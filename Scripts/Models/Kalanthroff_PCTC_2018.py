@@ -289,6 +289,7 @@ PCTC = pnl.System(
         task_word_process,
         conflict_process
     ],
+    reinitialize_mechanisms_when=pnl.Never(),
     name='PCTC_MODEL')
 
 

@@ -528,6 +528,9 @@ class EntriesDict(MutableMapping,dict):
         return dict.__getitem__(self,key)
 
     def __setitem__(self, key, value):
+        if isinstance(value, list):
+            dict.__setitem__(self, key, value)
+            return
 
         if not isinstance(value, LogEntry):
             raise LogError("Object other than a {} assigned to Log for {}".format(LogEntry.__name__, self.owner.name))
@@ -816,7 +819,7 @@ class Log:
         <Component.loggable_items>` (including its own `value <Component.value>`) in its `log <Component.log>`.
         The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
         System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
-        of its `run <System_Base.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
+        of its `run <System.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
         the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
         (see `System_Scheduler`).
 

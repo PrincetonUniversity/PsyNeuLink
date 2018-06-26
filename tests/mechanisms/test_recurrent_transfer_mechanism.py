@@ -11,7 +11,7 @@ from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-
+from psyneulink.scheduling.condition import Never
 
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
@@ -897,10 +897,8 @@ class TestRecurrentTransferMechanismReinitialize:
                     pathway=[R])
         S = System(name="S",
                    processes=[P])
-
+        R.reinitialize_when = Never()
         assert np.allclose(R.previous_value, 0.5)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
 
         S.run(inputs={R: 1.0},
               num_trials=2,
@@ -914,21 +912,15 @@ class TestRecurrentTransferMechanismReinitialize:
         # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
         # linear fn: 0.65*1.0 = 0.65
         assert np.allclose(R.previous_value, 0.65)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
 
         R.integrator_function.reinitialize(0.9)
 
         assert np.allclose(R.previous_value, 0.9)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.9)
         assert np.allclose(R.value, 0.65)
 
         R.reinitialize(0.5)
 
         assert np.allclose(R.previous_value, 0.5)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
         assert np.allclose(R.value, 0.5)
 
         S.run(inputs={R: 1.0}, num_trials=2)
@@ -939,8 +931,6 @@ class TestRecurrentTransferMechanismReinitialize:
         # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
         # linear fn: 0.7*1.0 = 0.7
         assert np.allclose(R.previous_value, 0.7)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
 
 class TestClip:
     def test_clip_float(self):

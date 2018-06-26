@@ -813,8 +813,16 @@ def run(obj,
 
         for time_step in range(time_steps):
 
+            result = None
+
             if call_before_time_step:
                 call_before_time_step()
+
+            # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
+            for mechanism in obj.mechanisms:
+                if hasattr(mechanism, "reinitialize_when"):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
+                        mechanism.reinitialize(None)
 
             input_num = execution%num_inputs_sets
 
@@ -838,7 +846,8 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+            if context == ContextFlags.COMMAND_LINE or not obj.context.execution_phase == ContextFlags.SIMULATION:
                 obj.context.execution_phase = ContextFlags.PROCESSING
                 obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
@@ -854,12 +863,12 @@ def run(obj,
             if call_after_time_step:
                 call_after_time_step()
 
-        # obj.results.append(result)
-        if isinstance(result, Iterable):
-            result_copy = result.copy()
-        else:
-            result_copy = result
-        obj.results.append(result_copy)
+        if obj.context.execution_phase != ContextFlags.SIMULATION:
+            if isinstance(result, Iterable):
+                result_copy = result.copy()
+            else:
+                result_copy = result
+            obj.results.append(result_copy)
 
         if call_after_trial:
             call_after_trial()

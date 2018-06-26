@@ -1,21 +1,23 @@
 import numpy as np
 import psyneulink as pnl
+import pytest
 
 
 class TestLCControlMechanism:
 
-    def test_default_lc_control_mechanism(self):
+    @pytest.mark.mechanism
+    @pytest.mark.control_mechanism
+    @pytest.mark.benchmark(group="LCControlMechanism Default")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_default_lc_control_mechanism(self, benchmark, mode):
         G = 1.0
         k = 0.5
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain))
-
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain))
+        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
         # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
-
-        P = pnl.Process(pathway=[A, B])
 
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
@@ -30,24 +32,29 @@ class TestLCControlMechanism:
         for output_state in LC.output_states:
             output_state.value *= starting_value_LC
 
+        P = pnl.Process(pathway=[A, B, LC])
         S = pnl.System(processes=[P])
 
+        # THIS CURRENTLY DOES NOT WORK:
+        # P = pnl.Process(pathway=[A, B])
+        # P2 = pnl.Process(pathway=[LC])
+        # S = pnl.System(processes=[P, P2])
+        # S.show_graph()
+
         gain_created_by_LC_output_state_1 = []
-        gain_created_by_LC_output_state_2 = []
         mod_gain_assigned_to_A = []
         base_gain_assigned_to_A = []
         mod_gain_assigned_to_B = []
         base_gain_assigned_to_B = []
 
         def report_trial():
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
-            gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
-            mod_gain_assigned_to_A.append(A.mod_gain[0])
-            mod_gain_assigned_to_B.append(B.mod_gain[0])
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
+            mod_gain_assigned_to_A.append(A.mod_gain)
+            mod_gain_assigned_to_B.append(B.mod_gain)
             base_gain_assigned_to_A.append(A.function_object.gain)
             base_gain_assigned_to_B.append(B.function_object.gain)
 
-        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+        benchmark(S.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
               call_after_trial=report_trial)
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
@@ -60,7 +67,21 @@ class TestLCControlMechanism:
 
         # (3) LC output on trial n becomes gain of A and B on trial n + 1
         assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
-        assert np.allclose(mod_gain_assigned_to_B[1:], gain_created_by_LC_output_state_2[0:-1])
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.control_mechanism
+    @pytest.mark.benchmark(group="LCControlMechanism Basic")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_lc_control_mech_basic(self, benchmark, mode):
+
+        LC = pnl.LCControlMechanism(
+            base_level_gain=3.0,
+            scaling_factor_gain=0.5
+        )
+        val = LC.execute([[10.0]])
+        assert np.allclose(np.asfarray(val).flatten(), [3.00139776,  0.512152259, .00279552477, 0.05000])
+        val = benchmark(LC.execute, [[10.0]])

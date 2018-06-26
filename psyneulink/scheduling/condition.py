@@ -705,7 +705,7 @@ class AtTimeStep(Condition):
 
     Notes:
 
-        - Counts of TimeScals are zero-indexed (that is, the first 'TIME_STEP' is pass 0, the second 'TIME_STEP' is 1, etc.);
+        - Counts of TimeScales are zero-indexed (that is, the first 'TIME_STEP' is pass 0, the second 'TIME_STEP' is 1, etc.);
           so, `AtTimeStep(1)` is satisfied when a single `TIME_STEP` (`TIME_STEP` 0) has occurred, and `AtTimeStep(2)` is satisfied
           when two `TIME_STEP`\\ s have occurred (`TIME_STEP` 0 and `TIME_STEP` 1), etc..
 

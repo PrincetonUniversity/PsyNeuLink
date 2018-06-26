@@ -18,8 +18,8 @@ ObjectiveMechanism monitors a specified set of OutputStates, and from these gene
 used by the ControlMechanism's `function <ControlMechanism.function>` to calculate an `allocation_policy
 <ControlMechanism.allocation_policy>`: a list of `allocation <ControlSignal.allocation>` values for each of its
 `ControlSignals <ControlSignal>`.  Each ControlSignal uses its `allocation <ControlSignal.allocation>` to calculate its
-`intensity`, which is then conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
-`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState then uses the value received by a
+`intensity`, which is then transmitted by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
+`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState uses the value received by a
 ControlProjection to modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation`
 for a more detailed description of how modulation operates).  A ControlMechanism can regulate only the parameters of
 Components in the `System` to which it belongs. The OutputStates used to determine the ControlMechanism's
@@ -44,14 +44,13 @@ COMMENT
 ControlMechanisms and a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be assigned to and executed within one or more Systems (listed in its `systems
-<Mechanism_Base.systems>` attribute), just like any other Mechanism.  It also be assigned as the `controller
-<System.controller>` of a `System`, that has a special relation to the System: it is used to control any and all
-parameters that have been `specified for control <ControlMechanism_Control_Signals>` in that System.  A
-ControlMechanism can be the `controller <System.controller>` for only one System, and a System can have only one
-one `controller <System.controller>`.  The System's `controller <System.controller>` is executed after all
-of the other Components in the System have been executed, including any other ControlMechanisms that belong to it (see
-`System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System.controller>`
+A ControlMechanism can be assigned to `Process` and executed within one or more Systems, just like any other Mechanism.
+It also be assigned as the `controller <System.controller>` of a `System`, that has a special relation to the System:
+it is used to control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
+in that System.  A ControlMechanism can be the `controller <System.controller>` for only one System, and a System can
+have only one one `controller <System.controller>`.  The System's `controller <System.controller>` is executed after
+all of the other Components in the System have been executed, including any other ControlMechanisms that belong to it
+(see `System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System.controller>`
 for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
 as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
 <ControlMechanism.assign_as_controller>` method. A System's `controller  <System.controller>` and its
@@ -67,56 +66,87 @@ Creating a ControlMechanism
 A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a `System is created <System_Creation>`, and the
 ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's constructor
-(see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), the
-`ObjectiveMechanism` it uses to monitor and evaluate `OutputStates <OutputState>` is specified in the
-**objective_mechanism** argument of its constructor, and the parameters it controls are specified in the
-**control_signals** argument.  If the ControlMechanism is created automatically by a System, then the specification of
-OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components themselves
-(see `System_Control_Specification`).  In either case the Components needed to monitor the specified OutputStates (an
-`ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters (`ControlSignals
-<ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created automatically, as described
-below.
+(see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), it must be included
+in a `Process` assigned to the System.  The `OutputStates <OutputState>` monitored by its `ObjectiveMechanism` are
+specified in the *monitor_for_control** argument of its constructor, and the parameters it controls are specified in
+the **control_signals** argument; an ObjectiveMechanism is automatically created that monitors and evaluates the
+specified OutputStates.  The ObjectiveMechanism can also be explicitly specified in the **objective_mechanism**
+argument of the ControlMechanism's constructor (see `below <ControlMechanism_ObjectiveMechanism>`). If the
+ControlMechanism is created automatically by a System (as its `controller <System.controller>`, then the specification
+of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
+themselves (see `System_Control_Specification`).  In either case the Components needed to monitor the specified
+OutputStates (an `ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters
+(`ControlSignals <ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created
+automatically, as described below.
 
 .. _ControlMechanism_ObjectiveMechanism:
 
-ObjectiveMechanism and Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ObjectiveMechanism
+~~~~~~~~~~~~~~~~~~
 
-When a ControlMechanism is created, it is associated with an `ObjectiveMechanism` that is used to monitor and
-evaluate a set of `OutputStates <OutputState>` upon which it bases it `allocation_policy
-<ControlMechanism.allocation_policy>`.  If the ControlMechanism is created explicitly, its ObjectiveMechanism
-can be specified in the **objective_mechanism** argument of its constructor, using either of the following:
-
-  * an existing `ObjectiveMechanism`, or a constructor for one;  in this case the **monitored_output_states** argument
-    of the ObjectiveMechanism's constructor is used to specify the OutputStates to be `monitored and evaluated
-    <ObjectiveMechanism_Monitored_Output_States>` (see `ControlMechanism_Examples`); note that, in this case, the
-    default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
-    default `objective_mechanism <ControlMechanism.objective_mechanism>`, including those of its `function
-    <ObjectiveMechanism.function>` (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
-    an example);
-  ..
-  * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`;  in this case, a default
-    ObjectiveMechanism is created, using the list of OutputState specifications as the **monitored_output_states**
-    argument of the ObjectiveMechanism's constructor.
-
-If the **objective_mechanism** argument is not specified, a default ObjectiveMechanism is created that is not assigned
-any OutputStates to monitor; this must then be done explicitly after the ControlMechanism is created.
-
-When a ControlMechanism is created automatically as part of a `System <System_Creation>`:
-
-  * a default ObjectiveMechanism is created for the ControlMechanism, using the list of `OutputStates <OutputState>`
-    specified in the **monitor_for_control** argument of the System's contructor, and any others within the System that
-    have been specified to be monitored (using the MONITOR_FOR_CONTROL keyword), as the **monitored_output_states**
-    argument for the ObjectiveMechanism's constructor (see `System_Control_Specification`).
-
-In all cases, the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
+Whenever a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that monitors and evaluates
+the `value <OutputState.value>`\\(s) of a set of `OutputState(s) <OutputState>`; this evaluation is used to determine
+the ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`. The ObjectiveMechanism, the
+OutputStates that it monitors, and how it evaluates them can be specified in a variety of ways, that depend on the
+context in which the ControlMechanism is created, as described in the subsections below. In all cases,
+the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
 ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's `primary
-InputState <InputState_Primary>`.
+InputState <InputState_Primary>`.  All of the OutputStates monitored by the ObjectiveMechanism are listed in its
+`monitored_output_States <ObjectiveMechanism.monitored_output_states>` attribute, and in the ControlMechanism's
+`monitor_for_control <ControlMechanism.montior_for_control>` attribute.
 
-OutputStates to be monitored can be added to an existing ControlMechanism by using the `add_monitored_output_states
+*When the ControlMechanism is created explicitly*
+
+When a ControlMechanism is created explicitly -- either on its own, or in the **controller** argument of the
+`constructor for a System <System_Control_Specification>`) -- the following arguments of the ControlMechanism's
+constructor can be used to specify its ObjectiveMechanism and/or the OutputStates it monitors:
+
+  * **objective_mechanism** -- this can be specified using any of the following:
+
+    - an existing `ObjectiveMechanism`;
+    |
+    - a constructor for an ObjectiveMechanism; its **monitored_output_states** argument can be used to specify
+      `the OutputStates to be monitored <ObjectiveMechanism_Monitored_Output_States>`, and its **function**
+      argument can be used to specify how those OutputStates are evaluated (see `ControlMechanism_Examples`).
+    |
+    - a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`; a default ObjectiveMechanism
+      is created, using the list of OutputState specifications for its **monitored_output_states** argument.
+    |
+    Note that if the ObjectiveMechanism is explicitly (using either of the first two methods above), its
+    attributes override any attributes specified by the ControlMechanism for its default `objective_mechanism
+    <ControlMechanism.objective_mechanism>`, including those of its `function <ObjectiveMechanism.function>` (see
+    `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example);
+  ..
+  * **monitor_for_control** -- a list a list of `OutputState specifications
+    <ObjectiveMechanism_Monitored_Output_States>`;  a default ObjectiveMechanism is created, using the list of
+    OutputState specifications for its **monitored_output_states** argument.
+
+  If OutputStates to be monitored are specified in both the **objective_mechanism** argument (on their own, or within
+  the constructor for an ObjectiveMechanism) and the **monitor_for_control** argument of the ControlMechanism,
+  both sets are used in creating the ObjectiveMechanism.
+
+*When the ControlMechanism is created for or assigned as the controller a System*
+
+If a ControlMechanism is specified as the `controller <System.controller>` of a System (see
+`ControlMechanism_System_Controller`), any OutputStates specified to be monitored by the System are assigned as
+inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
+System's constructor, as well as any specified in a MONITOR_FOR_CONTROL entry of a Mechanism `parameter specification
+dictionary <ParameterState_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
+
+COMMENT:
+FOR DEVELOPERS:
+    If the ObjectiveMechanism has not yet been created, these are added to the **monitored_output_states** of its
+    constructor called by ControlMechanism._instantiate_objective_mechanmism;  otherwise, they are created using the
+    ObjectiveMechanism.add_monitored_output_states method.
+COMMENT
+
+* Adding OutputStates to be monitored to a ControlMechanism*
+
+OutputStates to be monitored can also be added to an existing ControlMechanism by using the `add_monitored_output_states
 <ObjectiveMechanism.add_monitored_output_states>` method of the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>`.
+
 
 .. _ControlMechanism_Control_Signals:
 
@@ -168,13 +198,12 @@ input to the ControlMechanism's `function <ControlMechanism.function>`, that det
 via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
 `objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
-ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
-of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
-OutputStates it monitors are specified).  The OutputStates monitored by the ControlMechanism's `objective_mechanism
-<ControlMechanism.objective_mechanism>` can be displayed using its `show <ControlMechanism.show>` method.
-The ObjectiveMechanism's `function <ObjectiveMechanism>` evaluates the specified OutputStates, and the result is
-conveyed as the input to the ControlMechanism.
+ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute)
+are also listed in the `monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
+`ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the OutputStates it monitors are specified).
+The OutputStates monitored by the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` can
+be displayed using its `show <ControlMechanism.show>` method. The ObjectiveMechanism's `function <ObjectiveMechanism>`
+evaluates the specified OutputStates, and the result is conveyed as the input to the ControlMechanism.
 
 
 .. _ControlMechanism_Function:
@@ -237,7 +266,8 @@ Examples
 ~~~~~~~~
 
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
-that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`::
+that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
+and the function used to evaluated these::
 
     >>> import psyneulink as pnl
     >>> my_transfer_mech_A = pnl.TransferMechanism(name="Transfer Mech A")
@@ -308,18 +338,19 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.components.shellclasses import System_Base
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROL_PROJECTION, \
-    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
-    OBJECTIVE_MECHANISM, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, \
+    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, \
+    MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -329,21 +360,6 @@ ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}
 
-# MODIFIED 11/28/17 OLD:
-# def _is_control_spec(spec):
-#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-#     if isinstance(spec, tuple):
-#         return _is_control_spec(spec[1])
-#     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, ControlSignal):
-#         return True
-#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
-#         return True
-#     else:
-#         return False
-
-# MODIFIED 11/28/17 NEW:
 def _is_control_spec(spec):
     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
     if isinstance(spec, tuple):
@@ -358,7 +374,6 @@ def _is_control_spec(spec):
         return True
     else:
         return False
-# MODIFIED 11/28/17 END
 
 
 class ControlMechanismError(Exception):
@@ -369,7 +384,7 @@ class ControlMechanismError(Exception):
 # class ControlMechanism(Mechanism_Base):
 class ControlMechanism(AdaptiveMechanism_Base):
     """
-    ControlMechanism(                         \
+    ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
         function=Linear,                           \
@@ -471,18 +486,18 @@ class ControlMechanism(AdaptiveMechanism_Base):
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism_Base.input_state>`.
 
-    monitored_output_states : List[OutputState]
+    monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
         `objective_mechanism <ControlMechanism.objective_mechanism>` attribute;  it is the same as that
         ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute
         (see `ObjectiveMechanism_Monitored_Output_States` for specification).  The `value <OutputState.value>`
-        of the OutputStates listed are used by the ObjectiveMechanism to generate the ControlMechanism's `input
+        of the OutputStates in the list are used by the ObjectiveMechanism to generate the ControlMechanism's `input
         <ControlMechanism_Input>`.
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
-        each tuple in the list contains the weight and exponent associated with a corresponding item of
-        `monitored_output_states <ControlMechanism.monitored_output_states>`;  these are the same as those in
-        the `monitored_output_states_weights_and_exponents
+        each tuple in the list contains the weight and exponent associated with a corresponding OutputState specified
+        in `monitor_for_control <ControlMechanism.monitor_for_control>`;  these are the same as those in the
+        `monitored_output_states_weights_and_exponents
         <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
         <ControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
@@ -568,16 +583,23 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  system:tc.optional(System_Base)=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 control_signals=None,
+                 # control_signals=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
+        self.control_signals_arg = control_signals or []
+        if not isinstance(self.control_signals_arg, list):
+            self.control_signals_arg = [self.control_signals_arg]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
+                                                  monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
@@ -592,13 +614,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     function=function,
                                                     prefs=prefs,
                                                     context=ContextFlags.CONSTRUCTOR)
-
-        try:
-            self.monitored_output_states
-        except AttributeError:
-            raise ControlMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
-                                              format(self.__class__.__name__,
-                                                     self.__class__.__bases__[0].__name__))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -615,11 +630,45 @@ class ControlMechanism(AdaptiveMechanism_Base):
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
                                                        context=context)
+
+        def validate_monitored_state_spec(spec_list):
+            for spec in spec_list:
+                if isinstance(spec, MonitoredOutputStateTuple):
+                    spec = spec.output_state
+                if isinstance(spec, dict):
+                    # If it is a dict, parse to validate that it is an InputState specification dict
+                    #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
+                    spec = _parse_state_spec(owner=self,
+                                             state_type=InputState,
+                                             state_spec=spec,
+                                             context=context)
+                    # Get the OutputState, to validate that it is in the ControlMechanism's System (below);
+                    #    presumes that the monitored_output_state is the first in the list of projection_specs
+                    #    in the InputState state specification dictionary returned from the parse,
+                    #    and that it is specified as a projection_spec (parsed into that in the call
+                    #    to _parse_connection_specs by _parse_state_spec)
+
+                    spec = spec[PROJECTIONS][0][0]
+
+                # If ControlMechanism has been assigned to a System, check that
+                #    all the items in the list used to specify objective_mechanism are in the same System
+                if self.system:
+                    if not isinstance(spec, (list, ContentAddressableList)):
+                        spec = [spec]
+                    self.system._validate_monitored_states_in_system(spec, context=context)
+
+
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+
+        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
+            spec = target_set[MONITOR_FOR_CONTROL]
+            if not isinstance(spec, list):
+                spec = [spec]
+            validate_monitored_state_spec(spec)
 
         if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
 
@@ -627,8 +676,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
                 obj_mech_spec_list = target_set[OBJECTIVE_MECHANISM]
 
-                # Check if there is any ObjectiveMechanism in the list
-                #    (incorrect but possibly forgivable mis-specification
+                # Check if there is any ObjectiveMechanism is in the list;
+                #    incorrect but possibly forgivable mis-specification --
+                #    if an ObjectiveMechanism is specified, it should be "exposed" (i.e., not in a list)
                 if any(isinstance(spec, ObjectiveMechanism) for spec in obj_mech_spec_list):
                     # If an ObjectiveMechanism is the *only* item in the list, forgive the mis-spsecification and use it
                     if len(obj_mech_spec_list)==1 and isinstance(obj_mech_spec_list[0], ObjectiveMechanism):
@@ -644,28 +694,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     " it is in a list with other items ({})".
                                                     format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
                 else:
-                    for spec in obj_mech_spec_list:
-                        if isinstance(spec, MonitoredOutputStateTuple):
-                            spec = spec.output_state
-                        if isinstance(spec, dict):
-                            # If it is a dict, parse to validate that it is an InputState specification dict
-                            #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
-                            spec = _parse_state_spec(owner=self,
-                                                     state_type=InputState,
-                                                     state_spec=spec,
-                                                     context=context)
-                            # Get the OutputState, to validate that it is in the ControlMechanism's System (below);
-                            #    presumes that the monitored_output_state is the first in the list of projection_specs
-                            #    in the InputState state specification dictionary returned from the parse,
-                            #    and that it is specified as a projection_spec (parsed into that in the call
-                            #    to _parse_connection_specs by _parse_state_spec)
-
-                            spec = spec[PROJECTIONS][0][0]
-
-                        # If ControlMechanism has been assigned to a System, check that
-                        #    all the items in the list used to specify objective_mechanism are in the same System
-                        if self.system:
-                            self.system._validate_monitored_states_in_system([spec], context=context)
+                    validate_monitored_state_spec(obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -684,7 +713,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
         """
-        Assign InputState to ControlMechanism for each OutputState to be monitored;
+        # FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
+        Assign InputState to ObjectiveMechanism for each OutputState to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
@@ -705,47 +735,34 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.components.functions.function import FunctionError
 
-        monitored_output_states = None
-
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
 
+        monitored_output_states = []
+
         # If the ControlMechanism has already been assigned to a System
-        #    get OutputStates in System specified as MONITOR_FOR_CONTROL
+        #    get OutputStates in System specified as monitor_for_control or already being monitored:
         #        do this by calling _get_monitored_output_states_for_system(),
         #        which also gets any OutputStates already being monitored by the ControlMechanism
         if self.system:
-            monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
+            monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
-        # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
-        # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
-        #      IF objective_mechanism IS SPECIFIED AS A LIST:
-        #          CALL _parse_monitored_output_states_list() TO GET LIST OF OutputStates
-        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-        #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
+        self.monitor_for_control = self.monitor_for_control or []
+        if not isinstance(self.monitor_for_control, list):
+            self.monitor_for_control = [self.monitor_for_control]
+
+        # If objective_mechanism is used to specify OutputStates to be monitored (legacy feature)
+        #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
-            monitored_output_states = [None] * len(self.objective_mechanism)
-            for i, item in enumerate(self.objective_mechanism):
-                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
-                if isinstance(item, tuple) and len(item)==4:
-                    item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
-                # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
-                # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
-                if isinstance(item, MonitoredOutputStateTuple):
-                    # If matrix is specified, let it determine the variable
-                    if item.matrix is not None:
-                        variable = None
-                    # Otherwise, use OutputState's value as variable for InputState
-                    else:
-                        variable = item.output_state.value
-                    # Create InputState specification dictionary:
-                    monitored_output_states[i] = {NAME: item.output_state.name,
-                                                  VARIABLE: variable,
-                                                  WEIGHT:item.weight,
-                                                  EXPONENT:item.exponent,
-                                                  PROJECTIONS:[(item.output_state, item.matrix)]}
-                else:
-                    monitored_output_states[i] = item
+            self.monitor_for_control.extend(self.objective_mechanism)
+
+        # Add items in monitor_for_control to monitored_output_states
+        for i, item in enumerate(self.monitor_for_control):
+            # If it is already in the list received from System, ignore
+            if item in monitored_output_states:
+                # NOTE: this can happen if ControlMechanisms is being constructed by System
+                #       which passed its monitor_for_control specification
+                continue
+            monitored_output_states.extend([item])
 
         # INSTANTIATE ObjectiveMechanism
 
@@ -755,10 +772,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self.objective_mechanism.add_monitored_output_states(
                                                               monitored_output_states_specs=monitored_output_states,
                                                               context=context)
-        # Otherwise, instantiate ObjectiveMechanism with list of states in *objective_mechanism* arg
+        # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:
-            # Create specification for ObjectiveMechanism InputStates corresponding to
-            #    monitored_output_states and their exponents and weights
             try:
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
@@ -792,6 +807,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,
                           name=name)
+
+        self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
@@ -971,6 +988,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self.system:
             self.system._validate_monitored_states_in_system(output_states, context=context)
 
+    def _add_process(self, process, role:str):
+        super()._add_process(process, role)
+        self.objective_mechanism._add_process(process, role)
+
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
@@ -1029,13 +1050,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
 
         # Don't add any OutputStates that are already being monitored by the ControlMechanism's ObjectiveMechanism
-        for i, monitored_output_state in enumerate(monitored_output_states.copy()):
+        for monitored_output_state in monitored_output_states.copy():
             if monitored_output_state.output_state in self.monitored_output_states:
-                del monitored_output_states[i]
+                monitored_output_states.remove(monitored_output_state)
 
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
-        self.add_monitored_output_states(monitored_output_states)
+        if monitored_output_states:
+            self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
@@ -1078,7 +1100,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-        self._objective_mechanism.controller = True
+        self._objective_mechanism.for_controller = True
 
         if context != ContextFlags.PROPERTY:
             system._controller = self

@@ -165,8 +165,11 @@ LC.set_log_conditions('value')
 for output_state in LC.output_states:
     output_state.value *= G + k * initial_w
 
+LC_process = pnl.Process(pathway=[LC])
+
 # Now, we specify the processes of the System, which in this case is just the decision_process
-task = pnl.System(processes=[decision_process])
+task = pnl.System(processes=[decision_process, LC_process],
+                  reinitialize_mechanisms_when=pnl.Never(),)
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 

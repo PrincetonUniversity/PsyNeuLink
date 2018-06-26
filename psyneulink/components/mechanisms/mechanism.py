@@ -947,16 +947,15 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZATION_STATUS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SOURCE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
-    VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+    CHANGED, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, \
+    PARAMETER_STATES, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
+    VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, \
+    append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -1458,7 +1457,7 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = {}
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = {}
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -2015,38 +2014,42 @@ class Mechanism_Base(Mechanism):
             effectively begins the function's accumulation over again at the specified value, and updates related
             attributes on the mechanism.
 
-            If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`:
+            If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`, its `reinitialize
+            <Mechanism_Base.reinitialize>` method:
 
-                `reinitialize <Mechanism_Base.reinitialize>` first calls the function's own `reinitialize <Integrator.reinitialize>` method, which
-                typically sets:
+                (1) Calls the function's own `reinitialize <Integrator.reinitialize>` method (see Note below for
+                    details)
 
-                - `previous_value <Integrator.previous_value>`
-                - `initializer <Integrator.initial_value>`
-                - `value <Integrator.value>`
+                (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
+                    reinitialize method
 
-                to the quantity specified. For specific types of Integrator functions, additional values, such as
-                initial time, must be specified, and additional attributes are reset. See individual functions for
-                details.
+                (3) Updates its `output states <Mechanism_Base.output_state>` based on its new `value
+                    <Mechanism_Base.value>`
 
-                Then, the mechanism sets its `value <Mechanism_Base.value>` to the quantity specified, and updates its
-                `output states <Mechanism_Base.output_state>`.
+            If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reinitialize
+            <Mechanism_Base.reinitialize>` method::
 
-            If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`:
+                (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
+                    <Integrator.reinitialize>` method (see Note below for details)
 
-                `reinitialize <Mechanism_Base.reinitialize>` first calls the `integrator_function's <TransferMechanism.integrator_function>` own
-                `reinitialize <Integrator.reinitialize>` method, which typically sets:
+                (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
+                    <TransferMechanism.integrator_function>` `reinitialize <Integrator.reinitialize>` method as the
+                    function's variable
 
-                - `previous_value <Integrator.previous_value>`
-                - `initializer <Integrator.initial_value>`
-                - `value <Integrator.value>`
+                (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
 
-                to the quantity specified. For specific types of Integrator functions, additional values, such as
-                initial time, must be specified, and additional attributes are reset. See individual functions for
-                details.
+                (4) Updates its `output states <Mechanism_Base.output_state>` based on its new `value
+                    <Mechanism_Base.value>`
 
-                Then, the mechanism executes its `function <Mechanism_Base.function>` using the quantity specified as the
-                function's variable. The mechanism's `value <Mechanism_Base.value>` is set to the output of its function.
-                Finally, the mechanism updates its `output states <Mechanism_Base.output_state>`.
+        .. note::
+                The reinitialize method of an Integrator Function typically resets the function's `previous_value
+                <Integrator.previous_value>` (and any other `stateful_attributes <Integrator.stateful_attributes>`) and
+                `value <Integrator.value>` to the quantity (or quantities) specified. If `reinitialize
+                <Mechanism_Base.reinitialize>` is called without arguments, the `initializer <Integrator.initializer>`
+                value (or the values of each of the attributes in `initializers <Integrator.initializers>`) is used
+                instead. The `reinitialize <Integrator.reinitialize>` method may vary across different Integrators.
+                See individual functions for details on their `stateful_attributes <Integrator.stateful_attributes>`,
+                as well as other reinitialization steps that the reinitialize method may carry out.
         """
         from psyneulink.components.functions.function import Integrator
 
@@ -2062,9 +2065,8 @@ class Mechanism_Base(Mechanism):
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, Integrator):
-                new_input = self.integrator_function.reinitialize(*args)
-                if hasattr(self, "initial_value"):
-                    self.initial_value = np.atleast_2d(*args)
+                new_input = self.integrator_function.reinitialize(*args)[0]
+
                 self.value = super()._execute(variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
@@ -2910,6 +2912,14 @@ class Mechanism_Base(Mechanism):
         for state in states:
             labels.append(state.label)
         return labels
+
+    @tc.typecheck
+    def _add_process(self, process, role:str):
+        from psyneulink.components.process import Process
+        if not isinstance(process, Process):
+            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
+                                 format(Mechanism.__name__, process, Process.__name__))
+        self.processes.__additem__(process, role)
 
     @property
     def is_finished(self):

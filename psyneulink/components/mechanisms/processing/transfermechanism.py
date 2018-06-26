@@ -208,7 +208,6 @@ starting point. This is done using the `reinitialize <AdaptiveIntegrator.reiniti
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
@@ -216,16 +215,14 @@ The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_f
 
 The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
-    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
 
     to the specified value. Then:
 
     - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
     - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
-    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
+    - the TransferMechanism updates its `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
@@ -307,7 +304,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Function, TransferFunction, AdaptiveIntegrator, Linear, NormalizingFunction, DistributionFunction, UserDefinedFunction
+from psyneulink.components.functions.function import AdaptiveIntegrator, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, UserDefinedFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -930,27 +927,22 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                           owner=self)
 
             self.original_integrator_function = self.integrator_function
-
         current_input = self.integrator_function.execute(function_variable,
                                                          # Should we handle runtime params?
-                                                         runtime_params={INITIALIZER: self.initial_value,
-                                                                         NOISE: self.noise,
-                                                                         RATE: self.smoothing_factor},
+                                                         runtime_params={INITIALIZER: initial_value,
+                                                                         NOISE: noise,
+                                                                         RATE: smoothing_factor},
                                                          context=context)
 
         return current_input
 
-    def _clip_result(self, clip, current_input, runtime_params, context):
-
-        outputs = super(Mechanism, self)._execute(variable=current_input,
-                                                  runtime_params=runtime_params,
-                                                  context=context)
+    def _clip_result(self, clip, current_input):
         if clip is not None:
-            minCapIndices = np.where(outputs < clip[0])
-            maxCapIndices = np.where(outputs > clip[1])
-            outputs[minCapIndices] = np.min(clip)
-            outputs[maxCapIndices] = np.max(clip)
-        return outputs
+            minCapIndices = np.where(current_input < clip[0])
+            maxCapIndices = np.where(current_input > clip[1])
+            current_input[minCapIndices] = np.min(clip)
+            current_input[maxCapIndices] = np.max(clip)
+        return current_input
 
     def _execute(self,
                  variable=None,
@@ -1001,7 +993,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = self.get_current_mechanism_param("noise")
         initial_value = self.get_current_mechanism_param("initial_value")
 
-
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
@@ -1010,9 +1001,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             current_input = self._get_integrated_function_input(variable,
-                                                                    initial_value,
-                                                                    noise,
-                                                                    context)
+                                                                initial_value,
+                                                                noise,
+                                                                context)
 
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
@@ -1023,12 +1014,24 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = self._clip_result(clip, elem, runtime_params, context)
+                output_item = super(Mechanism, self)._execute(
+                    variable=elem,
+                    runtime_params=runtime_params,
+                    context=context
+                )
+                output_item = self._clip_result(clip, output_item)
                 outputs.append(output_item)
 
         else:
-            outputs = self._clip_result(clip, current_input, runtime_params, context)
+            outputs = super(Mechanism, self)._execute(
+                variable=current_input,
+                runtime_params=runtime_params,
+                context=context
+            )
+            outputs = self._clip_result(clip, outputs)
 
+        # # TEST PRINT:
+        # print('OUTPUT: ', outputs)
         return outputs
 
     def _report_mechanism_execution(self, input, params, output):
