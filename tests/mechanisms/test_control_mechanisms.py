@@ -88,14 +88,14 @@ class TestLCControlMechanism:
 
     def test_lc_control_modulated_mechanisms_all(self):
 
-        T1 = pnl.TransferMechanism(name='T1')
-        T2 = pnl.TransferMechanism(name='T2')
+        T_1 = pnl.TransferMechanism(name='T_1')
+        T_2 = pnl.TransferMechanism(name='T_2')
 
-        LC = pnl.LCControlMechanism(monitor_for_control=[T1, T2],
+        LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
                                     modulated_mechanisms=pnl.ALL
                                     )
-        S = pnl.System(processes=[pnl.proc(T1, T2, LC)])
+        S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
-        assert T1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
-        assert T2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
