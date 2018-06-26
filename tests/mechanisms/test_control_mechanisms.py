@@ -85,3 +85,17 @@ class TestLCControlMechanism:
         val = LC.execute([[10.0]])
         assert np.allclose(np.asfarray(val).flatten(), [3.00139776,  0.512152259, .00279552477, 0.05000])
         val = benchmark(LC.execute, [[10.0]])
+
+    def test_lc_control_modulated_mechanisms_all(self):
+
+        T1 = pnl.TransferMechanism(name='T1')
+        T2 = pnl.TransferMechanism(name='T2')
+
+        LC = pnl.LCControlMechanism(monitor_for_control=[T1, T2],
+                                    modulated_mechanisms=pnl.ALL
+                                    )
+        S = pnl.System(processes=[pnl.proc(T1, T2, LC)])
+        assert len(LC.control_signals)==1
+        assert len(LC.control_signals[0].efferents)==2
+        assert T1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
