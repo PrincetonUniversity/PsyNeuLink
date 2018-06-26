@@ -155,7 +155,7 @@ System_Conflict_Monitoring = pnl.System(processes=[color_response_process,
                                         reinitialize_mechanisms_when=pnl.Never(),
                                         name='CONFLICT MONITORING_SYSTEM')
 
-response_layer.systems[System_Conflict_Monitoring] = pnl.TERMINAL
+response_layer._add_system(System_Conflict_Monitoring, pnl.TERMINAL)
 System_Conflict_Monitoring.terminal_mechanisms.append(response_layer)
 
 # System_Conflict_Monitoring.show_graph(show_dimensions=pnl.ALL)#, show_mechanism_structure=True)

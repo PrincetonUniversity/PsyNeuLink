@@ -221,7 +221,7 @@ Bidirectional_Stroop = pnl.System(
     reinitialize_mechanisms_when=pnl.Never(),
     name='Bidirectional_Stroop_SYSTEM'
 )
-response_layer.systems[Bidirectional_Stroop] = pnl.TERMINAL
+response_layer._add_system(Bidirectional_Stroop, pnl.TERMINAL)
 Bidirectional_Stroop.terminal_mechanisms.append(response_layer)
 # LOGGING:
 colors_hidden_layer.set_log_conditions('value')
