@@ -58,14 +58,10 @@ constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifyi
 <Function_Modulatory_Params>` of the Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
 `TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
-<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms.
-COMMENT:
-The keyword
+<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms. The keyword
 *ALL* can also be used to specify all of the eligible `ProcessMechanisms <ProcessingMechanism>` in all of the
 `Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism specified in the
-**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored.
-COMMENT
-A `ControlProjection` is
+**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A `ControlProjection` is
 automatically created that projects from the LCControlMechanism to the `ParameterState` for the `multiplicative_param
 <Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms** argument.  The Mechanisms
 modulated by an LCControlMechanism are listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>`
@@ -353,18 +349,11 @@ class LCControlMechanism(ControlMechanism):
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
-    COMMENT:
     modulated_mechanisms : List[`Mechanism`] or *ALL*
-    COMMENT
-    modulated_mechanisms : List[`Mechanism`]
-        specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a Mechanism
-        with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
-        <Function_Modulatory_Params>`.
-        COMMENT:
-        ;  alternatively the keyword *ALL* can be used to specify all of the
-        `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism
-        belongs.
-        COMMENT
+        specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
+        Mechanism with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
+        <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
+        `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism  belongs.
 
     initial_w_FHN : float : default 0.0
         sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
