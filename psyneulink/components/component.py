@@ -837,7 +837,6 @@ class Component(object):
             raise TypeError('ClassDefaults is not meant to be instantiated')
 
         function = None
-        exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
     class InstanceDefaults(Defaults, _DefaultsAliases):
@@ -877,6 +876,8 @@ class Component(object):
     requiredParamClassDefaultTypes = {}
 
     paramClassDefaults = {}
+
+    exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
