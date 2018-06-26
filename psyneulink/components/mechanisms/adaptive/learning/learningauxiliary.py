@@ -782,7 +782,7 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
                                   context=ContextFlags.METHOD)
 
         if not aff_lm.systems:
-            aff_lm.systems[system] = LEARNING
+            aff_lm._add_system(system, LEARNING)
 
 
 class LearningComponents(object):

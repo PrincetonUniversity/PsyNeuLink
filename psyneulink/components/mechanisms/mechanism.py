@@ -1458,7 +1458,7 @@ class Mechanism_Base(Mechanism):
         self._receivesProcessInput = False
         self.phaseSpec = None
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        self.systems = {}
+        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
