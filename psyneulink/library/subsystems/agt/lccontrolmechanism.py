@@ -818,12 +818,14 @@ class LCControlMechanism(ControlMechanism):
     @tc.typecheck
     def _add_process(self, process, role:str):
         super()._add_process(process, role)
-        self._instantiate_output_states(context=ContextFlags.METHOD)
+        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
+            self._instantiate_output_states(context=ContextFlags.METHOD)
 
     @tc.typecheck
     def _add_system(self, system, role:str):
         super()._add_system(system, role)
-        self._instantiate_output_states(context=ContextFlags.METHOD)
+        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
+            self._instantiate_output_states(context=ContextFlags.METHOD)
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

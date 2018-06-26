@@ -1388,6 +1388,9 @@ class Mechanism_Base(Mechanism):
 
         self._execution_id = None
         self._is_finished = False
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
+        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
+
         # Register with MechanismRegistry or create one
         if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
@@ -1457,8 +1460,6 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
