@@ -836,6 +836,7 @@ class PredictionMechanism(IntegratorMechanism):
                 function = self.ClassDefaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
+
                 # Maintain the preceding sequence of inputs (of length window_size), and use those for each simulation
                 function = Buffer(default_variable=[[0]],
                                   initializer=initial_value,

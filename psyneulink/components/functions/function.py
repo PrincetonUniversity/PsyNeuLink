@@ -5646,11 +5646,17 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
+                 default_variable=[],
+                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
+                 # was failing.
+                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
+                 # default_variable=None,   # Changed to [] because None conflicts with initializer
                  # rate: parameter_spec=1.0,
                  # noise=0.0,
-                 rate:tc.optional(tc.any(int, float))=None,
-                 noise:tc.optional(tc.any(int, float, callable))=None,
+                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 rate:tc.optional(tc.any(int, float))=1.0,
+                 noise:tc.optional(tc.any(int, float, callable))=0.0,
                  history:tc.optional(int)=None,
                  initializer=[],
                  params: tc.optional(dict)=None,
@@ -5684,6 +5690,16 @@ class Buffer(Integrator):  # ---------------------------------------------------
         self.auto_dependent = True
 
     def reinitialize(self, *args):
+        """
+
+        Clears the `previous_value <Buffer.previous_value>` deque.
+
+        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        value besides [], then that value is used to start the deque.
+
+        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+
+        """
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -5695,7 +5711,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute: previous_value, or reinitialize must be called "
+                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
                                 "without any arguments, in which case the current initializer value, will be used to "
                                 "reinitialize previous_value".format(args,
                                                                      self.name))
@@ -5748,12 +5764,6 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # Just return current input (for validation).
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return variable
-
-        # If this NOT an initialization run,
-
-        # Update deque
-        # FIX: Need to recast as deque (since if reinitialize has been called, it returns np.array
-        self.previous_value = deque(self.previous_value, maxlen=self.history)
 
         self.previous_value.append(variable)
 
