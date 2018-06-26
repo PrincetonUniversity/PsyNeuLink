@@ -1113,7 +1113,7 @@ class Process(Process_Base):
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
-                if any(any(proj.receiver.owner is mech
+                if mech.output_states and any(any(proj.receiver.owner is mech
                            for proj in state.efferents)
                        for state in mech.output_states):
                     for state in mech.output_states:
