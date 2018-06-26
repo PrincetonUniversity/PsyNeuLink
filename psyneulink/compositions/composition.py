@@ -812,7 +812,7 @@ class Composition(object):
     #             # Then, check that each input_state is receiving the right size of input
     #             for i, value in enumerate(timestep):
     #                 val_length = len(value)
-    #                 state_length = len(mech.input_state.instance_defaults.value)
+    #                 state_length = len(mech.input_state.instance_defaults.variable)
     #                 if val_length != state_length:
     #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
     #                                      "{!s} where the InputState takes values of length {!s}".
@@ -1051,15 +1051,16 @@ class Composition(object):
     ):
         '''
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
-            coordinates with the Scheduler to receive and execute sets of Mechanisms that are eligible to run until
+            coordinates with the Scheduler to receive and execute sets of nodes that are eligible to run until
             termination conditions are met.
 
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` : list }
-                a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
-                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
+            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
+                a dictionary containing a key-value pair for each node in the composition that receives inputs from
+                the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
+                the shape of which must match the node's default variable.
 
             scheduler_processing : Scheduler
                 the scheduler object that owns the conditions that will instruct the non-learning execution of this Composition. \
@@ -1492,55 +1493,55 @@ class Composition(object):
 
         for node, stim_list in stimuli.items():
             if isinstance(node, Composition):
-                adjusted_stimuli[node] = stim_list
-                num_input_sets = 1
+                input_must_match = node.input_values
             else:
-                check_spec_type = self._input_matches_variable(stim_list, node.instance_defaults.value)
-                # If a nodeanism provided a single input, wrap it in one more list in order to represent trials
-                if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                    if check_spec_type == "homogeneous":
+                input_must_match = node.instance_defaults.variable
+            check_spec_type = self._input_matches_variable(stim_list, input_must_match)
+            # If a node provided a single input, wrap it in one more list in order to represent trials
+            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                if check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
+                else:
+                    adjusted_stimuli[node] = [stim_list]
+
+                # verify that all nodes have provided the same number of inputs
+                if num_input_sets == -1:
+                    num_input_sets = 1
+                elif num_input_sets != 1:
+                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                                   "conflicts with at least one other node's input specification.".format(self.name,
+                                                                                                               node.name))
+            else:
+                adjusted_stimuli[node] = []
+                for stim in stimuli[node]:
+                    check_spec_type = self._input_matches_variable(stim, input_must_match)
+                    # loop over each input to verify that it matches variable
+                    if check_spec_type == False:
+                        err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
+                            format(stim, node.name, input_must_match)
+                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                        # for "functionality" but rather a hack for user clarity
+                        if "KWTA" in str(type(node)):
+                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
+                                                " to represent the outside stimulus for the inhibition input state, and " \
+                                                "for systems, put your inputs"
+                        raise RunError(err_msg)
+                    elif check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input states specified without an outer list
                         # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                        adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
+                        adjusted_stimuli[node].append(np.atleast_2d(stim))
                     else:
-                        adjusted_stimuli[node] = [stim_list]
+                        adjusted_stimuli[node].append(stim)
 
-                    # verify that all nodes have provided the same number of inputs
-                    if num_input_sets == -1:
-                        num_input_sets = 1
-                    elif num_input_sets != 1:
-                        raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
-                                       "conflicts with at least one other node's input specification.".format(self.name,
-                                                                                                                   node.name))
-                else:
-                    adjusted_stimuli[node] = []
-                    for stim in stimuli[node]:
-                        check_spec_type = self._input_matches_variable(stim, node.instance_defaults.value)
-                        # loop over each input to verify that it matches variable
-                        if check_spec_type == False:
-                            err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                                format(stim, node.name, node.instance_defaults.value)
-                            # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                            # for "functionality" but rather a hack for user clarity
-                            if "KWTA" in str(type(node)):
-                                err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                    " to represent the outside stimulus for the inhibition input state, and " \
-                                                    "for systems, put your inputs"
-                            raise RunError(err_msg)
-                        elif check_spec_type == "homogeneous":
-                            # np.atleast_2d will catch any single-input states specified without an outer list
-                            # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                            adjusted_stimuli[node].append(np.atleast_2d(stim))
-                        else:
-                            adjusted_stimuli[node].append(stim)
-
-                    # verify that all nodeanisms have provided the same number of inputs
-                    if num_input_sets == -1:
-                        num_input_sets = len(stimuli[node])
-                    elif num_input_sets != len(stimuli[node]):
-                        raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
-                                       "conflicts with at least one other node's input specification."
-                                       .format(self.name, (stimuli[node]), node.name))
+                # verify that all nodes have provided the same number of inputs
+                if num_input_sets == -1:
+                    num_input_sets = len(stimuli[node])
+                elif num_input_sets != len(stimuli[node]):
+                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                                   "conflicts with at least one other node's input specification."
+                                   .format(self.name, (stimuli[node]), node.name))
 
         return adjusted_stimuli, num_input_sets
 
@@ -1548,11 +1549,13 @@ class Composition(object):
         adjusted_stimuli = {}
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
-                return {node: stimulus}
+                input_must_match = node.input_values
+            else:
+                input_must_match = node.instance_defaults.variable
 
 
-            check_spec_type = self._input_matches_variable(stimulus, node.instance_defaults.value)
-            # If a nodeanism provided a single input, wrap it in one more list in order to represent trials
+            check_spec_type = self._input_matches_variable(stimulus, input_must_match)
+            # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
                     # np.atleast_2d will catch any single-input states specified without an outer list
@@ -1563,7 +1566,7 @@ class Composition(object):
 
             else:
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
-                                       .format(stimulus, node.name, node.instance_defaults.value))
+                                       .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
 
