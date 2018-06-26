@@ -282,7 +282,7 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.globals.keywords import \
-    ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, PROJECTIONS
+    ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, PROJECTIONS
 from psyneulink.globals.utilities import is_iterable
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -757,7 +757,6 @@ class LCControlMechanism(ControlMechanism):
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-            self.modulated_mechanisms = []
             # if not (hasattr(self, 'systems') or hasattr(self, 'processes')):
                 # raise LCControlMechanismError("The keyword {} was specified for the {} argument of the constructor "
                 #                               "for {}, but it does not belong to any Systems or Processes".
@@ -767,19 +766,22 @@ class LCControlMechanism(ControlMechanism):
             # if hasattr(self, 'systems'):
             if self.systems:
                 for system in self.systems:
+                    self.modulated_mechanisms = []
                     for mech in system.mechanisms:
                         if (mech not in self.modulated_mechanisms and
                                 isinstance(mech, ProcessingMechanism_Base) and
-                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
+                                not (isinstance(mech, ObjectiveMechanism) and mech._role is CONTROL) and
+                                hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
-            # elif hasattr(self, 'processes'):
-            elif self.processes:
-                for process in self.processes:
-                    for mech in process.mechanisms:
-                        if (mech not in self.modulated_mechanisms and
-                                isinstance(mech, ProcessingMechanism_Base) and
-                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
-                            self.modulated_mechanisms.append(mech)
+            # # elif hasattr(self, 'processes'):
+            # elif self.processes:
+            #     for process in self.processes:
+            #         self.modulated_mechanisms = []
+            #         for mech in process.mechanisms:
+            #             if (mech not in self.modulated_mechanisms and
+            #                     isinstance(mech, ProcessingMechanism_Base) and
+            #                     hasattr(mech.function_object, MULTIPLICATIVE_PARAM)):
+            #                 self.modulated_mechanisms.append(mech)
             else:
                 # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
                 return
@@ -815,11 +817,11 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    @tc.typecheck
-    def _add_process(self, process, role:str):
-        super()._add_process(process, role)
-        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-            self._instantiate_output_states(context=ContextFlags.METHOD)
+    # @tc.typecheck
+    # def _add_process(self, process, role:str):
+    #     super()._add_process(process, role)
+    #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
+    #         self._instantiate_output_states(context=ContextFlags.METHOD)
 
     @tc.typecheck
     def _add_system(self, system, role:str):

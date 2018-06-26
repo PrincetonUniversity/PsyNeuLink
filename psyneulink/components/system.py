@@ -1350,6 +1350,11 @@ class System(System_Base):
 
             # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
+            # MODIFIED 6/24/18 NEW:
+            if not sender_mech.output_states:
+                return
+            # MODIFIED 6/24/18 END
+
             for output_state in sender_mech.output_states:
 
                 for projection in output_state.efferents:
