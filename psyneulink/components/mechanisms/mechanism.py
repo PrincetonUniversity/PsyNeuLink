@@ -2913,6 +2913,14 @@ class Mechanism_Base(Mechanism):
                                  format(Mechanism.__name__, process, Process.__name__))
         self.processes.__additem__(process, role)
 
+    @tc.typecheck
+    def _add_system(self, system, role:str):
+        from psyneulink.components.system import System
+        if not isinstance(system, System):
+            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
+                                 format(Mechanism.__name__, system, System.__name__))
+        self.processes.__additem__(system, role)
+
     @property
     def is_finished(self):
         return self._is_finished
