@@ -12,9 +12,11 @@ from psyneulink.llvm import helpers
 from llvmlite import ir
 import functools
 
+
 def __set_array_body(builder, index, array, value):
     ptr = builder.gep(array, [index])
     builder.store(value, ptr)
+
 
 def setup_vxm(ctx):
     module = ctx.module
@@ -32,7 +34,7 @@ def setup_vxm(ctx):
     v, m, x, y, o = function.args
 
     # Add function arg attributes
-    for a in v,m,o:
+    for a in v, m, o:
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
@@ -56,9 +58,9 @@ def setup_vxm(ctx):
     # Loop condition
     builder.branch(outer_cond_block)
     with builder.goto_block(outer_cond_block):
-        tmp = builder.load(index_i_var);
+        tmp = builder.load(index_i_var)
         cond = builder.icmp_signed("<", tmp, x)
-        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99,1])
+        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99, 1])
 
     # Loop body
     with builder.goto_block(outer_body_block):
@@ -76,9 +78,9 @@ def setup_vxm(ctx):
         # Loop condition
         builder.branch(inner_cond_block)
         with builder.goto_block(inner_cond_block):
-            tmp = builder.load(index_j_var);
+            tmp = builder.load(index_j_var)
             cond = builder.icmp_signed("<", tmp, y)
-            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99,1])
+            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99, 1])
 
         # Loop body
         with builder.goto_block(inner_body_block):
@@ -103,7 +105,6 @@ def setup_vxm(ctx):
             next_index_j = builder.add(index_j, ctx.int32_ty(1))
             builder.store(next_index_j, index_j_var)
             builder.branch(inner_cond_block)
-
 
         with builder.goto_block(inner_out_block):
             next_index_i = builder.add(index_i, ctx.int32_ty(1))
