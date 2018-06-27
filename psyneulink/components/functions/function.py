@@ -7788,21 +7788,16 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         ret = super().bin_function(variable, params, context)
 
-        v_len = len(self.previous_v)
-        v = ret[0:v_len]
-        if np.isscalar(self.previous_w):
-            w = ret[-2]
-        else:
-            w = ret[v_len:v_len + len(self.previous_w)]
+        ret = ret.reshape(3, len(ret)//3)
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_v = v
-            self.previous_w = w
-            self.previous_time = ret[-1]
+            self.previous_v = ret[0]
+            self.previous_w = ret[1]
+            self.previous_time = ret[2]
 
-        return v, w, ret[-1]
+        return ret
 
 
     def get_param_ids(self):
@@ -7828,7 +7823,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def get_context_initializer(self):
         v = self.previous_v if np.isscalar(self.previous_v) else tuple(self.previous_v)
         w = self.previous_w if np.isscalar(self.previous_w) else tuple(self.previous_w)
-        return (v, w, self.previous_time)
+        time = self.previous_time if np.isscalar(self.previous_time) else tuple(self.previous_time)
+        return (v, w, time)
 
 
     def _gen_llvm_function_body(self, ctx, builder):
@@ -7845,7 +7841,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         previous_v_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(0)])
         previous_w_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(1)])
         previous_time_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(2)])
-        previous_time = builder.load(previous_time_ptr)
 
         # Output locations
         out_v_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(0)])
@@ -7860,9 +7855,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         inner_args = {"ctx":ctx, "var_ptr":vi, "param_vals":param_vals,
                       "out_v":out_v_ptr, "out_w":out_w_ptr,
+                      "out_time":out_time_ptr,
                       "previous_v_ptr":previous_v_ptr,
                       "previous_w_ptr":previous_w_ptr,
-                      "previous_time":previous_time}
+                      "previous_time_ptr":previous_time_ptr}
 
         method = self.get_current_function_param("integration_method")
         if method == "RK4":
@@ -7876,26 +7872,28 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         vector_length = ctx.int32_ty(vi.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, func, method + "_body")
 
-        # Save output time
-        time = builder.fadd(previous_time, param_vals[TIME_STEP_SIZE])
-        builder.store(time, out_time_ptr)
-
         # Save context
         result = builder.load(out)
         builder.store(result, previous)
         return builder
 
 
-    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, param_vals, previous_v_ptr, previous_w_ptr, previous_time):
+    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
         var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
 
         previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
         previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+        previous_time = builder.load(builder.gep(previous_time_ptr, [ctx.int32_ty(0), index]))
 
         out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
         out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+        out_time_ptr = builder.gep(out_time, [ctx.int32_ty(0), index])
 
         time_step_size = param_vals[TIME_STEP_SIZE]
+
+        # Save output time
+        time = builder.fadd(previous_time, time_step_size)
+        builder.store(time, out_time_ptr)
 
         # First approximation uses previous_v
         input_v = previous_v
@@ -7967,13 +7965,21 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         builder.store(new_w, out_w_ptr)
 
 
-    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, param_vals, previous_v_ptr, previous_w_ptr, previous_time):
+    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
 
         var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
         previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
         previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+        previous_time = builder.load(builder.gep(previous_time_ptr, [ctx.int32_ty(0), index]))
         out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
         out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+        out_time_ptr = builder.gep(out_time, [ctx.int32_ty(0), index])
+
+        time_step_size = param_vals[TIME_STEP_SIZE]
+
+        # Save output time
+        time = builder.fadd(previous_time, time_step_size)
+        builder.store(time, out_time_ptr)
 
         # First approximation uses previous_v
         slope_v_approx = self.__gen_llvm_dv_dt(builder, ctx, var, previous_v, previous_w, param_vals)
@@ -7982,11 +7988,11 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         slope_w_approx = self.__gen_llvm_dw_dt(builder, ctx, previous_w, previous_v, param_vals)
 
         # new_v = previous_value_v + time_step_size*slope_v_approx
-        new_v = builder.fmul(param_vals[TIME_STEP_SIZE], slope_v_approx)
+        new_v = builder.fmul(time_step_size, slope_v_approx)
         new_v = builder.fadd(previous_v, new_v)
         builder.store(new_v, out_v_ptr)
         # new_w = previous_value_w + time_step_size*slope_w_approx
-        new_w = builder.fmul(param_vals[TIME_STEP_SIZE], slope_w_approx)
+        new_w = builder.fmul(time_step_size, slope_w_approx)
         new_w = builder.fadd(previous_w, new_w)
         builder.store(new_w, out_w_ptr)
 
