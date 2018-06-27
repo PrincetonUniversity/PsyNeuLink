@@ -15,16 +15,20 @@ matrix = np.random.rand(DIM_X, DIM_X)
 vector = np.random.rand(DIM_X)
 llvm_res = np.random.rand(DIM_X)
 
-ct_vec = vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-ct_mat = matrix.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 x, y = matrix.shape
 
 @pytest.mark.llvm
 def test_fixed_dimensions__pnl_builtin_vxm():
     # The original builtin mxv function
     binf = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
+    ct_in_ty, ct_mat_ty, _, _, ct_res_ty = binf.byref_arg_types
+
+    ct_vec = vector.ctypes.data_as(ctypes.POINTER(ct_in_ty))
+    ct_mat = matrix.ctypes.data_as(ctypes.POINTER(ct_mat_ty))
+
+
     orig_res = copy.deepcopy(llvm_res)
-    ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
 
     binf.c_func(ct_vec, ct_mat, x, y, ct_res)
     custom_name = None
@@ -48,7 +52,7 @@ def test_fixed_dimensions__pnl_builtin_vxm():
 
     binf2 = pnlvm.LLVMBinaryFunction.get(custom_name)
     new_res = copy.deepcopy(llvm_res)
-    ct_res = new_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ct_res = new_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
 
     binf2(ct_vec, ct_mat, ct_res)
 
