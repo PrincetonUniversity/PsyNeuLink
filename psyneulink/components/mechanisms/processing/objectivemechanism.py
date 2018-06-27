@@ -647,7 +647,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     def _name_input_states(self, input_states):
         # If InputStates are not already named, name them based on the OutputStates that project to them
-        from psyneulink.components.states.inputstate import InputState
+        from psyneulink.components.states.inputstate import InputState, INPUT_STATE
+        from psyneulink.globals.registry import remove_instance_from_registry, register_instance
         if not input_states:
             return
         for state in input_states:
@@ -659,8 +660,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if not (state.name is InputState.__name__ or InputState.__name__ + '-' in state.name):
                 return
             proj = state.path_afferents[0]
-            # FIX: DELETE OLD NAME FROM REGISTRY
+            # FIX: RENAME IN REGISTRY RATHER THAN DELETE AND REASSIGN [DOCUMENT REGISTRY METHODS]
+            remove_instance_from_registry(registry=self._stateRegistry,
+                                          category=INPUT_STATE,
+                                          component=state)
             state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
+            register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
+            assert True
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
