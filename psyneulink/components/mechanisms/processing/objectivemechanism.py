@@ -8,7 +8,6 @@
 
 # *********************************************  ObjectiveMechanism ****************************************************
 
-# FIX: RE-WRITE DOCS TO INDICATE THAT monitored_output_states IS AN ALIAS TO input_states ARGUMENT/ATTRIBUTE
 """
 
 Overview
@@ -36,6 +35,14 @@ as described below.
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+FOR DEVELOPERS:
+    The monitored_output_states argument is in effect and alias to the input_states argument
+    of the constructor for a Mechanism;  it is simply assigned to input_state in the __init__ method
+    and the specifications are handled by an override of the Mechanism's _instantiate_input_states method.
+    The monitored_output_states property returns the OutputStates that project to the Mechanism's InputStates
+COMMENT
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
@@ -626,13 +633,40 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Use self.input_states (containing specs from **input_states** arg of constructor) or
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
-            return super()._instantiate_input_states(input_states=input_states, context=context)
+            # return super()._instantiate_input_states(input_states=input_states, context=context)
+            input_states = super()._instantiate_input_states(input_states=input_states, context=context)
 
-        # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
-        #     (note: these will replace any existing ones, including a default one created on initialization)
-        return super()._instantiate_input_states(input_states=monitored_output_states_specs,
-                                                 reference_value=reference_value,
-                                                 context=context)
+        else:
+            # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
+            #     (note: these will replace any existing ones, including the default one created on initialization)
+            input_states = super()._instantiate_input_states(input_states=monitored_output_states_specs,
+                                                             reference_value=reference_value,
+                                                             context=context)
+        self._name_input_states(input_states)
+        return input_states
+
+    def _name_input_states(self, input_states):
+        # If InputStates are not already named, name them based on the OutputStates that project to them
+        from psyneulink.components.states.inputstate import InputState, INPUT_STATE
+        from psyneulink.globals.registry import remove_instance_from_registry, register_instance
+        if not input_states:
+            return
+        for state in input_states:
+            if not state.path_afferents:
+                continue
+            if len(state.path_afferents) > 1:
+                assert False
+            # If the name is not a default name, return
+            if not (state.name is InputState.__name__ or InputState.__name__ + '-' in state.name):
+                return
+            proj = state.path_afferents[0]
+            # FIX: RENAME IN REGISTRY RATHER THAN DELETE AND REASSIGN [DOCUMENT REGISTRY METHODS]
+            remove_instance_from_registry(registry=self._stateRegistry,
+                                          category=INPUT_STATE,
+                                          component=state)
+            state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
+            register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
+            assert True
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.

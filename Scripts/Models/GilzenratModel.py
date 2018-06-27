@@ -152,7 +152,9 @@ LC = pnl.LCControlMechanism(
         name='LC'
 )
 
-task = pnl.System(processes=[decision_process],
+LC_process = pnl.Process(pathway=[LC])
+
+task = pnl.System(processes=[decision_process, LC_process],
                   reinitialize_mechanisms_when=pnl.Never())
 
 # This displays a diagram of the System

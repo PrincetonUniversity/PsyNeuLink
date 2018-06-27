@@ -93,17 +93,15 @@ Class Reference
 """
 
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 from uuid import UUID
 
 import typecheck as tc
 
-from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
-
-from psyneulink.globals.keywords import \
-    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
-# from psyneulink.composition import Composition
+from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
+from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
 
 
 __all__ = [
@@ -359,6 +357,8 @@ class Context():
     """
 
     __name__ = 'Context'
+    _deepcopy_shared_keys = {'owner'}
+
     def __init__(self,
                  owner=None,
                  composition=None,
@@ -396,6 +396,8 @@ class Context():
         self.execution_time = None
         self.string = string
 
+    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+
     @property
     def composition(self):
         try:
@@ -407,7 +409,7 @@ class Context():
     def composition(self, composition):
         # from psyneulink.composition import Composition
         # if isinstance(composition, Composition):
-        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
+        if composition is None or composition.__class__.__name__ in {'Composition', 'SystemComposition', 'PathwayComposition', 'System', 'Process'}:
             self._composition = composition
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
@@ -513,6 +515,12 @@ class Context():
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
+
+    def add_to_string(self, string):
+        if self.string is None:
+            self.string = string
+        else:
+            self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
 
 
 @tc.typecheck

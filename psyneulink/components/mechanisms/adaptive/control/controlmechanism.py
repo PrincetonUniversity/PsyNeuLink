@@ -988,6 +988,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self.system:
             self.system._validate_monitored_states_in_system(output_states, context=context)
 
+    def _add_process(self, process, role:str):
+        super()._add_process(process, role)
+        self.objective_mechanism._add_process(process, role)
+
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
