@@ -1,3 +1,4 @@
+import itertools as it
 import numpy as np
 import pytest
 
@@ -366,6 +367,27 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="ControlMechanism")
+    @pytest.mark.parametrize("mode, var", it.product(['Python', 'LLVM'], ['scalar']))
+    def test_FHN_simple(self, benchmark, mode, var):
+        var =  [1.0] if var == 'scalar' else [1.0, 3.0]
+        I = IntegratorMechanism(name="I",
+                default_variable=[var],
+                function=FHNIntegrator())
+
+        res = I.execute([var], bin_execute=(mode=='LLVM'))
+        if len(var) == 1:
+            #LLVM version returns output of all mechanisms (1)
+            # so check that part
+            assert np.allclose(res[0], [0.05127053])
+        else:
+            assert np.allclose(res[0], [0.05127053, 0.15379818])
+
+        benchmark(I.execute, var, bin_execute=(mode=='LLVM'))
+
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
