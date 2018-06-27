@@ -35,7 +35,7 @@ def test_fixed_dimensions__pnl_builtin_vxm():
 
     with pnlvm.LLVMBuilderContext() as ctx:
         custom_name = ctx.module.get_unique_name("vxsqm")
-        double_ptr_ty = ctx.float_ty.as_pointer()
+        double_ptr_ty = pnlvm._convert_python_struct_to_llvm_ir(ctx, 1.0).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
@@ -52,7 +52,8 @@ def test_fixed_dimensions__pnl_builtin_vxm():
 
     binf2 = pnlvm.LLVMBinaryFunction.get(custom_name)
     new_res = copy.deepcopy(llvm_res)
-    ct_res = new_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
+    ct_res_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+    ct_res = new_res.ctypes.data_as(ct_res_ty)
 
     binf2(ct_vec, ct_mat, ct_res)
 
