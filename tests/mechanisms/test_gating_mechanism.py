@@ -6,7 +6,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
+from psyneulink.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 
@@ -72,6 +72,7 @@ def test_gating():
             VALUE: Middle_Weights_matrix,
             FUNCTION: ConstantIntegrator,
             FUNCTION_PARAMS: {
+                DEFAULT_VARIABLE: Middle_Weights_matrix,
                 INITIALIZER: Middle_Weights_matrix,
                 RATE: Middle_Weights_matrix
             },

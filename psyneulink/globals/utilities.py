@@ -1281,3 +1281,8 @@ def prune_unused_args(func, args=None, kwargs=None):
         kwargs = {}
 
     return args, kwargs
+
+
+def call_with_pruned_args(func, *args, **kwargs):
+    args, kwargs = prune_unused_args(func, args, kwargs)
+    return func(*args, **kwargs)
