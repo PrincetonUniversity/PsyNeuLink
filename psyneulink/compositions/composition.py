@@ -46,12 +46,12 @@ Class Reference
 
 """
 
+import collections
+import enum
 import logging
-import uuid
-from collections import Iterable, OrderedDict
-from enum import Enum
-
 import numpy as np
+import uuid
+
 import ctypes
 import psyneulink.llvm as pnlvm
 from llvmlite import ir
@@ -59,17 +59,13 @@ from llvmlite import ir
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-
-from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import EXECUTING
-from psyneulink.globals.context import ContextFlags
-from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.globals.keywords import HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
+from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.context import ContextFlags, ContextStatus
 
 __all__ = [
     'Composition', 'CompositionError', 'MechanismRole',
@@ -78,7 +74,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class MechanismRole(Enum):
+class MechanismRole(enum.Enum):
     """
 
     - ORIGIN
@@ -230,7 +226,7 @@ class Graph(object):
     '''
 
     def __init__(self):
-        self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
+        self.comp_to_vertex = collections.OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
@@ -373,7 +369,7 @@ class Composition(object):
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
         # helper attributes
-        self.mechanisms_to_roles = OrderedDict()
+        self.mechanisms_to_roles = collections.OrderedDict()
 
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
@@ -783,7 +779,7 @@ class Composition(object):
                 except TypeError:
                     raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
                                     "Likely missing set of brackets.".format(mech.name, i))
-                if not isinstance(timestep[0], Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
+                if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
                     # If not, embellish the formatting to match the verbose case
                     timestep = [timestep]
                 # Then, check that each input_state is receiving the right size of input

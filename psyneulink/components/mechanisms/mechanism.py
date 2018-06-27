@@ -1391,6 +1391,9 @@ class Mechanism_Base(Mechanism):
 
         self._execution_id = None
         self._is_finished = False
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
+        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
+
         # Register with MechanismRegistry or create one
         if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
@@ -1460,8 +1463,6 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        self.systems = {}
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -3156,6 +3157,14 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
                                  format(Mechanism.__name__, process, Process.__name__))
         self.processes.__additem__(process, role)
+
+    @tc.typecheck
+    def _add_system(self, system, role:str):
+        from psyneulink.components.system import System
+        if not isinstance(system, System):
+            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
+                                 format(Mechanism.__name__, system, System.__name__))
+        self.systems.__additem__(system, role)
 
     @property
     def is_finished(self):

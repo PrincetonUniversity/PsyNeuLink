@@ -304,7 +304,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Function, TransferFunction, AdaptiveIntegrator, Linear, NormalizingFunction, DistributionFunction, UserDefinedFunction
+from psyneulink.components.functions.function import AdaptiveIntegrator, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, UserDefinedFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -941,17 +941,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _clip_result(self, clip, current_input, runtime_params, context):
-
-        outputs = super(Mechanism, self)._execute(variable=current_input,
-                                                  runtime_params=runtime_params,
-                                                  context=context)
+    def _clip_result(self, clip, current_input):
         if clip is not None:
-            minCapIndices = np.where(outputs < clip[0])
-            maxCapIndices = np.where(outputs > clip[1])
-            outputs[minCapIndices] = np.min(clip)
-            outputs[maxCapIndices] = np.max(clip)
-        return outputs
+            minCapIndices = np.where(current_input < clip[0])
+            maxCapIndices = np.where(current_input > clip[1])
+            current_input[minCapIndices] = np.min(clip)
+            current_input[maxCapIndices] = np.max(clip)
+        return current_input
 
     def get_param_struct_type(self):
         input_param_list = []
@@ -1255,11 +1251,21 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = self._clip_result(clip, elem, runtime_params, context)
+                output_item = super(Mechanism, self)._execute(
+                    variable=elem,
+                    runtime_params=runtime_params,
+                    context=context
+                )
+                output_item = self._clip_result(clip, output_item)
                 outputs.append(output_item)
 
         else:
-            outputs = self._clip_result(clip, current_input, runtime_params, context)
+            outputs = super(Mechanism, self)._execute(
+                variable=current_input,
+                runtime_params=runtime_params,
+                context=context
+            )
+            outputs = self._clip_result(clip, outputs)
 
         # # TEST PRINT:
         # print('OUTPUT: ', outputs)

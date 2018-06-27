@@ -93,18 +93,15 @@ Class Reference
 """
 
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 from uuid import UUID
 
 import typecheck as tc
 
-from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
-
-from psyneulink.globals.keywords import \
-    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
+from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
-# from psyneulink.composition import Composition
 
 
 __all__ = [
@@ -412,7 +409,7 @@ class Context():
     def composition(self, composition):
         # from psyneulink.composition import Composition
         # if isinstance(composition, Composition):
-        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
+        if composition is None or composition.__class__.__name__ in {'Composition', 'SystemComposition', 'PathwayComposition', 'System', 'Process'}:
             self._composition = composition
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
@@ -518,6 +515,12 @@ class Context():
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
+
+    def add_to_string(self, string):
+        if self.string is None:
+            self.string = string
+        else:
+            self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
 
 
 @tc.typecheck
