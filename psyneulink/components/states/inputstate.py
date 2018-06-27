@@ -1038,7 +1038,7 @@ class InputState(State_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = projection_spec.state.value.ndim
+                            sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
@@ -1075,7 +1075,7 @@ class InputState(State_Base):
                                 continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
-                            sender_shape = projection_spec.state.value.shape
+                            sender_shape = np.array(projection_spec.state.value).shape
                             variable_item = np.zeros(sender_shape)
                             # If variable_item HASN'T been specified, or it is same shape as any previous ones,
                             #     use sender's value
