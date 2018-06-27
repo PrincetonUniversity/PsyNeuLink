@@ -1494,8 +1494,28 @@ class Composition(object):
         for node, stim_list in stimuli.items():
             if isinstance(node, Composition):
                 input_must_match = node.input_values
+                if isinstance(stim_list, dict):
+                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stim_list)
+                    adjusted_stimuli_list = []
+
+                    for state in node.input_states:
+                        # TBI: Look up the input value in adjusted_stimulus_dict which corresponds to this state
+
+                        # node.input_CIM_states is actually the inverse of what need in this case...
+
+                        # corresponding_origin_input_state = node.input_CIM_states[state][0]
+                        # origin_mechanism = corresponding_origin_input_state.owner
+                        # index = corresponding_origin_input_state.owner.input_states.\
+                        #     index(corresponding_origin_input_state)
+                        # state_input = adjusted_stimulus_dict[origin_mechanism][index]
+
+                        state_input = "placeholder for input value"
+
+                        adjusted_stimuli_list.append(state_input)
+
             else:
                 input_must_match = node.instance_defaults.variable
+
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
@@ -1550,6 +1570,10 @@ class Composition(object):
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
                 input_must_match = node.input_values
+                if isinstance(stimulus, dict):
+                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
+                    adjusted_stimuli[node] = adjusted_stimulus_dict
+                    continue
             else:
                 input_must_match = node.instance_defaults.variable
 

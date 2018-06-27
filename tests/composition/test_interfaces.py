@@ -252,3 +252,75 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(inner_composition_2.output_values, [[180.], [1800.]])
         assert np.allclose(outer_composition.output_values, [[180.], [1800.]])
 
+    def test_compositions_as_origin_nodes(self):
+
+        inner_composition_1 = Composition(name="inner_composition_1")
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              function=Linear(slope=0.5))
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              function=Linear(slope=2.0))
+
+        C = TransferMechanism(name="composition-pytests-C",
+                              function=Linear(slope=3.0))
+
+        inner_composition_1.add_c_node(A)
+        inner_composition_1.add_c_node(B)
+        inner_composition_1.add_c_node(C)
+
+        inner_composition_1.add_projection(A, MappingProjection(), C)
+        inner_composition_1.add_projection(B, MappingProjection(), C)
+
+        inner_composition_1._analyze_graph()
+
+        inner_composition_2 = Composition(name="inner_composition_2")
+
+        A2 = TransferMechanism(name="composition-pytests-A2",
+                               function=Linear(slope=0.25))
+
+        B2 = TransferMechanism(name="composition-pytests-B2",
+                               function=Linear(slope=1.0))
+
+        inner_composition_2.add_c_node(A2)
+        inner_composition_2.add_c_node(B2)
+
+        inner_composition_2.add_projection(A2, MappingProjection(), B2)
+
+        inner_composition_2._analyze_graph()
+
+        mechanism_d = TransferMechanism(name="composition-pytests-D",
+                                        function=Linear(slope=3.0))
+
+        outer_composition = Composition(name="outer_composition")
+
+        outer_composition.add_c_node(inner_composition_1)
+        outer_composition.add_c_node(inner_composition_2)
+        outer_composition.add_c_node(mechanism_d)
+
+        outer_composition.add_projection(sender=inner_composition_1,
+                                         projection=MappingProjection(),
+                                         receiver=mechanism_d)
+        outer_composition.add_projection(sender=inner_composition_2,
+                                         projection=MappingProjection(),
+                                         receiver=mechanism_d)
+
+        sched = Scheduler(composition=outer_composition)
+        outer_composition._analyze_graph()
+        print(inner_composition_1.input_states)
+        output = outer_composition.run(
+            inputs={inner_composition_1: {A: [2.0],
+                                          B: [1.0]},
+                    inner_composition_2: [[12.0]]},
+            scheduler_processing=sched
+        )
+
+        assert np.allclose(A.output_values, [[1.0]])
+        assert np.allclose(B.output_values, [[2.0]])
+        assert np.allclose(C.output_values, [[9.0]])
+        assert np.allclose(A2.output_values, [[3.0]])
+        assert np.allclose(B2.output_values, [[3.0]])
+        assert np.allclose(inner_composition_1.output_values, [[9.0]])
+        assert np.allclose(inner_composition_2.output_values, [[3.0]])
+        assert np.allclose(mechanism_d.output_values, [[36.0]])
+        assert np.allclose(outer_composition.output_values, [[36.0]])
