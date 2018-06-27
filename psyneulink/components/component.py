@@ -2745,7 +2745,8 @@ class Component(object):
         # fct_context_attrib.execution_phase = curr_context
         fct_context_attrib.flags = curr_context
 
-        # CALL function
+        # CALL FUNCTION
+
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)

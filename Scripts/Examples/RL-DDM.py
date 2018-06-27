@@ -125,7 +125,7 @@ def reward():
 input_list = {input_layer: [[1, 1],[1, 1]]}
 
 # # Shows graph of system (learning components are in orange)
-s.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
+# s.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
 # s.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
 # s.show_graph(show_mechanism_structure=True)
 
