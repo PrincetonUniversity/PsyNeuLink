@@ -586,7 +586,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 # control_signals=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
