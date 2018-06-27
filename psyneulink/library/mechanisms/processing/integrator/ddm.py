@@ -410,7 +410,7 @@ class DDM_OUTPUT():
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
         `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
@@ -423,7 +423,7 @@ class DDM_OUTPUT():
 
     *SELECTED_INPUT_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
         outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
