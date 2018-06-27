@@ -118,43 +118,52 @@ def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
     assert 250 == output[0][0]
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Control composition scalar")
 @pytest.mark.parametrize("mode", ['Python'])
 def test_3_mechanisms_2_origins_1_control_1_terminal(benchmark, mode):
-    # A-|
-    #   C --
-    #              ==> E
-    # D --
-
-    # 5 x 4 = 20 --
-    #                20 + 25 = 45  ==> 45 * 5 = 225
-    # 5 x 5 = 25 --
+    #
+    #   B--A
+    #  /    \
+    # C------D
+    #  \     |
+    #   -----+-> E
+    #
+    # C: 4 x 5 = 20
+    # B: 20 x 1 = 20
+    # A: f(20)[0] = 0.50838675
+    # D: 20 x 5 x 0.50838675 = 50.83865743
+    # E: (20 + 50.83865743) x 5 = 354.19328716
 
     comp = Composition()
     C = TransferMechanism(name="C", function=Linear(slope=5.0))
-    D = TransferMechanism(name="D", default_variable=[0.0], function=Linear(slope=5.0))
-    A = LCControlMechanism(modulated_mechanisms=D,
-                           objective_mechanism=ObjectiveMechanism(
-                                                function=Linear,
-                                                monitored_output_states=[C],
-                                                name='LC ObjectiveMechanism'))
+    D = TransferMechanism(name="D", function=Linear(slope=5.0))
+    B = ObjectiveMechanism(function=Linear,
+                           #monitored_output_states=[C], #setup later
+                           name='LC ObjectiveMechanism')
+    A = LCControlMechanism()
+#                           modulated_mechanisms=D,
+#                           objective_mechanism=B # setup later
     E = TransferMechanism(name="E", function=Linear(slope=5.0))
     comp.add_mechanism(A)
+    comp.add_mechanism(B)
     comp.add_mechanism(C)
     comp.add_mechanism(D)
     comp.add_mechanism(E)
+
     comp.add_projection(A, ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), D)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=B), B)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
     comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
     comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-    comp.add_projection(C, MappingProjection(sender=C, receiver=A), A)
+    comp.add_projection(B, MappingProjection(sender=B, receiver=A), A)
     comp._analyze_graph()
-    inputs_dict = {C: [4.0]}#,
-#                   D: [5.0]}
+
+    inputs_dict = {C: [4.0]}
     sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
-    assert 100 == output[0][0]
+    output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert np.allclose(output, 354.19328716)
+    benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
 
 @pytest.mark.composition
