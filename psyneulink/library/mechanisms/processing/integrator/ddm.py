@@ -410,7 +410,7 @@ class DDM_OUTPUT():
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
         `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
@@ -423,7 +423,7 @@ class DDM_OUTPUT():
 
     *SELECTED_INPUT_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
         outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
@@ -773,7 +773,12 @@ class DDM(ProcessingMechanism_Base):
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_states[THRESHOLD]
                            #    v[2]=self.input_states[0].variable
-                 FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
+                 # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
+                 # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][0][1])]}
+                 FUNCTION: lambda v: [float(np.atleast_2d(v[2])[0][0]), 0] \
+                                      if (v[1]-v[0]) < (v[1]+v[0]) \
+                                      else [0,float(np.atleast_2d(v[2])[0][1])]
+                 }
             ])
 
         else:
