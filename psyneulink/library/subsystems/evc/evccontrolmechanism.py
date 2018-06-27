@@ -943,6 +943,7 @@ class EVCControlMechanism(ControlMechanism):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def _instantiate_attributes_after_function(self, context=None):
+        '''Validate cost function'''
 
         super()._instantiate_attributes_after_function(context=context)
 

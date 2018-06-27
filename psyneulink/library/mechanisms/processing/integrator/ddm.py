@@ -775,7 +775,10 @@ class DDM(ProcessingMechanism_Base):
                            #    v[2]=self.input_states[0].variable
                  # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
                  # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][0][1])]}
-                 FUNCTION: lambda v: [float(v[2][0][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][0][1])]}
+                 FUNCTION: lambda v: [float(np.atleast_2d(v[2])[0][0]), 0] \
+                                      if (v[1]-v[0]) < (v[1]+v[0]) \
+                                      else [0,float(np.atleast_2d(v[2])[0][1])]
+                 }
             ])
 
         else:

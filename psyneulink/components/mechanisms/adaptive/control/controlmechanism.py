@@ -593,9 +593,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        self.control_signals_arg = control_signals or []
-        if not isinstance(self.control_signals_arg, list):
-            self.control_signals_arg = [self.control_signals_arg]
+        # self.control_signals_arg = control_signals or []
+        # if not isinstance(self.control_signals_arg, list):
+        #     self.control_signals_arg = [self.control_signals_arg]
+        control_signals_arg = control_signals or []
+        if not isinstance(control_signals, list):
+            control_signals = [control_signals]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -863,7 +866,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_control_signal(self, control_signal, context=None):
         from psyneulink.components.states.state import _instantiate_state
-        # Parses control_signal specifications (in call to State._parse_state_spec)
+        # Parses and instantiates control_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
