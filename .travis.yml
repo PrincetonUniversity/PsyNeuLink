@@ -56,4 +56,4 @@ before_install: |
   fi
 
 script:
-  - python -m pytest -p no:logging tests/
+  - python -m pytest -p no:logging --cov=psyneulink tests/
