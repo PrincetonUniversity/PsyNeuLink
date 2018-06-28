@@ -102,19 +102,19 @@ class TestLCControlMechanism:
 
 
     def test_control_modulation(self):
-        T1 = pnl.TransferMechanism(name='T1')
-        T2 = pnl.TransferMechanism(name='T2')
-        T3 = pnl.TransferMechanism(name='T3')
+        Tx = pnl.TransferMechanism(name='Tx')
+        Ty = pnl.TransferMechanism(name='Ty')
+        Tz = pnl.TransferMechanism(name='Tz')
         C =  pnl.ControlMechanism(
                 # function=pnl.Linear,
                 default_variable=[1],
-                monitor_for_control=T2,
+                monitor_for_control=Ty,
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
-                                                  projections=(pnl.SLOPE,T3)))
-        P1=pnl.Process(pathway=[T1,T3])
-        P2=pnl.Process(pathway=[T2, C])
+                                                  projections=(pnl.SLOPE,Tz)))
+        P1=pnl.Process(pathway=[Tx,Tz])
+        P2=pnl.Process(pathway=[Ty, C])
         S=pnl.System(processes=[P1, P2])
 
-        assert T3.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
-        result = S.run(inputs={T1:[1,1], T2:[4,4]})
+        assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert result == [[[4.], [4.]], [[4.], [4.]]]

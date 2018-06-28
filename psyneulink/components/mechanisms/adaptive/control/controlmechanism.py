@@ -592,7 +592,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        control_signals_arg = control_signals or []
+        control_signals = control_signals or []
         if not isinstance(control_signals, list):
             control_signals = [control_signals]
 
