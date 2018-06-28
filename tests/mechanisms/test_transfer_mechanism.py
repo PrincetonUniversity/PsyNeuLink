@@ -393,8 +393,7 @@ class TestTransferMechanismFunctions:
     
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    @pytest.mark.benchmark(group="TransferMechanism ReLU")
-    def test_transfer_mech_relu_fun(self, benchmark):
+    def test_transfer_mech_relu_fun(self):
 
         T = TransferMechanism(
             name='T',
