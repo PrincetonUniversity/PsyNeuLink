@@ -186,7 +186,7 @@ class TestOutputStates:
             name='DDM'
         )
         action_selection.execute([1.0])
-        
+
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # function = Bogacz
