@@ -185,8 +185,8 @@ class TestOutputStates:
             output_states=[SELECTED_INPUT_ARRAY],
             name='DDM'
         )
-
-        print(action_selection.execute([1.0]))
+        action_selection.execute([1.0])
+        
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # function = Bogacz

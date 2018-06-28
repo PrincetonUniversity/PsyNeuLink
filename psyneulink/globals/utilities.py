@@ -672,7 +672,36 @@ def convert_to_np_array(value, dimension):
         return None
 
     if dimension is 1:
-        value = np.atleast_1d(value)
+        # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
+        # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
+        # Which is due to a custom output state variable that includes an owner value, owner param, and owner input
+        # state variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
+        # if isinstance(value, list):
+        #     homogeneous = True
+        #
+        #     if is_iterable(value[0]):
+        #         first_length = len(value[0])
+        #     else:
+        #         first_length = -1
+        #
+        #     for value_item in value:
+        #         if is_iterable(value_item):
+        #             length = len(value)
+        #         else:
+        #             length = -1
+        #         if length != first_length:
+        #             homogeneous = False
+        #     if not homogeneous:
+        #         return value
+        # Better solution below -- use ValueError exception
+
+        try:
+            value = np.atleast_1d(value)
+        # KAM 6/28/18: FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array.
+        # but in this case (as far as I know) we cannot convert to np
+        except ValueError:
+            return value
+
     elif dimension is 2:
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
