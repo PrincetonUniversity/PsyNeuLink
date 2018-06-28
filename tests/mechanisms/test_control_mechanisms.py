@@ -99,3 +99,22 @@ class TestLCControlMechanism:
         assert len(LC.control_signals[0].efferents)==2
         assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
         assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+
+
+    def test_control_modulation(self):
+        T1 = pnl.TransferMechanism(name='T1')
+        T2 = pnl.TransferMechanism(name='T2')
+        T3 = pnl.TransferMechanism(name='T3')
+        C =  pnl.ControlMechanism(
+                # function=pnl.Linear,
+                default_variable=[1],
+                monitor_for_control=T2,
+                control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
+                                                  projections=(pnl.SLOPE,T3)))
+        P1=pnl.Process(pathway=[T1,T3])
+        P2=pnl.Process(pathway=[T2, C])
+        S=pnl.System(processes=[P1, P2])
+
+        assert T3.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        result = S.run(inputs={T1:[1,1], T2:[4,4]})
+        assert result == [[[4.], [4.]], [[4.], [4.]]]
