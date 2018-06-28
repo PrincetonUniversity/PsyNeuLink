@@ -226,7 +226,7 @@ from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, 
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -318,9 +318,22 @@ class MultiplicativeParam():
 
 class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
+    name = 'ADDITIVE'
     init_val = 0
     reduce = lambda x : np.sum(np.array(x), axis=0)
+
+# class OverrideParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'OVERRIDE'
+#     init_val = None
+#     reduce = lambda x : None
+#
+# class DisableParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'DISABLE'
+#     init_val = None
+#     reduce = lambda x : None
+
 
 # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
@@ -366,11 +379,13 @@ class ModulationParam():
     #                                 lambda x : np.product(np.array(x), axis=0))
     ADDITIVE = AdditiveParam
     # ADDITIVE = ModulationType(ADDITIVE_PARAM,
-    #                           'ADDITIVE_PARAM',
+    #                           'ADDITIVE',
     #                           0,
     #                           lambda x : np.sum(np.array(x), axis=0))
     OVERRIDE = OVERRIDE_PARAM
+    # OVERRIDE = OverrideParam
     DISABLE = DISABLE_PARAM
+    # DISABLE = DisableParam
 
 MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
 ADDITIVE = ModulationParam.ADDITIVE
@@ -399,15 +414,38 @@ def _get_modulated_param(owner, mod_proj):
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
-    # Get the actual parameter of owner.function_object to be modulated
-    function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
-
-    # Get the function parameter's value
-    function_param_value = owner.function_object.params[function_param_name]
-    # MODIFIED 6/9/17 OLD:
-    # if function_param_value is None:
-    #     function_param_value = function_mod_meta_param_obj.init_val
-    # MODIFIED 6/9/17 END
+    # # MODIFIED 6/27/18 OLD
+    # # Get the actual parameter of owner.function_object to be modulated
+    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+    # # Get the function parameter's value
+    # function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEW:
+    if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
+        # function_param_name = function_mod_meta_param_obj
+        from psyneulink.globals.utilities import Modulation
+        function_mod_meta_param_obj = getattr(Modulation,function_mod_meta_param_obj)
+        function_param_name = function_mod_meta_param_obj
+        function_param_value = mod_proj.sender.value
+    else:
+        # Get the actual parameter of owner.function_object to be modulated
+        function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+        # Get the function parameter's value
+        function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEWER:
+    # from psyneulink.globals.utilities import Modulation
+    # mod_spec = function_mod_meta_param_obj.attrib_name
+    # if mod_spec == OVERRIDE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = mod_proj.sender.value
+    # elif mod_spec == DISABLE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = None
+    # else:
+    #     # Get name of the actual parameter of owner.function_object to be modulated
+    #     function_param_name = owner.function_object.params[mod_spec]
+    #     # Get the function parameter's value
+    #     function_param_value = owner.function_object.params[mod_spec]
+    # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
     return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
@@ -1451,7 +1489,7 @@ class UserDefinedFunction(Function_Base):
 
         try:
             # Try calling with full list of args (including context and params)
-            return self.custom_function(**kwargs)
+            return call_with_pruned_args(self.custom_function, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
             return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
@@ -4770,8 +4808,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             else:
                 initializer = self.ClassDefaults.variable
 
-        # Assign here as default, for use in initialization of function
-        # self.previous_value = initializer
         self._initialize_previous_value(initializer)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -4902,9 +4938,27 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                         )
 
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        # use np.broadcast_to to guarantee that all initializer type attributes take on the same
+        # shape as variable
+        if not np.isscalar(self.instance_defaults.variable):
+            for attr in self.initializers:
+                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.instance_defaults.variable.shape).copy())
+
+        # create all stateful attributes and initialize their values to the current values of their
+        # corresponding initializer attributes
+        for i in range(len(self.stateful_attributes)):
+            attr_name = self.stateful_attributes[i]
+            initializer_value = getattr(self, self.initializers[i]).copy()
+            setattr(self, attr_name, initializer_value)
+
+        self.auto_dependent = True
+
+        super()._instantiate_attributes_before_function(function=function, context=context)
+
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
-
     def _validate_noise(self, noise):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
@@ -5630,11 +5684,17 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
+                 default_variable=[],
+                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
+                 # was failing.
+                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
+                 # default_variable=None,   # Changed to [] because None conflicts with initializer
                  # rate: parameter_spec=1.0,
                  # noise=0.0,
-                 rate:tc.optional(tc.any(int, float))=None,
-                 noise:tc.optional(tc.any(int, float, callable))=None,
+                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 rate:tc.optional(tc.any(int, float))=1.0,
+                 noise:tc.optional(tc.any(int, float, callable))=0.0,
                  history:tc.optional(int)=None,
                  initializer=[],
                  params: tc.optional(dict)=None,
@@ -5661,6 +5721,48 @@ class Buffer(Integrator):  # ---------------------------------------------------
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
         self.previous_value = deque(initializer, maxlen=self.history)
+        return self.previous_value
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        self.auto_dependent = True
+
+    def reinitialize(self, *args):
+        """
+
+        Clears the `previous_value <Buffer.previous_value>` deque.
+
+        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
+        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+
+        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+
+        """
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            reinitialization_value = self.get_current_function_param("initializer")
+
+        elif len(args) == 1:
+            reinitialization_value = args[0]
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
+                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "without any arguments, in which case the current initializer value, will be used to "
+                                "reinitialize previous_value".format(args,
+                                                                     self.name))
+
+        if reinitialization_value is None or reinitialization_value == []:
+            self.previous_value.clear()
+            self.value = deque([], maxlen=self.history)
+
+        else:
+            self.value = self._initialize_previous_value(reinitialization_value)
+
+        return self.value
 
     def function(self,
                  variable=None,
@@ -5702,11 +5804,6 @@ class Buffer(Integrator):  # ---------------------------------------------------
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        # If this NOT an initialization run,
-
-        # Update deque
-        # FIX: Need to recast as deque (since if reinitialize has been called, it returns np.array
-        self.previous_value = deque(self.previous_value, maxlen=self.history)
         self.previous_value.append(variable)
 
         # Apply rate and/or noise if they are specified
@@ -5714,6 +5811,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
             self.previous_value *= rate
         if noise:
             self.previous_value += noise
+
         self.previous_value = deque(self.previous_value, maxlen=self.history)
 
         return self.previous_value
@@ -6187,8 +6285,6 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
-        self.previous_time = t0
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -6196,7 +6292,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-        self.previous_time = self.t0
+
         self.auto_dependent = True
 
     def _validate_noise(self, noise):
@@ -6259,10 +6355,10 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
-            self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
-        # FIX?
-        # Current output format is [[[decision_variable]], time]
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
+
         return self.previous_value, self.previous_time
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
@@ -6492,9 +6588,12 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return [[self.previous_value], [self.previous_time]]
+
+        return self.previous_value, self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6922,20 +7021,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        if default_variable is None:
-            if params is not None and DEFAULT_VARIABLE in params and params[DEFAULT_VARIABLE] is not None:
-                default_variable = params[DEFAULT_VARIABLE]
-            else:
-                default_variable = self.ClassDefaults.variable
-
-        if not np.isscalar(default_variable):
-            initial_v = np.broadcast_to(initial_v, default_variable.shape)
-            initial_w = np.broadcast_to(initial_w, default_variable.shape)
-
-        self.previous_v = initial_v
-        self.previous_w = initial_w
-        self.previous_time = t_0
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
@@ -6962,29 +7047,12 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   params=params,
                                                   )
 
-
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = self.t_0
-
         super().__init__(
             default_variable=default_variable,
             params=params,
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-
-        if not np.isscalar(default_variable):
-            initial_v = np.broadcast_to(initial_v, default_variable.shape)
-            initial_w = np.broadcast_to(initial_w, default_variable.shape)
-
-        self.initial_v = initial_v
-        self.initial_w = initial_w
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = t_0
-        self.auto_dependent = True
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
@@ -7279,7 +7347,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_v, self.previous_w, self.previous_time
 
@@ -9818,7 +9888,7 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = np.where(np.logical_and(v1==0, v2==0), 0, -np.sum(v1*np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1==0, v2==0), 0, v1*np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:

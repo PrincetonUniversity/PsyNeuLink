@@ -277,7 +277,7 @@ COMMENT
 
 ..
 COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
+  FOR DEVELOPERS:
     * **paramClassDefaults**
 
     * **paramInstanceDefaults**
@@ -290,7 +290,7 @@ Component Methods
 ~~~~~~~~~~~~~~~~~
 
 COMMENT:
-   INCLUDE IN DEVELOPERS' MANUAL
+   FOR DEVELOPERS:
 
     There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
     another set that can be called to perform various operations common to all Components.  Each of these is described
@@ -417,7 +417,7 @@ from psyneulink.scheduling.condition import AtTimeStep, Never
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, prune_unused_args
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared_keys, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, prune_unused_args
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -837,7 +837,6 @@ class Component(object):
             raise TypeError('ClassDefaults is not meant to be instantiated')
 
         function = None
-        exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
     class InstanceDefaults(Defaults, _DefaultsAliases):
@@ -877,6 +876,8 @@ class Component(object):
     requiredParamClassDefaultTypes = {}
 
     paramClassDefaults = {}
+
+    exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
@@ -1079,18 +1080,7 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
-    # based off the answer here https://stackoverflow.com/a/15774013/3131666
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            if k in self.deepcopy_shared_keys:
-                res_val = v
-            else:
-                res_val = copy.deepcopy(v, memo)
-            setattr(result, k, res_val)
-        return result
+    __deepcopy__ = get_deepcopy_with_shared_keys(deepcopy_shared_keys)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2627,7 +2617,10 @@ class Component(object):
                             )
                         )
 
-            if function.owner is None:
+            # class default functions should always be copied, otherwise anything this component
+            # does with its function will propagate to anything else that wants to use
+            # the default
+            if function.owner is None and function is not self.ClassDefaults.function:
                 self.function_object = function
             else:
                 self.function_object = copy.deepcopy(function)
@@ -2755,7 +2748,8 @@ class Component(object):
         # fct_context_attrib.execution_phase = curr_context
         fct_context_attrib.flags = curr_context
 
-        # CALL function
+        # CALL FUNCTION
+
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)

@@ -61,3 +61,4 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)

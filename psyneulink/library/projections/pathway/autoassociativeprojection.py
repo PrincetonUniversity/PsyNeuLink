@@ -519,11 +519,11 @@ def get_hetero_matrix(raw_hetero, size):
 # similar to get_hetero_matrix() above
 def get_auto_matrix(raw_auto, size):
     if isinstance(raw_auto, numbers.Number):
-        return np.diag(np.full(size, raw_auto))
+        return np.diag(np.full(size, raw_auto, dtype=np.float))
     elif ((isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 1) or
               (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 1)):
         if len(raw_auto) == 1:
-            return np.diag(np.full(size, raw_auto[0]))
+            return np.diag(np.full(size, raw_auto[0], dtype=np.float))
         else:
             if len(raw_auto) != size:
                 return None

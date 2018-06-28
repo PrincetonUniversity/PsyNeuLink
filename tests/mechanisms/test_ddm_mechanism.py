@@ -68,6 +68,7 @@ class TestReinitialize:
 
         # reinitialize only decision variable
         D.function_object.initializer = 1.0
+        D.function_object.t0 = 0.0
         D.reinitialize()
         assert np.allclose(D.function_object.value[0], 1.0)
         assert np.allclose(D.function_object.previous_value, 1.0)

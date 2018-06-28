@@ -383,11 +383,12 @@ from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, FUNCTION_PARAMS,\
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
-    PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, STATEFUL_ATTRIBUTES, SUM
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
@@ -752,13 +753,13 @@ class EVCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 # monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism))=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
-                 control_signals:tc.optional(list) = None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -775,7 +776,7 @@ class EVCControlMechanism(ControlMechanism):
 
         super().__init__(system=system,
                          objective_mechanism=objective_mechanism,
-                         # monitor_for_control=monitor_for_control,
+                         monitor_for_control=monitor_for_control,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
@@ -942,6 +943,7 @@ class EVCControlMechanism(ControlMechanism):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def _instantiate_attributes_after_function(self, context=None):
+        '''Validate cost function'''
 
         super()._instantiate_attributes_after_function(context=context)
 
