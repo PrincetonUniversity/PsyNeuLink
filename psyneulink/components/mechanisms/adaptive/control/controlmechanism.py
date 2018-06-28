@@ -927,10 +927,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Must be overriden by subclass
         """
         # if self.verbosePref:
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            warnings.warn("No function has been specified for {};  default value ({}) was returned".
-                      format(self.name, list(self.instance_defaults.value)))
-        return self.instance_defaults.value
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     warnings.warn("No function has been specified for {};  default value ({}) was returned".
+        #               format(self.name, list(self.instance_defaults.value)))
+        # return self.instance_defaults.value
+        return super()._execute(variable=variable, runtime_params=runtime_params,context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
