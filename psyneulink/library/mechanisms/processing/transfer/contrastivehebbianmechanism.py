@@ -659,6 +659,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(convergence_criterion=convergence_criterion,
+                                                  # output_states=output_states,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
