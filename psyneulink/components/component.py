@@ -255,7 +255,7 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+* **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
   the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
   "manually" or programmatically by assigning an integer value directly to the attribute.
@@ -751,8 +751,8 @@ class Component(object):
     log : Log
         see `log <Component_Log>`
 
-    execution_count : int
-        see `execution_count <Component_Execution_Count>`
+    current_execution_count : int
+        see `current_execution_count <Component_Execution_Count>`
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
@@ -1520,11 +1520,11 @@ class Component(object):
                 pass
 
             # MODIFIED 6/29/18 OLD:
-            # params.update(params_arg)
-            # MODIFIED 6/29/18 NEW JDC:
-            for item in params_arg:
-                if params_arg[item] is not None:
-                    params.update({item: params_arg[item]})
+            params.update(params_arg)
+            # # MODIFIED 6/29/18 NEW JDC:
+            # for item in params_arg:
+            #     if params_arg[item] is not None:
+            #         params.update({item: params_arg[item]})
             # MODIFIED 6/29/18 END
 
         # Save user-accessible params
@@ -2766,25 +2766,25 @@ class Component(object):
         return value
 
     @property
-    def execution_count(self):
+    def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
         Incremented in the Component's execute method by call to self._increment_execution_count"""
         try:
-            return self._execution_count
+            return self._current_execution_count
         except:
-            self._execution_count = 0
-            return self._execution_count
+            self._current_execution_count = 0
+            return self._current_execution_count
 
-    @execution_count.setter
-    def execution_count(self, count:int):
-        self._execution_count = count
+    @current_execution_count.setter
+    def current_execution_count(self, count:int):
+        self._current_execution_count = count
 
     def _increment_execution_count(self, count=1):
         try:
-            self._execution_count +=count
+            self._current_execution_count +=count
         except:
-            self._execution_count = 1
-        return self._execution_count
+            self._current_execution_count = 1
+        return self._current_execution_count
 
     @property
     def current_execution_time(self):

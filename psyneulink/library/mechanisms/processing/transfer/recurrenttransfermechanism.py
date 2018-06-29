@@ -661,7 +661,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   auto=auto,
                                                   hetero=hetero,
                                                   has_recurrent_input_state=has_recurrent_input_state,
-                                                  # output_states=output_states,
+                                                  output_states=output_states,
                                                   params=params,
                                                   )
 
