@@ -625,6 +625,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 input_states:tc.optional(tc.any(list, dict)) = None,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
                  auto=None,
@@ -633,53 +634,51 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  noise=0.0,
                  smoothing_factor: is_numeric_or_none=0.5,
                  clip=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
                  convergence_criterion:float=0.01,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None):
 
         """Instantiate ContrastiveHebbianMechanism"""
 
-        # Default output_states is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None or output_states is RESULT:
-            output_states = [RESULT]
-
-        if isinstance(hetero, (list, np.matrix)):
-            hetero = np.array(hetero)
-
-        self._learning_enabled = enable_learning
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(convergence_criterion=convergence_criterion,
-                                                  params=params)
-
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
+        output_states = [PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY]
+        if additional_output_states:
+            if isinstance(additional_output_states, list):
+                output_states += additional_output_states
+            else:
+                output_states.append(additional_output_states)
+
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(convergence_criterion=convergence_criterion,
+                                                  params=params)
+
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
+                         function=function,
                          matrix=matrix,
                          auto=auto,
-                         function=function,
+                         hetero=hetero,
+                         has_recurrent_input_state=True,
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=True,
                          smoothing_factor=smoothing_factor,
                          clip=clip,
+                         enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          learning_function=learning_function,
                          output_states=output_states,
-                         has_recurrent_input_state=True,
                          params=params,
                          name=name,
                          prefs=prefs)
