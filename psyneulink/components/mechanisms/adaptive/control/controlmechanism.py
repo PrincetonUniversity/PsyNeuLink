@@ -586,16 +586,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 # control_signals=None,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
-        self.control_signals_arg = control_signals or []
-        if not isinstance(self.control_signals_arg, list):
-            self.control_signals_arg = [self.control_signals_arg]
+        control_signals = control_signals or []
+        if not isinstance(control_signals, list):
+            control_signals = [control_signals]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -863,7 +862,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_control_signal(self, control_signal, context=None):
         from psyneulink.components.states.state import _instantiate_state
-        # Parses control_signal specifications (in call to State._parse_state_spec)
+        # Parses and instantiates control_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
@@ -928,10 +927,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Must be overriden by subclass
         """
         # if self.verbosePref:
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            warnings.warn("No function has been specified for {};  default value ({}) was returned".
-                      format(self.name, list(self.instance_defaults.value)))
-        return self.instance_defaults.value
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     warnings.warn("No function has been specified for {};  default value ({}) was returned".
+        #               format(self.name, list(self.instance_defaults.value)))
+        # return self.instance_defaults.value
+        return super()._execute(variable=variable, runtime_params=runtime_params,context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism

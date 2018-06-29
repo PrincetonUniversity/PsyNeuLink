@@ -464,11 +464,7 @@ from psyneulink.components.functions.function import Function, Linear, LinearCom
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import \
-    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
-    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
-    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -702,7 +698,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     class ClassDefaults(State_Base.ClassDefaults):
-        function = LinearCombination(operation=SUM, owner=CLASS_DEFAULTS)
+        function = LinearCombination(operation=SUM)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1038,7 +1034,7 @@ class InputState(State_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = projection_spec.state.value.ndim
+                            sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
@@ -1075,7 +1071,7 @@ class InputState(State_Base):
                                 continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
-                            sender_shape = projection_spec.state.value.shape
+                            sender_shape = np.array(projection_spec.state.value).shape
                             variable_item = np.zeros(sender_shape)
                             # If variable_item HASN'T been specified, or it is same shape as any previous ones,
                             #     use sender's value

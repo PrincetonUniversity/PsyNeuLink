@@ -324,9 +324,22 @@ class MultiplicativeParam():
 
 class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
+    name = 'ADDITIVE'
     init_val = 0
     reduce = lambda x : np.sum(np.array(x), axis=0)
+
+# class OverrideParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'OVERRIDE'
+#     init_val = None
+#     reduce = lambda x : None
+#
+# class DisableParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'DISABLE'
+#     init_val = None
+#     reduce = lambda x : None
+
 
 # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
@@ -372,11 +385,13 @@ class ModulationParam():
     #                                 lambda x : np.product(np.array(x), axis=0))
     ADDITIVE = AdditiveParam
     # ADDITIVE = ModulationType(ADDITIVE_PARAM,
-    #                           'ADDITIVE_PARAM',
+    #                           'ADDITIVE',
     #                           0,
     #                           lambda x : np.sum(np.array(x), axis=0))
     OVERRIDE = OVERRIDE_PARAM
+    # OVERRIDE = OverrideParam
     DISABLE = DISABLE_PARAM
+    # DISABLE = DisableParam
 
 MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
 ADDITIVE = ModulationParam.ADDITIVE
@@ -405,15 +420,38 @@ def _get_modulated_param(owner, mod_proj):
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
-    # Get the actual parameter of owner.function_object to be modulated
-    function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
-
-    # Get the function parameter's value
-    function_param_value = owner.function_object.params[function_param_name]
-    # MODIFIED 6/9/17 OLD:
-    # if function_param_value is None:
-    #     function_param_value = function_mod_meta_param_obj.init_val
-    # MODIFIED 6/9/17 END
+    # # MODIFIED 6/27/18 OLD
+    # # Get the actual parameter of owner.function_object to be modulated
+    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+    # # Get the function parameter's value
+    # function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEW:
+    if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
+        # function_param_name = function_mod_meta_param_obj
+        from psyneulink.globals.utilities import Modulation
+        function_mod_meta_param_obj = getattr(Modulation,function_mod_meta_param_obj)
+        function_param_name = function_mod_meta_param_obj
+        function_param_value = mod_proj.sender.value
+    else:
+        # Get the actual parameter of owner.function_object to be modulated
+        function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+        # Get the function parameter's value
+        function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEWER:
+    # from psyneulink.globals.utilities import Modulation
+    # mod_spec = function_mod_meta_param_obj.attrib_name
+    # if mod_spec == OVERRIDE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = mod_proj.sender.value
+    # elif mod_spec == DISABLE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = None
+    # else:
+    #     # Get name of the actual parameter of owner.function_object to be modulated
+    #     function_param_name = owner.function_object.params[mod_spec]
+    #     # Get the function parameter's value
+    #     function_param_value = owner.function_object.params[mod_spec]
+    # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
     return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
