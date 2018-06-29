@@ -1218,10 +1218,11 @@ class InputState(State_Base):
         import inspect
 
         if (
-                ((inspect.isclass(function) and issubclass(function, LinearCombination))
-                 or isinstance(function, LinearCombination))
-                and (isinstance(variable, np.matrix) or
-                     (isinstance(np.array(variable),np.ndarray) and np.array(variable).ndim>=2))
+                (
+                    (inspect.isclass(function) and issubclass(function, LinearCombination))
+                    or isinstance(function, LinearCombination)
+                )
+                and isinstance(variable, np.matrix)
         ):
             variable = [variable]
 

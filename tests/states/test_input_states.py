@@ -83,3 +83,12 @@ class TestInputStates:
 
         assert mechs[-1].input_state.instance_defaults.variable.shape == receiver_input_state_variable.shape
         assert mechs[-1].input_state.function_object.instance_defaults.variable.shape == receiver_input_state_variable.shape
+
+    def test_input_state_variable_shapes(self):
+        t = pnl.TransferMechanism(input_states=[{pnl.VARIABLE: [[0], [0]]}])
+
+        assert t.input_state.instance_defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.instance_defaults.value.shape == np.array([0]).shape
+
+        assert t.input_state.function_object.instance_defaults.variable.shape == np.array([[0], [0]]).shape
+        assert t.input_state.function_object.instance_defaults.value.shape == np.array([0]).shape
