@@ -1929,11 +1929,13 @@ class Mechanism_Base(Mechanism):
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        self.attributes_dict_entries = dict(
-            OWNER_VARIABLE = VARIABLE,
-            OWNER_VALUE = VALUE,
-            EXECUTION_COUNT = CURRENT_EXECUTION_COUNT, # FIX: move to assignment to user_params in Component
-            EXECUTION_TIME = CURRENT_EXECUTION_TIME)
+        # Assign attributes to be included in attributes_dict
+        #   keys are keywords exposed to user for assignment
+        #   values are names of corresponding attributes
+        self.attributes_dict_entries = dict(OWNER_VARIABLE = VARIABLE,
+                                            OWNER_VALUE = VALUE,
+                                            EXECUTION_COUNT = CURRENT_EXECUTION_COUNT,
+                                            EXECUTION_TIME = CURRENT_EXECUTION_TIME)
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """Assign weights and exponents if specified in input_states
@@ -3098,9 +3100,12 @@ class Mechanism_Base(Mechanism):
         #         EXECUTION_TIME = self.current_execution_time,
         #         INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
         # )
-        # MODIFIED 6/29/18 NEW:
+        # MODIFIED 6/29/18 NEW JDC:
+        # Construct attributes_dict from entries specified in attributes_dict_entries
+        #   (which is assigned in _instantiate_attributes_before_function)
         attribs_dict = MechParamsDict({key:getattr(self, value) for key,value in self.attributes_dict_entries.items()})
         attribs_dict.update({INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]})
+        # MODIFIED 6/29/18 END
 
         attribs_dict.update(self.user_params)
         del attribs_dict[FUNCTION]

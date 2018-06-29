@@ -686,15 +686,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        self.plus_phase_activity = None
-        self.minus_phase_activity = None
-        self.learning_phase = None
-        self.attributes_dict_entries.update({PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
-                                             MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
-
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         activity_vector:tc.any(list, np.array),
@@ -736,13 +727,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         return learning_mechanism
 
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     # self.attributes_dict.update({PLUS_PHASE_ACTIVITY:self.plus_phase_activity,
-    #     #                              MINUS_PHASE_ACTIVITY:self.minus_phase_activity})
-    #     self.attributes_dict_entries.update({PLUS_PHASE_ACTIVITY:self.plus_phase_activity,
-    #                                          MINUS_PHASE_ACTIVITY:self.minus_phase_activity})
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
+    def _instantiate_attributes_after_function(self, context=None):
+
+        # Assign these after instantiation of function, since they are initialized in _execute (see below)
+        self.attributes_dict_entries.update({PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
+                                             MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
+
+        super()._instantiate_attributes_after_function(context=context)
+
     def _execute(self,
                  variable=None,
                  function_variable=None,
@@ -750,6 +742,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  context=None):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
+            self.plus_phase_activity = self.minus_phase_activity = variable[0]
+            self.learning_phase = None
             return(variable)
 
         internal_input =  self.input_state.variable[INTERNAL]
@@ -764,8 +758,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
             current_activity = external_input + internal_input
+            self.plus_phase_activity = current_activity
         else:
             current_activity = internal_input
+            self.minus_phase_activity = current_activity
 
         value = super()._execute(variable=current_activity,
                                  runtime_params=runtime_params,
