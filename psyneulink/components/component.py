@@ -1546,14 +1546,15 @@ class Component(object):
 
             self.user_params.__additem__(param_name, new_param_val)
 
-        # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
+        # Cache a (deep) copy of the user-specified values and put it in user_params_for_instantiation;
+        #    this is to deal with the following:
         #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
         #    • since paramsCurrent is a ParamsDict, it assigns the values of its entries to the corresponding attributes
         #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
-        #         the user-specified vaules (from the constructor args) in user_params
+        #         the user-specified values (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
