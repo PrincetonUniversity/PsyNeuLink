@@ -743,9 +743,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  runtime_params=None,
                  context=None):
 
-        # if self.context.initialization_status == ContextFlags.INITIALIZING:
-        #     return(variable)
-        #
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return(variable)
+
         internal_input =  self.input_state.variable[INTERNAL]
         if self.context.flags_string == ContextFlags.EXECUTING:
             external_input = self.input_state.variable[EXTERNAL]
