@@ -658,10 +658,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
-                                                  params=params,
                                                   auto=auto,
                                                   hetero=hetero,
-                                                  has_recurrent_input_state=has_recurrent_input_state)
+                                                  has_recurrent_input_state=has_recurrent_input_state,
+                                                  # output_states=output_states,
+                                                  params=params,
+                                                  )
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,

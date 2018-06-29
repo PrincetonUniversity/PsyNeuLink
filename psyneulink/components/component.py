@@ -1519,7 +1519,13 @@ class Component(object):
             except KeyError:
                 pass
 
-            params.update(params_arg)
+            # MODIFIED 6/29/18 OLD:
+            # params.update(params_arg)
+            # MODIFIED 6/29/18 NEW JDC:
+            for item in params_arg:
+                if params_arg[item] is not None:
+                    params.update({item: params_arg[item]})
+            # MODIFIED 6/29/18 END
 
         # Save user-accessible params
         # self.user_params = params.copy()
