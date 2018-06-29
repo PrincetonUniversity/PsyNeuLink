@@ -654,15 +654,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         self._learning_enabled = enable_learning
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(input_states=input_states,
-                                                  initial_value=initial_value,
+        params = self._assign_args_to_param_dicts(
+            # input_states=input_states,
+                                                  # initial_value=initial_value,
                                                   matrix=matrix,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
-                                                  output_states=output_states,
+                                                  # output_states=output_states,
                                                   params=params,
-                                                  noise=noise,
+                                                  # noise=noise,
                                                   auto=auto,
                                                   hetero=hetero,
                                                   has_recurrent_input_state=has_recurrent_input_state)

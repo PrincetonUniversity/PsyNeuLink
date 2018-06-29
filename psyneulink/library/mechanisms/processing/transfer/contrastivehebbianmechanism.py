@@ -613,9 +613,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:ENERGY},
-                                   {NAME:ENTROPY},
-                                   {NAME:PLUS_PHASE_ACTIVITY,
+    standard_output_states.extend([{NAME:PLUS_PHASE_ACTIVITY,
                                     VARIABLE:PLUS_PHASE_ACTIVITY},
                                    {NAME:MINUS_PHASE_ACTIVITY,
                                     VARIABLE:MINUS_PHASE_ACTIVITY}
@@ -637,8 +635,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  convergence_criterion:float=0.01,
-                 additional_output_states:tc.optional(tc.any(str, Iterable))=None,
+                 # additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None):
@@ -650,12 +649,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        output_states = [PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY]
-        if additional_output_states:
-            if isinstance(additional_output_states, list):
-                output_states += additional_output_states
-            else:
-                output_states.append(additional_output_states)
+        # output_states = [PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY]
+        # if additional_output_states:
+        #     if isinstance(additional_output_states, list):
+        #         output_states += additional_output_states
+        #     else:
+        #         output_states.append(additional_output_states)
 
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
