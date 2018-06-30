@@ -3803,9 +3803,10 @@ class System(System_Base):
                             proj_color = active_color
                         else:
                             proj_color = default_node_color
-                        sg.node(edge_label, shape=projection_shape, color=proj_color)
-                        G.edge(sndr_proj_label, edge_label, arrowhead='none')
-                        G.edge(edge_label, proc_mech_rcvr_label)
+                        proj_label = self._get_label(proj, show_dimensions, show_roles)
+                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        G.edge(sndr_proj_label, proj_label, arrowhead='none')
+                        G.edge(proj_label, proc_mech_rcvr_label)
                     else:
                         # show projection as edge
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
@@ -4297,7 +4298,8 @@ class System(System_Base):
 
         # get System's ProcessingMechanisms
         rcvrs = list(system_graph.keys())
-        learning_rcvrs = list(learning_graph.keys())
+        # learning_rcvrs = list(learning_graph.keys())
+        learning_rcvrs = self.learning_execution_list
 
         # MANAGE ProcessMechanisms
 
