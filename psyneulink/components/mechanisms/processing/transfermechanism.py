@@ -1023,11 +1023,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 outputs.append(output_item)
 
         else:
-            outputs = super(Mechanism, self)._execute(
-                variable=current_input,
-                runtime_params=runtime_params,
-                context=context
-            )
+            outputs = super(Mechanism, self)._execute(variable=current_input,
+                                                      runtime_params=runtime_params,
+                                                      context=context
+                                                      )
             outputs = self._clip_result(clip, outputs)
 
         # # TEST PRINT:

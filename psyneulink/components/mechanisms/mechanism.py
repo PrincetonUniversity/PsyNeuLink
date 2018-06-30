@@ -2196,10 +2196,9 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(
-                    variable=self.instance_defaults.variable,
-                    runtime_params=runtime_params,
-                    context=context,
+                return_value =  self._execute(variable=self.instance_defaults.variable,
+                                              runtime_params=runtime_params,
+                                              context=context,
                 )
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS

@@ -212,7 +212,8 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
     LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
-    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
+    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
@@ -9411,7 +9412,7 @@ class Stability(ObjectiveFunction):
     <Stability.variable>`.
 
 COMMENT:
-*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
+*** 11/11/17 - DELETE THIS ONCE Stability IS STABLE:
     Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
     where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
     :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
@@ -9859,8 +9860,12 @@ class Distance(ObjectiveFunction):
         v1 = variable[0]
         v2 = variable[1]
 
-        # Simple Hadamard difference of v1 and v2
-        if self.metric is DIFFERENCE:
+        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        if self.metric is MAX_DIFF:
+            result = np.max(v1 - v2)
+
+        # Simple Hadamard (elementwise) difference of v1 and v2
+        elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
         # Euclidean distance between v1 and v2
