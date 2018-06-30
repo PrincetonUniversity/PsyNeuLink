@@ -656,7 +656,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        output_states = [ACTIVITY_DIFFERENCE_OUTPUT, PLUS_PHASE_OUTPUT, MINUS_PHASE_OUTPUT]
+        output_states = [PLUS_PHASE_OUTPUT, MINUS_PHASE_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
             if isinstance(additional_output_states, list):
                 output_states += additional_output_states

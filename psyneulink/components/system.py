@@ -442,7 +442,7 @@ from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import \
     _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, OUTCOME, \
@@ -453,8 +453,9 @@ from psyneulink.components.projections.projection import Projection
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
+from psyneulink.globals.keywords import ALL, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
@@ -1658,6 +1659,10 @@ class System(System_Base):
             #  but do not send any projections, so no need to consider further
             from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
             if isinstance(sender_mech, MappingProjection):
+                return
+
+            # Exclude AutoAssociativeLearningMechanisms as they learn on their own
+            if isinstance(sender_mech, AutoAssociativeLearningMechanism):
                 return
 
             # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
@@ -3797,6 +3802,10 @@ class System(System_Base):
                         has_learning = proj.has_learning_projection
                     except AttributeError:
                         has_learning = None
+
+                    # Handle learning components for autoassociative projection
+                    #  calls _assign_learning_components,
+                    #  but need to manage it from here since MappingProjection needs be shown as node rather than edge
                     if show_learning and has_learning:
                         # show projection as node
                         if proj is active_item:
@@ -3807,6 +3816,11 @@ class System(System_Base):
                         sg.node(proj_label, shape=projection_shape, color=proj_color)
                         G.edge(sndr_proj_label, proj_label, arrowhead='none')
                         G.edge(proj_label, proc_mech_rcvr_label)
+                        learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                        learning_rcvrs = [learning_mech, proj]
+                        learning_graph={proj:{learning_mech}}
+                        for lr in learning_rcvrs:
+                            _assign_learning_components(G, sg, learning_graph, lr, processes)
                     else:
                         # show projection as edge
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
@@ -3930,7 +3944,7 @@ class System(System_Base):
                         pass
 
         tc.typecheck
-        def _assign_learning_components(G, sg, rcvr, processes:tc.optional(list)=None):
+        def _assign_learning_components(G, sg, lg, rcvr, processes:tc.optional(list)=None):
             '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             # Get rcvr info
@@ -3943,7 +3957,7 @@ class System(System_Base):
             # if rcvr is projection (i.e., recipient of a LearningProjection)
             if isinstance(rcvr, MappingProjection):
                 # for each sndr of rcvr
-                sndrs = learning_graph[rcvr]
+                sndrs = lg[rcvr]
                 for sndr in sndrs:
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
                     if show_projection_labels:
@@ -4348,7 +4362,7 @@ class System(System_Base):
                             # If the Component is in only one Process, add it to the subgraph for that Process
                             if len(intersection)==1:
                                 if process in processes:
-                                    _assign_learning_components(G, sg, l, [process])
+                                    _assign_learning_components(G, sg, learning_graph, l, [process])
                             # Otherwise, assign Component to entry in dict for process intersection (subgraph is
                             # created below)
                             else:
@@ -4370,7 +4384,7 @@ class System(System_Base):
                         if r in self.graph:
                             _assign_processing_components(G, sg, r, processes, subgraphs)
                         elif r in self.learningGraph:
-                            _assign_learning_components(G, sg, r, processes)
+                            _assign_learning_components(G, sg, learning_graph, r, processes)
                         else:
                             raise SystemError("PROGRAM ERROR: Component in interaction process ({}) is not in "
                                               "{}'s graph or learningGraph".format(r.name, self.name))
@@ -4381,7 +4395,9 @@ class System(System_Base):
             # Add learning-related Components to graph if show_learning
             if show_learning:
                 for rcvr in learning_rcvrs:
-                    _assign_learning_components(G, G, rcvr)
+                    # if 'Auto' in rcvr.name:
+                    #     break
+                    _assign_learning_components(G, G, learning_graph, rcvr)
 
         # MANAGE LEARNING Components
 
