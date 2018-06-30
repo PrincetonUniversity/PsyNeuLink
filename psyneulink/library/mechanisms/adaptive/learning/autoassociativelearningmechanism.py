@@ -347,12 +347,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                                                         format(self.name, variable))
         return variable
 
-    def _execute(
-        self,
-        variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 context=None
+                 ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
         :return: (2D np.array) self.learning_signal
@@ -362,11 +361,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
-        self.learning_signal = super(LearningMechanism, self)._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
-        )
+        # FIX: 6/30/18 JDC Mechanism._update_input_states DOESN'T SEEM TO BEEN CALLED OR UPDATED variable
+        self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
+                                                                       runtime_params=runtime_params,
+                                                                       context=context
+                                                                       )
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
