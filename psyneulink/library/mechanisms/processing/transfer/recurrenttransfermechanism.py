@@ -791,12 +791,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
-        # # MODIFIED 9/23/17 OLD:
-        # if AUTO not in param_keys:
-        # MODIFIED 9/23/17 NEW [JDC]:
-        # if self.auto is not None:
         if AUTO not in param_keys and HETERO in param_keys:
-        # MODIFIED 9/23/17 END
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
@@ -811,13 +806,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-        # # MODIFIED 9/23/17 OLD:
-        # if HETERO not in param_keys:
-        # MODIFIED 9/23/17 NEW [JDC]:
-        # if self.hetero is not None:
-
         if HETERO not in param_keys and AUTO in param_keys:
-        # MODIFIED 9/23/17 END
 
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
@@ -1075,7 +1064,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
-        self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
+        self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
                                                                        matrix=self.recurrent_projection,
@@ -1115,3 +1104,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                 input = np.concatenate((input, z))
 
         return super()._get_variable_from_input(input)
+
+    @property
+    def _learning_signal_source(self):
+        '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
+              Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
+        '''
+        return self.output_state
