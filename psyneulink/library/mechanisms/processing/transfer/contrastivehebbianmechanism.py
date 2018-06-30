@@ -171,7 +171,8 @@ from psyneulink.components.functions.function import \
     Function, Linear, LinearCombination, is_function_type, ContrastiveHebbian, Distance
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, ENERGY, ENTROPY, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
+    CONTRASTIVE_HEBBIAN_MECHANISM, ENERGY, ENTROPY, FUNCTION, HOLLOW_MATRIX, \
+    MAX_DIFF, MEAN, MEDIAN, NAME, OWNER_VALUE, \
     RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -180,15 +181,16 @@ from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanis
 
 __all__ = [
     'ConstrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT',
-    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT',
-    'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
+    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT',
+    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
 
 
+CURRENT_ACTIVITY = 'current_activity'
 PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
 MINUS_PHASE_ACTIVITY = 'minus_phase_activity'
 
+CURRENT_ACTIVITY_OUTPUT = 'CURRENT_ACTIVITY_OUTPUT'
 ACTIVITY_DIFFERENCE_OUTPUT = 'ACTIVITY_DIFFERENCE_OUTPUT'
 PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
 MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
@@ -246,6 +248,7 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
             (Note: this is only present if the Mechanism's `function` is bounded
             between 0 and 1 (e.g. the `Logistic` Function)).
 
+        COMMENT:
         .. _PLUS_PHASE_OUTPUT:
 
         *PLUS_PHASE_OUTPUT* : 1d np.array
@@ -255,11 +258,18 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 
         *MINUS_PHASE_OUTPUT* : 1d np.array
             the vector of activity at the end of the minus phase of a training trial.
+        COMMENT
+
+        .. _CURRENT_ACTIVITY_OUTPUT:
+
+        *CURRENT_ACTIVITY_OUTPUT* : 1d np.array
+            vector of current activity
 
         .. _ACTIVITY_DIFFERENCE_OUTPUT:
 
         *ACTIVITY_DIFFERENCE_OUTPUT* : 1d np.array
-            the vector of activity difference between the positive and negative phases of a training trial.
+            vector of element-wise differences in activity between the positive and negative phases of a training
+            trial.
         """
     RESULT=RESULT
     MEAN=MEAN
@@ -268,9 +278,10 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     VARIANCE=VARIANCE
     ENERGY=ENERGY
     ENTROPY=ENTROPY
+    CURRENT_ACTIVITY_OUTPUT=CURRENT_ACTIVITY_OUTPUT
     ACTIVITY_DIFFERENCE_OUTPUT=ACTIVITY_DIFFERENCE_OUTPUT
-    PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
-    MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
+    # PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
+    # MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -617,13 +628,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:ACTIVITY_DIFFERENCE_OUTPUT,
+    # standard_output_states.extend([{NAME:ACTIVITY_DIFFERENCE_OUTPUT,
+    #                                 VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
+    #                                 FUNCTION: lambda v: v[1] - v[0]},
+    #                                {NAME:PLUS_PHASE_OUTPUT,
+    #                                 VARIABLE:PLUS_PHASE_ACTIVITY},
+    #                                {NAME:MINUS_PHASE_OUTPUT,
+    #                                 VARIABLE:MINUS_PHASE_ACTIVITY}
+    #                                ])
+    standard_output_states.extend([{NAME:CURRENT_ACTIVITY_OUTPUT,
+                                    VARIABLE:CURRENT_ACTIVITY},
+                                    # VARIABLE:(OWNER_VALUE,0)},
+                                   {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
                                     VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
                                     FUNCTION: lambda v: v[1] - v[0]},
-                                   {NAME:PLUS_PHASE_OUTPUT,
-                                    VARIABLE:PLUS_PHASE_ACTIVITY},
-                                   {NAME:MINUS_PHASE_OUTPUT,
-                                    VARIABLE:MINUS_PHASE_ACTIVITY}
                                    ])
 
     @tc.typecheck
@@ -656,13 +674,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        output_states = [PLUS_PHASE_OUTPUT, MINUS_PHASE_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
+        output_states = [CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
             if isinstance(additional_output_states, list):
                 output_states += additional_output_states
             else:
                 output_states.append(additional_output_states)
-
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(convergence_function=convergence_function,
@@ -699,7 +716,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def _instantiate_attributes_after_function(self, context=None):
 
         # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
+        self.attributes_dict_entries.update({CURRENT_ACTIVITY:CURRENT_ACTIVITY,
+                                             PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
                                              MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
 
         super()._instantiate_attributes_after_function(context=context)
@@ -712,7 +730,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             # Set plus_phase and minus_phase activity vectors to zeros with size of an input projection
-            self.plus_phase_activity = self.minus_phase_activity = self.input_state.socket_template
+            self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
+                self.input_state.socket_template
             self.learning_phase = None
 
         if self.learning_phase is None:
@@ -721,12 +740,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
             self.plus_phase_activity = variable[EXTERNAL] + variable[INTERNAL]
-            current_activity = self.plus_phase_activity
+            self.current_activity = self.plus_phase_activity
         else:
             self.minus_phase_activity = variable[INTERNAL]
-            current_activity = self.minus_phase_activity
+            self.current_activity = self.minus_phase_activity
 
-        value = super()._execute(variable=np.atleast_2d(current_activity),
+        value = super()._execute(variable=np.atleast_2d(self.current_activity),
                                  runtime_params=runtime_params,
                                  context=context)
 
@@ -736,16 +755,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 abs(self.convergence_function([value, previous_value])) < self.convergence_criterion):
 
             # Terminate if this is the end of the minus phase
+
             if self.learning_phase == LearningPhase.MINUS:
+
+                # ?? USE initial_value attribute below??
                 self.is_finished = True
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-                self.input_state.variable[INTERNAL] = self.output_states[PLUS_PHASE_OUTPUT].value
+                # self.input_states[INTERNAL].variable = self.output_states[PLUS_PHASE_OUTPUT].value
+                self.input_states[INTERNAL].value = self.output_states[PLUS_PHASE_OUTPUT].value
 
             # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
             # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
             # Initialize internal input to zero for next phase
             # self.input_state.variable[INTERNAL] = self.input_state.socket_template
-            self.input_state.variable[INTERNAL] *= 0
+            # self.input_states[INTERNAL].variable *= 0
+            self.input_states[INTERNAL].value *= 0
 
             # Switch learning phase
             self.learning_phase = ~self.learning_phase
