@@ -471,10 +471,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         COMMENT
 
     integrator_function:
-        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function <RecurrentTransferMechanism.integrator_function>`,
-        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
-        Keep in mind that the `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>` parameter of the `RecurrentTransferMechanism` corresponds to the
-        `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
+        <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
+        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `smoothing_factor
+        <RecurrentTransferMechanism.smoothing_factor>` parameter of the `RecurrentTransferMechanism` corresponds to
+        the `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
@@ -484,14 +485,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         .. math::
             value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
 
-        The result of the integrator function above is then passed into the `mechanism's function <RecurrentTransferMechanism.function>`. Note that
-        on the first execution, *initial_value* sets previous_value.
+        The result of the integrator function above is then passed into the `mechanism's function
+        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
 
         **When integrator_mode is set to False:**
 
-        The variable of the mechanism is passed into the `function of the mechanism <RecurrentTransferMechanism.function>`. The mechanism's
-        `integrator_function <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
-        *initial_value*, and *time_step_size*) are ignored.
+        The variable of the mechanism is passed into the `function of the mechanism
+        <RecurrentTransferMechanism.function>`. The mechanism's `integrator_function
+        <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
+        (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
     noise : float or function : default 0.0
         When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to True, noise is passed into the
@@ -501,15 +503,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         If noise is a list or array, it must be the same length as `variable
         <RecurrentTransferMechanism.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is a
-        list or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is
+        a list or array, noise will be applied to each variable element. In the case of a noise function, this means
+        that the function will be executed separately for each variable element.
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value
+            from its distribution on each execution. If noise is specified as a float or as a function with a fixed
+            output, then the noise will simply be an offset that remains the same across all executions.
 
     smoothing_factor : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
@@ -521,8 +523,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
 
         the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
+        to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
@@ -834,7 +836,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name))
 
         if self.has_recurrent_input_state:
-            self._linear_combin_func = LinearCombination(default_variable=self.variable)
+            self.combination_function = LinearCombination(default_variable=self.variable)
 
         if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
@@ -1084,7 +1086,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _parse_function_variable(self, variable):
         if self.has_recurrent_input_state:
-            return self._linear_combin_func.execute(variable = variable)
+            return self.combination_function.execute(variable = variable)
         else:
             return variable
 

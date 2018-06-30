@@ -710,23 +710,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  context=None):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            self.plus_phase_activity = self.minus_phase_activity = variable
+            # Set plus_phase and minus_phase activity vectors to zeros with size of an input projection
+            self.plus_phase_activity = self.minus_phase_activity = self.input_state.socket_template
             self.learning_phase = None
-            # return(variable)
-
-
-        # self.input_state.variable = np.atleast_2d(self.input_state.variable)
-        inputs = np.atleast_2d(self.input_state.variable)
 
         if self.learning_phase is None:
             self.learning_phase = LearningPhase.PLUS
 
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
-            self.plus_phase_activity = inputs[EXTERNAL] + inputs[INTERNAL]
+            # self.plus_phase_activity = variable[EXTERNAL] + variable[INTERNAL]
+            self.plus_phase_activity = self.combination_function(variable)
             current_activity = self.plus_phase_activity
         else:
-            self.minus_phase_activity = inputs[INTERNAL]
+            self.minus_phase_activity = variable[INTERNAL]
             current_activity = self.minus_phase_activity
 
         value = super()._execute(variable=np.atleast_2d(current_activity),
@@ -735,7 +732,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # Check for convergence
         previous_value = self.integrator_function.previous_value
-        if abs(self.convergence_function([value, previous_value])) < self.convergence_criterion:
+        if (self.convergence_criterion is not None and
+                abs(self.convergence_function([value, previous_value])) < self.convergence_criterion):
 
             # Terminate if this is the end of the minus phase
             if self.learning_phase == LearningPhase.MINUS:
