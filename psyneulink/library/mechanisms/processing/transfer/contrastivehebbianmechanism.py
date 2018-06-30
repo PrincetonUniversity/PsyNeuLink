@@ -167,7 +167,8 @@ import numpy as np
 import typecheck as tc
 from enum import IntEnum
 
-from psyneulink.components.functions.function import Function, Linear, is_function_type, ContrastiveHebbian, Distance
+from psyneulink.components.functions.function import \
+    Function, Linear, LinearCombination, is_function_type, ContrastiveHebbian, Distance
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, ENERGY, ENTROPY, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
@@ -719,8 +720,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
-            # self.plus_phase_activity = variable[EXTERNAL] + variable[INTERNAL]
-            self.plus_phase_activity = self.combination_function(variable)
+            self.plus_phase_activity = variable[EXTERNAL] + variable[INTERNAL]
             current_activity = self.plus_phase_activity
         else:
             self.minus_phase_activity = variable[INTERNAL]
@@ -751,3 +751,4 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.learning_phase = ~self.learning_phase
 
         return value
+
