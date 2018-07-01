@@ -59,13 +59,19 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
     the entire weight change matrix (see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` for
     additional details).
 
+.. _AutoAssociativeLearningMechanism_Learning:
+
 Execution
 ---------
 
-An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, however its execution
-can be enabled or disabled by setting the the `learning_enabled <RecurrentTransferMechanism.learning_enabled>`
-attribute of the `RecurrentTransferMechanism` with which it is associated (identified in its `activity_source
-<AutoAssociativeLearningMechanism.attribute>`).
+An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
+* 1) its execution can be enabled or disabled by setting the the `learning_enabled
+  <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
+  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.attribute>`).
+* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+  distinct from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
+  that are executed during the `learning phase <System_Execution>` of a System's execution
+
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
 

@@ -30,7 +30,7 @@ autoassociative (e.g., Hebbian) learning.
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism is created directly by calling its constructor.::
+A RecurrentTransferMechanism is created directly by calling its constructor, for example::
 
     import psyneulink as pnl
     my_linear_recurrent_transfer_mechanism = pnl.RecurrentTransferMechanism(function=pnl.Linear)
@@ -41,7 +41,8 @@ The recurrent projection is automatically created using (1) the **matrix** argum
 arguments of the Mechanism's constructor, and is assigned to the mechanism's `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
-If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
+If the **matrix** argument is used to create the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, it must specify either a square matrix or an
 `AutoAssociativeProjection` that uses one (the default is `HOLLOW_MATRIX`).::
 
     recurrent_mech_1 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
@@ -52,8 +53,8 @@ If the **matrix** argument is used to create the recurrent projection, it must s
     recurrent_mech_2 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       matrix=pnl.AutoAssociativeProjection)
 
-If the **auto** and **hetero** arguments are used to create the recurrent projection, they set the diagonal and
-off-diagonal terms, respectively.::
+If the **auto** and **hetero** arguments are used to create the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, they set the diagonal and off-diagonal terms, respectively.::
 
     recurrent_mech_3 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       auto=1.0,
@@ -103,15 +104,18 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection`.
-By default, this recurrent projection projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
-`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
-stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the
-`has_recurrent_input_state <RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the recurrent
-projection can also be made to point to a separate input state rather than the primary one.  In this case, the input
-states' results will be combined using `LinearCombination <function.LinearCombination>` *before* being passed to the
-RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+The distinguishing feature of a RecurrentTransferMechanism is its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` attribute: a self-projecting `AutoAssociativeProjection`.
+By default, `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` projects from the Mechanism's
+`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.  This can be
+parameterized using its `matrix <RecurrentTransferMechanism.matrix>`, `auto <RecurrentTransferMechanism.auto>`,
+and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_state
+<RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` can also be made to point to a separate input state rather than the
+primary one.  In this case, the input states' results will be combined using `LinearCombination
+<function.LinearCombination>` *before* being passed to the RecurrentTransferMechanism's `function
+<RecurrentTransferMechanism.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
 `function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
@@ -132,30 +136,20 @@ Execution
 ---------
 
 When a RecurrentTransferMechanism executes, its variable, as is the case with all mechanisms, is determined by the
-projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by the
-value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
-recurrent projection.
+projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by
+the value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
+`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-COMMENT:
-Previous version of sentence above: "When a RecurrentTransferMechanism executes, it includes in its input the value of
-its `primary OutputState <OutputState_Primary>` from its last execution."
-8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
-takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
-that occurs along the way.
-
-12/1/17 KAM: Changed the above to describe the RecurrentTransferMechanism's variable on this execution in terms of
-projections received, which happens to include a recurrent projection from its own primary output state on the previous
-execution
-COMMENT
-
-Like a `TransferMechanism`, the function used to update each element can be assigned using its `function
-<RecurrentTransferMechanism.function>` parameter. It then transforms its input
-(including from the recurrent projection) using the specified function and parameters (see `Transfer_Execution`),
-and returns the results in its OutputStates.
+Like a `TransferMechanism`, the function used to update each element can be specified in the **function** argument
+of its constructor.  It then transforms its input (including from the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
+`Transfer_Execution`), and returns the results in its OutputStates.
 
 If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
-<System_Learning>` of the `System's execution <System_Execution>`.
+and is executed as part of a `System`, then its associated `LearningMechanism <AutoAssociativeLearningMechanism>` is
+executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
+the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
+during the `learning phase <System_Execution>` of a System's execution
 
 .. _Recurrent_Transfer_Class_Reference:
 

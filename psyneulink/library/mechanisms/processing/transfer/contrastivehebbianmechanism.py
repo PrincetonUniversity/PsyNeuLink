@@ -13,8 +13,8 @@
 Overview
 --------
 
-A ContrastiveHebbianMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent
-network and the Contrastive Hebbian learning rule.  See the following references for a description of the learning rule,
+A ContrastiveHebbianMechanism is a subclass of `RecurrentTransferMechanism` that is customized for use with the
+Contrastive Hebbian learning rule.  See the following references for a description of the learning rule,
 its relationship to the backpropagation learning rule, and its use in connectionist networks:
 
   `Movellan, J. R. (1991). Contrastive Hebbian learning in the continuous Hopfield model. In Connectionist Models
@@ -29,94 +29,66 @@ its relationship to the backpropagation learning rule, and its use in connection
   `Verguts, T., & Notebaert, W. (2008). Hebbian learning of cognitive control: dealing with specific and nonspecific
   adaptation. Psychological review, 115(2), 518 <http://psycnet.apa.org/record/2008-04236-010>`_
 
+The features and operation of a ContrastiveHebbianMechanism that differ from thoe of a RecurrentTransferMechanism are
+described below.
 
 .. _ContrastiveHebbian_Creation:
 
-Creating a ContrastiveHebbianMechanism
--------------------------------------
+Creation
+--------
 
-A ContrastiveHebbianMechanism is created directly by calling its constructor.::
-
-    import psyneulink as pnl
-    my_linear_ContrastiveHebbian_mechanism = pnl.ContrastiveHebbianMechanism(function=pnl.Linear)
-    my_logistic_ContrastiveHebbian_mechanism = pnl.ContrastiveHebbianMechanism(function=pnl.Logistic(gain=1.0,
-                                                                                                    bias=-4.0))
-
-The recurrent projection is automatically created using (1) the **matrix** argument or (2) the **auto** and **hetero**
-arguments of the Mechanism's constructor, and is assigned to the mechanism's `recurrent_projection
-<ContrastiveHebbianMechanism.recurrent_projection>` attribute.
-
-If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
-`AutoAssociativeProjection` that uses one (the default is `HOLLOW_MATRIX`).::
-
-    recurrent_mech_1 = pnl.ContrastiveHebbianMechanism(default_variable=[[0.0, 0.0, 0.0]],
-                                                      matrix=[[1.0, 2.0, 2.0],
-                                                              [2.0, 1.0, 2.0],
-                                                              [2.0, 2.0, 1.0]])
-
-    recurrent_mech_2 = pnl.ContrastiveHebbianMechanism(default_variable=[[0.0, 0.0, 0.0]],
-                                                      matrix=pnl.AutoAssociativeProjection)
-
-If the **auto** and **hetero** arguments are used to create the recurrent projection, they set the diagonal and
-off-diagonal terms, respectively.::
-
-    recurrent_mech_3 = pnl.ContrastiveHebbianMechanism(default_variable=[[0.0, 0.0, 0.0]],
-                                                      auto=1.0,
-                                                      hetero=2.0)
-
-.. note::
-
-    In the examples above, recurrent_mech_1 and recurrent_mech_3 are identical.
-
-In all other respects, a ContrastiveHebbianMechanism is specified in the same way as a standard `TransferMechanism`.
-
-.. _ContrastiveHebbian_Learning:
-
-Configuring Learning
-~~~~~~~~~~~~~~~~~~~~
-
-A ContrastiveHebbianMechanism can be configured for learning when it is created by assigning `True` to the
-**enable_learning** argument of its constructor.  This creates an `AutoAssociativeLearningMechanism` that is used to
-train its `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`, and assigns as its `function
-<Function_Base.function>` the one  specified in the **learning_function** argument of the ContrastiveHebbianMechanism's
-constructor.  By default, this is the `ContrastiveHebbian` Function;  however, it can be replaced by any other function
-that is suitable for autoassociative learning;  that is, one that takes a list or 1d array of numeric values
-(an "activity vector") and returns a 2d array or square matrix (the "weight change matrix") with the same dimensions
-as the length of the activity vector. The AutoAssociativeLearningMechanism is assigned to the `learning_mechanism
-<ContrastiveHebbianMechanism.learning_mechanism>` attribute and is used to modify the `matrix
-<AutoAssociativeProjection.matrix>` parameter of its `recurrent_projection
-<ContrastiveHebbianMechanism.recurrent_projection>` (also referenced by the ContrastiveHebbianMechanism's own `matrix
-<ContrastiveHebbianMechanism.matrix>` parameter.
-
-If a ContrastiveHebbianMechanism is created without configuring learning (i.e., **enable_learning** is assigned `False`
-in its constructor -- the default value), then learning cannot be enabled for the Mechanism until it has been
-configured for learning;  any attempt to do so will issue a warning and then be ignored.  Learning can be configured
-once the Mechanism has been created by calling its `configure_learning <ContrastiveHebbianMechanism.configure_learning>`
-method, which also enables learning.
+When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
+<RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`, and is
+automatically assigned two of its four `Standard OutputStates`: `CURRENT_ACTIVITY_OUTPUT`, `ACTIVITY_DIFFERENT_OUTPUT`
+(see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be specified in the
+**additional_output_states** argument of its constructor. If a ContrastiveHebbianMechanism is `configured for
+learning <Recurrent_Transfer_Learning>`, it is assigned `ContrastiveHebbian` as its `learning_function
+<ContrastiveHebbian.learning_function>`.  The **convergence_function** and **convergence** criterion** arguments of
+its constructor can be used, respectively, to specify the function and criterion for determining when a cycle of
+`settling and training` is complete (see `ContrastiveHebbian_Execution`).
 
 .. _ContrastiveHebbian_Structure:
 
 Structure
 ---------
 
-The distinguishing feature of a ContrastiveHebbianMechanism is a self-projecting `AutoAssociativeProjection` -- that
-is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parameterized using its `matrix <ContrastiveHebbianMechanism.matrix>`,
-`auto <ContrastiveHebbianMechanism.auto>`, and `hetero <ContrastiveHebbianMechanism.hetero>` attributes, and is
-stored in its `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>` attribute.
+.. _ContrastiveHebbian_Input:
 
-A ContrastiveHebbianMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
-`function <ContrastiveHebbianMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
-OutputState.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
-<OutputState_Primary>`) OutputState.
+Input
+~~~~~
 
-Finally, if it has been `specified for learning <ContrastiveHebbian_Learning>`, the ContrastiveHebbianMechanism is
-associated with an `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
-The `learning_enabled <ContrastiveHebbianMechanism.learning_enabled>` attribute indicates whether learning
-is enabled or disabled for the Mechanism.  If learning was not configured when the Mechanism was created, then it cannot
-be enabled until the Mechanism is `configured for learning <ContrastiveHebbian_Learning>`.
+A ContrastiveHebbianMechanism is automatically assigned two `InputStates <InputState>` on creation: `RECURRENT` and
+`EXTERNAL` (that is, its `has_recurrent_input_state <RecurrentTransferMechanism.has_recurrent_input_state>` attribute
+is automatically assigned as `True`),  This is so that the input from its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` can be kept separate from its external input during the
+`plus phase <ContrastiveHebbianMechanism_Inputs>` and `minus phase <ContrastiveHebbianMechanism_Inputs>` of its
+operation (see `ContrastiveHebbian_Execution`).
 
-In all other respects the Mechanism is identical to a standard  `TransferMechanism`.
+.. _ContrastiveHebbian_Function:
+
+Function
+~~~~~~~~
+
+uses the `ContrastiveHebbian`Function as its
+`learning_function <ContrastiveHebbianMechanism.learning_function>` by default;
+
+.. _ContrastiveHebbian_Output:
+
+Output
+~~~~~~
+
+LIST STANDARD OUTPUTSTATES
+it is also automatically assigned
+`CURRENT_ACTIVITY_OUTPUT`, `PLUS_PHASE_OUTPUT` and `MINUS_PHASE_OUTPUT` `OutputStates <OutputState>`.
+
+A ConstrativeHebbianMechanism always use
+has two `InputStates <InputState>` — `RECURRENT` and `EXTERNAL`; uses the `ContrastiveHebbian`Function as its
+`function <ContrastiveHebbianMechanism.function>` by default; and has three `OutputStates <OutputState>` — 
+`CURRENT_ACTIVITY_OUTPUT
+
+
+
+In all other respects the Mechanism is identical to a standard  `RecurrentTransferMechanism`.
 
 .. _ContrastiveHebbian_Execution:
 
@@ -127,27 +99,6 @@ COMMENT:
   NOTE THAT IT IS ALWAYS RUN IN INTEGRATOR_MODE = TRUE
 COMMENT
 
-When a ContrastiveHebbianMechanism executes, its variable, as is the case with all mechanisms, is determined by the
-projections the mechanism receives. This means that a ContrastiveHebbianMechanism's variable is determined in part by the
-value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
-recurrent projection.
-
-COMMENT:
-Previous version of sentence above: "When a ContrastiveHebbianMechanism executes, it includes in its input the value of
-its `primary OutputState <OutputState_Primary>` from its last execution."
-8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
-takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
-that occurs along the way.
-
-12/1/17 KAM: Changed the above to describe the ContrastiveHebbianMechanism's variable on this execution in terms of
-projections received, which happens to include a recurrent projection from its own primary output state on the previous
-execution
-COMMENT
-
-Like a `TransferMechanism`, the function used to update each element can be assigned using its `function
-<ContrastiveHebbianMechanism.function>` parameter. It then transforms its input
-(including from the recurrent projection) using the specified function and parameters (see `Transfer_Execution`),
-and returns the results in its OutputStates.
 
 If it has been `configured for learning <ContrastiveHebbian_Learning>`
 and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
@@ -199,7 +150,7 @@ class LearningPhase(IntEnum):
 
 
 # Used to index items of InputState.variable corresponding to recurrent and external inputs
-INTERNAL = 0
+RECURRENT = 0
 EXTERNAL = -1
 
 
@@ -731,10 +682,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
-            self.plus_phase_activity = variable[EXTERNAL] + variable[INTERNAL]
+            self.plus_phase_activity = variable[EXTERNAL] + variable[RECURRENT]
             self.current_activity = self.plus_phase_activity
         else:
-            self.minus_phase_activity = variable[INTERNAL]
+            self.minus_phase_activity = variable[RECURRENT]
             self.current_activity = self.minus_phase_activity
 
         value = super()._execute(variable=np.atleast_2d(self.current_activity),
@@ -747,21 +698,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 abs(self.convergence_function([value, previous_value])) < self.convergence_criterion):
 
             # Terminate if this is the end of the minus phase
-
             if self.learning_phase == LearningPhase.MINUS:
 
                 # ?? USE initial_value attribute below??
                 self.is_finished = True
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-                # self.input_states[INTERNAL].variable = self.output_states[PLUS_PHASE_OUTPUT].value
-                self.input_states[INTERNAL].value = self.output_states[PLUS_PHASE_OUTPUT].value
+                # self.input_states[RECURRENT].variable = self.output_states[PLUS_PHASE_OUTPUT].value
+                self.input_states[RECURRENT].value = self.output_states[PLUS_PHASE_OUTPUT].value
 
             # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
             # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-            # Initialize internal input to zero for next phase
-            # self.input_state.variable[INTERNAL] = self.input_state.socket_template
-            # self.input_states[INTERNAL].variable *= 0
-            self.input_states[INTERNAL].value *= 0
+            # Initialize RECURRENT input to zero for next phase
+            # self.input_state.variable[RECURRENT] = self.input_state.socket_template
+            # self.input_states[RECURRENT].variable *= 0
+            self.input_states[RECURRENT].value *= 0
 
             # Switch learning phase
             self.learning_phase = ~self.learning_phase
