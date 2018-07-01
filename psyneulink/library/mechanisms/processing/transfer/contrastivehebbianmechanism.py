@@ -69,17 +69,24 @@ operation (see `ContrastiveHebbian_Execution`).
 Function
 ~~~~~~~~
 
-uses the `ContrastiveHebbian`Function as its
-`learning_function <ContrastiveHebbianMechanism.learning_function>` by default;
+The default `function <ContrastiveHebbianMechanism.function>` of a ContrastiveHebbianMechanism is the same as
+for `RecurrentTransferMechanism` (`Linear`), however its default `learning_function
+<ContrastiveHebbianMechanism.learning_function>` is `ContrastiveHebbian`.  This
 
 .. _ContrastiveHebbian_Output:
 
 Output
 ~~~~~~
 
+ATTRIBUTES:
+current_activity
+plus_phase_activity
+minus_phase_activity
+
 LIST STANDARD OUTPUTSTATES
 it is also automatically assigned
-`CURRENT_ACTIVITY_OUTPUT`, `PLUS_PHASE_OUTPUT` and `MINUS_PHASE_OUTPUT` `OutputStates <OutputState>`.
+`CURRENT_ACTIVITY_OUTPUT`, `ACTIVITY_DIFFERNCE_OUTPUT` `PLUS_PHASE_OUTPUT` and `MINUS_PHASE_OUTPUT` `OutputStates
+<OutputState>`.
 
 A ConstrativeHebbianMechanism always use
 has two `InputStates <InputState>` — `RECURRENT` and `EXTERNAL`; uses the `ContrastiveHebbian`Function as its
@@ -87,22 +94,24 @@ has two `InputStates <InputState>` — `RECURRENT` and `EXTERNAL`; uses the `Co
 `CURRENT_ACTIVITY_OUTPUT
 
 
-
-In all other respects the Mechanism is identical to a standard  `RecurrentTransferMechanism`.
-
 .. _ContrastiveHebbian_Execution:
 
 Execution
 ---------
 
 COMMENT:
-  NOTE THAT IT IS ALWAYS RUN IN INTEGRATOR_MODE = TRUE
+  - NOTE THAT IT IS ALWAYS RUN IN INTEGRATOR_MODE = TRUE
+  - PLUS AND MINUS PHASES
+  - CONVERGENCE
 COMMENT
 
+If it has been `configured for learning <Recurrent_Transfer_Learning>`
+and is executed as part of a `System`, then its associated `LearningMechanism <AutoAssociativeLearningMechanism>` is
+executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
+the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
+during the `learning phase <System_Execution>` of a System's execution
 
-If it has been `configured for learning <ContrastiveHebbian_Learning>`
-and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
-<System_Learning>` of the `System's execution <System_Execution>`.
+
 
 .. _ContrastiveHebbian_Class_Reference:
 
