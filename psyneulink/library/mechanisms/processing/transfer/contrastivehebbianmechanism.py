@@ -407,7 +407,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
         cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
-        <ContrastiveHebbianMechanism.configure_learning>` method.
+        <RecurrentTransferMechanism.configure_learning>` method.
 
     learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
         specifies the learning rate used by its `learning function <ContrastiveHebbianMechanism.learning_function>`.
@@ -535,10 +535,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         indicates whether learning has been enabled for the ContrastiveHebbianMechanism.  It is set to `True` if
         `learning is specified <ContrastiveHebbian_Learning>` at the time of construction (i.e., if the
         **enable_learning** argument of the Mechanism's constructor is assigned `True`, or when it is configured for
-        learning using the `configure_learning <ContrastiveHebbianMechanism.configure_learning>` method.  Once learning
+        learning using the `configure_learning <RecurrentTransferMechanism.configure_learning>` method.  Once learning
         has been configured, `learning_enabled <ContrastiveHebbianMechanism.learning_enabled>` can be toggled at any
         time to enable or disable learning; however, if the Mechanism has not been configured for learning, an attempt
-        to set `learning_enabled <RecurrentMechanism.learning_enabled>` to `True` elicits a warning and is then ignored.
+        to set `learning_enabled <ContrastiveHebbianMechanism.learning_enabled>` to `True` elicits a warning and is
+        then ignored.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values
         specifies the learning rate used by the `learning_function <ContrastiveHebbianMechanism.learning_function>`
