@@ -164,8 +164,9 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Hebbian, Linear, LinearCombination,\
-    Stability, get_matrix, is_function_type
+from psyneulink.components.component import function_type, method_type
+from psyneulink.components.functions.function import \
+    Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -196,6 +197,8 @@ RECURRENT = 'RECURRENT'
 # Used to index items of InputState.variable corresponding to recurrent and external inputs
 EXTERNAL_INDEX = 0
 RECURRENT_INDEX = -1
+
+COMBINATION_FUNCTION = 'combination_function'
 
 
 class RecurrentTransferError(Exception):
@@ -645,6 +648,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  smoothing_factor: is_numeric_or_none=0.5,
                  clip=None,
                  has_recurrent_input_state=False,
+                 combination_function:is_function_type=LinearCombination,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -674,6 +678,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   auto=auto,
                                                   hetero=hetero,
                                                   has_recurrent_input_state=has_recurrent_input_state,
+                                                  combination_function=combination_function,
                                                   output_states=output_states,
                                                   params=params,
                                                   )
@@ -773,6 +778,31 @@ class RecurrentTransferMechanism(TransferMechanism):
                                format(MATRIX, self.name, rows, size))
                 raise RecurrentTransferError(err_msg)
 
+        # Validate combination_function
+        if COMBINATION_FUNCTION in target_set:
+            comb_fct = target_set[COMBINATION_FUNCTION]
+            if not (isinstance(comb_fct, LinearCombination) or
+                isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)):
+
+                if isinstance(comb_fct, type):
+                    comb_fct = comb_fct()
+                elif isinstance(comb_fct, (function_type, method_type)):
+                    comb_fct = UserDefinedFunction(comb_fct, self.variable)
+                try:
+                    x = comb_fct(self.variable[0],self.variable[0])
+                except:
+                    raise RecurrentTransferError("Function specified for {} argument of {} (comb_fct) was not able to "
+                                                 "take two arguments of the same form as the input to {} ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.componentName,
+                                                        self.name, self.variable))
+                try:
+                    assert len(x) == len(self.variable[0])
+                except:
+                    raise RecurrentTransferError("Function specified for {} argument of {} (comb_fct) did not return "
+                                                 "a result that is the same form as the input to {} ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.componentName,
+                                                        self.name, self.variable))
+
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:
         #
@@ -836,7 +866,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name))
 
         if self.has_recurrent_input_state:
-            self.combination_function = LinearCombination(default_variable=self.variable)
+            comb_fct = self.combination_function
+            if not isinstance(comb_fct, Function):
+                if isinstance(comb_fct, type):
+                    self._combination_function = comb_fct(default_variable=self.variable)
+                else:
+                    self._combination_function = UserDefinedFunction(custom_function=comb_fct,
+                                                                     default_variable=self.variable)
 
         if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
