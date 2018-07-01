@@ -361,7 +361,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
-        # FIX: 6/30/18 JDC Mechanism._update_input_states DOESN'T SEEM TO BEEN CALLED OR UPDATED variable
         self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
                                                                        runtime_params=runtime_params,
                                                                        context=context
@@ -369,6 +368,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+
+        # TEST PRINT
+        # print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        print("EXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]".format(self.context.flags_string))
+
 
         self.value = [self.learning_signal]
         return self.value

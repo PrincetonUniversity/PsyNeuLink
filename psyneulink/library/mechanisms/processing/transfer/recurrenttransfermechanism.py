@@ -1069,23 +1069,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        learning_rate=self.learning_rate,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
+        self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
+
         if self.learning_mechanism is None:
             self.learning_enabled = False
-
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-
-        # if self.learning_enabled :
-        #     self.context.execution_phase = ContextFlags.LEARNING
-        value = super()._execute(variable, runtime_params, context)
-        if self.learning_enabled and hasattr(self, 'learning_mechanism'):
-            self.learning_mechanism._execution_id = self._execution_id
-            # self.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
-            self.learning_mechanism.execute()
-            # self.learning_mechanism.context.execution_phase = ContextFlags.IDLE
-        return value
 
     def _parse_function_variable(self, variable):
         if self.has_recurrent_input_state:

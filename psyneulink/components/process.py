@@ -2098,6 +2098,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
+            context = ContextFlags.PROCESS
             mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 

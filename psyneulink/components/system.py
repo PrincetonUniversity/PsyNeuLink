@@ -1661,8 +1661,9 @@ class System(System_Base):
             if isinstance(sender_mech, MappingProjection):
                 return
 
+            # MODIFIED 6/30/18 NEW:
             # Exclude AutoAssociativeLearningMechanisms as they learn on their own
-            if isinstance(sender_mech, AutoAssociativeLearningMechanism):
+            elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
                 return
 
             # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
@@ -2704,6 +2705,8 @@ class System(System_Base):
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
+            # # TEST PRINT:
+            # print("\nEXECUTING System._execute_learning\n")
             self._execute_learning(context)
 
             self.context.execution_phase = ContextFlags.IDLE
@@ -2769,11 +2772,9 @@ class System(System_Base):
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
-                # # MODIFIED 6/18/18 OLD:
-                # mechanism.context.execution_phase = ContextFlags.PROCESSING
-                # MODIFIED 6/18/18 NEW:
                 mechanism.context.execution_phase = self.context.execution_phase
-                # MODIFIED 6/18/18 END
+                # # TEST PRINT:
+                # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
@@ -2783,6 +2784,36 @@ class System(System_Base):
                     mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[key])
                 mechanism.function_object._runtime_params_reset = {}
                 mechanism.context.execution_phase = ContextFlags.IDLE
+                
+                # MODIFIED 6/30/18 JDC NEW:
+                # If mechanisms is a "self-learner" (uses AutoAssociativeLearningMechanism), execute learning
+                if hasattr(mechanism, 'learning_mechanism') and mechanism.learning_enabled:
+
+                    # # TEST PRINT:
+                    # print('\nExecuting learning for {}'.format(self.name))
+                    # print(self._parameter_states[MATRIX].value)
+
+                    # Execute AutoAssociativeLearningMechanism
+                    mechanism.context.string = "Executing {} for {}".format(mechanism.learning_mechanism.name, mechanism.name)
+                    mechanism.learning_mechanism._execution_id = self._execution_id
+                    mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
+                    mechanism.learning_mechanism.execute(context=context)
+                    mechanism.learning_mechanism.context.execution_phase = ContextFlags.IDLE
+        
+                    # Execute AutoAssociativeLearningProjection
+                    mechanism.context.string = "Executing {}".format(mechanism.learning_projection.name, mechanism.name)
+                    mechanism.learning_projection._execution_id = self._execution_id
+                    mechanism.learning_projection.context.execution_phase = ContextFlags.LEARNING
+                    mechanism.learning_projection.execute(context=context)
+                    mechanism.learning_projection.context.execution_phase = ContextFlags.IDLE
+        
+                    # Update AutoAssociativeProjection matrix
+                    mechanism.recurrent_projection._parameter_states[MATRIX]._execution_id = self._execution_id
+                    mechanism.recurrent_projection.context.execution_phase = ContextFlags.LEARNING
+                    mechanism.context.string = "Updating ParameterState for {}".format(mechanism.input_state.path_afferents[0])
+                    mechanism.recurrent_projection._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+                    mechanism.recurrent_projection.context.execution_phase = ContextFlags.IDLE
+                # MODIFIED 6/30/18 END
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -2900,23 +2931,26 @@ class System(System_Base):
 
 
                 # Sort for consistency of reporting:
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                process_names = list(p.name for p in process_keys_sorted)
-
-                context_str = str("{} | {}: {} [in processes: {}]".
-                                  format(context,
-                                         component_type,
-                                         component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
+                # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                # process_names = list(p.name for p in process_keys_sorted)
+                #
+                # component.context.string = str("{} | {}: {} [in processes: {}]".
+                #                   format(context,
+                #                          component_type,
+                #                          component.name,
+                #                          re.sub(r'[\[,\],\n]','',str(process_names))))
                 component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = context_str
+                component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+                                                                             component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # TEST PRINT LEARNING:
-                # print ("EXECUTING WEIGHT UPDATES: ", component.name)
+                # # TEST PRINT LEARNING:
+                # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
+                #        format(component.name, component.context.flags_string))
+                # print(component._parameter_states[MATRIX].value)
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
