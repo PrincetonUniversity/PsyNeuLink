@@ -525,9 +525,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    previous_input : 1d np.array of floats
-        the value of the input on the previous execution, including the value of `recurrent_projection`.
-
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the

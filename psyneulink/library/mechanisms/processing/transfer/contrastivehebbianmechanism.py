@@ -502,9 +502,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <ContrastiveHebbianMechanism.clip>` that it exceeds.
 
-    previous_input : 1d np.array of floats
-        the value of the input on the previous execution, including the value of `recurrent_projection`.
-
     current_activity : 1d array of floats
         the value of the actvity of the ContrastiveHebbianMechanism at `the current step of execution
         <ContrastiveHebbian_Execution>`.
