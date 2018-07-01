@@ -167,13 +167,11 @@ import numpy as np
 import typecheck as tc
 from enum import IntEnum
 
-from psyneulink.components.functions.function import \
-    Function, Linear, LinearCombination, is_function_type, ContrastiveHebbian, Distance
+from psyneulink.components.functions.function import Function, Linear, is_function_type, ContrastiveHebbian, Distance
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, ENERGY, ENTROPY, FUNCTION, HOLLOW_MATRIX, \
-    MAX_DIFF, MEAN, MEDIAN, NAME, OWNER_VALUE, \
-    RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
+    MAX_DIFF, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
@@ -184,7 +182,6 @@ __all__ = [
     'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT',
     'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
-
 
 CURRENT_ACTIVITY = 'current_activity'
 PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
@@ -287,21 +284,25 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
-    ContrastiveHebbianMechanism(          \
-    default_variable=None,                \
-    size=None,                            \
-    function=Linear,                      \
-    matrix=HOLLOW_MATRIX,                 \
-    auto=None,                            \
-    hetero=None,                          \
-    initial_value=None,                   \
-    noise=0.0,                            \
-    smoothing_factor=0.5,                 \
-    clip=[float:min, float:max],          \
-    learning_rate=None,                   \
-    learning_function=ContrastiveHebbian, \
-    params=None,                          \
-    name=None,                            \
+    ContrastiveHebbianMechanism(                     \
+    default_variable=None,                           \
+    size=None,                                       \
+    function=Linear,                                 \
+    matrix=HOLLOW_MATRIX,                            \
+    auto=None,                                       \
+    hetero=None,                                     \
+    initial_value=None,                              \
+    noise=0.0,                                       \
+    smoothing_factor=0.5,                            \
+    clip=[float:min, float:max],                     \
+    enable_learning=False,                           \
+    learning_rate=None,                              \
+    learning_function=ContrastiveHebbian,            \
+    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_criterion=0.01,                      \
+    additional_output_states=None,                   \
+    params=None,                                     \
+    name=None,                                       \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -628,17 +629,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    # standard_output_states.extend([{NAME:ACTIVITY_DIFFERENCE_OUTPUT,
-    #                                 VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
-    #                                 FUNCTION: lambda v: v[1] - v[0]},
-    #                                {NAME:PLUS_PHASE_OUTPUT,
-    #                                 VARIABLE:PLUS_PHASE_ACTIVITY},
-    #                                {NAME:MINUS_PHASE_OUTPUT,
-    #                                 VARIABLE:MINUS_PHASE_ACTIVITY}
-    #                                ])
     standard_output_states.extend([{NAME:CURRENT_ACTIVITY_OUTPUT,
                                     VARIABLE:CURRENT_ACTIVITY},
-                                    # VARIABLE:(OWNER_VALUE,0)},
                                    {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
                                     VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
                                     FUNCTION: lambda v: v[1] - v[0]},
