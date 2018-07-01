@@ -201,13 +201,12 @@ from enum import IntEnum
 
 from psyneulink.components.functions.function import Function, Linear, is_function_type, ContrastiveHebbian, Distance
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, ENERGY, ENTROPY, FUNCTION, HOLLOW_MATRIX, \
-    MAX_DIFF, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIABLE, VARIANCE
+from psyneulink.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism, RECURRENT_INDEX, EXTERNAL_INDEX
 
 __all__ = [
     'ConstrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
@@ -228,11 +227,6 @@ MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
 class LearningPhase(IntEnum):
     MINUS = 1
     PLUS  = 0
-
-
-# Used to index items of InputState.variable corresponding to recurrent and external inputs
-RECURRENT = 0
-EXTERNAL = -1
 
 
 class ConstrastiveHebbianError(Exception):
@@ -328,6 +322,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         As an example, the following mechanisms are equivalent::
             T1 = ContrastiveHebbianMechanism(size = [3, 2])
             T2 = ContrastiveHebbian(default_variable = [[0, 0, 0], [0, 0]])
+
+    combination_function : function : default LinearCombination
+        specified function used to combine the *RECURRENT* and *INTERNAL* `InputStates <ContrastiveHebbian_Input>`;
+        must accept two 1d arrays and generate one of the same size;  default simply adds the two arrays.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -701,7 +699,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.finished = False
             self.current_activity = self.combination_function.function(variable)
         else:
-            self.current_activity = variable[RECURRENT]
+            self.current_activity = variable[RECURRENT_INDEX]
 
         value = super()._execute(variable=np.atleast_2d(self.current_activity),
                                  runtime_params=runtime_params,
