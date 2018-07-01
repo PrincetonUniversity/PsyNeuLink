@@ -369,9 +369,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # TEST PRINT
-        # print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
-        print("EXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]".format(self.context.flags_string))
+        # # TEST PRINT
+        # # print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        # print("EXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]".format(self.context.flags_string))
 
 
         self.value = [self.learning_signal]
