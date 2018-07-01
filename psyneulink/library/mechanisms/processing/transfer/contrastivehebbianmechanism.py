@@ -189,46 +189,8 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     """
         .. _ContrastiveHebbianMechanism_Standard_OutputStates:
 
-        `Standard OutputStates <OutputState_Standard>` for
-        `ContrastiveHebbianMechanism`
-
-        .. _TRANSFER_RESULT:
-
-        *RESULT* : 1d np.array
-            the result of the `function <ContrastiveHebbianMechanism.function>`
-            of the Mechanism
-
-        .. _TRANSFER_MEAN:
-
-        *MEAN* : float
-            the mean of the result
-
-        *VARIANCE* : float
-            the variance of the result
-
-        .. _ENERGY:
-
-        *ENERGY* : float
-            the energy of the result, which is calculated using the `Stability` Function with the ``ENERGY`` metric
-
-        .. _ENTROPY:
-
-        *ENTROPY* : float
-            the entropy of the result, which is calculated using the `Stability` Function with the ENTROPY metric
-            (Note: this is only present if the Mechanism's `function` is bounded
-            between 0 and 1 (e.g. the `Logistic` Function)).
-
-        COMMENT:
-        .. _PLUS_PHASE_OUTPUT:
-
-        *PLUS_PHASE_OUTPUT* : 1d np.array
-            the vector of activity at the end of the plus phase of a training trial.
-
-        .. _MINUS_PHASE_OUTPUT:
-
-        *MINUS_PHASE_OUTPUT* : 1d np.array
-            the vector of activity at the end of the minus phase of a training trial.
-        COMMENT
+        `Standard OutputStates <OutputState_Standard>` for `ContrastiveHebbianMechanism` (in addition to those
+        for `RecurrentTransferMechanism` and `TransferMechanism`):
 
         .. _CURRENT_ACTIVITY_OUTPUT:
 
@@ -250,8 +212,8 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     ENTROPY=ENTROPY
     CURRENT_ACTIVITY_OUTPUT=CURRENT_ACTIVITY_OUTPUT
     ACTIVITY_DIFFERENCE_OUTPUT=ACTIVITY_DIFFERENCE_OUTPUT
-    # PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
-    # MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
+    PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
+    MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -326,43 +288,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
         **hetero**.
-
-        In the following examples, assume that the default variable of the mechanism is length 4:
-
-        - setting **auto** to 1 and **hetero** to -1 sets matrix to have a diagonal of
-          1 and all non-diagonal entries -1:
-
-            .. math::
-
-                \\begin{bmatrix}
-                    1 & -1 & -1 & -1 \\\\
-                    -1 & 1 & -1 & -1 \\\\
-                    -1 & -1 & 1 & -1 \\\\
-                    -1 & -1 & -1 & 1 \\\\
-                \\end{bmatrix}
-
-        - setting **auto** to [1, 1, 2, 2] and **hetero** to -1 sets matrix to:
-
-            .. math::
-
-                \\begin{bmatrix}
-                    1 & -1 & -1 & -1 \\\\
-                    -1 & 1 & -1 & -1 \\\\
-                    -1 & -1 & 2 & -1 \\\\
-                    -1 & -1 & -1 & 2 \\\\
-                \\end{bmatrix}
-
-        - setting **auto** to [1, 1, 2, 2] and **hetero** to  [[3, 3, 3, 3], [3, 3, 3, 3], [4, 4, 4, 4], [4, 4, 4, 4]]
-          sets matrix to:
-
-            .. math::
-
-                \\begin{bmatrix}
-                    1 & 3 & 3 & 3 \\\\
-                    3 & 1 & 3 & 3 \\\\
-                    4 & 4 & 2 & 4 \\\\
-                    4 & 4 & 4 & 2 \\\\
-                \\end{bmatrix}
 
         See **matrix** for details on how **auto** and **hetero** may overwrite matrix.
 
@@ -540,45 +465,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         created automatically if `learning is specified <ContrastiveHebbian_Learning>`, and used to train the
         `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`.
 
-    value : 2d np.array [array(float64)]
+    value : 2d np.array
         result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
         `output_values <ContrastiveHebbianMechanism.output_values>`.
 
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
-            and the first item of ``output_values``.
-    COMMENT
-
     output_states : Dict[str: OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+        an OrderedDict with the following `OutputStates <OutputState>` by default:
 
-        * `TRANSFER_RESULT`, the `value <OutputState.value>` of which is the **result** of `function
-        <ContrastiveHebbianMechanism.function>`;
-        * `TRANSFER_MEAN`, the `value <OutputState.value>` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the `value <OutputState.value>` of which is the variance of the result;
-        * `ENERGY`, the `value <OutputState.value>` of which is the energy of the result,
-          calculated using the `Stability` Function with the ENERGY metric;
-        * `ENTROPY`, the `value <OutputState.value>` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric;
-          note:  this is only present if the Mechanism's `function <Mechanism_Base.function>` is bounded between 0 and 1
-          (e.g., the `Logistic` function).
-        * 'PLUS_PHASE_OUTPUT', the `value <OutputState.value>` of which is the activity at the end of the plus
-          phase of training.
-        * 'MINUS_PHASE_OUTPUT', the `value <OutputState.value>` of which is the activity at the end of the minus
-          phase of training.
+        * `CURRENT_ACTIVITY_OUTPUT`, the `value <OutputState.value>` of which is a 1d array with the current activity
+          of the ContrastiveHebbianMechanism during execution.
 
-    output_values : List[array(float64), float, float]
-        a list with the following items:
+        * `ACTIVITY_DIFFERENCE_OUTPUT`, the `value <OutputState.value>` of which is a 1d array with the element-wise
+          differences in activity between the plus and minus phases of the last execution.
 
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT OutputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN OutputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
-        * **energy** of the result (``value`` of ENERGY OutputState);
-        * **entropy** of the result (if the ENTROPY OutputState is present).
-        * **plus_phase_output** at the end of a training trial.
-        * **minus_phase_output** at the end of a training trial.
+    output_values : List[1d np.array]
+        a list with the following items by default:
+        * **current_activity_output** at the end of an execution.
+        * **activity_difference_output** at the end of an execution.
 
     name : str
         the name of the ContrastiveHebbianMechanism; if it is not specified in the **name** argument of the constructor,
@@ -607,6 +510,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                    {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
                                     VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
                                     FUNCTION: lambda v: v[1] - v[0]},
+                                   {NAME:PLUS_PHASE_OUTPUT,
+                                    VARIABLE:PLUS_PHASE_ACTIVITY},
+                                   {NAME:MINUS_PHASE_OUTPUT,
+                                    VARIABLE:MINUS_PHASE_ACTIVITY},
                                    ])
 
     @tc.typecheck
