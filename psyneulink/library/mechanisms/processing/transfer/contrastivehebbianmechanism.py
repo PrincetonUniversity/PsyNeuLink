@@ -699,11 +699,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
-            self.plus_phase_activity = variable[EXTERNAL] + variable[RECURRENT]
-            self.current_activity = self.plus_phase_activity
+            self.current_activity = self.combination_function.function(variable)
         else:
-            self.minus_phase_activity = variable[RECURRENT]
-            self.current_activity = self.minus_phase_activity
+            self.current_activity = variable[RECURRENT]
 
         value = super()._execute(variable=np.atleast_2d(self.current_activity),
                                  runtime_params=runtime_params,
@@ -719,13 +717,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.learning_phase == LearningPhase.MINUS:
 
                 # ?? USE initial_value attribute below??
-                self.is_finished = True
+                self.minus_phase_activity = self.current_activity
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
+                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
                 self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
+                self.is_finished = True
 
-            # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
-            # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-            self.reinitialize(self.input_state.socket_template)
+            else:
+                self.plus_phase_activity = self.current_activity
+                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
+                # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
+                self.reinitialize(self.input_state.socket_template)
 
             # Switch learning phase
             self.learning_phase = ~self.learning_phase
