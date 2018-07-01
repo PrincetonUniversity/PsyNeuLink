@@ -41,11 +41,13 @@ When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
 <RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`, and is
 automatically assigned two of its four `Standard OutputStates`: `CURRENT_ACTIVITY_OUTPUT`, `ACTIVITY_DIFFERENT_OUTPUT`
 (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be specified in the
-**additional_output_states** argument of its constructor. If a ContrastiveHebbianMechanism is `configured for
-learning <Recurrent_Transfer_Learning>`, it is assigned `ContrastiveHebbian` as its `learning_function
+**additional_output_states** argument of its constructor.  It uses the same default `function
+ContrastiveHebbianMechanism.function` as a `RecurrentTransferMechanism`, but its `integrator_mode
+<ConstrativeHebbianMechanism.integrator_mode>` is automatically set to `True`.  If a ContrastiveHebbianMechanism is
+`configured for learning <Recurrent_Transfer_Learning>`, it is assigned `ContrastiveHebbian` as its `learning_function
 <ContrastiveHebbian.learning_function>`.  The **convergence_function** and **convergence** criterion** arguments of
-its constructor can be used, respectively, to specify the function and criterion for determining when a cycle of
-`settling and training` is complete (see `ContrastiveHebbian_Execution`).
+its constructor specify, respectively, the function and criterion used for determining when its `execution
+<ContrastiveHebbian_Execution>` is complete.
 
 .. _ContrastiveHebbian_Structure:
 
@@ -64,14 +66,25 @@ is automatically assigned as `True`),  This is so that the input from its `recur
 `plus phase <ContrastiveHebbianMechanism_Inputs>` and `minus phase <ContrastiveHebbianMechanism_Inputs>` of its
 operation (see `ContrastiveHebbian_Execution`).
 
-.. _ContrastiveHebbian_Function:
+.. _ContrastiveHebbian_Functions:
 
-Function
-~~~~~~~~
+Functions
+~~~~~~~~~
 
-The default `function <ContrastiveHebbianMechanism.function>` of a ContrastiveHebbianMechanism is the same as
-for `RecurrentTransferMechanism` (`Linear`), however its default `learning_function
-<ContrastiveHebbianMechanism.learning_function>` is `ContrastiveHebbian`.  This
+* `function <ContrastiveHebbianMechanism.function>` -- the default is `Linear`, but it can be replaced with any
+  function that satisfies the constraints of a `TransferMechanism's function <TransferMechanism_Function>`.
+  This is used in conjunction with its `integrator_function <ContrastiveHebbianMechanism.integrator_function>` to
+  update the activity of the ContrastiveHebbianMechanism.  Note that the `integrator_mode
+  <ContrastiveHebbianMechanism.integrator_mode>` is always `True`.
+
+* `convergence_function <ContrastiveHebbianMechanism.convergence_function>` -- coupled with the
+  `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>` attribute, this determines when the
+  `execution <ContrastiveHebbian_Execution>` of the ContrastiveHebbianMechanism is complete.
+
+* `learning_function <ContrastiveHebbianMechanism.learning_function>` -- the default is `ContrastiveHebbian`, but it
+  can be replaced by any function that takes two 1d arrays ("activity states") and compares them to determine the
+  `matrix <MappingProjection.matrix>` of its `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`.
+
 
 .. _ContrastiveHebbian_Output:
 
