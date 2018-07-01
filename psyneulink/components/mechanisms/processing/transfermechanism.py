@@ -198,7 +198,7 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 .. _Transfer_Reinitialization:
 
 Reinitialization
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
