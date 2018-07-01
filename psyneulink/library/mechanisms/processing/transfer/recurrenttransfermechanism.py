@@ -113,8 +113,8 @@ and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in it
 <RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_state
 <RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>` can also be made to point to a separate input state rather than the
-primary one.  In this case, the input states' results will be combined using `LinearCombination
-<function.LinearCombination>` *before* being passed to the RecurrentTransferMechanism's `function
+primary one.  In this case, the input states' results will be combined using the `combination_function
+<RecurrentTransferMechanism.combination_function>` *before* being passed to the RecurrentTransferMechanism's `function
 <RecurrentTransferMechanism.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
@@ -443,6 +443,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     variable : value
         the input to Mechanism's `function <RecurrentTransferMechanism.variable>`.
+
+    combination_function : function
+        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
+        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
+        Function that simply adds the `value <InputState.value>` of the two InputStates.
 
     function : Function
         the Function used to transform the input.
