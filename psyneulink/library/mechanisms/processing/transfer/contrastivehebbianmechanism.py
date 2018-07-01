@@ -713,10 +713,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                  context=context)
 
         # Check for convergence
-        previous_value = self.integrator_function.previous_value
-        if (self.convergence_criterion is not None and
-                abs(self.convergence_function([value, previous_value])) <= self.convergence_criterion):
-
+        if (self.context.initialization_status != ContextFlags.INITIALIZING and
+                self.convergence_criterion is not None and
+                abs(self.convergence_function([value, self.integrator_function.previous_value]))
+                    <= self.convergence_criterion
+        ):
             # Terminate if this is the end of the minus phase
             if self.learning_phase == LearningPhase.MINUS:
 
@@ -729,8 +730,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
             # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
             # Initialize RECURRENT input to zero for next phase
-            self.input_states[RECURRENT].value = self.input_state.socket_template
-            # self.reinitialize(self.input_state.socket_template)
+            # self.input_states[RECURRENT].value = self.input_state.socket_template
+            self.reinitialize(self.input_state.socket_template)
 
             # Switch learning phase
             self.learning_phase = ~self.learning_phase
