@@ -721,13 +721,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # ?? USE initial_value attribute below??
                 self.is_finished = True
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-                # self.input_states[RECURRENT].value = self.output_states[PLUS_PHASE_OUTPUT].value
                 self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
 
             # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
             # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-            # Initialize RECURRENT input to zero for next phase
-            # self.input_states[RECURRENT].value = self.input_state.socket_template
             self.reinitialize(self.input_state.socket_template)
 
             # Switch learning phase
