@@ -85,3 +85,36 @@ class TestLCControlMechanism:
         val = LC.execute([[10.0]])
         assert np.allclose(np.asfarray(val).flatten(), [3.00139776,  0.512152259, .00279552477, 0.05000])
         val = benchmark(LC.execute, [[10.0]])
+
+    def test_lc_control_modulated_mechanisms_all(self):
+
+        T_1 = pnl.TransferMechanism(name='T_1')
+        T_2 = pnl.TransferMechanism(name='T_2')
+
+        LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
+                                    modulated_mechanisms=pnl.ALL
+                                    )
+        S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
+        assert len(LC.control_signals)==1
+        assert len(LC.control_signals[0].efferents)==2
+        assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+
+
+    def test_control_modulation(self):
+        Tx = pnl.TransferMechanism(name='Tx')
+        Ty = pnl.TransferMechanism(name='Ty')
+        Tz = pnl.TransferMechanism(name='Tz')
+        C =  pnl.ControlMechanism(
+                # function=pnl.Linear,
+                default_variable=[1],
+                monitor_for_control=Ty,
+                control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
+                                                  projections=(pnl.SLOPE,Tz)))
+        P1=pnl.Process(pathway=[Tx,Tz])
+        P2=pnl.Process(pathway=[Ty, C])
+        S=pnl.System(processes=[P1, P2])
+
+        assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
+        result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
+        assert result == [[[4.], [4.]], [[4.], [4.]]]

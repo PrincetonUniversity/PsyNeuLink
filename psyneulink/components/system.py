@@ -1143,7 +1143,7 @@ class System(System_Base):
                 # THIS IS NOW DONE IN _instantiate_graph
                 # # Add system to the Mechanism's list of systems of which it is member
                 # if not self in sender_object_item[MECHANISM].systems:
-                #     sender_mech.systems[self] = INTERNAL
+                #     sender_mech._add_system(self, INTERNAL)
 
                 # Assign sender mechanism entry in self.mechanismsDict, with object_item as key and its Process as value
                 #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
@@ -1241,7 +1241,7 @@ class System(System_Base):
                 # LearningMechanisms or ObjectiveMechanism used for learning:  label as LEARNING and return
                 if (isinstance(sender_mech, LearningMechanism) or
                         (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
-                    sender_mech.systems[self] = LEARNING
+                    sender_mech._add_system(self, LEARNING)
                     return
                 # System's controller or ObjectiveMechanism that projects it: label as CONTROL and return
                 # IMPLEMENTATION NOTE:  This allows ObjectiveMechanisms to be included in the System's execution_graph
@@ -1250,7 +1250,7 @@ class System(System_Base):
                 #                           a warning is issued and those other projections are ignored.
                 elif (sender_mech is self.controller or
                           (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.for_controller)):
-                    sender_mech.systems[self] = CONTROL
+                    sender_mech._add_system(self, CONTROL)
                     obj_mech_rcvrs = [[projection.receiver.owner for projection in output_state.efferents]
                              for output_state in sender_mech.output_states]
                     if len(obj_mech_rcvrs) > 1:
@@ -1270,7 +1270,7 @@ class System(System_Base):
                       and is_in_system(sender_mech)
                       # MODIFIED 6/24/18 END:
                 ):
-                    sender_mech.systems[self] = INTERNAL
+                    sender_mech._add_system(self, INTERNAL)
 
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
 
@@ -1322,11 +1322,11 @@ class System(System_Base):
                         for output_state in sender_mech.output_states)):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
-                        sender_mech.systems[self] = SINGLETON
+                        sender_mech._add_system(self, SINGLETON)
                     else:
-                        sender_mech.systems[self] = TERMINAL
+                        sender_mech._add_system(self, TERMINAL)
                 except KeyError:
-                    sender_mech.systems[self] = TERMINAL
+                    sender_mech._add_system(self, TERMINAL)
                 # If sender_mech has projections to ControlMechanism and/or Objective Mechanisms used for control
                 #    that are NOT the System's controller, then continue to track those projections
                 #    for dependents to add to the execution_graph;
@@ -1349,6 +1349,11 @@ class System(System_Base):
                     return
 
             # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
+
+            # MODIFIED 6/24/18 NEW:
+            if not sender_mech.output_states:
+                return
+            # MODIFIED 6/24/18 END
 
             for output_state in sender_mech.output_states:
 
@@ -1414,13 +1419,13 @@ class System(System_Base):
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in
                                                                {ORIGIN, SINGLETON,TERMINAL}):
-                                sender_mech.systems[self] = INITIALIZE_CYCLE
+                                sender_mech._add_system(self, INITIALIZE_CYCLE)
                             # # MODIFIED 6/24/18 OLD:
                             # if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
                             # MODIFIED 6/24/18 NEW:
                             if not (receiver.systems[self] in {ORIGIN, SINGLETON, TERMINAL}):
                             # MODIFIED 6/24/18 END
-                                receiver.systems[self] = CYCLE
+                                receiver._add_system(self, CYCLE)
                             continue
 
                     else:
@@ -1435,7 +1440,7 @@ class System(System_Base):
                                 {sender_mech}
 
                     if not sender_mech.systems:
-                        sender_mech.systems[self] = INTERNAL
+                        sender_mech._add_system(self, INTERNAL)
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver)
@@ -1478,7 +1483,7 @@ class System(System_Base):
                     object_item = first_mech
                     self.graph[object_item] = set()
                     self.execution_graph[object_item] = set()
-                    first_mech.systems[self] = ORIGIN
+                    first_mech._add_system(self, ORIGIN)
             except KeyError as e:
                 # IMPLEMENTATION NOTE:
                 # This occurs if a Mechanism belongs to one (or more) Process(es) in the System but not ALL of them;
@@ -1850,7 +1855,7 @@ class System(System_Base):
                             # If making receiver dependent on sender produced a cycle, remove from learningGraph
                             except ValueError:
                                 self.learning_execution_graph[receiver].remove(sender_mech)
-                                receiver.systems[self] = CYCLE
+                                receiver._add_system(self, CYCLE)
                                 continue
 
                         else:
@@ -1863,7 +1868,7 @@ class System(System_Base):
                                 self.learning_execution_graph[receiver] = {sender_mech}
 
                         if not sender_mech.systems:
-                            sender_mech.systems[self] = LEARNING
+                            sender_mech._add_system(self, LEARNING)
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver, process)
@@ -3810,8 +3815,8 @@ class System(System_Base):
             if isinstance(rcvr, LearningMechanism):
                 return
             # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
+            #    break, as those handled below
             if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
-            # if isinstance(rcvr, ObjectiveMechanism) and rcvr._role is CONTROL:
                 return
 
             # loop through senders to implement edges
@@ -3834,8 +3839,11 @@ class System(System_Base):
                         for proj in projs:
                             if proj.receiver.owner == rcvr:
                                 if show_mechanism_structure:
-                                    sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                    proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                    sndr_proj_label = '{}:{}-{}'.\
+                                        format(sndr_label, OutputState.__name__, proj.sender.name)
+                                    proc_mech_rcvr_label = '{}:{}-{}'.\
+                                        format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
+                                        # format(rcvr_label, InputState.__name__, proj.receiver.name)
                                 else:
                                     sndr_proj_label = sndr_label
                                     proc_mech_rcvr_label = rcvr_label
@@ -4043,30 +4051,6 @@ class System(System_Base):
                         else:
                             sndr_color = learning_color
 
-                        # # MODIFIED 5/13/18 OLD:
-                        # # If Projection is not from another learning component
-                        # #    only show if ALL is set, and don't color
-                        # # if (isinstance(sndr, LearningMechanism)
-                        # #         or (isinstance(sndr, ObjectiveMechanism)
-                        # if (isinstance(sndr, LearningMechanism)
-                        #      and sndr._role is LEARNING
-                        #      and self in sndr.systems):
-                        #
-                        #     # assert False, "WHY IS LearningMechanism NODE BEING ASSIGNED HERE? DOES IT HAVE _role ATTR?"
-                        #
-                        #     if show_mechanism_structure:
-                        #         sg.node(self._get_label(sndr, show_dimensions, show_roles),
-                        #                sndr.show_structure(**mech_struct_args),
-                        #                color=sndr_color)
-                        #     else:
-                        #         sg.node(self._get_label(sndr, show_dimensions, show_roles),
-                        #                shape=mechanism_shape,
-                        #                color=sndr_color)
-                        # else:
-                        #     if not show_learning is ALL:
-                        #         continue
-                        # # MODIFIED 5/12/18 END
-
                         # Create an edge for the Projection to the LearningMecchanism if:
                         #    - it is from another LearningMechanism in the same System
                         #    - it is from an ObjectiveMechanism used for learning in the same System
@@ -4237,7 +4221,7 @@ class System(System_Base):
                                color=prediction_mechanism_color)
                     pass
 
-        # MAIN BODY OFF METHOD:
+        # MAIN BODY OF METHOD:
 
         import graphviz as gv
 
@@ -4388,7 +4372,6 @@ class System(System_Base):
                         else:
                             raise SystemError("PROGRAM ERROR: Component in interaction process ({}) is not in "
                                               "{}'s graph or learningGraph".format(r.name, self.name))
-
 
         else:
             for r in rcvrs:

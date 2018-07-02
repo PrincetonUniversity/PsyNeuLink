@@ -931,7 +931,7 @@ Class Reference
 import inspect
 import logging
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 from inspect import isclass
 
 import numpy as np
@@ -1388,6 +1388,9 @@ class Mechanism_Base(Mechanism):
 
         self._execution_id = None
         self._is_finished = False
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
+        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
+
         # Register with MechanismRegistry or create one
         if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
@@ -1457,8 +1460,6 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        self.systems = {}
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -1493,6 +1494,9 @@ class Mechanism_Base(Mechanism):
         try:
             default_variable_from_input_states, input_states_variable_was_specified = \
                 self._handle_arg_input_states(params[INPUT_STATES])
+
+            # updated here in case it was parsed in _handle_arg_input_states
+            params[INPUT_STATES] = self.input_states
         except (TypeError, KeyError):
             pass
         except AttributeError as e:
@@ -1559,8 +1563,11 @@ class Mechanism_Base(Mechanism):
         default_variable_from_input_states = []
         input_state_variable_was_specified = None
 
-        if not isinstance(input_states, Iterable):
+        if not isinstance(input_states, list):
             input_states = [input_states]
+            # KDM 6/28/18: you can't set to self.input_states because this triggers
+            # a check for validation pref, but self.prefs does not exist yet so this fails
+            self._input_states = input_states
 
         for i, s in enumerate(input_states):
 
@@ -2920,6 +2927,14 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
                                  format(Mechanism.__name__, process, Process.__name__))
         self.processes.__additem__(process, role)
+
+    @tc.typecheck
+    def _add_system(self, system, role:str):
+        from psyneulink.components.system import System
+        if not isinstance(system, System):
+            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
+                                 format(Mechanism.__name__, system, System.__name__))
+        self.systems.__additem__(system, role)
 
     @property
     def is_finished(self):

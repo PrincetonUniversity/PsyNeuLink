@@ -985,7 +985,7 @@ class Process(Process_Base):
         # Move any ControlMechanisms in the pathway to the end
         from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
-            if isinstance(item, ControlMechanism):
+            if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
 
         # Identify and assign first Mechanism as first_mechanism and ORIGIN
@@ -996,7 +996,8 @@ class Process(Process_Base):
 
         # Identify and assign last Mechanism as last_mechanism and ORIGIN
         i = -1
-        while not isinstance(pathway[i],Mechanism_Base):
+        while (not isinstance(pathway[i],Mechanism_Base) or
+               (isinstance(pathway[i], ControlMechanism) and len(pathway)>1)):
             i -=1
         self.last_mechanism = pathway[i]
 
@@ -1038,7 +1039,11 @@ class Process(Process_Base):
             super()._instantiate_value(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            value = self.pathway[-1].output_state.value
+            # MODIFIED 6/24/18 OLD:
+            # value = self.pathway[-1].output_state.value
+            # MODIFIED 6/24/18 NEW:
+            value = self.last_mechanism.output_state.value
+            # MODIFIED 6/24/18 END
             try:
                 # Could be mutable, so assign copy
                 self.instance_defaults.value = value.copy()
@@ -1109,7 +1114,7 @@ class Process(Process_Base):
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
-                if any(any(proj.receiver.owner is mech
+                if mech.output_states and any(any(proj.receiver.owner is mech
                            for proj in state.efferents)
                        for state in mech.output_states):
                     for state in mech.output_states:

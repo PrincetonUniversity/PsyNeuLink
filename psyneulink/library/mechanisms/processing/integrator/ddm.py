@@ -343,7 +343,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CLASS_DEFAULTS, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
@@ -410,7 +410,7 @@ class DDM_OUTPUT():
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
         `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
@@ -423,7 +423,7 @@ class DDM_OUTPUT():
 
     *SELECTED_INPUT_ARRAY* : 1d nparray
       .. note::
-         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
         outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
@@ -710,7 +710,6 @@ class DDM(ProcessingMechanism_Base):
             threshold=1.0,
             noise=0.5,
             t0=.200,
-            owner=CLASS_DEFAULTS
         )
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -773,7 +772,12 @@ class DDM(ProcessingMechanism_Base):
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_states[THRESHOLD]
                            #    v[2]=self.input_states[0].variable
-                 FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
+                 # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
+                 # FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][0][1])]}
+                 FUNCTION: lambda v: [float(np.atleast_2d(v[2])[0][0]), 0] \
+                                      if (v[1]-v[0]) < (v[1]+v[0]) \
+                                      else [0,float(np.atleast_2d(v[2])[0][1])]
+                 }
             ])
 
         else:
@@ -888,7 +892,6 @@ class DDM(ProcessingMechanism_Base):
             # number of seconds to wait before next point is plotted
             time.sleep(.1)
 
-    # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
@@ -906,9 +909,6 @@ class DDM(ProcessingMechanism_Base):
         # if not is_numeric(variable) and len(variable[0]) > 1:
         #     raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         return super()._validate_variable(variable=variable, context=context)
-
-    # MODIFIED 11/21/16 END
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -978,7 +978,6 @@ class DDM(ProcessingMechanism_Base):
             self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
                                                           noise=self.function_params['noise']).function
 
-
     def _execute(
         self,
         variable=None,
@@ -1017,8 +1016,6 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
-
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
             variable = self._update_variable(self.instance_defaults.variable)
@@ -1034,7 +1031,6 @@ class DDM(ProcessingMechanism_Base):
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])
-
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:

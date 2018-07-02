@@ -46,33 +46,31 @@ Class Reference
 
 """
 
-import logging
-import uuid
+import collections
 from collections import Iterable, OrderedDict
 from enum import Enum
-
+import logging
 import numpy as np
+import uuid
+
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
-from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import EXECUTING
-from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
+from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.context import ContextFlags, ContextStatus
 
 __all__ = [
     'Composition', 'CompositionError', 'CNodeRole',
 ]
 
 logger = logging.getLogger(__name__)
-
 
 class CNodeRole(Enum):
     """
@@ -226,7 +224,7 @@ class Graph(object):
     '''
 
     def __init__(self):
-        self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
+        self.comp_to_vertex = collections.OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
@@ -371,7 +369,6 @@ class Composition(object):
         self.needs_update_scheduler_processing = True  # Tracks if the processing scheduler needs to be regenerated
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
-        # helper attributes
         self.c_nodes_to_roles = OrderedDict()
 
         # Create lists to track certain categories of Composition Nodes:
@@ -817,6 +814,35 @@ class Composition(object):
     #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
     #                                      "{!s} where the InputState takes values of length {!s}".
     #                                      format(i, mech.name, val_length, state_length))
+
+
+    def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
+        for mech in feed_dict.keys():  # For each mechanism given an input
+            if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
+                if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
+                    article = "an"
+                else:
+                    article = "a"
+                # Throw an error informing the user that the mechanism was not found in the mech type list
+                raise ValueError("The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
+            for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
+                # Check if there are multiple input states specified
+                try:
+                    timestep[0]
+                except TypeError:
+                    raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
+                                    "Likely missing set of brackets.".format(mech.name, i))
+                if not isinstance(timestep[0], collections.Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
+                    # If not, embellish the formatting to match the verbose case
+                    timestep = [timestep]
+                # Then, check that each input_state is receiving the right size of input
+                for i, value in enumerate(timestep):
+                    val_length = len(value)
+                    state_length = len(mech.input_state.instance_defaults.value)
+                    if val_length != state_length:
+                        raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
+                                         "{!s} where the InputState takes values of length {!s}".
+                                         format(i, mech.name, val_length, state_length))
 
     def _create_CIM_states(self):
         '''
@@ -1593,7 +1619,6 @@ class Composition(object):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-
     @property
     def input_states(self):
         """Returns all InputStates that belong to the Input CompositionInterfaceMechanism"""
@@ -1629,3 +1654,4 @@ class Composition(object):
     def output_state(self):
         """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states[0]
+
