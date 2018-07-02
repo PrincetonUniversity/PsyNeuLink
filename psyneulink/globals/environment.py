@@ -960,7 +960,8 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     for mech, stim_list in stimuli.items():
 
-        check_spec_type = _input_matches_variable(stim_list, mech.instance_defaults.variable)
+        check_spec_type = _input_matches_variable(stim_list, mech.external_input_values
+)
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
         if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
             if check_spec_type == "homogeneous":
@@ -980,11 +981,13 @@ def _adjust_stimulus_dict(obj, stimuli):
         else:
             adjusted_stimuli[mech] = []
             for stim in stimuli[mech]:
-                check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
+                check_spec_type = _input_matches_variable(stim, mech.external_input_values)
+
                 # loop over each input to verify that it matches variable
                 if check_spec_type == False:
                     err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                        format(stim, mech.name, mech.instance_defaults.variable)
+                        format(stim, mech.name, mech.external_input_values
+)
                     # 8/3/17 CW: The error message implementation here is very hacky; but it's at least not a hack
                     # for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(mech)):

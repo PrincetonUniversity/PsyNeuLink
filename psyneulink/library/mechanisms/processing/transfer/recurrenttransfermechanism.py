@@ -1009,7 +1009,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_state:
-            new_input_state = InputState(owner=self, name="Recurrent Input State", variable=self.variable[0])
+            new_input_state = InputState(owner=self,
+                                         name="Recurrent Input State",
+                                         variable=self.variable[0],
+                                         internal_only=True)
             assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
             assert(self.input_state.name != "Recurrent Input State")
             return AutoAssociativeProjection(owner=mech,
