@@ -767,7 +767,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         #         self.reinitialize(self._parse_function_variable(self.input_state.socket_template))
         # MODIFIED 7/1/18 END
 
-
             # Switch learning phase
             self.learning_phase = ~self.learning_phase
 
