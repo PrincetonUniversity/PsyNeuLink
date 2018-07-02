@@ -910,14 +910,14 @@ def run(obj,
 
 @tc.typecheck
 
-def _input_matches_external_input_state_values(input, var):
+def _input_matches_external_input_state_values(input, value_to_compare):
     # input states are uniform
-    if np.shape(np.atleast_2d(input)) == np.shape(var):
+    if np.shape(np.atleast_2d(input)) == np.shape(value_to_compare):
         return "homogeneous"
     # input states have different lengths
-    elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
+    elif len(np.shape(value_to_compare)) == 1 and isinstance(value_to_compare[0], (list, np.ndarray)):
         for i in range(len(input)):
-            if len(input[i]) != len(var[i]):
+            if len(input[i]) != len(value_to_compare[i]):
                 return False
         return "heterogeneous"
     return False
@@ -955,7 +955,7 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     # (1) Replace any user provided convenience notations with values that match the following specs:
     # a - all dictionary values are lists containing and input value on each trial (even if only one trial)
-    # b - each input value is a 2d array that matches variable
+    # b - each input value is a 2d array that matches external_input_values
     # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
     #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
     # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
@@ -988,7 +988,7 @@ def _adjust_stimulus_dict(obj, stimuli):
             for stim in stimuli[mech]:
                 check_spec_type = _input_matches_external_input_state_values(stim, mech.external_input_values)
 
-                # loop over each input to verify that it matches variable
+                # loop over each input to verify that it matches external_input_values
                 if check_spec_type == False:
                     err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
                         format(stim, mech.name, mech.external_input_values
@@ -998,10 +998,6 @@ def _adjust_stimulus_dict(obj, stimuli):
                     if "KWTA" in str(type(mech)):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other" \
                                             " values) to represent the outside stimulus for the inhibition input state"
-                    if hasattr(mech, "has_recurrent_input_state"):
-                        err_msg = err_msg + " For recurrent transfer mechanisms with the recurrent input state, " \
-                                            "remember to append an array of zeros (or other values) to represent the " \
-                                            "outside stimulus for the inhibition input state."
                     raise RunError(err_msg)
                 elif check_spec_type == "homogeneous":
                     # np.atleast_2d will catch any single-input states specified without an outer list
