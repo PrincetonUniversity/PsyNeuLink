@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.4.7.1+180.g6de8939 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.4.7.1+181.gc1af743 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+180.g6de8939 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+181.gc1af743 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Log" href="Log.html"/>
         <link rel="prev" title="Time" href="Time.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+180
+                0.4.7.1+181
               </div>
             
           
@@ -209,9 +209,9 @@ with <a class="reference internal" href="Condition.html"><span class="doc">Condi
 the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
 <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
 <p>Inputs are specified in a Python dictionary where the keys are <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, and the values are lists in which
-the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
-shape of the mechanism’s variable. This means that the inputs to an origin mechanism are usually specified by a
-list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>.</p>
+the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
+shape of the mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code>. This means that the inputs to
+an origin mechanism are usually specified by a list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>. Any InputStates that are not represented in <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> will not receive a user-specified input value.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
@@ -233,17 +233,15 @@ list of 2d lists/arrays, though <a class="reference internal" href="#input-speci
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="figure" id="run-inputs-fig">
-<img alt="Example input specifications with variable" src="_images/input_spec_variables.svg" /></div>
+<div class="figure" id="run-inputs-fig-states">
+<img alt="Example input specifications with input states" src="_images/input_spec_states.svg" /></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Keep in mind that a mechanism’s variable is the concatenation of its input states. In other words, a fully specified
-mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism’s i-th input state.
-Because of this <a class="reference internal" href="Mechanism.html#mechanism-figure"><span class="std std-ref">relationship between a mechanism's variable and its input states</span></a>, it is also
-valid to think about the input specification for a given origin mechanism as a nested list of values for each input
-state on each trial.</p>
-<div class="last figure" id="run-inputs-fig-states">
-<img alt="Example input specifications with input states" src="_images/input_spec_states.svg" /></div>
+<p class="last">Keep in mind that a mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> attribute contains
+the concatenation of the values of its external InputStates. Any InputStates marked as “internal”, such as
+InputStates that receive recurrent Projections, are excluded from this value. A mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> attribute is always a 2d list in which the index i element is the value of
+the Mechanism’s index i InputState. In many cases, <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> is
+the same as <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
 </div>
 <p>The number of inputs specified <strong>must</strong> be the same for all origin mechanisms in the system. In other words, all of the
 values in the input dictionary must have the same length.</p>
@@ -391,7 +389,10 @@ situations:</p>
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Shorthand - drop the remaining list on each input because <strong>Mechanism a</strong>’s variable is length 1:</p>
+<dl class="docutils">
+<dt>Shorthand - drop the remaining list on each input because <strong>Mechanism a</strong>’s <a href="#id1"><span class="problematic" id="id2">`</span></a>external_input_values</dt>
+<dd>&lt;MechanismBase.external_input_values&gt;` is length 1:</dd>
+</dl>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]}</span>
 
 <span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
@@ -819,7 +820,7 @@ inputs, then the inputs will be cycled until the number of <a class="reference i
 If it is <code class="xref any docutils literal"><span class="pre">True</span></code>, learning is forced on; if it is <code class="xref any docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
 <li><strong>call_before_trial</strong> (Function : default <code class="xref any docutils literal"><span class="pre">None</span></code>) – called before each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>
 <li><strong>call_after_trial</strong> (Function : default <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>
-<li><strong>call_before_time_step</strong> (Function : default <a href="#id1"><span class="problematic" id="id2">``</span></a>None`) – called before each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
+<li><strong>call_before_time_step</strong> (Function : default <a href="#id3"><span class="problematic" id="id4">``</span></a>None`) – called before each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>call_after_time_step</strong> (Function : default <code class="xref any docutils literal"><span class="pre">None</span></code>) – called after each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>termination_processing</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale" title="psyneulink.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> within the <a class="reference internal" href="System.html#system-execution-processing"><span class="std std-ref">processing
 phase of execution</span></a></li>
@@ -905,7 +906,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+180.g6de8939',
+            VERSION:'0.4.7.1+181.gc1af743',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
