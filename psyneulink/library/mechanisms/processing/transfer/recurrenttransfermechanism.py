@@ -439,7 +439,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     combination_function : function : default LinearCombination
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
-        must accept two 1d arrays and generate one of the same size;  default simply adds the two arrays.
+        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
+        as each of these;  default simply adds the two items.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -465,7 +466,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     combination_function : function
         the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
         <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
-        Function that simply adds the `value <InputState.value>` of the two InputStates.
+        Function that simply adds them.
 
     function : Function
         the Function used to transform the input.
@@ -789,19 +790,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                 elif isinstance(comb_fct, (function_type, method_type)):
                     comb_fct = UserDefinedFunction(comb_fct, self.variable)
                 try:
-                    x = comb_fct(self.variable[0],self.variable[0])
+                    x = comb_fct.execute(self.variable)
                 except:
-                    raise RecurrentTransferError("Function specified for {} argument of {} (comb_fct) was not able to "
-                                                 "take two arguments of the same form as the input to {} ({})".
-                                                 format(repr(COMBINATION_FUNCTION),self.componentName,
-                                                        self.name, self.variable))
+                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
+                                                 "take an array with two items ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.variable))
                 try:
                     assert len(x) == len(self.variable[0])
                 except:
-                    raise RecurrentTransferError("Function specified for {} argument of {} (comb_fct) did not return "
-                                                 "a result that is the same form as the input to {} ({})".
-                                                 format(repr(COMBINATION_FUNCTION),self.componentName,
-                                                        self.name, self.variable))
+                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
+                                                 "a result that is the same shape as the input to {} ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct,
+                                                        self.name, self.variable[0]))
 
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:
