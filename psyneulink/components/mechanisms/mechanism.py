@@ -1102,6 +1102,10 @@ class Mechanism_Base(Mechanism):
         contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism. If the current value
         of an InputState does not have a corresponding label, then its numeric value is used instead.
 
+    external_input_values : list
+        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
+        InputStates that are not designated as `internal_only <InputState.internal_only>`.
+
     COMMENT:
     target_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
@@ -2954,6 +2958,18 @@ class Mechanism_Base(Mechanism):
             return self.input_states.values
         except (TypeError, AttributeError):
             return None
+    @property
+    def external_input_states(self):
+        try:
+            return [input_state for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+    @property
+    def external_input_values(self):
+        try:
+            return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
 
     @property
     def input_labels(self):
@@ -3227,3 +3243,4 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
+

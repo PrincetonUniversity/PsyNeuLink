@@ -195,8 +195,8 @@ User-modifiable Parameters
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
   `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
-  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smoothing_factor
-  <TransferMechanism.smoothing_factor>`, as well as the parameters of the TransferMechanism's `function
+  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
+  <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
   <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
   Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
   can project (by way of a `ControlProjection`).
