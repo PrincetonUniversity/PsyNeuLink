@@ -701,8 +701,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
+            # Combine RECURRENT and EXTERNAL inputs
             self.current_activity = self.combination_function.execute(variable)
         else:
+            # Only use RECURRENT input
             self.current_activity = variable[RECURRENT_INDEX]
 
         value = super()._execute(variable=np.atleast_2d(self.current_activity),
