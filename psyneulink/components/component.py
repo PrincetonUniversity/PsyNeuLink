@@ -2598,7 +2598,9 @@ class Component(object):
         function_variable = self._parse_function_variable(self.instance_defaults.variable)
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
-            self.function_object = UserDefinedFunction(default_variable=function_variable, custom_function=function, context=context)
+            self.function_object = UserDefinedFunction(default_variable=function_variable,
+                                                       custom_function=function,
+                                                       context=context)
         elif isinstance(function, Function):
             if not iscompatible(function.instance_defaults.variable, function_variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
