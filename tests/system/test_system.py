@@ -430,6 +430,15 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
+class TestInputSpecsExternalInputStatesOnly:
+
+    def test_recurrent_transfer_origin(self):
+        R = RecurrentTransferMechanism(has_recurrent_input_state=True)
+        P = Process(pathway=[R])
+        S = System(processes=[P])
+
+        S.run(inputs={R: [[1.0], [2.0], [3.0]]})
+        print(S.results)
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
