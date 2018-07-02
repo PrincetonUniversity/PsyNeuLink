@@ -92,3 +92,8 @@ class TestInputStates:
 
         assert t.input_state.function_object.instance_defaults.variable.shape == np.array([[0], [0]]).shape
         assert t.input_state.function_object.instance_defaults.value.shape == np.array([0]).shape
+
+    def test_internal_only(self):
+        m = pnl.TransferMechanism(input_states=['EXTERNAL', pnl.InputState(name='INTERNAL_ONLY', internal_only=True)])
+        assert m.input_values == [[ 0.],[ 0.]]
+        assert m.external_input_values == [[0.]]

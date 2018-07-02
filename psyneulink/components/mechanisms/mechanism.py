@@ -2960,6 +2960,13 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def external_input_values(self):
+        try:
+            return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
     def input_labels(self):
         """
         Returns a list with as many items as there are InputStates of the Mechanism. Each list item represents the value
@@ -3240,3 +3247,4 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
+
