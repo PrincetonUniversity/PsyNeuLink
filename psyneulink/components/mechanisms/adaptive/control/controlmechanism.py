@@ -586,13 +586,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
-        control_signals_arg = control_signals or []
+        control_signals = control_signals or []
         if not isinstance(control_signals, list):
             control_signals = [control_signals]
 
@@ -927,10 +927,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Must be overriden by subclass
         """
         # if self.verbosePref:
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            warnings.warn("No function has been specified for {};  default value ({}) was returned".
-                      format(self.name, list(self.instance_defaults.value)))
-        return self.instance_defaults.value
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     warnings.warn("No function has been specified for {};  default value ({}) was returned".
+        #               format(self.name, list(self.instance_defaults.value)))
+        # return self.instance_defaults.value
+        return super()._execute(variable=variable, runtime_params=runtime_params,context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
