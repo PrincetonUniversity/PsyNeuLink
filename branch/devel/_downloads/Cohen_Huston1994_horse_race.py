@@ -41,7 +41,7 @@ task_layer = pnl.RecurrentTransferMechanism(size=2,
                                             function=pnl.Logistic(),
                                             hetero=-2,
                                             integrator_mode=True,
-                                            smoothing_factor=0.1,
+                                            integration_rate=0.1,
                                             name='TASK')
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
@@ -50,7 +50,7 @@ colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
                                                      integrator_mode=True,
                                                      hetero=-2.0,
                                                      # noise=pnl.NormalDist(mean=0.0, standard_dev=.0).function,
-                                                     smoothing_factor=0.1, # cohen-huston text says 0.01
+                                                     integration_rate=0.1, # cohen-huston text says 0.01
                                                      name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
@@ -58,14 +58,14 @@ words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
                                                     hetero=-2,
                                                     integrator_mode=True,
                                                     # noise=pnl.NormalDist(mean=0.0, standard_dev=.05).function,
-                                                    smoothing_factor=0.1,
+                                                    integration_rate=0.1,
                                                     name='WORDS HIDDEN')
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
 response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 function=pnl.Logistic(),
                                                 hetero=-2.0,
                                                 integrator_mode=True,
-                                                smoothing_factor=0.1,
+                                                integration_rate=0.1,
                                                 name='RESPONSE')
 
 # Log mechanisms ------------------------------------------------------------------------------------------------------
