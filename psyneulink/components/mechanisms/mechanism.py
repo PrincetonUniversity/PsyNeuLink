@@ -2581,30 +2581,37 @@ class Mechanism_Base(Mechanism):
             is_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(is_function, [is_params, is_context, is_in, is_out])
 
+        mf_params = builder.alloca(params.type.pointee.elements[1], 1)
         # Call parameter states for main function
         for idx, mf_param in enumerate(self.function_object.get_param_ids()):
+            param_in_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            param_out_ptr = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # FIXME: why wouldn't it be there?
             if mf_param not in self._parameter_states:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             i = self._parameter_states.key_values.index(mf_param)
             assert self._parameter_states[mf_param] == self.parameter_states[i]
 
+
             # Skip parameter states that don't have incoming projections
             if len(self._parameter_states[mf_param].mod_afferents) == 0:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
-            # Parameter states modify corresponding parameter in param struct
-            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            # Parameter states modify corresponding parameter
+            ps_output = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
         mf_in = is_output
         mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
-        mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
