@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -271,7 +271,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                            \
     initial_value=None,                     \
     noise=0.0,                              \
-    smoothing_factor=0.5,                   \
+    integration_rate=0.5,                   \
     clip=[float:min, float:max],            \
     has_recurrent_input_state=False         \
     combination_function=LinearCombination, \
@@ -400,12 +400,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         <RecurrentTransferMechanism.integrator_mode>` is True or False. See `noise <RecurrentTransferMechanism.noise>`
         for more details.
 
-    smoothing_factor : float : default 0.5
+    integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-             result = (smoothing_factor * variable) +
-             (1-smoothing_factor * input to mechanism's function on the previous time step)
+             result = (integration_rate * variable) +
+             (1-integration_rate * input to mechanism's function on the previous time step)
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
@@ -482,18 +482,17 @@ class RecurrentTransferMechanism(TransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input (only relevant if `smoothing_factor
-        <RecurrentTransferMechanism.smoothing_factor>` parameter is not 1.0).
+        determines the starting value for time-averaged input (only relevant if `integration_rate
+        <RecurrentTransferMechanism.integration_rate>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     integrator_function:
-        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
-        <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
-        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `smoothing_factor
-        <RecurrentTransferMechanism.smoothing_factor>` parameter of the `RecurrentTransferMechanism` corresponds to
-        the `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function <RecurrentTransferMechanism.integrator_function>`,
+        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
+        Keep in mind that the `integration_rate <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to the
+        `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
@@ -531,11 +530,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             from its distribution on each execution. If noise is specified as a float or as a function with a fixed
             output, then the noise will simply be an offset that remains the same across all executions.
 
-    smoothing_factor : float : default 0.5
+    integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
+          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
@@ -645,8 +644,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
+                 integration_rate: is_numeric_or_none=0.5,
                  integrator_mode=False,
-                 smoothing_factor: is_numeric_or_none=0.5,
                  clip=None,
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
@@ -696,7 +695,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,
-                         smoothing_factor=smoothing_factor,
+                         integration_rate=integration_rate,
                          clip=clip,
                          output_states=output_states,
                          params=params,
