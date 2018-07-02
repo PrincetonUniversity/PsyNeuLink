@@ -84,7 +84,7 @@ class TestConfigurableParameters:
         T = TransferMechanism(function=Linear(slope=old_value,
                                               intercept=old_value),
                               noise=old_value,
-                              smoothing_factor=old_value)
+                              integration_rate=old_value)
 
         # SLOPE - - - - - - - -
 
@@ -120,19 +120,19 @@ class TestConfigurableParameters:
 
         # SMOOTHING FACTOR - - - - - - - -
 
-        assert np.allclose(T.user_params["smoothing_factor"], old_value)
-        assert np.allclose(T.smoothing_factor, old_value)
-        assert np.allclose(T._smoothing_factor, old_value)
-        assert np.allclose(T.mod_smoothing_factor, old_value)
+        assert np.allclose(T.user_params["integration_rate"], old_value)
+        assert np.allclose(T.integration_rate, old_value)
+        assert np.allclose(T._integration_rate, old_value)
+        assert np.allclose(T.mod_integration_rate, old_value)
 
-        T.smoothing_factor = new_value
+        T.integration_rate = new_value
 
         # KAM changed 3/2/18 --
         # function_params looks at parameter state value, so this will not update until next execution
-        assert np.allclose(T.user_params["smoothing_factor"], old_value)
-        assert np.allclose(T.smoothing_factor, new_value)
-        assert np.allclose(T._smoothing_factor, new_value)
-        assert np.allclose(T.mod_smoothing_factor, old_value)
+        assert np.allclose(T.user_params["integration_rate"], old_value)
+        assert np.allclose(T.integration_rate, new_value)
+        assert np.allclose(T._integration_rate, new_value)
+        assert np.allclose(T.mod_integration_rate, old_value)
 
         # NOISE - - - - - - - -
 
@@ -162,10 +162,10 @@ class TestConfigurableParameters:
         assert np.allclose(T.function_object._intercept, new_value)
         assert np.allclose(T.mod_intercept, new_value)
 
-        assert np.allclose(T.user_params["smoothing_factor"], new_value)
-        assert np.allclose(T.smoothing_factor, new_value)
-        assert np.allclose(T._smoothing_factor, new_value)
-        assert np.allclose(T.mod_smoothing_factor, new_value)
+        assert np.allclose(T.user_params["integration_rate"], new_value)
+        assert np.allclose(T.integration_rate, new_value)
+        assert np.allclose(T._integration_rate, new_value)
+        assert np.allclose(T.mod_integration_rate, new_value)
 
         assert np.allclose(T.user_params["noise"], new_value)
         assert np.allclose(T.noise, new_value)

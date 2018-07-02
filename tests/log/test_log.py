@@ -18,14 +18,14 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert PJ.loggable_items == {'matrix': 'OFF',
                                      'value': 'OFF'}
@@ -39,14 +39,14 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'EXECUTION',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert PJ.loggable_items == {'matrix': 'EXECUTION',
                                      'value': 'OFF'}
@@ -118,14 +118,14 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert PJ.loggable_items == {'matrix': 'OFF',
                                      'value': 'OFF'}
@@ -143,14 +143,14 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'EXECUTION'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'EXECUTION',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'EXECUTION'}
         assert PJ.loggable_items == {'matrix': 'EXECUTION',
                                      'value': 'OFF'}
@@ -218,14 +218,14 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'OFF'}
 
         T1.set_log_conditions(pnl.SLOPE)
@@ -237,7 +237,7 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'EXECUTION'}
 
         T2.set_log_conditions(pnl.SLOPE)
@@ -249,7 +249,7 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'smoothing_factor': 'OFF',
+                                     'integration_rate': 'OFF',
                                      'value': 'EXECUTION'}
 
         # RUN ZERO  |  TRIALS ZERO, ONE, TWO ----------------------------------
@@ -343,7 +343,7 @@ class TestLog:
     def test_log_dictionary_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
-                                   smoothing_factor=0.5)
+                                   integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
@@ -393,7 +393,7 @@ class TestLog:
     def test_log_array_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
-                                   smoothing_factor=0.5)
+                                   integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
@@ -456,7 +456,7 @@ class TestLog:
     def test_log_dictionary_with_scheduler_many_time_step_increments(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
-                                   smoothing_factor=0.05)
+                                   integration_rate=0.05)
         PS = pnl.Process(name='log_test_PS', pathway=[T1])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 

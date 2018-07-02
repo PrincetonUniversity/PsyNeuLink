@@ -931,7 +931,7 @@ Class Reference
 import inspect
 import logging
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 from inspect import isclass
 
 import numpy as np
@@ -1101,6 +1101,10 @@ class Mechanism_Base(Mechanism):
     input_labels : list
         contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism. If the current value
         of an InputState does not have a corresponding label, then its numeric value is used instead.
+
+    external_input_values : list
+        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
+        InputStates that are not designated as `internal_only <InputState.internal_only>`.
 
     COMMENT:
     target_labels_dict : dict
@@ -1494,6 +1498,9 @@ class Mechanism_Base(Mechanism):
         try:
             default_variable_from_input_states, input_states_variable_was_specified = \
                 self._handle_arg_input_states(params[INPUT_STATES])
+
+            # updated here in case it was parsed in _handle_arg_input_states
+            params[INPUT_STATES] = self.input_states
         except (TypeError, KeyError):
             pass
         except AttributeError as e:
@@ -1560,8 +1567,11 @@ class Mechanism_Base(Mechanism):
         default_variable_from_input_states = []
         input_state_variable_was_specified = None
 
-        if not isinstance(input_states, Iterable):
+        if not isinstance(input_states, list):
             input_states = [input_states]
+            # KDM 6/28/18: you can't set to self.input_states because this triggers
+            # a check for validation pref, but self.prefs does not exist yet so this fails
+            self._input_states = input_states
 
         for i, s in enumerate(input_states):
 
@@ -2942,6 +2952,13 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def external_input_values(self):
+        try:
+            return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
     def input_labels(self):
         """
         Returns a list with as many items as there are InputStates of the Mechanism. Each list item represents the value
@@ -3213,3 +3230,4 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
+
