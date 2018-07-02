@@ -702,52 +702,28 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.learning_phase == LearningPhase.PLUS:
             self.finished = False
 
-        # MODIFIED 7/1/18 OLD:
-        if self.learning_phase == LearningPhase.PLUS:
-            # Combine RECURRENT and EXTERNAL inputs
-            self.current_activity = self.combination_function.execute(variable)
-        else:
-            # Only use RECURRENT input
-            self.current_activity = variable[RECURRENT_INDEX]
-
-        value = super()._execute(variable=np.atleast_2d(self.current_activity),
-                                 runtime_params=runtime_params,
-                                 context=context)
-        # TEST PRINT:
-        print(self.current_execution_time, value)
-
-        # Check for convergence
-        if (self.context.initialization_status != ContextFlags.INITIALIZING and
-                self.convergence_criterion is not None and
-                abs(self.convergence_function([value, self.integrator_function.previous_value]))
-                    <= self.convergence_criterion
-        ):
-            # Terminate if this is the end of the minus phase
-            if self.learning_phase == LearningPhase.MINUS:
-
-                # ?? USE initial_value attribute below??
-                self.minus_phase_activity = self.current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
-                self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
-                self.is_finished = True
-
-            else:
-                self.plus_phase_activity = self.current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
-                # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-                self.reinitialize(self.input_state.socket_template)
-
-        # # MODIFIED 7/1/18 NEW:
-        # value = super()._execute(variable,
+        # # MODIFIED 7/1/18 OLD:
+        # if self.learning_phase == LearningPhase.PLUS:
+        #     # Combine RECURRENT and EXTERNAL inputs
+        #     self.current_activity = self.combination_function.execute(variable)
+        # else:
+        #     # Only use RECURRENT input
+        #     self.current_activity = variable[RECURRENT_INDEX]
+        #
+        # value = super()._execute(variable=np.atleast_2d(self.current_activity),
         #                          runtime_params=runtime_params,
         #                          context=context)
+        # # TEST PRINT:
+        # print(self.current_execution_time,
+        #       '\nvariable:', variable,
+        #       '\ncurrent activity: ', self.current_activity,
+        #       '\nvalue', value
+        #       )
         #
         # # Check for convergence
-        # previous_value = self._parse_function_variable(self.integrator_function.previous_value)
         # if (self.context.initialization_status != ContextFlags.INITIALIZING and
         #         self.convergence_criterion is not None and
-        #         abs(self.convergence_function([value, previous_value]))
+        #         abs(self.convergence_function([value, self.integrator_function.previous_value]))
         #             <= self.convergence_criterion
         # ):
         #     # Terminate if this is the end of the minus phase
@@ -764,7 +740,44 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         #         self.plus_phase_activity = self.current_activity
         #         # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
         #         # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-        #         self.reinitialize(self._parse_function_variable(self.input_state.socket_template))
+        #         self.reinitialize(self.input_state.socket_template)
+
+        # MODIFIED 7/1/18 NEW:
+        value = super()._execute(variable,
+                                 runtime_params=runtime_params,
+                                 context=context)
+
+        # TEST PRINT:
+        print(self.current_execution_time,
+              '\nvariable:', variable,
+              '\ncurrent activity: ', self.current_activity,
+              '\nvalue', value
+              )
+
+        # Check for convergence
+        previous_value = self._parse_function_variable(self.integrator_function.previous_value)
+        if (self.context.initialization_status != ContextFlags.INITIALIZING and
+                self.convergence_criterion is not None and
+                abs(self.convergence_function([value, previous_value]))
+                    <= self.convergence_criterion
+        ):
+            # Terminate if this is the end of the minus phase
+            if self.learning_phase == LearningPhase.MINUS:
+
+                # ?? USE initial_value attribute below??
+                self.minus_phase_activity = self.current_activity
+                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
+                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
+                self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
+                self.is_finished = True
+
+            else:
+                self.plus_phase_activity = self.current_activity
+                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
+                # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
+                # self.reinitialize(self._parse_function_variable(self.input_state.socket_template))
+                self.reinitialize(self.input_state.socket_template)
+
         # MODIFIED 7/1/18 END
 
             # Switch learning phase
@@ -778,15 +791,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     # MODIFIED 7/1/18 NEW:
     def _parse_function_variable(self, variable):
 
+        # TEST PRINT:
+        print('\nparse variable: ', variable)
         try:
             if self.learning_phase == LearningPhase.PLUS:
                 # Combine RECURRENT and EXTERNAL inputs
-                return self.combination_function.execute(variable)
+                variable = self.combination_function.execute(variable)
             else:
                 # Only use RECURRENT input
-                return variable[RECURRENT_INDEX]
+                variable = variable[RECURRENT_INDEX]
         except:
-            return variable[RECURRENT_INDEX]
+            variable = variable[RECURRENT_INDEX]
+
+        return super()._parse_function_variable(variable)
     # MODIFIED 7/1/18 END
 
 
