@@ -777,3 +777,15 @@ class TestInputStateSpec:
         )
         assert T.input_states[0].socket_width == variable_len_state
         assert T.instance_defaults.variable.shape[-1] == variable_len_mech
+
+    def test_input_states_arg_no_list(self):
+        T = TransferMechanism(input_states={VARIABLE: [0, 0, 0]})
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1
+
+    def test_input_states_params_no_list(self):
+        T = TransferMechanism(params={INPUT_STATES: {VARIABLE: [0, 0, 0]}})
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1

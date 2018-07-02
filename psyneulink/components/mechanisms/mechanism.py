@@ -931,7 +931,7 @@ Class Reference
 import inspect
 import logging
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 from inspect import isclass
 
 import numpy as np
@@ -1497,6 +1497,9 @@ class Mechanism_Base(Mechanism):
         try:
             default_variable_from_input_states, input_states_variable_was_specified = \
                 self._handle_arg_input_states(params[INPUT_STATES])
+
+            # updated here in case it was parsed in _handle_arg_input_states
+            params[INPUT_STATES] = self.input_states
         except (TypeError, KeyError):
             pass
         except AttributeError as e:
@@ -1563,8 +1566,11 @@ class Mechanism_Base(Mechanism):
         default_variable_from_input_states = []
         input_state_variable_was_specified = None
 
-        if not isinstance(input_states, Iterable):
+        if not isinstance(input_states, list):
             input_states = [input_states]
+            # KDM 6/28/18: you can't set to self.input_states because this triggers
+            # a check for validation pref, but self.prefs does not exist yet so this fails
+            self._input_states = input_states
 
         for i, s in enumerate(input_states):
 
