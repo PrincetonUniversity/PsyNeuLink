@@ -1089,8 +1089,14 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Call parameter states for integrator function
         is_count = len(self.input_states)
-        if_ids = self.integrator_function.get_param_ids() if self.integrator_mode else []
+        if self.integrator_mode:
+            if_params = builder.alloca(f_params.type.pointee.elements[1], 1)
+            if_ids = self.integrator_function.get_param_ids()
+        else:
+            if_ids = []
         for idx, if_param in enumerate(if_ids):
+            param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            param_out_ptr = builder.gep(if_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
 
             # FIXME: Work around parameter rename. Mechanisms "smoothing_factor"
             # is integrator function's "rate"
@@ -1099,6 +1105,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # FIXME: Why wouldn't it be there?
             if if_param not in self._parameter_states:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             i = self._parameter_states.key_values.index(if_param)
@@ -1106,20 +1114,27 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Skip parameter states that don't have incoming projections
             if len(self._parameter_states[if_param].mod_afferents) == 0:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
             # Parameter states modify corresponding parameter in param struct
-            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            ps_output = builder.gep(if_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
+        mf_params = builder.alloca(f_params.type.pointee.elements[0], 1)
         # Call parameter states for main function
         for idx, mf_param in enumerate(self.function_object.get_param_ids()):
+            param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            param_out_ptr = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # FIXME: why wouldn't it be there?
             if mf_param not in self._parameter_states:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             i = self._parameter_states.key_values.index(mf_param)
@@ -1127,13 +1142,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Skip parameter states that don't have incoming projections
             if len(self._parameter_states[mf_param].mod_afferents) == 0:
+                raw_param_val = builder.load(param_in_ptr)
+                builder.store(raw_param_val, param_out_ptr)
                 continue
 
             ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
             # Parameter states modify corresponding parameter in param struct
-            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            ps_output = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
@@ -1141,14 +1158,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             if_in = is_out
             if_out = builder.alloca(integrator_function.args[3].type.pointee, 1)
-            if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.call(integrator_function, [if_params, if_context, if_in, if_out])
             mf_in = if_out
         else:
             mf_in = is_out
 
-        mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         if isinstance(self.function_object, NormalizingFunction):
