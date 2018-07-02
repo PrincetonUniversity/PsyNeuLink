@@ -65,9 +65,11 @@ the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **
 :keyword:`execute` or :keyword:`run` method.
 
 Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
-the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
-shape of the mechanism's variable. This means that the inputs to an origin mechanism are usually specified by a
-list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Specification_Examples>`.
+the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
+shape of the mechanism's `external_input_values <MechanismBase.external_input_values>`. This means that the inputs to
+an origin mechanism are usually specified by a list of 2d lists/arrays, though `some shorthand notations are allowed
+<Input_Specification_Examples>`. Any InputStates that are not represented in `external_input_values
+<MechanismBase.external_input_values>` will not receive a user-specified input value.
 
 ::
 
@@ -91,23 +93,25 @@ list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Spe
 
         >>> s.run(inputs=input_dictionary)
 
-.. _Run_Inputs_Fig:
+COMMENT:
+    .. _Run_Inputs_Fig:
 
-.. figure:: _static/input_spec_variables.svg
-   :alt: Example input specifications with variable
+    .. figure:: _static/input_spec_variables.svg
+       :alt: Example input specifications with variable
+COMMENT
 
+.. _Run_Inputs_Fig_States:
+
+.. figure:: _static/input_spec_states.svg
+   :alt: Example input specifications with input states
 
 .. note::
-    Keep in mind that a mechanism's variable is the concatenation of its input states. In other words, a fully specified
-    mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism's i-th input state.
-    Because of this `relationship between a mechanism's variable and its input states <Mechanism_Figure>`, it is also
-    valid to think about the input specification for a given origin mechanism as a nested list of values for each input
-    state on each trial.
-
-    .. _Run_Inputs_Fig_States:
-
-    .. figure:: _static/input_spec_states.svg
-       :alt: Example input specifications with input states
+    Keep in mind that a mechanism's `external_input_values <MechanismBase.external_input_values>` attribute contains
+    the concatenation of the values of its external InputStates. Any InputStates marked as "internal", such as
+    InputStates that receive recurrent Projections, are excluded from this value. A mechanism's `external_input_values
+    <MechanismBase.external_input_values>` attribute is always a 2d list in which the index i element is the value of
+    the Mechanism's index i InputState. In many cases, `external_input_values <MechanismBase.external_input_values>` is
+    the same as `variable <MechanismBase.variable>`
 
 The number of inputs specified **must** be the same for all origin mechanisms in the system. In other words, all of the
 values in the input dictionary must have the same length.
@@ -201,7 +205,8 @@ Shorthand - drop the outer list on each input because **Mechanism a** only has o
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s variable is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s `external_input_values
+    <MechanismBase.external_input_values>` is length 1:
 
 ::
 
@@ -905,7 +910,7 @@ def run(obj,
 
 @tc.typecheck
 
-def _input_matches_variable(input, var):
+def _input_matches_external_input_state_values(input, var):
     # input states are uniform
     if np.shape(np.atleast_2d(input)) == np.shape(var):
         return "homogeneous"
@@ -960,7 +965,8 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     for mech, stim_list in stimuli.items():
 
-        check_spec_type = _input_matches_variable(stim_list, mech.instance_defaults.variable)
+        check_spec_type = _input_matches_external_input_state_values(stim_list, mech.external_input_values
+                                                                     )
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
         if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
             if check_spec_type == "homogeneous":
@@ -980,11 +986,13 @@ def _adjust_stimulus_dict(obj, stimuli):
         else:
             adjusted_stimuli[mech] = []
             for stim in stimuli[mech]:
-                check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
+                check_spec_type = _input_matches_external_input_state_values(stim, mech.external_input_values)
+
                 # loop over each input to verify that it matches variable
                 if check_spec_type == False:
-                    err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                        format(stim, mech.name, mech.instance_defaults.variable)
+                    err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
+                        format(stim, mech.name, mech.external_input_values
+)
                     # 8/3/17 CW: The error message implementation here is very hacky; but it's at least not a hack
                     # for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(mech)):
