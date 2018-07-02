@@ -885,7 +885,7 @@ class Composition(object):
 
         for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
 
-            for input_state in node.input_states:
+            for input_state in node.external_input_states:
                 # add it to our set of current input states
                 current_origin_input_states.add(input_state)
 
@@ -1519,7 +1519,6 @@ class Composition(object):
 
         for node, stim_list in stimuli.items():
             if isinstance(node, Composition):
-                input_must_match = node.input_values
                 if isinstance(stim_list, dict):
                     adjusted_stimulus_dict = node._adjust_stimulus_dict(stim_list)
                     adjusted_stimuli_list = []
@@ -1539,8 +1538,7 @@ class Composition(object):
 
                         adjusted_stimuli_list.append(state_input)
 
-            else:
-                input_must_match = node.instance_defaults.variable
+            input_must_match = node.external_input_values
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
@@ -1649,6 +1647,25 @@ class Composition(object):
         for state in self.input_CIM.input_states:
             input_values.append(state.value)
         return input_values
+
+    #  For now, external_input_states == input_states and external_input_values == input_values
+    #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
+    #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
+    @property
+    def external_input_states(self):
+        """Returns all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            return [input_state for input_state in self.input_CIM.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_values(self):
+        """Returns values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            return [input_state.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
 
     @property
     def output_state(self):
