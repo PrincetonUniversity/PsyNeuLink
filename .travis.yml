@@ -5,6 +5,7 @@ python:
     - 3.6
 
 install:
+  - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
@@ -56,4 +57,7 @@ before_install: |
   fi
 
 script:
-  - python -m pytest -p no:logging tests/
+  - python -m pytest -p no:logging --cov=psyneulink tests/
+
+after_script:
+  - coveralls

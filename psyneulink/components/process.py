@@ -985,7 +985,7 @@ class Process(Process_Base):
         # Move any ControlMechanisms in the pathway to the end
         from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
-            if isinstance(item, ControlMechanism):
+            if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
 
         # Identify and assign first Mechanism as first_mechanism and ORIGIN
@@ -996,7 +996,8 @@ class Process(Process_Base):
 
         # Identify and assign last Mechanism as last_mechanism and ORIGIN
         i = -1
-        while (not isinstance(pathway[i],Mechanism_Base) or isinstance(pathway[i], ControlMechanism)):
+        while (not isinstance(pathway[i],Mechanism_Base) or
+               (isinstance(pathway[i], ControlMechanism) and len(pathway)>1)):
             i -=1
         self.last_mechanism = pathway[i]
 

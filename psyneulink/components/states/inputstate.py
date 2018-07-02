@@ -464,11 +464,7 @@ from psyneulink.components.functions.function import Function, Linear, LinearCom
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import \
-    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
-    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
-    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -510,6 +506,7 @@ class InputState(State_Base):
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
+        internal_only=False,                       \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -592,6 +589,11 @@ class InputState(State_Base):
     exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
+    internal_only : bool : False
+        specifies whether external input is required by the InputState's `owner <InputState.owner>` if its `role
+        <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputState.internal_only>`
+        for details).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -651,6 +653,12 @@ class InputState(State_Base):
     exponent : number
         see `weight and exponent <InputState_Weights_And_Exponents>` for description.
 
+    internal_only : bool
+        determines whether input is required for this InputState from `Run` or another `Composition` when the
+        InputState's `owner <InputState.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
+        is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
+        external input is required.
+
     name : str
         the name of the InputState; if it is not specified in the **name** argument of the constructor, a default is
         assigned by the InputStateRegistry of the Mechanism to which the InputState belongs.  Note that some Mechanisms
@@ -702,7 +710,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     class ClassDefaults(State_Base.ClassDefaults):
-        function = LinearCombination(operation=SUM, owner=CLASS_DEFAULTS)
+        function = LinearCombination(operation=SUM)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -722,6 +730,7 @@ class InputState(State_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
+                 internal_only:bool=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -747,6 +756,7 @@ class InputState(State_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
                                                   exponent=exponent,
+                                                  internal_only=internal_only,
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
