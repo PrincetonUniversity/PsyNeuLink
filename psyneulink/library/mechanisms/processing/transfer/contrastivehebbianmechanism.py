@@ -713,6 +713,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         value = super()._execute(variable=np.atleast_2d(self.current_activity),
                                  runtime_params=runtime_params,
                                  context=context)
+        # TEST PRINT:
+        print(self.current_execution_time, value)
 
         # Check for convergence
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
