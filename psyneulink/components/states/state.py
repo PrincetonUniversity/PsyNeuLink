@@ -395,7 +395,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.input_states)
     > [(InputState InputState-0)]
     print(my_mech.parameter_states)
-    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState smoothing_factor)]
+    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState integration_rate)]
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
