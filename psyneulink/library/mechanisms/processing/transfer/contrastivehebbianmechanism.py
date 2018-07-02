@@ -743,6 +743,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         #         self.reinitialize(self.input_state.socket_template)
 
         # MODIFIED 7/1/18 NEW:
+
+        try:
+            previous_value = self.integrator_function.previous_value
+        except:
+            previous_value = None
+
         value = super()._execute(variable,
                                  runtime_params=runtime_params,
                                  context=context)
@@ -755,12 +761,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               )
 
         # Check for convergence
-        previous_value = self._parse_function_variable(self.integrator_function.previous_value)
+        # previous_value = self._parse_function_variable(self.integrator_function.previous_value)
+        previous_value = np.squeeze(previous_value)
+        diff = abs(self.convergence_function([value, previous_value]))
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
-                self.convergence_criterion is not None and
-                abs(self.convergence_function([value, previous_value]))
-                    <= self.convergence_criterion
-        ):
+                self.convergence_criterion is not None and diff <= self.convergence_criterion):
             # Terminate if this is the end of the minus phase
             if self.learning_phase == LearningPhase.MINUS:
 
@@ -802,6 +807,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 variable = variable[RECURRENT_INDEX]
         except:
             variable = variable[RECURRENT_INDEX]
+
+        # self.current_activity = variable
 
         return super()._parse_function_variable(variable)
     # MODIFIED 7/1/18 END
