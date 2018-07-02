@@ -616,7 +616,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
-                 smoothing_factor: is_numeric_or_none=0.5,
+                 integration_rate: is_numeric_or_none=0.5,
                  clip=None,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
@@ -660,7 +660,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=True,
-                         smoothing_factor=smoothing_factor,
+                         integration_rate=integration_rate,
                          clip=clip,
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
@@ -766,7 +766,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         #         # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
         #         self.reinitialize(self._parse_function_variable(self.input_state.socket_template))
         # MODIFIED 7/1/18 END
-
 
             # Switch learning phase
             self.learning_phase = ~self.learning_phase

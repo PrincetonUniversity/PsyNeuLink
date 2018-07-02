@@ -34,7 +34,7 @@ task_layer = pnl.RecurrentTransferMechanism(size=2,
                                             function=pnl.Logistic(),
                                             hetero=-2,
                                             integrator_mode=True,
-                                            smoothing_factor=0.01,
+                                            integration_rate=0.01,
                                             name='TASK_LAYER')
 
 # Hidden layer
@@ -43,14 +43,14 @@ colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
                                                      function=pnl.Logistic(bias=4.0), # bias 4.0 is -4.0 in the paper see Docs for description
                                                      integrator_mode=True,
                                                      hetero=-2,
-                                                     smoothing_factor=0.01, # cohen-huston text says 0.01
+                                                     integration_rate=0.01, # cohen-huston text says 0.01
                                                      name='COLORS_HIDDEN')
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
                                                     function=pnl.Logistic(bias=4.0),
                                                     integrator_mode=True,
                                                     hetero=-2,
-                                                    smoothing_factor=0.01,
+                                                    integration_rate=0.01,
                                                     name='WORDS_HIDDEN')
 
 #   Response layer, responses: ('red', 'green')
@@ -58,7 +58,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 function=pnl.Logistic(),
                                                 hetero=-2.0,
                                                 integrator_mode=True,
-                                                smoothing_factor=0.01,
+                                                integration_rate=0.01,
                                                 output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                  {pnl.NAME: 'DECISION_ENERGY',
                                                                   pnl.VARIABLE: (pnl.OWNER_VALUE,0),
