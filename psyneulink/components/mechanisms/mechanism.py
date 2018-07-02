@@ -1103,6 +1103,10 @@ class Mechanism_Base(Mechanism):
         contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism. If the current value
         of an InputState does not have a corresponding label, then its numeric value is used instead.
 
+    external_input_values : list
+        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
+        InputStates that are not designated as `internal_only <InputState.internal_only>`.
+
     COMMENT:
     target_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
