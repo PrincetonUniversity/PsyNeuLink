@@ -2156,7 +2156,7 @@ class Component(object):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
@@ -2588,7 +2588,8 @@ class Component(object):
         if isinstance(self, Function):
             return
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable)
+        function_variable = self._parse_function_variable(self.instance_defaults.variable,
+                                                          context=ContextFlags.INSTANTIATE)
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable, custom_function=function, context=context)
@@ -2753,7 +2754,7 @@ class Component(object):
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        function_variable = self._parse_function_variable(variable)
+        function_variable = self._parse_function_variable(variable, context)
         value = self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
         fct_context_attrib.execution_phase = ContextFlags.IDLE
 
