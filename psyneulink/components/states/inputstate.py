@@ -1205,6 +1205,10 @@ class InputState(State_Base):
             label_dictionary = self.owner.input_labels_dict
         return self._get_value_label(label_dictionary, self.owner.input_states)
 
+    @property
+    def llvmSymbolName(self):
+        return self.function_object.llvmSymbolName
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d

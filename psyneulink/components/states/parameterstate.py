@@ -854,6 +854,12 @@ class ParameterState(State_Base):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
+    def _gen_llvm_function_body(self, ctx, builder):
+
+        params, state, input, output = builder.function.args
+        state_f = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        builder.call(state_f, [params, state, input, output])
+        return builder
 
 def _instantiate_parameter_states(owner, function=None, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
