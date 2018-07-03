@@ -2592,9 +2592,10 @@ class Mechanism_Base(Mechanism):
                 builder.store(raw_param_val, param_out_ptr)
                 continue
 
+            state = self._parameter_states[mf_param]
             i = self._parameter_states.key_values.index(mf_param)
-            assert self._parameter_states[mf_param] == self.parameter_states[i]
 
+            assert state is self.parameter_states[i]
 
             # Skip parameter states that don't have incoming projections
             if len(self._parameter_states[mf_param].mod_afferents) == 0:
