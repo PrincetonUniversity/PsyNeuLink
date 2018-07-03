@@ -175,8 +175,9 @@ class ContextFlags(IntEnum):
     """Call by property of the Component."""
     COMPOSITION =   1<<14 # 16384
     """Call by a/the Composition to which the Component belongs."""
+    LOCAL =         1<<15 # 32768
 
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION | LOCAL
     NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK

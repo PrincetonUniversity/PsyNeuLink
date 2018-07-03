@@ -1046,7 +1046,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     outputs = self._clip_result(clip, outputs)
         # MODIFIED 7/2/18 NEW:
         # Update according to time-scale of integration
-        if integrator_mode:
+        # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
+        if integrator_mode and context != ContextFlags.LOCAL:
             current_input = self._get_integrated_function_input(variable,
                                                                 initial_value,
                                                                 noise,
