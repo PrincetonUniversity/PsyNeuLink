@@ -225,7 +225,7 @@ PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
 MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
 
 
-class LearningPhase(IntEnum):
+class ExecutionPhase(IntEnum):
     PLUS  = 0
     MINUS = 1
 
@@ -694,16 +694,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Set plus_phase and minus_phase activity vectors to zeros with size of an input projection
             self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
                 self.input_state.socket_template
-            self.learning_phase = None
+            self.execution_phase = None
 
-        if self.learning_phase is None:
-            self.learning_phase = LearningPhase.PLUS
+        if self.execution_phase is None:
+            self.execution_phase = ExecutionPhase.PLUS
 
-        if self.learning_phase == LearningPhase.PLUS:
+        if self.execution_phase == ExecutionPhase.PLUS:
             self.finished = False
 
         # MODIFIED 7/1/18 OLD:
-        if self.learning_phase == LearningPhase.PLUS:
+        if self.execution_phase == ExecutionPhase.PLUS:
             # Combine RECURRENT and EXTERNAL inputs
             self.current_activity = self.combination_function.execute(variable)
         else:
@@ -721,13 +721,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               )
 
         # Check for convergence
+        diff = abs(self.convergence_function([value, self.integrator_function.previous_value]))
+
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
-                self.convergence_criterion is not None and
-                abs(self.convergence_function([value, self.integrator_function.previous_value]))
-                    <= self.convergence_criterion
+                self.convergence_criterion is not None and diff <= self.convergence_criterion
         ):
             # Terminate if this is the end of the minus phase
-            if self.learning_phase == LearningPhase.MINUS:
+            if self.execution_phase == ExecutionPhase.MINUS:
 
                 # ?? USE initial_value attribute below??
                 self.minus_phase_activity = self.current_activity
@@ -767,7 +767,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # if (self.context.initialization_status != ContextFlags.INITIALIZING and
         #         self.convergence_criterion is not None and diff <= self.convergence_criterion):
         #     # Terminate if this is the end of the minus phase
-        #     if self.learning_phase == LearningPhase.MINUS:
+        #     if self.execution_phase == ExecutionPhase.MINUS:
         #
         #         # ?? USE initial_value attribute below??
         #         self.minus_phase_activity = self.current_activity
@@ -786,7 +786,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # MODIFIED 7/1/18 END
 
             # Switch learning phase
-            self.learning_phase = ~self.learning_phase
+            self.execution_phase = ~self.execution_phase
 
         return value
 
@@ -799,7 +799,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # TEST PRINT:
         print('\nparse variable: ', variable)
         try:
-            if self.learning_phase == LearningPhase.PLUS:
+            if self.execution_phase == ExecutionPhase.PLUS:
                 # Combine RECURRENT and EXTERNAL inputs
                 variable = self.combination_function.execute(variable)
             else:
