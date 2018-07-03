@@ -1009,16 +1009,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         else:
             value = super(Mechanism, self)._execute(
-                variable=variable,
-                runtime_params=runtime_params,
-                context=context
+                    variable=variable,
+                    runtime_params=runtime_params,
+                    context=context
             )
             value = self._clip_result(clip, value)
 
         value = super(Mechanism, self)._execute(variable=value,
-                                                    runtime_params=runtime_params,
-                                                    context=context
-                                                    )
+                                                runtime_params=runtime_params,
+                                                context=context
+                                                )
 
         # # TEST PRINT:
         # print('VALUE: ', value)
