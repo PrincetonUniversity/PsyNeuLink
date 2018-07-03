@@ -1032,9 +1032,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
-        # if integrator_mode:
+        if integrator_mode:
         # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
-        if integrator_mode and context != ContextFlags.LOCAL:
+        # if integrator_mode and context != ContextFlags.LOCAL:
             initial_value = self.get_current_mechanism_param("initial_value")
             variable = self._get_integrated_function_input(variable,
                                                            initial_value,
