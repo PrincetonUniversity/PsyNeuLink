@@ -1113,18 +1113,17 @@ class TransferMechanism(ProcessingMechanism_Base):
             i = self._parameter_states.key_values.index(if_param)
             assert state is self.parameter_states[i]
 
-            # Skip parameter states that don't have incoming projections
-            if len(self._parameter_states[if_param].mod_afferents) == 0:
-                raw_param_val = builder.load(param_in_ptr)
-                builder.store(raw_param_val, param_out_ptr)
-                continue
-
             ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
+            ps_input = param_in_ptr #builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
             # Parameter states modify corresponding parameter in param struct
-            ps_output = builder.gep(if_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            ps_output = param_out_ptr
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+
+            # WORKAROUND: cast input and output
+            ps_input = builder.bitcast(ps_input, ps_function.args[2].type)
+            ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
+
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
         mf_params = builder.alloca(f_params.type.pointee.elements[0], 1)
@@ -1142,18 +1141,17 @@ class TransferMechanism(ProcessingMechanism_Base):
             i = self._parameter_states.key_values.index(mf_param)
             assert state is self.parameter_states[i]
 
-            # Skip parameter states that don't have incoming projections
-            if len(self._parameter_states[mf_param].mod_afferents) == 0:
-                raw_param_val = builder.load(param_in_ptr)
-                builder.store(raw_param_val, param_out_ptr)
-                continue
-
             ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
             ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
+            ps_input = param_in_ptr #builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
             # Parameter states modify corresponding parameter in param struct
-            ps_output = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            ps_output = param_out_ptr
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+
+            # WORKAROUND: cast input and output
+            ps_input = builder.bitcast(ps_input, ps_function.args[2].type)
+            ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
+
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
 
