@@ -1013,16 +1013,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                     )
             value = self._clip_result(clip, value)
 
-        # value = super(Mechanism, self)._execute(variable=value,
-        #                                         runtime_params=runtime_params,
-        #                                         context=context
-        #                                         )
-
-        # # TEST PRINT:
-        # print('VALUE: ', value)
         return value
 
     def _parse_function_variable(self, variable, context):
+
+        if context is ContextFlags.LOCAL:
+            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
@@ -1032,9 +1028,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
-        # if integrator_mode:
-        if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
-        # if integrator_mode and context != ContextFlags.LOCAL:
+        if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
             variable = self._get_integrated_function_input(variable,
                                                            initial_value,
