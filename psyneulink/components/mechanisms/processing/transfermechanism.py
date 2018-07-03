@@ -1019,7 +1019,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = self.get_current_mechanism_param("noise")
 
        # Update according to time-scale of integration
-        if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
+        if integrator_mode:
+        # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
         # if integrator_mode and context != ContextFlags.LOCAL:
             initial_value = self.get_current_mechanism_param("initial_value")
             current_input = self._get_integrated_function_input(variable,
