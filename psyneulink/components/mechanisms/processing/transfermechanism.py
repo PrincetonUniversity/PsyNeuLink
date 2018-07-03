@@ -712,6 +712,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function = None
         self.original_integrator_function = None
+        self._current_variable_index = 0
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -998,11 +999,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
             value = []
-            for elem in variable:
-                value_item = super(Mechanism, self)._execute(variable=elem,
+            for i in range(len(variable)):
+                self._current_variable_index = i
+                current_variable_element = variable[i]
+                value_item = super(Mechanism, self)._execute(variable=current_variable_element,
                                                              runtime_params=runtime_params,
-                                                             context=context
-                                                             )
+                                                             context=context)
                 value_item = self._clip_result(clip, value_item)
                 value.append(value_item)
 
@@ -1033,7 +1035,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             initial_value = self.get_current_mechanism_param("initial_value")
             if isinstance(self.function_object, NormalizingFunction):
                 variable = self._get_integrated_function_input(variable,
-                                                               initial_value[0],
+                                                               initial_value[self._current_variable_index],
                                                                noise,
                                                                context)[0]
             else:
