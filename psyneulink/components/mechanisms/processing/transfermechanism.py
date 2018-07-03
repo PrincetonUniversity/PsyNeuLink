@@ -1012,7 +1012,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # print('OUTPUT: ', outputs)
         return value
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
@@ -1024,6 +1024,27 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
+        # # MODIFIED 7/2/18 OLD:
+        # if isinstance(self.function_object, NormalizingFunction):
+        #     # Apply TransferMechanism's function to each input state separately
+        #     outputs = []
+        #     for elem in current_input:
+        #         output_item = super(Mechanism, self)._execute(
+        #             variable=elem,
+        #             runtime_params=runtime_params,
+        #             context=context
+        #         )
+        #         output_item = self._clip_result(clip, output_item)
+        #         outputs.append(output_item)
+        #
+        # else:
+        #     outputs = super(Mechanism, self)._execute(
+        #         variable=current_input,
+        #         runtime_params=runtime_params,
+        #         context=context
+        #     )
+        #     outputs = self._clip_result(clip, outputs)
+        # MODIFIED 7/2/18 NEW:
         # Update according to time-scale of integration
         if integrator_mode:
             current_input = self._get_integrated_function_input(variable,
@@ -1033,27 +1054,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
-
-
-        if isinstance(self.function_object, NormalizingFunction):
-            # Apply TransferMechanism's function to each input state separately
-            outputs = []
-            for elem in current_input:
-                output_item = super(Mechanism, self)._execute(
-                    variable=elem,
-                    runtime_params=runtime_params,
-                    context=context
-                )
-                output_item = self._clip_result(clip, output_item)
-                outputs.append(output_item)
-
-        else:
-            outputs = super(Mechanism, self)._execute(
-                variable=current_input,
-                runtime_params=runtime_params,
-                context=context
-            )
-            outputs = self._clip_result(clip, outputs)
+        # MODIFIED 7/2/18 END
+        return current_input
 
 
     def _report_mechanism_execution(self, input, params, output):
