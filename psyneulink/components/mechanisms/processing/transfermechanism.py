@@ -988,6 +988,32 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
+
+        # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+
+        fct_value = super(Mechanism, self)._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context
+                                                    )
+
+        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
+        # Clip outputs
+        clip = self.get_current_mechanism_param("clip")
+
+        if isinstance(self.function_object, NormalizingFunction):
+            # Apply clip to the results associated with each InputState separately
+            value = []
+            for elem in fct_value:
+                value.append(self._clip_result(clip, elem))
+        else:
+            value = self._clip_result(clip, fct_value)
+
+        # # TEST PRINT:
+        # print('OUTPUT: ', outputs)
+        return value
+
+    def _parse_function_variable(self, variable):
+
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
         noise = self.get_current_mechanism_param("noise")
@@ -1008,7 +1034,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
 
-        clip = self.get_current_mechanism_param("clip")
 
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
@@ -1030,9 +1055,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             )
             outputs = self._clip_result(clip, outputs)
 
-        # # TEST PRINT:
-        # print('OUTPUT: ', outputs)
-        return outputs
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
