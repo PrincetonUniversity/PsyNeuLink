@@ -999,20 +999,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             value = []
             for elem in variable:
-                value_item = super(Mechanism, self)._execute(
-                        variable=elem,
-                        runtime_params=runtime_params,
-                        context=context
-                )
+                value_item = super(Mechanism, self)._execute(variable=elem,
+                                                             runtime_params=runtime_params,
+                                                             context=context
+                                                             )
                 value_item = self._clip_result(clip, value_item)
                 value.append(value_item)
 
         else:
-            value = super(Mechanism, self)._execute(
-                    variable=variable,
-                    runtime_params=runtime_params,
-                    context=context
-            )
+            value = super(Mechanism, self)._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context
+                                                    )
             value = self._clip_result(clip, value)
 
         value = super(Mechanism, self)._execute(variable=value,
@@ -1039,9 +1037,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         if integrator_mode and context != ContextFlags.LOCAL:
             initial_value = self.get_current_mechanism_param("initial_value")
             variable = self._get_integrated_function_input(variable,
-                                                                initial_value,
-                                                                noise,
-                                                                context)
+                                                           initial_value,
+                                                           noise,
+                                                           context)
 
         else:
             variable = self._get_instantaneous_function_input(variable, noise)
