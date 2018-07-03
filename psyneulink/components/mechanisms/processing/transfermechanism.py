@@ -1017,7 +1017,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
         noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1046,8 +1045,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     outputs = self._clip_result(clip, outputs)
         # MODIFIED 7/2/18 NEW:
         # Update according to time-scale of integration
-        # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
-        if integrator_mode and context != ContextFlags.LOCAL:
+        if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
+        # if integrator_mode and context != ContextFlags.LOCAL:
+            initial_value = self.get_current_mechanism_param("initial_value")
             current_input = self._get_integrated_function_input(variable,
                                                                 initial_value,
                                                                 noise,
