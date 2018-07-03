@@ -991,25 +991,37 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
-        fct_value = super(Mechanism, self)._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context
-                                                    )
-
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
         # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
         if isinstance(self.function_object, NormalizingFunction):
-            # Apply clip to the results associated with each InputState separately
+            # Apply TransferMechanism's function to each input state separately
             value = []
-            for elem in fct_value:
-                value.append(self._clip_result(clip, elem))
+            for elem in variable:
+                value_item = super(Mechanism, self)._execute(
+                        variable=elem,
+                        runtime_params=runtime_params,
+                        context=context
+                )
+                value_item = self._clip_result(clip, value_item)
+                value.append(value_item)
+
         else:
-            value = self._clip_result(clip, fct_value)
+            value = super(Mechanism, self)._execute(
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
+            )
+            value = self._clip_result(clip, value)
+
+        value = super(Mechanism, self)._execute(variable=value,
+                                                    runtime_params=runtime_params,
+                                                    context=context
+                                                    )
 
         # # TEST PRINT:
-        # print('OUTPUT: ', outputs)
+        # print('VALUE: ', value)
         return value
 
     def _parse_function_variable(self, variable, context):
@@ -1017,37 +1029,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
         noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
-        # # MODIFIED 7/2/18 OLD:
-        # if isinstance(self.function_object, NormalizingFunction):
-        #     # Apply TransferMechanism's function to each input state separately
-        #     outputs = []
-        #     for elem in current_input:
-        #         output_item = super(Mechanism, self)._execute(
-        #             variable=elem,
-        #             runtime_params=runtime_params,
-        #             context=context
-        #         )
-        #         output_item = self._clip_result(clip, output_item)
-        #         outputs.append(output_item)
-        #
-        # else:
-        #     outputs = super(Mechanism, self)._execute(
-        #         variable=current_input,
-        #         runtime_params=runtime_params,
-        #         context=context
-        #     )
-        #     outputs = self._clip_result(clip, outputs)
-        # MODIFIED 7/2/18 NEW:
         # Update according to time-scale of integration
+        if integrator_mode:
         # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
-        if integrator_mode and context != ContextFlags.LOCAL:
+        # if integrator_mode and context != ContextFlags.LOCAL:
+            initial_value = self.get_current_mechanism_param("initial_value")
             current_input = self._get_integrated_function_input(variable,
                                                                 initial_value,
                                                                 noise,
@@ -1055,7 +1047,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
-        # MODIFIED 7/2/18 END
         return current_input
 
 
