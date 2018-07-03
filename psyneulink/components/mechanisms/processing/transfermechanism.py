@@ -1018,6 +1018,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _parse_function_variable(self, variable, context):
 
         if context is ContextFlags.LOCAL:
+
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
@@ -1030,10 +1031,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
-            variable = self._get_integrated_function_input(variable,
-                                                           initial_value,
-                                                           noise,
-                                                           context)
+            if isinstance(self.function_object, NormalizingFunction):
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value[0],
+                                                               noise,
+                                                               context)[0]
+            else:
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value,
+                                                               noise,
+                                                               context)
 
         else:
             variable = self._get_instantaneous_function_input(variable, noise)
