@@ -1030,24 +1030,22 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = self.integrator_mode
         noise = self.get_current_mechanism_param("noise")
 
-        # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
-
         # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
-        if integrator_mode:
+        # if integrator_mode:
         # if integrator_mode and self.context.initialization_status == ContextFlags.INITIALIZED:
-        # if integrator_mode and context != ContextFlags.LOCAL:
+        if integrator_mode and context != ContextFlags.LOCAL:
             initial_value = self.get_current_mechanism_param("initial_value")
-            current_input = self._get_integrated_function_input(variable,
+            variable = self._get_integrated_function_input(variable,
                                                                 initial_value,
                                                                 noise,
                                                                 context)
 
         else:
-            current_input = self._get_instantaneous_function_input(variable, noise)
-        return current_input
+            variable = self._get_instantaneous_function_input(variable, noise)
+        return variable
 
 
     def _report_mechanism_execution(self, input, params, output):
