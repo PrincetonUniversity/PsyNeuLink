@@ -2588,7 +2588,8 @@ class Component(object):
         if isinstance(self, Function):
             return
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable, context=ContextFlags.LOCAL)
+        function_variable = self._parse_function_variable(self.instance_defaults.variable,
+                                                          context=ContextFlags.INSTANTIATE)
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable, custom_function=function, context=context)

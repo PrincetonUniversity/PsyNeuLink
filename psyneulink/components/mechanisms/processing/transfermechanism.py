@@ -1019,7 +1019,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _parse_function_variable(self, variable, context):
 
-        if context is ContextFlags.LOCAL:
+        if context is ContextFlags.INSTANTIATE:
 
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
@@ -1027,9 +1027,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = self.integrator_mode
         noise = self.get_current_mechanism_param("noise")
 
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
@@ -1048,7 +1046,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             variable = self._get_instantaneous_function_input(variable, noise)
         return variable
 
-
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
         """
@@ -1062,17 +1059,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
-
-    # def terminate_function(self, context=None):
-    #     """Terminate the process
-    #
-    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-    #     returns output
-    #
-    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-    #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
-    #
     @property
     def clip(self):
         return self._clip
@@ -1081,24 +1067,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     @clip.setter
     def clip(self, value):
         self._clip = value
-
-    # # MODIFIED 4/17/17 NEW:
-    # @property
-    # def noise (self):
-    #     return self._noise
-    #
-    # @noise.setter
-    # def noise(self, value):
-    #     self._noise = value
-    #
-    # @property
-    # def integration_rate(self):
-    #     return self._time_constant
-    #
-    # @integration_rate.setter
-    # def integration_rate(self, value):
-    #     self._time_constant = value
-    # # # MODIFIED 4/17/17 END
 
     @property
     def previous_value(self):
