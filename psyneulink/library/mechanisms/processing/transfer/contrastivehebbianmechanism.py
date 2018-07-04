@@ -225,9 +225,8 @@ PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
 MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
 
 
-class ExecutionPhase(IntEnum):
-    PLUS  = 0
-    MINUS = 1
+PLUS_PHASE  = True
+MINUS_PHASE = False
 
 
 class ConstrastiveHebbianError(Exception):
@@ -698,40 +697,42 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.execution_phase = None
 
         if self.execution_phase is None:
-            self.execution_phase = ExecutionPhase.PLUS
+            self.execution_phase = PLUS_PHASE
 
-        if self.execution_phase == ExecutionPhase.PLUS:
+        if self.execution_phase == PLUS_PHASE:
             self.finished = False
 
-        previous_value = self.previous_value
+        previous_activity = self.previous_value
 
-        value = super()._execute(variable,
-                                 runtime_params=runtime_params,
-                                 context=context)
+        current_activity = super()._execute(variable,
+                                            runtime_params=runtime_params,
+                                            context=context)
+
 
         # TEST PRINT:
         print(self.current_execution_time,
               '\nvariable:', variable,
               '\ncurrent activity: ', self.current_activity,
-              '\nvalue', value
+              '\nvalue', current_activity
               )
 
         # Check for convergence
-        if self.previous_value is None:
-            return value
+        if previous_activity is None:
+            return current_activity
         else:
-            diff = abs(self.convergence_function([value, previous_value]))
+            diff = abs(self.convergence_function([current_activity, previous_activity]))
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
             # Terminate if this is the end of the minus phase
-            if self.execution_phase == ExecutionPhase.MINUS:
+            if self.execution_phase == MINUS_PHASE:
 
                 # ?? USE initial_value attribute below??
                 self.minus_phase_activity = self.current_activity
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
                 self.is_finished = True
-                self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
+                # self._update_output_states(runtime_params,context)
+                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
 
             else:
                 self.plus_phase_activity = self.current_activity
@@ -740,16 +741,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.reinitialize(self.input_state.socket_template)
 
             # Switch learning phase
-            self.execution_phase = ~self.execution_phase
+            self.execution_phase = not self.execution_phase
 
-        return value
+        return current_activity
 
     def _parse_function_variable(self, variable, context):
 
         # TEST PRINT:
         print('\nparse variable: ', variable)
         try:
-            if self.execution_phase == ExecutionPhase.PLUS:
+            if self.execution_phase == PLUS_PHASE:
                 # Combine RECURRENT and EXTERNAL inputs
                 variable = self.combination_function.execute(variable)
             else:
@@ -758,7 +759,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         except:
             variable = variable[RECURRENT_INDEX]
 
-        # self.current_activity = variable
         return super(RecurrentTransferMechanism, self)._parse_function_variable(variable, context)
 
     @property
