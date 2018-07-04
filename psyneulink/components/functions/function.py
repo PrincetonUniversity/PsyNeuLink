@@ -6444,6 +6444,10 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def get_param_ids(self):
         return RATE, OFFSET, NOISE
 
+    def get_output_struct_type(self):
+        default_val = self.instance_defaults.value
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
 
     def get_context_struct_type(self):
         return self.get_output_struct_type()
@@ -6452,7 +6456,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def get_context_initializer(self, data=None):
         if data is None:
             data = np.asfarray(self.previous_value).flatten().tolist()
-            if self.instance_defaults.variable.ndim > 1:
+            if self.instance_defaults.value.ndim > 1:
                 return (tuple(data),)
             return tuple(data)
 
@@ -6470,7 +6474,12 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         noise = builder.load(noise_p)
 
-        prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
+        # WORKAROUND: Standalone function produces 2d array value
+        if isinstance(state.type.pointee.element, ir.ArrayType):
+            assert state.type.pointee.count == 1
+            prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        else:
+            prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
         prev_val = builder.load(prev_ptr)
 
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -6484,7 +6493,12 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         ret = builder.fadd(ret, noise)
         res = builder.fadd(ret, offset)
 
-        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        # WORKAROUND: Standalone function produces 2d array value
+        if isinstance(vo.type.pointee.element, ir.ArrayType):
+            assert state.type.pointee.count == 1
+            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        else:
+            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
