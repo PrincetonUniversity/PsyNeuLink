@@ -712,6 +712,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function = None
         self.original_integrator_function = None
+        self._current_variable_index = 0
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -988,50 +989,62 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.integrator_mode
-        noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
-        # Update according to time-scale of integration
-        if integrator_mode:
-            current_input = self._get_integrated_function_input(variable,
-                                                                initial_value,
-                                                                noise,
-                                                                context)
-
-        else:
-            current_input = self._get_instantaneous_function_input(variable, noise)
-
+        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
+        # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
-            outputs = []
-            for elem in current_input:
-                output_item = super(Mechanism, self)._execute(
-                    variable=elem,
-                    runtime_params=runtime_params,
-                    context=context
-                )
-                output_item = self._clip_result(clip, output_item)
-                outputs.append(output_item)
+            value = []
+            for i in range(len(variable)):
+                self._current_variable_index = i
+                current_variable_element = variable[i]
+                value_item = super(Mechanism, self)._execute(variable=current_variable_element,
+                                                             runtime_params=runtime_params,
+                                                             context=context)
+                value_item = self._clip_result(clip, value_item)
+                value.append(value_item)
 
         else:
-            outputs = super(Mechanism, self)._execute(variable=current_input,
-                                                      runtime_params=runtime_params,
-                                                      context=context
-                                                      )
-            outputs = self._clip_result(clip, outputs)
+            value = super(Mechanism, self)._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context
+                                                    )
+            value = self._clip_result(clip, value)
 
-        # # TEST PRINT:
-        # print('OUTPUT: ', outputs)
-        return outputs
+        return value
+
+    def _parse_function_variable(self, variable, context):
+
+        if context is ContextFlags.INSTANTIATE:
+
+            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
+
+        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
+        integrator_mode = self.integrator_mode
+        noise = self.get_current_mechanism_param("noise")
+
+        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
+        # Update according to time-scale of integration
+        if integrator_mode:
+            initial_value = self.get_current_mechanism_param("initial_value")
+            if isinstance(self.function_object, NormalizingFunction):
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value[self._current_variable_index],
+                                                               noise,
+                                                               context)[0]
+            else:
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value,
+                                                               noise,
+                                                               context)
+
+        else:
+            variable = self._get_instantaneous_function_input(variable, noise)
+        return variable
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
@@ -1046,17 +1059,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
-
-    # def terminate_function(self, context=None):
-    #     """Terminate the process
-    #
-    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-    #     returns output
-    #
-    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-    #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
-    #
     @property
     def clip(self):
         return self._clip
@@ -1065,24 +1067,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     @clip.setter
     def clip(self, value):
         self._clip = value
-
-    # # MODIFIED 4/17/17 NEW:
-    # @property
-    # def noise (self):
-    #     return self._noise
-    #
-    # @noise.setter
-    # def noise(self, value):
-    #     self._noise = value
-    #
-    # @property
-    # def integration_rate(self):
-    #     return self._time_constant
-    #
-    # @integration_rate.setter
-    # def integration_rate(self, value):
-    #     self._time_constant = value
-    # # # MODIFIED 4/17/17 END
 
     @property
     def previous_value(self):

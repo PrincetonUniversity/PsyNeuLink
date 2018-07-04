@@ -333,7 +333,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context):
         return variable
 
     def _validate_variable(self, variable, context=None):

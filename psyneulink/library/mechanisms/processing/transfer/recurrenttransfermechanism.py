@@ -923,6 +923,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             if state.name != AUTO or state.name != HETERO:
                 state.update(params=runtime_params, context=context)
 
+    def _parse_function_variable(self, variable, context):
+        if self.has_recurrent_input_state:
+            variable = self._linear_combin_func.execute(variable=variable)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable=variable, context=context)
+
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
     @property
