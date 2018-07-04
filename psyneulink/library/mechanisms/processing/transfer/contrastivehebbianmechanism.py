@@ -704,10 +704,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         previous_activity = self.previous_value
 
+        # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
                                             runtime_params=runtime_params,
                                             context=context)
-
 
         # TEST PRINT:
         print(self.current_execution_time,
@@ -740,7 +740,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
                 self.reinitialize(self.input_state.socket_template)
 
-            # Switch learning phase
+            # Switch execution_phase
             self.execution_phase = not self.execution_phase
 
         return current_activity
