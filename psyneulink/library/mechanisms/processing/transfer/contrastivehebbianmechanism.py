@@ -200,7 +200,7 @@ import typecheck as tc
 from enum import IntEnum
 
 from psyneulink.components.functions.function import \
-    Function, Linear, LinearCombination, is_function_type, ContrastiveHebbian, Distance
+    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
 from psyneulink.globals.context import ContextFlags
@@ -702,17 +702,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.execution_phase == ExecutionPhase.PLUS:
             self.finished = False
 
-        # MODIFIED 7/1/18 OLD:
-        if self.execution_phase == ExecutionPhase.PLUS:
-            # Combine RECURRENT and EXTERNAL inputs
-            self.current_activity = self.combination_function.execute(variable)
-        else:
-            # Only use RECURRENT input
-            self.current_activity = variable[RECURRENT_INDEX]
-
-        value = super()._execute(variable=np.atleast_2d(self.current_activity),
+        value = super()._execute(variable,
                                  runtime_params=runtime_params,
                                  context=context)
+
         # TEST PRINT:
         print(self.current_execution_time,
               '\nvariable:', variable,
@@ -721,20 +714,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               )
 
         # Check for convergence
-        diff = abs(self.convergence_function([value, self.integrator_function.previous_value]))
+        if self.previous_value is not None:
+            diff = abs(self.convergence_function([value, self.previous_value]))
+        else:
+            diff = self.convergence_criterion + EPSILON
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
-                self.convergence_criterion is not None and diff <= self.convergence_criterion
-        ):
+                self.convergence_criterion is not None and diff <= self.convergence_criterion):
             # Terminate if this is the end of the minus phase
             if self.execution_phase == ExecutionPhase.MINUS:
 
                 # ?? USE initial_value attribute below??
                 self.minus_phase_activity = self.current_activity
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
-                self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
                 self.is_finished = True
+                self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
 
             else:
                 self.plus_phase_activity = self.current_activity
@@ -742,59 +736,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
                 self.reinitialize(self.input_state.socket_template)
 
-        # # MODIFIED 7/1/18 NEW:
-        #
-        # try:
-        #     previous_value = self.integrator_function.previous_value
-        # except:
-        #     previous_value = None
-        #
-        # value = super()._execute(variable,
-        #                          runtime_params=runtime_params,
-        #                          context=context)
-        #
-        # # TEST PRINT:
-        # print(self.current_execution_time,
-        #       '\nvariable:', variable,
-        #       '\ncurrent activity: ', self.current_activity,
-        #       '\nvalue', value
-        #       )
-        #
-        # # Check for convergence
-        # # previous_value = self._parse_function_variable(self.integrator_function.previous_value)
-        # previous_value = np.squeeze(previous_value)
-        # diff = abs(self.convergence_function([value, previous_value]))
-        # if (self.context.initialization_status != ContextFlags.INITIALIZING and
-        #         self.convergence_criterion is not None and diff <= self.convergence_criterion):
-        #     # Terminate if this is the end of the minus phase
-        #     if self.execution_phase == ExecutionPhase.MINUS:
-        #
-        #         # ?? USE initial_value attribute below??
-        #         self.minus_phase_activity = self.current_activity
-        #         # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
-        #         # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
-        #         self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
-        #         self.is_finished = True
-        #
-        #     else:
-        #         self.plus_phase_activity = self.current_activity
-        #         # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
-        #         # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-        #         # self.reinitialize(self._parse_function_variable(self.input_state.socket_template))
-        #         self.reinitialize(self.input_state.socket_template)
-
-        # MODIFIED 7/1/18 END
-
             # Switch learning phase
             self.execution_phase = ~self.execution_phase
 
         return value
 
-    # def _parse_function_variable(self, variable):
-    #     return variable
-
-    # MODIFIED 7/1/18 NEW:
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context):
 
         # TEST PRINT:
         print('\nparse variable: ', variable)
@@ -810,9 +757,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # self.current_activity = variable
 
-        return super()._parse_function_variable(variable)
-    # MODIFIED 7/1/18 END
-
+        return super()._parse_function_variable(variable, context)
 
     @property
     def _learning_signal_source(self):
