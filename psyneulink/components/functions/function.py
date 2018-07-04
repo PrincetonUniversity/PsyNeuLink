@@ -844,9 +844,9 @@ class Function_Base(Function):
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
     def get_output_struct_type(self):
-        # Keep format by default
-        return self.get_input_struct_type()
-
+        default_val = self.instance_defaults.value
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
 
     def bin_function(self,
                  variable=None,
@@ -2354,7 +2354,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
 
     def get_output_struct_type(self):
-        #FIXME: Remove this workaround
+        # WORKAROUND: Remove this workaround
         default_val = self.owner.instance_defaults.value if self.owner else self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
@@ -4226,6 +4226,8 @@ class SoftMax(NormalizingFunction):
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
+    def get_output_struct_type(self):
+        return self.get_input_struct_type()
 
     def get_param_ids(self):
         return [GAIN]
@@ -4262,6 +4264,7 @@ class SoftMax(NormalizingFunction):
         val = builder.fmul(orig_val, gain)
         val = builder.call(exp_f, [val])
         val = builder.fdiv(val, exp_sum)
+
         builder.store(val, ptro)
 
 
@@ -4854,13 +4857,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 return matrix
         else:
             return np.array(specification)
-
-
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
-
 
     def get_param_ids(self):
         return [MATRIX]
@@ -6444,11 +6440,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def get_param_ids(self):
         return RATE, OFFSET, NOISE
 
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
-
     def get_context_struct_type(self):
         return self.get_output_struct_type()
 
@@ -7857,13 +7848,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         return ("a_v", "b_v", "c_v", "d_v", "e_v", "f_v", "a_w", "b_w", "c_w",
                "time_constant_v", "time_constant_w", "threshold",
                "uncorrelated_activity", "mode", TIME_STEP_SIZE)
-
-
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
-
 
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -10591,12 +10575,6 @@ class Distance(ObjectiveFunction):
                         variable[1]
                     )
                 )
-
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
-
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
