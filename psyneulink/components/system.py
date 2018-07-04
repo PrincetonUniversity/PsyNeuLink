@@ -927,6 +927,12 @@ class System(System_Base):
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
+        if self.scheduler_processing is None:
+            self.scheduler_processing = Scheduler(system=self)
+
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
         #     print("\n{0} initialized with:\n- pathway: [{1}]".
@@ -2651,7 +2657,7 @@ class System(System_Base):
             for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
 
-                for j in range(len(origin_mech.input_states)):
+                for j in range(len(origin_mech.external_input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
@@ -3015,12 +3021,6 @@ class System(System_Base):
             list of the OutputValue for each `TERMINAL` Mechanism of the System returned for each execution.
 
         """
-        if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self)
-
-        if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
-
         if runtime_params is None:
             runtime_params = {}
 

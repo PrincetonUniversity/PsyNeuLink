@@ -26,13 +26,13 @@ words_input_layer = pnl.TransferMechanism(size=2,
 
 #   Logistic activation function, Gain = 1.0, Bias = -4.0
 #should be randomly distributed noise to the net input of each unit (except input unit)
-#should have tau = smoothing_factor = 0.1
+#should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
                                             function=pnl.Logistic(gain=1.0, bias=4.0),
                                             # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                             integrator_mode=False,
                                             noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
-                                            smoothing_factor=0.1,
+                                            integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau
@@ -41,7 +41,7 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
                                            # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                            integrator_mode=False,
                                            noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
-                                           smoothing_factor=0.1,
+                                           integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
 #log hidden layer activation
@@ -64,7 +64,7 @@ response_layer = pnl.TransferMechanism(size=2,
                                        name='RESPONSE',
                                        integrator_mode=True,
                                        noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
-                                       smoothing_factor=0.1)
+                                       integration_rate=0.1)
 #   Respond red accumulator
 #parameters from paper
 #alpha = rate of evidence accumlation = 0.1

@@ -30,19 +30,19 @@ task_layer.loggable_items
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 #   Logistic activation function, Gain = 1.0, Bias = -4.0
 #should be randomly distributed noise to the net input of each unit (except input unit)
-#should have tau = smoothing_factor = 0.1
+#should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
                                             function=pnl.Logistic(gain=1.0, bias=4.0),
                                             integrator_mode=True,
                                           #  noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
-                                            smoothing_factor=0.1,
+                                            integration_rate=0.1,
                                             name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.TransferMechanism(size=2,
                                            function=pnl.Logistic(gain=1.0, bias=4.0),
                                            integrator_mode=True,
                                        #    noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
-                                           smoothing_factor=0.1,
+                                           integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
 #log hidden layer activation
@@ -73,7 +73,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                                                                        matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
                          integrator_mode=True,#)
                         # noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function)
-                         smoothing_factor=0.1)
+                         integration_rate=0.1)
 
 #response_layer.set_log_conditions('value')
 #response_layer.set_log_conditions('gain')
