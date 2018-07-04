@@ -4220,14 +4220,22 @@ class SoftMax(NormalizingFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
+
+    # WORKAROUND: Transfermechanism initializes this function on 2d array
+    # while its expected to run on 1d array
     def get_input_struct_type(self):
         default_var = np.atleast_2d(self.instance_defaults.variable)
         assert default_var.ndim == 2
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
+    # WORKAROUND: Transfermechanism initializes this function on 2d array
+    # while its expected to run on 1d array
     def get_output_struct_type(self):
-        return self.get_input_struct_type()
+        default_val = np.atleast_2d(self.instance_defaults.value)
+        assert default_val.ndim == 2
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val[0])
 
     def get_param_ids(self):
         return [GAIN]
