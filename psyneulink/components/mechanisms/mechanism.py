@@ -2508,7 +2508,10 @@ class Mechanism_Base(Mechanism):
         for state in self.input_states:
             input_type_list.append(state.get_input_struct_type())
         for state in self.parameter_states:
-            input_type_list.append(state.get_input_struct_type())
+            state_input_type_list = []
+            for proj in state.mod_afferents:
+                state_input_type_list.append(proj.get_output_struct_type())
+            input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
 
