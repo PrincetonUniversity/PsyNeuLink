@@ -711,7 +711,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # TEST PRINT:
         print(self.current_execution_time,
-              '\nvariable:', variable,
+              '\ninput:', self.function_object.variable,
               '\ncurrent activity: ', current_activity,
               '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
               )
