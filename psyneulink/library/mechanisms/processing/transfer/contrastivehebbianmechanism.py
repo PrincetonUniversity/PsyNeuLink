@@ -709,18 +709,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
-        # TEST PRINT:
-        print(self.current_execution_time,
-              '\ninput:', self.function_object.variable,
-              '\ncurrent activity: ', current_activity,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
-              )
-
         # Check for convergence
         if previous_activity is None:
             return current_activity
         else:
             diff = abs(self.convergence_function([current_activity, previous_activity]))
+
+        # TEST PRINT:
+        print(self.current_execution_time,
+              '\n\ninput:', self.function_object.variable,
+              '\nMATRIX:', self.matrix,
+              '\ncurrent activity: ', current_activity,
+              '\ndiff: ', diff,
+              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+              )
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
@@ -747,8 +749,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def _parse_function_variable(self, variable, context):
 
-        # TEST PRINT:
-        print('\nparse variable: ', variable)
         try:
             if self.execution_phase == PLUS_PHASE:
                 # Combine RECURRENT and EXTERNAL inputs

@@ -2792,12 +2792,12 @@ class System(System_Base):
                 mechanism.context.execution_phase = ContextFlags.IDLE
                 
                 # MODIFIED 6/30/18 JDC NEW:
-                # If mechanisms is a "self-learner" (uses AutoAssociativeLearningMechanism), execute learning
+                # If Mechanism is a "self-learner" (i.e., uses AutoAssociativeLearningMechanism), execute learning
                 if hasattr(mechanism, 'learning_mechanism') and mechanism.learning_enabled:
 
-                    # # TEST PRINT:
-                    # print('\nExecuting learning for {}'.format(self.name))
-                    # print(self._parameter_states[MATRIX].value)
+                    # TEST PRINT:
+                    print('\nExecuting learning for {}'.format(self.name))
+                    print(mechanism._parameter_states[MATRIX].value)
 
                     # Execute AutoAssociativeLearningMechanism
                     mechanism.context.string = "Executing {} for {}".format(mechanism.learning_mechanism.name, mechanism.name)
