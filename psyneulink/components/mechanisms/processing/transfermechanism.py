@@ -712,7 +712,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function = None
         self.original_integrator_function = None
-        self._current_variable_index = 0
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,

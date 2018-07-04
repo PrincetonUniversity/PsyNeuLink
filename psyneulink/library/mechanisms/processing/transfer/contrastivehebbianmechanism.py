@@ -691,8 +691,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  context=None):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            # Set plus_phase and minus_phase activity vectors to zeros with size of an input projection
-            self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
+            # Set plus_phase, minus_phase activity, current_activity and initial_value
+            #    all  to zeros with size of Mechanism's array
+            self._initial_value = self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
                 self.input_state.socket_template
             self.execution_phase = None
 
@@ -701,6 +702,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.execution_phase == ExecutionPhase.PLUS:
             self.finished = False
+
+        previous_value = self.previous_value
 
         value = super()._execute(variable,
                                  runtime_params=runtime_params,
@@ -715,7 +718,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # Check for convergence
         if self.previous_value is not None:
-            diff = abs(self.convergence_function([value, self.previous_value]))
+            diff = abs(self.convergence_function([value, previous_value]))
         else:
             diff = self.convergence_criterion + EPSILON
 
@@ -756,8 +759,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             variable = variable[RECURRENT_INDEX]
 
         # self.current_activity = variable
-
-        return super()._parse_function_variable(variable, context)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable, context)
 
     @property
     def _learning_signal_source(self):
