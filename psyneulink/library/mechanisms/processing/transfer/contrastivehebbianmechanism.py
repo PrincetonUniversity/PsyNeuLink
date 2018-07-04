@@ -712,8 +712,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # TEST PRINT:
         print(self.current_execution_time,
               '\nvariable:', variable,
-              '\ncurrent activity: ', self.current_activity,
-              '\nvalue', current_activity
+              '\ncurrent activity: ', current_activity,
+              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
               )
 
         # Check for convergence
@@ -728,14 +728,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.execution_phase == MINUS_PHASE:
 
                 # ?? USE initial_value attribute below??
-                self.minus_phase_activity = self.current_activity
+                self.minus_phase_activity = current_activity
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
                 self.is_finished = True
                 # self._update_output_states(runtime_params,context)
                 # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
 
             else:
-                self.plus_phase_activity = self.current_activity
+                self.plus_phase_activity = current_activity
                 # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
                 # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
                 self.reinitialize(self.input_state.socket_template)
