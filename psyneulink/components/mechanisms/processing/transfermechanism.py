@@ -1090,12 +1090,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Call parameter states for integrator function
         is_count = len(self.input_states)
         if self.integrator_mode:
+            # Allocate a shadow structure to overload user supplied parameters
             if_params = builder.alloca(f_params.type.pointee.elements[1], 1)
             if_ids = self.integrator_function.get_param_ids()
         else:
             if_ids = []
+
         for idx, if_param in enumerate(if_ids):
             param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            raw_param_val = builder.load(param_in_ptr)
             param_out_ptr = builder.gep(if_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
 
             # FIXME: Work around parameter rename. Mechanisms "smoothing_factor"
@@ -1104,8 +1107,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if_param = SMOOTHING_FACTOR
 
             # FIXME: Why wouldn't it be there?
+            # If there is no param state, provide a copy of the user param value
             if if_param not in self._parameter_states:
-                raw_param_val = builder.load(param_in_ptr)
                 builder.store(raw_param_val, param_out_ptr)
                 continue
 
@@ -1113,15 +1116,25 @@ class TransferMechanism(ProcessingMechanism_Base):
             i = self._parameter_states.key_values.index(if_param)
             assert state is self.parameter_states[i]
 
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_input = param_in_ptr #builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
-            # Parameter states modify corresponding parameter in param struct
-            ps_output = param_out_ptr
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
 
-            # WORKAROUND: cast input and output
-            ps_input = builder.bitcast(ps_input, ps_function.args[2].type)
+            # Param states are in the 4th block, after input, function_objects,
+            # and output
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+
+            # Construct the input out of the user values and incoming projections
+            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # WORKAROUND: cast input pointer to match the state input subtype
+            raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
+            builder.store(raw_param_val, raw_ptr)
+
+            # TODO: copy mod_afferent inputs
+
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = param_out_ptr
+            # WORKAROUND: cast output to match the state output type
             ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
