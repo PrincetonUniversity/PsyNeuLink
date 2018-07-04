@@ -717,10 +717,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               )
 
         # Check for convergence
-        if self.previous_value is not None:
-            diff = abs(self.convergence_function([value, previous_value]))
+        if self.previous_value is None:
+            return value
         else:
-            diff = self.convergence_criterion + EPSILON
+            diff = abs(self.convergence_function([value, previous_value]))
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
