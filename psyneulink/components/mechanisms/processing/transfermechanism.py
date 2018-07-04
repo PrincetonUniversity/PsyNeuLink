@@ -1139,14 +1139,17 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
+        # Allocate a shadow structure to overload user supplied parameters
         mf_params = builder.alloca(f_params.type.pointee.elements[0], 1)
+
         # Call parameter states for main function
         for idx, mf_param in enumerate(self.function_object.get_param_ids()):
             param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            raw_param_val = builder.load(param_in_ptr)
             param_out_ptr = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # FIXME: why wouldn't it be there?
+            # If there is no param state, provide a copy of the user param value
             if mf_param not in self._parameter_states:
-                raw_param_val = builder.load(param_in_ptr)
                 builder.store(raw_param_val, param_out_ptr)
                 continue
 
@@ -1154,15 +1157,25 @@ class TransferMechanism(ProcessingMechanism_Base):
             i = self._parameter_states.key_values.index(mf_param)
             assert state is self.parameter_states[i]
 
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_input = param_in_ptr #builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
-            # Parameter states modify corresponding parameter in param struct
-            ps_output = param_out_ptr
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
 
+            # Param states are in the 4th block, after input, function_object,
+            # and output
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            # Construct the input out of the user values and incoming projections
+            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # WORKAROUND: cast input pointer to match the state input subtype
+            raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
+            builder.store(raw_param_val, raw_ptr)
+
+            # TODO: copy mod_afferent inputs
+
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = param_out_ptr
+
             # WORKAROUND: cast input and output
-            ps_input = builder.bitcast(ps_input, ps_function.args[2].type)
             ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
