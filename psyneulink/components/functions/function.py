@@ -10592,6 +10592,11 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def get_output_struct_type(self):
+        default_val = self.instance_defaults.value
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
+
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
@@ -10784,7 +10789,10 @@ class Distance(ObjectiveFunction):
                 else:
                     builder.store(ret, o)
         else:
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            # WORKAROUND: CORRELATION metric returns [x] instead of just x
+            if isinstance(vo.type.pointee, ir.ArrayType):
+                assert vo.type.pointee.count == 1
+                vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.store(ret, vo)
 
         return builder
