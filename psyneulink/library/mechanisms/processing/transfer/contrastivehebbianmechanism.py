@@ -696,11 +696,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.input_state.socket_template
             self.execution_phase = None
 
+        self.is_finished = False
+
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
-
-        if self.execution_phase == PLUS_PHASE:
-            self.is_finished = False
 
         previous_activity = self.previous_value
 
@@ -709,13 +708,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
-        # KAM added 7/5/2018
-        # Needed to set current_activity attribute, but self.current_activity = current_activity fails with shape error
-        # current_activity[0] may not be correct
-
-        self.current_activity = current_activity[0]
-
-        # TEST PRINT:
+        try:
+            self.current_activity = np.squeeze(current_activity)
+        except:
+            assert False
 
         # Check for convergence
         if previous_activity is None:
@@ -723,36 +719,35 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         else:
             diff = abs(self.convergence_function([current_activity, previous_activity]))
 
-        # TEST PRINT:
-        print(self.current_execution_time,
-              '\n\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', current_activity,
-              '\ndiff: ', diff,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
-              '\nis_finished: ', self.is_finished
-              )
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
+
             # Terminate if this is the end of the minus phase
             if self.execution_phase == MINUS_PHASE:
-
-                # ?? USE initial_value attribute below??
                 self.minus_phase_activity = current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
                 self.is_finished = True
-                # self._update_output_states(runtime_params,context)
+                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
                 # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
 
+            # Otherwise, start the minus phase
             else:
                 self.plus_phase_activity = current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
-                # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-                self.reinitialize(self.input_state.socket_template)
+                # Use initial_value attribute to initialize previous_value for minus phase
+                self.reinitialize(self.initial_value)
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
+
+        # TEST PRINT:
+        print('\n', self.current_execution_time,
+              '\ninput:', self.function_object.variable,
+              '\nMATRIX:', self.matrix,
+              '\ncurrent activity: ', current_activity,
+              '\ndiff: ', diff,
+              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS',
+              '\nis_finished: ', self.is_finished
+              )
 
         return current_activity
 
@@ -764,8 +759,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 variable = self.combination_function.execute(variable)
             else:
                 # Only use RECURRENT input
-                # variable = variable[RECURRENT_INDEX]                     # Original
-                variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+                variable = variable[RECURRENT_INDEX]                     # Original
+                # variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
 
         except:
             variable = variable[RECURRENT_INDEX]
