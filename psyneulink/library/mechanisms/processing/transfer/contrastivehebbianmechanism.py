@@ -699,8 +699,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
 
-        if self.execution_phase == PLUS_PHASE:
-            self.finished = False
+        # if self.execution_phase == PLUS_PHASE:
+        self.is_finished = False
 
         previous_activity = self.previous_value
 
@@ -713,7 +713,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         print(self.current_execution_time,
               '\ninput:', self.function_object.variable,
               '\ncurrent activity: ', current_activity,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS',
+              '\nis_finished: ', self.is_finished
               )
 
         # Check for convergence
