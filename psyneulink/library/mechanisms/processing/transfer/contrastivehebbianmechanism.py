@@ -699,8 +699,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
 
-        # if self.execution_phase == PLUS_PHASE:
-        self.is_finished = False
+        if self.execution_phase == PLUS_PHASE:
+            self.is_finished = False
 
         previous_activity = self.previous_value
 
