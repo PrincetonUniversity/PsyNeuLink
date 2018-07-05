@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.4.7.1+188.ge7f6e79 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.4.7.1+189.g4011e32 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+188.ge7f6e79 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+189.g4011e32 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+188
+                0.4.7.1+189
               </div>
             
           
@@ -214,7 +214,7 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
-ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet.add_condition" title="psyneulink.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
+ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition" title="psyneulink.scheduling.scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
 <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet.add_condition_set" title="psyneulink.scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
@@ -500,13 +500,17 @@ For example, <code class="xref any docutils literal"><span class="pre">times[Tim
 <dl class="method">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.add_condition">
 <code class="descname">add_condition</code><span class="sig-paren">(</span><em>owner</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to the Scheduler. If <strong>owner</strong> already has a Condition, it is overwritten
+with the new one. If you want to add multiple conditions to a single owner, use the
+<a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">composite Conditions</span></a> to accurately specify the desired behavior.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> – the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that is dependent on the <a class="reference internal" href="Condition.html#module-psyneulink.scheduling.condition" title="psyneulink.scheduling.condition"><code class="xref any py py-mod docutils literal"><span class="pre">condition</span></code></a></li>
-<li><strong>condition</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> (including All or Any)</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – specifies the Component with which the <strong>condition</strong> should be associated. <strong>condition</strong>
+will govern the execution behavior of <strong>owner</strong></li>
+<li><strong>condition</strong> (<a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.Condition" title="psyneulink.scheduling.condition.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
 </ul>
 </td>
 </tr>
@@ -517,12 +521,21 @@ For example, <code class="xref any docutils literal"><span class="pre">times[Tim
 <dl class="method">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.add_condition_set">
 <code class="descname">add_condition_set</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Adds a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> (in the form of a dict or another ConditionSet) to the Scheduler.
+Any Condition added here will overwrite an existing Condition for a given owner.
+If you want to add multiple conditions to a single owner, add a single <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a>
+to accurately specify the desired behavior.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> – a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <code class="xref any docutils literal"><span class="pre">Component`s</span> <span class="pre">to</span> <span class="pre">`Condition`s,</span>
-<span class="pre">which</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">added</span> <span class="pre">later</span> <span class="pre">with</span> <span class="pre">`add_condition</span></code></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> (dict[<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>], <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a>) – <p>specifies collection of Conditions to be added to this ConditionSet,</p>
+<dl class="docutils">
+<dt>if a dict is provided:</dt>
+<dd>each entry should map an owner <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> whose execution behavior will be
+governed) to a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -595,7 +608,7 @@ executions at each iteration</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+188.ge7f6e79',
+            VERSION:'0.4.7.1+189.g4011e32',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
