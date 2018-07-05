@@ -450,6 +450,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import \
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import Projection
+from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -1243,8 +1244,9 @@ class System(System_Base):
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
             # DEAL WITH LEARNING AND CONTROL MECHANISMS -----------------------------------------------------------
-
+            #  (and their ObjectiveMechanisms)
             if is_monitoring_mech(sender_mech):
+
                 # LearningMechanisms or ObjectiveMechanism used for learning:  label as LEARNING and return
                 if (isinstance(sender_mech, LearningMechanism) or
                         (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
@@ -1368,8 +1370,9 @@ class System(System_Base):
                     receiver = projection.receiver.owner
                     # receiver_tuple = self._all_mechanisms._get_tuple_for_mech(receiver)
 
-                    # If receiver is not in system's list of mechanisms, must belong to a process that has
-                    #    not been included in the system, so ignore it
+                    # If receiver is not in system's list of mechanisms,
+                    #    must belong to a process that has NOT been included in the system,
+                    #    ignore it unless it is an AutoAssociativeLearningMechanism for the sender
                     if (not receiver or
                             # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections
                             #                      (i.e. receiver is sender_mech)
@@ -1384,12 +1387,25 @@ class System(System_Base):
                     ):
                         continue
                     if is_monitoring_mech(receiver):
-                        # Don't include receiver if it is the controller for the System,
+                        # Check if receiver is:
+                        #    the controller for the System or the ObjectiveMechanism for one, or
+                        #    a LearningMechanism or the ObjectiveMechanism for one
                         if (receiver is self.controller
-                            or isinstance(receiver, LearningMechanism)
-                            or self.controller is not None and isinstance(receiver, self.controller.objective_mechanism)
-                            or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
-                            continue
+                                or isinstance(receiver, LearningMechanism)
+                                or (self.controller is not None and
+                                    isinstance(receiver, self.controller.objective_mechanism))
+                                or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
+                            # If it is an AutoAssociativeLearningMechanism for the sender_mech, include it
+                            #    (since these are executed during execute_processing rather than execute_learning)
+                            if isinstance(receiver, AutoAssociativeLearningMechanism):
+                                if not receiver == sender_mech.learning_mechanism:
+                                    raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection from {} "
+                                                      "but does not project to its {}".
+                                                      format(receiver.name, AutoAssociativeLearningMechanism.__name__,
+                                                             sender_mech.name, AutoAssociativeProjection.__name__))
+                            # Otherwise, exclude from execute_graph
+                            else:
+                                continue
                     try:
                         self.graph[receiver].add(sender_mech)
                     except KeyError:
@@ -1454,7 +1470,6 @@ class System(System_Base):
 
         self.graph = OrderedDict()
         self.execution_graph = OrderedDict()
-
 
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
@@ -1668,7 +1683,7 @@ class System(System_Base):
                 return
 
             # MODIFIED 6/30/18 NEW:
-            # Exclude AutoAssociativeLearningMechanisms as they learn on their own
+            # Exclude AutoAssociativeLearningMechanisms as they are included in (and executed as part of) System.graph
             elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
                 return
 
@@ -2517,6 +2532,21 @@ class System(System_Base):
                         raise SystemError("A parameter controlled by a ControlSignal of a controller "
                                           "being assigned to {} is not in that System".format(self.name))
 
+    def _add_mechanism_conditions(self, context=None):
+
+        condition_set = {}
+        for mech in self.execution_list:
+            if mech.condition and not mech in self.scheduler_processing.condition_set:
+                condition_set[mech] = mech.condition
+        self.scheduler_processing.add_condition_set(self, condition_set)
+
+        # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
+        condition_set = {}
+        for mech in self.learning_execution_list and not mech in self.scheduler_learning.condition_set:
+            if mech.condition:
+                condition_set[mech] = mech.condition
+        self.scheduler_learning.add_condition_set(self, condition_set)
+
     def _parse_runtime_params(self, runtime_params):
         if runtime_params is None:
             return {}
@@ -2603,6 +2633,8 @@ class System(System_Base):
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        self._add_mechanism_conditions(context=context)
 
         runtime_params = self._parse_runtime_params(runtime_params)
 
@@ -2791,35 +2823,35 @@ class System(System_Base):
                 mechanism.function_object._runtime_params_reset = {}
                 mechanism.context.execution_phase = ContextFlags.IDLE
                 
-                # MODIFIED 6/30/18 JDC NEW:
-                # If Mechanism is a "self-learner" (i.e., uses AutoAssociativeLearningMechanism), execute learning
-                if hasattr(mechanism, 'learning_mechanism') and mechanism.learning_enabled:
-
-                    # TEST PRINT:
-                    print('\nExecuting learning for {}'.format(self.name))
-                    print(mechanism._parameter_states[MATRIX].value)
-
-                    # Execute AutoAssociativeLearningMechanism
-                    mechanism.context.string = "Executing {} for {}".format(mechanism.learning_mechanism.name, mechanism.name)
-                    mechanism.learning_mechanism._execution_id = self._execution_id
-                    mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
-                    mechanism.learning_mechanism.execute(context=context)
-                    mechanism.learning_mechanism.context.execution_phase = ContextFlags.IDLE
-        
-                    # Execute AutoAssociativeLearningProjection
-                    mechanism.context.string = "Executing {}".format(mechanism.learning_projection.name, mechanism.name)
-                    mechanism.learning_projection._execution_id = self._execution_id
-                    mechanism.learning_projection.context.execution_phase = ContextFlags.LEARNING
-                    mechanism.learning_projection.execute(context=context)
-                    mechanism.learning_projection.context.execution_phase = ContextFlags.IDLE
-        
-                    # Update AutoAssociativeProjection matrix
-                    mechanism.recurrent_projection._parameter_states[MATRIX]._execution_id = self._execution_id
-                    mechanism.recurrent_projection.context.execution_phase = ContextFlags.LEARNING
-                    mechanism.context.string = "Updating ParameterState for {}".format(mechanism.input_state.path_afferents[0])
-                    mechanism.recurrent_projection._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                    mechanism.recurrent_projection.context.execution_phase = ContextFlags.IDLE
-                # MODIFIED 6/30/18 END
+                # # MODIFIED 6/30/18 JDC NEW:
+                # # If Mechanism is a "self-learner" (i.e., uses AutoAssociativeLearningMechanism), execute learning
+                # if hasattr(mechanism, 'learning_mechanism') and mechanism.learning_enabled:
+                #
+                #     # TEST PRINT:
+                #     print('\nExecuting learning for {}'.format(self.name))
+                #     print(mechanism._parameter_states[MATRIX].value)
+                #
+                #     # Execute AutoAssociativeLearningMechanism
+                #     mechanism.context.string = "Executing {} for {}".format(mechanism.learning_mechanism.name, mechanism.name)
+                #     mechanism.learning_mechanism._execution_id = self._execution_id
+                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
+                #     mechanism.learning_mechanism.execute(context=context)
+                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.IDLE
+                #
+                #     # Execute AutoAssociativeLearningProjection
+                #     mechanism.context.string = "Executing {}".format(mechanism.learning_projection.name, mechanism.name)
+                #     mechanism.learning_projection._execution_id = self._execution_id
+                #     mechanism.learning_projection.context.execution_phase = ContextFlags.LEARNING
+                #     mechanism.learning_projection.execute(context=context)
+                #     mechanism.learning_projection.context.execution_phase = ContextFlags.IDLE
+                #
+                #     # Update AutoAssociativeProjection matrix
+                #     mechanism.recurrent_projection._parameter_states[MATRIX]._execution_id = self._execution_id
+                #     mechanism.recurrent_projection.context.execution_phase = ContextFlags.LEARNING
+                #     mechanism.context.string = "Updating ParameterState for {}".format(mechanism.input_state.path_afferents[0])
+                #     mechanism.recurrent_projection._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+                #     mechanism.recurrent_projection.context.execution_phase = ContextFlags.IDLE
+                # # MODIFIED 6/30/18 END
 
                 if self._report_system_output and  self._report_process_output:
 

@@ -700,7 +700,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.execution_phase = PLUS_PHASE
 
         if self.execution_phase == PLUS_PHASE:
-            self.finished = False
+            self.is_finished = False
 
         previous_activity = self.previous_value
 
@@ -721,7 +721,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               '\nMATRIX:', self.matrix,
               '\ncurrent activity: ', current_activity,
               '\ndiff: ', diff,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS',
+              '\nif_finished: ', self.is_finished
               )
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
