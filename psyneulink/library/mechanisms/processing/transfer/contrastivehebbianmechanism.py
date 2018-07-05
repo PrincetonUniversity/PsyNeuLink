@@ -709,12 +709,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
+        # KAM added 7/5/2018
+        # Needed to set current_activity attribute, but self.current_activity = current_activity fails with shape error
+        # current_activity[0] may not be correct
+
+        self.current_activity = current_activity[0]
+        
         # TEST PRINT:
-        print(self.current_execution_time,
-              '\ninput:', self.function_object.variable,
-              '\ncurrent activity: ', current_activity,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
-              )
+        if context is ContextFlags.COMPOSITION:
+                print(self.current_execution_time,
+                      '\nmechanism variable ([ External InputState value, Internal InputState value]):', variable,
+                      '\ninput to function:', self.function_object.variable,
+                      '\ncurrent activity: ', self.current_activity,
+                      '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+                      )
 
         # Check for convergence
         if previous_activity is None:
@@ -747,15 +755,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def _parse_function_variable(self, variable, context):
 
-        # TEST PRINT:
-        print('\nparse variable: ', variable)
         try:
             if self.execution_phase == PLUS_PHASE:
                 # Combine RECURRENT and EXTERNAL inputs
                 variable = self.combination_function.execute(variable)
             else:
                 # Only use RECURRENT input
-                variable = variable[RECURRENT_INDEX]
+                # variable = variable[RECURRENT_INDEX]                     # Original
+                variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+
         except:
             variable = variable[RECURRENT_INDEX]
 
