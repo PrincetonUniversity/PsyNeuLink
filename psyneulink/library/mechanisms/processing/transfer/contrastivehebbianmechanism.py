@@ -709,6 +709,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
+        # KAM added 7/5/2018
+        # Needed to set current_activity attribute, but self.current_activity = current_activity fails with shape error
+        # current_activity[0] may not be correct
+
+        self.current_activity = current_activity[0]
+
+        # TEST PRINT:
+
         # Check for convergence
         if previous_activity is None:
             return current_activity
@@ -722,6 +730,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
               '\ncurrent activity: ', current_activity,
               '\ndiff: ', diff,
               '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+              '\nis_finished: ', self.is_finished
               )
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
@@ -755,7 +764,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 variable = self.combination_function.execute(variable)
             else:
                 # Only use RECURRENT input
-                variable = variable[RECURRENT_INDEX]
+                # variable = variable[RECURRENT_INDEX]                     # Original
+                variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+
         except:
             variable = variable[RECURRENT_INDEX]
 
