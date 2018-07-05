@@ -700,7 +700,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.execution_phase = PLUS_PHASE
 
         if self.execution_phase == PLUS_PHASE:
-            self.finished = False
+            self.is_finished = False
 
         previous_activity = self.previous_value
 
@@ -716,12 +716,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.current_activity = current_activity[0]
         
         # TEST PRINT:
+
         if context is ContextFlags.COMPOSITION:
                 print(self.current_execution_time,
                       '\nmechanism variable ([ External InputState value, Internal InputState value]):', variable,
-                      '\ninput to function:', self.function_object.variable,
-                      '\ncurrent activity: ', self.current_activity,
-                      '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS'
+                      '\ninput:', self.function_object.variable,
+                      '\ncurrent activity: ', current_activity,
+                      '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS',
+                      '\nis_finished: ', self.is_finished
                       )
 
         # Check for convergence
