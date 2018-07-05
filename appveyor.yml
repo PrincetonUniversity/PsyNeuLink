@@ -1,3 +1,8 @@
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
 version: '{build}'
 clone_depth: 25
 init:
