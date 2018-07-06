@@ -307,11 +307,14 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
-        print(inner_composition_1.input_states)
+
+        # FIX: order of input states on inner composition 1 is not stable
         output = outer_composition.run(
-            inputs={inner_composition_1: {A: [2.0],
+            inputs={
+                # inner_composition_1: [[2.0], [1.0]],
+                inner_composition_1: {A: [2.0],
                                           B: [1.0]},
-                    inner_composition_2: [[12.0]]},
+                inner_composition_2: [[12.0]]},
             scheduler_processing=sched
         )
 
@@ -324,3 +327,150 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(inner_composition_2.output_values, [[3.0]])
         assert np.allclose(mechanism_d.output_values, [[36.0]])
         assert np.allclose(outer_composition.output_values, [[36.0]])
+
+    def test_compositions_as_origin_nodes_multiple_trials(self):
+
+        inner_composition_1 = Composition(name="inner_composition_1")
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              function=Linear(slope=0.5))
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              function=Linear(slope=2.0))
+
+        C = TransferMechanism(name="composition-pytests-C",
+                              function=Linear(slope=3.0))
+
+        inner_composition_1.add_c_node(A)
+        inner_composition_1.add_c_node(B)
+        inner_composition_1.add_c_node(C)
+
+        inner_composition_1.add_projection(A, MappingProjection(), C)
+        inner_composition_1.add_projection(B, MappingProjection(), C)
+
+        inner_composition_1._analyze_graph()
+
+        inner_composition_2 = Composition(name="inner_composition_2")
+
+        A2 = TransferMechanism(name="composition-pytests-A2",
+                               function=Linear(slope=0.25))
+
+        B2 = TransferMechanism(name="composition-pytests-B2",
+                               function=Linear(slope=1.0))
+
+        inner_composition_2.add_c_node(A2)
+        inner_composition_2.add_c_node(B2)
+
+        inner_composition_2.add_projection(A2, MappingProjection(), B2)
+
+        inner_composition_2._analyze_graph()
+
+        mechanism_d = TransferMechanism(name="composition-pytests-D",
+                                        function=Linear(slope=3.0))
+
+        outer_composition = Composition(name="outer_composition")
+
+        outer_composition.add_c_node(inner_composition_1)
+        outer_composition.add_c_node(inner_composition_2)
+        outer_composition.add_c_node(mechanism_d)
+
+        outer_composition.add_projection(sender=inner_composition_1,
+                                         projection=MappingProjection(),
+                                         receiver=mechanism_d)
+        outer_composition.add_projection(sender=inner_composition_2,
+                                         projection=MappingProjection(),
+                                         receiver=mechanism_d)
+
+        sched = Scheduler(composition=outer_composition)
+        outer_composition._analyze_graph()
+
+        # FIX: order of input states on inner composition 1 is not stable
+        output = outer_composition.run(
+            inputs={
+                inner_composition_1: {A: [[2.0], [1.5], [2.5]],
+                                      B: [[1.0], [1.5], [1.5]]},
+                inner_composition_2: [[12.0], [11.5], [12.5]]},
+            scheduler_processing=sched
+        )
+        print(output)
+        # trial 0:
+        # inner composition 1 = (0.5*2.0 + 2.0*1.0) * 3.0 = 9.0
+        # inner composition 2 = 0.25*12.0 = 3.0
+        # outer composition = (3.0 + 9.0) * 3.0 = 36.0
+
+        # trial 1:
+        # inner composition 1 = (0.5*1.5 + 2.0*1.5) * 3.0 = 11.25
+        # inner composition 2 = 0.25*11.5 = 2.875
+        # outer composition = (2.875 + 11.25) * 3.0 = 42.375
+
+        # trial 2:
+        # inner composition 1 = (0.5*2.5 + 2.0*1.5) * 3.0 = 12.75
+        # inner composition 2 = 0.25*12.5 = 3.125
+        # outer composition = (3.125 + 12.75) * 3.0 = 47.625
+
+        assert np.allclose(output, [[np.array([36.])],
+                                    [np.array([42.375])],
+                                    [np.array([47.625])]])
+
+    def test_input_specification_multiple_nested_compositions(self):
+
+        # level_0 composition --------------------------------- innermost composition
+        level_0 = Composition(name="level_0")
+
+        A0 = TransferMechanism(name="composition-pytests-A0",
+                               default_variable=[[0.], [0.]],
+                               function=Linear(slope=1.))
+        B0 = TransferMechanism(name="composition-pytests-B0",
+                               function=Linear(slope=2.))
+
+        level_0.add_c_node(A0)
+        level_0.add_c_node(B0)
+        level_0.add_projection(A0, MappingProjection(), B0)
+        level_0.add_projection(A0, MappingProjection(sender=A0.output_states[1], receiver=B0), B0)
+        level_0._analyze_graph()
+
+        # level_1 composition ---------------------------------
+        level_1 = Composition(name="level_1")
+
+        A1 = TransferMechanism(name="composition-pytests-A1",
+                              function=Linear(slope=1.))
+        B1 = TransferMechanism(name="composition-pytests-B1",
+                              function=Linear(slope=2.))
+
+        level_1.add_c_node(level_0)
+        level_1.add_c_node(A1)
+        level_1.add_c_node(B1)
+        level_1.add_projection(level_0, MappingProjection(), B1)
+        level_1.add_projection(A1, MappingProjection(), B1)
+        level_1._analyze_graph()
+
+        # level_2 composition --------------------------------- outermost composition
+        level_2 = Composition(name="level_2")
+
+        A2 = TransferMechanism(name="composition-pytests-A2",
+                               size=2,
+                               function=Linear(slope=1.))
+        B2 = TransferMechanism(name="composition-pytests-B2",
+                               function=Linear(slope=2.))
+
+        level_2.add_c_node(level_1)
+        level_2.add_c_node(A2)
+        level_2.add_c_node(B2)
+        level_2.add_projection(level_1, MappingProjection(), B2)
+        level_2.add_projection(A2, MappingProjection(), B2)
+        level_2._analyze_graph()
+
+        sched = Scheduler(composition=level_2)
+
+        # FIX: order of input states in each inner composition (level_0 and level_1)
+        level_2.run(inputs={A2: [[1.0, 2.0]],
+                            level_1: {A1: [[1.0]],
+                                      level_0: {A0: [[1.0], [2.0]]}}},
+                    scheduler_processing=sched)
+
+        # level_0 output = 2.0 * (1.0 + 2.0) = 6.0
+        assert np.allclose(level_0.output_values, [6.0])
+        # level_1 output = 2.0 * (1.0 + 6.0) = 14.0
+        assert np.allclose(level_1.output_values, [14.0])
+        # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
+        assert np.allclose(level_2.output_values, [34.0])

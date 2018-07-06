@@ -1523,11 +1523,17 @@ class Composition(object):
                     adjusted_stimulus_dict, num_trials = node._adjust_stimulus_dict(stim_list)
                     translated_stimulus_dict = {}
 
-                    for nested_origin_node, value in adjusted_stimulus_dict.items():
-                        for i in range(len(value)):
+                    # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
+                    # InputStates and the values are lists containing the first input value
+                    for nested_origin_node, values in adjusted_stimulus_dict.items():
+                        first_value = values[0]
+                        for i in range(len(first_value)):
                             input_state = nested_origin_node.external_input_states[i]
                             input_cim_input_state = node.input_CIM_states[input_state][0]
-                            translated_stimulus_dict[input_cim_input_state] = value[i]
+                            translated_stimulus_dict[input_cim_input_state] = [first_value[i]]
+                            # then loop through the stimulus dictionary again for each remaining trial
+                            for trial in range(1, num_trials):
+                                translated_stimulus_dict[input_cim_input_state].append(values[trial][i])
 
                     adjusted_stimulus_list = []
                     for trial in range(num_trials):
