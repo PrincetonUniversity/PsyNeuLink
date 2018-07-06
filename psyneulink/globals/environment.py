@@ -205,8 +205,7 @@ Shorthand - drop the outer list on each input because **Mechanism a** only has o
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s `external_input_values
-    <MechanismBase.external_input_values>` is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
 
 ::
 
