@@ -277,6 +277,7 @@ class AutoAssociativeProjection(MappingProjection):
 
         if self.sender.owner.learning_enabled:
             self.context.execution_phase = ContextFlags.LEARNING
+        super()._update_parameter_states(runtime_params, context)
 
         # TEST PRINT
         if not self.context.initialization_status == ContextFlags.INITIALIZING:
@@ -288,7 +289,6 @@ class AutoAssociativeProjection(MappingProjection):
                        time.time_step))
             print("{} weight change matrix: \n{}\n".format(self.name,
                                                            self.parameter_states[MATRIX].mod_afferents[0].value))
-        super()._update_parameter_states(runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
