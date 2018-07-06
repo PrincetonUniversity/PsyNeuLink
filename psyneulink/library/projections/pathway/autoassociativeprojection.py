@@ -275,18 +275,19 @@ class AutoAssociativeProjection(MappingProjection):
     def _update_parameter_states(self, runtime_params=None, context=None):
 
 
-        # TEST PRINT
-        if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  PASS: {}  TIME_STEP: {}".
-                format(self.context.flags_string,
-                       self.current_execution_time.trial,
-                       self.current_execution_time.pass_,
-                       self.current_execution_time.time_step))
-            print("{} weight change matrix: \n{}\n".format(self.name,
-                                                           self.parameter_states[MATRIX].mod_afferents[0].value))
-
         if self.sender.owner.learning_enabled:
             self.context.execution_phase = ContextFlags.LEARNING
+
+        # TEST PRINT
+        if not self.context.initialization_status == ContextFlags.INITIALIZING:
+            time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
+                format(self.context.flags_string,
+                       time.trial,
+                       # time.pass_,
+                       time.time_step))
+            print("{} weight change matrix: \n{}\n".format(self.name,
+                                                           self.parameter_states[MATRIX].mod_afferents[0].value))
         super()._update_parameter_states(runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech

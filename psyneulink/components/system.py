@@ -2819,8 +2819,8 @@ class System(System_Base):
 
                 # MODIFIED 7/6/18 JDC NEW:
                 # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
-                # if isinstance(mechanism, AutoAssociativeLearningMechanism):
-                #     mechanism.context.execution_phase = ContextFlags.LEARNING
+                if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                    mechanism.context.execution_phase = ContextFlags.LEARNING
                 # MODIFIED 7/6/18 END
 
                 # Execute

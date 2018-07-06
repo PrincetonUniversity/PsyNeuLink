@@ -376,12 +376,14 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #     print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
         #
         # TEST PRINT
-        print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  PASS: {} TIME-STEP: {}".
-            format(self.context.flags_string,
-                   self.current_execution_time.trial,
-                   self.current_execution_time.pass_,
-                   self.current_execution_time.time_step))
-        print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        if not self.context.initialization_status == ContextFlags.INITIALIZING:
+            time = self.context.composition.scheduler_processing.clock.simple_time
+            print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
+                format(self.context.flags_string,
+                       time.trial,
+                       # self.pass_,
+                       time.time_step))
+            print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
 
         self.value = [self.learning_signal]
