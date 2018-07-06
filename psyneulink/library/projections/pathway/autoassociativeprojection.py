@@ -254,26 +254,6 @@ class AutoAssociativeProjection(MappingProjection):
                          name=name,
                          prefs=prefs)
 
-    def _execute(self, variable, runtime_params=None, context=None):
-        """
-        Based heavily on the execute() method for MappingProjection.
-
-        """
-
-        # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
-        # so the ParameterStates for 'auto' and 'hetero' live on the RecurrentTransferMechanism rather than on
-        # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-
-        return super()._execute(variable, runtime_params=runtime_params, context=context)
-
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
 
