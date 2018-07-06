@@ -2816,10 +2816,12 @@ class System(System_Base):
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
                 mechanism.context.execution_phase = self.context.execution_phase
-                if
 
-                #     mechanism.learning_mechanism._execution_id = self._execution_id
-                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
+                # MODIFIED 7/6/18 JDC NEW:
+                # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
+                # if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                #     mechanism.context.execution_phase = ContextFlags.LEARNING
+                # MODIFIED 7/6/18 END
 
                 # Execute
                 # # TEST PRINT:

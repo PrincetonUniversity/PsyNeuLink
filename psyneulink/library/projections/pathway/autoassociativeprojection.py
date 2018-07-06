@@ -254,23 +254,26 @@ class AutoAssociativeProjection(MappingProjection):
                          name=name,
                          prefs=prefs)
 
-    def _execute(self, variable, runtime_params=None, context=None):
-        """
-        Based heavily on the execute() method for MappingProjection.
+    # def _execute(self, variable, runtime_params=None, context=None):
+    #     """
+    #     Based heavily on the execute() method for MappingProjection.
+    #
+    #     """
+    #     # TEST PRINT
+    #     if not self.context.initialization_status == ContextFlags.INITIALIZING:
+    #         print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]".format(self.context.flags_string))
+    #         print("{} weight change matrix: \n{}\n".format(self.name,
+    #                                                        self.parameter_states[MATRIX].mod_afferents[0].value))
+    #
+    #     if self.sender.owner.learning_enabled:
+    #         self.context.execution_phase = ContextFlags.LEARNING
+    #     value = super()._execute(variable, runtime_params=runtime_params, context=context)
+    #     if self.sender.owner.learning_enabled:
+    #         self.context.execution_phase = ContextFlags.IDLE
+    #     return value
 
-        """
+    def _update_parameter_states(self, runtime_params=None, context=None):
 
-        # # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
-        # # so the ParameterStates for 'auto' and 'hetero' live on the RecurrentTransferMechanism rather than on
-        # # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
-        # if not isinstance(self.sender, (OutputState, Mechanism)):
-        # #     owner_mech = self.sender.owner
-        # # elif isinstance(self.sender, Mechanism):
-        # #     owner_mech = self.sender
-        # # else:
-        #     raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-        #                                " the sender is {}".
-        #                                format(self.__class__.__name__, self.name, self.sender))
 
         # TEST PRINT
         if not self.context.initialization_status == ContextFlags.INITIALIZING:
@@ -280,10 +283,7 @@ class AutoAssociativeProjection(MappingProjection):
 
         if self.sender.owner.learning_enabled:
             self.context.execution_phase = ContextFlags.LEARNING
-        value = super()._execute(variable, runtime_params=runtime_params, context=context)
-        if self.sender.owner.learning_enabled:
-            self.context.execution_phase = ContextFlags.IDLE
-        return value
+        super()._update_parameter_states(runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
