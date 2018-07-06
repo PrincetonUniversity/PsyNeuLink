@@ -277,7 +277,11 @@ class AutoAssociativeProjection(MappingProjection):
 
         # TEST PRINT
         if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]".format(self.context.flags_string))
+            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  PASS: {}  TIME_STEP: {}".
+                format(self.context.flags_string,
+                       self.current_execution_time.trial,
+                       self.current_execution_time.pass_,
+                       self.current_execution_time.time_step))
             print("{} weight change matrix: \n{}\n".format(self.name,
                                                            self.parameter_states[MATRIX].mod_afferents[0].value))
 

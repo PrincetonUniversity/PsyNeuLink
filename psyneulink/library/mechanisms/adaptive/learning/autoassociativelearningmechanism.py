@@ -376,7 +376,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #     print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
         #
         # TEST PRINT
-        print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]".format(self.context.flags_string))
+        print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  PASS: {} TIME-STEP: {}".
+            format(self.context.flags_string,
+                   self.current_execution_time.trial,
+                   self.current_execution_time.pass_,
+                   self.current_execution_time.time_step))
         print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
 
