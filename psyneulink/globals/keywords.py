@@ -31,7 +31,7 @@ __all__ = [
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONROLLER_PHASE_SPEC', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
+    'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
     'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY',
@@ -597,7 +597,6 @@ SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
 ENABLE_CONTROLLER = "enable_controller"
-CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
 RUN = 'run'
 TRIAL = 'trial'
@@ -641,6 +640,7 @@ kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g.,
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
+CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'

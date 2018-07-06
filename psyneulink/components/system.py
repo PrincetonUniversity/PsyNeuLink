@@ -456,7 +456,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, CONTROL, CONTROLLER, CYCLE, \
+from psyneulink.globals.keywords import ALL, CONDITION, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
@@ -2535,17 +2535,17 @@ class System(System_Base):
     def _add_mechanism_conditions(self, context=None):
 
         condition_set = {}
-        for mech in self.execution_list:
-            if mech.condition and not mech in self.scheduler_processing.condition_set:
-                condition_set[mech] = mech.condition
-        self.scheduler_processing.add_condition_set(self, condition_set)
+        for item in self.execution_list:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.condition_set:
+                condition_set[item] = item.condition
+        self.scheduler_processing.add_condition_set(condition_set)
 
         # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
         condition_set = {}
-        for mech in self.learning_execution_list and not mech in self.scheduler_learning.condition_set:
-            if mech.condition:
-                condition_set[mech] = mech.condition
-        self.scheduler_learning.add_condition_set(self, condition_set)
+        for item in self.learning_execution_list and not item in self.scheduler_learning.condition_set:
+            if hasattr(item, CONDITION) and item.condition:
+                condition_set[item] = item.condition
+        self.scheduler_learning.add_condition_set(condition_set)
 
     def _parse_runtime_params(self, runtime_params):
         if runtime_params is None:

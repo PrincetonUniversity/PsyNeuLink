@@ -1199,10 +1199,16 @@ class Mechanism_Base(Mechanism):
         contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism. If the current value
         of an OutputState does not have a corresponding label, then its numeric value is used instead.
 
+    condition : Condition : None
+        condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
+        `System` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
+        Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
+        the Mechanism directly to a Scheduler that is then assigned to the System.
+
     is_finished : bool : default False
-        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by `Component-based
-        Conditions <Conditions_Component_Based>` to predicate the execution of one or more other Components on the
-        Mechanism.
+        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>` in a `trial`; used by
+        `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
+        Components on the Mechanism.
 
     COMMENT:
         phaseSpec : int or float :  default 0
