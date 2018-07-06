@@ -1516,28 +1516,28 @@ class Composition(object):
         adjusted_stimuli = {}
         num_input_sets = -1
 
-
         for node, stim_list in stimuli.items():
             if isinstance(node, Composition):
                 if isinstance(stim_list, dict):
-                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stim_list)
-                    adjusted_stimuli_list = []
 
-                    for state in node.input_states:
-                        # TBI: Look up the input value in adjusted_stimulus_dict which corresponds to this state
+                    adjusted_stimulus_dict, num_trials = node._adjust_stimulus_dict(stim_list)
+                    translated_stimulus_dict = {}
 
-                        # node.input_CIM_states is actually the inverse of what need in this case...
+                    for nested_origin_node, value in adjusted_stimulus_dict.items():
+                        for i in range(len(value)):
+                            input_state = nested_origin_node.external_input_states[i]
+                            input_cim_input_state = node.input_CIM_states[input_state][0]
+                            translated_stimulus_dict[input_cim_input_state] = value[i]
 
-                        # corresponding_origin_input_state = node.input_CIM_states[state][0]
-                        # origin_mechanism = corresponding_origin_input_state.owner
-                        # index = corresponding_origin_input_state.owner.input_states.\
-                        #     index(corresponding_origin_input_state)
-                        # state_input = adjusted_stimulus_dict[origin_mechanism][index]
+                    adjusted_stimulus_list = []
+                    for trial in range(num_trials):
+                        trial_adjusted_stimulus_list = []
+                        for state in node.external_input_states:
+                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[state][trial])
+                        adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
+                    stimuli[node] = adjusted_stimulus_list
 
-                        state_input = "placeholder for input value"
-
-                        adjusted_stimuli_list.append(state_input)
-
+            # excludes any input states marked "internal_only" (usually recurrent)
             input_must_match = node.external_input_values
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
@@ -1563,7 +1563,7 @@ class Composition(object):
                     check_spec_type = self._input_matches_variable(stim, input_must_match)
                     # loop over each input to verify that it matches variable
                     if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
+                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
                             format(stim, node.name, input_must_match)
                         # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                         # for "functionality" but rather a hack for user clarity
