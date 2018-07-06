@@ -1309,13 +1309,11 @@ class System(System_Base):
             #          only ones to ObjectiveMechanism(s) used for Learning or Control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            assert True
             if (
                 not (isinstance(sender_mech, ControlMechanism) or
                 # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism or ObjectiveMechanism for one
                     # It is not an ObjectiveMechanism used for Learning or for the controller of the System
                     (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL)))
-
                     and
                         # All of its projections
                         all(
@@ -1353,6 +1351,14 @@ class System(System_Base):
                         for output_state in sender_mech.output_states):
                     pass
 
+                # If sender_mech projects to an AutoAssociativeLearningMechanism,
+                #    let it pass, as that is a legitimate dependent that should be including in the execution_list
+                elif any(
+                        # Projection to a ControlMechanism that is not the System's controller
+                        (isinstance(projection.receiver.owner, AutoAssociativeLearningMechanism)
+                         for projection in output_state.efferents)
+                        for output_state in sender_mech.output_states):
+                    pass
                 # Otherwise, don't track any of the TERMINAL Mechanism's projections
                 else:
                     return
@@ -2803,21 +2809,27 @@ class System(System_Base):
                 mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
-
+                # Set up runtime params and context
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
-
                 mechanism.context.execution_phase = self.context.execution_phase
+                if
+
+                #     mechanism.learning_mechanism._execution_id = self._execution_id
+                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
+
+                # Execute
                 # # TEST PRINT:
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
+
+                # Reset runtime params and context
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
                 mechanism._runtime_params_reset = {}
-
                 for key in mechanism.function_object._runtime_params_reset:
                     mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[key])
                 mechanism.function_object._runtime_params_reset = {}
