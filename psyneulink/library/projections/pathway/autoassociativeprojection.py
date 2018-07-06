@@ -358,9 +358,25 @@ class AutoAssociativeProjection(MappingProjection):
         #     # # MODIFIED 9/23/17 END
         #
         # return self.function(self.sender.value, params=runtime_params, context=context)
+
+        # TEST PRINT
+        if not self.context.initialization_status == ContextFlags.INITIALIZING:
+            time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
+                format(self.context.flags_string,
+                       time.trial,
+                       # time.pass_,
+                       time.time_step))
+            print("{} weight change matrix: \n{}\n".format(self.name,
+                                                           self.parameter_states[MATRIX].mod_afferents[0].value))
+
+
         # MODIFIED 9/23/17 NEW:
-        return super()._execute(variable, runtime_params=runtime_params, context=context)
+        value = super()._execute(variable, runtime_params=runtime_params, context=context)
         # MODIFIED 9/23/17 END:
+
+
+        return value
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
