@@ -143,7 +143,7 @@ Processing
 ~~~~~~~~~~
 
 A ContrastiveHebbianMechanism always executes in `integrator_mode <Transfer_Execution>`.  It executes in two
-sequential phases:
+sequential phases that constitute a "trial of execution:"
 
 * *plus phase:* in each step of execution, the inputs received from the *RECURRENT* and *EXTERNAL* `InputStates
   <ContrastiveHebbian_Input>` are combined using the `combination_function 
@@ -167,10 +167,15 @@ sequential phases:
   ContrastiveHebbianMechanism is assigned to its `minus_phase_activity
   <ContrastiveHebbianMechanism.minus_phase_activity>` attribute.
 
-Following the *minus phase*, the difference between `plus_phase_activity
-<ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
-<ContrastiveHebbianMechanism.minus_phase_activity>` is taken, and assigned as the `value <OutputState.value>` of the 
-the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
+Once a trial of execution is complete (i.e, after completion of the *minus phase*, the following computations and
+assigments are made:
+
+* the value of `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned to
+  *CURRENT_ACTIVITY* `OutputState <ContrastiveHebbian_Output>`;
+..
+* the difference between `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` and
+  `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` is taken, and is assigned as the `value
+  <OutputState.value>` of the the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
 
 .. _ContrastiveHebbian_Learning_Execution:
 
@@ -559,11 +564,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>` by default:
 
-        * *CURRENT_ACTIVITY_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the current activity
-          of the ContrastiveHebbianMechanism during execution.
+        * *CURRENT_ACTIVITY_OUTPUT* -- the  `primary OutputState  <OutputState.primary>` of the Mechanism, the
+          `value <OutputState.value>` of which is a 1d array containing the activity of the ContrastiveHebbianMechanism
+          after each execution;  at the end of an execution sequence (i.e., when `is_finished
+          <ContrastiveHebbianMechanism.is_finished>` is `True`), it is assigned the value of `plus_phase_activity
+          <ContrastiveHebbianMechanism.plus_phase_activity>`.
 
         * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
-          differences in activity between the plus and minus phases of the last execution.
+          differences in activity between the plus and minus phases at the end of an execution sequence.
 
     output_values : List[1d np.array]
         a list with the following items by default:
@@ -696,11 +704,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.input_state.socket_template
             self.execution_phase = None
 
+        # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
+        # USED FOR TEST PRINT BELOW:
+        curr_phase = self.execution_phase
 
-        if self.execution_phase == PLUS_PHASE:
-            self.is_finished = False
+        if self.is_finished == True:
+            # If current execution follows completion of a previous trial,
+            #    zero primary OutputState (CURRENT_ACTIVITY) so that input is not received
+            #    from residual activity of previous trial via recurrent projection
+            self.current_activity = self.input_state.socket_template
+
+        self.is_finished = False
 
         previous_activity = self.previous_value
 
@@ -709,44 +725,62 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
+        try:
+            # self.current_activity = np.squeeze(current_activity)
+            current_activity = np.squeeze(current_activity)
+            # Set value of primary OutputState to current activity
+            self.current_activity = current_activity
+        except:
+            assert False
+
         # Check for convergence
         if previous_activity is None:
             return current_activity
+            # return self.current_activity
         else:
             diff = abs(self.convergence_function([current_activity, previous_activity]))
 
-        # TEST PRINT:
-        print(self.current_execution_time,
-              '\n\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', current_activity,
-              '\ndiff: ', diff,
-              '\nphase: ', 'PLUS' if self.execution_phase == PLUS_PHASE else 'MINUS',
-              '\nif_finished: ', self.is_finished
-              )
 
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
+
             # Terminate if this is the end of the minus phase
             if self.execution_phase == MINUS_PHASE:
-
-                # ?? USE initial_value attribute below??
+                # Store activity from last execution in minus phase
                 self.minus_phase_activity = current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO
                 self.is_finished = True
-                # self._update_output_states(runtime_params,context)
-                # self.reinitialize(self.output_states[PLUS_PHASE_OUTPUT].value)
+                # FIX??: NOT SURE THIS IS THE CORRECT THING TO DO
+                # Set value of primary outputState to activity at end of plus phase
+                self.current_activity = self.plus_phase_activity
 
+            # Otherwise, prepare for start of minus phase on next execution
             else:
+                # Store activity from last execution in plus phase
                 self.plus_phase_activity = current_activity
-                # JDC: NOT SURE THIS IS THE CORRECT THING TO DO;  MAYBE ONLY AT BEGINNING OF MINUS PHASE?
-                # NOTE: "socket_template" is a convenience property = np.zeros(<InputState>.variable.shape[-1])
-                self.reinitialize(self.input_state.socket_template)
+                # self.plus_phase_activity = self.current_activity
+                # Use initial_value attribute to initialize, for the minus phase,
+                #    both the integrator_function's previous_value
+                #    and the Mechanism's current activity (which is returned as it input)
+                self.reinitialize(self.initial_value)
+                self.current_activity = self.initial_value
+
+            curr_phase = self.execution_phase
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
 
+        # TEST PRINT:
+        print('\n', self.current_execution_time,
+              '\ninput:', self.function_object.variable,
+              '\nMATRIX:', self.matrix,
+              '\ncurrent activity: ', self.current_activity,
+              '\ndiff: ', diff,
+              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+              '\nis_finished: ', self.is_finished
+              )
+
         return current_activity
+        # return self.current_activity
 
     def _parse_function_variable(self, variable, context):
 
@@ -756,7 +790,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 variable = self.combination_function.execute(variable)
             else:
                 # Only use RECURRENT input
-                variable = variable[RECURRENT_INDEX]
+                variable = variable[RECURRENT_INDEX]                     # Original
+                # variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+
         except:
             variable = variable[RECURRENT_INDEX]
 
