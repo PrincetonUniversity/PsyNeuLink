@@ -211,6 +211,7 @@ from psyneulink.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION,
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.scheduling.condition import Condition, WhenFinished
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, RECURRENT_INDEX
 
@@ -691,6 +692,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
+        self.learning_mechanism.condition = WhenFinished(self)
+
     def _execute(self,
                  variable=None,
                  function_variable=None,
@@ -770,11 +773,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # TEST PRINT:
         print('\n', self.current_execution_time,
+              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
               '\ninput:', self.function_object.variable,
               '\nMATRIX:', self.matrix,
               '\ncurrent activity: ', self.current_activity,
               '\ndiff: ', diff,
-              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
               '\nis_finished: ', self.is_finished
               )
 
