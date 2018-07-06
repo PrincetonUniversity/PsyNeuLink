@@ -743,7 +743,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         else:
             diff = abs(self.convergence_function([current_activity, previous_activity]))
 
-
         if (self.context.initialization_status != ContextFlags.INITIALIZING and
                 self.convergence_criterion is not None and diff <= self.convergence_criterion):
 
