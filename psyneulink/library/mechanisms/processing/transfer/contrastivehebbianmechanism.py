@@ -712,9 +712,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
-            # #    zero primary OutputState (CURRENT_ACTIVITY) so that input is not received
-            # #    from residual activity of previous trial via recurrent projection
-            # self.current_activity = self.input_state.socket_template
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_state.socket_template
