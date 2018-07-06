@@ -3832,9 +3832,15 @@ class System(System_Base):
                 rcvr_color = terminal_color
                 rcvr_penwidth = bold_width
                 rcvr_rank = terminal_rank
+            elif LEARNING in rcvr.systems[self]:
+                rcvr_color = learning_color
+                rcvr_penwidth = default_width
             else:
                 rcvr_color = default_node_color
                 rcvr_penwidth = default_width
+
+            if isinstance(rcvr, AutoAssociativeLearningMechanism) and not show_learning:
+                return
 
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
@@ -3892,7 +3898,7 @@ class System(System_Base):
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
 
             # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-            #    break, as those handled below
+            #    break, as those are handled below
             if isinstance(rcvr, LearningMechanism):
                 return
             # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
@@ -4127,12 +4133,13 @@ class System(System_Base):
                         # Get sndr info
                         sndr = proj.sender.owner
                         sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                        if sndr is active_item:
-                            sndr_color = active_color
-                        else:
-                            sndr_color = learning_color
+                        # # FIX: NEED TO ASSIGN sndr_color TO sndr NODE AFTER COLOR ASSIGNMENT BELOW
+                        # if sndr is active_item:
+                        #     sndr_color = active_color
+                        # else:
+                        #     sndr_color = learning_color
 
-                        # Create an edge for the Projection to the LearningMecchanism if:
+                        # Create an edge for the Projection to the LearningMechanism if:
                         #    - it is from another LearningMechanism in the same System
                         #    - it is from an ObjectiveMechanism used for learning in the same System
                         #    - **show_learning** argument was specifid as ALL
