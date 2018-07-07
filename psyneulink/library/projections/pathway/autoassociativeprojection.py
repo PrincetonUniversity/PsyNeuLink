@@ -254,113 +254,25 @@ class AutoAssociativeProjection(MappingProjection):
                          name=name,
                          prefs=prefs)
 
-    def _execute(self, variable, runtime_params=None, context=None):
-        """
-        Based heavily on the execute() method for MappingProjection.
+    def _update_parameter_states(self, runtime_params=None, context=None):
 
-        COMMENT:
-            [9/23/17 JDC: THIS SHOULD NOT JUST OVERRIDE SUPER;
-                          IT SHOULD DO WHAT IT NEEDS TO BUT STILL CALL SUPER,
-                          SO THAT CHANGES DON'T HAVE TO BE DUPLICLATED
-                          (I RAN INTO THE PROBLEM OF DUPLICATING WHEN IMPLEMENTING learning_enabled ON
-                          LearningMechanism)
+        if context==ContextFlags.LEARNING:
+            self.context.execution_phase = ContextFlags.LEARNING
+        super()._update_parameter_states(runtime_params, context)
 
-        COMMENT
-
-        """
-
-        # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
-        # so the ParameterStates for 'auto' and 'hetero' live on the RecurrentTransferMechanism rather than on
-        # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-
-        owner_param_states = owner_mech._parameter_states.key_values
-
-        # KAM COMMENTED OUT 1/9/2018 -- redundant code? auto and hetero should only be handled by mechanism, projection
-        # just looks up current matrix??
-
-        # MODIFIED 9/23/17 NEW: [JDC ALLOW DEFAULT MATRIX TO BE USED IF AUTO AND HETERO ARE NOT SPECIFIED]:
-
-        # if AUTO in owner_param_states or HETERO in owner_param_states:
-        # # MODIFIED 9/23/17 END
-        #     if AUTO not in owner_param_states or HETERO not in owner_param_states:
-        #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; "
-        #                                    "here are names of the current ParameterStates for {1}: {2}".
-        #                                    format(owner_mech.__class__.__name__, owner_mech.name, owner_param_states))
-        #
-        #     # update the param states for auto/hetero: otherwise, if they've changed since self's last execution,
-        #     # we won't know because the mechanism may not have updated its param state yet
-        #     # (if we execute before the mechanism)
-        #     self._update_auto_and_hetero(owner_mech, runtime_params, time_scale, context)
-        #
-        #     # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
-        #     # (where auto_matrix is a diagonal matrix and hetero_matrix is a hollow matrix)
-        #     raw_auto = owner_mech.auto
-        #     auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
-        #     if auto_matrix is None:
-        #         raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-        #                                    "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-        #                                    "2d array, 2d list, or numpy matrix".
-        #                                    format(owner_mech.__class__.__name__,
-        #                                           owner_mech.name,
-        #                                           raw_auto,
-        #                                           type(raw_auto)))
-        #
-        #     raw_hetero = owner_mech.hetero
-        #     hetero_matrix = get_hetero_matrix(raw_hetero=raw_hetero, size=owner_mech.size[0])
-        #     if hetero_matrix is None:
-        #         raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, "
-        #                                    "and was of type {}. Instead, the `hetero` parameter should be a number, "
-        #                                    "1D array of length one, 2d array, 2d list, or numpy matrix".
-        #                                    format(owner_mech.__class__.__name__,
-        #                                           owner_mech.name, raw_hetero,
-        #                                           type(raw_hetero)))
-        #     self.matrix = auto_matrix + hetero_matrix
-
-        # END OF KAM COMMENTED OUT 1/9/2018
-
-        # # MODIFIED 9/23/17 OLD [JDC: CALLED SUPER FOR ALL OF THIS, THOUGH SEE IMPLEMENTATION NOTE BELOW]:
-        # # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
-        # # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
-        # # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
-        # # from the previous_value into the value of the parameterState
-        # self._update_parameter_states(runtime_params=runtime_params, context=context)
-        #
-        # # Check whether error_signal has changed
-        # if (self.learning_mechanism
-        #     and self.learning_mechanism.learning_enabled
-        #     and self.learning_mechanism.status == CHANGED):
-        #
-        #     # Assume that if learning_mechanism attribute is assigned,
-        #     #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-        #     matrix_parameter_state = self._parameter_states[MATRIX]
-        #
-        #     # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-        #     setattr(self, '_'+MATRIX, self.matrix)
-        #
-        #     # Update MATRIX, and AUTO and HETERO accordingly
-        #     self.matrix = matrix_parameter_state.value
-        #
-        #     # # MODIFIED 9/23/17 OLD: [JDC DOESN'T SEEM TO DO ANYTHING:]
-        #     # # IMPLEMENTATION NOTE: SPECIFIC TO AutoAssociativeProjection -
-        #     # # DOES THIS NEED TO BE IN THE CONDITIONAL?  CAN IT BE MOVED TO THE AutoAssociativeProjection BLOCK ABOVE?
-        #     # owner_mech.auto = np.diag(self.matrix).copy()
-        #     # owner_mech.hetero = self.matrix.copy()
-        #     # np.fill_diagonal(owner_mech.hetero, 0)
-        #     # # IMPLEMENTATION NOTE: END
-        #     # # MODIFIED 9/23/17 END
-        #
-        # return self.function(self.sender.value, params=runtime_params, context=context)
-        # MODIFIED 9/23/17 NEW:
-        return super()._execute(variable, runtime_params=runtime_params, context=context)
-        # MODIFIED 9/23/17 END:
+        # # TEST PRINT
+        # if not self.context.initialization_status == ContextFlags.INITIALIZING and self.has_learning_projection:
+        #     if self.sender.owner.context.composition:
+        #         time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+        #     else:
+        #         time = self.current_execution_time
+        #     print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
+        #         format(self.context.flags_string,
+        #                time.trial,
+        #                # time.pass_,
+        #                time.time_step))
+        #     print("{} weight change matrix: \n{}\n".format(self.name,
+        #                                                    self.parameter_states[MATRIX].mod_afferents[0].value))
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future

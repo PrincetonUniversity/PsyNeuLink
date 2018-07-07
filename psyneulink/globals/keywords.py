@@ -31,10 +31,11 @@ __all__ = [
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONROLLER_PHASE_SPEC', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
+    'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
-    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY', 'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY',
+    'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
@@ -74,7 +75,7 @@ __all__ = [
     'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
+    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
     'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
@@ -250,6 +251,9 @@ class DistanceMetrics:
     Attributes
     ----------
 
+    MAX_DIFF
+        :math:`d = \\max(a_1-a_2)`
+
     DIFFERENCE
         :math:`d = \\sum\\limits^{len}(a_1-a_2)`
 
@@ -276,6 +280,7 @@ class DistanceMetrics:
 
     """
     def __init__(self):
+        self.MAX_DIFF = MAX_DIFF
         self.DIFFERENCE = DIFFERENCE
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
@@ -302,6 +307,7 @@ class DistanceMetrics:
 
 
 DIFFERENCE = 'difference'
+MAX_DIFF = 'max_diff'
 EUCLIDEAN = 'euclidean'
 ANGLE = 'angle'
 CORRELATION = 'correlation'
@@ -423,6 +429,8 @@ CONTEXT = "context"
 STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
 
 INITIAL_VALUES = 'initial_values'
+CURRENT_EXECUTION_TIME = 'current_execution_time'
+CURRENT_EXECUTION_COUNT = 'current_execution_count'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -523,6 +531,7 @@ PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 TRANSFER_MECHANISM = "TransferMechanism"
 LEABRA_MECHANISM = "LeabraMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
+CONTRASTIVE_HEBBIAN_MECHANISM = "ContrastiveHebbianMechanism"
 LCA = "LCA"
 KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
@@ -559,6 +568,7 @@ DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
+CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbianFunction'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
@@ -587,7 +597,6 @@ SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
 ENABLE_CONTROLLER = "enable_controller"
-CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
 RUN = 'run'
 TRIAL = 'trial'
@@ -609,7 +618,6 @@ SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
 PULSE_CLAMP = "pulse_clamp"
 NO_CLAMP = "no_clamp"
-LEARNING = 'LEARNING'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'CONTROL'
 GATING = 'gating'
@@ -631,6 +639,7 @@ kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g.,
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
+CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
@@ -649,8 +658,10 @@ ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
 CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
+# AUTO_LEARNING = 'AUTO_LEARNING'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
+LEARNING = 'LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'

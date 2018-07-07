@@ -30,7 +30,7 @@ autoassociative (e.g., Hebbian) learning.
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism is created directly by calling its constructor.::
+A RecurrentTransferMechanism is created directly by calling its constructor, for example::
 
     import psyneulink as pnl
     my_linear_recurrent_transfer_mechanism = pnl.RecurrentTransferMechanism(function=pnl.Linear)
@@ -41,7 +41,8 @@ The recurrent projection is automatically created using (1) the **matrix** argum
 arguments of the Mechanism's constructor, and is assigned to the mechanism's `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
-If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
+If the **matrix** argument is used to create the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, it must specify either a square matrix or an
 `AutoAssociativeProjection` that uses one (the default is `HOLLOW_MATRIX`).::
 
     recurrent_mech_1 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
@@ -52,8 +53,8 @@ If the **matrix** argument is used to create the recurrent projection, it must s
     recurrent_mech_2 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       matrix=pnl.AutoAssociativeProjection)
 
-If the **auto** and **hetero** arguments are used to create the recurrent projection, they set the diagonal and
-off-diagonal terms, respectively.::
+If the **auto** and **hetero** arguments are used to create the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`, they set the diagonal and off-diagonal terms, respectively.::
 
     recurrent_mech_3 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       auto=1.0,
@@ -103,14 +104,17 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection`.
-By default, this recurrent projection projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
-`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
-stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the
-`has_recurrent_input_state <RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the recurrent
-projection can also be made to point to a separate input state rather than the primary one.  In this case, the input
-states' results will be combined using `LinearCombination <function.LinearCombination>` *before* being passed to the
+The distinguishing feature of a RecurrentTransferMechanism is its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` attribute: a self-projecting `AutoAssociativeProjection`.
+By default, `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` projects from the Mechanism's
+`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.  This can be
+parameterized using its `matrix <RecurrentTransferMechanism.matrix>`, `auto <RecurrentTransferMechanism.auto>`,
+and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in its `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_state
+<RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputState
+rather, than the primary one (named *EXTERNAL*).  In this case, the InputStates' results will be combined using the
+`combination_function <RecurrentTransferMechanism.combination_function>` *before* being passed to the
 RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
@@ -132,30 +136,20 @@ Execution
 ---------
 
 When a RecurrentTransferMechanism executes, its variable, as is the case with all mechanisms, is determined by the
-projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by the
-value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
-recurrent projection.
+projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by
+the value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
+`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-COMMENT:
-Previous version of sentence above: "When a RecurrentTransferMechanism executes, it includes in its input the value of
-its `primary OutputState <OutputState_Primary>` from its last execution."
-8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
-takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
-that occurs along the way.
-
-12/1/17 KAM: Changed the above to describe the RecurrentTransferMechanism's variable on this execution in terms of
-projections received, which happens to include a recurrent projection from its own primary output state on the previous
-execution
-COMMENT
-
-Like a `TransferMechanism`, the function used to update each element can be assigned using its `function
-<RecurrentTransferMechanism.function>` parameter. It then transforms its input
-(including from the recurrent projection) using the specified function and parameters (see `Transfer_Execution`),
-and returns the results in its OutputStates.
+Like a `TransferMechanism`, the function used to update each element can be specified in the **function** argument
+of its constructor.  It then transforms its input (including from the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
+`Transfer_Execution`), and returns the results in its OutputStates.
 
 If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
-<System_Learning>` of the `System's execution <System_Execution>`.
+and is executed as part of a `System`, then its associated `LearningMechanism <AutoAssociativeLearningMechanism>` is
+executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
+the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
+during the `learning phase <System_Execution>` of a System's execution
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -170,8 +164,9 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Hebbian, Linear, LinearCombination,\
-    Stability, get_matrix, is_function_type
+from psyneulink.components.component import function_type, method_type
+from psyneulink.components.functions.function import \
+    Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -183,17 +178,28 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
 from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, MATRIX, MEAN, MEDIAN, NAME, \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 
 __all__ = [
-    'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
+    'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
+    'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
 ]
+
+EXTERNAL = 'EXTERNAL'
+RECURRENT = 'RECURRENT'
+# Used to index items of InputState.variable corresponding to recurrent and external inputs
+EXTERNAL_INDEX = 0
+RECURRENT_INDEX = -1
+
+COMBINATION_FUNCTION = 'combination_function'
+
 
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):
@@ -256,22 +262,24 @@ class RECURRENT_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(        \
-    default_variable=None,             \
-    size=None,                         \
-    function=Linear,                   \
-    matrix=HOLLOW_MATRIX,   \
-    auto=None,                         \
-    hetero=None,                       \
-    initial_value=None,                \
-    noise=0.0,                         \
-    integration_rate=0.5,              \
-    clip=[float:min, float:max],       \
-    learning_rate=None,                \
-    learning_function=Hebbian,         \
-    integrator_mode=False,             \
-    params=None,                       \
-    name=None,                         \
+    RecurrentTransferMechanism(             \
+    default_variable=None,                  \
+    size=None,                              \
+    function=Linear,                        \
+    matrix=HOLLOW_MATRIX,                   \
+    auto=None,                              \
+    hetero=None,                            \
+    initial_value=None,                     \
+    noise=0.0,                              \
+    integration_rate=0.5,                   \
+    clip=[float:min, float:max],            \
+    has_recurrent_input_state=False         \
+    combination_function=LinearCombination, \
+    learning_rate=None,                     \
+    learning_function=Hebbian,              \
+    integrator_mode=False,                  \
+    params=None,                            \
+    name=None,                              \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -429,6 +437,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
         being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
+    combination_function : function : default LinearCombination
+        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
+        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
+        as each of these;  default simply adds the two items.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
@@ -447,8 +460,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     Attributes
     ----------
 
-    variable : value
-        the input to Mechanism's `function <RecurrentTransferMechanism.variable>`.
+    variable : 2d np.array with one item in axis 0.
+        the input to Mechanism's `function <RecurrentTransferMechanism.function>`.
+
+    combination_function : function
+        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
+        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
+        Function that simply adds them.
 
     function : Function
         the Function used to transform the input.
@@ -484,14 +502,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         .. math::
             value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
 
-        The result of the integrator function above is then passed into the `mechanism's function <RecurrentTransferMechanism.function>`. Note that
-        on the first execution, *initial_value* sets previous_value.
+        The result of the integrator function above is then passed into the `mechanism's function
+        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
 
         **When integrator_mode is set to False:**
 
-        The variable of the mechanism is passed into the `function of the mechanism <RecurrentTransferMechanism.function>`. The mechanism's
-        `integrator_function <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
-        *initial_value*, and *time_step_size*) are ignored.
+        The variable of the mechanism is passed into the `function of the mechanism
+        <RecurrentTransferMechanism.function>`. The mechanism's `integrator_function
+        <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
+        (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
     noise : float or function : default 0.0
         When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to True, noise is passed into the
@@ -501,15 +520,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         If noise is a list or array, it must be the same length as `variable
         <RecurrentTransferMechanism.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is a
-        list or array, noise will be applied to each variable element. In the case of a noise function, this means that
-        the function will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is
+        a list or array, noise will be applied to each variable element. In the case of a noise function, this means
+        that the function will be executed separately for each variable element.
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value
+            from its distribution on each execution. If noise is specified as a float or as a function with a fixed
+            output, then the noise will simply be an offset that remains the same across all executions.
 
     integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
@@ -521,11 +540,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
 
         the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
-
-    previous_input : 1d np.array of floats
-        the value of the input on the previous execution, including the value of `recurrent_projection`.
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
+        to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
@@ -621,6 +637,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 input_states:tc.optional(tc.any(list, dict)) = None,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
                  auto=None,
@@ -630,12 +647,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  integrator_mode=False,
                  clip=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
+                 has_recurrent_input_state=False,
+                 combination_function:is_function_type=LinearCombination,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 has_recurrent_input_state=False,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None):
@@ -654,18 +671,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         self._learning_enabled = enable_learning
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(input_states=input_states,
-                                                  initial_value=initial_value,
-                                                  matrix=matrix,
+        params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
-                                                  output_states=output_states,
-                                                  params=params,
-                                                  noise=noise,
                                                   auto=auto,
                                                   hetero=hetero,
-                                                  has_recurrent_input_state=has_recurrent_input_state)
+                                                  has_recurrent_input_state=has_recurrent_input_state,
+                                                  combination_function=combination_function,
+                                                  output_states=output_states,
+                                                  params=params,
+                                                  )
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -762,6 +778,30 @@ class RecurrentTransferMechanism(TransferMechanism):
                                format(MATRIX, self.name, rows, size))
                 raise RecurrentTransferError(err_msg)
 
+        # Validate combination_function
+        if COMBINATION_FUNCTION in target_set:
+            comb_fct = target_set[COMBINATION_FUNCTION]
+            if not (isinstance(comb_fct, LinearCombination) or
+                isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)):
+
+                if isinstance(comb_fct, type):
+                    comb_fct = comb_fct()
+                elif isinstance(comb_fct, (function_type, method_type)):
+                    comb_fct = UserDefinedFunction(comb_fct, self.variable)
+                try:
+                    x = comb_fct.execute(self.variable)
+                except:
+                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
+                                                 "take an array with two items ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.variable))
+                try:
+                    assert len(x) == len(self.variable[0])
+                except:
+                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
+                                                 "a result that is the same shape as the input to {} ({})".
+                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct,
+                                                        self.name, self.variable[0]))
+
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:
         #
@@ -791,12 +831,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
-        # # MODIFIED 9/23/17 OLD:
-        # if AUTO not in param_keys:
-        # MODIFIED 9/23/17 NEW [JDC]:
-        # if self.auto is not None:
         if AUTO not in param_keys and HETERO in param_keys:
-        # MODIFIED 9/23/17 END
             d = np.diagonal(specified_matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
@@ -811,13 +846,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-        # # MODIFIED 9/23/17 OLD:
-        # if HETERO not in param_keys:
-        # MODIFIED 9/23/17 NEW [JDC]:
-        # if self.hetero is not None:
-
         if HETERO not in param_keys and AUTO in param_keys:
-        # MODIFIED 9/23/17 END
 
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
@@ -836,7 +865,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name))
 
         if self.has_recurrent_input_state:
-            self._linear_combin_func = LinearCombination(default_variable=self.variable)
+            comb_fct = self.combination_function
+            if not isinstance(comb_fct, Function):
+                if isinstance(comb_fct, type):
+                    self._combination_function = comb_fct(default_variable=self.variable)
+                else:
+                    self._combination_function = UserDefinedFunction(custom_function=comb_fct,
+                                                                     default_variable=self.variable)
 
         if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
@@ -860,7 +895,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
-
         if self.learning_enabled:
             self.configure_learning(context=context)
 
@@ -888,6 +922,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
                 state.update(params=runtime_params, context=context)
+
+    def _parse_function_variable(self, variable, context):
+        if self.has_recurrent_input_state:
+            variable = self._linear_combin_func.execute(variable=variable)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1009,12 +1048,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_state:
-            new_input_state = InputState(owner=self,
-                                         name="Recurrent Input State",
-                                         variable=self.variable[0],
+            new_input_state = InputState(owner=self, name=RECURRENT, variable=self.variable[0],
                                          internal_only=True)
             assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
             assert(self.input_state.name != "Recurrent Input State")
+            # Rename existing InputState as EXTERNAL
+            remove_instance_from_registry(registry=self._stateRegistry,
+                                          category=INPUT_STATE,
+                                          component=self.input_state)
+            register_instance(self.input_state, EXTERNAL, InputState, self._stateRegistry, INPUT_STATE)
             return AutoAssociativeProjection(owner=mech,
                                              receiver=new_input_state,
                                              matrix=matrix,
@@ -1079,19 +1121,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
-        self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
+        self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
+        self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
+
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context):
         if self.has_recurrent_input_state:
-            return self._linear_combin_func.execute(variable = variable)
-        else:
-            return variable
+            variable = self.combination_function.execute(variable = variable)
+
+        return super()._parse_function_variable(variable, context)
 
     def _get_variable_from_input(self, input):
         if self.has_recurrent_input_state:
@@ -1104,3 +1148,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                 input = np.concatenate((input, z))
 
         return super()._get_variable_from_input(input)
+
+    @property
+    def _learning_signal_source(self):
+        '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
+              Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
+        '''
+        return self.output_state
