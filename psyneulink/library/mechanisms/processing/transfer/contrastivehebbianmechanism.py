@@ -29,7 +29,7 @@ its relationship to the backpropagation learning rule, and its use in connection
   `Verguts, T., & Notebaert, W. (2008). Hebbian learning of cognitive control: dealing with specific and nonspecific
   adaptation. Psychological review, 115(2), 518 <http://psycnet.apa.org/record/2008-04236-010>`_
 
-The features and operation of a ContrastiveHebbianMechanism that differ from thoe of a RecurrentTransferMechanism are
+The features and operation of a ContrastiveHebbianMechanism that differ from those of a RecurrentTransferMechanism are
 described below.
 
 .. _ContrastiveHebbian_Creation:
@@ -122,10 +122,11 @@ A ContrastiveHebbianMechanism is configured for learning in the same was as a `R
 <Recurrent_Transfer_Learning>`, with two differences:
 
 * a `MappingProjection` is assigned from its *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>`
-  (rather than its `Primary OutputState <OutputState_Primary>`).
+  (rather than its `Primary OutputState <OutputState_Primary>`) to the *ACTIVATION_INPUT* of its associated
+  `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>.
 
 * a `ContrastiveHebbian` Function is assigned as the `function <AutoAssociativeLearningMechanism.function>` of its
-  `AutoAssociativeLearningMechanism`.
+  `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.
 
 
 .. _ContrastiveHebbian_Execution:
@@ -143,7 +144,7 @@ Processing
 ~~~~~~~~~~
 
 A ContrastiveHebbianMechanism always executes in `integrator_mode <Transfer_Execution>`.  It executes in two
-sequential phases that constitute a "trial of execution:"
+sequential phases that constitute a *trial of execution:*
 
 * *plus phase:* in each step of execution, the inputs received from the *RECURRENT* and *EXTERNAL* `InputStates
   <ContrastiveHebbian_Input>` are combined using the `combination_function 
@@ -183,8 +184,10 @@ Learning
 ~~~~~~~~
 
 If a ContrastiveHebbianMechanism has been `configured for learning <ContrastiveHebbian_Learning>`, then the
-`value <OutputState.value>` of it *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>` is passed
-to its `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.  If it is part of a `System`,
+`value <OutputState.value>` of its *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>` is passed
+to its `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` at the end of each `trial of execution
+<ContrastiveHebbian_Processing>` (the `learning_condition <RecurrentTransferMechanism.learning_condition>` of a
+ContrastiveHebbianMechanism is automatically specified as *CONVERGENCE*).  If the Mechanism is part of a `System`,
 then the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` is executed during the `execution
 phase <System_Execution>` of the System's execution.  Note that this is distinct from the behavior of supervised
 learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed during the `learning phase
@@ -197,28 +200,26 @@ Class Reference
 
 """
 
-import numbers
 from collections import Iterable
 
 import numpy as np
 import typecheck as tc
-from enum import IntEnum
 
 from psyneulink.components.functions.function import \
     ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism, RECURRENT_INDEX, CONVERGENCE
+from psyneulink.globals.keywords import \
+    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.scheduling.condition import Condition, WhenFinished
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism, RECURRENT_INDEX
 
 __all__ = [
     'ConstrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
     'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT',
-    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
+    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT',
 ]
 
 CURRENT_ACTIVITY = 'current_activity'
@@ -229,7 +230,6 @@ CURRENT_ACTIVITY_OUTPUT = 'CURRENT_ACTIVITY_OUTPUT'
 ACTIVITY_DIFFERENCE_OUTPUT = 'ACTIVITY_DIFFERENCE_OUTPUT'
 PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
 MINUS_PHASE_OUTPUT = 'MINUS_PHASE_OUTPUT'
-
 
 PLUS_PHASE  = True
 MINUS_PHASE = False
@@ -626,11 +626,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
                  clip=None,
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_criterion:float=0.01,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
-                 convergence_criterion:float=0.01,
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
@@ -673,6 +673,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          learning_function=learning_function,
+                         learning_condition=CONVERGENCE,
                          output_states=output_states,
                          params=params,
                          name=name,
@@ -691,11 +692,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                              MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
 
         super()._instantiate_attributes_after_function(context=context)
-
-    def configure_learning(self, learning_function=None, learning_rate=None, context=None):
-        super().configure_learning(learning_function=learning_function, learning_rate=learning_rate, context=context)
-        if self.learning_enabled:
-            self.learning_mechanism.condition = WhenFinished(self)
 
     def _execute(self,
                  variable=None,

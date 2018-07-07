@@ -146,10 +146,13 @@ of its constructor.  It then transforms its input (including from the `recurrent
 `Transfer_Execution`), and returns the results in its OutputStates.
 
 If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its associated `LearningMechanism <AutoAssociativeLearningMechanism>` is
-executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
+and is executed as part of a `System`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied,  during the
+`execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
 the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
-during the `learning phase <System_Execution>` of a System's execution
+during the `learning phase <System_Execution>` of a System's execution.  By default, the `learning_mechanism
+<RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection` immediately after the RecurrentTransferMechanism executes.
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -177,6 +180,8 @@ from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStat
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
@@ -184,12 +189,13 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
-    AutoAssociativeLearningMechanism
+from psyneulink.scheduling.condition import Condition, WhenFinished, TimeScale
+
 
 __all__ = [
-    'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
+    'CONVERGENCE', 'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
     'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
+    'UPDATE'
 ]
 
 EXTERNAL = 'EXTERNAL'
@@ -199,6 +205,10 @@ EXTERNAL_INDEX = 0
 RECURRENT_INDEX = -1
 
 COMBINATION_FUNCTION = 'combination_function'
+
+# Used to specify learning_condition
+UPDATE = 'UPDATE'
+CONVERGENCE = 'CONVERGENCE'
 
 
 class RecurrentTransferError(Exception):
@@ -277,6 +287,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     combination_function=LinearCombination, \
     learning_rate=None,                     \
     learning_function=Hebbian,              \
+    learning_condition=UPDATE,              \
     integrator_mode=False,                  \
     params=None,                            \
     name=None,                              \
@@ -430,6 +441,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
+    learning_condition : Condition, UPDATE, CONVERGENCE : default UPDATE
+       specifies the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+       is executed (see `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
+
     has_recurrent_input_state : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. By default, if False, the recurrent_projection points to its `primary
@@ -553,20 +568,31 @@ class RecurrentTransferMechanism(TransferMechanism):
         set `learning_enabled <RecurrentMechahinsm.learning_enabled>` to `True` elicits a warning and is then
         ignored.
 
+    learning_mechanism : LearningMechanism
+        created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
+        `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
-        specifies the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
+        determines the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
         of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
-        assignement).
+        assignment).
 
     learning_function : function : default Hebbian
         the function used by the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` if `learning is specified
         <Recurrent_Transfer_Learning>`.
 
-    learning_mechanism : LearningMechanism
-        created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
-        `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+    learning_condition : Condition : default None
+       determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+       is executed in the context of a `Composition`. By default, it executes immediately after the
+       RecurrentTransferMechanism executesThe `Condition` can be specified in the **learning_condition** argument of
+       the Mechanism's constructor or its `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
+       Note that the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is an
+       `AutoAssociativeLearningMechanism`, which executes during the `execution phase <System_Execution>` of the
+       System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
+       `Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
+       System's execution
 
     value : 2d np.array [array(float64)]
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
@@ -652,6 +678,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
+                 learning_condition:tc.optional(tc.any(Condition, TimeScale,
+                                                       tc.enum(UPDATE, CONVERGENCE)))=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
@@ -675,6 +703,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
+                                                  learning_condition=learning_condition,
                                                   auto=auto,
                                                   hetero=hetero,
                                                   has_recurrent_input_state=has_recurrent_input_state,
@@ -1069,8 +1098,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         activity_vector:tc.any(list, np.array),
-                                        learning_function:tc.any(is_function_type),
-                                        learning_rate:tc.any(numbers.Number, list, np.ndarray, np.matrix),
+                                        learning_function,
+                                        learning_rate,
+                                        learning_condition,
                                         matrix,
                                         context=None):
 
@@ -1081,6 +1111,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               name="{} for {}".format(
                                                                       AutoAssociativeLearningMechanism.className,
                                                                       self.name))
+        learning_mechanism.condition = learning_condition
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
@@ -1094,9 +1125,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return learning_mechanism
 
-    def configure_learning(self, learning_function=None, learning_rate=None, context=None):
-        """
-        configure_learning(learning_function=None, learning_rate=None)
+    def configure_learning(self,
+                           learning_function:tc.optional(tc.any(is_function_type))=None,
+                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_condition:tc.any(Condition, TimeScale,
+                                                     tc.enum(UPDATE, CONVERGENCE))=None,
+                           context=None):
+        """Provide user-accessible-interface to _instantiate_learning_mechanism
 
         Configure RecurrentTransferMechanism for learning. Creates the following Components:
 
@@ -1117,6 +1152,14 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_function = learning_function
         if learning_rate:
             self.learning_rate = learning_rate
+        if learning_condition:
+            self.learning_condition = learning_condition
+
+        if not isinstance(self.learning_condition, Condition):
+            if self.learning_condition is CONVERGENCE:
+                self.learning_condition = WhenFinished(self)
+            elif self.learning_condition is UPDATE:
+                self.learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -1124,8 +1167,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
+                                                                       learning_condition=self.learning_condition,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
+
         self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
 
         if self.learning_mechanism is None:
