@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.7.1+189.g4011e32 documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.7.1+190.g92560e6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+189.g4011e32 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+190.g92560e6 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+189
+                0.4.7.1+190
               </div>
             
           
@@ -344,7 +344,7 @@ general, only parameters that take numerical values and/or do not affect the str
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>,
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
+<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
 Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -403,7 +403,7 @@ parameter can be specified).</p>
 information about its contents and/or state, but do not directly affect its operation.  Every Component has the
 following two informational attributes:</p>
 <ul class="simple" id="component-execution-count">
-<li><strong>execution_count</strong> – maintains a record of the number of times a Component has executed; it <em>excludes</em> the
+<li><strong>current_execution_count</strong> – maintains a record of the number of times a Component has executed; it <em>excludes</em> the
 executions carried out during initialization and validation, but includes all other executions, whether they are of
 the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> (e.g., <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>). The value can be changed
 “manually” or programmatically by assigning an integer value directly to the attribute.</li>
@@ -556,9 +556,9 @@ It should be instantiated using the constructor for a subclass.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.components.component.Component.execution_count">
-<code class="descname">execution_count</code><a class="headerlink" href="#psyneulink.components.component.Component.execution_count" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a></p>
+<dt id="psyneulink.components.component.Component.current_execution_count">
+<code class="descname">current_execution_count</code><a class="headerlink" href="#psyneulink.components.component.Component.current_execution_count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">current_execution_count</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -623,7 +623,7 @@ values on the component, depending on the component type.</p>
 
 <dl class="attribute">
 <dt>
-<code class="descname">execution_count</code></dt>
+<code class="descname">current_execution_count</code></dt>
 <dd><p>Maintains a simple count of executions over the life of the Component,
 Incremented in the Component’s execute method by call to self._increment_execution_count</p>
 </dd></dl>
@@ -709,7 +709,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+189.g4011e32',
+            VERSION:'0.4.7.1+190.g92560e6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
