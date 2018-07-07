@@ -145,6 +145,16 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
+
+ALWAYS EXECUTES INTEGRATOR MODE (ADD TO CREATION ABOVE)
+The **convergence_function** and **convergence_criterion**
+arguments of its constructor specify, respectively, the `convergence_function
+<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
+<ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
+completes <ContrastiveHebbian_Execution>`.
+ADD IMPLICATIONS FOR LEARNING AND 'learning_condition` BELOW
+
+
 If it has been `configured for learning <Recurrent_Transfer_Learning>`
 and is executed as part of a `System`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
 is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied,  during the
@@ -153,6 +163,9 @@ the behavior of supervised learning algorithms (such as `Reinforcement` and `Bac
 during the `learning phase <System_Execution>` of a System's execution.  By default, the `learning_mechanism
 <RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection` immediately after the RecurrentTransferMechanism executes.
+
+
+
 
 .. _Recurrent_Transfer_Class_Reference:
 

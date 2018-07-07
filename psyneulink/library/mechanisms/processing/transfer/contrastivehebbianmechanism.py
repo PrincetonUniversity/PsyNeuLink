@@ -43,13 +43,15 @@ automatically assigned two of its four `Standard OutputStates <ContrastiveHebbia
 *CURRENT_ACTIVITY_OUTPUT* and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional
 OutputStates can be specified in the **additional_output_states** argument of its constructor.  It uses the same
 default `function <ContrastiveHebbianMechanism.function>` as a `RecurrentTransferMechanism`, but it is always executed
-in `integrator_mode <Transfer_Execution>`.  If a ContrastiveHebbianMechanism is `configured for learning
-<ContrastiveHebbian_Learning>`, it is assigned `ContrastiveHebbian` as its `learning_function
-<ContrastiveHebbianMechanism.learning_function>`.  The **convergence_function** and **convergence_criterion**
-arguments of its constructor specify, respectively, the `convergence_function
-<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
-<ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
-completes <ContrastiveHebbian_Execution>`.
+in `integrator_mode <Transfer_Execution>`, and must have both a `convergence_function
+<ContrastiveHebbianMechanisms.convergence_function>` and `convergence_criterion
+<ContrastiveHebbianMechanisms.convergence_criterion>` (it is automatically assigned the defaults for a
+RecurrentTransferMechanism if these are not specified).  If a ContrastiveHebbianMechanism is `configured for learning
+<ContrastiveHebbian_Learning>`, it is automatically assigned `ContrastiveHebbian` as its `learning_function
+<ContrastiveHebbianMechanism.learning_function>` (which is, in turn, assigned to its `learning_mechanism
+<ContrastiveHebbianMechanism.learning_mechanism>`), and its `learning_condition
+<RecurrentTransferMechanism.learning_condition>` is automaticaly assigned as *CONVERGENCE*, which determine
+when `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
 .. _ContrastiveHebbian_Structure:
 
