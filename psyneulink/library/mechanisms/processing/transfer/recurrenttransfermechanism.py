@@ -442,8 +442,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         matrix of numeric values with the same dimensions as the length of the input.
 
     learning_condition : Condition, UPDATE, CONVERGENCE : default UPDATE
-       specifies the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
-       is executed (see `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
+       specifies the `Condition` assigned to `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`;
+       A `Condition` can be used, or one of the following two keywords:
+
+       * *UPDATE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed immediately after
+         every execution of the RecurrentTransferMechanism;  this is equivalent to assigning no `Condition`
+       ..
+       * *CONVERGENCE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed whenever the
+         the `convergence_criterion` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
+         in which ``rec_mech`` is the RecurrentTransferMechanism.
+
+       See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
 
     has_recurrent_input_state : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
@@ -584,15 +593,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         <Recurrent_Transfer_Learning>`.
 
     learning_condition : Condition : default None
-       determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
-       is executed in the context of a `Composition`. By default, it executes immediately after the
-       RecurrentTransferMechanism executesThe `Condition` can be specified in the **learning_condition** argument of
-       the Mechanism's constructor or its `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
-       Note that the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is an
-       `AutoAssociativeLearningMechanism`, which executes during the `execution phase <System_Execution>` of the
-       System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
-       `Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
-       System's execution
+        determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+        is executed in the context of a `Composition`; it can be specified in the **learning_condition** argument of
+        the Mechanism's constructor or of its `configure_learning <RecurrentTransferMechanism.configure_learning>`
+        method. By default, it executes immediately after the RecurrentTransferMechanism executes.
+
+        .. note::
+            The `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is an
+            `AutoAssociativeLearningMechanism`, which executes during the `execution phase <System_Execution>`
+            of the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms
+            (such as `Reinforcement` and `BackPropagation`), that are executed during the
+            `learning phase <System_Execution>` of a System's execution
 
     value : 2d np.array [array(float64)]
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
