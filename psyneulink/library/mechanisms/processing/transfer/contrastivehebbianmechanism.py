@@ -651,9 +651,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 output_states.append(additional_output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(convergence_function=convergence_function,
-                                                  convergence_criterion=convergence_criterion,
-                                                  output_states=output_states,
+        params = self._assign_args_to_param_dicts(output_states=output_states,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -670,6 +668,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          integrator_mode=True,
                          integration_rate=integration_rate,
                          clip=clip,
+                         convergence_function=convergence_function,
+                         convergence_criterion=convergence_criterion,
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          learning_function=learning_function,
@@ -678,11 +678,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
-
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        if isinstance(self.convergence_function, Function):
-            self.convergence_function = self.convergence_function.function
 
     def _instantiate_attributes_after_function(self, context=None):
 

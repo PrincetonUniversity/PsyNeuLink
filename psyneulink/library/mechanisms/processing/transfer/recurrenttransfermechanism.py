@@ -169,7 +169,7 @@ import typecheck as tc
 
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
-    Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
+    Function, Distance, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -183,7 +183,7 @@ from psyneulink.components.states.state import _instantiate_state
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MEAN, MEDIAN, NAME, \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -686,6 +686,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  clip=None,
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_criterion:float=0.01,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -712,6 +714,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
+                                                  convergence_function=convergence_function,
+                                                  convergence_criterion=convergence_criterion,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
                                                   learning_condition=learning_condition,
@@ -918,6 +922,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
+
+        if isinstance(self.convergence_function, Function):
+            self.convergence_function = self.convergence_function.function
+
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
