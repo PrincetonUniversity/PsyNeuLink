@@ -2817,11 +2817,9 @@ class System(System_Base):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
                 mechanism.context.execution_phase = self.context.execution_phase
 
-                # MODIFIED 7/6/18 JDC NEW:
                 # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if isinstance(mechanism, AutoAssociativeLearningMechanism):
                     mechanism.context.execution_phase = ContextFlags.LEARNING
-                # MODIFIED 7/6/18 END
 
                 # Execute
                 # # TEST PRINT:
@@ -2836,36 +2834,6 @@ class System(System_Base):
                     mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[key])
                 mechanism.function_object._runtime_params_reset = {}
                 mechanism.context.execution_phase = ContextFlags.IDLE
-                
-                # # MODIFIED 6/30/18 JDC NEW:
-                # # If Mechanism is a "self-learner" (i.e., uses AutoAssociativeLearningMechanism), execute learning
-                # if hasattr(mechanism, 'learning_mechanism') and mechanism.learning_enabled:
-                #
-                #     # TEST PRINT:
-                #     print('\nExecuting learning for {}'.format(self.name))
-                #     print(mechanism._parameter_states[MATRIX].value)
-                #
-                #     # Execute AutoAssociativeLearningMechanism
-                #     mechanism.context.string = "Executing {} for {}".format(mechanism.learning_mechanism.name, mechanism.name)
-                #     mechanism.learning_mechanism._execution_id = self._execution_id
-                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.LEARNING
-                #     mechanism.learning_mechanism.execute(context=context)
-                #     mechanism.learning_mechanism.context.execution_phase = ContextFlags.IDLE
-                #
-                #     # Execute AutoAssociativeLearningProjection
-                #     mechanism.context.string = "Executing {}".format(mechanism.learning_projection.name, mechanism.name)
-                #     mechanism.learning_projection._execution_id = self._execution_id
-                #     mechanism.learning_projection.context.execution_phase = ContextFlags.LEARNING
-                #     mechanism.learning_projection.execute(context=context)
-                #     mechanism.learning_projection.context.execution_phase = ContextFlags.IDLE
-                #
-                #     # Update AutoAssociativeProjection matrix
-                #     mechanism.recurrent_projection._parameter_states[MATRIX]._execution_id = self._execution_id
-                #     mechanism.recurrent_projection.context.execution_phase = ContextFlags.LEARNING
-                #     mechanism.context.string = "Updating ParameterState for {}".format(mechanism.input_state.path_afferents[0])
-                #     mechanism.recurrent_projection._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                #     mechanism.recurrent_projection.context.execution_phase = ContextFlags.IDLE
-                # # MODIFIED 6/30/18 END
 
                 if self._report_system_output and  self._report_process_output:
 

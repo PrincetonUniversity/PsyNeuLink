@@ -713,8 +713,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
-        # USED FOR TEST PRINT BELOW:
-        curr_phase = self.execution_phase
+        # # USED FOR TEST PRINT BELOW:
+        # curr_phase = self.execution_phase
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
@@ -773,16 +773,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
 
-        # TEST PRINT:
-        print("--------------------------------------------",
-              "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
-              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-              '\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', self.current_activity,
-              '\ndiff: ', diff,
-              '\nis_finished: ', self.is_finished
-              )
+        # # TEST PRINT:
+        # print("--------------------------------------------",
+        #       "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
+        #       '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+        #       '\ninput:', self.function_object.variable,
+        #       '\nMATRIX:', self.matrix,
+        #       '\ncurrent activity: ', self.current_activity,
+        #       '\ndiff: ', diff,
+        #       '\nis_finished: ', self.is_finished
+        #       )
 
         return current_activity
         # return self.current_activity
