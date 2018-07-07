@@ -692,7 +692,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        self.learning_mechanism.condition = WhenFinished(self)
+    def configure_learning(self, learning_function=None, learning_rate=None, context=None):
+        super().configure_learning(learning_function=learning_function, learning_rate=learning_rate, context=context)
+        if self.learning_enabled:
+            self.learning_mechanism.condition = WhenFinished(self)
 
     def _execute(self,
                  variable=None,

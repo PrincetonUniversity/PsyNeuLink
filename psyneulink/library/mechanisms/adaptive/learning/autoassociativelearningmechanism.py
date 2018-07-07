@@ -399,9 +399,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         '''
 
         super()._update_output_states(runtime_params, context)
-        learned_projection = self.activity_source.recurrent_projection
-        learned_projection.execute(context=ContextFlags.LEARNING)
-        learned_projection.context.execution_phase = ContextFlags.IDLE
+
+        if self.context.composition:
+            learned_projection = self.activity_source.recurrent_projection
+            learned_projection.execute(context=ContextFlags.LEARNING)
+            learned_projection.context.execution_phase = ContextFlags.IDLE
 
 
     @property
