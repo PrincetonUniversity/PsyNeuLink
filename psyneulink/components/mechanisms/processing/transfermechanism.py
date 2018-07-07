@@ -198,7 +198,7 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 .. _Transfer_Reinitialization:
 
 Reinitialization
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
@@ -712,7 +712,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function = None
         self.original_integrator_function = None
-        self._current_variable_index = 0
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
