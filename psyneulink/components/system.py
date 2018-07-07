@@ -3419,7 +3419,6 @@ class System(System_Base):
         return self._all_mechanisms.mechanisms
 
     @property
-
     def stateful_mechanisms(self):
         """
         List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
@@ -3436,6 +3435,11 @@ class System(System_Base):
                 stateful_mechanisms.append(mechanism)
 
         return stateful_mechanisms
+
+    @property
+    def mechanism_conditions(self):
+        # return [mech.condition for mech in self.mechanisms if hasattr(mech, CONDITION)]
+        return dict({mech:mech.condition for mech in self.mechanisms if hasattr(mech, CONDITION)})
 
     @property
     def numPhases(self):
