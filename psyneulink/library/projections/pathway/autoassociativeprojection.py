@@ -256,14 +256,16 @@ class AutoAssociativeProjection(MappingProjection):
 
     def _update_parameter_states(self, runtime_params=None, context=None):
 
-
-        if self.sender.owner.learning_enabled:
+        if context==ContextFlags.LEARNING:
             self.context.execution_phase = ContextFlags.LEARNING
         super()._update_parameter_states(runtime_params, context)
 
         # TEST PRINT
-        if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+        if not self.context.initialization_status == ContextFlags.INITIALIZING and self.has_learning_projection:
+            if self.sender.owner.context.composition:
+                time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+            else:
+                time = self.current_execution_time
             print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
                 format(self.context.flags_string,
                        time.trial,
