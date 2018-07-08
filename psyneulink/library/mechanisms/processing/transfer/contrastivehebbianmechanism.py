@@ -395,11 +395,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         value of `clip <ContrastiveHebbianMechanism.clip>` that it exceeds.
 
     convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
-        specifies the function used to determine when `each phase of execution completes
-        <ContrastiveHebbian_Execution>`, by comparing the `current_activity
-        <ContrastiveHebbianMechanism.current_activity>` with the `previous_value <ContrastiveHebbian.previous_value>`.
-        Can be any function that takes two 1d arrays of the same length as `variable
-        <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
+        specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
+        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous `value
+        <ContrastiveHebbian.value>` of the Mechanism.  Can be any function that takes two 1d arrays of the same
+        length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
         is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value** option, which computes the
         elementwise difference between two arrays and returns the difference with the maximum absolute value.
 
@@ -520,11 +519,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` on the `previous step
         of execution <ContrastiveHebbian_Execution>`.
 
+    is_converged : bool
+        `True` when the value returned by `converge_function <ContrastiveHebbianMechanism.convergence_function>`.
+        is less than or equal to the `converge_criterion <ContrastiveHebbianMechanism.convergence_criterion>`;
+        used by the ContrastiveHebbianMechanism to determine when `each phase of execution is complete
+        <ContrastiveHebbian_Execution>`.
+
     convergence_function : function
-        compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with 
-        `previous_value <ContrastiveHebbianMechanism.previous_value>` and returns a scalar value;
-        sets the Mechanism's `is_finished` attribute to `True` if the value returned is less than or equal to 
-        the `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.
+        compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous
+        `value <ContrastiveHebbianMechanism.value>` of the Mechanism and returns a scalar value; used to determine
+        when `each phase of execution is complete <ContrastiveHebbian_Execution>` (i.e., when `is_converged
+        <ContrastiveHebbianMechanism.is_converged>` is `True`.
     
     convergence_criterion : float
         determines the value of `convergence_function <ContrastiveHebbianMechanism.convergence_function>` at which

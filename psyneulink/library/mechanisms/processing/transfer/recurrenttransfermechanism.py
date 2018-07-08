@@ -437,6 +437,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
+    convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
+        specifies the function that determines when the `is_converged <RecurrentTransferMechanism.is_converged>`
+        attribute is `True`. The default is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value**
+        option, which computes the elementwise difference between  two arrays and returns the difference with the
+        maximum absolute value.
+
+    convergence_criterion : float : default 0.01
+        specifies the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
+        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
         cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
@@ -580,8 +590,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    converged : bool
-        indicates whether `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` has been reached.
+    is_converged : bool
+        `True` if the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>` is
+        less than or equal to `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`; otherwise
+        returns `False`.
+
+    convergence_function : function
+        compares `value <ContrastiveHebbianMechanism.value>` with its previous value and returns a scalar value used
+        to determine the value of `is_converged <RecurrentTransferMechanism.is_converged>`.
+
+    convergence_criterion : float
+        determines the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
+        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
