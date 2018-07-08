@@ -1261,7 +1261,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input)
 
     def reinitialize(self, *args):
-        super().reinitialize(*args)
+        if self.integrator_mode:
+            super().reinitialize(*args)
         self._previous_mech_value = None
 
     @property
