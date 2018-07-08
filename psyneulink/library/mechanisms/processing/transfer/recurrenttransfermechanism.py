@@ -145,11 +145,27 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
+
+ALWAYS EXECUTES INTEGRATOR MODE (ADD TO CREATION ABOVE)
+The **convergence_function** and **convergence_criterion**
+arguments of its constructor specify, respectively, the `convergence_function
+<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
+<ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
+completes <ContrastiveHebbian_Execution>`.
+ADD IMPLICATIONS FOR LEARNING AND 'learning_condition` BELOW
+
+
 If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its associated `LearningMechanism <AutoAssociativeLearningMechanism>` is
-executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
+and is executed as part of a `System`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied,  during the
+`execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
 the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
-during the `learning phase <System_Execution>` of a System's execution
+during the `learning phase <System_Execution>` of a System's execution.  By default, the `learning_mechanism
+<RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection` immediately after the RecurrentTransferMechanism executes.
+
+
+
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -166,7 +182,7 @@ import typecheck as tc
 
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
-    Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
+    Function, Distance, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -177,19 +193,22 @@ from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStat
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MEAN, MEDIAN, NAME, \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
-    AutoAssociativeLearningMechanism
+from psyneulink.scheduling.condition import Condition, WhenFinished, TimeScale
+
 
 __all__ = [
-    'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
+    'CONVERGENCE', 'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
     'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
+    'UPDATE'
 ]
 
 EXTERNAL = 'EXTERNAL'
@@ -199,6 +218,10 @@ EXTERNAL_INDEX = 0
 RECURRENT_INDEX = -1
 
 COMBINATION_FUNCTION = 'combination_function'
+
+# Used to specify learning_condition
+UPDATE = 'UPDATE'
+CONVERGENCE = 'CONVERGENCE'
 
 
 class RecurrentTransferError(Exception):
@@ -277,6 +300,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     combination_function=LinearCombination, \
     learning_rate=None,                     \
     learning_function=Hebbian,              \
+    learning_condition=UPDATE,              \
     integrator_mode=False,                  \
     params=None,                            \
     name=None,                              \
@@ -430,6 +454,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
+    learning_condition : Condition, UPDATE, CONVERGENCE : default UPDATE
+       specifies the `Condition` assigned to `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`;
+       A `Condition` can be used, or one of the following two keywords:
+
+       * *UPDATE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed immediately after
+         every execution of the RecurrentTransferMechanism;  this is equivalent to assigning no `Condition`
+       ..
+       * *CONVERGENCE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed whenever the
+         the `convergence_criterion` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
+         in which ``rec_mech`` is the RecurrentTransferMechanism.
+
+       See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
+
     has_recurrent_input_state : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
         points to a separate input state. By default, if False, the recurrent_projection points to its `primary
@@ -553,20 +590,33 @@ class RecurrentTransferMechanism(TransferMechanism):
         set `learning_enabled <RecurrentMechahinsm.learning_enabled>` to `True` elicits a warning and is then
         ignored.
 
+    learning_mechanism : LearningMechanism
+        created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
+        `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
-        specifies the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
+        determines the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
         of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
-        assignement).
+        assignment).
 
     learning_function : function : default Hebbian
         the function used by the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` if `learning is specified
         <Recurrent_Transfer_Learning>`.
 
-    learning_mechanism : LearningMechanism
-        created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
-        `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+    learning_condition : Condition : default None
+        determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+        is executed in the context of a `Composition`; it can be specified in the **learning_condition** argument of
+        the Mechanism's constructor or of its `configure_learning <RecurrentTransferMechanism.configure_learning>`
+        method. By default, it executes immediately after the RecurrentTransferMechanism executes.
+
+        .. note::
+            The `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is an
+            `AutoAssociativeLearningMechanism`, which executes during the `execution phase <System_Execution>`
+            of the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms
+            (such as `Reinforcement` and `BackPropagation`), that are executed during the
+            `learning phase <System_Execution>` of a System's execution
 
     value : 2d np.array [array(float64)]
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
@@ -649,9 +699,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                  clip=None,
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_criterion:float=0.01,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
+                 learning_condition:tc.optional(tc.any(Condition, TimeScale,
+                                                       tc.enum(UPDATE, CONVERGENCE)))=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
@@ -673,8 +727,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
+                                                  convergence_function=convergence_function,
+                                                  convergence_criterion=convergence_criterion,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
+                                                  learning_condition=learning_condition,
                                                   auto=auto,
                                                   hetero=hetero,
                                                   has_recurrent_input_state=has_recurrent_input_state,
@@ -879,6 +936,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
 
+        self._previous_mech_value = None
+
+        if isinstance(self.convergence_function, Function):
+            self.convergence_function = self.convergence_function.function
+
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
@@ -1069,8 +1132,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         activity_vector:tc.any(list, np.array),
-                                        learning_function:tc.any(is_function_type),
-                                        learning_rate:tc.any(numbers.Number, list, np.ndarray, np.matrix),
+                                        learning_function,
+                                        learning_rate,
+                                        learning_condition,
                                         matrix,
                                         context=None):
 
@@ -1081,6 +1145,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               name="{} for {}".format(
                                                                       AutoAssociativeLearningMechanism.className,
                                                                       self.name))
+        learning_mechanism.condition = learning_condition
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
@@ -1094,9 +1159,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return learning_mechanism
 
-    def configure_learning(self, learning_function=None, learning_rate=None, context=None):
-        """
-        configure_learning(learning_function=None, learning_rate=None)
+    def configure_learning(self,
+                           learning_function:tc.optional(tc.any(is_function_type))=None,
+                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learning_condition:tc.any(Condition, TimeScale,
+                                                     tc.enum(UPDATE, CONVERGENCE))=None,
+                           context=None):
+        """Provide user-accessible-interface to _instantiate_learning_mechanism
 
         Configure RecurrentTransferMechanism for learning. Creates the following Components:
 
@@ -1117,6 +1186,14 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_function = learning_function
         if learning_rate:
             self.learning_rate = learning_rate
+        if learning_condition:
+            self.learning_condition = learning_condition
+
+        if not isinstance(self.learning_condition, Condition):
+            if self.learning_condition is CONVERGENCE:
+                self.learning_condition = WhenFinished(self)
+            elif self.learning_condition is UPDATE:
+                self.learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -1124,12 +1201,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
+                                                                       learning_condition=self.learning_condition,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
+
         self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
 
         if self.learning_mechanism is None:
             self.learning_enabled = False
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self._previous_mech_value = self.value
+        self._output = super()._execute(variable, runtime_params, context)
+        return self._output
 
     def _parse_function_variable(self, variable, context):
         if self.has_recurrent_input_state:
@@ -1149,9 +1235,37 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input)
 
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        self._previous_mech_value = None
+
+    @property
+    def converged(self):
+        # Check for convergence
+        if (self.convergence_criterion is not None and
+                self._previous_mech_value is not None and
+                self.context.initialization_status != ContextFlags.INITIALIZING):
+            if self.convergence_function([self._output, self._previous_mech_value]) <= self.convergence_criterion:
+                return True
+            else:
+                return False
+        # Otherwise just return True
+        else:
+            return None
+
+    # @property
+    # def is_finished(self):
+    #     return self.converged
+    #
+    # @is_finished.setter
+    # @tc.typecheck
+    # def is_finished(self, value:bool):
+    #     self._is_finished = value
+
     @property
     def _learning_signal_source(self):
         '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
               Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
         '''
         return self.output_state
+
