@@ -296,7 +296,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     noise=0.0,                                       \
     smoothing_factor=0.5,                            \
     clip=[float:min, float:max],                     \
-    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
     convergence_criterion=0.01,                      \
     enable_learning=False,                           \
     learning_rate=None,                              \
@@ -399,14 +399,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <ContrastiveHebbianMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF)
+    convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
         specifies the function used to determine when `each phase of execution completes
         <ContrastiveHebbian_Execution>`, by comparing the `current_activity
         <ContrastiveHebbianMechanism.current_activity>` with the `previous_value <ContrastiveHebbian.previous_value>`.
         Can be any function that takes two 1d arrays of the same length as `variable
         <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
-        is the `Distance` Function, using the `MAX_DIFF` metric, which computes the elementwise difference between
-        two arrays and returns the maximum of these.
+        is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value** option, which computes the
+        elementwise difference between two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
         specifies the value of the `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
@@ -628,7 +628,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF, absolute_value=True),
                  convergence_criterion:float=0.01,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
@@ -690,6 +690,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
+
     def _execute(self,
                  variable=None,
                  function_variable=None,
@@ -707,7 +708,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
         # # USED FOR TEST PRINT BELOW:
-        # curr_phase = self.execution_phase
+        curr_phase = self.execution_phase
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
@@ -715,9 +716,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_state.socket_template
 
-        self.is_finished = False
-
-        previous_activity = self.previous_value
+        # # MODIFIED 7/7/18 OLD:
+        # self.is_finished = False
+        #
+        # previous_activity = self.previous_value
+        # MODIFIED 7/7/18 END
 
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
@@ -732,21 +735,50 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         except:
             assert False
 
-        # Check for convergence
-        if previous_activity is None:
+        # # # MODIFIED 7/7/18 OLD:
+        # # Check for convergence
+        # if previous_activity is None:
+        #     return current_activity
+        #     # return self.current_activity
+        # else:
+        #     diff = abs(self.convergence_function([current_activity, previous_activity]))
+        #
+        # if (self.context.initialization_status != ContextFlags.INITIALIZING and
+        #         self.convergence_criterion is not None and diff <= self.convergence_criterion):
+        #
+        #     # Terminate if this is the end of the minus phase
+        #     if self.execution_phase == MINUS_PHASE:
+        #         # Store activity from last execution in minus phase
+        #         self.minus_phase_activity = current_activity
+        #         self.is_finished = True
+        #         # Set value of primary outputState to activity at end of plus phase
+        #         self.current_activity = self.plus_phase_activity
+        #
+        #     # Otherwise, prepare for start of minus phase on next execution
+        #     else:
+        #         # Store activity from last execution in plus phase
+        #         self.plus_phase_activity = current_activity
+        #         # self.plus_phase_activity = self.current_activity
+        #         # Use initial_value attribute to initialize, for the minus phase,
+        #         #    both the integrator_function's previous_value
+        #         #    and the Mechanism's current activity (which is returned as it input)
+        #         self.reinitialize(self.initial_value)
+        #         self.current_activity = self.initial_value
+        #
+        #     curr_phase = self.execution_phase
+        #
+        #     # Switch execution_phase
+        #     self.execution_phase = not self.execution_phase
+
+        # MODIFIED 7/7/18 NEW:
+        if self._previous_output is None:
             return current_activity
-            # return self.current_activity
-        else:
-            diff = abs(self.convergence_function([current_activity, previous_activity]))
 
-        if (self.context.initialization_status != ContextFlags.INITIALIZING and
-                self.convergence_criterion is not None and diff <= self.convergence_criterion):
-
+        if self.is_finished:
             # Terminate if this is the end of the minus phase
             if self.execution_phase == MINUS_PHASE:
                 # Store activity from last execution in minus phase
                 self.minus_phase_activity = current_activity
-                self.is_finished = True
                 # Set value of primary outputState to activity at end of plus phase
                 self.current_activity = self.plus_phase_activity
 
@@ -765,17 +797,18 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
+        # MODIFIED 7/7/18 END
 
-        # # TEST PRINT:
-        # print("--------------------------------------------",
-        #       "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
-        #       '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-        #       '\ninput:', self.function_object.variable,
-        #       '\nMATRIX:', self.matrix,
-        #       '\ncurrent activity: ', self.current_activity,
-        #       '\ndiff: ', diff,
-        #       '\nis_finished: ', self.is_finished
-        #       )
+        # TEST PRINT:
+        print("--------------------------------------------",
+              "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
+              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+              '\ninput:', self.function_object.variable,
+              '\nMATRIX:', self.matrix,
+              '\ncurrent activity: ', self.current_activity,
+              '\ndiff: ', self._output,
+              '\nis_finished: ', self.is_finished
+              )
 
         return current_activity
         # return self.current_activity

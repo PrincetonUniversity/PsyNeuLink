@@ -9739,6 +9739,9 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
+    absolute_value : bool : Default False
+        specifies whether to use absolute value(s) in determining the distance.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9766,6 +9769,9 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
+    absolute_value : bool
+        determines whether to use absolute value(s) in determining the distance (metric-specific).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9789,12 +9795,14 @@ class Distance(ObjectiveFunction):
                  default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
+                 absolute_value:bool=False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
+                                                  absolute_value=absolute_value,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -9862,7 +9870,10 @@ class Distance(ObjectiveFunction):
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_DIFF:
-            result = np.max(v1 - v2)
+            if self.absolute_value:
+                result = abs(np.max(v1 - v2))
+            else:
+                result = np.max(v1 - v2)
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:

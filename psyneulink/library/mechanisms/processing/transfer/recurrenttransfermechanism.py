@@ -936,6 +936,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
 
+        self._previous_output = None
+
         if isinstance(self.convergence_function, Function):
             self.convergence_function = self.convergence_function.function
 
@@ -1208,6 +1210,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
+    def _execute(self, variable=None, runtime_params=None, context=None):
+
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self._previous_output = self.output_state.value
+        self._output = super()._execute(variable, runtime_params, context)
+        return self._output
+
     def _parse_function_variable(self, variable, context):
         if self.has_recurrent_input_state:
             variable = self.combination_function.execute(variable = variable)
@@ -1226,9 +1235,35 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input)
 
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        self._previous_output = None
+
+    @property
+    def is_finished(self):
+        # Check for convergence
+        if (self.convergence_criterion is not None and
+                self._previous_output is not None and
+                self.context.initialization_status != ContextFlags.INITIALIZING):
+            if self.convergence_function([self._output, self._previous_output]) <= self.convergence_criterion:
+                self._is_finished = True
+            else:
+                self._is_finished = False
+        # Otherwise just return True
+        else:
+            self._is_finished = True
+
+        return self._is_finished
+
+    @is_finished.setter
+    @tc.typecheck
+    def is_finished(self, value:bool):
+        self._is_finished = value
+
     @property
     def _learning_signal_source(self):
         '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
               Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
         '''
         return self.output_state
+
