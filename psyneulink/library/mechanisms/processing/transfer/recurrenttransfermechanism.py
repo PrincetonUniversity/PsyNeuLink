@@ -145,8 +145,6 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
-
-ALWAYS EXECUTES INTEGRATOR MODE (ADD TO CREATION ABOVE)
 The **convergence_function** and **convergence_criterion**
 arguments of its constructor specify, respectively, the `convergence_function
 <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
@@ -285,25 +283,27 @@ class RECURRENT_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(             \
-    default_variable=None,                  \
-    size=None,                              \
-    function=Linear,                        \
-    matrix=HOLLOW_MATRIX,                   \
-    auto=None,                              \
-    hetero=None,                            \
-    initial_value=None,                     \
-    noise=0.0,                              \
-    integration_rate=0.5,                   \
-    clip=[float:min, float:max],            \
-    has_recurrent_input_state=False         \
-    combination_function=LinearCombination, \
-    learning_rate=None,                     \
-    learning_function=Hebbian,              \
-    learning_condition=UPDATE,              \
-    integrator_mode=False,                  \
-    params=None,                            \
-    name=None,                              \
+    RecurrentTransferMechanism(                                           \
+    default_variable=None,                                                \
+    size=None,                                                            \
+    function=Linear,                                                      \
+    matrix=HOLLOW_MATRIX,                                                 \
+    auto=None,                                                            \
+    hetero=None,                                                          \
+    initial_value=None,                                                   \
+    noise=0.0,                                                            \
+    integrator_mode=False,                                                \
+    integration_rate=0.5,                                                 \
+    clip=[float:min, float:max],                                          \
+    has_recurrent_input_state=False                                       \
+    combination_function=LinearCombination,                               \
+    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
+    convergence_criterion=None,                                           \
+    learning_rate=None,                                                   \
+    learning_function=Hebbian,                                            \
+    learning_condition=UPDATE,                                            \
+    params=None,                                                          \
+    name=None,                                                            \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -412,8 +412,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         Can be modified by control.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input (only relevant if
-        `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is True).
+        specifies the starting value for time-averaged input if `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is `True`).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -421,12 +421,12 @@ class RecurrentTransferMechanism(TransferMechanism):
     noise : float or function : default 0.0
         a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
         `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is True or False. See `noise <RecurrentTransferMechanism.noise>`
-        for more details.
+        <RecurrentTransferMechanism.integrator_mode>` is `True` or `False`. See
+        `noise <RecurrentTransferMechanism.noise>` for additional details.
 
     integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to True::
+        the rate used for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
              result = (integration_rate * variable) +
              (1-integration_rate * input to mechanism's function on the previous time step)
@@ -436,6 +436,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+
+    convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
+        specifies the function that determines when the `is_converged <RecurrentTransferMechanism.is_converged>`
+        attribute is `True`. The default is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value**
+        option, which computes the elementwise difference between  two arrays and returns the difference with the
+        maximum absolute value.
+
+    convergence_criterion : float : default 0.01
+        specifies the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
+        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -526,10 +536,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         COMMENT
 
     integrator_function:
-        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function <RecurrentTransferMechanism.integrator_function>`,
-        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
-        Keep in mind that the `integration_rate <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to the
-        `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
+        <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
+        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
+        <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to
+        the `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
@@ -540,7 +551,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
 
         The result of the integrator function above is then passed into the `mechanism's function
-        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
+        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets
+        `previous_value <RecurrentTransferMechanism.previous_value>`.
 
         **When integrator_mode is set to False:**
 
@@ -550,8 +562,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
     noise : float or function : default 0.0
-        When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to True, noise is passed into the
-        `integrator_function <RecurrentTransferMechanism.integrator_function>`. Otherwise, noise is added to the output
+        When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to `True`, noise is passed into the
+        `integrator_function <RecurrentTransferMechanism.integrator_function>`. Otherwise, noise is added to the result
         of the `function <RecurrentTransferMechanism.function>`.
 
         If noise is a list or array, it must be the same length as `variable
@@ -568,8 +580,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             output, then the noise will simply be an offset that remains the same across all executions.
 
     integration_rate : float : default 0.5
-        the smoothing factor for exponential time averaging of input when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to True::
+        the rate used for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
 
           result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
@@ -579,6 +591,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+
+    is_converged : bool
+        `True` if the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>` is
+        less than or equal to `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`; otherwise
+        returns `False`.
+
+    convergence_function : function
+        compares `value <ContrastiveHebbianMechanism.value>` with its previous value and returns a scalar value used
+        to determine the value of `is_converged <RecurrentTransferMechanism.is_converged>`.
+
+    convergence_criterion : float
+        determines the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
+        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
@@ -1236,11 +1261,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input)
 
     def reinitialize(self, *args):
-        super().reinitialize(*args)
+        if self.integrator_mode:
+            super().reinitialize(*args)
         self._previous_mech_value = None
 
     @property
-    def converged(self):
+    def is_converged(self):
         # Check for convergence
         if (self.convergence_criterion is not None and
                 self._previous_mech_value is not None and
@@ -1252,15 +1278,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Otherwise just return True
         else:
             return None
-
-    # @property
-    # def is_finished(self):
-    #     return self.converged
-    #
-    # @is_finished.setter
-    # @tc.typecheck
-    # def is_finished(self, value:bool):
-    #     self._is_finished = value
 
     @property
     def _learning_signal_source(self):
