@@ -936,7 +936,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
 
-        self._previous_output = None
+        self._previous_mech_value = None
 
         if isinstance(self.convergence_function, Function):
             self.convergence_function = self.convergence_function.function
@@ -1213,7 +1213,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self._previous_output = self.value
+            self._previous_mech_value = self.value
         self._output = super()._execute(variable, runtime_params, context)
         return self._output
 
@@ -1237,15 +1237,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def reinitialize(self, *args):
         super().reinitialize(*args)
-        self._previous_output = None
+        self._previous_mech_value = None
 
     @property
     def converged(self):
         # Check for convergence
         if (self.convergence_criterion is not None and
-                self._previous_output is not None and
+                self._previous_mech_value is not None and
                 self.context.initialization_status != ContextFlags.INITIALIZING):
-            if self.convergence_function([self._output, self._previous_output]) <= self.convergence_criterion:
+            if self.convergence_function([self._output, self._previous_mech_value]) <= self.convergence_criterion:
                 return True
             else:
                 return False

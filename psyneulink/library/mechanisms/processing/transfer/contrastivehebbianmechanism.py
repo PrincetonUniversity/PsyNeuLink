@@ -773,7 +773,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         #     self.execution_phase = not self.execution_phase
 
         # MODIFIED 7/7/18 NEW:
-        if self._previous_output is None:
+        if self._previous_mech_value is None:
             return current_activity
 
         if self.converged:
