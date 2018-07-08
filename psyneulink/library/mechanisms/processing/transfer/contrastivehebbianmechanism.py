@@ -75,8 +75,7 @@ Functions
 * `function <ContrastiveHebbianMechanism.function>` -- the default is `Linear`, but it can be replaced with any
   function that satisfies the constraints of a `TransferMechanism's function <TransferMechanism_Function>`.
   This is used in conjunction with its `integrator_function <ContrastiveHebbianMechanism.integrator_function>` to
-  update the activity of the ContrastiveHebbianMechanism.  Note that its always executed in `integrator_mode
-  <Transfer_Execution>`.
+  update the activity of the ContrastiveHebbianMechanism.
 ..
 * `convergence_function <ContrastiveHebbianMechanism.convergence_function>` -- coupled with the
   `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>` attribute, this determines when
@@ -279,26 +278,28 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
-    ContrastiveHebbianMechanism(                     \
-    default_variable=None,                           \
-    size=None,                                       \
-    function=Linear,                                 \
-    combination_function=LinearCombination,          \
-    matrix=HOLLOW_MATRIX,                            \
-    auto=None,                                       \
-    hetero=None,                                     \
-    initial_value=None,                              \
-    noise=0.0,                                       \
-    smoothing_factor=0.5,                            \
-    clip=[float:min, float:max],                     \
+    ContrastiveHebbianMechanism(                                          \
+    default_variable=None,                                                \
+    size=None,                                                            \
+    function=Linear,                                                      \
+    combination_function=LinearCombination,                               \
+    matrix=HOLLOW_MATRIX,                                                 \
+    auto=None,                                                            \
+    hetero=None,                                                          \
+    initial_value=None,                                                   \
+    noise=0.0,                                                            \
+    smoothing_factor=0.5,                                                 \
+    integrator_mode=False,                                                \
+    integration_rate=0.5,                                                 \
+    clip=[float:min, float:max],                                          \
     convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
-    convergence_criterion=0.01,                      \
-    enable_learning=False,                           \
-    learning_rate=None,                              \
-    learning_function=ContrastiveHebbian,            \
-    additional_output_states=None,                   \
-    params=None,                                     \
-    name=None,                                       \
+    convergence_criterion=0.01,                                           \
+    enable_learning=False,                                                \
+    learning_rate=None,                                                   \
+    learning_function=ContrastiveHebbian,                                 \
+    additional_output_states=None,                                        \
+    params=None,                                                          \
+    name=None,                                                            \
     prefs=None)
 
     Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network.
@@ -627,6 +628,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  initial_value=None,
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
+                 integrator_mode:bool=False,
                  clip=None,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF, absolute_value=True),
                  convergence_criterion:float=0.01,
@@ -667,7 +669,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          has_recurrent_input_state=True,
                          initial_value=initial_value,
                          noise=noise,
-                         integrator_mode=True,
+                         integrator_mode=integrator_mode,
                          integration_rate=integration_rate,
                          clip=clip,
                          convergence_function=convergence_function,

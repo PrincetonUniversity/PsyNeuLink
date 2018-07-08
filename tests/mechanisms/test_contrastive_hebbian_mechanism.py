@@ -6,6 +6,7 @@ class TestContrastiveHebbian:
     def test_scheduled_contrastive_hebbian(self):
         o = pnl.TransferMechanism()
         m = pnl.ContrastiveHebbianMechanism(
+            integrator_mode=True,
             enable_learning=False,
             auto=0,
             hetero=-1,
@@ -31,6 +32,7 @@ class TestContrastiveHebbian:
         R = pnl.ContrastiveHebbianMechanism(
                 size=size,
                 function=pnl.Linear,
+                integrator_mode=True,
                 learning_function=pnl.Hebbian,
                 enable_learning=True,
                 integration_rate=0.2,

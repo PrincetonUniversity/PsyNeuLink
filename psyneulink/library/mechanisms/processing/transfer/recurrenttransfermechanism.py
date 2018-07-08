@@ -145,8 +145,6 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
-
-ALWAYS EXECUTES INTEGRATOR MODE (ADD TO CREATION ABOVE)
 The **convergence_function** and **convergence_criterion**
 arguments of its constructor specify, respectively, the `convergence_function
 <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
@@ -285,25 +283,27 @@ class RECURRENT_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(             \
-    default_variable=None,                  \
-    size=None,                              \
-    function=Linear,                        \
-    matrix=HOLLOW_MATRIX,                   \
-    auto=None,                              \
-    hetero=None,                            \
-    initial_value=None,                     \
-    noise=0.0,                              \
-    integration_rate=0.5,                   \
-    clip=[float:min, float:max],            \
-    has_recurrent_input_state=False         \
-    combination_function=LinearCombination, \
-    learning_rate=None,                     \
-    learning_function=Hebbian,              \
-    learning_condition=UPDATE,              \
-    integrator_mode=False,                  \
-    params=None,                            \
-    name=None,                              \
+    RecurrentTransferMechanism(                                           \
+    default_variable=None,                                                \
+    size=None,                                                            \
+    function=Linear,                                                      \
+    matrix=HOLLOW_MATRIX,                                                 \
+    auto=None,                                                            \
+    hetero=None,                                                          \
+    initial_value=None,                                                   \
+    noise=0.0,                                                            \
+    integrator_mode=False,                                                \
+    integration_rate=0.5,                                                 \
+    clip=[float:min, float:max],                                          \
+    has_recurrent_input_state=False                                       \
+    combination_function=LinearCombination,                               \
+    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
+    convergence_criterion=None,                                           \
+    learning_rate=None,                                                   \
+    learning_function=Hebbian,                                            \
+    learning_condition=UPDATE,                                            \
+    params=None,                                                          \
+    name=None,                                                            \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -536,10 +536,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         COMMENT
 
     integrator_function:
-        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function <RecurrentTransferMechanism.integrator_function>`,
-        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
-        Keep in mind that the `integration_rate <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to the
-        `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
+        <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
+        <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
+        <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to
+        the `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
 
     integrator_mode:
         **When integrator_mode is set to True:**
