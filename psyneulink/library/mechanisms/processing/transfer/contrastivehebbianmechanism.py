@@ -164,8 +164,9 @@ A ContrastiveHebbianMechanism always executes in two sequential phases that toge
   the minus phase is completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned to
   its `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` attribute.
 
-Once a trial of execution is complete (i.e, after completion of the *minus phase*), the following computations and
-assignments are made:
+If the number of executions in a given phase reaches `max_passes <ContrastiveHebbianMechanism.max_passes>` (if it is
+specified) in either phase of execution, an error is generated.  Otherwise, once a trial of execution is complete
+(i.e, after completion of the *minus phase*), the following computations and assignments are made:
 
 * the value of `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned to
   *CURRENT_ACTIVITY* `OutputState <ContrastiveHebbian_Output>`;
@@ -294,6 +295,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     clip=[float:min, float:max],                                          \
     convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
     convergence_criterion=0.01,                                           \
+    max_passes=None,                                                      \
     enable_learning=False,                                                \
     learning_rate=None,                                                   \
     learning_function=ContrastiveHebbian,                                 \
@@ -407,6 +409,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     convergence_criterion : float : default 0.01
         specifies the value of the `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
         used to determine when `each phase of execution completes <ContrastiveHebbian_Execution>`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <pass>`) that will occur in an `execution phase
+        <ContrastiveHebbian_Execution>` before reaching the `convergence_criterion
+        <ContrastiveHebbianMechanism.convergence_criterion>`, after which an error occurs; if `None` is specified,
+        execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -558,6 +566,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         determines the value of `convergence_function <ContrastiveHebbianMechanism.convergence_function>` at which
         `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
+    max_passes : int or None
+        determines the maximum number of executions (`passes <pass>`) that will occur in an `execution phase
+        <ContrastiveHebbian_Execution>` before reaching the `convergence_criterion
+        <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+
     learning_enabled : bool
         indicates whether learning has been enabled for the ContrastiveHebbianMechanism.  It is set to `True` if
         `learning is specified <ContrastiveHebbian_Learning>` at the time of construction (i.e., if the
@@ -654,6 +668,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  clip=None,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF, absolute_value=True),
                  convergence_criterion:float=0.01,
+                 max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
@@ -696,6 +711,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          clip=clip,
                          convergence_function=convergence_function,
                          convergence_criterion=convergence_criterion,
+                         max_passes=max_passes,
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          learning_function=learning_function,

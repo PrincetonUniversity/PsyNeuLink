@@ -145,24 +145,20 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
-The **convergence_function** and **convergence_criterion** arguments of its constructor specify, respectively,
-the `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
-<ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
-completes <ContrastiveHebbian_Execution>`.
-ADD IMPLICATIONS FOR LEARNING AND 'learning_condition` BELOW
+If a `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` is specified, then on each execution
+the `convergence_function <RecurrentTransferMechanism.convergence_function>` is evaluated, and execution in the current
+`trial` continues until the result returned is less than or equal to the `convergence_criterion
+<RecurrentTransferMechanism.convergence_criterion>` or the number of executions reaches `max_passes
+<RecurrentTransferMechanism.max_passes>` (if it is specified).
 
-
-If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
-is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied,  during the
-`execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
-the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
-during the `learning phase <System_Execution>` of a System's execution.  By default, the `learning_mechanism
-<RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection` immediately after the RecurrentTransferMechanism executes.
-
-
-
+If it has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as part of a `System`,
+then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed when the `learning_condition
+<RecurrentTransferMechanism.learning_condition>` is satisfied,  during the `execution phase <System_Execution>` of
+the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
+`Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
+System's execution.  By default, the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes,
+and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection` immediately after the
+RecurrentTransferMechanism executes.
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -611,7 +607,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
-        determined maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
+        determines the maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
         `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
@@ -736,7 +732,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  combination_function:is_function_type=LinearCombination,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
                  convergence_criterion:float=0.01,
-                 max_passes:tc.optional(int)=10,
+                 max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
