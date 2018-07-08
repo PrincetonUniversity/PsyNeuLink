@@ -806,6 +806,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         print("--------------------------------------------",
               "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
               '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+              '\nvariable: ', variable,
               '\ninput:', self.function_object.variable,
               '\nMATRIX:', self.matrix,
               '\ncurrent activity: ', self.current_activity,

@@ -1213,7 +1213,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self._previous_output = self.output_state.value
+            self._previous_output = self.value
         self._output = super()._execute(variable, runtime_params, context)
         return self._output
 
