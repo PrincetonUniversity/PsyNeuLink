@@ -145,25 +145,20 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
-The **convergence_function** and **convergence_criterion**
-arguments of its constructor specify, respectively, the `convergence_function
-<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
-<ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
-completes <ContrastiveHebbian_Execution>`.
-ADD IMPLICATIONS FOR LEARNING AND 'learning_condition` BELOW
+If a `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` is specified, then on each execution
+the `convergence_function <RecurrentTransferMechanism.convergence_function>` is evaluated, and execution in the current
+`trial` continues until the result returned is less than or equal to the `convergence_criterion
+<RecurrentTransferMechanism.convergence_criterion>` or the number of executions reaches `max_passes
+<RecurrentTransferMechanism.max_passes>` (if it is specified).
 
-
-If it has been `configured for learning <Recurrent_Transfer_Learning>`
-and is executed as part of a `System`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
-is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied,  during the
-`execution phase <System_Execution>` of the System's execution.  Note that this is distinct from
-the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`), that are executed
-during the `learning phase <System_Execution>` of a System's execution.  By default, the `learning_mechanism
-<RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection` immediately after the RecurrentTransferMechanism executes.
-
-
-
+If it has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as part of a `System`,
+then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed when the `learning_condition
+<RecurrentTransferMechanism.learning_condition>` is satisfied,  during the `execution phase <System_Execution>` of
+the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
+`Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
+System's execution.  By default, the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes,
+and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection` immediately after the
+RecurrentTransferMechanism executes.
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -299,6 +294,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     combination_function=LinearCombination,                               \
     convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
     convergence_criterion=None,                                           \
+    max_passes=None,                                                      \
     learning_rate=None,                                                   \
     learning_function=Hebbian,                                            \
     learning_condition=UPDATE,                                            \
@@ -446,6 +442,11 @@ class RecurrentTransferMechanism(TransferMechanism):
     convergence_criterion : float : default 0.01
         specifies the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
+        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -605,6 +606,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         determines the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
+    max_passes : int or None
+        determines the maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
+        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
@@ -726,6 +732,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  combination_function:is_function_type=LinearCombination,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
                  convergence_criterion:float=0.01,
+                 max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -754,6 +761,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   integrator_mode=integrator_mode,
                                                   convergence_function=convergence_function,
                                                   convergence_criterion=convergence_criterion,
+                                                  max_passes=max_passes,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
                                                   learning_condition=learning_condition,
@@ -1273,6 +1281,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                 self.context.initialization_status != ContextFlags.INITIALIZING):
             if self.convergence_function([self._output, self._previous_mech_value]) <= self.convergence_criterion:
                 return True
+            elif self.current_execution_time.pass_ >= self.max_passes:
+                raise RecurrentTransferError("Maximum number of executions ({}) has occurred before reaching "
+                                             "convergence_criterion ({}) for {} in trial {} of run {}".
+                                             format(self.max_passes, self.convergence_criterion, self.name,
+                                                    self.current_execution_time.trial, self.current_execution_time.run))
             else:
                 return False
         # Otherwise just return True
