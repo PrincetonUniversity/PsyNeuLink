@@ -722,6 +722,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # previous_activity = self.previous_value
         # MODIFIED 7/7/18 END
 
+        self.is_finished = False
+
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
                                             runtime_params=runtime_params,
@@ -774,13 +776,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._previous_output is None:
             return current_activity
 
-        if self.is_finished:
+        if self.converged:
             # Terminate if this is the end of the minus phase
             if self.execution_phase == MINUS_PHASE:
                 # Store activity from last execution in minus phase
                 self.minus_phase_activity = current_activity
                 # Set value of primary outputState to activity at end of plus phase
                 self.current_activity = self.plus_phase_activity
+                self.is_finished = True
 
             # Otherwise, prepare for start of minus phase on next execution
             else:

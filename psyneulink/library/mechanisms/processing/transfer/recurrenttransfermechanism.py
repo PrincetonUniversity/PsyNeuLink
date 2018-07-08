@@ -1240,25 +1240,27 @@ class RecurrentTransferMechanism(TransferMechanism):
         self._previous_output = None
 
     @property
-    def is_finished(self):
+    def converged(self):
         # Check for convergence
         if (self.convergence_criterion is not None and
                 self._previous_output is not None and
                 self.context.initialization_status != ContextFlags.INITIALIZING):
             if self.convergence_function([self._output, self._previous_output]) <= self.convergence_criterion:
-                self._is_finished = True
+                return True
             else:
-                self._is_finished = False
+                return False
         # Otherwise just return True
         else:
-            self._is_finished = True
+            return None
 
-        return self._is_finished
-
-    @is_finished.setter
-    @tc.typecheck
-    def is_finished(self, value:bool):
-        self._is_finished = value
+    # @property
+    # def is_finished(self):
+    #     return self.converged
+    #
+    # @is_finished.setter
+    # @tc.typecheck
+    # def is_finished(self, value:bool):
+    #     self._is_finished = value
 
     @property
     def _learning_signal_source(self):
