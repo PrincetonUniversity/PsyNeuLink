@@ -580,6 +580,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
+    converged : bool
+        indicates whether `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` has been reached.
+
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
@@ -1240,7 +1243,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self._previous_mech_value = None
 
     @property
-    def converged(self):
+    def is_converged(self):
         # Check for convergence
         if (self.convergence_criterion is not None and
                 self._previous_mech_value is not None and
@@ -1252,15 +1255,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Otherwise just return True
         else:
             return None
-
-    # @property
-    # def is_finished(self):
-    #     return self.converged
-    #
-    # @is_finished.setter
-    # @tc.typecheck
-    # def is_finished(self, value:bool):
-    #     self._is_finished = value
 
     @property
     def _learning_signal_source(self):
