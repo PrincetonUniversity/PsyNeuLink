@@ -299,6 +299,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     combination_function=LinearCombination,                               \
     convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
     convergence_criterion=None,                                           \
+    max_passes=None,                                                      \
     learning_rate=None,                                                   \
     learning_function=Hebbian,                                            \
     learning_condition=UPDATE,                                            \
@@ -446,6 +447,11 @@ class RecurrentTransferMechanism(TransferMechanism):
     convergence_criterion : float : default 0.01
         specifies the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
+        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -605,6 +611,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         determines the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
+    max_passes : int or None
+        determined maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
+        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+
     learning_enabled : bool : default False
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
         `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
@@ -726,6 +737,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  combination_function:is_function_type=LinearCombination,
                  convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
                  convergence_criterion:float=0.01,
+                 max_passes:tc.optional(int)=10,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
@@ -754,6 +766,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   integrator_mode=integrator_mode,
                                                   convergence_function=convergence_function,
                                                   convergence_criterion=convergence_criterion,
+                                                  max_passes=max_passes,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
                                                   learning_condition=learning_condition,
@@ -1273,6 +1286,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                 self.context.initialization_status != ContextFlags.INITIALIZING):
             if self.convergence_function([self._output, self._previous_mech_value]) <= self.convergence_criterion:
                 return True
+            elif self.current_execution_time.pass_ >= self.max_passes:
+                raise RecurrentTransferError("Maximum number of executions ({}) has occurred before reaching "
+                                             "convergence_criterion ({}) for {} in trial {} of run {}".
+                                             format(self.max_passes, self.convergence_criterion, self.name,
+                                                    self.current_execution_time.trial, self.current_execution_time.run))
             else:
                 return False
         # Otherwise just return True
