@@ -288,7 +288,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     hetero=None,                                                          \
     initial_value=None,                                                   \
     noise=0.0,                                                            \
-    smoothing_factor=0.5,                                                 \
+    integration_rate=0.5,                                                 \
     integrator_mode=False,                                                \
     integration_rate=0.5,                                                 \
     clip=[float:min, float:max],                                          \
@@ -374,20 +374,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         Can be modified by control.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input.
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
+        specifies the starting value for time-averaged input if `integrator_mode
+        <ContrastiveHebbianMechanism.integrator_mode>` is `True`).
 
     noise : float or function : default 0.0
-        a value added to the result of the `function <ContrastiveHebbianMechanism.function>`. See `noise
-        <ContrastiveHebbianMechanism.noise>` for more details.
+        a value added to the result of the `function <ContrastiveHebbianMechanism.function>` or to the result of
+        `integrator_function <ContrastiveHebbianMechanism.integrator_function>`, depending on whether `integrator_mode
+        <ContrastiveHebbianMechanism.integrator_mode>` is `True` or `False`. See `noise
+        <ContrastiveHebbianMechanism.noise>` for additional details.
 
-    smoothing_factor : float : default 0.5
-        the smoothing factor for exponential time averaging of input::
+    integration_rate : float : default 0.5
+        the rate used for exponential time averaging of input when `integrator_mode
+        <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`::
 
-         result = (smoothing_factor * variable) +
-         (1-smoothing_factor * input to mechanism's function on the previous time step)
+         result = (integration_rate * variable) +
+         (1-integration_rate * input to mechanism's function on the previous time step)
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>` the item in
@@ -463,21 +464,41 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray
-        determines the starting value for time-averaged input (only relevant if `smoothing_factor
-        <ContrastiveHebbianMechanism.smoothing_factor>` parameter is not 1.0).
+        determines the starting value for time-averaged input (only relevant if `integration_rate
+        <ContrastiveHebbianMechanism.integration_rate>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     integrator_function:
         the `IntegratorFunction` used by the Mechanism when it executes, which is an `AdaptiveIntegrator
-        <AdaptiveIntegrator>`. Keep in mind that the `smoothing_factor <ContrastiveHebbianMechanism.smoothing_factor>`
+        <AdaptiveIntegrator>`. Keep in mind that the `integration_rate <ContrastiveHebbianMechanism.integration_rate>`
         parameter of the `ContrastiveHebbianMechanism` corresponds to the `rate
         <ContrastiveHebbianMechanismIntegrator.rate>` of the `ContrastiveHebbianMechanismIntegrator`.
 
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+
+        The result of the integrator function above is then passed into the `mechanism's function
+        <ContrastiveHebbianMechanismIntegrator.function>`. Note that on the first execution, *initial_value*
+        sets `previous_value <ContrastiveHebbianMechanism._previous_value>`.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism
+        <RecurrentTransferMechanism.function>`. The mechanism's `integrator_function
+        <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
+        (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
+
     noise : float or function
-        value passed to the `integrator_function <ContrastiveHebbianMechanism.integrator_function>` that is added to
-        the current input.
+        When `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`, noise is passed into the
+        `integrator_function <ContrastiveHebbianMechanism.integrator_function>`. Otherwise, noise is added to the result
+        of the `function <ContrastiveHebbianMechanism.function>`.
 
         If noise is a list or array, it must be the same length as `variable
         <ContrastiveHebbianMechanism.default_variable>`.
@@ -492,10 +513,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             from its distribution on each execution. If noise is specified as a float or as a function with a fixed
             output, then the noise will simply be an offset that remains the same across all executions.
 
-    smoothing_factor : float
-        the smoothing factor for exponential time averaging of input when::
+    integration_rate : float
+        the rate used for exponential time averaging of input when `integrator_mode
+        <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`::
 
-          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
+          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
     clip : list [float, float]
         specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`
