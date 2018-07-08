@@ -708,19 +708,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
         # # USED FOR TEST PRINT BELOW:
-        curr_phase = self.execution_phase
+        # curr_phase = self.execution_phase
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_state.socket_template
-
-        # # MODIFIED 7/7/18 OLD:
-        # self.is_finished = False
-        #
-        # previous_activity = self.previous_value
-        # MODIFIED 7/7/18 END
 
         self.is_finished = False
 
@@ -737,42 +731,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         except:
             assert False
 
-        # # # MODIFIED 7/7/18 OLD:
-        # # Check for convergence
-        # if previous_activity is None:
-        #     return current_activity
-        #     # return self.current_activity
-        # else:
-        #     diff = abs(self.convergence_function([current_activity, previous_activity]))
-        #
-        # if (self.context.initialization_status != ContextFlags.INITIALIZING and
-        #         self.convergence_criterion is not None and diff <= self.convergence_criterion):
-        #
-        #     # Terminate if this is the end of the minus phase
-        #     if self.execution_phase == MINUS_PHASE:
-        #         # Store activity from last execution in minus phase
-        #         self.minus_phase_activity = current_activity
-        #         self.is_finished = True
-        #         # Set value of primary outputState to activity at end of plus phase
-        #         self.current_activity = self.plus_phase_activity
-        #
-        #     # Otherwise, prepare for start of minus phase on next execution
-        #     else:
-        #         # Store activity from last execution in plus phase
-        #         self.plus_phase_activity = current_activity
-        #         # self.plus_phase_activity = self.current_activity
-        #         # Use initial_value attribute to initialize, for the minus phase,
-        #         #    both the integrator_function's previous_value
-        #         #    and the Mechanism's current activity (which is returned as it input)
-        #         self.reinitialize(self.initial_value)
-        #         self.current_activity = self.initial_value
-        #
-        #     curr_phase = self.execution_phase
-        #
-        #     # Switch execution_phase
-        #     self.execution_phase = not self.execution_phase
-
-        # MODIFIED 7/7/18 NEW:
         if self._previous_mech_value is None:
             return current_activity
 
@@ -796,23 +754,24 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.reinitialize(self.initial_value)
                 self.current_activity = self.initial_value
 
-            curr_phase = self.execution_phase
+            # # USED FOR TEST PRINT BELOW:
+            # curr_phase = self.execution_phase
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
         # MODIFIED 7/7/18 END
 
-        # TEST PRINT:
-        print("--------------------------------------------",
-              "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
-              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-              '\nvariable: ', variable,
-              '\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', self.current_activity,
-              '\ndiff: ', self._output,
-              '\nis_finished: ', self.is_finished
-              )
+        # # TEST PRINT:
+        # print("--------------------------------------------",
+        #       "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
+        #       '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+        #       '\nvariable: ', variable,
+        #       '\ninput:', self.function_object.variable,
+        #       '\nMATRIX:', self.matrix,
+        #       '\ncurrent activity: ', self.current_activity,
+        #       '\ndiff: ', self._output,
+        #       '\nis_finished: ', self.is_finished
+        #       )
 
         return current_activity
         # return self.current_activity
