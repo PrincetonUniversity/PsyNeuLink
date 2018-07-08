@@ -145,9 +145,8 @@ of its constructor.  It then transforms its input (including from the `recurrent
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `Transfer_Execution`), and returns the results in its OutputStates.
 
-The **convergence_function** and **convergence_criterion**
-arguments of its constructor specify, respectively, the `convergence_function
-<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
+The **convergence_function** and **convergence_criterion** arguments of its constructor specify, respectively,
+the `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
 <ContrastiveHebbianMechanism.convergence_criterion>` attributes used to determine when `each phase of execution
 completes <ContrastiveHebbian_Execution>`.
 ADD IMPLICATIONS FOR LEARNING AND 'learning_condition` BELOW
