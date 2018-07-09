@@ -43,9 +43,9 @@ automatically assigned two of its four `Standard OutputStates <ContrastiveHebbia
 *CURRENT_ACTIVITY_OUTPUT* and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional
 OutputStates can be specified in the **additional_output_states** argument of its constructor.  It uses the same
 default `function <ContrastiveHebbianMechanism.function>` as a `RecurrentTransferMechanism`, but must have (and is
-automatically assigned defaults for) both a `convergence_function <ContrastiveHebbianMechanisms.convergence_function>`
-and `convergence_criterion <ContrastiveHebbianMechanisms.convergence_criterion>`, that determine when `each phase
-of execution completes <ContrastiveHebbian_Execution`.  If a ContrastiveHebbianMechanism is `configured for learning
+automatically assigned defaults for) both a `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
+and `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase
+of execution completes <ContrastiveHebbian_Execution>`.  If a ContrastiveHebbianMechanism is `configured for learning
 <ContrastiveHebbian_Learning>`, it is automatically assigned `ContrastiveHebbian` as its `learning_function
 <ContrastiveHebbianMechanism.learning_function>` (which is, in turn, assigned to its `learning_mechanism
 <ContrastiveHebbianMechanism.learning_mechanism>`), and its `learning_condition
@@ -152,13 +152,13 @@ A ContrastiveHebbianMechanism always executes in two sequential phases that toge
   compared with the previous `value <ContrastiveHebbianMechanism>` using the `convergence_function
   <ContrastiveHebbianMechanism.convergence_function>`, and execution continues until the value returned by that
   function is equal to or below the `convergence_criterion  <ContrastiveHebbianMechanism.convergence_criterion>`
-  (i.e., the Mechanism's `is_converged <ContrastiveHebbian.is_converged>` property is `True`. At that point,
+  (i.e., the Mechanism's `is_converged <ContrastiveHebbianMechanism.is_converged>` property is `True`. At that point,
   the plus phase is completed, the `value <ContrastiveHebbianMechanism.value>` of the ContrastiveHebbianMechanism is
   assigned to its `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` attribute, and execution
   proceeds to the minus phase.
 ..
 * *minus phase:* the record of the Mechanism's previous `value <ContrastiveHebbianMechanism.value>` is reinitialized
-  to the value of it `initial_value <ContrastiveMechanism.initial_value>` attribute.  It is then executed, using
+  to the value of it `initial_value <ContrastiveHebbianMechanism.initial_value>` attribute.  It is then executed, using
   only the input received from the *EXTERNAL* `InputState <ContrastiveHebbian_Input>`. Otherwise, execution proceeds
   as during the plus phase, completing when it `is_converged <ContrastiveHebbianMechanism>` is `True`. At that point,
   the minus phase is completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned to
@@ -401,7 +401,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
         by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous `value
-        <ContrastiveHebbian.value>` of the Mechanism.  Can be any function that takes two 1d arrays of the same
+        <ContrastiveHebbian.value>` of the Mechanism;  can be any function that takes two 1d arrays of the same
         length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
         is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value** option, which computes the
         elementwise difference between two arrays and returns the difference with the maximum absolute value.
@@ -411,7 +411,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         used to determine when `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
     max_passes : int : default 1000
-        specifies maximum number of executions (`passes <pass>`) that will occur in an `execution phase
+        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
         <ContrastiveHebbian_Execution>` before reaching the `convergence_criterion
         <ContrastiveHebbianMechanism.convergence_criterion>`, after which an error occurs; if `None` is specified,
         execution may continue indefinitely or until an interpreter exception is generated.
@@ -481,25 +481,28 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     integrator_function:
         the `IntegratorFunction` used by the Mechanism when it executes, which is an `AdaptiveIntegrator
         <AdaptiveIntegrator>`. Keep in mind that the `integration_rate <ContrastiveHebbianMechanism.integration_rate>`
-        parameter of the `ContrastiveHebbianMechanism` corresponds to the `rate
-        <ContrastiveHebbianMechanismIntegrator.rate>` of the `ContrastiveHebbianMechanismIntegrator`.
+        parameter of the ContrastiveHebbianMechanism corresponds to the `rate
+        <Integrator.rate>` of the ContrastiveHebbianMechanism's `integrator_function`.
+
 
     integrator_mode:
         **When integrator_mode is set to True:**
 
-        the variable of the mechanism is first passed into the following equation:
+        the variable of the Mechanism is first passed into the following equation:
 
         .. math::
-            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+            value = previous\_value(1-integration\_rate) + variable \cdot integration\_rate + noise
 
-        The result of the integrator function above is then passed into the `mechanism's function
-        <ContrastiveHebbianMechanismIntegrator.function>`. Note that on the first execution, *initial_value*
+        The result of the integrator function above is then passed into the Mechanism's `function
+        <ContrastiveHebbianMechanism.function>`. Note that on the first execution, *initial_value*
         sets `previous_value <ContrastiveHebbianMechanism._previous_value>`.
 
         **When integrator_mode is set to False:**
 
-        The variable of the mechanism is passed into the `function of the mechanism
-        <RecurrentTransferMechanism.function>`. The mechanism's `integrator_function
+        The `variable <ContrastiveHebbianMechanism.variable>` of the Mechanism is passed into the `function
+        <RecurrentTransferMechanism.function>`.
+        The
+        Mechanism's `integrator_function
         <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
         (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
@@ -508,8 +511,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `integrator_function <ContrastiveHebbianMechanism.integrator_function>`. Otherwise, noise is added to the result
         of the `function <ContrastiveHebbianMechanism.function>`.
 
-        If noise is a list or array, it must be the same length as `variable
-        <ContrastiveHebbianMechanism.default_variable>`.
+        If noise is a list or array, it must be the same length as `variable <ContrastiveHebbianMechanism.variable>`.
 
         If noise is specified as a single float or function, while `variable <ContrastiveHebbianMechanism.variable>`
         is a list or array, noise will be applied to each variable element. In the case of a noise function, this means
@@ -567,7 +569,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
     max_passes : int or None
-        determines the maximum number of executions (`passes <pass>`) that will occur in an `execution phase
+        determines the maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
         <ContrastiveHebbian_Execution>` before reaching the `convergence_criterion
         <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.

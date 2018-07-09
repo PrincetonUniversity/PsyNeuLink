@@ -117,7 +117,7 @@ rather, than the primary one (named *EXTERNAL*).  In this case, the InputStates'
 `combination_function <RecurrentTransferMechanism.combination_function>` *before* being passed to the
 RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
-A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
+A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>`:  an *ENERGY* OutputState and, if its
 `function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
 OutputState.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
 <OutputState_Primary>`) OutputState.
@@ -434,18 +434,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
-        specifies the function that determines when the `is_converged <RecurrentTransferMechanism.is_converged>`
-        attribute is `True`. The default is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value**
-        option, which computes the elementwise difference between  two arrays and returns the difference with the
-        maximum absolute value.
+        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        The default is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value** option, which
+        computes the elementwise difference between  two arrays and returns the difference with the maximum absolute
+        value.
 
     convergence_criterion : float : default 0.01
-        specifies the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
-        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
+        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
-        specifies maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
-        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     enable_learning : boolean : default False
@@ -536,29 +536,29 @@ class RecurrentTransferMechanism(TransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
-    integrator_function:
+    integrator_function :
         When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function
         <RecurrentTransferMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
         <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
-        <RecurrentTransferMechanism.integration_rate>` parameter of the `RecurrentTransferMechanism` corresponds to
-        the `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+        <RecurrentTransferMechanism.integration_rate>` parameter of the RecurrentTransferMechanism corresponds to
+        the `rate <Integrator.rate>` parameter of the RecurrentTransferMechanism's `integrator_function`.
 
-    integrator_mode:
+    integrator_mode :
         **When integrator_mode is set to True:**
 
         the variable of the mechanism is first passed into the following equation:
 
         .. math::
-            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+            value = previous\_value(1-integration\_rate) + variable \cdot integration\_rate + noise
 
-        The result of the integrator function above is then passed into the `mechanism's function
+        The result of the integrator function above is then passed into the mechanism's `function
         <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets
         `previous_value <RecurrentTransferMechanism.previous_value>`.
 
         **When integrator_mode is set to False:**
 
         The variable of the mechanism is passed into the `function of the mechanism
-        <RecurrentTransferMechanism.function>`. The mechanism's `integrator_function
+        <RecurrentTransferMechanism.function>`. The Mechanism's `integrator_function
         <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
         (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
@@ -599,16 +599,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         returns `False`.
 
     convergence_function : function
-        compares `value <ContrastiveHebbianMechanism.value>` with its previous value and returns a scalar value used
-        to determine the value of `is_converged <RecurrentTransferMechanism.is_converged>`.
+        compares `value <ContrastiveHebbianMechanism.value>` with the Mechanism's previous value and returns a scalar
+        value used to determine whether `is_converged <RecurrentTransferMechanism.is_converged>` is `True` or `False`.
 
     convergence_criterion : float
-        determines the value of `convergence_function <RecurrentTransferMechanism.convergence_function>` at which
-        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        determines the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
+        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
-        determines the maximum number of executions (`passes <pass>`) that will occur in a trial before reaching the
-        `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     learning_enabled : bool : default False
