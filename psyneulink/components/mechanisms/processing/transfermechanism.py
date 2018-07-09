@@ -578,11 +578,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             function with a fixed output, then the noise will simply be an offset that remains the same across all
             executions.
 
-    integration_rate : float
-        the smoothing factor used for exponential time averaging of the TransferMechanism's `variable
-        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
-        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
-
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
         to exponentially time average its `variable <TransferMechanism.variable>` when it executes.
@@ -593,7 +588,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             passed into the `AdaptiveIntegrator` Function, that carries out the following calculation:
 
             .. math::
-                result = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+                result = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
 
             where *previous_value* is set to the value of the TransferMechanism's `initial_value
             <TransferMechanism.initial_value>` attribute on the first execution, and *integration_rate* and *noise*
@@ -619,6 +614,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         .. note::
             The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter
             specifies the `rate <AdaptiveIntegrator.rate>` of the `AdaptiveIntegrator` Function.
+
+    integration_rate : float
+        the rate used for exponential time averaging of the TransferMechanism's `variable
+        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
+        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
     clip : list [float, float]
         specifies the allowable range for the result of `function <TransferMechanism.function>`.  The 1st item (index

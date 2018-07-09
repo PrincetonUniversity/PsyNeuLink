@@ -157,7 +157,7 @@ then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is
 the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
 `Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
 System's execution.  By default, the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes,
-and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection` immediately after the
+and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` immediately after the
 RecurrentTransferMechanism executes.
 
 .. _Recurrent_Transfer_Class_Reference:
@@ -295,6 +295,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
     convergence_criterion=None,                                           \
     max_passes=None,                                                      \
+    enable_learning=False,                                                \
     learning_rate=None,                                                   \
     learning_function=Hebbian,                                            \
     learning_condition=UPDATE,                                            \
@@ -524,7 +525,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        back to its `primary inputState <Mechanism_InputStates>`.
+         to its `primary InputState <Mechanism_InputStates>`.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
