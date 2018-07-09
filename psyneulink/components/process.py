@@ -1394,12 +1394,9 @@ class Process(Process_Base):
                                           "so its receiver must be a Mechanism in the pathway".
                                           format(self.name, item))
 
-                # MODIFIED 7/9/18 NEW:
                 # Check if there is already a projection between the sender and receiver
                 if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
                     continue
-
-                # MODIFIED 7/9/18 END
 
                 # Projection spec is an instance of a MappingProjection
                 if isinstance(item, MappingProjection):
@@ -1522,24 +1519,23 @@ class Process(Process_Base):
         if learning_projection_specified:
             self.learning = LEARNING
 
-
-
-    @tc.typecheck
     def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
         '''Check if there is already a projection between sndr_mech and rcvr_mech
         If so:
-            - if verbosePref, warn
-            - replace proj_spec with existing projection
+            - if it has just found the same project (e.g., as in case of AutoAssociativeProjection), let pass
+            - otherwise:
+                - if verbosePref, warn
+                - replace proj_spec with existing projection
         '''
 
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:
                 if proj.sender.owner is sndr_mech:
+                    if self.pathway[pathway_index] == proj:
+                        continue
                     if self.prefs.verbosePref:
                         print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
                               format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))
-                    if self.pathway[pathway_index] == proj:
-                        continue
                     self.pathway[pathway_index] = proj
                     return True
         return False
