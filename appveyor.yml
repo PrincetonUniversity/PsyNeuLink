@@ -1,0 +1,34 @@
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
+version: '{build}'
+clone_depth: 25
+init:
+- cmd: ''
+environment:
+  matrix:
+  - PYTHON: C:\Python35
+    PATH: C:\Python35\Scripts;%PATH%
+  - PYTHON: C:\Python36
+    PATH: C:\Python36\Scripts;%PATH%
+  - PYTHON: C:\Python35-x64
+    PATH: C:\Python35-x64\Scripts;%PATH%
+  - PYTHON: C:\Python36-x64
+    PATH: C:\Python36-x64\Scripts;%PATH%
+install:
+- cmd: >-
+    %PYTHON%\\python.exe -m pip install -U certifi pip
+
+    %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
+
+    choco upgrade graphviz.portable -y
+
+    %PYTHON%\\python.exe -m pip install -e .[dev]
+cache:
+- '%PYTHON%\Scripts'
+- '%PYTHON%\lib\site-packages'
+build: off
+test_script:
+- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/'

@@ -1278,17 +1278,7 @@ class State_Base(State):
                 (inspect.isclass(function) and issubclass(function, LinearCombination))
                 or isinstance(function, LinearCombination)
             )
-            and (
-                isinstance(self.instance_defaults.variable, np.matrix)
-                or (
-                    isinstance(self.instance_defaults.variable, np.ndarray)
-                    # # MODIFIED 2/21/18 OLD:
-                    # and len(self.instance_defaults.variable) < 2
-                    # MODIFIED 2/21/18 NEW:
-                    and self.instance_defaults.variable.ndim >=2
-                    # MODIFIED 2/21/18 END
-                )
-            )
+            and isinstance(self.instance_defaults.variable, np.matrix)
         ):
             self.instance_defaults.variable = [self.instance_defaults.variable]
             var_is_matrix = True
