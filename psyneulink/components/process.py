@@ -1182,7 +1182,7 @@ class Process(Process_Base):
 
                 # Check if first Mechanism already has any projections and, if so, issue appropriate warning
                 if mech.input_state.path_afferents:
-                    self._issue_warning_about_existing_projections(mech, context)
+                    self._warn_about_existing_projections_to_first_mechanism(mech, context)
 
                 # Assign input Projection from Process
                 self._assign_process_input_projections(mech, context=context)
@@ -1352,7 +1352,7 @@ class Process(Process_Base):
 
             # Item is a Projection or specification for one
             else:
-                # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
+                # Instantiate Projection, assigning Mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
                 #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
                 #        + Projection object
@@ -1393,6 +1393,13 @@ class Process(Process_Base):
                        raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
                                           "so its receiver must be a Mechanism in the pathway".
                                           format(self.name, item))
+
+                # MODIFIED 7/9/18 NEW:
+                # Check if there is already a projection between the sender and receiver
+                if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
+                    continue
+
+                # MODIFIED 7/9/18 END
 
                 # Projection spec is an instance of a MappingProjection
                 if isinstance(item, MappingProjection):
@@ -1516,7 +1523,26 @@ class Process(Process_Base):
             self.learning = LEARNING
 
 
-    def _issue_warning_about_existing_projections(self, mechanism, context=None):
+
+    @tc.typecheck
+    def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
+        '''Check if there is already a projection between sndr_mech and rcvr_mech
+        If so:
+            - if verbosePref, warn
+            - replace proj_spec with existing projection
+        '''
+
+        for input_state in rcvr_mech.input_states:
+            for proj in input_state.path_afferents:
+                if proj.sender.owner is sndr_mech:
+                    if self.prefs.verbosePref:
+                        print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
+                              format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))
+                    self.pathway[pathway_index] = proj
+                    return True
+        return False
+
+    def _warn_about_existing_projections_to_first_mechanism(self, mechanism, context=None):
 
         # Check where the Projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.input_state.all_afferents:
@@ -1528,8 +1554,7 @@ class Process(Process_Base):
                 # (B) from another Process, warn if verbose pref is set
                 if not projection.sender.owner is self:
                     if self.prefs.verbosePref:
-                        print("WARNING: {0} in pathway for {1} already has an input from {2} "
-                              "that will be used".
+                        print("WARNING: {0} in pathway for {1} already has an input from {2} that will be used".
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
