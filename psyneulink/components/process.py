@@ -1538,6 +1538,8 @@ class Process(Process_Base):
                     if self.prefs.verbosePref:
                         print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
                               format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))
+                    if self.pathway[pathway_index] == proj:
+                        continue
                     self.pathway[pathway_index] = proj
                     return True
         return False
