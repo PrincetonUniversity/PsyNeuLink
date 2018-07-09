@@ -586,7 +586,7 @@ class RunError(Exception):
 
 @tc.typecheck
 def run(obj,
-        inputs,
+        inputs=None,
         num_trials:tc.optional(int)=None,
         initialize:bool=False,
         initial_values:tc.optional(tc.any(list, dict, np.ndarray))=None,
@@ -708,6 +708,9 @@ def run(obj,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
     from psyneulink.globals.context import ContextFlags
+
+    if inputs == None:
+        inputs = {}
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
@@ -945,11 +948,12 @@ def _adjust_stimulus_dict(obj, stimuli):
         if not mech in obj.origin_mechanisms.mechanisms:
             raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
                            format(mech.name, obj.name))
+
     # Check that all of the ORIGIN mechanisms in the obj are represented by entries in the inputs dict
+    # If not, assign their default variable to the dict
     for mech in obj.origin_mechanisms:
         if not mech in stimuli:
-            raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
-                           format(mech.name, obj.name))
+            stimuli[mech] = mech.instance_defaults.variable.copy()
 
     # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
@@ -980,7 +984,7 @@ def _adjust_stimulus_dict(obj, stimuli):
             if num_input_sets == -1:
                 num_input_sets = 1
             elif num_input_sets != 1:
-                raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {} "
                                "conflicts with at least one other mechanism's input specification.".format(obj.name,
                                                                                                            mech.name))
         else:
