@@ -1070,7 +1070,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @property
     def delta(self):
         if self.integrator_function:
-            return self.value - self.integrator_function.previous_value
+            return self.value - self.previous_value # self.previous_value TBI
         return None
 
     @property
