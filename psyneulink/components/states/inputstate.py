@@ -1219,6 +1219,15 @@ class InputState(State_Base):
             label_dictionary = self.owner.input_labels_dict
         return self._get_value_label(label_dictionary, self.owner.input_states)
 
+    @property
+    def position_in_mechanism(self):
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                return self.owner.get_input_state_position(self)
+            else:
+                return None
+        return None
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d

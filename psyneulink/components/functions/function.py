@@ -203,7 +203,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIV
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
     CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
-    DECAY, DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
+    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
     ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
@@ -3108,14 +3108,12 @@ class InterfaceStateMap(InterfaceFunction):
                                                           params=params,
                                                           context=context))
 
-        index = self.corresponding_input_state.owner.input_states.index(self.corresponding_input_state)
-
-
+        index = self.corresponding_input_state.position_in_mechanism
 
         if self.corresponding_input_state.owner.value is not None:
 
             # If CIM's variable does not match its value, then a new pair of states was added since the last execution
-            if not np.allclose(np.shape(self.corresponding_input_state.owner.variable),
+            if not np.allclose(np.shape(self.corresponding_input_state.owner.input_values),
                                np.shape(self.corresponding_input_state.owner.value)):
                 return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
@@ -3124,9 +3122,7 @@ class InterfaceStateMap(InterfaceFunction):
             if index == 0:
                 if not isinstance(variable[0], (list, np.ndarray)):
                     return variable
-
             return variable[index]
-
         # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
@@ -4809,6 +4805,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         matrix = self.get_current_function_param(MATRIX)
+
         return np.dot(variable, matrix)
 
     @staticmethod

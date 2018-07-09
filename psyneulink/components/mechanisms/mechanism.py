@@ -2183,9 +2183,6 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
-        if "first" in self.name:
-            print("input state value = ", self.input_state.value, " [", self.name, "]")
-            print("context = ", context)
         self.ignore_execution_id = ignore_execution_id
         context = context or ContextFlags.COMMAND_LINE
         if not self.context.source or context & ContextFlags.COMMAND_LINE:
@@ -2917,6 +2914,11 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
+
+    def get_input_state_position(self, state):
+        if state in self.input_states:
+            return self.input_states.index(state)
+        raise MechanismError("{} is not an InputState of {}.".format(state.name, self.name))
 
     # @tc.typecheck
     # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
