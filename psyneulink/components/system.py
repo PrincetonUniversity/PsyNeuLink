@@ -2992,7 +2992,7 @@ class System(System_Base):
                              # process_names))
 
     def run(self,
-            inputs,
+            inputs=None,
             num_trials=None,
             initialize=False,
             initial_values=None,

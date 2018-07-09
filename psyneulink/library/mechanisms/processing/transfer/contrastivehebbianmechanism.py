@@ -725,7 +725,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         return current_activity
         # return self.current_activity
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
 
         try:
             if self.execution_phase == PLUS_PHASE:

@@ -1016,7 +1016,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return value
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
 
         if context is ContextFlags.INSTANTIATE:
 

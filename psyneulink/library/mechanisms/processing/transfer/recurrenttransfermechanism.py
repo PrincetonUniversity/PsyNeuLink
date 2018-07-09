@@ -1020,7 +1020,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if state.name != AUTO or state.name != HETERO:
                 state.update(params=runtime_params, context=context)
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
             variable = self._linear_combin_func.execute(variable=variable)
         return super(RecurrentTransferMechanism, self)._parse_function_variable(variable=variable, context=context)
@@ -1251,7 +1251,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self._output = super()._execute(variable, runtime_params, context)
         return self._output
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
             variable = self.combination_function.execute(variable = variable)
 

@@ -2163,7 +2163,7 @@ class Component(object):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
