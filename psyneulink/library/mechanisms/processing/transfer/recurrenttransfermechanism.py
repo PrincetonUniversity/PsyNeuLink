@@ -553,8 +553,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             value = previous\_value(1-integration\_rate) + variable \cdot integration\_rate + noise
 
         The result of the integrator function above is then passed into the mechanism's `function
-        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* sets
-        `previous_value <RecurrentTransferMechanism.previous_value>`.
+        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* determines the
+        `integrator_function's <RecurrentTransferMechanism.integrator_function>` `previous_value
+        <AdaptiveIntegrator.previous_value>`.
 
         **When integrator_mode is set to False:**
 

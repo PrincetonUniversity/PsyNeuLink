@@ -1068,12 +1068,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         self._clip = value
 
     @property
-    def previous_value(self):
-        if self.integrator_function:
-            return self.integrator_function.previous_value
-        return None
-
-    @property
     def delta(self):
         if self.integrator_function:
             return self.value - self.integrator_function.previous_value
