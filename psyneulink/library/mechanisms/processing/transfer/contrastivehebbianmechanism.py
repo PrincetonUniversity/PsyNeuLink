@@ -680,7 +680,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         except:
             assert False
 
-        if self._previous_mech_value is None:
+        if self.previous_value is None:
             return current_activity
 
         if self.is_converged:

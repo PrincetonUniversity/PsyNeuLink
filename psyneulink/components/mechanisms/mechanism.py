@@ -951,7 +951,7 @@ from psyneulink.globals.keywords import \
     FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, \
     INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, \
-    PARAMETER_STATES, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
+    PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
     VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
@@ -1946,6 +1946,8 @@ class Mechanism_Base(Mechanism):
                                             OWNER_VALUE = VALUE,
                                             EXECUTION_COUNT = CURRENT_EXECUTION_COUNT,
                                             EXECUTION_TIME = CURRENT_EXECUTION_TIME)
+        if hasattr(self, PREVIOUS_VALUE):
+            self.attributes_dict_entries.update({'PREVIOUS_VALUE': PREVIOUS_VALUE})
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """Assign weights and exponents if specified in input_states
@@ -2038,7 +2040,7 @@ class Mechanism_Base(Mechanism):
             If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
             effectively begins the function's accumulation over again at the specified value, and updates related
-            attributes on the mechanism.
+            attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
 
             If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`, its `reinitialize
             <Mechanism_Base.reinitialize>` method:
@@ -2112,6 +2114,9 @@ class Mechanism_Base(Mechanism):
         else:
             raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
+
+        # if hasattr(self, PREVIOUS_VALUE):
+        #     self.previous_value = None
 
     def get_current_mechanism_param(self, param_name):
         if param_name == "variable":

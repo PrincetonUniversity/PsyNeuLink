@@ -311,7 +311,10 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PROB, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.globals.keywords import \
+    FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
+    NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
+    STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -630,7 +633,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         result of executing `function <TransferMechanism.function>`.
 
     previous_value : float
-        the `value <TransferMechanism.value>` on the previous execution of the Mechanism.
+        `value <TransferMechanism.value>` on the previous execution of the Mechanism;  this attribute exists only if
+        `integrator_mode <TransferMechanism.integrator_mode>` has been set to `True` at some point, and retains
+        it value if `integrator_mode <TransferMechanism.integrator_mode>` is set to `False` until it is set to
+        `True` again.
 
     delta : float
         the change in `value <TransferMechanism.value>` from the previous execution of the TransferMechanism
@@ -890,6 +896,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
+        if self.integrator_mode:
+            self.previous_value = None
+
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
@@ -988,6 +997,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
+        self._update_previous_value()
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1015,6 +1025,18 @@ class TransferMechanism(ProcessingMechanism_Base):
             value = self._clip_result(clip, value)
 
         return value
+
+    def reinitialize(self, *args):
+        if self.integrator_mode:
+            super().reinitialize(*args)
+            self.previous_value = None
+
+    def _update_previous_value(self):
+        if self.integrator_mode:
+            try:
+                self.previous_value = self.value
+            except:
+                self.previous_value = None
 
     def _parse_function_variable(self, variable, context=None):
 
@@ -1070,7 +1092,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @property
     def delta(self):
         if self.integrator_function:
-            return self.value - self.previous_value # self.previous_value TBI
+            return self.value - self.previous_value
         return None
 
     @property
@@ -1083,6 +1105,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function is None:
                 self.integrator_function = self.original_integrator_function
                 self._integrator_mode = True
+            if not hasattr(self, PREVIOUS_VALUE):
+                self.previous_value = None
         elif val is False:
             if self.integrator_function is not None:
                 self.original_integrator_function = self.integrator_function
