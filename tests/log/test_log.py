@@ -14,6 +14,8 @@ class TestLog:
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -21,6 +23,8 @@ class TestLog:
                                      'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -35,6 +39,8 @@ class TestLog:
         PJ.set_log_conditions(pnl.MATRIX)
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
@@ -42,6 +48,8 @@ class TestLog:
                                      'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -114,6 +122,8 @@ class TestLog:
         PJ = T2.path_afferents[0]
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -121,6 +131,8 @@ class TestLog:
                                      'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -139,6 +151,8 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'EXECUTION',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
@@ -146,6 +160,8 @@ class TestLog:
                                      'integration_rate': 'OFF',
                                      'value': 'EXECUTION'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'EXECUTION',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
@@ -214,6 +230,8 @@ class TestLog:
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -221,6 +239,8 @@ class TestLog:
                                      'integration_rate': 'OFF',
                                      'value': 'OFF'}
         assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
@@ -233,6 +253,8 @@ class TestLog:
         T1.set_log_conditions(pnl.VALUE)
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'EXECUTION',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
@@ -245,6 +267,8 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
 
         assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'convergence_criterion':'OFF',
+                                     'max_passes':'OFF',
                                      'slope': 'EXECUTION',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',

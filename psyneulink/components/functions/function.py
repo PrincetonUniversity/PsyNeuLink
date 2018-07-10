@@ -9627,11 +9627,7 @@ COMMENT
 
         """
 
-        # MODIFIED 11/25/17 OLD:
-        # size = len(np.squeeze(self.instance_defaults.variable))
-        # MODIFIED 11/25/17 NEW:
         size = len(self.instance_defaults.variable)
-        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
@@ -9644,17 +9640,10 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
-        # # MODIFIED 11/12/17 OLD:
-        # if self.metric is ENTROPY:
-        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
-        # elif self.metric in DISTANCE_METRICS:
-        #     self._metric_fct = Distance(metric=self.metric)
-        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
-        # MODIFIED 11/12/17 END
 
 
     def function(self,

@@ -190,7 +190,7 @@ from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmech
     AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
-    PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+    PARAMS_CURRENT, PREVIOUS_VALUE, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.registry import register_instance, remove_instance_from_registry
@@ -595,18 +595,31 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None`
+        on the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
+
+        .. note::
+           The RecurrentTransferMechanism's `previous_value` attribute is distinct from the `previous_value
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <RecurrentTransferMechanism.integrator_function>`.
+
+    delta : scalar
+        value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
     is_converged : bool
-        `True` if the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>` is
-        less than or equal to `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`; otherwise
-        returns `False`.
+        `True` if `delta <RecurrentTransferMechanism.delta>` is less than or equal to `convergence_criterion
+        <RecurrentTransferMechanism.convergence_criterion>`.
 
     convergence_function : function
-        compares `value <ContrastiveHebbianMechanism.value>` with the Mechanism's previous value and returns a scalar
-        value used to determine whether `is_converged <RecurrentTransferMechanism.is_converged>` is `True` or `False`.
+        compares `value <RecurrentTransferMechanism.value>` with `previous_value
+        <RecurrentTransferMechanism.previous_value>`; result is used to determine when `is_converged
+        <RecurrentTransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float
-        determines the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
-        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
+        <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
         determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
@@ -654,6 +667,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     value : 2d np.array [array(float64)]
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
         `output_values <RecurrentTransferMechanism.output_values>`.
+
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism; it is assigned `None`
+        until the 2nd execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
     COMMENT:
         CORRECTED:
@@ -761,9 +778,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
-                                                  convergence_function=convergence_function,
-                                                  convergence_criterion=convergence_criterion,
-                                                  max_passes=max_passes,
+                                                  # convergence_function=convergence_function,
+                                                  # convergence_criterion=convergence_criterion,
+                                                  # max_passes=max_passes,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
                                                   learning_condition=learning_condition,
@@ -789,6 +806,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                          integrator_mode=integrator_mode,
                          integration_rate=integration_rate,
                          clip=clip,
+                         convergence_function=convergence_function,
+                         convergence_criterion=convergence_criterion,
+                         max_passes=max_passes,
                          output_states=output_states,
                          params=params,
                          name=name,
@@ -910,6 +930,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
+        self.previous_value = None
+
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_states.key_values
@@ -971,11 +993,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
 
-        self._previous_mech_value = None
-
-        if isinstance(self.convergence_function, Function):
-            self.convergence_function = self.convergence_function.function
-
+        # if isinstance(self.convergence_function, Function):
+        #     self.convergence_function = self.convergence_function.function
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
@@ -1020,6 +1039,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
                 state.update(params=runtime_params, context=context)
+
+    def _update_previous_value(self):
+        try:
+            self.previous_value = self.value
+        except:
+            self.previous_value = None
 
     def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
@@ -1245,12 +1270,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
-
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self._previous_mech_value = self.value
-        self._output = super()._execute(variable, runtime_params, context)
-        return self._output
+    # def _execute(self, variable=None, runtime_params=None, context=None):
+    #
+    #     if self.context.initialization_status != ContextFlags.INITIALIZING:
+    #         self.previous_value = self.value
+    #     self._output = super()._execute(variable, runtime_params, context)
+    #     return self._output
+    #     # return super()._execute(variable, runtime_params, context)
 
     def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
@@ -1273,27 +1299,27 @@ class RecurrentTransferMechanism(TransferMechanism):
     def reinitialize(self, *args):
         if self.integrator_mode:
             super().reinitialize(*args)
-        self._previous_mech_value = None
+        self.previous_value = None
 
-    @property
-    def is_converged(self):
-        # Check for convergence
-        if (self.convergence_criterion is not None and
-                self._previous_mech_value is not None and
-                self.context.initialization_status != ContextFlags.INITIALIZING):
-            if self.convergence_function([self._output, self._previous_mech_value]) <= self.convergence_criterion:
-                return True
-            elif self.current_execution_time.pass_ >= self.max_passes:
-                raise RecurrentTransferError("Maximum number of executions ({}) has occurred before reaching "
-                                             "convergence_criterion ({}) for {} in trial {} of run {}".
-                                             format(self.max_passes, self.convergence_criterion, self.name,
-                                                    self.current_execution_time.trial, self.current_execution_time.run))
-            else:
-                return False
-        # Otherwise just return True
-        else:
-            return None
-
+    # @property
+    # def is_converged(self):
+    #     # Check for convergence
+    #     if (self.convergence_criterion is not None and
+    #             self.previous_value is not None and
+    #             self.context.initialization_status != ContextFlags.INITIALIZING):
+    #         if self.convergence_function([self._output, self.previous_value]) <= self.convergence_criterion:
+    #             return True
+    #         elif self.current_execution_time.pass_ >= self.max_passes:
+    #             raise RecurrentTransferError("Maximum number of executions ({}) has occurred before reaching "
+    #                                          "convergence_criterion ({}) for {} in trial {} of run {}".
+    #                                          format(self.max_passes, self.convergence_criterion, self.name,
+    #                                                 self.current_execution_time.trial, self.current_execution_time.run))
+    #         else:
+    #             return False
+    #     # Otherwise just return True
+    #     else:
+    #         return None
+    #
     @property
     def _learning_signal_source(self):
         '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
