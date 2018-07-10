@@ -2626,7 +2626,6 @@ class Mechanism_Base(Mechanism):
             # Parameter states modify the corresponding function object parameter
             ps_output = param_out_ptr
             # WORKAROUND: cast output pointer to match the state output type
-#            ps_input = builder.bitcast(ps_input, ps_function.args[2].type)
             ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
