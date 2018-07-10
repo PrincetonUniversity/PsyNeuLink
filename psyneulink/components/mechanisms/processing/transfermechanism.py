@@ -635,12 +635,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         result of executing `function <TransferMechanism.function>`.
 
     previous_value : 2d np.array [array(float64)] : default None
-        `value <TransferMechanism.value>` after the previous execution of the Mechanism;  this attribute exists only
-        if `integrator_mode <TransferMechanism.integrator_mode>` has been set to `True` at some point, and retains
-        its value if `integrator_mode <TransferMechanism.integrator_mode>` is set to `False` until it is set to
-        `True` again.  It is assigned `None` on the first execution in which `integrator_mode
-        <TransferMechanism.integrator_mode>` is `True`, and when the Mechanism's `reinitialize
-        <Mechanism.reinitialize>` method is called.
+        `value <TransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None` on
+        the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
         .. note::
            The TransferMechanism's `previous_value` attribute is distinct from the `previous_value
@@ -911,8 +907,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        if self.integrator_mode:
-            self.previous_value = None
+        # if self.integrator_mode:
+        self.previous_value = None
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1052,9 +1048,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         return value
 
     def reinitialize(self, *args):
-        if self.integrator_mode:
-            super().reinitialize(*args)
-            self.previous_value = None
+        super().reinitialize(*args)
+        self.previous_value = None
 
     def _update_previous_value(self):
         if self.integrator_mode:
