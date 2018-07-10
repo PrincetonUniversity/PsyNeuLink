@@ -632,11 +632,18 @@ class TransferMechanism(ProcessingMechanism_Base):
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
 
-    previous_value : float
-        `value <TransferMechanism.value>` on the previous execution of the Mechanism;  this attribute exists only if
-        `integrator_mode <TransferMechanism.integrator_mode>` has been set to `True` at some point, and retains
-        it value if `integrator_mode <TransferMechanism.integrator_mode>` is set to `False` until it is set to
-        `True` again.
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <TransferMechanism.value>` after the previous execution of the Mechanism;  this attribute exists only
+        if `integrator_mode <TransferMechanism.integrator_mode>` has been set to `True` at some point, and retains
+        its value if `integrator_mode <TransferMechanism.integrator_mode>` is set to `False` until it is set to
+        `True` again.  It is assigned `None` on the first execution in which `integrator_mode
+        <TransferMechanism.integrator_mode>` is `True`, and when the Mechanism's `reinitialize
+        <Mechanism.reinitialize>` method is called.
+
+        .. note::
+           The TransferMechanism's `previous_value` attribute is distinct from the `previous_value
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <TransferMechanism.integrator_function>`.
 
     delta : float
         the change in `value <TransferMechanism.value>` from the previous execution of the TransferMechanism

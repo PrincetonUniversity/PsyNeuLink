@@ -654,9 +654,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
         `output_values <RecurrentTransferMechanism.output_values>`.
 
-    previous_value : 2d np.array [array(float64)]
-        `value <RecurrentTransferMechanism.value>` of Mechanism after previous execution;  reset to `None`
-        if `reinitialize <TransferMechanism.reinitialized>` method is called.
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism; it is assigned `None`
+        until the 2nd execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
     COMMENT:
         CORRECTED:
