@@ -2575,10 +2575,19 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         # Allocate temporary storage. We rely on the fact that series
         # of input state results should match the main function input.
-        is_output = builder.alloca(main_function.args[2].type.pointee, 1)
+        is_output_list = []
+        for state in self.input_states:
+            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            is_output_list.append(is_function.args[3].type.pointee)
+
+        # Check if all elements are the same
+        if len(set(is_output_list)) == 1:
+            is_output_type = ir.ArrayType(is_output_list[0], len(is_output_list))
+        else:
+            is_output_type = ir.LiteralStructType(is_output_list)
+        is_output = builder.alloca(is_output_type, 1)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2630,16 +2639,17 @@ class Mechanism_Base(Mechanism):
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
-        mf_in = is_output
-        mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
+        mf = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        mf_in, builder = self._gen_llvm_function_input_parse(builder, ctx, mf, is_output)
+        mf_out = builder.alloca(mf.args[3].type.pointee, 1)
         mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-        builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
+        builder.call(mf, [mf_params, mf_context, mf_in, mf_out])
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, mf_out)
 
         for i, state in enumerate(self.output_states):
-            #FIXME: an we rely on this?
+            #FIXME: can we rely on this?
             os_in_spec = state._variable
             if os_in_spec == OWNER_VALUE:
                 os_input = ppval
@@ -2650,6 +2660,7 @@ class Mechanism_Base(Mechanism):
                 print(ppval.type)
                 print(os_in_spec)
                 assert False
+
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2657,6 +2668,9 @@ class Mechanism_Base(Mechanism):
             builder.call(os_function, [os_params, os_context, os_input, os_output])
 
         return builder
+
+    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
+        return func_in, builder
 
 
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
