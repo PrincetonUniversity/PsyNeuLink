@@ -2670,7 +2670,7 @@ class Component(object):
         # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
         # auto_dependent status
         if self.function_object.auto_dependent:
-            self._auto_dependent = True
+            self.auto_dependent = True
 
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
@@ -3057,31 +3057,14 @@ class Component(object):
         Assign auto_dependent status to Component and any of its owners up the hierarchy.
 
         Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
-        reinitialize condition to AtTimeStep(0).
+        reinitialize condition to Never().
         """
-        if self.owner is self:
-            self._auto_dependent = value
-            if value:
-                # self.reinitialize_when = AtTimeStep(0)
-                self.reinitialize_when = Never()
-            # else:
-            #     if hasattr(self, "reinitialize_when"):
-            #         del self.reinitialize_when
-        else:
-            owner = self
-            while owner is not None:
-                try:
-                    owner._auto_dependent = value
-                    if value:
-                        # owner.reinitialize_when = AtTimeStep(0)
-                        owner.reinitialize_when = Never()
-                    # else:
-                    #     if hasattr(owner.reinitialize_when):
-                    #         del owner.reinitialize_when
-                    owner = owner.owner
+        self._auto_dependent = value
+        self.reinitialize_when = Never()
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                self.owner.auto_dependent = True
 
-                except AttributeError:
-                    owner = None
 
     @property
     def _default_variable_flexibility(self):

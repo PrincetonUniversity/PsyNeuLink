@@ -128,7 +128,7 @@ class TestReinitializeValues:
                              B,
                              C])
         S = System(processes=[P])
-        A.reinitialize_when = Never()
+        S.reinitialize_mechanisms_when = Never()
 
         S.run(inputs={A: [[1.0], [1.0]]})
 

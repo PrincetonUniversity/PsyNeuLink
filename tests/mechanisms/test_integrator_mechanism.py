@@ -981,6 +981,18 @@ class TestIntegratorNoise:
 
         # np.testing.assert_allclose(val, 4.356601554140335)
 
+class TestStatefulness:
+
+    def test_autodependent_property(self):
+        I = IntegratorMechanism()
+        assert I.auto_dependent
+
+        # I2 = IntegratorMechanism(function=Linear())
+        # assert not I2.auto_dependent
+        #
+        print(I.reinitialize_when)
+
+
 class TestAGTUtilityIntegrator:
 
     @pytest.mark.mechanism

@@ -2,6 +2,7 @@ from psyneulink.components.functions.function import Buffer
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
+from psyneulink.scheduling.condition import Never
 from collections import deque
 import numpy as np
 
@@ -42,7 +43,7 @@ class TestBuffer():
 
         process = Process(pathway=[P])
         system = System(processes=[process])
-
+        P.reinitialize_when = Never()
         full_result = []
 
         def assemble_full_result():
