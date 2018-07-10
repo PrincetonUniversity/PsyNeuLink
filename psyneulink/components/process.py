@@ -1531,8 +1531,11 @@ class Process(Process_Base):
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:
                 if proj.sender.owner is sndr_mech:
-                    if self.pathway[pathway_index] == proj:
-                        continue
+                    try:
+                        if self.pathway[pathway_index] == proj:
+                            continue
+                    except:
+                        pass
                     if self.prefs.verbosePref:
                         print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
                               format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))

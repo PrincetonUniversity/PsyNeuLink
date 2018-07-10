@@ -1,6 +1,8 @@
 import numpy as np
 import psyneulink as pnl
 import itertools
+# from sklearn.metrics import mean_squared_error
+
 
 # Setting up default network parameters
 DEFAULT_HIDDEN_PATH_SIZE = 1
@@ -49,6 +51,8 @@ class MultitaskingModel:
         self.input_layers = self._generate_io_layers('input')
         self.output_layers = self._generate_io_layers('output')
         self._generate_output_bias_layers()
+        self.input_output_processes = []
+        self._generate_processes_product()
         self._generate_processes()
         self._generate_system()
 
@@ -63,94 +67,98 @@ class MultitaskingModel:
                                   name='output-bias-{i}'.format(i=i))
             for i in range(self.num_dimensions)]
 
-    def _generate_processes(self):
-        self.input_output_processes = []
+    def _generate_processes_product(self):
         for (input_index, output_index) in itertools.product(range(self.num_dimensions),
                                                              range(self.num_dimensions)):
-            # proc = pnl.Process(pathway=[self.input_layers[input_index],
-            #                          (pnl.random_matrix(self.num_features, self.hidden_layer_size, 2,
-            #                                            -1) * self.weight_init_scale, pnl.LEARNING),
-            #                          self.hidden_layer,
-            #                          (pnl.random_matrix(self.hidden_layer_size, self.num_features, 2,
-            #                                            -1) * self.weight_init_scale, pnl.LEARNING),
-            #                          self.output_layers[output_index]],
-            #                 name='input-{i}-output-{o}-proc'.format(i=input_index,
-            #                                                         o=output_index))
-            #                 #learning=pnl.LEARNING))
-            #
-            # proc = pnl.Process(pathway=[self.input_layers[input_index],
-            #                          pnl.MappingProjection(matrix=(pnl.random_matrix(self.num_features, self.hidden_layer_size, 2,
-            #                                             -1) * self.weight_init_scale, pnl.LEARNING_PROJECTION)),
-            #                          self.hidden_layer,
-            #                          pnl.MappingProjection(matrix=(pnl.random_matrix(self.hidden_layer_size, self.num_features, 2,
-            #                                             -1) * self.weight_init_scale, pnl.LEARNING_PROJECTION)),
-            #                          self.output_layers[output_index]],
-            #                 name='input-{i}-output-{o}-proc'.format(i=input_index,
-            #                                                         o=output_index),
-            #                 learning=pnl.LEARNING)
-
-            input_to_hidden = pnl.MappingProjection(name='input-{i}-to-hidden'.format(i=input_index),
-                                                    sender=self.input_layers[input_index],
-                                                    receiver=self.hidden_layer,
-                                                    matrix=pnl.random_matrix(self.num_features, self.hidden_layer_size,
-                                                                             2, -1) * self.weight_init_scale)
-
-            hidden_to_output = pnl.MappingProjection(name='hidden-to-output-{o}'.format(o=output_index),
-                                                     sender=self.hidden_layer,
-                                                     receiver=self.output_layers[output_index],
-                                                     matrix=pnl.random_matrix(self.hidden_layer_size, self.num_features,
-                                                                              2, -1) * self.weight_init_scale)
-
             proc = pnl.Process(pathway=[self.input_layers[input_index],
-                                        input_to_hidden,
+                                        pnl.random_matrix(self.num_features, self.hidden_layer_size, 2, -1) * self.weight_init_scale,
                                         self.hidden_layer,
-                                        hidden_to_output,
+                                        pnl.random_matrix(self.hidden_layer_size, self.num_features, 2, -1) * self.weight_init_scale,
                                         self.output_layers[output_index]],
-                               name='input-{i}-output-{o}-proc'.format(i=input_index,
-                                                                       o=output_index),
-                               learning=pnl.ENABLED)
+                               name='input-{i}-output-{o}-proc'.format(i=input_index, o=output_index),
+                               learning=pnl.LEARNING)
 
             self.input_output_processes.append(proc)
 
-        self.task_hidden_processes = []
-        self.task_output_processes = []
-        self.output_bias_processes = []
-        for output_index in range(self.num_dimensions):
-            self.task_hidden_processes.append(
-                pnl.Process(pathway=[self.task_layer,
-                                     # pnl.random_matrix(self.num_tasks, self.hidden_layer_size, 2,
-                                     #                   -1) * self.weight_init_scale,
-                                     self.hidden_layer,
-                                     # pnl.random_matrix(self.hidden_layer_size, self.num_features, 2,
-                                     #                   -1) * self.weight_init_scale,
-                                     self.output_layers[output_index]],
-                            name='task-hidden-proc-{o}'.format(o=output_index),
-                            learning=pnl.LEARNING))
-
-            self.task_output_processes.append(
-                pnl.Process(pathway=[self.task_layer,
-                                     # pnl.random_matrix(self.num_tasks, self.num_features, 2,
-                                     #                   -1) * self.weight_init_scale,
-                                     self.output_layers[output_index]],
-                            name='task-output-proc-{o}'.format(o=output_index),
-                            learning=pnl.LEARNING))
-
-            self.output_bias_processes.append(
-                pnl.Process(pathway=[self.output_biases[output_index],
-                                     self.output_layers[output_index]],
-                            name='output-bias-proc-{o}'.format(o=output_index)))
+    def _generate_processes(self):
+        self.task_hidden_process = pnl.Process(pathway=[self.task_layer,
+                                                        pnl.random_matrix(self.num_tasks, self.hidden_layer_size, 2,
+                                                                          -1) * self.weight_init_scale,
+                                                        self.hidden_layer],
+                                               name='task-hidden-proc',
+                                               learning=pnl.LEARNING)
 
         self.hidden_bias_process = pnl.Process(pathway=[self.hidden_bias,
                                                         self.hidden_layer],
                                                name='hidden-bias-proc')
 
+        self.input_hidden_processes = []
+        self.hidden_output_processes = []
+        self.task_output_processes = []
+        self.output_bias_processes = []
+
+        for index in range(self.num_dimensions):
+            self.input_hidden_processes.append(pnl.Process(pathway=[self.input_layers[index],
+                                                                    pnl.random_matrix(self.num_features,
+                                                                                      self.hidden_layer_size,
+                                                                                      2, -1) * self.weight_init_scale,
+                                                                    self.hidden_layer],
+                                                           name='input-{i}-to-hidden-proc'.format(i=index),
+                                                           learning=pnl.ENABLED))
+
+            self.hidden_output_processes.append(pnl.Process(pathway=[self.hidden_layer,
+                                                                     pnl.random_matrix(self.hidden_layer_size,
+                                                                                       self.num_features,
+                                                                                       2, -1) * self.weight_init_scale,
+                                                                     self.output_layers[index]],
+                                                            name='hidden-to-output-{o}-proc'.format(o=index),
+                                                            learning=pnl.ENABLED))
+
+            self.task_output_processes.append(
+                pnl.Process(pathway=[self.task_layer,
+                                     pnl.random_matrix(self.num_tasks, self.num_features, 2,
+                                                       -1) * self.weight_init_scale,
+                                     self.output_layers[index]],
+                            name='task-output-proc-{o}'.format(o=index),
+                            learning=pnl.LEARNING))
+
+            self.output_bias_processes.append(
+                pnl.Process(pathway=[self.output_biases[index],
+                                     self.output_layers[index]],
+                            name='output-bias-proc-{o}'.format(o=index)))
+
     def _generate_system(self):
         self.system = pnl.System(
-            processes=self.input_output_processes + self.task_hidden_processes + \
-                      self.task_output_processes + self.output_bias_processes + [self.hidden_bias_process],
+            processes=self.input_hidden_processes + self.hidden_output_processes + self.task_output_processes + self.input_output_processes +
+                      self.output_bias_processes + [self.task_hidden_process, self.hidden_bias_process],
             learning_rate=self.learning_rate
-
         )
+
+    # def train(self, inputs, task, target, iterations=1, threshold=DEFAULT_STOPPING_THRESHOLD):
+    #     mse_log = []
+    #     for iter in range(1, iterations + 1):
+    #         print('Starting iteration {iter}'.format(iter=iter))
+    #         num_trials = inputs.shape[0]
+    #         perm = np.random.permutation(num_trials)
+    #
+    #         input_dict = {self.input_layers[i]: inputs[perm, i, :] for i in range(self.num_dimensions)}
+    #         input_dict[self.task_layer] = task[perm, :]
+    #         target_dict = {self.output_layers[i]: target[perm, i, :] for i in range(self.num_dimensions)}
+    #
+    #         # TODO: remove this once default values properly supported
+    #         input_dict[self.hidden_bias] = np.ones((num_trials, self.hidden_layer_size))
+    #         input_dict.update({bias: np.ones((num_trials, self.num_features)) for bias in self.output_biases})
+    #
+    #         output = np.array(self.system.run(inputs=input_dict, targets=target_dict)[-num_trials:])
+    #         mse = mean_squared_error(np.ravel(target), np.ravel(output))
+    #         mse_log.append(mse)
+    #         print('MSE after iteration {iter} is {mse}'.format(iter=iter, mse=mse))
+    #
+    #         if mse < threshold:
+    #             print('MSE smaller than threshold ({threshold}, breaking'.format(threshold=threshold))
+    #             break
+    #
+    #     return mse_log
 
 model = MultitaskingModel(3, 4)
 model.system.show_graph(show_dimensions=pnl.ALL, show_projection_labels=pnl.ALL) #show_processes=pnl.ALL)
