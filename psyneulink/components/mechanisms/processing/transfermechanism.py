@@ -314,7 +314,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_DIFF, MAX_VAL, MEAN, MEDIAN, \
+    DIFFERENCE, FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
     NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
     STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -413,22 +413,22 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(                                                    \
-    default_variable=None,                                                \
-    size=None,                                                            \
-    input_states=None,                                                    \
-    function=Linear,                                                      \
-    initial_value=None,                                                   \
-    noise=0.0,                                                            \
-    integration_rate=0.5,                                                 \
-    integrator_mode=False,                                                \
-    clip=[float:min, float:max],                                          \
-    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
-    convergence_criterion=None,                                           \
-    max_passes=None,                                                      \
-    output_states=RESULTS                                                 \
-    params=None,                                                          \
-    name=None,                                                            \
+    TransferMechanism(                                  \
+    default_variable=None,                              \
+    size=None,                                          \
+    input_states=None,                                  \
+    function=Linear,                                    \
+    initial_value=None,                                 \
+    noise=0.0,                                          \
+    integration_rate=0.5,                               \
+    integrator_mode=False,                              \
+    clip=[float:min, float:max],                        \
+    convergence_function=Distance(metric=DIFFERENCE),   \
+    convergence_criterion=None,                         \
+    max_passes=None,                                    \
+    output_states=RESULTS                               \
+    params=None,                                        \
+    name=None,                                          \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
@@ -512,6 +512,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
+
+    convergence_function : function : default Distance(metric=DIFFERENCE)
+        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float : default 0.01
+        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
+        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : str, list or np.ndarray : default RESULTS
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
@@ -646,9 +658,26 @@ class TransferMechanism(ProcessingMechanism_Base):
            <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
            <TransferMechanism.integrator_function>`.
 
-    delta : float
-        the change in `value <TransferMechanism.value>` from the previous execution of the TransferMechanism
-        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
+    delta : scalar
+        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    is_converged : bool
+        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
+        <TransferMechanism.convergence_criterion>`.
+
+    convergence_function : function
+        compares `value <TransferMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
+        result is used to determine when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float
+        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
+
+    max_passes : int or None
+        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <TransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : *ContentAddressableList[OutputState]*
         list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputState,
@@ -699,7 +728,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integration_rate=0.5,
                  integrator_mode=False,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,

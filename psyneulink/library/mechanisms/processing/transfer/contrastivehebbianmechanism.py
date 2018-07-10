@@ -472,14 +472,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Execution>`.
 
     convergence_function : function
-        compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous
-        `value <ContrastiveHebbianMechanism.value>` of the Mechanism and returns a scalar value; used to determine
-        when `each phase of execution is complete <ContrastiveHebbian_Execution>` (i.e., when `is_converged
+        compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
+        <ContrastiveHebbianMechanism.previous_value>` and returns a scalar value; used to determine when `each phase
+        of execution is complete <ContrastiveHebbian_Execution>` (i.e., when `is_converged
         <ContrastiveHebbianMechanism.is_converged>` is `True`.
     
     convergence_criterion : float
-        determines the value of `convergence_function <ContrastiveHebbianMechanism.convergence_function>` at which
-        `each phase of execution completes <ContrastiveHebbian_Execution>`.
+        determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which `each phase of execution completes
+        <ContrastiveHebbian_Execution>` (i.e., `is_converged <ContrastiveHebbianMechanism.is_converged>` is `True`).
 
     max_passes : int or None
         determines the maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase

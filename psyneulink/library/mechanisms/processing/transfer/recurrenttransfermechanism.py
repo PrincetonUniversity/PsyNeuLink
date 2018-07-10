@@ -595,20 +595,30 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None`
+        on the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
+
+        .. note::
+           The RecurrentTransferMechanism's `previous_value` attribute is distinct from the `previous_value
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <RecurrentTransferMechanism.integrator_function>`.
+
     delta : scalar
-        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
-        when `is_converged <TransferMechanism.is_converged>` is `True`.
+        value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     is_converged : bool
-        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
+        `True` if `delta <RecurrentTransferMechanism.delta>` is less than or equal to `convergence_criterion
         <RecurrentTransferMechanism.convergence_criterion>`.
 
     convergence_function : function
-        compares `value <ContrastiveHebbianMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
-        result is used to determine when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        compares `value <RecurrentTransferMechanism.value>` with `previous_value
+        <RecurrentTransferMechanism.previous_value>`; result is used to determine when `is_converged
+        <RecurrentTransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float
-        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
+        determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
         <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
