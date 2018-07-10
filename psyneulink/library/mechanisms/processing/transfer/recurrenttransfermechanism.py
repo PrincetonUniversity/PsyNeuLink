@@ -595,17 +595,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
         to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
+    delta : scalar
+        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <TransferMechanism.is_converged>` is `True`.
+
     is_converged : bool
-        `True` if the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>` is
-        less than or equal to `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`.
+        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
+        <RecurrentTransferMechanism.convergence_criterion>`.
 
     convergence_function : function
         compares `value <ContrastiveHebbianMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
-        result is used to determine whether or not `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        result is used to determine when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float
-        determines the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
-        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int or None
         determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching

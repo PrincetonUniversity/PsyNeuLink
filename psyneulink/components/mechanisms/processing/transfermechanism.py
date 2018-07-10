@@ -413,19 +413,22 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(           \
-    default_variable=None,       \
-    size=None,                   \
-    input_states=None,           \
-    function=Linear,             \
-    initial_value=None,          \
-    noise=0.0,                   \
-    integration_rate=0.5,        \
-    integrator_mode=False,       \
-    clip=[float:min, float:max], \
-    output_states=RESULTS        \
-    params=None,                 \
-    name=None,                   \
+    TransferMechanism(                                                    \
+    default_variable=None,                                                \
+    size=None,                                                            \
+    input_states=None,                                                    \
+    function=Linear,                                                      \
+    initial_value=None,                                                   \
+    noise=0.0,                                                            \
+    integration_rate=0.5,                                                 \
+    integrator_mode=False,                                                \
+    clip=[float:min, float:max],                                          \
+    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
+    convergence_criterion=None,                                           \
+    max_passes=None,                                                      \
+    output_states=RESULTS                                                 \
+    params=None,                                                          \
+    name=None,                                                            \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
