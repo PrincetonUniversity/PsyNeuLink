@@ -845,16 +845,19 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def _update_parameter_states(self, runtime_params=None, context=None):
+
         for state in self._parameter_states:
             state_name = state.name
             state.update(params=runtime_params, context=context)
 
-            # Assign ParameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
-                param = param_template = runtime_params
-            # Otherwise use paramsCurrent
-            else:
-                param = param_template = self.paramsCurrent
+            # # Assign ParameterState's value to parameter value in runtime_params
+            # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+            #     param = param_template = runtime_params
+            # # Otherwise use paramsCurrent
+            # else:
+            #     param = param_template = self.paramsCurrent
+
+            param = param_template = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
             try:
@@ -879,20 +882,16 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
 
         if variable is None:
             variable = self.sender.value
-
-        if function_variable is None:
-            function_variable = self.sender.value
 
         self.context.execution_phase = ContextFlags.PROCESSING
         self.context.string = context
 
         self.value = super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )

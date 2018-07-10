@@ -65,9 +65,11 @@ the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **
 :keyword:`execute` or :keyword:`run` method.
 
 Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
-the i-th element represents the input value to the mechanism on trial i. Each input value must be compatible with the
-shape of the mechanism's variable. This means that the inputs to an origin mechanism are usually specified by a
-list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Specification_Examples>`.
+the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
+shape of the mechanism's `external_input_values <MechanismBase.external_input_values>`. This means that the inputs to
+an origin mechanism are usually specified by a list of 2d lists/arrays, though `some shorthand notations are allowed
+<Input_Specification_Examples>`. Any InputStates that are not represented in `external_input_values
+<MechanismBase.external_input_values>` will not receive a user-specified input value.
 
 ::
 
@@ -91,23 +93,25 @@ list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Spe
 
         >>> s.run(inputs=input_dictionary)
 
-.. _Run_Inputs_Fig:
+COMMENT:
+    .. _Run_Inputs_Fig:
 
-.. figure:: _static/input_spec_variables.svg
-   :alt: Example input specifications with variable
+    .. figure:: _static/input_spec_variables.svg
+       :alt: Example input specifications with variable
+COMMENT
 
+.. _Run_Inputs_Fig_States:
+
+.. figure:: _static/input_spec_states.svg
+   :alt: Example input specifications with input states
 
 .. note::
-    Keep in mind that a mechanism's variable is the concatenation of its input states. In other words, a fully specified
-    mechanism variable is a 2d list/array in which the i-th element is the variable of the mechanism's i-th input state.
-    Because of this `relationship between a mechanism's variable and its input states <Mechanism_Figure>`, it is also
-    valid to think about the input specification for a given origin mechanism as a nested list of values for each input
-    state on each trial.
-
-    .. _Run_Inputs_Fig_States:
-
-    .. figure:: _static/input_spec_states.svg
-       :alt: Example input specifications with input states
+    Keep in mind that a mechanism's `external_input_values <MechanismBase.external_input_values>` attribute contains
+    the concatenation of the values of its external InputStates. Any InputStates marked as "internal", such as
+    InputStates that receive recurrent Projections, are excluded from this value. A mechanism's `external_input_values
+    <MechanismBase.external_input_values>` attribute is always a 2d list in which the index i element is the value of
+    the Mechanism's index i InputState. In many cases, `external_input_values <MechanismBase.external_input_values>` is
+    the same as `variable <MechanismBase.variable>`
 
 The number of inputs specified **must** be the same for all origin mechanisms in the system. In other words, all of the
 values in the input dictionary must have the same length.
@@ -116,7 +120,7 @@ If num_trials is not in use, the number of inputs provided determines the number
 five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.
 
 +----------------------+-------+------+------+------+------+
-| Trial #              |1      |2     |3     |4     |5     |
+| Trial #              |0      |1     |2     |3     |4     |
 +----------------------+-------+------+------+------+------+
 | Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
 +----------------------+-------+------+------+------+------+
@@ -138,10 +142,10 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 
 If num_trials is in use, `run` will iterate over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `ORIGIN` mechanism, and num_trials = 7, the system will execute seven times. The first two
-items in the list of inputs will be used on the 6th and 7th trials, respectively.
+items in the list of inputs will be used on trial 5 and trial 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
-| Trial #              |1      |2     |3     |4     |5     |6     |7     |
+| Trial #              |0      |1     |2     |3     |4     |5     |6     |
 +----------------------+-------+------+------+------+------+------+------+
 | Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
 +----------------------+-------+------+------+------+------+------+------+
@@ -169,7 +173,7 @@ situations:
 
 * **Case 1: Origin mechanism has only one input state**
 +--------------------------+-------+------+------+------+------+
-| Trial #                  |1      |2     |3     |4     |5     |
+| Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
 | Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
 +--------------------------+-------+------+------+------+------+
@@ -201,7 +205,8 @@ Shorthand - drop the outer list on each input because **Mechanism a** only has o
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s variable is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s `external_input_values
+    <MechanismBase.external_input_values>` is length 1:
 
 ::
 
@@ -213,7 +218,7 @@ Shorthand - drop the remaining list on each input because **Mechanism a**'s vari
 * **Case 2: Only one input is provided for the mechanism**
 
 +--------------------------+------------------+
-| Trial #                  |1                 |
+| Trial #                  |0                 |
 +--------------------------+------------------+
 | Input to **Mechanism a** |[[1.0], [2.0]]    |
 +--------------------------+------------------+
@@ -249,7 +254,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification because
 * **Case 3: The same input is used on all trials**
 
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
-| Trial #                  |1                  |2                  |3                  |4                  |5                  |
+| Trial #                  |0                  |1                  |2                  |3                  |4                  |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
 | Input to **Mechanism a** | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
@@ -286,7 +291,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
 * **Case 4: There is only one origin mechanism**
 
 +--------------------------+-------------------+-------------------+
-| Trial #                  |1                  |2                  |
+| Trial #                  |0                  |1                  |
 +--------------------------+-------------------+-------------------+
 | Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
 +--------------------------+-------------------+-------------------+
@@ -318,6 +323,77 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
 
         s.run(inputs=input_list)
 ..
+
+.. _Run_Runtime_Parameters:
+
+Runtime Parameters
+~~~~~~~~~~~~~~~~~~
+
+Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
+specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
+parameters of Mechanisms, which is passed into the `runtime_params <Run.runtime_params>` argument of `Run`.
+
+Outer dictionary:
+    - *key* - Mechanism
+    - *value* - Runtime Parameter Specification Dictionary
+
+Runtime Parameter Specification Dictionary:
+    - *key* - keyword corresponding to a parameter of the Mechanism or its Function
+    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+`Condition` will be assigned by default:
+
+>>> import psyneulink as pnl
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+>>> T.function_object.slope  # slope starts out at 1.0
+1.0
+
+>>> # During the following run, 10.0 will be used as the slope
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"slope": 10.0}})
+[ 20.]
+
+>>> T.function_object.slope  # After the run, T.slope resets to 1.0
+
+Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True:
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+
+>>> T.function_object.intercept     # intercept starts out at 0.0
+>>> T.function_object.slope         # slope starts out at 1.0
+
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+...                           "slope": (2.0, pnl.AtTrial(3))}},
+...       num_trials=5)
+[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+
+The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
+example above.
+
++-------------+--------+--------+--------+--------+--------+
+|             |Trial 0 |Trial 1 |Trial 2 |Trial 3 |Trial 4 |
++=============+========+========+========+========+========+
+| Intercept   |0.0     |0.0     |5.0     |5.0     |5.0     |
++-------------+--------+--------+--------+--------+--------+
+| Slope       |1.0     |1.0     |1.0     |2.0     |0.0     |
++-------------+--------+--------+--------+--------+--------+
+| Value       |2.0     |2.0     |7.0     |9.0     |7.0     |
++-------------+--------+--------+--------+--------+--------+
+
+as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
+the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
 
 COMMENT:
 .. _Run_Initial_Values:
@@ -361,7 +437,7 @@ with **inputs**, if the number of `TRIAL` \\s specified is greater than the numb
 list will be cycled until the number of `TRIAL` \\s specified is completed.
 
 +------------------------------------------+--------------+--------------+
-| Trial #                                  |1             |   2          |
+| Trial #                                  |0             |   1          |
 +------------------------------------------+--------------+--------------+
 | Target value for the learning sequence   | [1.0, 1.0]   |   [2.0, 2.0] |
 | containing **Mechanism b**               |              |              |
@@ -440,7 +516,7 @@ Finally, for convenience, if there is only one learning sequence in a system, th
 rather than a dictionary.
 
 +------------------------------------------+-------+------+------+------+------+
-| Trial #                                  |1      |2     |3     |4     |5     |
+| Trial #                                  |0      |1     |2     |3     |4     |
 +------------------------------------------+-------+------+------+------+------+
 | Target corresponding to  **Mechanism b** |1.0    |2.0   |3.0   |4.0   |5.0   |
 +------------------------------------------+-------+------+------+------+------+
@@ -483,6 +559,7 @@ Class Reference
 
 import datetime
 import warnings
+
 from collections import Iterable
 from numbers import Number
 
@@ -492,29 +569,24 @@ import typecheck as tc
 from psyneulink.components.component import function_type
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, \
-    PROCESS, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.log import LogCondition
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'EXECUTION_SET_DIM', 'MECHANISM_DIM', 'RunError', 'STATE_DIM', 'run'
+    'RunError', 'run'
 ]
 
-EXECUTION_SET_DIM = 0
-MECHANISM_DIM = 2
-STATE_DIM = 3  # Note: only meaningful if mechanisms are homnogenous (i.e., all have the same number of states -- see chart below):
-
 class RunError(Exception):
-     def __init__(object, error_value):
-         object.error_value = error_value
+     def __init__(obj, error_value):
+         obj.error_value = error_value
 
-     def __str__(object):
-         return repr(object.error_value)
+     def __str__(obj):
+         return repr(obj.error_value)
 
 @tc.typecheck
-def run(object,
-        inputs,
+def run(obj,
+        inputs=None,
         num_trials:tc.optional(int)=None,
         initialize:bool=False,
         initial_values:tc.optional(tc.any(list, dict, np.ndarray))=None,
@@ -526,6 +598,7 @@ def run(object,
         call_after_time_step:tc.optional(callable)=None,
         termination_processing=None,
         termination_learning=None,
+        runtime_params=None,
         context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
@@ -537,7 +610,11 @@ def run(object,
     call_before_trial=None,      \
     call_after_trial=None,       \
     call_before_time_step=None,  \
-    call_after_time_step=None,   \)
+    call_after_time_step=None,   \
+    termination_processing=None, \
+    termination_learning=None,   \
+    runtime_params=None,         \
+    )
 
     Run a sequence of executions for a `Process` or `System`.
 
@@ -546,13 +623,13 @@ def run(object,
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
-                * call ``object.execute`` with inputs, and append result to ``object.results``;
+                * call ``obj.execute`` with inputs, and append result to ``obj.results``;
                 * call call_after_time_step if specified;
             * call call_after_trial if specified.
-        Return ``object.results``.
+        Return ``obj.results``.
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-            * the inner-most dimension must equal the length of object.instance_defaults.variable (i.e., the input to the object);
+            * the inner-most dimension must equal the length of obj.instance_defaults.variable (i.e., the input to the obj);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
                 Note: num_input_sets need not equal num_trials (the number of executions to actually run)
@@ -608,31 +685,49 @@ def run(object,
         a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
         phase of execution <System_Execution_Learning>`
 
+    runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+        nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
+        alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
+
+        Outer dictionary:
+            - *key* - Mechanism
+            - *value* - Runtime Parameter Specification Dictionary
+
+        Runtime Parameter Specification Dictionary:
+            - *key* - keyword corresponding to a parameter of the Mechanism
+            - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
+              `Condition`
+
+        See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
    Returns
    -------
 
-    <object>.results : List[OutputState.value]
+    <obj>.results : List[OutputState.value]
         list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
     from psyneulink.globals.context import ContextFlags
 
+    if inputs == None:
+        inputs = {}
+
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
-        if len(object.origin_mechanisms) == 1:
-            inputs = {object.origin_mechanisms[0]: inputs}
+        if len(obj.origin_mechanisms) == 1:
+            inputs = {obj.origin_mechanisms[0]: inputs}
         else:
             raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
-    elif not isinstance(inputs, dict):
-        if len(object.origin_mechanisms) == 1:
+                           "mechanisms.".format(obj.name, len(obj.origin_mechanisms)))
+    elif not isinstance(inputs, dict) and not isinstance(inputs, str):
+        if len(obj.origin_mechanisms) == 1:
             raise RunError("Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
-                           "as its only key".format(object.name, object.origin_mechanisms[0].name))
+                           "as its only key".format(obj.name, obj.origin_mechanisms[0].name))
         else:
             raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
+                           "mechanisms.".format(obj.name, len(obj.origin_mechanisms)))
 
-    inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
+    inputs, num_inputs_sets = _adjust_stimulus_dict(obj, inputs)
 
     if num_trials is not None:
         num_trials = num_trials
@@ -644,34 +739,34 @@ def run(object,
     if targets is not None:
 
         if isinstance(targets, dict):
-            targets, num_targets = _adjust_target_dict(object, targets)
+            targets, num_targets = _adjust_target_dict(obj, targets)
 
         elif isinstance(targets, (list, np.ndarray)):
             # small version of former 'sequence' format -- only allowed if there is a single Target mechanism
-            if len(object.target_mechanisms) == 1:
-                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
-                targets, num_targets = _adjust_target_dict(object, targets)
+            if len(obj.target_mechanisms) == 1:
+                targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(obj, targets)
             else:
-                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+                raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
         elif isinstance(targets, function_type):
-            if len(object.target_mechanisms) == 1:
-                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
-                targets, num_targets = _adjust_target_dict(object, targets)
+            if len(obj.target_mechanisms) == 1:
+                targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(obj, targets)
             else:
-                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+                raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
         else:
-            raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+            raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
         # if num_targets = -1, all targets were specified as functions
         if num_targets != num_inputs_sets and num_targets != -1:
             raise RunError("Number of target values specified ({}) for each learning sequence in {} must equal the "
                            "number of input values specified ({}) for each origin mechanism in {}."
-                           .format(num_targets, object.name, num_inputs_sets, object.name))
+                           .format(num_targets, obj.name, num_inputs_sets, obj.name))
 
-    object_type = _get_object_type(object)
+    object_type = _get_object_type(obj)
 
-    object.targets = targets
+    obj.targets = targets
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -680,39 +775,39 @@ def run(object,
     # If learning is specified, buffer current state and set to specified state
     if learning is not None:
         try:
-            learning_state_buffer = object._learning_enabled
+            learning_state_buffer = obj._learning_enabled
         except AttributeError:
-            if object.verbosePref:
-                warnings.warn("WARNING: learning not enabled for {}".format(object.name))
+            if obj.verbosePref:
+                warnings.warn("WARNING: learning not enabled for {}".format(obj.name))
         else:
             if learning is True:
-                object._learning_enabled = True
+                obj._learning_enabled = True
 
             elif learning is False:
-                object._learning_enabled = False
+                obj._learning_enabled = False
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
-    if object.learning_rate is not None:
+    if obj.learning_rate is not None:
         from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        for learning_mech in object.learning_mechanisms.mechanisms:
+        for learning_mech in obj.learning_mechanisms.mechanisms:
             for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):
-                    projection.function_object.learning_rate = object.learning_rate
+                    projection.function_obj.learning_rate = obj.learning_rate
 
     # Class-specific validation:
-    if not object.context.flags:
-        object.context.initialization_status = ContextFlags.VALIDATING
-        object.context.string = RUN + "validating " + object.name
+    if not obj.context.flags:
+        obj.context.initialization_status = ContextFlags.VALIDATING
+        obj.context.string = RUN + "validating " + obj.name
 
     # INITIALIZATION
     if initialize:
-        object.initialize()
+        obj.initialize()
 
     # SET UP TIMING
     if object_type == MECHANISM:
         time_steps = 1
     else:
-        time_steps = object.numPhases
+        time_steps = obj.numPhases
 
     # EXECUTE
     execution_inputs = {}
@@ -726,21 +821,29 @@ def run(object,
 
         for time_step in range(time_steps):
 
+            result = None
+
             if call_before_time_step:
                 call_before_time_step()
+
+            # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
+            for mechanism in obj.mechanisms:
+                if hasattr(mechanism, "reinitialize_when"):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
+                        mechanism.reinitialize(None)
 
             input_num = execution%num_inputs_sets
 
             for mech in inputs:
                 execution_inputs[mech] = inputs[mech][input_num]
             if object_type == SYSTEM:
-                object.inputs = execution_inputs
+                obj.inputs = execution_inputs
 
             # Assign targets:
             if targets is not None:
 
                 if isinstance(targets, function_type):
-                    object.target = targets
+                    obj.target = targets
                 else:
                     for mech in targets:
                         if callable(targets[mech]):
@@ -748,44 +851,46 @@ def run(object,
                         else:
                             execution_targets[mech] = targets[mech][input_num]
                     if object_type is SYSTEM:
-                        object.target = execution_targets
-                        object.current_targets = execution_targets
+                        obj.target = execution_targets
+                        obj.current_targets = execution_targets
 
-            if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
-                object.context.execution_phase = ContextFlags.PROCESSING
-                object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+            if context == ContextFlags.COMMAND_LINE or not obj.context.execution_phase == ContextFlags.SIMULATION:
+                obj.context.execution_phase = ContextFlags.PROCESSING
+                obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
-            result = object.execute(
+            result = obj.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
+                runtime_params=runtime_params,
                 context=context
             )
 
             if call_after_time_step:
                 call_after_time_step()
 
-        # object.results.append(result)
-        if isinstance(result, Iterable):
-            result_copy = result.copy()
-        else:
-            result_copy = result
-        object.results.append(result_copy)
+        if obj.context.execution_phase != ContextFlags.SIMULATION:
+            if isinstance(result, Iterable):
+                result_copy = result.copy()
+            else:
+                result_copy = result
+            obj.results.append(result_copy)
 
         if call_after_trial:
             call_after_trial()
 
         from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
-        _log_trials_and_runs(composition=object,
+        _log_trials_and_runs(composition=obj,
                              curr_condition=LogCondition.TRIAL,
                              context=context)
 
     try:
-        object.scheduler_processing.date_last_run_end = datetime.datetime.now()
-        object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+        obj.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        obj.scheduler_learning.date_last_run_end = datetime.datetime.now()
 
-        for sched in [object.scheduler_processing, object.scheduler_learning]:
+        for sched in [obj.scheduler_processing, obj.scheduler_learning]:
             sched.clock._increment_time(TimeScale.RUN)
     except AttributeError:
         # this will fail on processes, which do not have schedulers
@@ -797,25 +902,25 @@ def run(object,
     except UnboundLocalError:
         pass
     else:
-        object._learning_enabled = learning_state_buffer
+        obj._learning_enabled = learning_state_buffer
 
     from psyneulink.globals.log import _log_trials_and_runs
-    _log_trials_and_runs(composition=object,
+    _log_trials_and_runs(composition=obj,
                          curr_condition=LogCondition.RUN,
                          context=context)
 
-    return object.results
+    return obj.results
 
 @tc.typecheck
 
-def _input_matches_variable(input, var):
+def _input_matches_external_input_state_values(input, value_to_compare):
     # input states are uniform
-    if np.shape(np.atleast_2d(input)) == np.shape(var):
+    if np.shape(np.atleast_2d(input)) == np.shape(value_to_compare):
         return "homogeneous"
     # input states have different lengths
-    elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
+    elif len(np.shape(value_to_compare)) == 1 and isinstance(value_to_compare[0], (list, np.ndarray)):
         for i in range(len(input)):
-            if len(input[i]) != len(var[i]):
+            if len(input[i]) != len(value_to_compare[i]):
                 return False
         return "heterogeneous"
     return False
@@ -828,8 +933,13 @@ def _target_matches_input_state_variable(target, input_state_variable):
 def _adjust_stimulus_dict(obj, stimuli):
 
     #  STEP 0:  parse any labels into array entries
-    if any(mech.input_labels_dict for mech in obj.origin_mechanisms):
-        _parse_input_labels(obj, stimuli)
+    need_parse_input_labels = []
+    for mech in obj.origin_mechanisms:
+        if hasattr(mech, "input_labels_dict"):
+            if mech.input_labels_dict is not None and mech.input_labels_dict != {}:
+                need_parse_input_labels.append(mech)
+    if len(need_parse_input_labels) > 0:
+        stimuli = _parse_input_labels(obj, stimuli, need_parse_input_labels)
 
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
@@ -838,17 +948,18 @@ def _adjust_stimulus_dict(obj, stimuli):
         if not mech in obj.origin_mechanisms.mechanisms:
             raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
                            format(mech.name, obj.name))
+
     # Check that all of the ORIGIN mechanisms in the obj are represented by entries in the inputs dict
+    # If not, assign their default variable to the dict
     for mech in obj.origin_mechanisms:
         if not mech in stimuli:
-            raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
-                           format(mech.name, obj.name))
+            stimuli[mech] = mech.instance_defaults.variable.copy()
 
     # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
     # (1) Replace any user provided convenience notations with values that match the following specs:
     # a - all dictionary values are lists containing and input value on each trial (even if only one trial)
-    # b - each input value is a 2d array that matches variable
+    # b - each input value is a 2d array that matches external_input_values
     # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
     #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
     # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
@@ -858,7 +969,8 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     for mech, stim_list in stimuli.items():
 
-        check_spec_type = _input_matches_variable(stim_list, mech.instance_defaults.variable)
+        check_spec_type = _input_matches_external_input_state_values(stim_list, mech.external_input_values
+                                                                     )
         # If a mechanism provided a single input, wrap it in one more list in order to represent trials
         if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
             if check_spec_type == "homogeneous":
@@ -872,23 +984,24 @@ def _adjust_stimulus_dict(obj, stimuli):
             if num_input_sets == -1:
                 num_input_sets = 1
             elif num_input_sets != 1:
-                raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {} "
                                "conflicts with at least one other mechanism's input specification.".format(obj.name,
                                                                                                            mech.name))
         else:
             adjusted_stimuli[mech] = []
             for stim in stimuli[mech]:
-                check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
-                # loop over each input to verify that it matches variable
+                check_spec_type = _input_matches_external_input_state_values(stim, mech.external_input_values)
+
+                # loop over each input to verify that it matches external_input_values
                 if check_spec_type == False:
-                    err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                        format(stim, mech.name, mech.instance_defaults.variable)
-                    # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                    err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
+                        format(stim, mech.name, mech.external_input_values
+)
+                    # 8/3/17 CW: The error message implementation here is very hacky; but it's at least not a hack
                     # for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(mech)):
-                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                            " to represent the outside stimulus for the inhibition input state, and " \
-                                            "for systems, put your inputs"
+                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other" \
+                                            " values) to represent the outside stimulus for the inhibition input state"
                     raise RunError(err_msg)
                 elif check_spec_type == "homogeneous":
                     # np.atleast_2d will catch any single-input states specified without an outer list
@@ -910,8 +1023,13 @@ def _adjust_stimulus_dict(obj, stimuli):
 def _adjust_target_dict(component, target_dict):
 
     #  STEP 0:  parse any labels into array entries
-    if any(mech.input_labels_dict for mech in component.target_mechanisms):
-        _parse_input_labels(component, target_dict)
+    need_parse_target_labels = []
+    for mech in target_dict:
+        if hasattr(mech, "output_labels_dict"):
+            if mech.output_labels_dict is not None and mech.output_labels_dict != {}:
+                need_parse_target_labels.append(mech)
+    if len(need_parse_target_labels) > 0:
+        target_dict = _parse_target_labels(component, target_dict, need_parse_target_labels)
 
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
@@ -942,7 +1060,11 @@ def _adjust_target_dict(component, target_dict):
     num_targets = -1
     for mech, target_list in target_dict.items():
         if isinstance(target_list, (float, list, np.ndarray)):
-            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].instance_defaults.variable
+            for efferent_projection in mech.output_state.efferents:
+                for input_state in efferent_projection.receiver.owner.input_states:
+                    if input_state.name == TARGET:
+                        input_state_variable = input_state.socket_template
+                        break
             num_targets = -1
 
             # first check if only one target was provided:
@@ -980,117 +1102,173 @@ def _adjust_target_dict(component, target_dict):
             adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
 
-
 @tc.typecheck
-def _parse_input_labels(obj, stimuli:dict):
-    from psyneulink.components.states.inputstate import InputState
+def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
 
-    # def get_input_for_label(mech, key, input_array=None):
-    def get_input_for_label(mech, key, subdicts, input_array=None):
-        """check mech.input_labels_dict for key
-        If input_array is passed, need to check for subdicts (should be one for each InputState of mech)"""
+    def get_input_for_label(mech, key):
+        """check mech.input_labels_dict for key"""
+        try:
+            return mech.input_labels_dict[key]
+        except KeyError:
+            raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                           format(key, obj.name, INPUT_LABELS_DICT, mech.name))
 
-        # FIX: FOR SOME REASON dict IN TEST BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
-        # subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+    if len(mechanisms_to_parse) == 1:
+        if isinstance(stimuli, float):
+            return stimuli
+        elif isinstance(stimuli, str):
+            stimuli = {mechanisms_to_parse[0]: [stimuli]}
 
-        if input_array is None:
-            if subdicts:
-                raise RunError("Attempt to reference a label for a stimulus at top level of {} for {},"
-                               "which contains subdictionaries for each of its {}s".
-                               format(INPUT_LABELS_DICT, mech.name, InputState))
-            try:
-                return mech.input_labels_dict[key]
-            except KeyError:
-                raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
-                               format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+    for mech in mechanisms_to_parse:
+        inputs = stimuli[mech]
+
+        # Check for subdicts
+        subdicts = False
+        for k in mech.input_labels_dict:
+            value = mech.input_labels_dict[k]
+            if isinstance(value, dict):
+                subdicts = True
+                break
+
+        if subdicts:    # If there are subdicts, validate
+            # if len(mech.input_labels_dict) != len(mech.input_states):
+            #     raise RunError("If input labels are specified at the level of input states, then one input state label "
+            #                    "sub-dictionary must be provided for each input state. {} has {} input state label "
+            #                    "sub-dictionaries, but {} input states.".format(mech.name,
+            #                                                                    len(mech.input_labels_dict),
+            #                                                                    len(mech.input_states)))
+            for k in mech.input_labels_dict:
+                value = mech.input_labels_dict[k]
+                if not isinstance(value, dict):
+                    raise RunError("A sub-dictionary  of label:value pairs was not specified for the input state {} of "
+                                   "{}. If input labels are specified at the level of InputStates, then a sub-dictionary"
+                                   " must be provided for each InputState in the input labels dictionary"
+                                   .format(k, mech.name))
+
+            # If there is only one subdict, then we already know that we are in the correct input state
+            num_input_labels = len(mech.input_labels_dict)
+            if num_input_labels == 1:
+                # there is only one key, but we don't know what it is
+                for k in mech.input_labels_dict:
+                    for i in range(len(inputs)):
+                        # if the whole input spec is a string, look up its value
+                        if isinstance(inputs[i], str):
+                            inputs[i] = mech.input_labels_dict[k][inputs[i]]
+                        # otherwise, index into [0] because we know that this label is for the primary input state
+                        elif isinstance(inputs[i][0], str):
+                            inputs[i][0] = mech.input_labels_dict[k][inputs[i][0]]
+
+            else:
+                for trial_stimulus in inputs:
+                    for input_state_index in range(len(trial_stimulus)):
+                        if isinstance(trial_stimulus[input_state_index], str):
+                            label_to_parse = trial_stimulus[input_state_index]
+                            input_state_name = mech.input_states[input_state_index].name
+                            if input_state_index in mech.input_labels_dict:
+                                trial_stimulus[input_state_index] = \
+                                    mech.input_labels_dict[input_state_index][label_to_parse]
+                            elif input_state_name in mech.input_labels_dict:
+                                trial_stimulus[input_state_index] = \
+                                    mech.input_labels_dict[input_state_name][label_to_parse]
+
         else:
-            if not subdicts:
-                try:
-                    return mech.input_labels_dict[key]
-                except KeyError:
-                    raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
-                                   format(key, obj.name, INPUT_LABELS_DICT, mech.name))
-            else:
-                # if subdicts, look exhaustively for any instances of the label in keys of all subdicts
-                name_value_pairs = []
-                for name, dict in mech.input_labels.items():
-                    if key in dict:
-                        name_value_pairs.append((name,dict[key]))
-                if len(name_value_pairs)==1:
-                    # if only one found, use its value
-                    return name_value_pairs[0][1]
-                else:
-                    # if more than one is found, now know that "convenience notation" has not been used
-                    #     check that number of items in input_array == number of states
-                    if len(input_array) != len(mech.input_states):
-                        raise RunError("Number of items in input for {} of {} ({}) "
-                                       "does not match the number of its {}s ({})".
-                                       format(mech.name, obj.name, len(input_array),
-                                              InputState, len(mech.input_states)))
-                    # use index of item in outer array and key (int or name of state) to determine which subdict to use
-                    input_index = input_array.index(key)
+            for i, stim in enumerate(inputs):
+                # "Burrow" down to determine whether there's a number at the "bottom";
+                #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+                if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                    for j, item in enumerate(stim):
+                        if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                            continue # leave input item as is
+                        elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                            # inputs[i][j] = get_input_for_label(mech, item, stim)
+                            inputs[i][j] = get_input_for_label(mech, item)
+                elif isinstance(stim, str):
+                    inputs[i] = get_input_for_label(mech, stim)
+        return stimuli
 
-                    # try to match input_index against index in name_value_pairs[0];
-                    value = [item[1] for item in name_value_pairs if item[0]==input_index]
-                    if value:
-                        return value[0]
-                    else:
-                        # otherwise, match against index associated with name of state in name_value_pairs
-                        value = [item[1] for item in name_value_pairs if mech.input_states.index(item[0])==input_index]
-                        if value:
-                            return value[0]
+def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
+    if len(mechanisms_to_parse) == 1:
+        if isinstance(target_dict, float):
+            return target_dict
+        elif isinstance(target_dict, str):
+            target_dict= {mechanisms_to_parse[0]: [target_dict]}
+        elif isinstance(target_dict, (list, np.ndarray)):
+            target_dict = {mechanisms_to_parse[0]: target_dict}
+    def get_target_for_label(mech, key):
+        """check mech.input_labels_dict for key"""
+
+        try:
+            return mech.output_labels_dict[key]
+        except KeyError:
+            raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                           format(key, obj.name, OUTPUT_LABELS_DICT, mech.name))
+
+    for mech in mechanisms_to_parse:
+        targets = target_dict[mech]
+        # Check for subdicts
+        subdicts = False
+        for k in mech.output_labels_dict:
+            value = mech.output_labels_dict[k]
+            if isinstance(value, dict):
+                subdicts = True
+                break
+
+        if subdicts:    # If there are subdicts, validate
+            for key in mech.output_labels_dict:
+                output_state = mech.output_states[key]
+                for proj in output_state.efferents:
+                    if proj.receiver.name == SAMPLE:
+                        output_state_index = mech.output_states.index(output_state)
+                        output_state_name = output_state.name
+
+            for i in range(len(targets)):
+                trial_target = targets[i]
+                if isinstance(trial_target, str):
+                    if output_state_index in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_state_index][trial_target]
+                    elif output_state_name in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_state_name][trial_target]
+
+        else:
+            for i, stim in enumerate(targets):
+                # "Burrow" down to determine whether there's a number at the "bottom";
+                #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+                if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                    for j, item in enumerate(stim):
+                        if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                            continue # leave input item as is
+                        elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                            # targets[i][j] = get_input_for_label(mech, item, stim)
+                            targets[i][j] = get_target_for_label(mech, item)
                         else:
-                            raise RunError("Unable to find value for label ({}) in {} for {} of {}".
-                                           format(key, INPUT_LABELS_DICT, mech.name, obj.name))
-
-    for mech, inputs in stimuli.items():
-
-        subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
-
-        if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
-            raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
-                           format(mech.name, INPUT_LABELS_DICT))
-        for i, stim in enumerate(inputs):
-            # "Burrow" down to determine whether there's a number at the "bottom";
-            #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
-            if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
-                for j, item in enumerate(stim):
-                    if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
-                        continue # leave input item as is
-                    elif isinstance(item, str): # format of stimuli dict is [[label]...]
-                        # inputs[i][j] = get_input_for_label(mech, item, stim)
-                        inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
-                    else:
-                        raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
-                                       "for {} in inputs dictionary specified for {}".
-                                       format(item, i, mech.name, obj.name))
-            elif isinstance(stim, str):
-                # Don't pass input_array as no need to check for subdicts
-                # inputs[i] = get_input_for_label(mech, stim)
-                inputs[i] = get_input_for_label(mech, stim, subdicts)
-            else:
-                raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
-                               "for {} of inputs dictionary specified for {}".
-                               format(stim, i, mech.name, obj.name))
-
+                            raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
+                                           "for {} in targets dictionary specified for {}".
+                                           format(item, i, mech.name, obj.name))
+                elif isinstance(stim, str):
+                    targets[i] = get_target_for_label(mech, stim)
+                else:
+                    raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
+                                   "for {} of targets dictionary specified for {}".
+                                   format(stim, i, mech.name, obj.name))
+    return target_dict
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
     generated_targets = np.atleast_1d(target_function())
-    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
+    expected_shape = target_mechanism.input_states[TARGET].socket_template
     if np.shape(generated_targets) != np.shape(expected_shape):
             raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
                            "of {} ({}). See {} entry in target specification dictionary. "
                            .format(generated_targets, target_mechanism.name, expected_shape, sample_mechanism.name))
 
-def _get_object_type(object):
-    if isinstance(object, Mechanism):
+def _get_object_type(obj):
+    if isinstance(obj, Mechanism):
         return MECHANISM
-    elif isinstance(object, Process_Base):
+    elif isinstance(obj, Process_Base):
         return PROCESS
-    elif isinstance(object, System_Base):
+    elif isinstance(obj, System_Base):
         return SYSTEM
     else:
-        raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
+        raise RunError("{} type not supported by Run module".format(obj.__class__.__name__))
 
 
 import uuid

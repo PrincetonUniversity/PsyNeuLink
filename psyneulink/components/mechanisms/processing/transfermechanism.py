@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -71,17 +71,17 @@ When `integrator_mode <TransferMechanism.integrator_mode>` is True, the Transfer
 
 The `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is always the
 `AdaptiveIntegrator`. Two parameters of the `AdaptiveIntegrator` are exposed on the TransferMechanism. Specifying the
-arguments **smoothing_factor** and/or **initial_value** in the mechanism's constructor will actually set the mechanism's
+arguments **integration_rate** and/or **initial_value** in the mechanism's constructor will actually set the mechanism's
 `integrator_function <TransferMechanism.integrator_function>` to an `AdaptiveIntegrator` with those values specified for
 `rate <AdaptiveIntegrator.rate>` and `initializer <AdaptiveIntegrator.initializer>`, respectively.
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
-    ...                                                        smoothing_factor=0.1,
+    ...                                                        integration_rate=0.1,
     ...                                                        initial_value=np.array([[0.2]]))
 
 .. note::
-    If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **smoothing_factor** and
+    If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
     **initial_value** are ignored, because the mechanism does not have an `integrator_function
     <TransferMechanism.integrator_function>` to construct.
 
@@ -90,7 +90,7 @@ Finally, the TransferMechanism has two arguments that can adjust the final resul
 `noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <TransferMechanism.function>`
 before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
 **noise** is simply handed to the mechanism's `integrator_function <TransferMechanism.integrator_function>` (in the same
-manner as **smoothing_factor** and **initial_value**), whereas `clip <TransferMechanism.clip>` modifies the value
+manner as **integration_rate** and **initial_value**), whereas `clip <TransferMechanism.clip>` modifies the value
 returned by the mechanism's `function <TransferMechanism.function>` before setting it as the mechanism's value.
 
 .. _Transfer_Structure:
@@ -177,10 +177,10 @@ the following parameters (in addition to any specified for the `function <Transf
       `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
       <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
 
-    * `smoothing_factor <TransferMechanism.smoothing_factor>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
-      attribute is set to True, the `smoothing_factor <TransferMechanism.smoothing_factor>` attribute is the rate of
+    * `integration_rate <TransferMechanism.integration_rate>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
+      attribute is set to True, the `integration_rate <TransferMechanism.integration_rate>` attribute is the rate of
       integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is False,
-      `smoothing_factor <TransferMechanism.smoothing_factor>` is ignored and time-averaging does not occur.
+      `integration_rate <TransferMechanism.integration_rate>` is ignored and time-averaging does not occur.
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
       <TransferMechanism.integrator_function>` or its `function <TransferMechanism.function>`, depending on whether
@@ -198,7 +198,7 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 .. _Transfer_Reinitialization:
 
 Reinitialization
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
@@ -208,7 +208,6 @@ starting point. This is done using the `reinitialize <AdaptiveIntegrator.reiniti
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
@@ -216,16 +215,14 @@ The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_f
 
 The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
-    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
 
     to the specified value. Then:
 
     - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
     - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
-    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
+    - the TransferMechanism updates its `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
@@ -233,7 +230,7 @@ Create a `System` with a TransferMechanism in integrator_mode:
 
     >>> my_time_averaged_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear,        #doctest: +SKIP
     ...                                                        integrator_mode=True,            #doctest: +SKIP
-    ...                                                        smoothing_factor=0.1,            #doctest: +SKIP
+    ...                                                        integration_rate=0.1,            #doctest: +SKIP
     ...                                                        initial_value=np.array([[0.2]])) #doctest: +SKIP
     >>> my_process = pnl.Process(pathway=[my_time_averaged_transfer_mechanism]) #doctest: +SKIP
     >>> my_system = pnl.System(processes=[my_process])  #doctest: +SKIP
@@ -306,27 +303,32 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Function, TransferFunction, AdaptiveIntegrator, Linear, NormalizingFunction, DistributionFunction, UserDefinedFunction
+from psyneulink.components.component import function_type, method_type
+from psyneulink.components.functions.function import \
+    AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, \
+    UserDefinedFunction, is_function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PROB, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.globals.keywords import \
+    DIFFERENCE, FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
+    NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
+    STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP', 'SMOOTHING_FACTOR', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
+    'INITIAL_VALUE', 'CLIP', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
 CLIP = "clip"
-SMOOTHING_FACTOR = "smoothing_factor"
+INTEGRATION_RATE = "integration_rate"
 INITIAL_VALUE = 'initial_value'
 
 # TransferMechanism default parameter values:
@@ -411,19 +413,22 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(           \
-    default_variable=None,       \
-    size=None,                   \
-    input_states=None,           \
-    function=Linear,             \
-    initial_value=None,          \
-    noise=0.0,                   \
-    smoothing_factor=0.5,        \
-    integrator_mode=False,       \
-    clip=[float:min, float:max], \
-    output_states=RESULTS        \
-    params=None,                 \
-    name=None,                   \
+    TransferMechanism(                                  \
+    default_variable=None,                              \
+    size=None,                                          \
+    input_states=None,                                  \
+    function=Linear,                                    \
+    initial_value=None,                                 \
+    noise=0.0,                                          \
+    integration_rate=0.5,                               \
+    integrator_mode=False,                              \
+    clip=[float:min, float:max],                        \
+    convergence_function=Distance(metric=DIFFERENCE),   \
+    convergence_criterion=None,                         \
+    max_passes=None,                                    \
+    output_states=RESULTS                               \
+    params=None,                                        \
+    name=None,                                          \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
@@ -492,7 +497,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False`. See `noise <TransferMechanism.noise>` for details.
 
-    smoothing_factor : float : default 0.5
+    integration_rate : float : default 0.5
         specifies the smoothing factor used for exponential time averaging of input when the TransferMechanism is
         executed with `integrator_mode` set to `True`.
 
@@ -507,6 +512,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
+
+    convergence_function : function : default Distance(metric=DIFFERENCE)
+        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float : default 0.01
+        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
+        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : str, list or np.ndarray : default RESULTS
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
@@ -554,7 +571,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     initial_value :  value, list or np.ndarray
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
-        <TransferMechanism.integrator_mode>` is `True` and `smoothing_factor <TransferMechanism.smoothing_factor>` is
+        <TransferMechanism.integrator_mode>` is `True` and `integration_rate <TransferMechanism.integration_rate>` is
         not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
@@ -581,11 +598,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             function with a fixed output, then the noise will simply be an offset that remains the same across all
             executions.
 
-    smoothing_factor : float
-        the smoothing factor used for exponential time averaging of the TransferMechanism's `variable
-        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
-        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
-
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
         to exponentially time average its `variable <TransferMechanism.variable>` when it executes.
@@ -596,11 +608,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             passed into the `AdaptiveIntegrator` Function, that carries out the following calculation:
 
             .. math::
-                result = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+                result = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
 
             where *previous_value* is set to the value of the TransferMechanism's `initial_value
-            <TransferMechanism.initial_value>` attribute on the first execution, and *smoothing_factor* and *noise*
-            are determined by the TransferMechanism's `smoothing_factor <TransferMechanism.smoothing_factor>` and
+            <TransferMechanism.initial_value>` attribute on the first execution, and *integration_rate* and *noise*
+            are determined by the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` and
             `noise <TransferMechanism.noise>` attributes, respectively.  The result is then passed to the
             TransferMechanism's `function <TransferMechanism.function>` which computes the TransferMechanism's `value
             <TransferMechanism.value>`.
@@ -609,8 +621,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             the TransferMechanism's `variable <TransferMechanism>` is passed directly to its `function
             <TransferMechanism.function>` -- that is, its `integrator_function <TransferMechanism.integrator_function>`
-            is bypassed, and all related attributes (`initial_value <TransferMechanism.initial_value>`, smoothing_factor
-            <TransferMechanism.smoothing_factor>`, and `noise <TransferMechanism.noise>`) are ignored.
+            is bypassed, and all related attributes (`initial_value <TransferMechanism.initial_value>`, integration_rate
+            <TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`) are ignored.
             COMMENT:
             leak and time_step_size were previoulsy mentioned, but don't appear in the integrator_mode equation above
             COMMENT
@@ -620,8 +632,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
         .. note::
-            The TransferMechanism's `smoothing_factor <TransferMechanism.smoothing_factor>` parameter
+            The TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter
             specifies the `rate <AdaptiveIntegrator.rate>` of the `AdaptiveIntegrator` Function.
+
+    integration_rate : float
+        the rate used for exponential time averaging of the TransferMechanism's `variable
+        <TransferMechanism>` when it is executed with `integrator_mode <TransferMechanism.integrator_mode>`
+        set to True (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
 
     clip : list [float, float]
         specifies the allowable range for the result of `function <TransferMechanism.function>`.  The 1st item (index
@@ -632,12 +649,35 @@ class TransferMechanism(ProcessingMechanism_Base):
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
 
-    previous_value : float
-        the `value <TransferMechanism.value>` on the previous execution of the Mechanism.
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <TransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None` on
+        the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
-    delta : float
-        the change in `value <TransferMechanism.value>` from the previous execution of the TransferMechanism
-        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
+        .. note::
+           The TransferMechanism's `previous_value` attribute is distinct from the `previous_value
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <TransferMechanism.integrator_function>`.
+
+    delta : scalar
+        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    is_converged : bool
+        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
+        <TransferMechanism.convergence_criterion>`.
+
+    convergence_function : function
+        compares `value <TransferMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
+        result is used to determine when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float
+        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
+
+    max_passes : int or None
+        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <TransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : *ContentAddressableList[OutputState]*
         list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputState,
@@ -669,8 +709,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     # classPreferences = {
     #     kwPreferenceSetName: 'TransferCustomClassPreferences',
     #     # kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    #     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    # }
+    #     }
 
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
@@ -686,9 +725,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
-                 smoothing_factor=0.5,
+                 integration_rate=0.5,
                  integrator_mode=False,
                  clip=None,
+                 convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
+                 convergence_criterion:float=0.01,
+                 max_passes:tc.optional(int)=1000,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -709,9 +751,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   noise=noise,
-                                                  smoothing_factor=smoothing_factor,
+                                                  integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
+                                                  convergence_function=convergence_function,
+                                                  convergence_criterion=convergence_criterion,
+                                                  max_passes=max_passes,
                                                   params=params)
 
         self.integrator_function = None
@@ -791,7 +836,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                         )
                     )
 
-        # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
+        # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
             noise = target_set[NOISE]
@@ -801,12 +846,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
-        # Validate SMOOTHING_FACTOR:
-        if SMOOTHING_FACTOR in target_set:
-            smoothing_factor = target_set[SMOOTHING_FACTOR]
-            if (not (isinstance(smoothing_factor, (int, float)) and 0 <= smoothing_factor <= 1)) and (smoothing_factor != None):
-                raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
-                                    format(smoothing_factor, self.name))
+        # Validate INTEGRATION_RATE:
+        if INTEGRATION_RATE in target_set:
+            integration_rate = target_set[INTEGRATION_RATE]
+            if (not (isinstance(integration_rate, (int, float)) and 0 <= integration_rate <= 1)) and (integration_rate != None):
+                raise TransferError("integration_rate parameter ({}) for {} must be a float between 0 and 1".
+                                    format(integration_rate, self.name))
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -825,7 +870,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     # default_variable=self.default_variable,
         #                                       initializer = self.instance_defaults.variable,
         #                                       noise = self.noise,
-        #                                       rate = self.smoothing_factor,
+        #                                       rate = self.integration_rate,
         #                                       integration_type= ADAPTIVE)
 
     def _validate_noise(self, noise):
@@ -894,10 +939,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
+        # if self.integrator_mode:
+        self.previous_value = None
+
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
+
+        if isinstance(self.convergence_function, Function):
+            self.convergence_function = self.convergence_function.function
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
@@ -920,53 +971,38 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
+        integration_rate = self.get_current_mechanism_param("integration_rate")
 
         if not self.integrator_function:
 
-            self.integrator_function = AdaptiveIntegrator(
-                function_variable,
-                initializer=initial_value,
-                noise=noise,
-                rate=smoothing_factor,
-                owner=self
-            )
+            self.integrator_function = AdaptiveIntegrator(function_variable,
+                                                          initializer=initial_value,
+                                                          noise=noise,
+                                                          rate=integration_rate,
+                                                          owner=self)
 
             self.original_integrator_function = self.integrator_function
-
-        current_input = self.integrator_function.execute(
-            function_variable,
-            # Should we handle runtime params?
-            runtime_params={
-                # FIX: 4/30/18 - SHOULDN'T THESE BE THE PARAMS PASSED IN OR RETRIEVED ABOVE??
-                INITIALIZER: self.initial_value,
-                NOISE: self.noise,
-                RATE: self.smoothing_factor
-            },
-            context=context
-        )
+        current_input = self.integrator_function.execute(function_variable,
+                                                         # Should we handle runtime params?
+                                                         runtime_params={INITIALIZER: initial_value,
+                                                                         NOISE: noise,
+                                                                         RATE: integration_rate},
+                                                         context=context)
 
         return current_input
 
-    def _clip_result(self, clip, current_input, runtime_params, context):
-
-        outputs = super(Mechanism, self)._execute(function_variable=current_input,
-                                                  runtime_params=runtime_params,
-                                                  context=context)
+    def _clip_result(self, clip, current_input):
         if clip is not None:
-            minCapIndices = np.where(outputs < clip[0])
-            maxCapIndices = np.where(outputs > clip[1])
-            outputs[minCapIndices] = np.min(clip)
-            outputs[maxCapIndices] = np.max(clip)
-        return outputs
+            minCapIndices = np.where(current_input < clip[0])
+            maxCapIndices = np.where(current_input > clip[1])
+            current_input[minCapIndices] = np.min(clip)
+            current_input[maxCapIndices] = np.max(clip)
+        return current_input
 
-    def _execute(
-        self,
-        variable=None,
-        function_variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -984,7 +1020,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         variable (float): set to self.value (= self.input_value)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + NOISE (float)
-            + SMOOTHING_FACTOR (float)
+            + INTEGRATION_RATE (float)
             + RANGE ([float, float])
         - context (str)
 
@@ -1007,40 +1043,81 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.integrator_mode
-        noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
-
+        self._update_previous_value()
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
-        # Update according to time-scale of integration
-        if integrator_mode:
-            current_input = self._get_integrated_function_input(function_variable,
-                                                                    initial_value,
-                                                                    noise,
-                                                                    context)
-
-        else:
-            current_input = self._get_instantaneous_function_input(function_variable, noise)
-
+        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
+        # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
-            outputs = []
-            for elem in current_input:
-                output_item = self._clip_result(clip, elem, runtime_params, context)
-                outputs.append(output_item)
+            value = []
+            for i in range(len(variable)):
+                self._current_variable_index = i
+                current_variable_element = variable[i]
+                value_item = super(Mechanism, self)._execute(variable=current_variable_element,
+                                                             runtime_params=runtime_params,
+                                                             context=context)
+                value_item = self._clip_result(clip, value_item)
+                value.append(value_item)
 
         else:
-            outputs = self._clip_result(clip, current_input, runtime_params, context)
+            value = super(Mechanism, self)._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context
+                                                    )
+            value = self._clip_result(clip, value)
 
-        return outputs
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     # self.previous_value = self.value
+        #     self._update_previous_value()
+
+        # Used by update_previous_value, convergence_function and delta
+        self._current_value = value
+
+        return value
+
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        self.previous_value = None
+
+    def _update_previous_value(self):
+        if self.integrator_mode:
+            try:
+                self.previous_value = self.value
+            except:
+                self.previous_value = None
+
+    def _parse_function_variable(self, variable, context=None):
+
+        if context is ContextFlags.INSTANTIATE:
+
+            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
+
+        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
+        integrator_mode = self.integrator_mode
+        noise = self.get_current_mechanism_param("noise")
+
+        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
+        # Update according to time-scale of integration
+        if integrator_mode:
+            initial_value = self.get_current_mechanism_param("initial_value")
+            if isinstance(self.function_object, NormalizingFunction):
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value[self._current_variable_index],
+                                                               noise,
+                                                               context)[0]
+            else:
+                variable = self._get_integrated_function_input(variable,
+                                                               initial_value,
+                                                               noise,
+                                                               context)
+
+        else:
+            variable = self._get_instantaneous_function_input(variable, noise)
+        return variable
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
@@ -1055,55 +1132,17 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
-
-    # def terminate_function(self, context=None):
-    #     """Terminate the process
-    #
-    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-    #     returns output
-    #
-    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-    #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
-    #
     @property
     def clip(self):
         return self._clip
-
 
     @clip.setter
     def clip(self, value):
         self._clip = value
 
-    # # MODIFIED 4/17/17 NEW:
-    # @property
-    # def noise (self):
-    #     return self._noise
-    #
-    # @noise.setter
-    # def noise(self, value):
-    #     self._noise = value
-    #
-    # @property
-    # def smoothing_factor(self):
-    #     return self._time_constant
-    #
-    # @smoothing_factor.setter
-    # def smoothing_factor(self, value):
-    #     self._time_constant = value
-    # # # MODIFIED 4/17/17 END
-
-    @property
-    def previous_value(self):
-        if self.integrator_function:
-            return self.integrator_function.previous_value
-        return None
-
     @property
     def delta(self):
-        if self.integrator_function:
-            return self.value - self.integrator_function.previous_value
-        return None
+        return self.convergence_function([self._current_value, self.previous_value])
 
     @property
     def integrator_mode(self):
@@ -1115,6 +1154,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function is None:
                 self.integrator_function = self.original_integrator_function
                 self._integrator_mode = True
+            if not hasattr(self, PREVIOUS_VALUE):
+                self.previous_value = None
         elif val is False:
             if self.integrator_function is not None:
                 self.original_integrator_function = self.integrator_function
@@ -1122,6 +1163,26 @@ class TransferMechanism(ProcessingMechanism_Base):
             self._integrator_mode = False
         else:
             raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
+
+    @property
+    def is_converged(self):
+        # Check for convergence
+        if (self.convergence_criterion is not None and
+                self.previous_value is not None and
+                self.context.initialization_status != ContextFlags.INITIALIZING):
+            if self.delta <= self.convergence_criterion:
+                return True
+            elif self.current_execution_time.pass_ >= self.max_passes:
+                raise TransferError("Maximum number of executions ({}) has occurred before reaching "
+                                    "convergence_criterion ({}) for {} in trial {} of run {}".
+                                    format(self.max_passes, self.convergence_criterion, self.name,
+                                           self.current_execution_time.trial, self.current_execution_time.run))
+            else:
+                return False
+        # Otherwise just return True
+        else:
+            return None
+
 
 
 

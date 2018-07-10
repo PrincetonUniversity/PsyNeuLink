@@ -27,7 +27,7 @@ class TestReinitialize:
 
         # reinitialize function
         D.function_object.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.value[0], 2.0)
         assert np.allclose(D.function_object.previous_value, 2.0)
         assert np.allclose(D.function_object.previous_time, 0.1)
         assert np.allclose(D.value,  [[1.0], [1.0]])
@@ -36,7 +36,7 @@ class TestReinitialize:
 
         # reinitialize function without value spec
         D.function_object.reinitialize()
-        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.value[0], 0.0)
         assert np.allclose(D.function_object.previous_value, 0.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.value, [[1.0], [1.0]])
@@ -45,7 +45,7 @@ class TestReinitialize:
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.value[0], 2.0)
         assert np.allclose(D.function_object.previous_value, 2.0)
         assert np.allclose(D.function_object.previous_time, 0.1)
         assert np.allclose(D.value, [[2.0], [0.1]])
@@ -60,15 +60,17 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         D.reinitialize()
-        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.value[0], 0.0)
         assert np.allclose(D.function_object.previous_value, 0.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 0.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
         # reinitialize only decision variable
-        D.reinitialize(1.0)
-        assert np.allclose(D.function_object.value, 1.0)
+        D.function_object.initializer = 1.0
+        D.function_object.t0 = 0.0
+        D.reinitialize()
+        assert np.allclose(D.function_object.value[0], 1.0)
         assert np.allclose(D.function_object.previous_value, 1.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 1.0)
@@ -246,7 +248,7 @@ def test_DDM_noise_0_5():
 
     val = float(T.execute(stim)[0])
 
-    assert val == 11.320562919094161
+    assert val == 9.308960184035778
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -264,7 +266,7 @@ def test_DDM_noise_2_0():
         )
     )
     val = float(T.execute(stim)[0])
-    assert val == 12.641125838188323
+    assert val == 8.617920368071555
 
 # ------------------------------------------------------------------------------------------------
 
