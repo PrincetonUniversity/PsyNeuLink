@@ -568,17 +568,41 @@ class Scheduler(object):
         return self.condition_set.__contains__(item)
 
     def add_condition(self, owner, condition):
-        '''
-        :param owner: the `Component <Component>` that is dependent on the `condition`
-        :param condition: a `Condition` (including All or Any)
-        '''
+        """
+        Adds a `Condition` to the Scheduler. If **owner** already has a Condition, it is overwritten
+        with the new one. If you want to add multiple conditions to a single owner, use the
+        `composite Conditions <Conditions_Composite>` to accurately specify the desired behavior.
+
+        Arguments
+        ---------
+
+        owner : Component
+            specifies the Component with which the **condition** should be associated. **condition**
+            will govern the execution behavior of **owner**
+
+        condition : Condition
+            specifies the Condition, associated with the **owner** to be added to the ConditionSet.
+        """
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
-        '''
-        :param conditions: a `dict` mapping `Component`s to `Condition`s,
-               which can be added later with `add_condition`
-        '''
+        """
+        Adds a set of `Conditions <Condition>` (in the form of a dict or another ConditionSet) to the Scheduler.
+        Any Condition added here will overwrite an existing Condition for a given owner.
+        If you want to add multiple conditions to a single owner, add a single `Composite Condition <Conditions_Composite>`
+        to accurately specify the desired behavior.
+
+        Arguments
+        ---------
+
+        conditions : dict[`Component <Component>`: `Condition`], `ConditionSet`
+            specifies collection of Conditions to be added to this ConditionSet,
+
+            if a dict is provided:
+                each entry should map an owner `Component` (the `Component` whose execution behavior will be
+                governed) to a `Condition <Condition>`
+
+        """
         self.condition_set.add_condition_set(conditions)
 
     ################################################################################

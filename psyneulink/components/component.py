@@ -195,8 +195,8 @@ User-modifiable Parameters
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
   `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
-  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smoothing_factor
-  <TransferMechanism.smoothing_factor>`, as well as the parameters of the TransferMechanism's `function
+  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
+  <TransferMechanism.integration_rate>`, as well as the parameters of the TransferMechanism's `function
   <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
   Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
   can project (by way of a `ControlProjection`).
@@ -255,7 +255,7 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+* **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
   the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
   "manually" or programmatically by assigning an integer value directly to the attribute.
@@ -751,8 +751,8 @@ class Component(object):
     log : Log
         see `log <Component_Log>`
 
-    execution_count : int
-        see `execution_count <Component_Execution_Count>`
+    current_execution_count : int
+        see `current_execution_count <Component_Execution_Count>`
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
@@ -1519,7 +1519,13 @@ class Component(object):
             except KeyError:
                 pass
 
+            # MODIFIED 6/29/18 OLD:
             params.update(params_arg)
+            # # MODIFIED 6/29/18 NEW JDC:
+            # for item in params_arg:
+            #     if params_arg[item] is not None:
+            #         params.update({item: params_arg[item]})
+            # MODIFIED 6/29/18 END
 
         # Save user-accessible params
         # self.user_params = params.copy()
@@ -1540,14 +1546,15 @@ class Component(object):
 
             self.user_params.__additem__(param_name, new_param_val)
 
-        # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
+        # Cache a (deep) copy of the user-specified values and put it in user_params_for_instantiation;
+        #    this is to deal with the following:
         #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
         #    • since paramsCurrent is a ParamsDict, it assigns the values of its entries to the corresponding attributes
         #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
-        #         the user-specified vaules (from the constructor args) in user_params
+        #         the user-specified values (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
@@ -2156,7 +2163,7 @@ class Component(object):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
@@ -2588,10 +2595,13 @@ class Component(object):
         if isinstance(self, Function):
             return
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable)
+        function_variable = self._parse_function_variable(self.instance_defaults.variable,
+                                                          context=ContextFlags.INSTANTIATE)
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
-            self.function_object = UserDefinedFunction(default_variable=function_variable, custom_function=function, context=context)
+            self.function_object = UserDefinedFunction(default_variable=function_variable,
+                                                       custom_function=function,
+                                                       context=context)
         elif isinstance(function, Function):
             if not iscompatible(function.instance_defaults.variable, function_variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
@@ -2753,32 +2763,32 @@ class Component(object):
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        function_variable = self._parse_function_variable(variable)
+        function_variable = self._parse_function_variable(variable, context)
         value = self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
         fct_context_attrib.execution_phase = ContextFlags.IDLE
 
         return value
 
     @property
-    def execution_count(self):
+    def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
         Incremented in the Component's execute method by call to self._increment_execution_count"""
         try:
-            return self._execution_count
+            return self._current_execution_count
         except:
-            self._execution_count = 0
-            return self._execution_count
+            self._current_execution_count = 0
+            return self._current_execution_count
 
-    @execution_count.setter
-    def execution_count(self, count:int):
-        self._execution_count = count
+    @current_execution_count.setter
+    def current_execution_count(self, count:int):
+        self._current_execution_count = count
 
     def _increment_execution_count(self, count=1):
         try:
-            self._execution_count +=count
+            self._current_execution_count +=count
         except:
-            self._execution_count = 1
-        return self._execution_count
+            self._current_execution_count = 1
+        return self._current_execution_count
 
     @property
     def current_execution_time(self):

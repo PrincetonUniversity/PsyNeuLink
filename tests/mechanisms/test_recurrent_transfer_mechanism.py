@@ -458,7 +458,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -470,7 +470,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -482,7 +482,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -494,7 +494,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -503,12 +503,12 @@ class TestRecurrentTransferMechanismFunction:
 
 class TestRecurrentTransferMechanismTimeConstant:
 
-    def test_recurrent_mech_smoothing_factor_0_8(self):
+    def test_recurrent_mech_integration_rate_0_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1])
@@ -516,12 +516,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[.96, .96, .96, .96]])
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_0_5(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_0_5(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
             integrator_mode=True
         )
@@ -530,12 +530,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]])  # due to inevitable floating point errors
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_1_8(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_1_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
             integrator_mode=True
         )
@@ -546,12 +546,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([-4, -3, 0, 1])
         np.testing.assert_allclose(val, [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]])
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_1_2(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
             integrator_mode=True
         )
@@ -890,7 +890,7 @@ class TestRecurrentTransferMechanismReinitialize:
         R = RecurrentTransferMechanism(name="R",
                  initial_value=0.5,
                  integrator_mode=True,
-                 smoothing_factor=0.1,
+                 integration_rate=0.1,
                  auto=1.0,
                  noise=0.0)
         P = Process(name="P",
@@ -898,7 +898,7 @@ class TestRecurrentTransferMechanismReinitialize:
         S = System(name="S",
                    processes=[P])
         R.reinitialize_when = Never()
-        assert np.allclose(R.previous_value, 0.5)
+        assert np.allclose(R.integrator_function.previous_value, 0.5)
 
         S.run(inputs={R: 1.0},
               num_trials=2,
@@ -911,16 +911,16 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 2    |   variable = 1.0 + 0.55
         # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
         # linear fn: 0.65*1.0 = 0.65
-        assert np.allclose(R.previous_value, 0.65)
+        assert np.allclose(R.integrator_function.previous_value, 0.65)
 
         R.integrator_function.reinitialize(0.9)
 
-        assert np.allclose(R.previous_value, 0.9)
+        assert np.allclose(R.integrator_function.previous_value, 0.9)
         assert np.allclose(R.value, 0.65)
 
         R.reinitialize(0.5)
 
-        assert np.allclose(R.previous_value, 0.5)
+        assert np.allclose(R.integrator_function.previous_value, 0.5)
         assert np.allclose(R.value, 0.5)
 
         S.run(inputs={R: 1.0}, num_trials=2)
@@ -930,7 +930,7 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 4
         # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
         # linear fn: 0.7*1.0 = 0.7
-        assert np.allclose(R.previous_value, 0.7)
+        assert np.allclose(R.integrator_function.previous_value, 0.7)
 
 class TestClip:
     def test_clip_float(self):
@@ -959,7 +959,7 @@ class TestRecurrentInputState:
         R2.execute(input=[1, 3, 2])
         p2 = Process(pathway=[R2])
         s2 = System(processes=[p2])
-        s2.run(inputs=[[1, 3, 2], [0, 0, 0]])
+        s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.value, [[14., 12., 13.]])
         assert len(R2.input_states) == 2
         assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary

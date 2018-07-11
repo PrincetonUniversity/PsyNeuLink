@@ -506,6 +506,7 @@ class InputState(State_Base):
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
+        internal_only=False,                       \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -588,6 +589,11 @@ class InputState(State_Base):
     exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
+    internal_only : bool : False
+        specifies whether external input is required by the InputState's `owner <InputState.owner>` if its `role
+        <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputState.internal_only>`
+        for details).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -646,6 +652,12 @@ class InputState(State_Base):
 
     exponent : number
         see `weight and exponent <InputState_Weights_And_Exponents>` for description.
+
+    internal_only : bool
+        determines whether input is required for this InputState from `Run` or another `Composition` when the
+        InputState's `owner <InputState.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
+        is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
+        external input is required.
 
     name : str
         the name of the InputState; if it is not specified in the **name** argument of the constructor, a default is
@@ -718,6 +730,7 @@ class InputState(State_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
+                 internal_only:bool=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -743,6 +756,7 @@ class InputState(State_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
                                                   exponent=exponent,
+                                                  internal_only=internal_only,
                                                   params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
@@ -1218,10 +1232,11 @@ class InputState(State_Base):
         import inspect
 
         if (
-                ((inspect.isclass(function) and issubclass(function, LinearCombination))
-                 or isinstance(function, LinearCombination))
-                and (isinstance(variable, np.matrix) or
-                     (isinstance(np.array(variable),np.ndarray) and np.array(variable).ndim>=2))
+                (
+                    (inspect.isclass(function) and issubclass(function, LinearCombination))
+                    or isinstance(function, LinearCombination)
+                )
+                and isinstance(variable, np.matrix)
         ):
             variable = [variable]
 

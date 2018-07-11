@@ -44,6 +44,7 @@ Functions
              Distance,
              LearningFunction,
              Hebbian,
+             ContrastiveHebbian,
              Reinforcement,
              BackPropagation,
              TDLearning

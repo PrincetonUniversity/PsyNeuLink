@@ -139,7 +139,7 @@ class TestLCAReinitialize:
                    processes=[P])
 
         L.reinitialize_when = Never()
-        assert np.allclose(L.previous_value, 0.5)
+        assert np.allclose(L.integrator_function.previous_value, 0.5)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
@@ -156,16 +156,16 @@ class TestLCAReinitialize:
         # Trial 2    |   variable = 1.0 + 1.55
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
-        assert np.allclose(L.previous_value, 4.255)
+        assert np.allclose(L.integrator_function.previous_value, 4.255)
 
         L.integrator_function.reinitialize(0.9)
 
-        assert np.allclose(L.previous_value, 0.9)
+        assert np.allclose(L.integrator_function.previous_value, 0.9)
         assert np.allclose(L.value, 4.255)
 
         L.reinitialize(0.5)
 
-        assert np.allclose(L.previous_value, 0.5)
+        assert np.allclose(L.integrator_function.previous_value, 0.5)
         assert np.allclose(L.value, 0.5)
 
         S.run(inputs={L: 1.0},
@@ -176,7 +176,7 @@ class TestLCAReinitialize:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.previous_value, 5.305)
+        assert np.allclose(L.integrator_function.previous_value, 5.305)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
