@@ -7,7 +7,7 @@ from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionI
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
-from psyneulink.scheduling.condition import WhenFinished
+from psyneulink.scheduling.condition import WhenFinished, Never
 from psyneulink.scheduling.time import TimeScale
 
 class TestReinitialize:
@@ -156,10 +156,11 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
         P = Process(pathway=[D])
-        S = System(processes=[P])
-
+        S = System(processes=[P],
+                   reinitialize_mechanisms_when=Never())
         S.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
+
         # decision variable's value should match threshold
         assert D.value[0] == 10.0
         # it should have taken 5 executions (and time_step_size = 1.0)
