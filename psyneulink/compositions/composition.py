@@ -1476,17 +1476,30 @@ class Composition(object):
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
 
-                input_s = par_proj.receiver
-                assert input_s in input_s.owner.input_states
-                target_input_state = input_s.owner.input_states.index(input_s)
-                assert par_proj in input_s.pathway_projections
-                input_projection_idx = input_s.pathway_projections.index(par_proj)
-                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_input_state), ctx.int32_ty(input_projection_idx)])
+                state = par_proj.receiver
+                if state in state.owner.input_states:
+                    target_input_state = state.owner.input_states.index(state)
 
-                output_s = par_proj.sender
-                assert output_s in output_s.owner.output_states
-                consume_output_state = output_s.owner.output_states.index(output_s)
-                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
+                    assert par_proj in state.pathway_projections
+                    input_projection_idx = state.pathway_projections.index(par_proj)
+                    proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_input_state), ctx.int32_ty(input_projection_idx)])
+
+                    output_s = par_proj.sender
+                    assert output_s in output_s.owner.output_states
+                    consume_output_state = output_s.owner.output_states.index(output_s)
+                    proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
+                elif state in state.owner.parameter_states:
+                    target_param_state = state.owner.parameter_states.index(state)
+
+                    assert par_proj in state.mod_afferents
+                    control_projection_idx = state.mod_afferents.index(par_proj)
+                    proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_param_state + len(state.owner.input_states)), ctx.int32_ty(control_projection_idx)])
+
+                    output_s = par_proj.sender
+                    assert output_s in output_s.owner.output_states
+                    consume_output_state = output_s.owner.output_states.index(output_s)
+                    proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
+
 
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
 
