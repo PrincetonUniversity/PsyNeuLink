@@ -9830,9 +9830,8 @@ class Distance(ObjectiveFunction):
     def correlation(v1, v2):
         v1_norm = v1-np.mean(v1)
         v2_norm = v2-np.mean(v2)
-        v1_norm = np.where(v1_norm==0, EPSILON, v1_norm)
-        v2_norm = np.where(v2_norm==0, EPSILON, v2_norm)
-        return np.sum(v1_norm*v2_norm)/np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2))
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
 
     def function(self,
                  variable=None,
@@ -9897,7 +9896,7 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
+        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
