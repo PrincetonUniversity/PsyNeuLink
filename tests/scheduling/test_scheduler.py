@@ -3,13 +3,17 @@ import logging
 import pytest
 import uuid
 
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import Linear, DriftDiffusionIntegrator
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.composition import Composition
-from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, WhenFinished
+from psyneulink.components.system import System
+from psyneulink.components.process import Process
+from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, Never, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.keywords import VALUE
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +143,44 @@ class TestScheduler:
         # pprint.pprint(output)
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    def test_change_termination_condition(self):
+        D = DDM(function=DriftDiffusionIntegrator(threshold=10))
+        P = Process(pathway=[D])
+        S = System(processes=[P])
+
+        D.set_log_conditions(VALUE)
+
+        # initialization_scheduler = Scheduler(system=S,
+        #                                      termination_conds={TimeScale.TRIAL: AllHaveRun()})
+        # processing_scheduler = Scheduler(system=S,
+        #                                  termination_conds={TimeScale.TRIAL: WhenFinished(D)})
+        #
+        def change_termination_processing():
+
+            print("\n\n", S.termination_processing)
+            print(S.scheduler_processing.termination_conds)
+            if S.termination_processing is None:
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            else:
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
+
+        S.run(inputs={D: [[1.0], [2.0]]},
+              termination_processing={TimeScale.TRIAL: WhenFinished(D)},
+              call_after_trial=change_termination_processing,
+              num_trials=4)
+        # Trial 0:
+        # input = 1.0, termination condition = WhenFinished
+        # 10 passes
+        # Trial 1:
+        # input = 2.0, termination condition = None
+        # 1 pass
+        print(S.results)
+        print(D.log.nparray_dictionary(VALUE))
 
 class TestLinear:
 

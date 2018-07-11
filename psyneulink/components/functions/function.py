@@ -5087,7 +5087,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
+        if len(args) == 0 or args is None or args == (None,):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
