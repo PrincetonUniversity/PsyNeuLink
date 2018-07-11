@@ -1130,12 +1130,21 @@ class TransferMechanism(ProcessingMechanism_Base):
             raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
             builder.store(raw_param_val, raw_ptr)
 
-            # TODO: copy mod_afferent inputs
+            # Copy mod_afferent inputs
+            for idx, ps_mod in enumerate(state.mod_afferents):
+                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
+                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                afferent_val = builder.load(mod_in_ptr)
+                builder.store(afferent_val, mod_out_ptr)
 
             # Parameter states modify corresponding parameter in param struct
             ps_output = param_out_ptr
+
             # WORKAROUND: cast output to match the state output type
-            ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
+            # to workaround x vs. [x] mismatch
+            func_output_type = ps_function.args[3].type.pointee
+            if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
+                ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
@@ -1170,13 +1179,21 @@ class TransferMechanism(ProcessingMechanism_Base):
             raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
             builder.store(raw_param_val, raw_ptr)
 
-            # TODO: copy mod_afferent inputs
+            # Copy mod_afferent inputs
+            for idx, ps_mod in enumerate(state.mod_afferents):
+                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
+                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                afferent_val = builder.load(mod_in_ptr)
+                builder.store(afferent_val, mod_out_ptr)
 
             # Parameter states modify corresponding parameter in param struct
             ps_output = param_out_ptr
 
-            # WORKAROUND: cast input and output
-            ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
+            # WORKAROUND: cast output to match the state output type
+            # to workaround x vs. [x] mismatch
+            func_output_type = ps_function.args[3].type.pointee
+            if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
+                ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
