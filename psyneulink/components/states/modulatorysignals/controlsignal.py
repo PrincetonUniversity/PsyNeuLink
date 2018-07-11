@@ -410,7 +410,7 @@ class ControlSignal(ModulatorySignal):
         owner,                                                    \
         index=SEQUENTIAL,                                         \
         function=Linear(),                                        \
-        costs_options=ControlSignalCosts.NONE,                    \
+        costs_options=None,                                       \
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
         duration_cost_function=Integrator,                        \
@@ -463,7 +463,7 @@ class ControlSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
-    cost_options : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalCosts.NONE
+    cost_options : ControlSignalCosts or List[ControlSignalCosts] : None
         specifies the cost components to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
@@ -551,7 +551,7 @@ class ControlSignal(ModulatorySignal):
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
-    cost_options : int
+    cost_options : ControlSignalCosts or None
         boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
         ControlSignal's constructor;  can be modified using the `assign_cost_options` method.
 
@@ -668,8 +668,6 @@ class ControlSignal(ModulatorySignal):
                  index=None,
                  assign=None,
                  function=Linear(),
-                 # cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
-                 # cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.NONE,
                  cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
