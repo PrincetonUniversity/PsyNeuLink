@@ -1,5 +1,5 @@
 import logging
-
+import numpy as np
 import pytest
 import uuid
 
@@ -150,15 +150,7 @@ class TestScheduler:
 
         D.set_log_conditions(VALUE)
 
-        # initialization_scheduler = Scheduler(system=S,
-        #                                      termination_conds={TimeScale.TRIAL: AllHaveRun()})
-        # processing_scheduler = Scheduler(system=S,
-        #                                  termination_conds={TimeScale.TRIAL: WhenFinished(D)})
-        #
         def change_termination_processing():
-
-            print("\n\n", S.termination_processing)
-            print(S.scheduler_processing.termination_conds)
             if S.termination_processing is None:
                 S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
                 S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
@@ -175,12 +167,17 @@ class TestScheduler:
               num_trials=4)
         # Trial 0:
         # input = 1.0, termination condition = WhenFinished
-        # 10 passes
+        # 10 passes (value = 1.0, 2.0 ... 9.0, 10.0)
         # Trial 1:
-        # input = 2.0, termination condition = None
-        # 1 pass
-        print(S.results)
-        print(D.log.nparray_dictionary(VALUE))
+        # input = 2.0, termination condition = AllHaveRun
+        # 1 pass (value = 2.0)
+        expected_results = [[np.array([[10.]]), np.array([[10.]])],
+                            [np.array([[2.]]), np.array([[1.]])],
+                            [np.array([[10.]]), np.array([[10.]])],
+                            [np.array([[2.]]), np.array([[1.]])]]
+        assert np.allclose(expected_results, S.results)
+
+
 
 class TestLinear:
 
