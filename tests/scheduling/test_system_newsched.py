@@ -1043,9 +1043,9 @@ class TestTermination:
 
         s = System(
             processes=[p],
-            name='s'
+            name='s',
+            reinitialize_mechanisms_when=Never()
         )
-        s.reinitialize_mechanisms_when = Never()
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 

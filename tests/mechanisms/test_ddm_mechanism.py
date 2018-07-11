@@ -156,8 +156,8 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
         P = Process(pathway=[D])
-        S = System(processes=[P])
-        S.reinitialize_mechanisms_when = Never()
+        S = System(processes=[P],
+                   reinitialize_mechanisms_when=Never())
         S.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
 

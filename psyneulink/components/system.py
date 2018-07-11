@@ -3401,12 +3401,11 @@ class System(System_Base):
         # assign to backing field
         self._reinitialize_mechanisms_when = new_condition
 
-        # assign to ALL mechanisms
         for mechanism in self.mechanisms:
             if hasattr(mechanism, "reinitialize_when"):
                 # assign to all mechanisms that do not already have a user-specified condition
-                # if isinstance(mechanism.reinitialize_when, Never):
-                mechanism.reinitialize_when = new_condition
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = new_condition
 
     @property
     def mechanisms(self):
