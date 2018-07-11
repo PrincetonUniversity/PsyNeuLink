@@ -962,7 +962,7 @@ class OutputState(State_Base):
                          function=function,
                          )
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
             return variable

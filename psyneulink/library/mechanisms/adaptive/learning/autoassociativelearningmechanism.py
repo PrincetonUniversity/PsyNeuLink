@@ -59,13 +59,19 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
     the entire weight change matrix (see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` for
     additional details).
 
+.. _AutoAssociativeLearningMechanism_Learning:
+
 Execution
 ---------
 
-An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, however its execution
-can be enabled or disabled by setting the the `learning_enabled <RecurrentTransferMechanism.learning_enabled>`
-attribute of the `RecurrentTransferMechanism` with which it is associated (identified in its `activity_source
-<AutoAssociativeLearningMechanism.attribute>`).
+An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
+* 1) its execution can be enabled or disabled by setting the the `learning_enabled
+  <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
+  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.attribute>`).
+* 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
+  distinct from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
+  that are executed during the `learning phase <System_Execution>` of a System's execution
+
 
 .. _AutoAssociativeLearningMechanism_Class_Reference:
 
@@ -81,11 +87,11 @@ from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
-from psyneulink.components.shellclasses import Projection
+from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+from psyneulink.globals.keywords import \
+    AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
@@ -327,7 +333,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         return variable
 
     def _validate_variable(self, variable, context=None):
@@ -337,20 +343,21 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
         variable = self._update_variable(super(LearningMechanism, self)._validate_variable(variable, context))
 
-        # MODIFIED 9/22/17 NEW: [HACK]
-        if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
+        # # MODIFIED 9/22/17 NEW: [HACK] JDC: 6/29/18 -> CAUSES DEFAULT variable [[0]] OR ANYTHING OF size=1 TO FAIL
+        # if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
+        # MODIFIED 6/29/18 NEWER JDC: ALLOW size=1, AND DEFER FAILURE TO LearningFunction IF enbale_learning=True
+        if np.array(variable)[0].ndim != 1 or not is_numeric(variable):
         # MODIFIED 9/22/17 END
             raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must be "
                                                         "a list or 1d np.array containing only numbers".
                                                         format(self.name, variable))
         return variable
 
-    def _execute(
-        self,
-        variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 context=None
+                 ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
         :return: (2D np.array) self.learning_signal
@@ -360,17 +367,44 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
-        self.learning_signal = super(LearningMechanism, self)._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
-        )
+        self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
+                                                                       runtime_params=runtime_params,
+                                                                       context=context
+                                                                       )
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
+        # # TEST PRINT
+        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
+        #     if self.context.composition:
+        #         time = self.context.composition.scheduler_processing.clock.simple_time
+        #     else:
+        #         time = self.current_execution_time
+        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
+        #         format(self.context.flags_string,
+        #                time.trial,
+        #                # self.pass_,
+        #                time.time_step))
+        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+
         self.value = [self.learning_signal]
         return self.value
+
+    def _update_output_states(self, runtime_params=None, context=None):
+        '''Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
+
+        Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
+        This insures that weights are updated within the same trial in which they have been learned
+        '''
+
+        super()._update_output_states(runtime_params, context)
+
+        if self.context.composition:
+            learned_projection = self.activity_source.recurrent_projection
+            learned_projection.execute(context=ContextFlags.LEARNING)
+            learned_projection.context.execution_phase = ContextFlags.IDLE
+
 
     @property
     def activity_source(self):

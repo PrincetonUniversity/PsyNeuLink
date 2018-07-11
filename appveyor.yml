@@ -1,3 +1,8 @@
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
 version: '{build}'
 clone_depth: 25
 init:
@@ -8,10 +13,14 @@ environment:
     PATH: C:\Python35\Scripts;%PATH%
   - PYTHON: C:\Python36
     PATH: C:\Python36\Scripts;%PATH%
+  - PYTHON: C:\Python37
+    PATH: C:\Python37\Scripts;%PATH%
   - PYTHON: C:\Python35-x64
     PATH: C:\Python35-x64\Scripts;%PATH%
   - PYTHON: C:\Python36-x64
     PATH: C:\Python36-x64\Scripts;%PATH%
+  - PYTHON: C:\Python37-x64
+    PATH: C:\Python37-x64\Scripts;%PATH%
 install:
 - cmd: >-
     %PYTHON%\\python.exe -m pip install -U certifi pip

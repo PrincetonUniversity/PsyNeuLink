@@ -947,10 +947,11 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    CHANGED, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, EXECUTION_COUNT, \
+    FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, \
-    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, \
-    PARAMETER_STATES, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
+    INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, \
+    PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
     VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
@@ -1201,10 +1202,16 @@ class Mechanism_Base(Mechanism):
         contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism. If the current value
         of an OutputState does not have a corresponding label, then its numeric value is used instead.
 
+    condition : Condition : None
+        condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
+        `System` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
+        Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
+        the Mechanism directly to a Scheduler that is then assigned to the System.
+
     is_finished : bool : default False
-        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by `Component-based
-        Conditions <Conditions_Component_Based>` to predicate the execution of one or more other Components on the
-        Mechanism.
+        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>` in a `trial`; used by
+        `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
+        Components on the Mechanism.
 
     COMMENT:
         phaseSpec : int or float :  default 0
@@ -1935,6 +1942,16 @@ class Mechanism_Base(Mechanism):
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+        # Assign attributes to be included in attributes_dict
+        #   keys are keywords exposed to user for assignment
+        #   values are names of corresponding attributes
+        self.attributes_dict_entries = dict(OWNER_VARIABLE = VARIABLE,
+                                            OWNER_VALUE = VALUE,
+                                            EXECUTION_COUNT = CURRENT_EXECUTION_COUNT,
+                                            EXECUTION_TIME = CURRENT_EXECUTION_TIME)
+        if hasattr(self, PREVIOUS_VALUE):
+            self.attributes_dict_entries.update({'PREVIOUS_VALUE': PREVIOUS_VALUE})
+
     def _instantiate_function(self, function, function_params=None, context=None):
         """Assign weights and exponents if specified in input_states
         """
@@ -2026,7 +2043,7 @@ class Mechanism_Base(Mechanism):
             If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
             effectively begins the function's accumulation over again at the specified value, and updates related
-            attributes on the mechanism.
+            attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
 
             If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`, its `reinitialize
             <Mechanism_Base.reinitialize>` method:
@@ -2080,8 +2097,7 @@ class Mechanism_Base(Mechanism):
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, Integrator):
                 new_input = self.integrator_function.reinitialize(*args)[0]
-
-                self.value = super()._execute(variable=new_input, context="REINITIALIZING")
+                self.value = self.function_object.execute(variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
@@ -2101,6 +2117,9 @@ class Mechanism_Base(Mechanism):
         else:
             raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
+
+        # if hasattr(self, PREVIOUS_VALUE):
+        #     self.previous_value = None
 
     def get_current_mechanism_param(self, param_name):
         if param_name == "variable":
@@ -2195,10 +2214,9 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(
-                    variable=self.instance_defaults.variable,
-                    runtime_params=runtime_params,
-                    context=context,
+                return_value =  self._execute(variable=self.instance_defaults.variable,
+                                              runtime_params=runtime_params,
+                                              context=context,
                 )
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -3407,13 +3425,23 @@ class Mechanism_Base(Mechanism):
 
     @property
     def attributes_dict(self):
-        attribs_dict = MechParamsDict(
-                OWNER_VARIABLE = self.variable,
-                OWNER_VALUE = self.value,
-                EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
-                EXECUTION_TIME = self.current_execution_time,
-                INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
-        )
+        '''Note: this needs to be updated each time it is called, as it must be able to report current values'''
+
+        # # MODIFIED 6/29/18 OLD:
+        # attribs_dict = MechParamsDict(
+        #         OWNER_VARIABLE = self.variable,
+        #         OWNER_VALUE = self.value,
+        #         EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
+        #         EXECUTION_TIME = self.current_execution_time,
+        #         INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
+        # )
+        # MODIFIED 6/29/18 NEW JDC:
+        # Construct attributes_dict from entries specified in attributes_dict_entries
+        #   (which is assigned in _instantiate_attributes_before_function)
+        attribs_dict = MechParamsDict({key:getattr(self, value) for key,value in self.attributes_dict_entries.items()})
+        attribs_dict.update({INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]})
+        # MODIFIED 6/29/18 END
+
         attribs_dict.update(self.user_params)
         del attribs_dict[FUNCTION]
         try:
@@ -3427,7 +3455,6 @@ class Mechanism_Base(Mechanism):
         except KeyError:
             pass
         return attribs_dict
-
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification
