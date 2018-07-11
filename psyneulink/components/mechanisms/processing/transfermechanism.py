@@ -1069,65 +1069,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Call parameter states for integrator function
-        is_count = len(self.input_states)
         if self.integrator_mode:
-            # Allocate a shadow structure to overload user supplied parameters
-            if_params = builder.alloca(f_params.type.pointee.elements[1], 1)
-            if_ids = self.integrator_function.get_param_ids()
-        else:
-            if_ids = []
-
-        for idx, if_param in enumerate(if_ids):
-            param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
-            raw_param_val = builder.load(param_in_ptr)
-            param_out_ptr = builder.gep(if_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-
-            # FIXME: Work around parameter rename. Mechanisms "smoothing_factor"
-            # is integrator function's "rate"
-            if if_param == RATE:
-                if_param = INTEGRATION_RATE
-
-            # FIXME: Why wouldn't it be there?
-            # If there is no param state, provide a copy of the user param value
-            if if_param not in self._parameter_states:
-                builder.store(raw_param_val, param_out_ptr)
-                continue
-
-            state = self._parameter_states[if_param]
-            i = self._parameter_states.key_values.index(if_param)
-            assert state is self.parameter_states[i]
-
-            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
-
-            # Param states are in the 4th block, after input, function_objects,
-            # and output
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-
-            # Construct the input out of the user values and incoming projections
-            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
-            raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            # WORKAROUND: cast input pointer to match the state input subtype
-            raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
-            builder.store(raw_param_val, raw_ptr)
-
-            # Copy mod_afferent inputs
-            for idx, ps_mod in enumerate(state.mod_afferents):
-                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
-                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
-                afferent_val = builder.load(mod_in_ptr)
-                builder.store(afferent_val, mod_out_ptr)
-
-            # Parameter states modify corresponding parameter in param struct
-            ps_output = param_out_ptr
-
-            # WORKAROUND: cast output to match the state output type
-            # to workaround x vs. [x] mismatch
-            func_output_type = ps_function.args[3].type.pointee
-            if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
-                ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
-
-            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+            # Integrator function is the second in the function param aggregate
+            if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, si)
 
         # Allocate a shadow structure to overload user supplied parameters
         mf_params = builder.alloca(f_params.type.pointee.elements[0], 1)
