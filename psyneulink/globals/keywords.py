@@ -252,10 +252,10 @@ class DistanceMetrics:
     ----------
 
     MAX_DIFF
-        :math:`d = \\max(a_1-a_2)`
+        :math:`d = |\\max(a_1-a_2)|`
 
     DIFFERENCE
-        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -265,7 +265,8 @@ class DistanceMetrics:
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
+        a_2}}\\right|`
 
     COMMENT:
     PEARSON
@@ -285,7 +286,7 @@ class DistanceMetrics:
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
         self.CORRELATION = CORRELATION
-        self.PEARSON = PEARSON
+        # self.PEARSON = PEARSON
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
