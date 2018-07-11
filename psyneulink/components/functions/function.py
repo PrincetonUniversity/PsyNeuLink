@@ -9728,9 +9728,6 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool : Default False
-        specifies whether to use absolute value(s) in determining the distance.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9758,9 +9755,6 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool
-        determines whether to use absolute value(s) in determining the distance (metric-specific).
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9784,14 +9778,12 @@ class Distance(ObjectiveFunction):
                  default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
-                 absolute_value:bool=False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
-                                                  absolute_value=absolute_value,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -9835,6 +9827,12 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def correlation(v1, v2):
+        v1_norm = v1-np.mean(v1)
+        v2_norm = v2-np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
+
     def function(self,
                  variable=None,
                  params=None,
@@ -9859,10 +9857,7 @@ class Distance(ObjectiveFunction):
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_DIFF:
-            if self.absolute_value:
-                result = abs(np.max(v1 - v2))
-            else:
-                result = np.max(v1 - v2)
+            result = abs(np.max(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
@@ -9879,11 +9874,8 @@ class Distance(ObjectiveFunction):
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
-            result = np.correlate(v1, v2)
-
-        # Pearson Correlation of v1 and v2
-        elif self.metric is PEARSON:
-            result = np.corrcoef(v1, v2)
+            # result = np.correlate(v1, v2)
+            return 1-np.abs(Distance.correlation(v1, v2))
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -9900,15 +9892,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
-            # # MODIFIED 11/12/17 OLD:
-            # result /= len(variable[0])
-            # MODIFIED 11/12/17 NEW:
+        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
                 result /= len(v1)
-            # MODIFIED 11/12/17 END
 
         return result
 
