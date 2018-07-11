@@ -739,6 +739,8 @@ class MappingProjection(PathwayProjection_Base):
         return self.function_object.get_context_initializer()
 
 
+    # Provide invocation wrapper for easier debuging
+    # This can be replaced by redirecting llvmSymbolName to self.function_object
     def _gen_llvm_function_body(self, ctx, builder):
         params, state, vi, vo = builder.function.args
 
