@@ -435,14 +435,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
-        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
-        The default is the `Distance` Function, using the `MAX_DIFF` metric and **absolute_value** option, which
-        computes the elementwise difference between  two arrays and returns the difference with the maximum absolute
-        value.
+        specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
+        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float : default 0.01
-        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
-        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
+        <RecurrentTransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
