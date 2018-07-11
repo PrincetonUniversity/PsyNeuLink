@@ -1068,63 +1068,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-        # Call parameter states for integrator function
         if self.integrator_mode:
             # Integrator function is the second in the function param aggregate
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, si)
 
-        # Allocate a shadow structure to overload user supplied parameters
-        mf_params = builder.alloca(f_params.type.pointee.elements[0], 1)
-
-        # Call parameter states for main function
-        for idx, mf_param in enumerate(self.function_object.get_param_ids()):
-            param_in_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            raw_param_val = builder.load(param_in_ptr)
-            param_out_ptr = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            # FIXME: why wouldn't it be there?
-            # If there is no param state, provide a copy of the user param value
-            if mf_param not in self._parameter_states:
-                builder.store(raw_param_val, param_out_ptr)
-                continue
-
-            state = self._parameter_states[mf_param]
-            i = self._parameter_states.key_values.index(mf_param)
-            assert state is self.parameter_states[i]
-
-            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
-
-            # Param states are in the 4th block, after input, function_object,
-            # and output
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            # Construct the input out of the user values and incoming projections
-            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
-            raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            # WORKAROUND: cast input pointer to match the state input subtype
-            raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
-            builder.store(raw_param_val, raw_ptr)
-
-            # Copy mod_afferent inputs
-            for idx, ps_mod in enumerate(state.mod_afferents):
-                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
-                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
-                afferent_val = builder.load(mod_in_ptr)
-                builder.store(afferent_val, mod_out_ptr)
-
-            # Parameter states modify corresponding parameter in param struct
-            ps_output = param_out_ptr
-
-            # WORKAROUND: cast output to match the state output type
-            # to workaround x vs. [x] mismatch
-            func_output_type = ps_function.args[3].type.pointee
-            if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
-                ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
-
-            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
-
-
-        if self.integrator_mode:
             if_fun = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
             if_in = is_out
             if_out = builder.alloca(if_fun.args[3].type.pointee, 1)
@@ -1133,6 +1081,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             mf_in = if_out
         else:
             mf_in = is_out
+
+        # Main function is the first in the function param aggregate
+        mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, si)
 
         main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
