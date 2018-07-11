@@ -350,10 +350,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     convergence_function : function : default Distance(metric=MAX_DIFF)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
         by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
-        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the
-        same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is
-        the `Distance` Function, using the `MAX_DIFF` metric which computes the elementwise difference between two
-        arrays and returns the difference with the maximum absolute value.
+        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
+        as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is the `Distance`
+        Function, using the `MAX_DIFF` metric  which computes
+        the elementwise difference between two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
         specifies the value of the `delta <ContrastiveHebbianMechanism.delta>`
