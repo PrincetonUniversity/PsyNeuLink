@@ -120,7 +120,7 @@ def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Control composition scalar")
-@pytest.mark.parametrize("mode", ['Python'])
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
 def test_3_mechanisms_2_origins_1_control_1_terminal(benchmark, mode):
     #
     #   B--A
@@ -141,7 +141,7 @@ def test_3_mechanisms_2_origins_1_control_1_terminal(benchmark, mode):
     B = ObjectiveMechanism(function=Linear,
                            #monitored_output_states=[C], #setup later
                            name='LC ObjectiveMechanism')
-    A = LCControlMechanism()
+    A = LCControlMechanism(name="A")
 #                           modulated_mechanisms=D,
 #                           objective_mechanism=B # setup later
     E = TransferMechanism(name="E", function=Linear(slope=5.0))

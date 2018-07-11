@@ -357,7 +357,7 @@ import typecheck as tc
 import llvmlite.ir as ir
 
 from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.components.functions.function import get_param_value_for_keyword
+from psyneulink.components.functions.function import get_param_value_for_keyword, MULTIPLICATIVE
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
@@ -874,7 +874,25 @@ class ParameterState(State_Base):
         # Create a local copy of the function parameters
         f_params = builder.alloca(state_f.args[0].type.pointee, 1)
         builder.store(builder.load(params), f_params)
+        assert len(self.mod_afferents) <= 1
         # TODO Use mod afferents to update the local function parameters
+        if len(self.mod_afferents) == 1:
+            f_mod_ptr = builder.gep(input, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            # WORKAROUND: Mismatch between x and [x] for control projection's
+            # value and param shape
+            if isinstance(f_mod_ptr.type.pointee, ir.ArrayType) and f_mod_ptr.type.pointee.count == 1:
+                f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            f_mod = builder.load(f_mod_ptr)
+
+            afferent = self.mod_afferents[0]
+            # FIXME: get proper index!!!
+            assert afferent.sender.modulation is MULTIPLICATIVE
+            f_mod_param_idx = 0
+            f_mod_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(f_mod_param_idx)])
+            builder.store(f_mod, f_mod_param_ptr)
+
 
         builder.call(state_f, [f_params, state, f_input, output])
         return builder
