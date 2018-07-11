@@ -2673,6 +2673,15 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+        fun = ctx.get_llvm_function(function.llvmSymbolName)
+        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
+        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+
+        builder.call(fun, [params, context, fun_in, fun_out])
+
+        return fun_out, builder
+
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
@@ -2681,15 +2690,10 @@ class Mechanism_Base(Mechanism):
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_params_ptr, ctx, builder, params, context, si)
 
-
-        mf = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        mf_in, builder = self._gen_llvm_function_input_parse(builder, ctx, mf, is_output)
-        mf_out = builder.alloca(mf.args[3].type.pointee, 1)
         mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_context, is_output)
 
-        builder.call(mf, [mf_params, mf_context, mf_in, mf_out])
-
-        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, mf_out)
+        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
         builder = self._gen_llvm_output_states(ctx, builder, params, context, ppval, so)
         return builder
