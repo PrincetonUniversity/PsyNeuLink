@@ -1466,7 +1466,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.able;  if it is not, raise exception:
+                #        self.variable;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
@@ -1498,6 +1498,18 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
+            # MODIFIED 7/11/18 OLD:
+            # if projection in self.path_afferents:
+            #     assert True
+            # MODIFIED 7/11/18 NEW:
+            # if any(proj.sender == projection.sender for proj in self.path_afferents):
+            if any(proj.sender == projection.sender for proj in self.path_afferents):
+                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
+                              format(Projection.__name__, repr(projection.sender.name),
+                                     projection.sender.owner.name,
+                              repr(self.name), self.owner.name, repr(projection.name)))
+                continue
+            # MODIFIED 7/11/18 END
 
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
