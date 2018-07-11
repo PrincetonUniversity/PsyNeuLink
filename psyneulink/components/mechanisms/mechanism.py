@@ -2651,6 +2651,28 @@ class Mechanism_Base(Mechanism):
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
         return f_params, builder
 
+    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
+        for i, state in enumerate(self.output_states):
+            #FIXME: can we rely on this?
+            os_in_spec = state._variable
+            if os_in_spec == OWNER_VALUE:
+                os_input = value
+            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
+                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+            else:
+                #TODO: support more options
+                print(value.type)
+                print(os_in_spec)
+                assert False
+
+            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(os_function, [os_params, os_context, os_input, os_output])
+
+        return builder
+
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
@@ -2669,25 +2691,7 @@ class Mechanism_Base(Mechanism):
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, mf_out)
 
-        for i, state in enumerate(self.output_states):
-            #FIXME: can we rely on this?
-            os_in_spec = state._variable
-            if os_in_spec == OWNER_VALUE:
-                os_input = ppval
-            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
-                os_input = builder.gep(ppval, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
-            else:
-                #TODO: support more options
-                print(ppval.type)
-                print(os_in_spec)
-                assert False
-
-            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_function = ctx.get_llvm_function(state.llvmSymbolName)
-            builder.call(os_function, [os_params, os_context, os_input, os_output])
-
+        builder = self._gen_llvm_output_states(ctx, builder, params, context, ppval, so)
         return builder
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
