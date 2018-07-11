@@ -5,7 +5,6 @@ Contributors Guide
 * `File_Structure`
 * `Environment_Setup`
 * `Components_Overview`
-* `Mechanism_Implementation`
 * `Compositions_Overview`
 * `Scheduler`
 * `Testing`
@@ -72,11 +71,6 @@ The subclasses of Component should override Component's functions to implement t
 
 Compositions Overview
 ---------------------
-
-.. _Mechanism_Implementation:
-
-Mechanism Implementation
-------------------------
 
 .. _Scheduler:
 
