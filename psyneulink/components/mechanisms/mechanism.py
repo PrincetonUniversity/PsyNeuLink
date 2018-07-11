@@ -2596,15 +2596,13 @@ class Mechanism_Base(Mechanism):
 
         return is_output, builder
 
-    def _gen_llvm_param_states(self, func, ctx, builder, params, context, si):
+    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
         # Allocate a shadow structure to overload user supplied parameters
-        # FIXME: Get proper index
-        f_index = 1
-        f_params = builder.alloca(params.type.pointee.elements[f_index], 1)
+        f_params = builder.alloca(f_params_ptr.type.pointee, 1)
 
         # Call parameter states for function
         for idx, f_param in enumerate(func.get_param_ids()):
-            param_in_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(f_index), ctx.int32_ty(idx)])
+            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             raw_param_val = builder.load(param_in_ptr)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # If there is no param state, provide a copy of the user param value
@@ -2658,7 +2656,8 @@ class Mechanism_Base(Mechanism):
 
         is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
 
-        mf_params, builder = self._gen_llvm_param_states(self.function_object, ctx, builder, params, context, si)
+        mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_params_ptr, ctx, builder, params, context, si)
 
 
         mf = ctx.get_llvm_function(self.function_object.llvmSymbolName)
