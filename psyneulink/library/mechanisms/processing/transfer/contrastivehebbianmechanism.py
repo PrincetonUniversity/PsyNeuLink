@@ -350,14 +350,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
-        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous `value
-        <ContrastiveHebbian.value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
-        as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is the `Distance`
-        Function, using the `MAX_DIFF` metric and `absolute_value <Distance.absolute_value>` option, which computes
-        the elementwise difference between two arrays and returns the difference with the maximum absolute value.
+        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
+        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the
+        same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is
+        the `Distance` Function, using the `MAX_DIFF` metric and `absolute_value <Distance.absolute_value>` option,
+        which computes the elementwise difference between two arrays and returns the difference with the maximum
+        absolute value.
 
     convergence_criterion : float : default 0.01
-        specifies the value of the `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
+        specifies the value of the `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
     max_passes : int : default 1000
@@ -473,9 +474,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     convergence_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
-        <ContrastiveHebbianMechanism.previous_value>` and returns a scalar value; used to determine when `each phase
-        of execution is complete <ContrastiveHebbian_Execution>` (i.e., when `is_converged
-        <ContrastiveHebbianMechanism.is_converged>` is `True`.
+        <ContrastiveHebbianMechanism.previous_value>`; used to determine when `each phase of execution is complete
+        <ContrastiveHebbian_Execution>` (i.e., when `is_converged <ContrastiveHebbianMechanism.is_converged>` is `True`.
     
     convergence_criterion : float
         determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which `each phase of execution completes

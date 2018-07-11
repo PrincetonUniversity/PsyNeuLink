@@ -514,11 +514,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         `clip <TransferMechanism.clip>` that it exceeds.
 
     convergence_function : function : default Distance(metric=DIFFERENCE)
-        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the function that calculates `delta <TransferMechanism.delta>`, and determines when `is_converged
+        <TransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float : default 0.01
-        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
-        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
