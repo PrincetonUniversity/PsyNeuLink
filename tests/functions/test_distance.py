@@ -21,7 +21,7 @@ test_data = [
     # (test_var, kw.CORRELATION, False, None, np.correlate(v1, v2)),
     # (test_var, kw.CORRELATION, True,  None, np.correlate(v1, v2)/norm),
     (test_var, kw.CORRELATION, False, None, Function.Distance.correlation(v1,v2)),
-    (test_var, kw.CORRELATION, True,  None, Function.Distance.correlation(v1,v2)/norm),
+    (test_var, kw.CORRELATION, True,  None, Function.Distance.correlation(v1,v2)),
     # (test_var, kw.PEARSON, False, None, np.corrcoef(v1, v2)),
     # (test_var, kw.PEARSON, True,  None, np.corrcoef(v1, v2)/norm),
     (test_var, kw.CROSS_ENTROPY, False, None, -np.sum(v1*np.log(v2))),
