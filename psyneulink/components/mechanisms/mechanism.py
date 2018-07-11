@@ -2571,10 +2571,7 @@ class Mechanism_Base(Mechanism):
 
         return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
 
-
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, context, si, so = builder.function.args
-
+    def _gen_llvm_input_states(self, ctx, builder, params, context, si):
         # Allocate temporary storage. We rely on the fact that series
         # of input state results should match the main function input.
         is_output_list = []
@@ -2596,6 +2593,14 @@ class Mechanism_Base(Mechanism):
             is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(is_function, [is_params, is_context, is_in, is_out])
+
+        return is_output, builder
+
+
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, context, si, so = builder.function.args
+
+        is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
 
         # Allocate a shadow structure to overload user supplied parameters
         mf_params = builder.alloca(params.type.pointee.elements[1], 1)
