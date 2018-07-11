@@ -9,7 +9,6 @@ Contributors Guide
 * `Compositions_Overview`
 * `Scheduler`
 * `Documentation`
-* `Publishing`
 
 .. _Introduction:
 
