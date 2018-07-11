@@ -385,6 +385,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
@@ -973,6 +974,15 @@ class EVCControlMechanism(ControlMechanism):
                                           COST_FUNCTION,
                                           self.name,
                                           num_control_projections))
+
+    def _instantiate_control_signal(self, control_signal, context=None):
+        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        '''
+        control_signal = super()._instantiate_control_signal(control_signal, context)
+        if control_signal.cost_options is None:
+            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        return control_signal
+
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):

@@ -303,15 +303,20 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, UserDefinedFunction
+from psyneulink.components.component import function_type, method_type
+from psyneulink.components.functions.function import \
+    AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, \
+    UserDefinedFunction, is_function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PROB, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.globals.keywords import \
+    DIFFERENCE, FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
+    NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
+    STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
@@ -408,19 +413,22 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(           \
-    default_variable=None,       \
-    size=None,                   \
-    input_states=None,           \
-    function=Linear,             \
-    initial_value=None,          \
-    noise=0.0,                   \
-    integration_rate=0.5,        \
-    integrator_mode=False,       \
-    clip=[float:min, float:max], \
-    output_states=RESULTS        \
-    params=None,                 \
-    name=None,                   \
+    TransferMechanism(                                  \
+    default_variable=None,                              \
+    size=None,                                          \
+    input_states=None,                                  \
+    function=Linear,                                    \
+    initial_value=None,                                 \
+    noise=0.0,                                          \
+    integration_rate=0.5,                               \
+    integrator_mode=False,                              \
+    clip=[float:min, float:max],                        \
+    convergence_function=Distance(metric=DIFFERENCE),   \
+    convergence_criterion=None,                         \
+    max_passes=None,                                    \
+    output_states=RESULTS                               \
+    params=None,                                        \
+    name=None,                                          \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
@@ -504,6 +512,19 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
+
+    convergence_function : function : default Distance(metric=DIFFERENCE)
+        specifies the function that calculates `delta <TransferMechanism.delta>`, and determines when `is_converged
+        <TransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float : default 0.01
+        specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
+
+    max_passes : int : default 1000
+        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : str, list or np.ndarray : default RESULTS
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
@@ -629,12 +650,35 @@ class TransferMechanism(ProcessingMechanism_Base):
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
 
-    previous_value : float
-        the `value <TransferMechanism.value>` on the previous execution of the Mechanism.
+    previous_value : 2d np.array [array(float64)] : default None
+        `value <TransferMechanism.value>` after the previous execution of the Mechanism.  It is assigned `None` on
+        the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
-    delta : float
-        the change in `value <TransferMechanism.value>` from the previous execution of the TransferMechanism
-        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
+        .. note::
+           The TransferMechanism's `previous_value` attribute is distinct from the `previous_value
+           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <TransferMechanism.integrator_function>`.
+
+    delta : scalar
+        value returned by `convergence_function <TransferMechanism.convergence_function>`;  used to determined
+        when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    is_converged : bool
+        `True` if `delta <TransferMechanism.delta>` is less than or equal to `convergence_criterion
+        <TransferMechanism.convergence_criterion>`.
+
+    convergence_function : function
+        compares `value <TransferMechanism.value>` with `previous_value <TransferMechanism.previous_value>`;
+        result is used to determine when `is_converged <TransferMechanism.is_converged>` is `True`.
+
+    convergence_criterion : float
+        determines the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
+
+    max_passes : int or None
+        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
+        the `convergence_criterion <TransferMechanism.convergence_criterion>`, after which an error occurs;
+        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
     output_states : *ContentAddressableList[OutputState]*
         list of Mechanism's `OutputStates <OutputStates>`; by default there is one OutputState for each InputState,
@@ -685,6 +729,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integration_rate=0.5,
                  integrator_mode=False,
                  clip=None,
+                 convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
+                 convergence_criterion:float=0.01,
+                 max_passes:tc.optional(int)=1000,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -708,6 +755,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
+                                                  convergence_function=convergence_function,
+                                                  convergence_criterion=convergence_criterion,
+                                                  max_passes=max_passes,
                                                   params=params)
 
         self.integrator_function = None
@@ -890,10 +940,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
+        # if self.integrator_mode:
+        self.previous_value = None
+
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
+
+        if isinstance(self.convergence_function, Function):
+            self.convergence_function = self.convergence_function.function
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
@@ -988,6 +1044,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
+        self._update_previous_value()
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1014,7 +1071,25 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                     )
             value = self._clip_result(clip, value)
 
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     # self.previous_value = self.value
+        #     self._update_previous_value()
+
+        # Used by update_previous_value, convergence_function and delta
+        self._current_value = value
+
         return value
+
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        self.previous_value = None
+
+    def _update_previous_value(self):
+        if self.integrator_mode:
+            try:
+                self.previous_value = self.value
+            except:
+                self.previous_value = None
 
     def _parse_function_variable(self, variable, context=None):
 
@@ -1062,16 +1137,13 @@ class TransferMechanism(ProcessingMechanism_Base):
     def clip(self):
         return self._clip
 
-
     @clip.setter
     def clip(self, value):
         self._clip = value
 
     @property
     def delta(self):
-        if self.integrator_function:
-            return self.value - self.previous_value # self.previous_value TBI
-        return None
+        return self.convergence_function([self._current_value, self.previous_value])
 
     @property
     def integrator_mode(self):
@@ -1083,6 +1155,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function is None:
                 self.integrator_function = self.original_integrator_function
                 self._integrator_mode = True
+            if not hasattr(self, PREVIOUS_VALUE):
+                self.previous_value = None
         elif val is False:
             if self.integrator_function is not None:
                 self.original_integrator_function = self.integrator_function
@@ -1090,6 +1164,26 @@ class TransferMechanism(ProcessingMechanism_Base):
             self._integrator_mode = False
         else:
             raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
+
+    @property
+    def is_converged(self):
+        # Check for convergence
+        if (self.convergence_criterion is not None and
+                self.previous_value is not None and
+                self.context.initialization_status != ContextFlags.INITIALIZING):
+            if self.delta <= self.convergence_criterion:
+                return True
+            elif self.current_execution_time.pass_ >= self.max_passes:
+                raise TransferError("Maximum number of executions ({}) has occurred before reaching "
+                                    "convergence_criterion ({}) for {} in trial {} of run {}".
+                                    format(self.max_passes, self.convergence_criterion, self.name,
+                                           self.current_execution_time.trial, self.current_execution_time.run))
+            else:
+                return False
+        # Otherwise just return True
+        else:
+            return None
+
 
 
 

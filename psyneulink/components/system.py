@@ -2277,7 +2277,7 @@ class System(System_Base):
                     # Search System for Mechanisms with OutputStates with the string as their name
                     for mech in self.mechanisms:
                         for output_state in mech.output_states:
-                            if output_state.name is spec:
+                            if output_state.name == spec:
                                 monitored_output_state_tuples.extend(
                                         [MonitoredOutputStateTuple(output_state=output_state,
                                                                    weight=weight,
