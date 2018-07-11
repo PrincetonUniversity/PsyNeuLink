@@ -3422,7 +3422,7 @@ class System(System_Base):
     @property
     def stateful_mechanisms(self):
         """
-        List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
+        List of all mechanisms in the system that are currently marked as stateful (mechanism.has_initializers = True)
 
         Returns
         -------
@@ -3432,7 +3432,7 @@ class System(System_Base):
 
         stateful_mechanisms = []
         for mechanism in self.mechanisms:
-            if mechanism.auto_dependent:
+            if mechanism.has_initializers:
                 stateful_mechanisms.append(mechanism)
 
         return stateful_mechanisms

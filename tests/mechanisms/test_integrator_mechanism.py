@@ -983,14 +983,10 @@ class TestIntegratorNoise:
 
 class TestStatefulness:
 
-    def test_autodependent_property(self):
+    def test_has_initializers_property(self):
         I = IntegratorMechanism()
-        assert I.auto_dependent
+        assert I.has_initializers
 
-        # I2 = IntegratorMechanism(function=Linear())
-        # assert not I2.auto_dependent
-        #
-        print(I.reinitialize_when)
 
 
 class TestAGTUtilityIntegrator:

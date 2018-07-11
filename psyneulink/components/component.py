@@ -948,7 +948,7 @@ class Component(object):
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
 
-        self._auto_dependent = False
+        self._has_initializers = False
         self._role = None
 
         # self.componentName = self.componentType
@@ -2666,11 +2666,11 @@ class Component(object):
 
         self.function_object.owner = self
 
-        # KAM added 6/14/18 for functions that do not pass their auto_dependent status up to their owner via property
-        # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
-        # auto_dependent status
-        if self.function_object.auto_dependent:
-            self.auto_dependent = True
+        # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
+        # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
+        # has_initializers status
+        if self.function_object.has_initializers:
+            self.has_initializers = True
 
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
@@ -3048,22 +3048,22 @@ class Component(object):
         return self.log.logged_items
 
     @property
-    def auto_dependent(self):
-        return self._auto_dependent
+    def has_initializers(self):
+        return self._has_initializers
 
-    @auto_dependent.setter
-    def auto_dependent(self, value):
+    @has_initializers.setter
+    def has_initializers(self, value):
         """
-        Assign auto_dependent status to Component and any of its owners up the hierarchy.
+        Assign has_initializers status to Component and any of its owners up the hierarchy.
 
-        Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
+        Adding reinitialize_when attribute to Components that are now has_initializers, and setting the default
         reinitialize condition to Never().
         """
-        self._auto_dependent = value
+        self._has_initializers = value
         self.reinitialize_when = Never()
         if hasattr(self, "owner"):
             if self.owner is not None:
-                self.owner.auto_dependent = True
+                self.owner.has_initializers = True
 
 
     @property
