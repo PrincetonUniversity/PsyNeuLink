@@ -1062,26 +1062,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
-            is_out_type = integrator_function.args[2].type.pointee
-        else:
-            is_out_type = main_function.args[2].type.pointee
-
-
-        # Allocate space for input state results
-        is_out = builder.alloca(is_out_type, 1)
-
-        # Call input states
-        for i, state in enumerate(self.input_states):
-            is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_output = builder.gep(is_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_function = ctx.get_llvm_function(state.llvmSymbolName)
-            builder.call(is_function, [is_params, is_context, is_input, is_output])
+        is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
 
         # Params and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -1199,14 +1180,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
 
         if self.integrator_mode:
+            if_fun = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
             if_in = is_out
-            if_out = builder.alloca(integrator_function.args[3].type.pointee, 1)
+            if_out = builder.alloca(if_fun.args[3].type.pointee, 1)
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            builder.call(integrator_function, [if_params, if_context, if_in, if_out])
+            builder.call(if_fun, [if_params, if_context, if_in, if_out])
             mf_in = if_out
         else:
             mf_in = is_out
 
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         if isinstance(self.function_object, NormalizingFunction):
