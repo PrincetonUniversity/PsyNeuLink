@@ -1394,9 +1394,9 @@ class Process(Process_Base):
                                           "so its receiver must be a Mechanism in the pathway".
                                           format(self.name, item))
 
-                # Check if there is already a projection between the sender and receiver
-                if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
-                    continue
+                # # Check if there is already a projection between the sender and receiver
+                # if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
+                #     continue
 
                 # Projection spec is an instance of a MappingProjection
                 if isinstance(item, MappingProjection):
@@ -1531,6 +1531,7 @@ class Process(Process_Base):
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:
                 if proj.sender.owner is sndr_mech:
+                    # Skip recurrent projections
                     try:
                         if self.pathway[pathway_index] == proj:
                             continue
