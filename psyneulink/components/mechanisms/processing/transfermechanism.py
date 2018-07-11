@@ -1070,15 +1070,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if self.integrator_mode:
             # Integrator function is the second in the function param aggregate
+            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, si)
 
-            if_fun = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
-            if_in = is_out
-            if_out = builder.alloca(if_fun.args[3].type.pointee, 1)
-            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            builder.call(if_fun, [if_params, if_context, if_in, if_out])
-            mf_in = if_out
+            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function, if_params, if_context, is_out)
         else:
             mf_in = is_out
 
