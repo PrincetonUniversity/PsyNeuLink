@@ -278,29 +278,29 @@ class RECURRENT_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(                                           \
-    default_variable=None,                                                \
-    size=None,                                                            \
-    function=Linear,                                                      \
-    matrix=HOLLOW_MATRIX,                                                 \
-    auto=None,                                                            \
-    hetero=None,                                                          \
-    initial_value=None,                                                   \
-    noise=0.0,                                                            \
-    integrator_mode=False,                                                \
-    integration_rate=0.5,                                                 \
-    clip=[float:min, float:max],                                          \
-    has_recurrent_input_state=False                                       \
-    combination_function=LinearCombination,                               \
-    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
-    convergence_criterion=None,                                           \
-    max_passes=None,                                                      \
-    enable_learning=False,                                                \
-    learning_rate=None,                                                   \
-    learning_function=Hebbian,                                            \
-    learning_condition=UPDATE,                                            \
-    params=None,                                                          \
-    name=None,                                                            \
+    RecurrentTransferMechanism(                      \
+    default_variable=None,                           \
+    size=None,                                       \
+    function=Linear,                                 \
+    matrix=HOLLOW_MATRIX,                            \
+    auto=None,                                       \
+    hetero=None,                                     \
+    initial_value=None,                              \
+    noise=0.0,                                       \
+    integrator_mode=False,                           \
+    integration_rate=0.5,                            \
+    clip=[float:min, float:max],                     \
+    has_recurrent_input_state=False                  \
+    combination_function=LinearCombination,          \
+    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_criterion=None,                      \
+    max_passes=None,                                 \
+    enable_learning=False,                           \
+    learning_rate=None,                              \
+    learning_function=Hebbian,                       \
+    learning_condition=UPDATE,                       \
+    params=None,                                     \
+    name=None,                                       \
     prefs=None)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
@@ -434,7 +434,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
+    convergence_function : function : default Distance(metric=MAX_DIFF)
         specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
