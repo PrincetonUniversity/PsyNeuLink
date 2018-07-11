@@ -1109,13 +1109,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
                 builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
 
-        for i, state in enumerate(self.output_states):
-            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_input = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_function = ctx.get_llvm_function(state.llvmSymbolName)
-            builder.call(os_function, [os_params, os_context, os_input, os_output])
+        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, so)
 
         return builder
 
