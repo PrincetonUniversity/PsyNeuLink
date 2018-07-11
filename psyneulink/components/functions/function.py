@@ -9877,10 +9877,6 @@ class Distance(ObjectiveFunction):
             # result = np.correlate(v1, v2)
             return 1-np.abs(Distance.correlation(v1, v2))
 
-        # # Pearson Correlation of v1 and v2
-        # elif self.metric is PEARSON:
-        #     result = np.corrcoef(v1, v2)
-
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
