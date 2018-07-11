@@ -21,6 +21,7 @@ class TestContrastiveHebbian:
         print('matrix:\n', m.afferents[1].matrix)
         results = s.run(inputs=[2, 2], num_trials=4)
         print(results)
+        np.testing.assert_allclose(results, [[np.array([2.])], [np.array([2.])], [np.array([2.])], [np.array([2.])]])
 
 
     def test_using_Hebbian_learning_of_orthognal_inputs_without_integrator_mode(self):
