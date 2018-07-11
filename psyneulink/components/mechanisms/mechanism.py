@@ -2596,42 +2596,41 @@ class Mechanism_Base(Mechanism):
 
         return is_output, builder
 
-
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, context, si, so = builder.function.args
-
-        is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
-
+    def _gen_llvm_param_states(self, func, ctx, builder, params, context, si):
         # Allocate a shadow structure to overload user supplied parameters
-        mf_params = builder.alloca(params.type.pointee.elements[1], 1)
+        # FIXME: Get proper index
+        f_index = 1
+        f_params = builder.alloca(params.type.pointee.elements[f_index], 1)
 
-        # Call parameter states for main function
-        for idx, mf_param in enumerate(self.function_object.get_param_ids()):
-            param_in_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+        # Call parameter states for function
+        for idx, f_param in enumerate(func.get_param_ids()):
+            param_in_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(f_index), ctx.int32_ty(idx)])
             raw_param_val = builder.load(param_in_ptr)
-            param_out_ptr = builder.gep(mf_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            # FIXME: why wouldn't it be there?
+            param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # If there is no param state, provide a copy of the user param value
-            if mf_param not in self._parameter_states:
+            # FIXME: why wouldn't it be there?
+            if f_param not in self._parameter_states:
                 builder.store(raw_param_val, param_out_ptr)
                 continue
 
-            state = self._parameter_states[mf_param]
-            i = self._parameter_states.key_values.index(mf_param)
+            state = self._parameter_states[f_param]
+            i = self._parameter_states.key_values.index(f_param)
 
             assert state is self.parameter_states[i]
 
             ps_function = ctx.get_llvm_function(state.llvmSymbolName)
 
-            # Param states are in the 4th block, after input, function_object,
-            # and output
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            # Param states are in the 4th block (idx 3).
+            # After input, function_object,  and output
+            ps_idx = ctx.int32_ty(3)
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
 
             # Construct the input out of the user value and incoming projection
             ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
             raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            # WORKAROUND: cast input pointer to match the state input subtype
+
+            # FIXME: cast input pointer to match the state input subtype
             raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
             builder.store(raw_param_val, raw_ptr)
 
@@ -2645,18 +2644,22 @@ class Mechanism_Base(Mechanism):
             # Parameter states modify corresponding parameter in param struct
             ps_output = param_out_ptr
 
-            # WORKAROUND: cast output to match the state output type
+            # FIXME: cast output to match the state output type
             # to workaround x vs. [x] mismatch
             func_output_type = ps_function.args[3].type.pointee
             if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
                 ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
-            # Parameter states modify the corresponding function object parameter
-            ps_output = param_out_ptr
-            # WORKAROUND: cast output pointer to match the state output type
-            ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
-
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+        return f_params, builder
+
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, context, si, so = builder.function.args
+
+        is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
+
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, ctx, builder, params, context, si)
+
 
         mf = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         mf_in, builder = self._gen_llvm_function_input_parse(builder, ctx, mf, is_output)
