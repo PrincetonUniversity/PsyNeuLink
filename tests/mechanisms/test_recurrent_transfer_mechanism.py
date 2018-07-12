@@ -981,3 +981,24 @@ class TestRecurrentInputState:
         np.testing.assert_allclose(R2.value, [[14., 12., 13.]])
         assert len(R2.input_states) == 2
         assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
+
+class TestCustomCombinationFunction:
+
+    def test_rt_without_custom_comb_fct(self):
+        R1 = RecurrentTransferMechanism(
+                has_recurrent_input_state=True,
+                size=2,
+        )
+        result = R1.execute([1,2])
+        np.testing.assert_allclose(result, [[1,2]])
+
+    def test_rt_with_custom_comb_fct(self):
+        def my_fct(x):
+            return x[0] * x[1] if len(x) == 2 else x[0]
+        R2 = RecurrentTransferMechanism(
+                has_recurrent_input_state=True,
+                size=2,
+                combination_function=my_fct
+        )
+        result = R2.execute([1,2])
+        np.testing.assert_allclose(result, [[0,0]])

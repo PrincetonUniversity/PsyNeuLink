@@ -542,7 +542,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
     class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        variable = np.array([[0]])
+        variable = np.array([[0,0]])
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
@@ -670,16 +670,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
+        if self.previous_value is None:
+            return current_activity
+
         try:
-            # self.current_activity = np.squeeze(current_activity)
             current_activity = np.squeeze(current_activity)
             # Set value of primary OutputState to current activity
             self.current_activity = current_activity
         except:
             assert False
 
-        if self.previous_value is None:
-            return current_activity
 
         if self.is_converged:
             # Terminate if this is the end of the minus phase

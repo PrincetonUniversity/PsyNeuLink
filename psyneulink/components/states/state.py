@@ -2927,6 +2927,7 @@ def _parse_state_spec(state_type=None,
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
+        spec_function = state_type.ClassDefaults.function
 
 
     # Assign value based on variable if not specified
@@ -2935,14 +2936,10 @@ def _parse_state_spec(state_type=None,
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
-            raise StateError(
-                'state_spec value specified ({0}) is not compatible with the value '
-                'computed ({1}) from the state_spec function ({2})'.format(
-                    state_dict[VALUE],
-                    spec_function_value,
-                    spec_function
-                )
-            )
+            raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
+                             'the value ({}) computed from the state_spec function ({})'.
+                             format(state_dict[VALUE], repr(state_dict[NAME]), state_type.__name__,
+                                    state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
         raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
