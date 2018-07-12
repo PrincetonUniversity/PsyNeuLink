@@ -27,7 +27,7 @@ __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
     'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
-    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'AUTO_DEPENDENT', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
@@ -84,8 +84,8 @@ __all__ = [
     'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
     'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
-    'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT',
-    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
+    'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
+    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
     'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM',
     'PRODUCT', 'PROJECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
     'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
@@ -252,10 +252,10 @@ class DistanceMetrics:
     ----------
 
     MAX_DIFF
-        :math:`d = \\max(a_1-a_2)`
+        :math:`d = |\\max(a_1-a_2)|`
 
     DIFFERENCE
-        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -265,7 +265,8 @@ class DistanceMetrics:
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
+        a_2}}\\right|`
 
     COMMENT:
     PEARSON
@@ -285,7 +286,7 @@ class DistanceMetrics:
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
         self.CORRELATION = CORRELATION
-        self.PEARSON = PEARSON
+        # self.PEARSON = PEARSON
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -421,6 +422,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
+PREVIOUS_VALUE = 'previous_value'
 LABELS = 'labels'
 PARAMS = "params"
 NAME = "name"
@@ -837,7 +839,7 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
-AUTO_DEPENDENT='auto_dependent'
+HAS_INITIALIZERS='has_initializers'
 DRIFT_RATE = 'drift_rate'
 INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'

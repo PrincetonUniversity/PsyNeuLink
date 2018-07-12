@@ -1464,7 +1464,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.able;  if it is not, raise exception:
+                #        self.variable;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
@@ -1496,6 +1496,12 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
+            if any(proj.sender == projection.sender for proj in self.path_afferents):
+                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
+                              format(Projection.__name__, repr(projection.sender.name),
+                                     projection.sender.owner.name,
+                              repr(self.name), self.owner.name, repr(projection.name)))
+                continue
 
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
@@ -2918,6 +2924,7 @@ def _parse_state_spec(state_type=None,
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
+        spec_function = state_type.ClassDefaults.function
 
 
     # Assign value based on variable if not specified
@@ -2926,14 +2933,10 @@ def _parse_state_spec(state_type=None,
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
-            raise StateError(
-                'state_spec value specified ({0}) is not compatible with the value '
-                'computed ({1}) from the state_spec function ({2})'.format(
-                    state_dict[VALUE],
-                    spec_function_value,
-                    spec_function
-                )
-            )
+            raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
+                             'the value ({}) computed from the state_spec function ({})'.
+                             format(state_dict[VALUE], repr(state_dict[NAME]), state_type.__name__,
+                                    state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
         raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
