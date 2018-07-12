@@ -172,6 +172,7 @@ from collections import Iterable
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
@@ -1146,7 +1147,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_mechanism.learning_enabled = value
         # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:
-            print("Learning cannot be enabled for {} because it has no {}".
+            warnings.warn("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))
             return
 
