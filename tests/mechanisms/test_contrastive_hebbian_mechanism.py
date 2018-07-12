@@ -12,7 +12,6 @@ class TestContrastiveHebbian:
             hetero=-1,
             size=2,
         )
-
         s = pnl.sys(m, o)
         ms = pnl.Scheduler(system=s)
         ms.add_condition(o, pnl.WhenFinished(m))
