@@ -1,5 +1,6 @@
 import psyneulink as pnl
 import numpy as np
+import pytest
 
 class TestContrastiveHebbian:
 
@@ -146,3 +147,30 @@ class TestContrastiveHebbian:
                                               additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
         assert len(CHL.output_states)==4
         assert pnl.PLUS_PHASE_OUTPUT in CHL.output_states.names
+
+    def test_configure_learning(self):
+
+        o = pnl.TransferMechanism()
+        m = pnl.ContrastiveHebbianMechanism(size=2,matrix=[[0,-1],[-1,0]])
+
+        with pytest.warns(UserWarning) as record:
+            m.learning_enabled = True
+
+        correct_message_found = False
+        for warning in record:
+            if ("Learning cannot be enabled" in str(warning.message) and
+                    "because it has no LearningMechanism" in str(warning.message)):
+                correct_message_found = True
+                break
+        assert correct_message_found
+
+        m.configure_learning()
+        m.reinitialize_when=pnl.Never()
+        s = pnl.sys(m,o)
+
+        ms = pnl.Scheduler(system=s)
+        ms.add_condition(o, pnl.WhenFinished(m))
+        s.scheduler_processing=ms
+        results = s.run(inputs=[2,2], num_trials=4)
+
+        np.testing.assert_allclose(results, [[[4.]], [[2.23061754]], [[2.3088827]], [[2.39958265]]])
