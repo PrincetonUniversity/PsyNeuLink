@@ -597,9 +597,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
+        # input_size = (input_size or size or
+        #               (len(default_variable) if default_variable is not None else len(self.ClassDefaults.variable)))
+        # output_size = (output_size or size or
+        #               (len(default_variable) if default_variable is not None else len(self.ClassDefaults.variable)))
+        input_size = input_size or size
+        output_size = output_size or size
+
         input_states = [{NAME:'INPUT',SIZE:input_size},
                         {NAME:'RECURRENT',SIZE:size},
                         {NAME:'TARGET',SIZE:output_size}]
+        # input_states = [{NAME:'INPUT',VARIABLE:np.zeros(input_size)},
+        #                 {NAME:'RECURRENT',VARIABLE:np.zeros(size)},
+        #                 {NAME:'TARGET',VARIABLE:np.zeros(output_size)}]
         if additional_input_states:
             if isinstance(additional_input_states, list):
                 input_states += additional_input_states
