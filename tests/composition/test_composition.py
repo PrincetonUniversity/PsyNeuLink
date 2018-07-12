@@ -3109,3 +3109,77 @@ class TestInputSpecifications:
         )
         assert np.allclose([125], output)
 
+    def test_some_inputs_not_specified(self):
+        comp = Composition()
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=Linear(slope=2.0))
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              default_variable=[[0.0, 0.0, 0.0]],
+                              function=Linear(slope=3.0))
+
+        C = TransferMechanism(name="composition-pytests-C")
+
+        D = TransferMechanism(name="composition-pytests-D")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+
+        comp._analyze_graph()
+
+        inputs = {B: [[1., 2., 3.]],
+                  D: [[4.]]}
+
+        sched = Scheduler(composition=comp)
+        comp.run(inputs=inputs,
+                 scheduler_processing=sched)[0]
+
+        assert np.allclose(A.output_values, [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.output_values, [[3., 6., 9.]])
+        assert np.allclose(C.output_values, [[0.]])
+        assert np.allclose(D.output_values, [[4.]])
+
+    def test_some_inputs_not_specified_origin_node_is_composition(self):
+
+        compA = Composition()
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=Linear(slope=2.0))
+        compA.add_c_node(A)
+        compA._analyze_graph()
+
+        comp = Composition()
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              default_variable=[[0.0, 0.0, 0.0]],
+                              function=Linear(slope=3.0))
+
+        C = TransferMechanism(name="composition-pytests-C")
+
+        D = TransferMechanism(name="composition-pytests-D")
+
+        comp.add_c_node(compA)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+
+        comp._analyze_graph()
+
+        inputs = {B: [[1., 2., 3.]],
+                  D: [[4.]]}
+
+        sched = Scheduler(composition=comp)
+        comp.run(inputs=inputs,
+                 scheduler_processing=sched)[0]
+
+        assert np.allclose(A.output_values, [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(compA.output_values, [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.output_values, [[3., 6., 9.]])
+        assert np.allclose(C.output_values, [[0.]])
+        assert np.allclose(D.output_values, [[4.]])
+
+
