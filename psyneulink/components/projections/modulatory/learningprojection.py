@@ -536,9 +536,9 @@ class LearningProjection(ModulatoryProjection_Base):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
                                           format(self.name, self.sender.owner.name))
 
-        # This assigns self as an outgoing projection from the self.sender (LearningMechanism) outputState
-        #    and formats self.instance_defaults.variable to be compatible with that outputState's value
-        #    (i.e., its learning_signal)
+        # This assigns LearningProjection as an outgoing projection from the LearningMechanism's LearningSignal
+        #    OutputState and formats the LearningProjection's instance_defaults.variable to be compatible with
+        #    the LearningSignal's value
         super()._instantiate_sender(self.sender, context=context)
 
         if self.sender.learning_rate is not None:
@@ -603,7 +603,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
-    def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
+    def _execute(self, variable, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -613,9 +613,6 @@ class LearningProjection(ModulatoryProjection_Base):
         # Pass during initialization (since has not yet been fully initialized
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             return self.context.initialization_status
-
-        # if self.learning_rate:
-        #     runtime_params.update({SLOPE:self.learning_rate})
 
         if variable is not None:
             learning_signal = variable
@@ -650,8 +647,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
         self.weight_change_matrix = super(ShellClass, self)._execute(
-            variable=variable,
-            function_variable=learning_signal,
+            variable=learning_signal,
             runtime_params=runtime_params,
             context=context
         )

@@ -11,7 +11,7 @@ from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-
+from psyneulink.scheduling.condition import Never
 
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
@@ -30,6 +30,7 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
+        assert True
 
     def test_recurrent_mech_auto_associative_projection(self):
 
@@ -457,7 +458,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -469,7 +470,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -481,7 +482,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -493,7 +494,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
-                smoothing_factor=1.0,
+                integration_rate=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -502,12 +503,12 @@ class TestRecurrentTransferMechanismFunction:
 
 class TestRecurrentTransferMechanismTimeConstant:
 
-    def test_recurrent_mech_smoothing_factor_0_8(self):
+    def test_recurrent_mech_integration_rate_0_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1])
@@ -515,12 +516,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[.96, .96, .96, .96]])
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_0_5(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_0_5(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
             integrator_mode=True
         )
@@ -529,12 +530,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]])  # due to inevitable floating point errors
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_1_8(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_1_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
             integrator_mode=True
         )
@@ -545,12 +546,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([-4, -3, 0, 1])
         np.testing.assert_allclose(val, [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]])
 
-    def test_recurrent_mech_smoothing_factor_0_8_initial_1_2(self):
+    def test_recurrent_mech_integration_rate_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            smoothing_factor=0.8,
+            integration_rate=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
             integrator_mode=True
         )
@@ -819,6 +820,24 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
 
+    def test_recurrent_mech_with_learning_warning(self):
+        R = RecurrentTransferMechanism(size=2,
+                                       function=Linear,
+                                       matrix=np.full((2, 2), 0.1),
+                                       enable_learning=True)
+        P = Process(pathway=[R])
+        with pytest.warns(UserWarning) as record:
+            S = System(processes=[P],
+                       prefs={VERBOSE_PREF: True})
+
+        # hack to find a specific warning (12 warnings are generated by the System construction)
+        correct_message_found = False
+        for warning in record:
+            if "This is okay if the learning (e.g. Hebbian learning) does not need a target." in str(warning.message):
+                correct_message_found = True
+                break
+        assert correct_message_found
+
     def test_learning_of_orthognal_inputs(self):
         size=4
         R = RecurrentTransferMechanism(
@@ -889,17 +908,15 @@ class TestRecurrentTransferMechanismReinitialize:
         R = RecurrentTransferMechanism(name="R",
                  initial_value=0.5,
                  integrator_mode=True,
-                 smoothing_factor=0.1,
+                 integration_rate=0.1,
                  auto=1.0,
                  noise=0.0)
         P = Process(name="P",
                     pathway=[R])
         S = System(name="S",
                    processes=[P])
-
-        assert np.allclose(R.previous_value, 0.5)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
+        R.reinitialize_when = Never()
+        assert np.allclose(R.integrator_function.previous_value, 0.5)
 
         S.run(inputs={R: 1.0},
               num_trials=2,
@@ -912,22 +929,16 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 2    |   variable = 1.0 + 0.55
         # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
         # linear fn: 0.65*1.0 = 0.65
-        assert np.allclose(R.previous_value, 0.65)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
+        assert np.allclose(R.integrator_function.previous_value, 0.65)
 
         R.integrator_function.reinitialize(0.9)
 
-        assert np.allclose(R.previous_value, 0.9)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.9)
+        assert np.allclose(R.integrator_function.previous_value, 0.9)
         assert np.allclose(R.value, 0.65)
 
         R.reinitialize(0.5)
 
-        assert np.allclose(R.previous_value, 0.5)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
+        assert np.allclose(R.integrator_function.previous_value, 0.5)
         assert np.allclose(R.value, 0.5)
 
         S.run(inputs={R: 1.0}, num_trials=2)
@@ -937,9 +948,7 @@ class TestRecurrentTransferMechanismReinitialize:
         # Trial 4
         # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
         # linear fn: 0.7*1.0 = 0.7
-        assert np.allclose(R.previous_value, 0.7)
-        assert np.allclose(R.initial_value, 0.5)
-        assert np.allclose(R.integrator_function.initializer, 0.5)
+        assert np.allclose(R.integrator_function.previous_value, 0.7)
 
 class TestClip:
     def test_clip_float(self):
@@ -957,3 +966,39 @@ class TestClip:
                               clip=[-2.0, 2.0])
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
+
+class TestRecurrentInputState:
+    def test_ris_simple(self):
+        R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                            matrix=[[1.0, 2.0, 3.0],
+                                                    [2.0, 1.0, 2.0],
+                                                    [3.0, 2.0, 1.0]],
+                                            has_recurrent_input_state=True)
+        R2.execute(input=[1, 3, 2])
+        p2 = Process(pathway=[R2])
+        s2 = System(processes=[p2])
+        s2.run(inputs=[[1, 3, 2]])
+        np.testing.assert_allclose(R2.value, [[14., 12., 13.]])
+        assert len(R2.input_states) == 2
+        assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
+
+class TestCustomCombinationFunction:
+
+    def test_rt_without_custom_comb_fct(self):
+        R1 = RecurrentTransferMechanism(
+                has_recurrent_input_state=True,
+                size=2,
+        )
+        result = R1.execute([1,2])
+        np.testing.assert_allclose(result, [[1,2]])
+
+    def test_rt_with_custom_comb_fct(self):
+        def my_fct(x):
+            return x[0] * x[1] if len(x) == 2 else x[0]
+        R2 = RecurrentTransferMechanism(
+                has_recurrent_input_state=True,
+                size=2,
+                combination_function=my_fct
+        )
+        result = R2.execute([1,2])
+        np.testing.assert_allclose(result, [[0,0]])

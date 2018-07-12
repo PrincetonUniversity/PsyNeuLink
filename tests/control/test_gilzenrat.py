@@ -1,14 +1,11 @@
-import sys
 import numpy as np
 
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
-from psyneulink.components.functions.function import Linear, Logistic, NormalDist, FHNIntegrator
+from psyneulink.components.functions.function import FHNIntegrator, Linear
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+
 
 class TestGilzenratMechanisms:
 
@@ -125,15 +122,17 @@ class TestGilzenratMechanisms:
         # plt.plot(plot_w_list)
         # plt.show()
 
-        np.testing.assert_allclose(plot_v_list, [0.2, 0.22493312915681499, 0.24844236992931412, 0.27113468959297515,
-                                                 0.29350254152625221, 0.31599112332052792, 0.33904651470437225,
-                                                 0.36315614063656521, 0.38888742632665502, 0.41692645840176923,
-                                                 0.44811281741549686]
+        np.testing.assert_allclose(plot_v_list, [0.2, 0.22493312915681499, 0.24840327807265583, 0.27101619694032797,
+                                                 0.29325863380332173, 0.31556552465130933, 0.33836727470568129,
+                                                 0.36212868305470697, 0.38738542852040492, 0.41478016676749552,
+                                                 0.44509530539552955]
 )
-        np.testing.assert_allclose(plot_w_list, [0.0, 0.0019518690642000148, 0.0041351416812363193,
-                                                 0.0065323063637677276, 0.0091322677555586273, 0.011929028036111457,
-                                                 0.014921084302726394, 0.018111324713170868, 0.021507331976846619,
-                                                 0.025122069034563425, 0.028974949616469712]
+        print(plot_w_list)
+        np.testing.assert_allclose(plot_w_list, [0.0, 0.0019900332500000003, 0.0042083541185625045,
+                                                 0.0066381342093118408, 0.009268739886338381, 0.012094486544132229,
+                                                 0.015114073825358726, 0.018330496914962583, 0.021751346023501487,
+                                                 0.025389465931011893, 0.029263968140538919]
+
 )
 #
 # class TestGilzenratFullModel:
@@ -316,62 +315,3 @@ class TestGilzenratMechanisms:
 #         # This displays a diagram of the System
 #         # task.show_graph()
 #
-
-class TestLCControlMechanism:
-    def test_default_lc_control_mechanism(self):
-        G = 1.0
-        k = 0.5
-        starting_value_LC = 2.0
-        user_specified_gain = 1.0
-
-        A = TransferMechanism(function=Logistic(gain=user_specified_gain))
-
-        B = TransferMechanism(function=Logistic(gain=user_specified_gain))
-        # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
-
-        P = Process(pathway=[A, B])
-
-        LC = LCControlMechanism(modulated_mechanisms=[A, B],
-                                base_level_gain=G,
-                                scaling_factor_gain=k,
-                                objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                                       monitored_output_states=[B],
-                                                                       name='LC ObjectiveMechanism')
-                                )
-        for output_state in LC.output_states:
-            output_state.value *= starting_value_LC
-
-        S = System(processes=[P])
-
-        gain_created_by_LC_output_state_1 = []
-        gain_created_by_LC_output_state_2 = []
-        mod_gain_assigned_to_A = []
-        base_gain_assigned_to_A = []
-        mod_gain_assigned_to_B = []
-        base_gain_assigned_to_B = []
-
-        def report_trial():
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
-            gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
-            mod_gain_assigned_to_A.append(A.mod_gain[0])
-            mod_gain_assigned_to_B.append(B.mod_gain[0])
-            base_gain_assigned_to_A.append(A.function_object.gain)
-            base_gain_assigned_to_B.append(B.function_object.gain)
-
-        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-              call_after_trial=report_trial)
-
-        # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
-        assert mod_gain_assigned_to_A[0] == starting_value_LC
-
-        # (2) _gain should always be set to user-specified value
-        for i in range(5):
-            assert base_gain_assigned_to_A[i] == user_specified_gain
-            assert base_gain_assigned_to_B[i] == user_specified_gain
-
-        # (3) LC output on trial n becomes gain of A and B on trial n + 1
-        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
-        assert np.allclose(mod_gain_assigned_to_B[1:], gain_created_by_LC_output_state_2[0:-1])
-
-        # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
-        assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)

@@ -3,15 +3,19 @@ import pytest
 import psyneulink as pnl
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def clear_registry():
     # Clear Registry to have a stable reference for indexed suffixes of default names
     from psyneulink.components.component import DeferredInitRegistry
     from psyneulink.components.mechanisms.mechanism import MechanismRegistry
     from psyneulink.components.projections.projection import ProjectionRegistry
+    from psyneulink.components.process import ProcessRegistry
+    from psyneulink.components.system import SystemRegistry
     pnl.clear_registry(DeferredInitRegistry)
     pnl.clear_registry(MechanismRegistry)
     pnl.clear_registry(ProjectionRegistry)
+    pnl.clear_registry(ProcessRegistry)
+    pnl.clear_registry(SystemRegistry)
 
 
 @pytest.mark.usefixtures('clear_registry')
@@ -38,7 +42,7 @@ class TestNaming:
     # ------------------------------------------------------------------------------------------------
     # TEST 2
     # Test that Processes and Systems assigned duplicate names are indexed starting at 1 (original is not indexed)
-    def test_process_and_system_default_names(self):
+    def test_process_and_system_default_names_2(self):
 
         T = pnl.TransferMechanism(name='T0')
         P1 = pnl.Process(name='MY PROCESS', pathway=[T])
@@ -65,20 +69,25 @@ class TestNaming:
     # Test that Mechanism assigned a duplicate name is incremented starting at 1 (original is not indexed)
 
     @pytest.mark.parametrize(
-        'name, expected1, expected2',
+        'name, expected_list',
         [
-            ('MY TRANSFER MECHANISM', 'MY TRANSFER MECHANISM', 'MY TRANSFER MECHANISM-1'),
-            ('A-1', 'A-1', 'A-1-1'),
-            ('A', 'A', 'A-2'),
-            ('A', 'A-3', 'A-4'),
-            ('A-1', 'A-5', 'A-6'),
+            ('MY TRANSFER MECHANISM', ['MY TRANSFER MECHANISM', 'MY TRANSFER MECHANISM-1']),
+            ('A-1', ['A-1', 'A-1-1', 'A-1-2']),
+            ('A', ['A', 'A-1', 'A-2']),
         ]
     )
-    def test_duplicate_assigned_mechanism_names(self, name, expected1, expected2):
-        TN1 = pnl.TransferMechanism(name=name)
-        TN2 = pnl.TransferMechanism(name=name)
-        assert TN1.name == expected1
-        assert TN2.name == expected2
+    def test_duplicate_assigned_mechanism_names(self, name, expected_list):
+        for expected_name in expected_list:
+            t = pnl.TransferMechanism(name=name)
+            assert t.name == expected_name
+
+    def test_duplicate_assigned_mechanism_names_2(self):
+        pnl.TransferMechanism(name='A')
+        pnl.TransferMechanism(name='A')  # A-1
+        pnl.TransferMechanism(name='A')  # A-2
+        t = pnl.TransferMechanism(name='A-1')
+
+        assert t.name == 'A-3'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5

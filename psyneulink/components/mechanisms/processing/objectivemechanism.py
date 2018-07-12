@@ -8,7 +8,6 @@
 
 # *********************************************  ObjectiveMechanism ****************************************************
 
-# FIX: RE-WRITE DOCS TO INDICATE THAT monitored_output_states IS AN ALIAS TO input_states ARGUMENT/ATTRIBUTE
 """
 
 Overview
@@ -36,6 +35,14 @@ as described below.
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+FOR DEVELOPERS:
+    The monitored_output_states argument is in effect and alias to the input_states argument
+    of the constructor for a Mechanism;  it is simply assigned to input_state in the __init__ method
+    and the specifications are handled by an override of the Mechanism's _instantiate_input_states method.
+    The monitored_output_states property returns the OutputStates that project to the Mechanism's InputStates
+COMMENT
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
@@ -562,6 +569,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs):
 
+        monitored_output_states = monitored_output_states or None # deal with possibility of empty list
         input_states = monitored_output_states
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
@@ -592,30 +600,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
-        self.controller = False
-
-    def _validate_variable(self, variable, context=None):
-        """Validate that default_variable (if specified) matches in number of values the monitored_output_states
-
-        """
-        # # MODIFIED 10/8/17 OLD: [OBVIATED BY ALIASING OF monitored_output_states TO input_states]
-        # # NOTE 6/29/17: (CW)
-        # # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
-        # # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
-        # # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
-        # # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
-        # # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
-        # # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
-        # # to always set variable to ClassDefaults.variable if variable and size are both None.
-        # # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
-        # #                       since params have not yet been validated and so self.params is not yet available
-        # if variable is not None and len(variable) != len(self.user_params[MONITORED_OUTPUT_STATES]):
-        #     raise ObjectiveMechanismError("The number of items specified for the default_variable arg ({}) of {} "
-        #                                   "must match the number of items specified for its monitored_output_states arg ({})".
-        #                                   format(len(variable), self.name, len(self.user_params[MONITORED_OUTPUT_STATES])))
-        # MODIFIED 10/8/17 END
-
-        return super()._validate_variable(variable=variable, context=context)
+        self.for_controller = False
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **role**, **monitored_output_states**, amd **input_states** arguments
@@ -630,20 +615,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                           format(target_set[ROLE], self.name))
 
-        if (INPUT_STATES in target_set and target_set[INPUT_STATES] is not None and
-                not all(input_state is None for input_state in target_set[INPUT_STATES])):
-            # FIX: 10/3/17 - ??ARE THESE DOING ANYTHING:  INTEGRATE THEM... HERE OR BELOW (IN _instantiate_input_states)
-            if MONITORED_OUTPUT_STATES in target_set:
-                monitored_output_states = target_set[MONITORED_OUTPUT_STATES]
-            elif hasattr(self, 'monitored_output_states'):
-                monitored_output_states = self.monitored_output_states
-            else:
-                pass
-
-        # FIX: 10/3/17 ->
-        if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
-            pass
-
     def _instantiate_input_states(self, monitored_output_states_specs=None, reference_value=None, context=None):
         """Instantiate InputStates specified in **input_states** argument of constructor or each OutputState
         specified in monitored_output_states_specs
@@ -657,18 +628,43 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Otherwise, uses monitored_output_States_specs as specification of InputStates to instantiate;
             these will replace any existing InputStates (including a default one)
         """
-        from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
-        if self.context.initialization_status == ContextFlags.UNSET:
-            # Use self.input_states (containing specs from **input_states** arg of constructor) or default InputState
-            input_states = self.input_states or [{STATE_TYPE: InputState, VARIABLE: [0]}]
-            return super()._instantiate_input_states(input_states=input_states, context=context)
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            # Use self.input_states (containing specs from **input_states** arg of constructor) or
+            #    or pass off instantiation of default InputState(s) to super
+            input_states = self.input_states or None
+            # return super()._instantiate_input_states(input_states=input_states, context=context)
+            input_states = super()._instantiate_input_states(input_states=input_states, context=context)
 
-        # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
-        #     (note: these will replace any existing ones, including a default one created on initialization)
-        return super()._instantiate_input_states(input_states=monitored_output_states_specs,
-                                                 reference_value=reference_value,
-                                                 context=context)
+        else:
+            # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
+            #     (note: these will replace any existing ones, including the default one created on initialization)
+            input_states = super()._instantiate_input_states(input_states=monitored_output_states_specs,
+                                                             reference_value=reference_value,
+                                                             context=context)
+        self._name_input_states(input_states)
+        return input_states
+
+    def _name_input_states(self, input_states):
+        # If InputStates are not already named, name them based on the OutputStates that project to them
+        from psyneulink.components.states.inputstate import InputState, INPUT_STATE
+        from psyneulink.globals.registry import remove_instance_from_registry, register_instance
+        if not input_states:
+            return
+        for state in input_states:
+            if not state.path_afferents:
+                continue
+            if len(state.path_afferents) > 1:
+                assert False
+            # If the name is not a default name, return
+            if not (state.name is InputState.__name__ or InputState.__name__ + '-' in state.name):
+                return
+            proj = state.path_afferents[0]
+            remove_instance_from_registry(registry=self._stateRegistry,
+                                          category=INPUT_STATE,
+                                          component=state)
+            state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
+            register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
@@ -736,8 +732,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 reference_value.append(projection_tuple.state.value)
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
-                                              reference_value=reference_value,
-                                              context = ContextFlags.METHOD)
+                                                      reference_value=reference_value,
+                                                      context = ContextFlags.METHOD)
 
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
@@ -765,10 +761,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if hasattr(self.function_object, WEIGHTS):
             if any(weight is not None for weight in weights):
-                self.function_object.weights = [weight or DEFAULT_WEIGHT for weight in weights]
+                self.function_object.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
         if hasattr(self.function_object, EXPONENTS):
             if any(exponent is not None for exponent in exponents):
-                self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
+                self.function_object.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
     @property

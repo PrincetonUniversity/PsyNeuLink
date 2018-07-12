@@ -17,12 +17,13 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
-  * `PredictionErrorDelta`
+  * `PredictionErrorDeltaFunction`
 
-TransferMechanism Functions:
+Transfer Functions:
   * `Linear`
   * `Exponential`
   * `Logistic`
+  * `ReLU`
   * `OneHot`
   * `SoftMax`
   * `LinearMatrix`
@@ -31,10 +32,12 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
+  * `Buffer`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
   * `AccumulatorIntegrator`
+  * `LCAIntegrator`
   * `FHNIntegrator`
   * `AGTUtilityIntegrator`
   * `BogaczEtAl`
@@ -54,6 +57,7 @@ Objective Functions:
 
 Learning Functions:
   * `Hebbian`
+  * `ContrastiveHebbian`
   * `Reinforcement`
   * `BackPropagation`
   * `TDLearning`
@@ -171,8 +175,10 @@ Functions are not executable objects, but their `function <Function_Base.functio
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
 `parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
-call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
-`runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
+call to the `function <Function_Base.function>`.
+
+For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Run_Runtime_Parameters>` in the `Run`
+method of their `Composition`.
 
 Class Reference
 ---------------
@@ -182,7 +188,7 @@ Class Reference
 import numbers
 import warnings
 
-from collections import namedtuple
+from collections import namedtuple, deque
 from enum import Enum, IntEnum
 from random import randint
 
@@ -192,17 +198,43 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, HAS_INITIALIZERS, \
+    BACKPROPAGATION_FUNCTION, BETA, BIAS, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
+    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
+    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
+    GAIN, GAMMA_DIST_FUNCTION, \
+    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
+    IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
+    LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
+    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
+    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_DIFF, MAX_INDICATOR, MAX_VAL, \
+    NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
+    OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
+    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
+    TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
+    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
+    VARIABLE, \
+    WALD_DIST_FUNCTION, WEIGHTS, \
+    kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
     'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
     'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
-    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'DISABLE',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
     'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
@@ -218,7 +250,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -288,9 +320,22 @@ class MultiplicativeParam():
 
 class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
+    name = 'ADDITIVE'
     init_val = 0
     reduce = lambda x : np.sum(np.array(x), axis=0)
+
+# class OverrideParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'OVERRIDE'
+#     init_val = None
+#     reduce = lambda x : None
+#
+# class DisableParam():
+#     attrib_name = OVERRIDE_PARAM
+#     name = 'DISABLE'
+#     init_val = None
+#     reduce = lambda x : None
+
 
 # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
@@ -336,11 +381,13 @@ class ModulationParam():
     #                                 lambda x : np.product(np.array(x), axis=0))
     ADDITIVE = AdditiveParam
     # ADDITIVE = ModulationType(ADDITIVE_PARAM,
-    #                           'ADDITIVE_PARAM',
+    #                           'ADDITIVE',
     #                           0,
     #                           lambda x : np.sum(np.array(x), axis=0))
     OVERRIDE = OVERRIDE_PARAM
+    # OVERRIDE = OverrideParam
     DISABLE = DISABLE_PARAM
+    # DISABLE = DisableParam
 
 MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
 ADDITIVE = ModulationParam.ADDITIVE
@@ -369,15 +416,38 @@ def _get_modulated_param(owner, mod_proj):
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
-    # Get the actual parameter of owner.function_object to be modulated
-    function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
-
-    # Get the function parameter's value
-    function_param_value = owner.function_object.params[function_param_name]
-    # MODIFIED 6/9/17 OLD:
-    # if function_param_value is None:
-    #     function_param_value = function_mod_meta_param_obj.init_val
-    # MODIFIED 6/9/17 END
+    # # MODIFIED 6/27/18 OLD
+    # # Get the actual parameter of owner.function_object to be modulated
+    # function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+    # # Get the function parameter's value
+    # function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEW:
+    if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
+        # function_param_name = function_mod_meta_param_obj
+        from psyneulink.globals.utilities import Modulation
+        function_mod_meta_param_obj = getattr(Modulation,function_mod_meta_param_obj)
+        function_param_name = function_mod_meta_param_obj
+        function_param_value = mod_proj.sender.value
+    else:
+        # Get the actual parameter of owner.function_object to be modulated
+        function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+        # Get the function parameter's value
+        function_param_value = owner.function_object.params[function_param_name]
+    # # MODIFIED 6/27/18 NEWER:
+    # from psyneulink.globals.utilities import Modulation
+    # mod_spec = function_mod_meta_param_obj.attrib_name
+    # if mod_spec == OVERRIDE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = mod_proj.sender.value
+    # elif mod_spec == DISABLE_PARAM:
+    #     function_param_name = mod_spec
+    #     function_param_value = None
+    # else:
+    #     # Get name of the actual parameter of owner.function_object to be modulated
+    #     function_param_name = owner.function_object.params[mod_spec]
+    #     # Get the function parameter's value
+    #     function_param_value = owner.function_object.params[mod_spec]
+    # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
     return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
@@ -482,7 +552,7 @@ class Function_Base(Function):
             - Parameters can be assigned and/or changed individually or in sets, by:
               - including them in the initialization call
               - calling the _instantiate_defaults method (which changes their default values)
-              - including them in a call the function method (which changes their values for just for that call)
+              - including them in a call the function method (which changes their values for just for that call)
             - Parameters must be specified in a params dictionary:
               - the key for each entry should be the name of the parameter (used also to name associated Projections)
               - the value for each entry is the value of the parameter
@@ -811,7 +881,6 @@ class ArgumentTherapy(Function_Base):
     classPreferences = {
         kwPreferenceSetName: 'ExampleClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     # Variable class default
@@ -1422,7 +1491,7 @@ class UserDefinedFunction(Function_Base):
 
         try:
             # Try calling with full list of args (including context and params)
-            return self.custom_function(**kwargs)
+            return call_with_pruned_args(self.custom_function, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
             return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
@@ -1444,7 +1513,8 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0])
+        # variable = np.array([0, 0])
+        variable = np.array([0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1928,7 +1998,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     classPreferences = {
         kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     multiplicative_param = SCALE
@@ -1964,11 +2033,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        if self.weights is not None:
-            self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1, 1)
-
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
@@ -1996,9 +2060,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} "
-                                        "for {1} must be the same".format(variable,
-                                                                          self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
+                                        format(self.__class__.__name__, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2020,17 +2083,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[EXPONENTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
 
@@ -2187,21 +2248,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
         if isinstance(scale, numbers.Number):
+            # scalar scale
             product = combination * scale
-            # Scalar scale and offset
-            if isinstance(offset, numbers.Number):
-                result = product + offset
-            # Scalar scale and Hadamard offset
-            else:
-                result = np.sum([product, offset], axis=0)
         else:
-            hadamard_product = np.product([combination, scale], axis=0)
-            # Hadamard scale, scalar offset
-            if isinstance(offset, numbers.Number):
-                result = hadamard_product + offset
-            # Hadamard scale and offset
-            else:
-                result = np.sum([hadamard_product, offset], axis=0)
+            # Hadamard scale
+            product = np.product([combination, scale], axis=0)
+
+        if isinstance(offset, numbers.Number):
+            # scalar offset
+            result = product + offset
+        else:
+            # Hadamard offset
+            result = np.sum([product, offset], axis=0)
 
         return result
 
@@ -2402,7 +2460,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     classPreferences = {
         kwPreferenceSetName: 'CombineMeansCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     multiplicative_param = SCALE
@@ -2648,8 +2705,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     classPreferences = {
         kwPreferenceSetName: 'PredictionErrorDeltaCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False,
-                                                            PreferenceLevel.INSTANCE)
     }
 
     class ClassDefaults(CombinationFunction.ClassDefaults):
@@ -2941,7 +2996,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -3387,6 +3441,151 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 
 MODE = 'mode'
+
+class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
+    """
+    ReLU(                  \
+         default_variable, \
+         gain=1.0,         \
+         bias=0.0,         \
+         leak=0.0,         \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+    .. _Relu:
+    Perform rectified linear transformation on variable,
+
+    Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
+
+    Arguments
+    ---------
+    variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it, if (variable - bias) is greater than 0.
+    bias : float : default 0.0
+        specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
+        result is greater than 0 and multiplying by either gain or leak based on the result. 
+    leak : float : default 0.0
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it if (variable - bias) is lesser than or equal to 0. 
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+    owner : Component
+        `component <Component>` to which to assign the Function.
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    Attributes
+    ----------
+    variable : number or np.array
+        contains value to be transformed.
+    gain : float : default 1.0
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
+        (variable - bias) is greater than 0. 
+    bias : float : default 0.0
+        value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
+        greater than 0 and multiplying by either gain or leak based on the result. 
+    leak : float : default 0.0
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
+        (variable - bias) is lesser than or equal to 0. 
+    bounds : (None,None)
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+    
+    
+    componentName = RELU_FUNCTION
+    parameter_keywords.update({GAIN, BIAS, LEAK})
+    
+    bounds = (None,None)
+    multiplicative_param = GAIN
+    additive_param = BIAS
+    
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 gain: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
+                 leak: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  bias=bias,
+                                                  leak=leak,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return:
+            
+            :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
+            
+        Arguments
+        ---------
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+        Returns
+        -------
+        ReLU transformation of variable : number or np.array
+        """
+        
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        gain = self.get_current_function_param(GAIN)
+        bias = self.get_current_function_param(BIAS)
+        leak = self.get_current_function_param(LEAK)
+        
+        return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
+
+    def derivative(self, output):
+        """
+        derivative(output)
+        Derivative of `function <ReLU.function>`.
+        Returns
+        -------
+        derivative :  number
+            gain if output > 0, leak otherwise
+        """
+        gain = self.get_current_function_param(GAIN)
+        leak = self.get_current_function_param(LEAK)
+        
+        if (output > 0): return gain
+        else: return leak
+
+
+MODE = 'mode'
+
 class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     OneHot(                \
@@ -3441,12 +3640,12 @@ class OneHot(TransferFunction):  # ---------------------------------------------
 
     mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
-            * **MAX_VAL**: element with the maximum signed value in the original array;
-            * *MAX_ABS_VAL**: element with the maximum absolute value;
-            * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
-            * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
-            * **PROB**: probabilistically chosen element based on probabilities passed in second item of
-            * **PROB_INDICATOR**: same as *PROB* but chosen item is assigned a value of 1.
+            * *MAX_VAL*: element with the maximum signed value in the original array;
+            * *MAX_ABS_VAL*: element with the maximum absolute value;
+            * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+            * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+            * *PROB*: probabilistically chosen element based on probabilities passed in second item of
+            * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3470,7 +3669,6 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     classPreferences = {
         kwPreferenceSetName: 'OneHotClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -4087,7 +4285,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 else:
                     raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
                                         format(self.receiver, self.name))
-            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
+            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
             else:
                 if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
                     print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
@@ -4108,7 +4306,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if param_name in function_keywords:
                     continue
 
-                if param_name is AUTO_DEPENDENT:
+                if param_name is HAS_INITIALIZERS:
                     continue
 
                 # Matrix specification param
@@ -4348,7 +4546,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(obj.receiver.instance_defaults.variable)
+                cols = obj.receiver.socket_width
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -4456,18 +4654,17 @@ class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
 # • why does integrator return a 2d array?
-# • are rate and noise converted to 1d np.array?  If not, correct docstring
-# • can noise and initializer be an array?  If so, validated in validate_param?
+# • are rate and noise converted to 1d np.array?  If not, correct docstring
+# • can noise and initializer be an array?  If so, validated in validate_param?
 
 class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
         rate=1.0,               \
-
         noise=0.0,              \
         time_step_size=1.0,     \
-        initializer,     \
+        initializer,            \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -4550,8 +4747,19 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         array, initializer will be applied to each variable element. In the case of an initializer function, this means
         that the function will be executed separately for each variable element.
 
-    previous_value : 1d np.array : default ClassDefaults.variable
+    previous_value : 1d np.array
         stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    initializers : list
+        stores the names of the initialization attributes for each of the stateful attributes of the function. The
+        index i item in initializers provides the initialization value for the index i item in `stateful_attributes
+        <Integrator.stateful_attributes>`.
+
+    stateful_attributes : list
+        stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
+        initialized by the value of the initialization attribute whose name is stored in index i of `initializers
+        <Integrator.initializers>`. In most cases, the stateful_attributes, in that order, are the return values of the
+        function.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4579,12 +4787,18 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 initializer=None,
+                 noise = 0.0,
+                 initializer = None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=None):
+
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value"]
 
         if initializer is None:
             if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
@@ -4592,8 +4806,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 # whenever assigning the function to a mechanism.
                 # The old values are compiled and passed in through params argument.
                 initializer = params[INITIALIZER]
+
             else:
                 initializer = self.ClassDefaults.variable
+
+        self._initialize_previous_value(initializer)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4601,9 +4818,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                                   noise=noise,
                                                   params=params)
 
-
-        # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
 
@@ -4613,15 +4827,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.initializer = initializer
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
-
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
+        self._validate_initializers(self.instance_defaults.variable)
         super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -4674,10 +4884,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
-
-        # if INITIALIZER in target_set:
-        #     print(target_set)
-        #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
             noise = target_set[NOISE]
@@ -4734,9 +4940,27 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                         )
 
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        # use np.broadcast_to to guarantee that all initializer type attributes take on the same
+        # shape as variable
+        if not np.isscalar(self.instance_defaults.variable):
+            for attr in self.initializers:
+                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.instance_defaults.variable.shape).copy())
+
+        # create all stateful attributes and initialize their values to the current values of their
+        # corresponding initializer attributes
+        for i in range(len(self.stateful_attributes)):
+            attr_name = self.stateful_attributes[i]
+            initializer_value = getattr(self, self.initializers[i]).copy()
+            setattr(self, attr_name, initializer_value)
+
+        self.has_initializers = True
+
+        super()._instantiate_attributes_before_function(function=function, context=context)
+
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
-
     def _validate_noise(self, noise):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
@@ -4763,6 +4987,23 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
+    def _validate_initializers(self, default_variable):
+        for initial_value_name in self.initializers:
+
+            initial_value = self.get_current_function_param(initial_value_name)
+
+            if isinstance(initial_value, (list, np.ndarray)):
+                if len(initial_value) != 1:
+                    # np.atleast_2d may not be necessary here?
+                    if np.shape(np.atleast_2d(initial_value))!= np.shape(np.atleast_2d(default_variable)):
+                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
+                                            .format(self.name, initial_value_name, initial_value, default_variable))
+            elif not isinstance(initial_value, (float, int)):
+                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
+                                    .format(self.name, initial_value_name, initial_value))
+
+    def _initialize_previous_value(self, initializer):
+        self.previous_value = np.atleast_1d(initializer)
 
     def _try_execute_param(self, param, var):
 
@@ -4817,35 +5058,93 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
-    def reinitialize(self, new_previous_value=None, **kwargs):
+
+    def reinitialize(self, *args):
         """
-            Effectively begins accumulation over again at the specified value.
+            Effectively begins accumulation over again at the specified value(s).
 
-            Sets
+            If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+            `stateful_attributes <Integrator.stateful_attributes>` to the value of the corresponding argument. Next, it
+            sets the `value <Integrator.value>` to a list containing each of the argument values.
 
-            - `previous_value <Integrator.previous_value>`
-            - `initializer <Integrator.initial_value>`
-            - `value <Integrator.value>`
+            If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
+            <Integrator.stateful_attributes>` to the value of the corresponding attribute in `initializers
+            <Integrator.initializers>`. Next, it sets the `value <Integrator.value>` to a list containing the values of
+            each of the attributes in `initializers <Integrator.initializers>`.
 
-            to the quantity specified.
+            Often, the only attribute in `stateful_attributes <Integrator.stateful_attributes>` is
+            `previous_value <Integrator.previous_value>` and the only attribute in `initializers
+            <Integrator.initializers>` is `initializer <Integrator.initializer>`, in which case the reinitialize method
+            sets `previous_value <Integrator.previous_value>` and `value <Integrator.value>` to either the value of the
+            argument (if an argument was passed into reinitialize) or the current value of `initializer
+            <Integrator.initializer>`.
 
-            For specific types of Integrator functions, additional values, such as initial time, must be specified, and
-            additional attributes are reset.
+            For specific types of Integrator functions, the reinitialize method may carry out other reinitialization
+            steps.
 
-            If no arguments are specified, then the instance default for `initializer <Integrator.initializer>` is used.
         """
-        if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
-        self._initializer = new_previous_value
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
+
+        reinitialization_values = []
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            for i in range(len(self.initializers)):
+                initializer_name = self.initializers[i]
+                reinitialization_values.append(self.get_current_function_param(initializer_name))
+
+        elif len(args) == len(self.initializers):
+            for i in range(len(self.initializers)):
+                initializer_name = self.initializers[i]
+                if args[i] is None:
+                    reinitialization_values.append(self.get_current_function_param(initializer_name))
+                else:
+                    # Not sure if np.atleast_1d is necessary here:
+                    reinitialization_values.append(np.atleast_1d(args[i]))
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            stateful_attributes_string = self.stateful_attributes[0]
+            if len(self.stateful_attributes) > 1:
+                for i in range(1, len(self.stateful_attributes) - 1):
+                    stateful_attributes_string += ", "
+                    stateful_attributes_string += self.stateful_attributes[i]
+                stateful_attributes_string += " and "
+                stateful_attributes_string += self.stateful_attributes[len(self.stateful_attributes) - 1]
+
+            initializers_string = self.initializers[0]
+            if len(self.initializers) > 1:
+                for i in range(1, len(self.initializers) - 1):
+                    initializers_string += ", "
+                    initializers_string += self.initializers[i]
+                initializers_string += " and "
+                initializers_string += self.initializers[len(self.initializers) - 1]
+
+            raise FunctionError("Invalid arguments ({}) specified for {}. If arguments are specified for the "
+                                "reinitialize method of {}, then a value must be passed to reinitialize each of its "
+                                "stateful_attributes: {}, in that order. Alternatively, reinitialize may be called "
+                                "without any arguments, in which case the current values of {}'s initializers: {}, will"
+                                " be used to reinitialize their corresponding stateful_attributes."
+                                .format(args,
+                                        self.name,
+                                        self.name,
+                                        stateful_attributes_string,
+                                        self.name,
+                                        initializers_string))
+
+        # rebuilding self.value rather than simply returning reinitialization_values in case any of the stateful
+        # attrs are modified during assignment
+        self.value = []
+        for i in range(len(self.stateful_attributes)):
+            setattr(self, self.stateful_attributes[i], reinitialization_values[i])
+            self.value.append(getattr(self, self.stateful_attributes[i]))
+
         return self.value
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
 
-class SimpleIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class SimpleIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     SimpleIntegrator(                 \
         default_variable=None,  \
@@ -4987,7 +5286,7 @@ class SimpleIntegrator(
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -5041,216 +5340,6 @@ class SimpleIntegrator(
 
         return adjusted_value
 
-class LCAIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
-    """
-    LCAIntegrator(                  \
-        default_variable=None,      \
-        noise=0.0,                  \
-        initializer=0.0,            \
-        rate=1.0,                   \
-        offset=None,                \
-        time_step_size=0.1,         \
-        params=None,                \
-        owner=None,                 \
-        prefs=None,                 \
-        )
-
-    .. _LCAIntegrator:
-
-    Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
-
-    .. math::
-
-        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-    COMMENT:
-    `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
-    `variable <variable.LCAIntegrator.variable>` + \
-    `noise <LCAIntegrator.noise>`;
-    COMMENT
-
-    Arguments
-    ---------
-
-    default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d np.array : default 1.0
-        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the
-        `value <LCAIntegrator.value>` on each time step
-
-    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
-        `noise <LCAIntegrator.noise>` for details).
-
-    initializer : float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        current input value some portion of which (determined by `rate <LCAIntegrator.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d np.array
-        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
-        accumulation of the `value <LCAIntegrator.value>` on each time step. If rate has a single element, it
-        applies to all elements of `variable <LCAIntegrator.variable>`;  if rate has more than one element, each element
-        applies to the corresponding element of `variable <LCAIntegrator.variable>`.
-
-    noise : float, function, list, or 1d np.array
-        specifies a value to be added in each call to `function <LCAIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d np.array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <LCAIntegrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
-
-    previous_value : 1d np.array : default ClassDefaults.variable
-        stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = SIMPLE_INTEGRATOR_FUNCTION
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: parameter_spec=1.0,
-                 noise=0.0,
-                 offset=None,
-                 initializer=None,
-                 time_step_size=0.1,
-                 params: tc.optional(dict)=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  time_step_size=time_step_size,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(
-            default_variable=default_variable,
-            initializer=initializer,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
-
-        self.auto_dependent = True
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
-        """
-        Return:
-
-        .. math::
-
-            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
-
-        Arguments
-        ---------
-
-        variable : number, list or np.array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        updated value of integral : 2d np.array
-
-        """
-
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        rate = np.atleast_1d(self.get_current_function_param(RATE))
-        initializer = self.get_current_function_param(INITIALIZER)  # unnecessary?
-        time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
-        offset = self.get_current_function_param(OFFSET)
-
-        if offset is None:
-            offset = 0.0
-
-        # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        previous_value = self.previous_value
-        new_value = variable
-
-        # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
-
-        adjusted_value = value + offset
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
-
-        return adjusted_value
 
 class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
@@ -5411,7 +5500,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         # Reassign to initializer in case default value was overridden
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_rate(self, rate):
         # unlike other Integrators, variable does not need to match rate
@@ -5477,6 +5566,258 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
             self.previous_value = adjusted_value
 
         return adjusted_value
+
+
+class Buffer(Integrator):  # ------------------------------------------------------------------------------
+    """
+    Buffer(                     \
+        default_variable=None,  \
+        rate=None,              \
+        noise=0.0,              \
+        history=None,           \
+        initializer,            \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _Buffer:
+
+    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
+    which is a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
+    applied to each item in the deque (including the newly added one) on each call, as follows:
+
+        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float : default None
+        specifies a value applied to each item in the deque on each call.
+
+    noise : float or Function : default 0.0
+        specifies a random value added to each item in the deque on each call.
+
+    history : int : default None
+        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
+
+    initializer float, list or ndarray : default []
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+        empty list.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value appended to the end of the deque.
+
+    rate : float
+        value added to each item of the deque on each call.
+
+    noise : float or Function
+        random value added to each item of the deque in each call.
+
+        .. note::
+            In order to generate random noise, a probability distribution function should be used (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    history : int
+        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
+        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
+        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
+        the value returned continues to be extended indefinitely.
+
+    initializer : float, list or ndarray
+        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        if the **new_previous_value** argument is not specified in the call to `reinitialize
+        <IntegratorFunction.reinitialize>`.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = BUFFER_FUNCTION
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=[],
+                 # KAM 6/26/18 changed default param values because constructing a plain buffer function ("Buffer())
+                 # was failing.
+                 # For now, updated default_variable, noise, and Alternatively, we can change validation on
+                 # default_variable=None,   # Changed to [] because None conflicts with initializer
+                 # rate: parameter_spec=1.0,
+                 # noise=0.0,
+                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 rate:tc.optional(tc.any(int, float))=1.0,
+                 noise:tc.optional(tc.any(int, float, callable))=0.0,
+                 history:tc.optional(int)=None,
+                 initializer=[],
+                 params: tc.optional(dict)=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  history=history,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def _initialize_previous_value(self, initializer):
+        initializer = initializer or []
+        self.previous_value = deque(initializer, maxlen=self.history)
+        return self.previous_value
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        self.has_initializers = True
+
+    def reinitialize(self, *args):
+        """
+
+        Clears the `previous_value <Buffer.previous_value>` deque.
+
+        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
+        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+
+        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+
+        """
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            reinitialization_value = self.get_current_function_param("initializer")
+
+        elif len(args) == 1:
+            reinitialization_value = args[0]
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
+                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "without any arguments, in which case the current initializer value, will be used to "
+                                "reinitialize previous_value".format(args,
+                                                                     self.name))
+
+        if reinitialization_value is None or reinitialization_value == []:
+            self.previous_value.clear()
+            self.value = deque([], maxlen=self.history)
+
+        else:
+            self.value = self._initialize_previous_value(reinitialization_value)
+
+        return self.value
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return: `previous_value <Buffer.previous_value>` appended with `variable
+        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
+
+        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
+
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of deque : deque
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        rate = np.array(self.get_current_function_param(RATE)).astype(float)
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
+
+        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
+        # Just return current input (for validation).
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return variable
+
+        self.previous_value.append(variable)
+
+        # Apply rate and/or noise if they are specified
+        if rate != 1.0:
+            self.previous_value *= rate
+        if noise:
+            self.previous_value += noise
+
+        self.previous_value = deque(self.previous_value, maxlen=self.history)
+
+        return self.previous_value
+
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
@@ -5629,7 +5970,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -5761,8 +6102,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             self.previous_value = adjusted_value
         return adjusted_value
 
-class DriftDiffusionIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class DriftDiffusionIntegrator(Integrator):  # -------------------------------------------------------------------------
     """
     DriftDiffusionIntegrator(           \
         default_variable=None,          \
@@ -5929,6 +6270,12 @@ class DriftDiffusionIntegrator(
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value", "previous_time"]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -5940,7 +6287,6 @@ class DriftDiffusionIntegrator(
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -5949,8 +6295,7 @@ class DriftDiffusionIntegrator(
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.previous_time = self.t0
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6012,41 +6357,13 @@ class DriftDiffusionIntegrator(
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        # FIX?
-        # Current output format is [[[decision_variable]], time]
-        return adjusted_value
+        return self.previous_value, self.previous_time
 
-    def reinitialize(self, new_previous_value=None, new_previous_time=None):
-        """
-        In effect, begins accumulation over again at the original starting point and time, or new ones.
-
-        Sets
-
-        - `previous_value <DriftDiffusionIntegrator.previous_value>`
-        - `initializer <DriftDiffusionIntegrator.initializer>`
-        - `value <DriftDiffusionIntegrator.value>`
-
-        to the value specified in the first argument.
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
-
-        If no arguments are specified, then the instance defaults for `initializer
-        <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
-        """
-        if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
-        if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t0
-        self._initializer = new_previous_value
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
-        self.previous_time = new_previous_time
-        return np.atleast_1d(new_previous_value), np.atleast_1d(new_previous_time)
-
-class OrnsteinUhlenbeckIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
     OrnsteinUhlenbeckIntegrator(        \
         default_variable=None,          \
@@ -6185,6 +6502,12 @@ class OrnsteinUhlenbeckIntegrator(
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value", "previous_time"]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -6197,6 +6520,7 @@ class OrnsteinUhlenbeckIntegrator(
 
         # Assign here as default, for use in initialization of function
         self.previous_value = initializer
+        self.previous_time = t0
 
         super().__init__(
             default_variable=default_variable,
@@ -6207,7 +6531,7 @@ class OrnsteinUhlenbeckIntegrator(
             context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6266,36 +6590,12 @@ class OrnsteinUhlenbeckIntegrator(
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return adjusted_value
 
-    def reinitialize(self, new_previous_value=None, new_previous_time=None):
-        """
-        In effect, begins accumulation over again at the original starting point and time, or new ones.
-
-        Sets
-
-        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
-        - `value <OrnsteinUhlenbeckIntegrator.value>`
-
-        to the value specified in the first argument.
-
-        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
-
-        If no arguments are specified, then the instance defaults for `initializer
-        <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
-        """
-        if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
-        if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t0
-        self._initializer = new_previous_value
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
-        self.previous_time = new_previous_time
-        return self.value
+        return self.previous_value, self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6674,7 +6974,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     class ClassDefaults(Integrator.ClassDefaults):
         variable = np.array([1.0])
-        initializer = np.array([1.0])
+        initial_v = np.array([1.0])
+        initial_w = np.array([1.0])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -6716,6 +7017,12 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_v", "initial_w", "t_0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
@@ -6742,18 +7049,12 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   params=params,
                                                   )
 
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = self.t_0
-
         super().__init__(
             default_variable=default_variable,
             params=params,
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-
-        self.auto_dependent = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
@@ -6872,6 +7173,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
+
         slope_w_approx_3 = slope_w(variable,
                                    previous_time + time_step_size/2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
@@ -6882,7 +7184,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         # Fourth approximation
         # v is approximately previous_value_v + time_step_size * slope_v_approx_3
         # w is approximately previous_value_w + time_step_size * slope_w_approx_3
@@ -6890,7 +7191,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         slope_v_approx_4 = slope_v(variable,
                                    previous_time + time_step_size,
                                    previous_value_v + (time_step_size * slope_v_approx_3),
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    a_v,
                                    threshold,
                                    b_v,
@@ -6902,7 +7203,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         slope_w_approx_4 = slope_w(variable,
                                    previous_time + time_step_size,
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    mode,
                                    a_w,
@@ -6910,7 +7211,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         new_v = previous_value_v \
                 + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_w = previous_value_w \
@@ -6925,22 +7225,22 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Standard coefficients - hardcoded for testing
         # val = v - (v**3)/3 - w + variable
-
         # Gilzenrat paper - hardcoded for testing
         # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
-
         return val
 
     def dw_dt(self, variable, time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w):
-        val = (mode*a_w*self.previous_v + b_w*w + c_w +
-                (1-mode)*uncorrelated_activity)/time_constant_w
+
+        # val = np.ones_like(variable)*(mode*a_w*self.previous_v + b_w*w + c_w + (1-mode)*uncorrelated_activity)/time_constant_w
+        val = (mode * a_w * self.previous_v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w
 
         # Standard coefficients - hardcoded for testing
         # val = (v + 0.7 - 0.8*w)/12.5
-
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
+        if not np.isscalar(variable):
+            val = np.broadcast_to(val, variable.shape)
 
         return val
 
@@ -7049,48 +7349,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_v, self.previous_w, self.previous_time
 
-    def reinitialize(self, new_previous_v=None, new_previous_w=None, new_previous_time=None):
-        """
-        Effectively begins accumulation over again at the specified v, w, and time.
-
-        Sets
-
-        - `previous_v <DriftDiffusionIntegrator.previous_v>`
-        - `initial_v <DriftDiffusionIntegrator.initial_v>`
-
-        to the quantity specified in the first argument.
-
-        Sets
-
-        - `previous_w <DriftDiffusionIntegrator.previous_w>`
-        - `initial_w <DriftDiffusionIntegrator.initial_w>`
-
-        to the quantity specified in the second argument.
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third argument.
-
-        If no arguments are specified, then the instance defaults for `initial_v <FHNIntegrator.initial_v>`, `initial_w
-        <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
-        """
-        if new_previous_v is None:
-            new_previous_v = self.instance_defaults.initial_v
-        if new_previous_w is None:
-            new_previous_w = self.instance_defaults.initial_w
-        if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t_0
-        self._initial_v = new_previous_v
-        self.previous_v = new_previous_v
-        self._initial_w = new_previous_w
-        self.previous_w = new_previous_w
-        self.previous_time = new_previous_time
-        self.value = new_previous_v, new_previous_w, new_previous_time
-        return [new_previous_v], [new_previous_w], [new_previous_time]
-
-class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
+class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
         default_variable=None,          \
@@ -7254,7 +7519,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
@@ -7288,58 +7553,18 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
 
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
+        for key in self._runtime_params_reset:
+            self._set_parameter_value(key, self._runtime_params_reset[key])
+        self._runtime_params_reset = {}
+
         runtime_params = params
-        if runtime_params and runtime_params is not None:
-            for param_name in self.user_params:
-                # Ignore input_states and output_states -- they should not be modified during run
-                # IMPLEMENTATION NOTE:
-                #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
-                #        At present, assignment of ``function`` as runtime param is not supported
-                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
-                    continue
-                # If param is specified in runtime_params, then assign it
-                if param_name in runtime_params:
-                    self.paramsCurrent[param_name] = runtime_params[param_name]
-                # Otherwise, (re-)assign to paramInstanceDefaults
-                #    this insures that any params that were assigned as runtime on last execution are reset here
-                #    (unless they have been assigned another runtime value)
-                elif not self.runtimeParamStickyAssignmentPref:
-                    if param_name is FUNCTION_PARAMS:
-                        for function_param in self.function_object.user_params:
-                            self.function_object.paramsCurrent[function_param] = \
-                                self.function_object.paramInstanceDefaults[function_param]
+        if runtime_params:
+            for param_name in runtime_params:
+                if hasattr(self, param_name):
+                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
-                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
-            self.runtime_params_in_use = True
-
-        # Otherwise, reset paramsCurrent to paramInstanceDefaults
-        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
-            # Can't do the following since function could still be a class ref rather than abound method (see below)
-            # self.paramsCurrent = self.paramInstanceDefaults
-            for param_name in self.user_params:
-                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                #    At present, assignment of ``function`` as runtime param is not supported
-                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name is FUNCTION:
-                    continue
-                if param_name is FUNCTION_PARAMS:
-                    for function_param in self.function_object.user_params:
-                        self.function_object.paramsCurrent[function_param] = \
-                            self.function_object.paramInstanceDefaults[function_param]
-                    continue
-                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
-
-            self.runtime_params_in_use = False
-
-        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is target_set:
-            try:
-                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
-            except TypeError:
-                self._validate_params(request_set=params, target_set=target_set, context=context)
+                    self._runtime_params_reset[param_name] = getattr(self, param_name)
+                    self._set_parameter_value(param_name, runtime_params[param_name])
 
     def function(self,
                  variable=None,
@@ -7388,7 +7613,218 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         return value
 
 
-class AGTUtilityIntegrator(Integrator):  # --------------------------------------------------------------------------------
+class LCAIntegrator(Integrator):  # ------------------------------------------------------------------------------------
+    """
+    LCAIntegrator(                  \
+        default_variable=None,      \
+        noise=0.0,                  \
+        initializer=0.0,            \
+        rate=1.0,                   \
+        offset=None,                \
+        time_step_size=0.1,         \
+        params=None,                \
+        owner=None,                 \
+        prefs=None,                 \
+        )
+
+    .. _LCAIntegrator:
+
+    Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
+
+    .. math::
+
+        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+    COMMENT:
+    `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
+    `variable <variable.LCAIntegrator.variable>` + \
+    `noise <LCAIntegrator.noise>`;
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the
+        `value <LCAIntegrator.value>` on each time step
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
+        `noise <LCAIntegrator.noise>` for details).
+
+    initializer : float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <LCAIntegrator.rate>`) will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d np.array
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
+        accumulation of the `value <LCAIntegrator.value>` on each time step. If rate has a single element, it
+        applies to all elements of `variable <LCAIntegrator.variable>`;  if rate has more than one element, each element
+        applies to the corresponding element of `variable <LCAIntegrator.variable>`.
+
+    noise : float, function, list, or 1d np.array
+        specifies a value to be added in each call to `function <LCAIntegrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d np.array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <LCAIntegrator.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = LCA_INTEGRATOR_FUNCTION
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec=1.0,
+                 noise=0.0,
+                 offset=None,
+                 initializer=None,
+                 time_step_size=0.1,
+                 params: tc.optional(dict)=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  time_step_size=time_step_size,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=initializer,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR)
+
+        self.has_initializers = True
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return:
+
+        .. math::
+
+            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        rate = np.atleast_1d(self.get_current_function_param(RATE))
+        initializer = self.get_current_function_param(INITIALIZER)  # unnecessary?
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
+        offset = self.get_current_function_param(OFFSET)
+
+        if offset is None:
+            offset = 0.0
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
+        previous_value = self.previous_value
+        new_value = variable
+
+        # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
+        value = previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+
+        adjusted_value = value + offset
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self.previous_value = adjusted_value
+
+        return adjusted_value
+
+
+class AGTUtilityIntegrator(Integrator):  # -----------------------------------------------------------------------------
     """
     AGTUtilityIntegrator(                    \
         default_variable=None,            \
@@ -7565,6 +8001,12 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_long_term_utility", "initial_short_term_utility"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
@@ -7592,7 +8034,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -7766,40 +8208,30 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         """
         Effectively begins accumulation over again at the specified utilities.
 
-        Sets
+        Sets `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` to the quantity specified
+        in the first argument and `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>` to the
+        quantity specified in the second argument.
 
-        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
-        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
-
-        to the quantity specified in the first argument.
-
-        Sets
-
-        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
-        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
-
-        to the quantity specified in the second argument.
-
-        sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
+        Sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
         `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` and
         `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`.
 
-        If no arguments are specified, then the instance defaults for `initial_short_term_utility
+        If no arguments are specified, then the current values of `initial_short_term_utility
         <AGTUtilityIntegrator.initial_short_term_utility>` and `initial_long_term_utility
         <AGTUtilityIntegrator.initial_long_term_utility>` are used.
         """
 
         if short is None:
-            short = self.instance_defaults.initial_short_term_utility
+            short = self.get_current_function_param("initial_short_term_utility")
         if long is None:
-            long = self.instance_defaults.initial_long_term_utility
-        self._initial_short_term_utility = short
+            long = self.get_current_function_param("initial_long_term_utility")
+
         self.previous_short_term_utility = short
-        self._initial_long_term_utility = long
         self.previous_long_term_utility = long
         self.value = self.combine_utilities(short, long)
+
         return self.value
-#
+
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -7816,8 +8248,7 @@ kwNavarrosAndFuss = "NavarroAndFuss"
 
 
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
-class BogaczEtAl(
-    IntegratorFunction):  # --------------------------------------------------------------------------------
+class BogaczEtAl(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     BogaczEtAl(                 \
         default_variable=None,  \
@@ -8111,8 +8542,7 @@ class NF_Results(IntEnum):
     COND_SKEW_RTS = 5
 
 
-# ----------------------------------------------------------------------------
-class NavarroAndFuss(IntegratorFunction):
+class NavarroAndFuss(IntegratorFunction): # ----------------------------------------------------------------------------
     """
     NavarroAndFuss(                             \
         default_variable=None,                  \
@@ -8982,7 +9412,7 @@ class Stability(ObjectiveFunction):
     <Stability.variable>`.
 
 COMMENT:
-*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
+*** 11/11/17 - DELETE THIS ONCE Stability IS STABLE:
     Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
     where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
     :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
@@ -9197,11 +9627,7 @@ COMMENT
 
         """
 
-        # MODIFIED 11/25/17 OLD:
-        # size = len(np.squeeze(self.instance_defaults.variable))
-        # MODIFIED 11/25/17 NEW:
         size = len(self.instance_defaults.variable)
-        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
@@ -9214,17 +9640,10 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
-        # # MODIFIED 11/12/17 OLD:
-        # if self.metric is ENTROPY:
-        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
-        # elif self.metric in DISTANCE_METRICS:
-        #     self._metric_fct = Distance(metric=self.metric)
-        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
-        # MODIFIED 11/12/17 END
 
 
     def function(self,
@@ -9408,6 +9827,12 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def correlation(v1, v2):
+        v1_norm = v1-np.mean(v1)
+        v2_norm = v2-np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
+
     def function(self,
                  variable=None,
                  params=None,
@@ -9430,8 +9855,12 @@ class Distance(ObjectiveFunction):
         v1 = variable[0]
         v2 = variable[1]
 
-        # Simple Hadamard difference of v1 and v2
-        if self.metric is DIFFERENCE:
+        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        if self.metric is MAX_DIFF:
+            result = abs(np.max(v1 - v2))
+
+        # Simple Hadamard (elementwise) difference of v1 and v2
+        elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
         # Euclidean distance between v1 and v2
@@ -9445,11 +9874,8 @@ class Distance(ObjectiveFunction):
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
-            result = np.correlate(v1, v2)
-
-        # Pearson Correlation of v1 and v2
-        elif self.metric is PEARSON:
-            result = np.corrcoef(v1, v2)
+            # result = np.correlate(v1, v2)
+            return 1-np.abs(Distance.correlation(v1, v2))
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -9460,21 +9886,17 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = np.where(np.logical_and(v1==0, v2==0), 0, -np.sum(v1*np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1==0, v2==0), 0, v1*np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
-            # # MODIFIED 11/12/17 OLD:
-            # result /= len(variable[0])
-            # MODIFIED 11/12/17 NEW:
+        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
                 result /= len(v1)
-            # MODIFIED 11/12/17 END
 
         return result
 
@@ -9782,6 +10204,228 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
             variable = variable * learning_rate
+
+        # Generate the column array from the variable
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
+
+        # Calculate weight chhange matrix
+        weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
+        if self.learning_rate_dim in {0, 2}:
+            weight_change_matrix = weight_change_matrix * learning_rate
+
+        return weight_change_matrix
+
+
+class ContrastiveHebbian(LearningFunction):  # -------------------------------------------------------------------------
+    """
+    ContrastiveHebbian(         \
+        default_variable=None,  \
+        learning_rate=None,     \
+        params=None,            \
+        name=None,              \
+        prefs=None)
+
+    Implements a function that calculates a matrix of weight changes using the `ContrastiveHebbian learning rule
+    <https://www.sciencedirect.com/science/article/pii/B978148321448150007X>`_.
+
+    Arguments
+    ---------
+
+    variable : List[number] or 1d np.array : default ClassDefaults.variable
+       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+
+    COMMENT:
+    activation_function : Function or function : SoftMax
+        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
+        in `variable <ContrastiveHebbian.variable>`.
+    COMMENT
+
+    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+        specifies the learning rate used by the `function <ContrastiveHebbian.function>`; supersedes any specification
+        for the `Process` and/or `System` to which the function's `owner <ContrastiveHebbian.owner>` belongs (see
+        `learning_rate <ContrastiveHebbian.learning_rate>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+        of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    Attributes
+    ----------
+
+    variable: 1d np.array
+        activation values, the pair-wise products of which are used to generate the weight change matrix returned by
+        the `function <ContrastiveHebbian.function>`.
+
+    COMMENT:
+    activation_function : Function or function : SoftMax
+        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
+        `variable <ContrastiveHebbian.variable>`.
+    COMMENT
+
+    learning_rate : float, 1d or 2d np.array
+        used by the `function <ContrastiveHebbian.function>` to scale the weight change matrix returned by the `function
+        <ContrastiveHebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
+        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner
+        <ContrastiveHebbian.owner>` belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
+        is a 1d np.array, it is multiplied Hadamard (elementwise) by the `variable` <ContrastiveHebbian.variable>`
+        before calculating the weight change matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by
+        the weight change matrix; if it is `None`, then the `learning_rate <Process.learning_rate>` specified for the
+        Process to which the `owner <ContrastiveHebbian.owner>` belongs is used;  and, if that is `None`, then the
+        `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <ContrastiveHebbian.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <ContrastiveHebbian.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         calculates the pairwise product of all elements in the `variable <ContrastiveHebbian.variable>`, and then
+         scales that by the `learning_rate <ContrastiveHebbian.learning_rate>` to generate the weight change matrix
+         returned by the function.
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+
+    componentName = CONTRASTIVE_HEBBIAN_FUNCTION
+
+    class ClassDefaults(LearningFunction.ClassDefaults):
+        variable = np.array([0, 0])
+
+    default_learning_rate = 0.05
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 default_variable=None,
+                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(
+                # activation_function=activation_function,
+                learning_rate=learning_rate,
+                params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super()._validate_variable(variable, context))
+
+        variable = np.squeeze(np.array(variable))
+
+        if not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
+                                 format(self.name, variable))
+        if variable.ndim == 0:
+            raise ComponentError("Variable for {} is a single number ({}) "
+                                 "which doesn't make much sense for associative learning".
+                                 format(self.name, variable))
+        if variable.ndim > 1:
+            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
+                                 format(self.name, variable))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """Calculate a matrix of weight changes from a 1d array of activity values using ContrastiveHebbian
+        learning function.
+
+        The weight change matrix is calculated as:
+
+        COMMENT:
+        THE FOLOWING NEEDS TO BE REPLACED WITH CONTRASTIVE HEBBIAN LEARNING RULE:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <ContrastiveHebbian.variable>`.
+        COMMENT
+
+        Arguments
+        ---------
+
+        variable : List[number] or 1d np.array : default ClassDefaults.variable
+            array of activity values, the pairwise products of which are used to generate a weight change matrix.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            matrix of pairwise products of elements of `variable <ContrastiveHebbian.variable>` scaled by the
+            `learning_rate <ContrastiveHebbian.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+
+        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
+
+        # MODIFIED 9/21/17 NEW:
+        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 9/21/17 END
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if self.learning_rate_dim == 1:
+            variable = variable * learning_rate
+
+        # IMPLEMENTATION NOTE:  THE FOLLOWING NEEDS TO BE REPLACED BY THE CONTRASTIVE HEBBIAN LEARNING RULE:
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)

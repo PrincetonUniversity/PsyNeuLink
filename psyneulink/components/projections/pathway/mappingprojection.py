@@ -512,7 +512,8 @@ class MappingProjection(PathwayProjection_Base):
         initial_rate = matrix * 0.0
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
-                                                                            initializer=matrix,
+                                                                               default_variable=matrix,
+                                                                               initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
@@ -536,7 +537,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_input_len = 1
         try:
-            receiver_len = len(self.receiver.instance_defaults.variable)
+            receiver_len = self.receiver.socket_width
         except TypeError:
             receiver_len = 1
 
@@ -616,19 +617,7 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
-        """
-        If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
-
-        - it should set runtime_params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-          and then call its super().execute
-        - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
-
-        Assumes that if ``self.learning_mechanism`` is assigned *and* ParameterState[MATRIX] has been instantiated
-        then learningSignal exists;  this averts duck typing which otherwise would be required for the most
-        frequent cases (i.e., *no* learningSignal).
-
-        """
+    def _execute(self, variable=None, runtime_params=None, context=None):
 
         self.context.execution_phase = ContextFlags.PROCESSING
         self.context.string = context
@@ -637,7 +626,6 @@ class MappingProjection(PathwayProjection_Base):
 
         return super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )
