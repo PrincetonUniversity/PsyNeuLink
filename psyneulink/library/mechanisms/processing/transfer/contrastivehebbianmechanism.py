@@ -542,7 +542,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
     class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        variable = np.array([[0]])
+        variable = np.array([[0,0]])
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 

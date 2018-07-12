@@ -140,3 +140,10 @@ class TestContrastiveHebbian:
                                    [ 0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.plus_phase_activity, [0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.minus_phase_activity, [0.0, 0.0, 0.0, 0.0])
+
+
+    def test_additional_output_states(self):
+        CHL = pnl.ContrastiveHebbianMechanism(size=2,
+                                              additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
+        assert len(CHL.output_states)==4
+        assert pnl.PLUS_PHASE_OUTPUT in CHL.output_states.names
