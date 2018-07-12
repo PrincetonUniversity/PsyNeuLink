@@ -1495,11 +1495,13 @@ class Composition(object):
             if not node in origin_nodes:
                 raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
                                format(node.name, self.name))
-        # Check that all of the ORIGIN nodes in the self are represented by entries in the inputs dict
+        # Check that all of the ORIGIN nodes are represented - if not, use default_variable
         for node in origin_nodes:
             if not node in stimuli:
-                raise RunError("Entry for ORIGIN Node {} is missing from the inputs dict for {}".
-                               format(node.name, self.name))
+                # Change error below to warning??
+                # raise RunError("Entry for ORIGIN Node {} is missing from the inputs dict for {}".
+                #                format(node.name, self.name))
+                stimuli[node] = node.default_external_input_values
 
         # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
@@ -1669,6 +1671,15 @@ class Composition(object):
             return [input_state.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
+
+    @property
+    def default_external_input_values(self):
+        """Returns the default values of all external InputStates that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            return [input_state.instance_defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
 
     @property
     def output_state(self):

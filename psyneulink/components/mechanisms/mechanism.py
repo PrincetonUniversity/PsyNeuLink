@@ -2984,10 +2984,18 @@ class Mechanism_Base(Mechanism):
             return [input_state for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
+
     @property
     def external_input_values(self):
         try:
             return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_values(self):
+        try:
+            return [input_state.instance_defaults.value for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 
