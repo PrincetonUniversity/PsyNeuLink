@@ -186,7 +186,7 @@ from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStat
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, RECURRENT_INDEX, CONVERGENCE
 from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
+    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, SIZE, VARIABLE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
@@ -197,10 +197,12 @@ __all__ = [
     'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT',
 ]
 
+OUTPUT_ACTIVITY = 'current_activity'
 CURRENT_ACTIVITY = 'current_activity'
 PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
 MINUS_PHASE_ACTIVITY = 'minus_phase_activity'
 
+OUTPUT_ACTIVITY_OUTPUT = 'OUTPUT_ACTIVITY_OUTPUT'
 CURRENT_ACTIVITY_OUTPUT = 'CURRENT_ACTIVITY_OUTPUT'
 ACTIVITY_DIFFERENCE_OUTPUT = 'ACTIVITY_DIFFERENCE_OUTPUT'
 PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
@@ -548,6 +550,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:CURRENT_ACTIVITY_OUTPUT,
+                                    VARIABLE:OUTPUT_ACTIVITY_OUTPUT},
+                                   {NAME:CURRENT_ACTIVITY_OUTPUT,
                                     VARIABLE:CURRENT_ACTIVITY},
                                    {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
                                     VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
@@ -562,7 +566,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
+                 input_size:tc.optional(int)=None,
+                 output_size:tc.optional(int)=None,
                  combination_function:is_function_type=LinearCombination,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
@@ -579,6 +584,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
+                 additional_input_states:tc.optional(tc.any(list, dict)) = None,
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
@@ -591,7 +597,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        output_states = [CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
+        input_states = [{NAME:'INPUT',SIZE:input_size},
+                        {NAME:'RECURRENT',SIZE:size},
+                        {NAME:'TARGET',SIZE:output_size}]
+        if additional_input_states:
+            if isinstance(additional_input_states, list):
+                input_states += additional_input_states
+            else:
+                input_states.append(additional_input_states)
+
+        output_states = [OUTPUT_ACTIVITY, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
             if isinstance(additional_output_states, list):
                 output_states += additional_output_states
@@ -599,7 +614,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 output_states.append(additional_output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(output_states=output_states,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  output_states=output_states,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -628,10 +644,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
+        assert True
+        super()._instantiate_input_states(self, input_states, reference_value, context)
+
     def _instantiate_attributes_after_function(self, context=None):
 
         # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({CURRENT_ACTIVITY:CURRENT_ACTIVITY,
+        self.attributes_dict_entries.update({OUTPUT_ACTIVITY:OUTPUT_ACTIVITY,
+                                             CURRENT_ACTIVITY:CURRENT_ACTIVITY,
                                              PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
                                              MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
 
