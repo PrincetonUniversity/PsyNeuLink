@@ -567,7 +567,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.array(defaultControlAllocation)
+        variable = np.atleast_2d(defaultControlAllocation)
         value = np.array(defaultControlAllocation)
 
     class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):

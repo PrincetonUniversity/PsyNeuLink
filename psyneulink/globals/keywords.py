@@ -27,7 +27,7 @@ __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
     'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
-    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'AUTO_DEPENDENT', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
@@ -252,10 +252,10 @@ class DistanceMetrics:
     ----------
 
     MAX_DIFF
-        :math:`d = \\max(a_1-a_2)`
+        :math:`d = |\\max(a_1-a_2)|`
 
     DIFFERENCE
-        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -265,7 +265,8 @@ class DistanceMetrics:
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
+        a_2}}\\right|`
 
     COMMENT:
     PEARSON
@@ -285,7 +286,7 @@ class DistanceMetrics:
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
         self.CORRELATION = CORRELATION
-        self.PEARSON = PEARSON
+        # self.PEARSON = PEARSON
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -836,7 +837,7 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
-AUTO_DEPENDENT='auto_dependent'
+HAS_INITIALIZERS='has_initializers'
 DRIFT_RATE = 'drift_rate'
 INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'

@@ -34,7 +34,7 @@ class TestLCControlMechanism:
 
         P = pnl.Process(pathway=[A, B, LC])
         S = pnl.System(processes=[P])
-
+        LC.reinitialize_when = pnl.Never()
         # THIS CURRENTLY DOES NOT WORK:
         # P = pnl.Process(pathway=[A, B])
         # P2 = pnl.Process(pathway=[LC])

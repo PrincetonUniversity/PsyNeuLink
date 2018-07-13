@@ -199,7 +199,7 @@ from psyneulink.components.component import ComponentError, DefaultsFlexibility,
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
-    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, HAS_INITIALIZERS, \
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
     CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
@@ -4674,7 +4674,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if param_name in function_keywords:
                     continue
 
-                if param_name is AUTO_DEPENDENT:
+                if param_name is HAS_INITIALIZERS:
                     continue
 
                 # Matrix specification param
@@ -5216,7 +5216,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
@@ -5344,7 +5344,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             initializer_value = getattr(self, self.initializers[i]).copy()
             setattr(self, attr_name, initializer_value)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -5675,7 +5675,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -5889,7 +5889,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         # Reassign to initializer in case default value was overridden
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_rate(self, rate):
         # unlike other Integrators, variable does not need to match rate
@@ -6107,7 +6107,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
@@ -6116,7 +6116,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def reinitialize(self, *args):
         """
@@ -6359,7 +6359,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -6776,7 +6776,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -7012,7 +7012,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -8267,7 +8267,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
@@ -8512,7 +8512,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -8782,7 +8782,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -10476,9 +10476,6 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool : Default False
-        specifies whether to use absolute value(s) in determining the distance.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -10506,9 +10503,6 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool
-        determines whether to use absolute value(s) in determining the distance (metric-specific).
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -10532,14 +10526,12 @@ class Distance(ObjectiveFunction):
                  default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
-                 absolute_value:bool=False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
-                                                  absolute_value=absolute_value,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -10582,6 +10574,12 @@ class Distance(ObjectiveFunction):
                         variable[1]
                     )
                 )
+
+    def correlation(v1, v2):
+        v1_norm = v1-np.mean(v1)
+        v2_norm = v2-np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
@@ -10819,10 +10817,7 @@ class Distance(ObjectiveFunction):
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_DIFF:
-            if self.absolute_value:
-                result = abs(np.max(v1 - v2))
-            else:
-                result = np.max(v1 - v2)
+            result = abs(np.max(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
@@ -10839,11 +10834,8 @@ class Distance(ObjectiveFunction):
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
-            result = np.correlate(v1, v2)
-
-        # Pearson Correlation of v1 and v2
-        elif self.metric is PEARSON:
-            result = np.corrcoef(v1, v2)
+            # result = np.correlate(v1, v2)
+            return 1-np.abs(Distance.correlation(v1, v2))
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -10860,15 +10852,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
-            # # MODIFIED 11/12/17 OLD:
-            # result /= len(variable[0])
-            # MODIFIED 11/12/17 NEW:
+        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
                 result /= len(v1)
-            # MODIFIED 11/12/17 END
 
         return result
 

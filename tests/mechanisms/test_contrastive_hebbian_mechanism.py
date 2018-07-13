@@ -1,5 +1,6 @@
 import psyneulink as pnl
 import numpy as np
+import pytest
 
 class TestContrastiveHebbian:
 
@@ -12,7 +13,6 @@ class TestContrastiveHebbian:
             hetero=-1,
             size=2,
         )
-
         s = pnl.sys(m, o)
         ms = pnl.Scheduler(system=s)
         ms.add_condition(o, pnl.WhenFinished(m))
@@ -21,6 +21,7 @@ class TestContrastiveHebbian:
         print('matrix:\n', m.afferents[1].matrix)
         results = s.run(inputs=[2, 2], num_trials=4)
         print(results)
+        np.testing.assert_allclose(results, [[np.array([2.])], [np.array([2.])], [np.array([2.])], [np.array([2.])]])
 
 
     def test_using_Hebbian_learning_of_orthognal_inputs_without_integrator_mode(self):
@@ -139,3 +140,37 @@ class TestContrastiveHebbian:
                                    [ 0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.plus_phase_activity, [0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.minus_phase_activity, [0.0, 0.0, 0.0, 0.0])
+
+
+    def test_additional_output_states(self):
+        CHL = pnl.ContrastiveHebbianMechanism(size=2,
+                                              additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
+        assert len(CHL.output_states)==4
+        assert pnl.PLUS_PHASE_OUTPUT in CHL.output_states.names
+
+    def test_configure_learning(self):
+
+        o = pnl.TransferMechanism()
+        m = pnl.ContrastiveHebbianMechanism(size=2,matrix=[[0,-1],[-1,0]])
+
+        with pytest.warns(UserWarning) as record:
+            m.learning_enabled = True
+
+        correct_message_found = False
+        for warning in record:
+            if ("Learning cannot be enabled" in str(warning.message) and
+                    "because it has no LearningMechanism" in str(warning.message)):
+                correct_message_found = True
+                break
+        assert correct_message_found
+
+        m.configure_learning()
+        m.reinitialize_when=pnl.Never()
+        s = pnl.sys(m,o)
+
+        ms = pnl.Scheduler(system=s)
+        ms.add_condition(o, pnl.WhenFinished(m))
+        s.scheduler_processing=ms
+        results = s.run(inputs=[2,2], num_trials=4)
+
+        np.testing.assert_allclose(results, [[[4.]], [[2.23061754]], [[2.3088827]], [[2.39958265]]])

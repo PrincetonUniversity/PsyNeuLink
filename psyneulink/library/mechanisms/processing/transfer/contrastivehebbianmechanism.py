@@ -79,12 +79,11 @@ Functions
 
 A ContrastiveHebbianMechanism executes to convergence in each `phase of execution <ContrastiveHebbian_Execution>`
 and thus must be assigned both a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and a
-`convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  The defaults are a `Distance`
-Function using the `MAX_DIFF` metric and `absolute_value <Distance.absolute_value>` option, and a
-`convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>` of 0.01.  The `learning_function
-<ContrastiveHebbianMechanism.learning_function>` is automatically assigned as `ContrastiveHebbian`,
-but it can be replaced by any function that takes two 1d arrays ("activity states") and compares them to determine
-the `matrix <MappingProjection.matrix>` of the Mechanism's `recurrent_projection
+`convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  The defaults are a `Distance` Function
+using the `MAX_DIFF` metric, and a `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`
+of 0.01. The `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
+`ContrastiveHebbian`, but it can be replaced by any function that takes two 1d arrays ("activity states") and
+compares them to determine the `matrix <MappingProjection.matrix>` of the Mechanism's `recurrent_projection
 <ContrastiveHebbianMechanism.recurrent_projection>`.
 
 .. _ContrastiveHebbian_Output:
@@ -258,29 +257,29 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
-    ContrastiveHebbianMechanism(                                          \
-    default_variable=None,                                                \
-    size=None,                                                            \
-    function=Linear,                                                      \
-    combination_function=LinearCombination,                               \
-    matrix=HOLLOW_MATRIX,                                                 \
-    auto=None,                                                            \
-    hetero=None,                                                          \
-    initial_value=None,                                                   \
-    noise=0.0,                                                            \
-    integration_rate=0.5,                                                 \
-    integrator_mode=False,                                                \
-    integration_rate=0.5,                                                 \
-    clip=[float:min, float:max],                                          \
-    convergence_function=Distance(metric=MAX_DIFF, absolute_value=True),  \
-    convergence_criterion=0.01,                                           \
-    max_passes=None,                                                      \
-    enable_learning=False,                                                \
-    learning_rate=None,                                                   \
-    learning_function=ContrastiveHebbian,                                 \
-    additional_output_states=None,                                        \
-    params=None,                                                          \
-    name=None,                                                            \
+    ContrastiveHebbianMechanism(                     \
+    default_variable=None,                           \
+    size=None,                                       \
+    function=Linear,                                 \
+    combination_function=LinearCombination,          \
+    matrix=HOLLOW_MATRIX,                            \
+    auto=None,                                       \
+    hetero=None,                                     \
+    initial_value=None,                              \
+    noise=0.0,                                       \
+    integration_rate=0.5,                            \
+    integrator_mode=False,                           \
+    integration_rate=0.5,                            \
+    clip=[float:min, float:max],                     \
+    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_criterion=0.01,                      \
+    max_passes=None,                                 \
+    enable_learning=False,                           \
+    learning_rate=None,                              \
+    learning_function=ContrastiveHebbian,            \
+    additional_output_states=None,                   \
+    params=None,                                     \
+    name=None,                                       \
     prefs=None)
 
     Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network using two-phases
@@ -348,16 +347,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`;
         see `clip <TransferMechanism.clip>` for additional details.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF, absolute_value=True)
+    convergence_function : function : default Distance(metric=MAX_DIFF)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
-        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the previous `value
-        <ContrastiveHebbian.value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
+        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
+        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
         as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is the `Distance`
-        Function, using the `MAX_DIFF` metric and `absolute_value <Distance.absolute_value>` option, which computes
+        Function, using the `MAX_DIFF` metric  which computes
         the elementwise difference between two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
-        specifies the value of the `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
+        specifies the value of the `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when `each phase of execution completes <ContrastiveHebbian_Execution>`.
 
     max_passes : int : default 1000
@@ -473,9 +472,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     convergence_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
-        <ContrastiveHebbianMechanism.previous_value>` and returns a scalar value; used to determine when `each phase
-        of execution is complete <ContrastiveHebbian_Execution>` (i.e., when `is_converged
-        <ContrastiveHebbianMechanism.is_converged>` is `True`.
+        <ContrastiveHebbianMechanism.previous_value>`; used to determine when `each phase of execution is complete
+        <ContrastiveHebbian_Execution>` (i.e., when `is_converged <ContrastiveHebbianMechanism.is_converged>` is `True`.
     
     convergence_criterion : float
         determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which `each phase of execution completes
@@ -544,7 +542,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
     class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        variable = np.array([[0]])
+        variable = np.array([[0,0]])
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
@@ -575,7 +573,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  integrator_mode:bool=False,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF, absolute_value=True),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
@@ -672,16 +670,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             context=context)
 
+        if self.previous_value is None:
+            return current_activity
+
         try:
-            # self.current_activity = np.squeeze(current_activity)
             current_activity = np.squeeze(current_activity)
             # Set value of primary OutputState to current activity
             self.current_activity = current_activity
         except:
             assert False
 
-        if self.previous_value is None:
-            return current_activity
 
         if self.is_converged:
             # Terminate if this is the end of the minus phase
