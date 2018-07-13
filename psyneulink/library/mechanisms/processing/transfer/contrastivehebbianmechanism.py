@@ -695,7 +695,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         self.input_states[RECURRENT].internal_only = True
         self.input_states[TARGET].internal_only = True
-        assert True
 
     @tc.typecheck
     def _instantiate_recurrent_projection(self,
