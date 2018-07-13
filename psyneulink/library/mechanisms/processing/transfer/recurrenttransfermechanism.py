@@ -979,7 +979,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.has_recurrent_input_state:
             comb_fct = self.combination_function
-            if not isinstance(comb_fct, Function):
+            # If combination_function is a method of a subclass, let it pass
+            if comb_fct.__self__ == self:
+                pass
+            elif not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self._combination_function = comb_fct(default_variable=self.variable)
                 else:
@@ -1044,11 +1047,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.previous_value = self.value
         except:
             self.previous_value = None
-
-    def _parse_function_variable(self, variable, context=None):
-        if self.has_recurrent_input_state:
-            variable = self._linear_combin_func.execute(variable=variable)
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1170,6 +1168,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_state:
+            # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
             new_input_state = InputState(owner=self, name=RECURRENT, variable=self.variable[0],
                                          internal_only=True)
             assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
@@ -1279,7 +1278,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
-            variable = self.combination_function.execute(variable = variable)
+            variable = self.combination_function.execute(variable=variable)
 
         return super()._parse_function_variable(variable, context)
 

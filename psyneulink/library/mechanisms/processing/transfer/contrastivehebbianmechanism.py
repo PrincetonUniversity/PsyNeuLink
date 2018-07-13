@@ -184,18 +184,30 @@ from psyneulink.components.functions.function import \
     ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism, RECURRENT_INDEX, CONVERGENCE
+    RecurrentTransferMechanism, RECURRENT, CONVERGENCE
 from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, SIZE, VARIABLE
+    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, \
+    MAX_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 
 __all__ = [
-    'ConstrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT',
-    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT',
+    'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
+    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'INPUT',
+    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
+
+INPUT = 'INPUT'
+
+INPUT_SIZE = 'input_size'
+HIDDEN_SIZE = 'hidden_size'
+TARGET_SIZE = 'target_size'
+SEPARATED = 'separated'
+
+INPUT_INDEX = 0
+TARGET_INDEX = 1
+RECURRENT_INDEX = 2
 
 OUTPUT_ACTIVITY = 'current_activity'
 CURRENT_ACTIVITY = 'current_activity'
@@ -212,7 +224,7 @@ PLUS_PHASE  = True
 MINUS_PHASE = False
 
 
-class ConstrastiveHebbianError(Exception):
+class ContrastiveHebbianError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -564,15 +576,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 input_size:tc.optional(int)=None,
-                 output_size:tc.optional(int)=None,
-                 combination_function:is_function_type=LinearCombination,
+                 # default_variable=None,
+                 # size=None,
+                 input_size:int,
+                 hidden_size:int,
+                 target_size:int,
+                 separated:bool=True,
+                 clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
-                 auto=None,
-                 hetero=None,
                  initial_value=None,
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,
@@ -596,25 +608,33 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.target_size = target_size
+        self.separated = separated
+        self.clamp = clamp
+        if separated:
+            self.target_start = input_size + hidden_size
+        else:
+            self.target_start = 0
 
-        # input_size = (input_size or size or
-        #               (len(default_variable) if default_variable is not None else len(self.ClassDefaults.variable)))
-        # output_size = (output_size or size or
-        #               (len(default_variable) if default_variable is not None else len(self.ClassDefaults.variable)))
-        input_size = input_size or size
-        output_size = output_size or size
+        recurrent_size = input_size + hidden_size
+        if separated:
+            recurrent_size += target_size
 
-        input_states = [{NAME:'INPUT',SIZE:input_size},
-                        {NAME:'RECURRENT',SIZE:size},
-                        {NAME:'TARGET',SIZE:output_size}]
-        # input_states = [{NAME:'INPUT',VARIABLE:np.zeros(input_size)},
-        #                 {NAME:'RECURRENT',VARIABLE:np.zeros(size)},
-        #                 {NAME:'TARGET',VARIABLE:np.zeros(output_size)}]
+        default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(recurrent_size)]
+
+        # Set InputState sizes in _instantiate_input_states,
+        #    so that there is no conflict with parsing of Mechanism's size
+        input_states = [INPUT, TARGET, RECURRENT]
+
         if additional_input_states:
             if isinstance(additional_input_states, list):
                 input_states += additional_input_states
             else:
                 input_states.append(additional_input_states)
+
+        combination_function = self.combination_function
 
         output_states = [OUTPUT_ACTIVITY, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
@@ -628,14 +648,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                   output_states=output_states,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+                         default_variable=default_variable,
+                         # size=size,
                          input_states=input_states,
                          combination_function=combination_function,
                          function=function,
                          matrix=matrix,
-                         auto=auto,
-                         hetero=hetero,
                          has_recurrent_input_state=True,
                          initial_value=initial_value,
                          noise=noise,
@@ -654,9 +673,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
+        size = self.variable.size
+        if self.separated and self.input_size != self.target_size:
+            raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
+                                          format(repr(SEPARATED), repr(True), self.name,
+                                                 repr(INPUT_SIZE), self.input_size,
+                                                 repr(TARGET_SIZE), self.target_size))
+
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
-        assert True
-        super()._instantiate_input_states(self, input_states, reference_value, context)
+
+        # Assign InputState specification dictionaries for required InputStates
+        sizes = dict(INPUT=self.input_size, RECURRENT=self.variable.size, TARGET=self.target_size)
+        for i, input_state in enumerate((s for s in self.input_states if s in {INPUT, TARGET, RECURRENT})):
+            self.input_states[i] = {NAME:input_state, SIZE: sizes[input_state]}
+
+        super()._instantiate_input_states(input_states, reference_value, context)
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -755,20 +788,29 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # return self.current_activity
 
     def _parse_function_variable(self, variable, context=None):
+        function_variable = self.combination_function(variable, context)
+        super(RecurrentTransferMechanism)._parse_function_variable(function_variable, context)
 
-        try:
+    def combination_function(self, variable, context):
+        # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization
+        # IMPLEMENTATION NOTE: separated vs. overlapping input and target handled by assignment of target_start in init
+        try:  # Execution
             if self.execution_phase == PLUS_PHASE:
-                # Combine RECURRENT and EXTERNAL inputs
-                variable = self.combination_function.execute(variable)
+                if self.clamp == HARD_CLAMP:
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:] = variable[TARGET_INDEX]
+                else:
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[INPUT_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:] += variable[TARGET_INDEX]
             else:
-                # Only use RECURRENT input
-                variable = variable[RECURRENT_INDEX]                     # Original
-                # variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+                if self.clamp == HARD_CLAMP:
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]
+                else:
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[INPUT_INDEX]
+        except:  # Initialization
+            pass
 
-        except:
-            variable = variable[RECURRENT_INDEX]
-
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable, context)
+        return variable[RECURRENT_INDEX]
 
     @property
     def _learning_signal_source(self):

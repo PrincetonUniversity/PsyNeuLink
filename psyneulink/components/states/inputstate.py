@@ -989,9 +989,9 @@ class InputState(State_Base):
                     raise InputStateError("PROGRAM ERROR: SIZE specification found in state_specific_spec dict "
                                           "for {} specification of {} when SIZE or VARIABLE is already present in its "
                                           "state_specific_spec dict or state_dict".format(self.__name__, owner.name))
-                    state_dict.update({VARIABLE:np.zeros(state_specific_spec[SIZE])})
-                    del state_specific_spec[SIZE]
-                    return state_dict, state_specific_spec
+                state_dict.update({VARIABLE:np.zeros(state_specific_spec[SIZE])})
+                del state_specific_spec[SIZE]
+                return state_dict, state_specific_spec
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, tuple):
