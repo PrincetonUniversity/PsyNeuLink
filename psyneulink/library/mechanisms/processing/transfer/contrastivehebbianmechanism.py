@@ -181,8 +181,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import \
-    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON
+    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON, get_matrix
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, RECURRENT, CONVERGENCE
 from psyneulink.globals.keywords import \
@@ -209,7 +210,7 @@ INPUT_INDEX = 0
 TARGET_INDEX = 1
 RECURRENT_INDEX = 2
 
-OUTPUT_ACTIVITY = 'current_activity'
+OUTPUT_ACTIVITY = 'output_activity'
 CURRENT_ACTIVITY = 'current_activity'
 PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
 MINUS_PHASE_ACTIVITY = 'minus_phase_activity'
@@ -561,8 +562,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:CURRENT_ACTIVITY_OUTPUT,
-                                    VARIABLE:OUTPUT_ACTIVITY_OUTPUT},
+    standard_output_states.extend([{NAME:OUTPUT_ACTIVITY_OUTPUT,
+                                    VARIABLE:OUTPUT_ACTIVITY},
                                    {NAME:CURRENT_ACTIVITY_OUTPUT,
                                     VARIABLE:CURRENT_ACTIVITY},
                                    {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
@@ -617,12 +618,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.target_start = input_size + hidden_size
         else:
             self.target_start = 0
+        self.target_end = self.target_start + self.target_size
 
-        recurrent_size = input_size + hidden_size
+        self.recurrent_size = input_size + hidden_size
         if separated:
-            recurrent_size += target_size
+            self.recurrent_size += target_size
 
-        default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(recurrent_size)]
+        default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
 
         # Set InputState sizes in _instantiate_input_states,
         #    so that there is no conflict with parsing of Mechanism's size
@@ -636,7 +638,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         combination_function = self.combination_function
 
-        output_states = [OUTPUT_ACTIVITY, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
+        output_states = [OUTPUT_ACTIVITY_OUTPUT, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
             if isinstance(additional_output_states, list):
                 output_states += additional_output_states
@@ -685,11 +687,36 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
 
         # Assign InputState specification dictionaries for required InputStates
-        sizes = dict(INPUT=self.input_size, RECURRENT=self.variable.size, TARGET=self.target_size)
+        sizes = dict(INPUT=self.input_size, RECURRENT=self.recurrent_size, TARGET=self.target_size)
         for i, input_state in enumerate((s for s in self.input_states if s in {INPUT, TARGET, RECURRENT})):
             self.input_states[i] = {NAME:input_state, SIZE: sizes[input_state]}
 
         super()._instantiate_input_states(input_states, reference_value, context)
+
+        self.input_states[RECURRENT].internal_only = True
+        self.input_states[TARGET].internal_only = True
+        assert True
+
+    @tc.typecheck
+    def _instantiate_recurrent_projection(self,
+                                          mech: Mechanism,
+                                          # this typecheck was failing, I didn't want to fix (7/19/17 CW)
+                                          # matrix:is_matrix=HOLLOW_MATRIX,
+                                          matrix=HOLLOW_MATRIX,
+                                          context=None):
+        """Instantiate an AutoAssociativeProjection from Mechanism to itself
+
+        """
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+        if isinstance(matrix, str):
+            size = len(mech.instance_defaults.variable[0])
+            matrix = get_matrix(matrix, size, size)
+
+        return AutoAssociativeProjection(owner=mech,
+                                         sender=self.output_states[CURRENT_ACTIVITY_OUTPUT],
+                                         receiver=self.input_states[RECURRENT],
+                                         matrix=matrix,
+                                         name=mech.name + ' recurrent projection')
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -698,9 +725,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                              CURRENT_ACTIVITY:CURRENT_ACTIVITY,
                                              PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
                                              MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
-
         super()._instantiate_attributes_after_function(context=context)
-
 
     def _execute(self,
                  variable=None,
@@ -712,7 +737,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Set plus_phase, minus_phase activity, current_activity and initial_value
             #    all  to zeros with size of Mechanism's array
             self._initial_value = self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
-                self.input_state.socket_template
+                self.input_states[RECURRENT].socket_template
+            self.output_activity = self.input_states[TARGET].socket_template
             self.execution_phase = None
 
         # Initialize execution_phase
@@ -733,6 +759,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         current_activity = super()._execute(variable,
                                             runtime_params=runtime_params,
                                             context=context)
+
+        self.output_activity = self.current_activity[self.target_start:self.target_end]
 
         if self.previous_value is None:
             return current_activity
@@ -789,7 +817,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         function_variable = self.combination_function(variable, context)
-        super(RecurrentTransferMechanism)._parse_function_variable(function_variable, context)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context)
 
     def combination_function(self, variable, context):
         # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization
@@ -798,10 +826,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.execution_phase == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:] = variable[TARGET_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[TARGET_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[INPUT_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:] += variable[TARGET_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[TARGET_INDEX]
             else:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]

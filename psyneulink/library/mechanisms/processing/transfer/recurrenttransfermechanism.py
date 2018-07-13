@@ -1157,7 +1157,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                           # matrix:is_matrix=HOLLOW_MATRIX,
                                           matrix=HOLLOW_MATRIX,
                                           context=None):
-        """Instantiate a AutoAssociativeProjection from Mechanism to itself
+        """Instantiate an AutoAssociativeProjection from Mechanism to itself
 
         """
 
