@@ -949,7 +949,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.initial_value = self.instance_defaults.variable
 
         if isinstance(self.convergence_function, Function):
-            self.convergence_function = self.convergence_function.function
+            self._convergence_function = self.convergence_function.function
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
