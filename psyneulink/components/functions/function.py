@@ -213,7 +213,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
-    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_DIFF, MAX_INDICATOR, MAX_VAL, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
@@ -9856,7 +9856,7 @@ class Distance(ObjectiveFunction):
         v2 = variable[1]
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
-        if self.metric is MAX_DIFF:
+        if self.metric is MAX_ABS_DIFF:
             result = abs(np.max(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
@@ -9892,7 +9892,7 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
+        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:

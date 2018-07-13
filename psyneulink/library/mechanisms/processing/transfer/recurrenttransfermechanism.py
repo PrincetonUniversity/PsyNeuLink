@@ -190,7 +190,7 @@ from psyneulink.components.states.state import _instantiate_state
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, PREVIOUS_VALUE, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -293,7 +293,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     clip=[float:min, float:max],                     \
     has_recurrent_input_state=False                  \
     combination_function=LinearCombination,          \
-    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_function=Distance(metric=MAX_ABS_DIFF),  \
     convergence_criterion=None,                      \
     max_passes=None,                                 \
     enable_learning=False,                           \
@@ -435,7 +435,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF)
+    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
@@ -748,7 +748,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  clip=None,
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
