@@ -161,8 +161,9 @@ class TestScheduler:
                 S.scheduler_processing.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
                 S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
 
+        change_termination_processing()
         S.run(inputs={D: [[1.0], [2.0]]},
-              termination_processing={TimeScale.TRIAL: WhenFinished(D)},
+              # termination_processing={TimeScale.TRIAL: WhenFinished(D)},
               call_after_trial=change_termination_processing,
               num_trials=4)
         # Trial 0:
