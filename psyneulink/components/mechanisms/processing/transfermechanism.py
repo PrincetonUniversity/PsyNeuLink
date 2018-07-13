@@ -1143,7 +1143,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @property
     def delta(self):
-        return self.convergence_function([self._current_value, self.previous_value])
+        return self.convergence_function([self._current_value[0], self.previous_value[0]])
 
     @property
     def integrator_mode(self):

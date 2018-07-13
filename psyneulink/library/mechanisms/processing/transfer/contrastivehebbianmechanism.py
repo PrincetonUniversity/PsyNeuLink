@@ -762,7 +762,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.output_activity = self.current_activity[self.target_start:self.target_end]
 
         if self.previous_value is None:
-            return current_activity
+            return self.current_activity
 
         try:
             current_activity = np.squeeze(current_activity)
