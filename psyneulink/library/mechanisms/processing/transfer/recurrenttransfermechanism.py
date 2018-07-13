@@ -980,11 +980,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.has_recurrent_input_state:
             comb_fct = self.combination_function
             # If combination_function is a method of a subclass, let it pass
-            if comb_fct.__self__ == self:
-                pass
-            elif not isinstance(comb_fct, Function):
+            if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self._combination_function = comb_fct(default_variable=self.variable)
+                elif is_method_type(comb_fct) and comb_fct.__self__ == self:
+                    pass
+                elif isinstance(comb_fct, LCControlMechanism):
+                    tuppe = X
                 else:
                     self._combination_function = UserDefinedFunction(custom_function=comb_fct,
                                                                      default_variable=self.variable)
