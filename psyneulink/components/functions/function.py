@@ -10646,6 +10646,27 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, mul)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_max_diff(self, builder, index, ctx, v1, v2, max_diff_ptr):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # Get the difference
+        diff = builder.fsub(val1, val2)
+
+        # Get absolute value
+        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
+        diff = builder.call(fabs, [diff])
+
+        old_max = builder.load(max_diff_ptr)
+        # Maxnum for some reason needs full function prototype
+        fmax = ctx.module.declare_intrinsic("llvm.maxnum", [ctx.float_ty],
+            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+
+        max_diff = builder.call(fmax, [diff, old_max])
+        builder.store(max_diff, max_diff_ptr)
+
     def __gen_llvm_pearson(self, builder, index, ctx, v1, v2, acc_x, acc_y, acc_xy, acc_x2, acc_y2):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
@@ -10701,6 +10722,12 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_energy, **kwargs)
         elif (self.metric == CORRELATION):
             inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
+        elif self.metric == MAX_DIFF:
+            del kwargs['acc']
+            max_diff_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty("NaN"), max_diff_ptr)
+            kwargs['max_diff_ptr'] = max_diff_ptr
+            inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
         elif (self.metric == PEARSON):
             acc_x_ptr = builder.alloca(ctx.float_ty)
             acc_y_ptr = builder.alloca(ctx.float_ty)
@@ -10731,6 +10758,8 @@ class Distance(ObjectiveFunction):
         ret = builder.load(acc_ptr)
         if (self.metric == EUCLIDEAN):
             ret = builder.call(sqrt, [ret])
+        elif self.metric == MAX_DIFF:
+            ret = builder.load(max_diff_ptr)
         elif (self.metric == PEARSON):
             # (n * acc_xy - acc_x * acc_y) /
             # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
@@ -10758,7 +10787,8 @@ class Distance(ObjectiveFunction):
 
             ret = builder.fdiv(numerator, denominator)
 
-        if self.normalize:
+        # MAX_DIFF ignores normalization
+        if self.normalize and self.metric != MAX_DIFF:
             norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
