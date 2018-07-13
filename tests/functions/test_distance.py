@@ -17,8 +17,8 @@ def correlation(v1,v2):
     return np.sum(v1_norm*v2_norm)/np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2))
 
 test_data = [
-    (test_var, kw.MAX_ABS_DIFF, False, None, abs(np.max(v1 - v2))),
-    (test_var, kw.MAX_ABS_DIFF, True,  None, abs(np.max(v1 - v2))),
+    (test_var, kw.MAX_ABS_DIFF, False, None, np.max(np.abs(v1 - v2))),
+    (test_var, kw.MAX_ABS_DIFF, True,  None, np.max(np.abs.max(v1 - v2))),
     (test_var, kw.DIFFERENCE, False, None, np.sum(np.abs(v1 - v2))),
     (test_var, kw.DIFFERENCE, True,  None, np.sum(np.abs(v1 - v2))/norm),
     (test_var, kw.EUCLIDEAN, False, None, np.linalg.norm(v1 - v2)),

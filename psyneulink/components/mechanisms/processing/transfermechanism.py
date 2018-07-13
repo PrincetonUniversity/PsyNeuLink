@@ -1075,8 +1075,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     # self.previous_value = self.value
         #     self._update_previous_value()
 
-        # Used by update_previous_value, convergence_function and delta
-        self._current_value = value
+        # # Used by update_previous_value, convergence_function and delta
+        # self._current_value = value
 
         return value
 

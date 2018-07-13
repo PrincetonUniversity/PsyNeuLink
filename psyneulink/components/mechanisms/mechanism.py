@@ -2321,6 +2321,9 @@ class Mechanism_Base(Mechanism):
             self._increment_execution_count()
             self._update_current_execution_time(context=context)
 
+        # Used by sublcasses with update_previous_value and/or convergence_function and delta
+        self._current_value = value
+
         return self.value
 
     def run(
