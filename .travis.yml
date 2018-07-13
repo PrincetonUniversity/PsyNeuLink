@@ -44,7 +44,7 @@ matrix:
     python: 3.6
     language: generic
     env:
-        - PYTHON=3.6.5
+        - PYTHON=3.6.6
         - PYTHON_PKG_VERSION=macosx10.9
     # Cache installed python packages
     cache:
