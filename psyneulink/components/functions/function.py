@@ -6449,12 +6449,9 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
-        # FIXME: Use llvm type in the check
-        if hasattr(self.noise, "__len__") and len(self.noise) != 1:
-            assert len(self.noise) == vi.type.pointee.count
-            noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
-        else:
-            noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        if isinstance(noise_p.type.pointee, ir.ArrayType) and noise_p.type.pointee.count > 1:
+            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
 
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
