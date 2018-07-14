@@ -842,11 +842,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.execution_phase == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
+                    if self.mode is HEBBIAN:
+                        return variable[RECURRENT_INDEX]
+                    else:
+                        variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
+                    if self.mode is HEBBIAN:
+                        return variable[RECURRENT_INDEX]
+                    else:
+                        variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
             else:
+                if self.mode is HEBBIAN:
+                    return variable[RECURRENT_INDEX]
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
                 else:
