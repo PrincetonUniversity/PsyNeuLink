@@ -10720,15 +10720,14 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
         elif (self.metric == ENERGY):
             inner = functools.partial(self.__gen_llvm_energy, **kwargs)
-        elif (self.metric == CORRELATION):
-            inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
         elif self.metric == MAX_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty("NaN"), max_diff_ptr)
             kwargs['max_diff_ptr'] = max_diff_ptr
             inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
-        elif (self.metric == PEARSON):
+        # Pearson and correlation collect the same statistics
+        elif self.metric == PEARSON or self.metric == CORRELATION:
             acc_x_ptr = builder.alloca(ctx.float_ty)
             acc_y_ptr = builder.alloca(ctx.float_ty)
             acc_xy_ptr = builder.alloca(ctx.float_ty)
@@ -10755,11 +10754,66 @@ class Distance(ObjectiveFunction):
         vector_length = ctx.int32_ty(input_length)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
         sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
+        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)
         if (self.metric == EUCLIDEAN):
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_DIFF:
             ret = builder.load(max_diff_ptr)
+        elif self.metric == CORRELATION:
+            n = ctx.float_ty(input_length)
+            acc_xy = builder.load(acc_xy_ptr)
+            acc_x = builder.load(acc_x_ptr)
+            acc_y = builder.load(acc_y_ptr)
+            acc_x2 = builder.load(acc_x2_ptr)
+            acc_y2 = builder.load(acc_y2_ptr)
+
+            # We'll need meanx,y below
+            mean_x = builder.fdiv(acc_x, n)
+            mean_y = builder.fdiv(acc_y, n)
+
+            # Numerator: sum((x - mean(x))*(y - mean(y)) =
+            # sum(x*y - x*mean(y) - y*mean(x) + mean(x)*mean(y)) =
+            # sum(x*y) - sum(x)*mean(y) - sum(y)*mean(x) + mean(x)*mean(y)*n
+            b = builder.fmul(acc_x, mean_y)
+            c = builder.fmul(acc_y, mean_x)
+            d = builder.fmul(mean_x, mean_y)
+            d = builder.fmul(d, n)
+
+            numerator = builder.fsub(acc_xy, b)
+            numerator = builder.fsub(numerator, c)
+            numerator = builder.fadd(numerator, d)
+
+            # Denominator: sqrt(D_X * D_Y)
+            # D_X = sum((x - mean(x))^2) = sum(x^2 - 2*x*mean(x) + mean(x)^2) =
+            # sum(x^2) - 2 * sum(x) * mean(x) + n * mean(x)^2
+            dxb = builder.fmul(acc_x, mean_x)
+            dxb = builder.fadd(dxb, dxb)        # *2
+            dxc = builder.fmul(mean_x, mean_x)  # ^2
+            dxc = builder.fmul(dxc, n)
+
+            dx = builder.fsub(acc_x2, dxb)
+            dx = builder.fadd(dx, dxc)
+
+            # Similarly for y
+            dyb = builder.fmul(acc_y, mean_y)
+            dyb = builder.fadd(dyb, dyb)        # *2
+            dyc = builder.fmul(mean_y, mean_y)  # ^2
+            dyc = builder.fmul(dyc, n)
+
+            dy = builder.fsub(acc_y2, dyb)
+            dy = builder.fadd(dy, dyc)
+
+            # Denominator: sqrt(D_X * D_Y)
+            denominator = builder.fmul(dx, dy)
+            denominator = builder.call(sqrt, [denominator])
+
+            corr = builder.fdiv(numerator, denominator)
+
+            # ret =  1 - abs(corr)
+            ret = builder.call(fabs, [corr])
+            ret = builder.fsub(ctx.float_ty(1), ret)
+
         elif (self.metric == PEARSON):
             # (n * acc_xy - acc_x * acc_y) /
             # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
@@ -10788,7 +10842,7 @@ class Distance(ObjectiveFunction):
             ret = builder.fdiv(numerator, denominator)
 
         # MAX_DIFF ignores normalization
-        if self.normalize and self.metric != MAX_DIFF:
+        if self.normalize and self.metric != MAX_DIFF and self.metric != CORRELATION:
             norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
@@ -10802,10 +10856,6 @@ class Distance(ObjectiveFunction):
                 else:
                     builder.store(ret, o)
         else:
-            # WORKAROUND: CORRELATION metric returns [x] instead of just x
-            if isinstance(vo.type.pointee, ir.ArrayType):
-                assert vo.type.pointee.count == 1
-                vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.store(ret, vo)
 
         return builder
