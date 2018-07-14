@@ -10817,7 +10817,7 @@ class Distance(ObjectiveFunction):
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_DIFF:
-            result = abs(np.max(v1 - v2))
+            result = np.max(abs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
