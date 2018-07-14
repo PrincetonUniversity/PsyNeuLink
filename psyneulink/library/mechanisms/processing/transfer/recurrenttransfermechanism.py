@@ -169,6 +169,7 @@ Class Reference
 
 import numbers
 from collections import Iterable
+from types import MethodType
 
 import numpy as np
 import typecheck as tc
@@ -983,10 +984,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self._combination_function = comb_fct(default_variable=self.variable)
-                elif is_method_type(comb_fct) and comb_fct.__self__ == self:
+                elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
                     pass
-                elif isinstance(comb_fct, LCControlMechanism):
-                    tuppe = X
                 else:
                     self._combination_function = UserDefinedFunction(custom_function=comb_fct,
                                                                      default_variable=self.variable)
