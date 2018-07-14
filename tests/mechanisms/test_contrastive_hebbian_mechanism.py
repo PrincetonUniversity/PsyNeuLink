@@ -46,7 +46,7 @@ class TestContrastiveHebbian:
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
-        assert R.current_execution_time.pass_ == 4
+        assert R.current_execution_time.pass_ == 5
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(R.plus_phase_activity, [1.20074767, 0.0, 1.20074767, 0.0])
@@ -106,7 +106,7 @@ class TestContrastiveHebbian:
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
-        assert R.current_execution_time.pass_ == 18
+        assert R.current_execution_time.pass_ == 19
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.plus_phase_activity, [1.14142296, 0.0, 1.14142296, 0.0])
