@@ -260,19 +260,19 @@ class AutoAssociativeProjection(MappingProjection):
             self.context.execution_phase = ContextFlags.LEARNING
         super()._update_parameter_states(runtime_params, context)
 
-        # # TEST PRINT
-        # if not self.context.initialization_status == ContextFlags.INITIALIZING and self.has_learning_projection:
-        #     if self.sender.owner.context.composition:
-        #         time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
-        #     else:
-        #         time = self.current_execution_time
-        #     print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
-        #         format(self.context.flags_string,
-        #                time.trial,
-        #                # time.pass_,
-        #                time.time_step))
-        #     print("{} weight change matrix: \n{}\n".format(self.name,
-        #                                                    self.parameter_states[MATRIX].mod_afferents[0].value))
+        # TEST PRINT
+        if not self.context.initialization_status == ContextFlags.INITIALIZING and self.has_learning_projection:
+            if self.sender.owner.context.composition:
+                time = self.sender.owner.context.composition.scheduler_processing.clock.simple_time
+            else:
+                time = self.current_execution_time
+            print("\nEXECUTED AutoAssociative LearningProjection [CONTEXT: {}]\nTRIAL:  {}  TIME_STEP: {}".
+                format(self.context.flags_string,
+                       time.trial,
+                       # time.pass_,
+                       time.time_step))
+            print("{} weight change matrix: \n{}\n".format(self.name,
+                                                           self.parameter_states[MATRIX].mod_afferents[0].value))
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
