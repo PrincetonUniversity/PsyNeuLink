@@ -1073,6 +1073,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                     )
             value = self._clip_result(clip, value)
 
+        # Used by update_previous_value, convergence_function and delta
+        self._current_value = [value]
+
         return value
 
     def reinitialize(self, *args):
