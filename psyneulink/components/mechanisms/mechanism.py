@@ -2646,8 +2646,6 @@ class Mechanism_Base(Mechanism):
             ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
             raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            # FIXME: cast input pointer to match the state input subtype
-            raw_ptr = builder.bitcast(raw_ptr, param_in_ptr.type)
             builder.store(raw_param_val, raw_ptr)
 
             # Copy mod_afferent inputs
@@ -2659,12 +2657,6 @@ class Mechanism_Base(Mechanism):
 
             # Parameter states modify corresponding parameter in param struct
             ps_output = param_out_ptr
-
-            # FIXME: cast output to match the state output type
-            # to workaround x vs. [x] mismatch
-            func_output_type = ps_function.args[3].type.pointee
-            if isinstance(func_output_type, ir.ArrayType) and func_output_type.count == 1:
-                ps_output = builder.bitcast(ps_output, ps_function.args[3].type)
 
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
         return f_params, builder
