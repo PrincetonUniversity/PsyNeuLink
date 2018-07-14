@@ -36,13 +36,17 @@ class TestContrastiveHebbian:
         '''
         size=4
         R = pnl.ContrastiveHebbianMechanism(
-                size=size,
+                input_size=4,
+                hidden_size=0,
+                target_size=4,
+                separated=False,
+                enable_learning=True,
+                matrix=np.full((size,size),0.0),
                 function=pnl.Linear,
                 learning_function=pnl.Hebbian,
-                enable_learning=True,
                 convergence_criterion=.01,
                 # auto=0,
-                hetero=np.full((size,size),0.0)
+                # hetero=np.full((size,size),0.0)
         )
         P=pnl.Process(pathway=[R])
         S=pnl.System(processes=[P])
