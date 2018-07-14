@@ -1246,13 +1246,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
         if learning_condition:
-            self.learning_condition = learning_condition
+            self._learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
             if self.learning_condition is CONVERGENCE:
-                self.learning_condition = WhenFinished(self)
+                self._learning_condition = WhenFinished(self)
             elif self.learning_condition is UPDATE:
-                self.learning_condition = None
+                self._learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE

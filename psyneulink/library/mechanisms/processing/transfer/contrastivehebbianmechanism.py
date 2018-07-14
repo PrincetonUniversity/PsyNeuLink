@@ -195,7 +195,7 @@ from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'INPUT',
+    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'HEBBIAN', 'INPUT',
     'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
 
@@ -205,6 +205,8 @@ INPUT_SIZE = 'input_size'
 HIDDEN_SIZE = 'hidden_size'
 TARGET_SIZE = 'target_size'
 SEPARATED = 'separated'
+
+HEBBIAN = 'HEBBIAN'
 
 INPUT_INDEX = 0
 TARGET_INDEX = 1
@@ -583,6 +585,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  hidden_size:int,
                  target_size:int,
                  separated:bool=True,
+                 mode:tc.optional(tc.enum(HEBBIAN))=None,
                  clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
@@ -603,7 +606,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  name=None,
                  prefs: is_pref_set=None):
 
-        """Instantiate ContrastiveHebbianMechanism"""
+        """Instantiate ContrastiveHebbianMechanism
+        :type mode: object
+        :type clamp: object
+        """
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -614,6 +620,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_size = target_size
         self.separated = separated
         self.clamp = clamp
+        self.mode = mode
+
         if separated:
             self.target_start = input_size + hidden_size
         else:
@@ -822,19 +830,27 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def combination_function(self, variable, context):
         # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization
         # IMPLEMENTATION NOTE: separated vs. overlapping input and target handled by assignment of target_start in init
+
+        MINUS_PHASE_INDEX = INPUT_INDEX
+        PLUS_PHASE_INDEX = TARGET_INDEX
+
+        if self.mode is HEBBIAN:
+            MINUS_PHASE_INDEX = TARGET_INDEX
+            PLUS_PHASE_INDEX = INPUT_INDEX
+
         try:  # Execution
             if self.execution_phase == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
-                    variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[TARGET_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
                 else:
-                    variable[RECURRENT_INDEX][:self.input_size] += variable[INPUT_INDEX]
-                    variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[TARGET_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
+                    variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
             else:
                 if self.clamp == HARD_CLAMP:
-                    variable[RECURRENT_INDEX][:self.input_size] = variable[INPUT_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
                 else:
-                    variable[RECURRENT_INDEX][:self.input_size] += variable[INPUT_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
         except:  # Initialization
             pass
 
