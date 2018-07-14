@@ -4271,16 +4271,15 @@ class SoftMax(NormalizingFunction):
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
 
-        # Restrict to 1d arrays
-        # We force this to 1D in get_input_struct_type
-        # assert self.instance_defaults.variable.ndim == 1
-
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
+
         max_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(float('-inf')), max_ptr)
+
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
