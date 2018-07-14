@@ -1044,7 +1044,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        self._update_previous_value()
+        # # MODIFIED 7/14/18 OLD:
+        # self._update_previous_value()
+        # # MODIFIED 7/14/18 NEW:
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 

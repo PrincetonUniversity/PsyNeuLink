@@ -781,6 +781,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Set value of primary OutputState to current activity
         self.current_activity = current_activity
 
+
+
+        # TEST PRINT:
+        print("--------------------------------------------",
+              "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
+              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+              '\nvariable: ', variable,
+              '\ninput:', self.function_object.variable,
+              '\nMATRIX:', self.matrix,
+              '\ncurrent activity: ', self.current_activity,
+              '\ndiff: ', self.output_activity,
+              '\nis_finished: ', self.is_finished
+              )
+
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
         if previous_value is None:
@@ -806,23 +820,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.reinitialize(self.initial_value)
                 self.current_activity = self.initial_value
 
-            # USED FOR TEST PRINT BELOW:
-            curr_phase = self.execution_phase
-
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
-
-        # TEST PRINT:
-        print("--------------------------------------------",
-              "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
-              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-              '\nvariable: ', variable,
-              '\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', self.current_activity,
-              '\ndiff: ', self.output_activity,
-              '\nis_finished: ', self.is_finished
-              )
 
         return current_activity
         # return self.current_activity

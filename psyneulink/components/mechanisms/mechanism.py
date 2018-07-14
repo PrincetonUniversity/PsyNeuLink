@@ -2252,6 +2252,10 @@ class Mechanism_Base(Mechanism):
             target_set=runtime_params,
         )
 
+        # MODIFIED 7/14/18 NEW:
+        self._update_previous_value()
+        # MODIFIED 7/14/18 END
+
         # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
@@ -2404,6 +2408,12 @@ class Mechanism_Base(Mechanism):
                 )
 
         return np.array(self.input_values)
+
+    def _update_previous_value(self):
+        try:
+            self.previous_value = self.value
+        except:
+            self.previous_value = None
 
     def _update_input_states(self, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:
