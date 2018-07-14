@@ -871,7 +871,7 @@ class LCControlMechanism(ControlMechanism):
         return new_out, builder
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        # WORKAROUND!!! composition does not seem to onstruct this fully
+        # FIXME: Is this part of input parse? Shouls it be more targeted?
         if func.args[2].type.pointee != func_in.type.pointee:
             return builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)]), builder
         else:

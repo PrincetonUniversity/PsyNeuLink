@@ -2343,12 +2343,16 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         return result
 
     def get_input_struct_type(self):
+        # FIXME: Workaround a special case of simple array.
+        #        It should just pass through to modifiers, which matches what
+        #        single element 2d array does
         default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
     def get_output_struct_type(self):
-        # WORKAROUND: Remove this workaround
+        # FIXME: We should always produce on less dimension.
+        #        Objective mechanism test fails without this workaround
         default_val = self.owner.instance_defaults.value if self.owner else self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
@@ -4211,16 +4215,16 @@ class SoftMax(NormalizingFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    # WORKAROUND: Transfermechanism initializes this function on 2d array
-    # while its expected to run on 1d array
+    # FIXME: Transfermechanism initializes this function on 2d array
+    #        while its expected to run on 1d array
     def get_input_struct_type(self):
         default_var = np.atleast_2d(self.instance_defaults.variable)
         assert default_var.ndim == 2
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
-    # WORKAROUND: Transfermechanism initializes this function on 2d array
-    # while its expected to run on 1d array
+    # FIXME: Transfermechanism initializes this function on 2d array
+    #        while its expected to run on 1d array
     def get_output_struct_type(self):
         default_val = np.atleast_2d(self.instance_defaults.value)
         assert default_val.ndim == 2
@@ -6455,7 +6459,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
-        # WORKAROUND: Standalone function produces 2d array value
+        # FIXME: Standalone function produces 2d array value
         if isinstance(state.type.pointee.element, ir.ArrayType):
             assert state.type.pointee.count == 1
             prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
@@ -6474,7 +6478,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         ret = builder.fadd(ret, noise)
         res = builder.fadd(ret, offset)
 
-        # WORKAROUND: Standalone function produces 2d array value
+        # FIXME: Standalone function produces 2d array value
         if isinstance(vo.type.pointee.element, ir.ArrayType):
             assert state.type.pointee.count == 1
             vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
