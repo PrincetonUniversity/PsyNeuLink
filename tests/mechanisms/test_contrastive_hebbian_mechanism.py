@@ -7,11 +7,15 @@ class TestContrastiveHebbian:
     def test_scheduled_contrastive_hebbian(self):
         o = pnl.TransferMechanism()
         m = pnl.ContrastiveHebbianMechanism(
-            integrator_mode=True,
-            enable_learning=False,
-            auto=0,
-            hetero=-1,
-            size=2,
+                input_size=2,
+                hidden_size=0,
+                target_size=2,
+                separated=False,
+                integrator_mode=True,
+                enable_learning=False,
+                matrix=[[0,-1],[-1, 0]],
+            # auto=0,
+            # hetero=-1,
         )
         s = pnl.sys(m, o)
         ms = pnl.Scheduler(system=s)

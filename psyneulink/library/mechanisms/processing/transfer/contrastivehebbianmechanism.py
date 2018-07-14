@@ -740,6 +740,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.output_activity = self.input_states[TARGET].socket_template
             self.execution_phase = None
 
+
         # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
@@ -754,6 +755,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         self.is_finished = False
 
+        # Need to store this, as it will be updated in call to super
+        previous_value = self.previous_value
+
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
                                             runtime_params=runtime_params,
@@ -761,16 +765,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         self.output_activity = self.current_activity[self.target_start:self.target_end]
 
-        if self.previous_value is None:
+        current_activity = np.squeeze(current_activity)
+        # Set value of primary OutputState to current activity
+        self.current_activity = current_activity
+
+        # This is the first trial, so can't test for convergence
+        #    (since that requires comparison with value from previous trial)
+        if previous_value is None:
             return self.current_activity
-
-        try:
-            current_activity = np.squeeze(current_activity)
-            # Set value of primary OutputState to current activity
-            self.current_activity = current_activity
-        except:
-            assert False
-
 
         if self.is_converged:
             # Terminate if this is the end of the minus phase
@@ -797,7 +799,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
-        # MODIFIED 7/7/18 END
 
         # # TEST PRINT:
         # print("--------------------------------------------",
