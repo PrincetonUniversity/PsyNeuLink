@@ -838,10 +838,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         MINUS_PHASE_INDEX = INPUT_INDEX
         PLUS_PHASE_INDEX = TARGET_INDEX
 
-        if self.mode is HEBBIAN:
-            MINUS_PHASE_INDEX = TARGET_INDEX
-            PLUS_PHASE_INDEX = INPUT_INDEX
-
         try:  # Execution
             if self.execution_phase == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
