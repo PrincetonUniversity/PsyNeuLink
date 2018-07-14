@@ -818,11 +818,6 @@ class Function_Base(Function):
         param_init = []
         for p in self.get_param_ids():
             param = self.get_current_function_param(p)
-            # WORKAROUND: get_current_function_param sometimes returns [x],
-            # sometimes x. Make sure scalars are not added as single element
-            # array
-            if hasattr(param, "__len__") and len(param) == 1:
-                param = param[0]
             if not np.isscalar(param) and param is not None:
                 param = np.asfarray(param).flatten().tolist()
             param_init.append(param)
@@ -3231,8 +3226,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         intercept_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        slope = builder.load(slope_ptr)
-        intercept = builder.load(intercept_ptr)
+
+        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
 
         val = builder.load(ptri)
         val = builder.fmul(val, slope)
@@ -3454,8 +3450,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        rate = builder.load(rate_ptr)
-        scale = builder.load(scale_ptr)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -3627,12 +3624,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
         gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         bias_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        gain = builder.load(gain_ptr)
-        bias = builder.load(bias_ptr)
-        offset = builder.load(offset_ptr)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -4278,7 +4277,7 @@ class SoftMax(NormalizingFunction):
         builder.store(ctx.float_ty(float('-inf')), max_ptr)
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        gain = builder.load(gain_ptr)
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
@@ -6446,15 +6445,18 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         offset_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        rate = builder.load(rate_p)
-        offset = builder.load(offset_p)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
+
+        # FIXME: Use llvm type in the check
         if hasattr(self.noise, "__len__") and len(self.noise) != 1:
             assert len(self.noise) == vi.type.pointee.count
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
         else:
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
-        noise = builder.load(noise_p)
+        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
 
         # WORKAROUND: Standalone function produces 2d array value
         if isinstance(state.type.pointee.element, ir.ArrayType):
@@ -7872,7 +7874,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         param_vals = {}
         for i, p in enumerate(self.get_param_ids()):
             param_ptr = builder.gep(params, [zero_i32, ctx.int32_ty(i)])
-            param_vals[p] = builder.load(param_ptr)
+            param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
+                                            builder, param_ptr)
 
         inner_args = {"ctx": ctx, "var_ptr": vi, "param_vals": param_vals,
                       "out_v": out_v_ptr, "out_w": out_w_ptr,

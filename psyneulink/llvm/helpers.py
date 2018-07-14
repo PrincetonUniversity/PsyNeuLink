@@ -58,3 +58,9 @@ def fclamp_const(builder, val, min_val, max_val):
     minval = val.type(min_val)
     maxval = val.type(max_val)
     return fclamp(builder, val, minval, maxval)
+
+def load_extract_scalar_array_one(builder, ptr):
+    val = builder.load(ptr)
+    if isinstance(val.type, ir.ArrayType) and val.type.count == 1:
+        val = builder.extract_value(val, [0])
+    return val
