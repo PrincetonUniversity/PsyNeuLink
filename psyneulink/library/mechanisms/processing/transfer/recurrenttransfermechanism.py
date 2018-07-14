@@ -954,7 +954,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
-            self.auto = d
+            self._auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
