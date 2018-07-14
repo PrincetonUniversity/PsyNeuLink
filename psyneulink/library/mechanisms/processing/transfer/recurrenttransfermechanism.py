@@ -964,7 +964,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
-            self.hetero = m
+            self._hetero = m
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=HETERO,
