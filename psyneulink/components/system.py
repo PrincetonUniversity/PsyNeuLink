@@ -1649,6 +1649,8 @@ class System(System_Base):
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
+                if origin_mech.input_states[j].internal_only:
+                    continue
                 if len(self.instance_defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".

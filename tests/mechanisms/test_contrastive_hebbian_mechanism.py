@@ -42,12 +42,12 @@ class TestContrastiveHebbian:
                 separated=False,
                 mode=pnl.HEBBIAN,
                 enable_learning=True,
-                matrix=np.full((size,size),0.0),
+                # matrix=np.full((size,size),0.0),
                 function=pnl.Linear,
                 learning_function=pnl.Hebbian,
                 convergence_criterion=.01,
-                # auto=0,
-                # hetero=np.full((size,size),0.0)
+                auto=0,
+                hetero=np.full((size,size),0.0)
         )
         P=pnl.Process(pathway=[R])
         S=pnl.System(processes=[P])
