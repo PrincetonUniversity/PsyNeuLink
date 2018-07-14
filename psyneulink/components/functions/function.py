@@ -10694,8 +10694,7 @@ class Distance(ObjectiveFunction):
             builder.store(ctx.float_ty("NaN"), max_diff_ptr)
             kwargs['max_diff_ptr'] = max_diff_ptr
             inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
-        # Pearson and correlation collect the same statistics
-        elif self.metric == PEARSON or self.metric == CORRELATION:
+        elif self.metric == CORRELATION:
             acc_x_ptr = builder.alloca(ctx.float_ty)
             acc_y_ptr = builder.alloca(ctx.float_ty)
             acc_xy_ptr = builder.alloca(ctx.float_ty)
@@ -10781,63 +10780,15 @@ class Distance(ObjectiveFunction):
             ret = builder.call(fabs, [corr])
             ret = builder.fsub(ctx.float_ty(1), ret)
 
-        elif self.metric == PEARSON:
-            # (n * acc_xy - acc_x * acc_y) /
-            # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
-            fn = ctx.float_ty(input_length)
-            acc_xy = builder.load(acc_xy_ptr)
-            acc_x = builder.load(acc_x_ptr)
-            acc_y = builder.load(acc_y_ptr)
-            acc_x2 = builder.load(acc_x2_ptr)
-            acc_y2 = builder.load(acc_y2_ptr)
-
-            nxy = builder.fmul(fn, acc_xy)
-            axay = builder.fmul(acc_x, acc_y)
-            numerator = builder.fsub(nxy, axay)
-
-            nx2 = builder.fmul(fn, acc_x2)
-            sx2 = builder.fmul(acc_x, acc_x)
-            rx = builder.fsub(nx2, sx2)
-
-            ny2 = builder.fmul(fn, acc_y2)
-            sy2 = builder.fmul(acc_y, acc_y)
-            ry = builder.fsub(ny2, sy2)
-
-            denominator = builder.fmul(rx, ry)
-            denominator = builder.call(sqrt, [denominator])
-
-            ret = builder.fdiv(numerator, denominator)
-
         # MAX_DIFF ignores normalization
         if self.normalize and self.metric != MAX_DIFF and self.metric != CORRELATION:
             norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-        if self.metric == PEARSON:
-            selfcor = ctx.float_ty(1 / input_length if self.normalize else 1)
-            for i in range(4):
-                o = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-                if i == 0 or i == 3:
-                    builder.store(selfcor, o)
-                else:
-                    builder.store(ret, o)
-        else:
-            builder.store(ret, vo)
+        builder.store(ret, vo)
 
         return builder
-
-    def bin_function(self,
-                     variable=None,
-                     params=None,
-                     context=None):
-
-        ret = super().bin_function(variable, params, context)
-
-        # FIXME: PEARSON breaks output format
-        if self.metric == PEARSON:
-            return ret.reshape((2, 2))
-        return ret
 
     def function(self,
                  variable=None,
