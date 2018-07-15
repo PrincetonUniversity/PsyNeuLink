@@ -7703,7 +7703,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
-        return np.broadcast_to(val, np.atleast_1d(variable).shape)
+        if not np.isscalar(variable):
+            val = np.broadcast_to(val, variable.shape)
+
+        return val
 
     def function(self,
                  variable=None,
