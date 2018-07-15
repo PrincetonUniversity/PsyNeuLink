@@ -40,7 +40,7 @@ class TestContrastiveHebbian:
                 input_size=4,
                 hidden_size=0,
                 target_size=4,
-                separated=False,
+                # separated=False,
                 mode=pnl.HEBBIAN,
                 enable_learning=True,
                 function=pnl.Linear,
@@ -177,7 +177,9 @@ class TestContrastiveHebbian:
         o = pnl.TransferMechanism()
         m = pnl.ContrastiveHebbianMechanism(
                 input_size=2, hidden_size=0, target_size=2,
-                # ,matrix=[[0,-1],[-1,0]]
+                mode=pnl.HEBBIAN,
+                separated=False,
+                matrix=[[0,-1],[-1,0]]
         )
 
         with pytest.warns(UserWarning) as record:

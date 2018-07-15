@@ -617,6 +617,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
+        self.mode = mode
+        if self.mode is HEBBIAN:
+            clamp = SOFT_CLAMP
+            separated = False
+
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.target_size = target_size
@@ -631,10 +636,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         size = self.recurrent_size
 
         self.clamp = clamp
-        self.mode = mode
-        if self.mode is HEBBIAN:
-            self.clamp = SOFT_CLAMP
-
 
         default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
 
