@@ -195,7 +195,7 @@ from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'HEBBIAN', 'INPUT',
+    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'SIMPLE_HEBBIAN', 'INPUT',
     'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
 
@@ -206,7 +206,7 @@ HIDDEN_SIZE = 'hidden_size'
 TARGET_SIZE = 'target_size'
 SEPARATED = 'separated'
 
-HEBBIAN = 'HEBBIAN'
+SIMPLE_HEBBIAN = 'SIMPLE_HEBBIAN'
 
 INPUT_INDEX = 0
 TARGET_INDEX = 1
@@ -585,7 +585,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  hidden_size:int,
                  target_size:int,
                  separated:bool=True,
-                 mode:tc.optional(tc.enum(HEBBIAN))=None,
+                 mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
                  clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
@@ -618,7 +618,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
         self.mode = mode
-        if self.mode is HEBBIAN:
+        if self.mode is SIMPLE_HEBBIAN:
             clamp = SOFT_CLAMP
             separated = False
 
@@ -846,18 +846,18 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.execution_phase == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
-                    if self.mode is HEBBIAN:
+                    if self.mode is SIMPLE_HEBBIAN:
                         return variable[RECURRENT_INDEX]
                     else:
                         variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
-                    if self.mode is HEBBIAN:
+                    if self.mode is SIMPLE_HEBBIAN:
                         return variable[RECURRENT_INDEX]
                     else:
                         variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
             else:
-                if self.mode is HEBBIAN:
+                if self.mode is SIMPLE_HEBBIAN:
                     return variable[RECURRENT_INDEX]
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = vardiable[MINUS_PHASE_INDEX]

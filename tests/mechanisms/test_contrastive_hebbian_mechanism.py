@@ -11,7 +11,7 @@ class TestContrastiveHebbian:
                 hidden_size=0,
                 target_size=2,
                 separated=False,
-                mode=pnl.HEBBIAN,
+                mode=pnl.SIMPLE_HEBBIAN,
                 integrator_mode=True,
                 enable_learning=False,
                 matrix=[[0,-1],[-1, 0]],
@@ -41,7 +41,7 @@ class TestContrastiveHebbian:
                 hidden_size=0,
                 target_size=4,
                 # separated=False,
-                mode=pnl.HEBBIAN,
+                mode=pnl.SIMPLE_HEBBIAN,
                 enable_learning=True,
                 function=pnl.Linear,
                 learning_function=pnl.Hebbian,
@@ -103,7 +103,7 @@ class TestContrastiveHebbian:
                 hidden_size=0,
                 target_size=4,
                 separated=False,
-                mode=pnl.HEBBIAN,
+                mode=pnl.SIMPLE_HEBBIAN,
                 enable_learning=True,
                 function=pnl.Linear,
                 integrator_mode=True,
@@ -177,7 +177,7 @@ class TestContrastiveHebbian:
         o = pnl.TransferMechanism()
         m = pnl.ContrastiveHebbianMechanism(
                 input_size=2, hidden_size=0, target_size=2,
-                mode=pnl.HEBBIAN,
+                mode=pnl.SIMPLE_HEBBIAN,
                 separated=False,
                 matrix=[[0,-1],[-1,0]]
         )
