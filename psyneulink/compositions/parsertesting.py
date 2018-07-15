@@ -31,6 +31,7 @@ from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F 
 import torch.optim as optim
+from torchviz import make_dot
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +238,7 @@ class Graph(object):
 
 
 
-
+'''
 # Pytorch nn module subclass
 class ModelInPytorch(torch.nn.Module):
     
@@ -437,10 +438,216 @@ class ModelInPytorch(torch.nn.Module):
     # method for retreiving the weights, biases corresponding to psyneulink projections
     def get_parameters_for_projections(self):
         return self.projections_to_torch_weights
+'''
     
     
     
     
+
+
+
+
+
+
+
+# Pytorch nn module subclass
+class ModelInPytorch(torch.nn.Module):
+    
+    
+    
+    # HELPER METHODS
+    
+    
+    # method for creating ordered execution sets from processing graph
+    def get_ordered_exec_sets(self, processing_graph):
+        
+        # initialize lists of ordered execution sets, terminal nodes
+        ordered_exec_sets = []
+        terminal_nodes = []
+        
+        # create list of terminal nodes in processing graph
+        for i in range(len(processing_graph.vertices)):
+            node = processing_graph.vertices[i]
+            if len(node.children) == 0:
+                terminal_nodes.append(node)
+        
+        # iterate over terminal nodes, call recursive function to create ordered execution sets
+        for i in range(len(terminal_nodes)):
+            node = terminal_nodes[i]
+            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
+        
+        return ordered_exec_sets
+    
+    
+    # helper recursive method for creating ordered execution sets from processing graph
+    def get_node_pos(self, node, ordered_exec_sets):
+        
+        # check if current node has already been put in an execution set
+        for i in range(len(ordered_exec_sets)):
+            if (node in ordered_exec_sets[i]):
+                return ordered_exec_sets, i
+            
+        # check if we are at a node with no parents
+        if len(node.parents) == 0:
+            if len(ordered_exec_sets) < 1:
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[0].append(node)
+            return ordered_exec_sets, 0
+            
+        # if we are at a node with parents
+        else:
+            
+            # iterate over parents, find parent path with maximum length
+            max_dist = -1
+            for i in range(len(node.parents)):
+                parent = node.parents[i]
+                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
+                dist += 1
+                if dist > max_dist: 
+                    max_dist = dist
+            
+            # set node at position = max_dist in the ordered execution sets list
+            if len(ordered_exec_sets) < (max_dist+1):
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[max_dist].append(node)
+            return ordered_exec_sets, max_dist
+    
+    
+    # helper function creator
+    def activation_function_creator(self, node):
+        
+        # linear function case
+        if isinstance(node.component.function_object, Linear):
+            slope = node.component.function_object.params['slope']
+            intercept = node.component.function_object.params['intercept']
+            return lambda x: x * slope + intercept
+        
+        # logistic function case
+        elif isinstance(node.component.function_object, Logistic):
+            gain = node.component.function_object.params['gain']
+            bias = node.component.function_object.params['bias']
+            offset = node.component.function_object.params['offset']
+            return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
+        
+        # relu function case
+        else:
+            gain = node.component.function_object.params['gain']
+            bias = node.component.function_object.params['bias']
+            leak = node.component.function_object.params['leak']
+            return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).float()) * gain + 
+                              torch.min(input=(x-bias), other=torch.tensor([0]).float()) * leak)
+    
+    
+    
+    # initialization
+    def __init__(self, processing_graph):
+        
+        # do superclass init
+        super(ModelInPytorch, self).__init__()
+        
+        # instance variables
+        self.ordered_execution_sets = self.get_ordered_exec_sets(processing_graph) # execution sets
+        self.processing_graph = processing_graph # processing graph of model
+        self.node_to_feedforward_info = {} # map from PNL node to feedforward information
+        self.projections_to_torch_weights = {} # map from PNL projections to corresponding params in pytorch
+        self.params = nn.ParameterList() # list of parameters for Pytorch to take note of
+        
+        # go through nodes in the execution sets one by one, set up above dictionaries for each
+        for i in range(len(self.ordered_execution_sets)):
+            for j in range(len(self.ordered_execution_sets[i])):
+                
+                # get current node
+                node = self.ordered_execution_sets[i][j]
+                
+                # create feedforward information list for node
+                node_feedforward_info = []
+                
+                # set up node's tensor and activation function
+                layer = None
+                activation_function = self.activation_function_creator(node)
+                
+                # add them to relevant places
+                node_feedforward_info.append(layer)
+                node_feedforward_info.append(activation_function)
+                
+                # set up node's afferents dictionary. If we have an origin node:
+                if len(node.parents) == 0:
+                    
+                    afferents = {}
+                    node_feedforward_info.append(afferents)
+                
+                # if we don't have origin node
+                else:
+                    
+                    afferents = {}
+                    for k in range(len(node.component.path_afferents)):
+                        mapping_proj = node.component.path_afferents[k]
+                        input_component = mapping_proj.sender.owner
+                        input_node = self.processing_graph.comp_to_vertex[input_component]
+                        weights = nn.Parameter(torch.randn(len(input_component.input_states[0].variable), 
+                                                           len(node.component.input_states[0].variable)).float())
+                        biases = nn.Parameter(torch.randn(len(node.component.input_states[0].variable)).float())
+                        self.params.append(weights)
+                        self.params.append(biases)
+                        afferents[input_node] = [weights, biases]
+                        self.projections_to_torch_weights[mapping_proj] = [weights, biases]
+                    node_feedforward_info.append(afferents)
+                
+                self.node_to_feedforward_info[node] = node_feedforward_info
+    
+    
+    # feedforward method
+    def forward(self, inputs):
+        
+        # set up output list
+        outputs = []
+        
+        # iterate over nodes in execution sets
+        for i in range(len(self.ordered_execution_sets)):
+            for j in range(len(self.ordered_execution_sets[i])):
+                
+                # get current node, feedforward information for it
+                node = self.ordered_execution_sets[i][j]
+                activation_function = self.node_to_feedforward_info[node][1]
+                afferents = self.node_to_feedforward_info[node][2]
+                
+                # check if we have origin node (we are in the 1st execution set)
+                if (i == 0):
+                    
+                    # perform feedforward step for node
+                    layer = activation_function(inputs[j])
+                
+                # if we do not have origin node (we are not in the 1st execution set)
+                else:
+                    
+                    # perform feedforward step for node
+                    layer = torch.zeros(len(node.component.input_states[0].variable))
+                    for input_node, param_list in afferents.items():
+                        layer += (torch.matmul(self.node_to_feedforward_info[input_node][0], param_list[0]) + param_list[1])
+                    layer = activation_function(layer)
+                
+                # put layer in correct place in the dictionary
+                self.node_to_feedforward_info[node][0] = layer
+                
+                # if we're at a node in the last execution set
+                if i == len(self.ordered_execution_sets)-1:
+                    outputs.append(layer)
+        
+        return outputs
+    
+    
+    
+    # method for retreiving the weights, biases corresponding to psyneulink projections
+    def get_parameters_for_projections(self):
+        return self.projections_to_torch_weights
+
+
+
+
+
+
     
     
     
@@ -725,78 +932,82 @@ print("\n")
 
 
 
-'''
+
 # takes inputs and targets for pytorch model and trains them 
-    def autodiff_training(self, inputs, targets, epochs_or_stop_learning_condition=None):
+def autodiff_training(model, inputs, targets, epochs_or_stop_learning_condition=None):
+    
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters())
+    outputs = np.empty([len(inputs)], dtype=object)
+    
+    # iterate over epochs
+    for epoch in range(epochs_or_stop_learning_condition):
         
-        # convert inputs, targets to torch tensors
-        tensor_inputs = np.empty([len(inputs)], dtype=object)
-        tensor_targets = np.empty([len(targets)], dtype=object)
+        print(epoch)
+        print("\n")
         
+        # set a random number seed
+        torch.manual_seed(epoch)
+        
+        # get a random permutation of inputs/targets
+        rand_train_order = np.random.permutation(len(inputs))
+        
+        # iterate over inputs/targets
         for t in range(len(inputs)):
             
-            curr_tensor_inputs = []
-            curr_tensor_targets = []
+            print(t)
+            print("\n")
             
-            for i in len(inputs[t]):
-                curr_tensor_inputs.append(torch.from_numpy(np.asarray(inputs[t][i])).float())
-            tensor_inputs[t] = curr_tensor_inputs
+            # get current inputs, targets
+            curr_tensor_inputs = inputs[rand_train_order[t]]
+            curr_tensor_targets = targets[rand_train_order[t]]
             
-            for i in len(targets[t]):
-                curr_tensor_targets.append(torch.from_numpy(np.asarray(targets[t][i])).float())
-            tensor_targets[t] = curr_tensor_targets
+            # run the model on inputs
+            curr_tensor_outputs = model.forward(curr_tensor_inputs)
+            
+            # compute loss
+            loss = torch.zeros(1).float()
+            for i in range(len(curr_tensor_outputs)):
+                loss += criterion(curr_tensor_outputs[i], curr_tensor_targets[i])
+            
+            
+            # dot = make_dot(loss)
+            # dot.format = 'svg'
+            # dot.render()
+            
+            
+            if (t == 1):
+                dot = make_dot(loss)
+                dot.format = 'svg'
+                dot.render()
+            
+            
+            # compute gradients and perform parameter update
+            optimizer.zero_grad()
+            loss.backward()
+            
+            # if (t == 0):
+                # dot = make_dot(loss)
+                # dot.format = 'svg'
+                # dot.render()
+            
+            optimizer.step()
+            
+            # save outputs of model if this is final epoch
+            if epoch == epochs_or_stop_learning_condition - 1:
+                curr_output_list = []
+                for i in range(len(curr_tensor_outputs)):
+                    curr_output_list.append(curr_tensor_outputs[i])
+                outputs[rand_train_order[t]] = curr_output_list
+            
+            
+    
+    
+    outputs_list = []
+    for i in range(len(outputs)):
+        outputs_list.append(outputs[i])
         
-        # train model
-        
-        # NOTE 1: currently, learning conditions are not supported - first implementation defaults
-        # to 50 epochs, using mean-squared-error loss and the Adam optimizer with certain default settings
-        
-        # NOTE 2: currently, tensor_inputs/targets is a numpy array of lists of tensors - this should be simplified
-        
-        # set loss criterion, optimizer, output list for holding outputs on final iteration
-        criterion = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters)
-        outputs = np.empty([len(inputs)], dtype=object)
-        
-        # iterate over epochs
-        for epoch in range(epochs_or_stop_learning_condition):
-            
-            # set a random number seed
-            torch.manual_seed(epoch)
-            
-            # get a random permutation of inputs/targets
-            rand_train_order = np.random.permutation(len(tensor_inputs))
-            
-            # iterate over inputs/targets
-            for t in range(len(tensor_inputs)):
-                
-                # get current inputs, targets
-                curr_tensor_inputs = tensor_inputs[rand_train_order[t]]
-                curr_tensor_targets = tensor_targets[rand_train_order[t]]
-                
-                # run the model on inputs
-                output_tuple = self.model.forward(*curr_tensor_inputs)
-                
-                # compute loss
-                loss = torch.zeros(1).float()
-                for i in range(len(output_tuple)):
-                    loss += criterion(output_tuple[i], curr_tensor_targets[i])
-                
-                # compute gradients and perform parameter update
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                
-                # save outputs of model if this is final epoch
-                if epoch == epochs_or_stop_learning_condition - 1:
-                    curr_output_list = []
-                    for i in range(len(output_tuple)):
-                        curr_output_list.append(output_tuple[i].numpy())
-                    outputs[rand_train_order[t]] = curr_output_list
-            
-            return outputs
-'''
-
+    return outputs_list
 
 
 
@@ -817,15 +1028,30 @@ ready_targets = []
 for i in range(len(PT_nouns)):
     for j in range(len(PT_rels)):
         
-        ready_inputs.append([PT_nouns[i], PT_rels[j]])
+        ready_inputs.append([PT_rels[j], PT_nouns[i]])
         ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
 
-print(len(ready_inputs))
-print(len(ready_targets))
+test_training = autodiff_training(rumel_parsed_pytorch, ready_inputs, ready_targets, epochs_or_stop_learning_condition=1)
+print(test_training)
 
-for i in range(24):
-    print(len(ready_inputs[i]))
-    print(len(ready_targets[i]))
+
+
+'''
+test = rumel_parsed_pytorch.forward(ready_inputs[0])
+print(test)
+
+dot = make_dot(test[1])
+dot.format = 'svg'
+dot.render()
+'''
+
+
+
+
+
+
+
+
 
 
 
