@@ -894,20 +894,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         if COMBINATION_FUNCTION in target_set:
             comb_fct = target_set[COMBINATION_FUNCTION]
             if not (isinstance(comb_fct, LinearCombination) or
-                isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)):
-
+                    (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)) or
+                    (isinstance(comb_fct, MethodType) and comb_fct.__self__==self)):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
                 elif isinstance(comb_fct, (function_type, method_type)):
                     comb_fct = UserDefinedFunction(comb_fct, self.variable)
                 try:
-                    x = comb_fct.execute(self.variable)
+                    cust_fct_result = comb_fct.execute(self.variable)
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
                                                  "take an array with two items ({})".
                                                  format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.variable))
                 try:
-                    assert len(x) == len(self.variable[0])
+                    assert len(cust_fct_result) == len(self.variable[0])
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
                                                  "a result that is the same shape as the input to {} ({})".

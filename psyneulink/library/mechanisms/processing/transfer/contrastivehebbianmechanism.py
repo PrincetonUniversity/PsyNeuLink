@@ -662,7 +662,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super().__init__(
                          default_variable=default_variable,
-                         # size=size,
                          input_states=input_states,
                          combination_function=combination_function,
                          function=function,
@@ -687,14 +686,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
-        size = self.variable.size
-        if self.separated and self.input_size != self.target_size:
-            raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
-                                          format(repr(SEPARATED), repr(True), self.name,
-                                                 repr(INPUT_SIZE), self.input_size,
-                                                 repr(TARGET_SIZE), self.target_size))
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #     # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
+    #     size = self.variable.size
+    #     if self.separated and self.input_size != self.target_size:
+    #         raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
+    #                                       format(repr(SEPARATED), repr(True), self.name,
+    #                                              repr(INPUT_SIZE), self.input_size,
+    #                                              repr(TARGET_SIZE), self.target_size))
+    #
 
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
 
@@ -716,8 +716,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                           matrix=HOLLOW_MATRIX,
                                           context=None):
         """Instantiate an AutoAssociativeProjection from Mechanism to itself
-
         """
+
         from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
             size = len(mech.instance_defaults.variable[0])
@@ -752,7 +752,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.output_activity = self.input_states[TARGET].socket_template
             self.execution_phase = None
 
-
         # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
@@ -780,7 +779,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         current_activity = np.squeeze(current_activity)
         # Set value of primary OutputState to current activity
         self.current_activity = current_activity
-
 
 
         # TEST PRINT:

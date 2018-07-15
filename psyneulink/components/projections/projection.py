@@ -878,7 +878,6 @@ class Projection_Base(Projection):
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
             param[state_name] = type_match(state.value, param_type)
-            x = param[state_name]
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
