@@ -270,11 +270,6 @@ from psyneulink.globals.log import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
-import functools
-import ctypes
-import psyneulink.llvm as pnlvm
-from llvmlite import ir
-
 __all__ = [
     'MappingError', 'MappingProjection',
 ]
@@ -700,39 +695,3 @@ class MappingProjection(PathwayProjection_Base):
     def logPref(self, setting):
         self.prefs.logPref = setting
         self.parameter_states[MATRIX].logPref = setting
-
-    def get_param_struct_type(self):
-        return self.function_object.get_param_struct_type()
-
-
-    def get_context_struct_type(self):
-        return self.function_object.get_context_struct_type()
-
-
-    def get_output_struct_type(self):
-        # This should be in sync with mechanism input struct type
-        return self.function_object.get_output_struct_type()
-
-
-    def get_input_struct_type(self):
-        # This should be in sync with mechanism output struct type
-        return self.function_object.get_input_struct_type()
-
-
-    def get_param_initializer(self):
-        return self.function_object.get_param_initializer()
-
-
-    def get_context_initializer(self):
-        return self.function_object.get_context_initializer()
-
-
-    # Provide invocation wrapper for easier debuging
-    # This can be replaced by redirecting llvmSymbolName to self.function_object
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, state, vi, vo = builder.function.args
-
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        builder.call(main_function, [params, state, vi, vo])
-
-        return builder

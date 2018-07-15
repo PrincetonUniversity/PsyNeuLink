@@ -392,30 +392,4 @@ class ControlProjection(ModulatoryProjection_Base):
     def control_signal(self):
         return self.sender.value
 
-    def get_output_struct_type(self):
-        return self.function_object.get_output_struct_type()
 
-    def get_input_struct_type(self):
-        return self.function_object.get_input_struct_type()
-
-    def get_param_struct_type(self):
-        return self.function_object.get_param_struct_type()
-
-    def get_context_struct_type(self):
-        return self.function_object.get_context_struct_type()
-
-    def get_param_initializer(self):
-        return self.function_object.get_param_initializer()
-
-    def get_context_initializer(self):
-        return self.function_object.get_context_initializer()
-
-    # Provide invocation wrapper for easier debuging
-    # This can be replaced by redirecting llvmSymbolName to self.function_object
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, state, vi, vo = builder.function.args
-
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        builder.call(main_function, [params, state, vi, vo])
-
-        return builder
