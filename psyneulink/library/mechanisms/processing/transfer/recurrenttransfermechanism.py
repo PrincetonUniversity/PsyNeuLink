@@ -813,7 +813,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
-        assert True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
