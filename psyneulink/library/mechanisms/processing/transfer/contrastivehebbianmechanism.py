@@ -621,20 +621,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.hidden_size = hidden_size
         self.target_size = target_size
         self.separated = separated
+        self.recurrent_size = input_size + hidden_size
+        if separated:
+            self.recurrent_size += target_size
+            self.target_start = input_size + hidden_size
+        else:
+            self.target_start = 0
+        self.target_end = self.target_start + self.target_size
+        size = self.recurrent_size
+
         self.clamp = clamp
         self.mode = mode
         if self.mode is HEBBIAN:
             self.clamp = SOFT_CLAMP
 
-        if separated:
-            self.target_start = input_size + hidden_size
-        else:
-            self.target_start = 0
-        self.target_end = self.target_start + self.target_size
-
-        self.recurrent_size = input_size + hidden_size
-        if separated:
-            self.recurrent_size += target_size
 
         default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
 
@@ -664,6 +664,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super().__init__(
                          default_variable=default_variable,
+                         size=size,
                          input_states=input_states,
                          combination_function=combination_function,
                          function=function,
@@ -858,7 +859,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 if self.mode is HEBBIAN:
                     return variable[RECURRENT_INDEX]
                 if self.clamp == HARD_CLAMP:
-                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] = vardiable[MINUS_PHASE_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
         except:  # Initialization

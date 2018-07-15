@@ -770,6 +770,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
+        if has_recurrent_input_state:
+            try:
+                self.recurrent_size
+            except:
+                # Defer determination until Component has parsed size of Mechanism's variable
+                self.recurrent_size = None
+
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
 
@@ -814,6 +821,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
+        default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
+        self.recurrent_size = self.recurrent_size or len(default_variable[0])
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
         """
@@ -847,13 +859,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         if MATRIX in target_set:
 
             matrix_param = target_set[MATRIX]
-            size = self.size[0]
 
             if isinstance(matrix_param, AutoAssociativeProjection):
                 matrix = matrix_param.matrix
 
             elif isinstance(matrix_param, str):
-                matrix = get_matrix(matrix_param, size, size)
+                matrix = get_matrix(matrix_param, rows=self.recurrent_size, cols=self.recurrent_size)
 
             elif isinstance(matrix_param, (np.matrix, list)):
                 matrix = np.array(matrix_param)
@@ -861,8 +872,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 matrix = matrix_param
             if matrix is None:
-                rows = cols = size # this is a hack just to skip the tests ahead: if the matrix really is None, that is
-                # checked up ahead, in _instantiate_attributes_before_function()
+                rows = cols = self.recurrent_size # this is a hack just to skip the tests ahead:
+                # if the matrix really is None, that is checked up ahead, in _instantiate_attributes_before_function()
             else:
                 rows = np.array(matrix).shape[0]
                 cols = np.array(matrix).shape[1]
@@ -879,15 +890,15 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError(err_msg)
 
             # Size of matrix must equal length of variable:
-            if rows != size:
-                if (matrix_param, AutoAssociativeProjection):
-                    # if __name__ == '__main__':
+            if rows != self.recurrent_size:
+                if isinstance(matrix_param, AutoAssociativeProjection):
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
-                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.instance_defaults.variable))
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size,
+                                      self.instance_defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
-                               format(MATRIX, self.name, rows, size))
+                               format(MATRIX, self.name, rows, self.recurrent_size))
                 raise RecurrentTransferError(err_msg)
 
         # Validate combination_function
@@ -935,7 +946,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_states.key_values
-        specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+
+        specified_matrix = get_matrix(self.params[MATRIX], rows=self.recurrent_size, cols=self.recurrent_size)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
@@ -991,7 +1003,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                      default_variable=self.variable)
 
         if self.auto is None and self.hetero is None:
-            self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+            self.matrix = specified_matrix
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
