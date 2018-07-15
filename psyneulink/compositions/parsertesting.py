@@ -719,22 +719,113 @@ print(PT_truth_can.shape)
 print("\n")
 '''
 
+
+
+
+
+
+
+'''
+# takes inputs and targets for pytorch model and trains them 
+    def autodiff_training(self, inputs, targets, epochs_or_stop_learning_condition=None):
+        
+        # convert inputs, targets to torch tensors
+        tensor_inputs = np.empty([len(inputs)], dtype=object)
+        tensor_targets = np.empty([len(targets)], dtype=object)
+        
+        for t in range(len(inputs)):
+            
+            curr_tensor_inputs = []
+            curr_tensor_targets = []
+            
+            for i in len(inputs[t]):
+                curr_tensor_inputs.append(torch.from_numpy(np.asarray(inputs[t][i])).float())
+            tensor_inputs[t] = curr_tensor_inputs
+            
+            for i in len(targets[t]):
+                curr_tensor_targets.append(torch.from_numpy(np.asarray(targets[t][i])).float())
+            tensor_targets[t] = curr_tensor_targets
+        
+        # train model
+        
+        # NOTE 1: currently, learning conditions are not supported - first implementation defaults
+        # to 50 epochs, using mean-squared-error loss and the Adam optimizer with certain default settings
+        
+        # NOTE 2: currently, tensor_inputs/targets is a numpy array of lists of tensors - this should be simplified
+        
+        # set loss criterion, optimizer, output list for holding outputs on final iteration
+        criterion = nn.MSELoss()
+        optimizer = optim.Adam(self.model.parameters)
+        outputs = np.empty([len(inputs)], dtype=object)
+        
+        # iterate over epochs
+        for epoch in range(epochs_or_stop_learning_condition):
+            
+            # set a random number seed
+            torch.manual_seed(epoch)
+            
+            # get a random permutation of inputs/targets
+            rand_train_order = np.random.permutation(len(tensor_inputs))
+            
+            # iterate over inputs/targets
+            for t in range(len(tensor_inputs)):
+                
+                # get current inputs, targets
+                curr_tensor_inputs = tensor_inputs[rand_train_order[t]]
+                curr_tensor_targets = tensor_targets[rand_train_order[t]]
+                
+                # run the model on inputs
+                output_tuple = self.model.forward(*curr_tensor_inputs)
+                
+                # compute loss
+                loss = torch.zeros(1).float()
+                for i in range(len(output_tuple)):
+                    loss += criterion(output_tuple[i], curr_tensor_targets[i])
+                
+                # compute gradients and perform parameter update
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                # save outputs of model if this is final epoch
+                if epoch == epochs_or_stop_learning_condition - 1:
+                    curr_output_list = []
+                    for i in range(len(output_tuple)):
+                        curr_output_list.append(output_tuple[i].numpy())
+                    outputs[rand_train_order[t]] = curr_output_list
+            
+            return outputs
+'''
+
+
+
+
+
+
+
+
+
+
+
+
 print("Tryna run this bitch: ")
 print("\n")
-inputs = [PT_rels[0], PT_nouns[0]]
-test = rumel_parsed_pytorch.forward(inputs)
-print(test)
-print(len(test))
-print("\n")
 
-for i in range(len(test)):
-    print(test[i])
-    print(test[i].shape)
-    print("\n")
+ready_inputs = []
+ready_targets = []
 
+for i in range(len(PT_nouns)):
+    for j in range(len(PT_rels)):
+        
+        ready_inputs.append([PT_nouns[i], PT_rels[j]])
+        ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
 
+print(len(ready_inputs))
+print(len(ready_targets))
 
-
+for i in range(24):
+    print(len(ready_inputs[i]))
+    print(len(ready_targets[i]))
 
 
 
