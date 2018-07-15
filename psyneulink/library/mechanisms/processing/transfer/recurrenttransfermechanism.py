@@ -825,6 +825,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
         default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
         self.recurrent_size = self.recurrent_size or len(default_variable[0])
+        return default_variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
