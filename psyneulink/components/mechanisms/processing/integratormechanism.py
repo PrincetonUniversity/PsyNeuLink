@@ -78,11 +78,6 @@ from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPrefere
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
-import functools
-import ctypes
-import psyneulink.llvm as pnlvm
-from llvmlite import ir
-
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
 ]
@@ -230,3 +225,5 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def previous_value(self):
         return self.function_object.previous_value
     # MODIFIED 6/2/17 END
+
+
