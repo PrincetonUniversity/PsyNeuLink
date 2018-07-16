@@ -435,7 +435,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     continuous : bool : default True
 
-    clamp : SOFT_CLAMP or HARD_CLAMP : default HARD_CLAMP
+    clamp : HARD_CLAMP or SOFT_CLAMP : default HARD_CLAMP
 
     combination_function : function : default None
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
@@ -528,20 +528,28 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     Attributes
     ----------
 
-input_size:int,
-hidden_size:tc.optional(int)=None,
-target_size:tc.optional(int)=None,
-target_start
-target_end
-separated
-recurrent_size
-continuous:bool=True,
-clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
+    input_size : int
+
+    hidden_size : int
+
+    target_size : int
+
+    target_start : int
+
+    target_end : int
+
+    separated : bool
+
+    recurrent_size : int
+
+    continuous : bool
+
+    clamp : HARD_CLAMP or SOFT_CLAMP
 
     variable : value
         the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
 
-    combination_function : function
+    combination_function : method or function
         used to combine `value <InputState.value>` of the *RECURRENT* and *EXTERNAL* `inputs
         <ContrastiveHebbian_Input>`.  The default function adds them.
 
