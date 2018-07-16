@@ -900,7 +900,6 @@ class System(System_Base):
 
         self.scheduler_processing = scheduler
         self.scheduler_learning = None
-        self.termination_processing = None
         self.termination_learning = None
 
         register_category(entry=self,
@@ -2722,7 +2721,12 @@ class System(System_Base):
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
-        self.termination_processing = termination_processing
+
+        # termination_processing should be treated like a runtime param -- if nothing is passed in, then use the attr
+        if termination_processing is None:
+
+            termination_processing = self.termination_processing
+
         self.termination_learning = termination_learning
 
         if self._report_system_output:
@@ -2738,6 +2742,7 @@ class System(System_Base):
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(runtime_params=runtime_params,
+                                 termination_processing=termination_processing,
                                  context=context)
         outcome = self.terminal_mechanisms.outputStateValues
 
@@ -2787,7 +2792,7 @@ class System(System_Base):
         # return self.terminal_mechanisms.outputStateValues
         return outcome
 
-    def _execute_processing(self, runtime_params, context=None):
+    def _execute_processing(self, runtime_params, termination_processing, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2795,8 +2800,9 @@ class System(System_Base):
         if self.scheduler_processing is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
-        logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
-        for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
+        logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, termination_processing))
+
+        for next_execution_set in self.scheduler_processing.run(termination_conds=termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
@@ -3387,6 +3393,15 @@ class System(System_Base):
     @property
     def function(self):
         return self.execute
+
+    @property
+    def termination_processing(self):
+        return self.scheduler_processing.termination_conds
+
+    @termination_processing.setter
+    def termination_processing(self, termination_conds):
+        self.scheduler_processing.termination_conds = termination_conds
+
 
     @property
     def reinitialize_mechanisms_when(self):

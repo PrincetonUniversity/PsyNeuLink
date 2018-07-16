@@ -420,6 +420,14 @@ class Composition(object):
 
         return self._scheduler_learning
 
+    @property
+    def termination_processing(self):
+        return self.scheduler_processing.termination_conds
+
+    @termination_processing.setter
+    def termination_processing(self, termination_conds):
+        self.scheduler_processing.termination_conds = termination_conds
+
     def _get_unique_id(self):
         return uuid.uuid4()
 
@@ -991,6 +999,9 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
         self._assign_values_to_CIM_output_states(inputs)
         # self._assign_values_to_target_CIM_output_states(targets)
         execution_id = self._assign_execution_ids(execution_id)
@@ -1182,6 +1193,9 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
         self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
@@ -1228,12 +1242,10 @@ class Composition(object):
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
-
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_before_trial()
-
-            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
+            if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                                   execution_id=execution_id):
                 break
 
