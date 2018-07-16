@@ -52,6 +52,8 @@ a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and 
 and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be
 specified in the **additional_output_states** argument of its constructor.
 
+.. _ContrastiveHebbian_SIMPLE_HEBBIAN:
+
 *SIMPLE_HEBBIAN* mode
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -116,8 +118,9 @@ and thus must be assigned both a `convergence_function <ContrastiveHebbianMechan
 `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  The defaults are a `Distance` Function
 using the `MAX_ABS_DIFF` metric, and a `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`
 of 0.01. The `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
-`ContrastiveHebbian`, but it can be replaced by any function that takes two 1d arrays ("activity states") and
-compares them to determine the `matrix <MappingProjection.matrix>` of the Mechanism's `recurrent_projection
+`ContrastiveHebbian` (unless **mode** is specified as *SIMPLE_HEBBIAN* -- see `ContrastiveHebbian_SIMPLE_HEBBIAN`),
+but it can be replaced by any function that takes two 1d arrays ("activity states") and compares them to determine
+the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
 <ContrastiveHebbianMechanism.recurrent_projection>`.
 
 .. _ContrastiveHebbian_Output:
@@ -125,15 +128,25 @@ compares them to determine the `matrix <MappingProjection.matrix>` of the Mechan
 Output
 ~~~~~~
 
-A ContrastiveHebbianMechanism is automatically assigned two `OutputStates <OutputState>`: 
-*CURRENT_ACTIVITY_OUTPUT* and *ACTIVITY_DIFFERENCE_OUTPUT*.  The former is assigned the value of the `current_activity
-<ContrastiveHebbianMechanism.current_activity>` attribute after each `execution of the Mechanism
-<ContrastiveHebbian_Execution>`, and the latter the difference between its `plus_phase_activity
-<ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
-<ContrastiveHebbianMechanism.minus_phase_activity>` at the `completion of execution <ContrastiveHebbian_Execution>`.
-If `configured for learning <ContrastiveHebbian_Learning>`, a `MappingProjection` is assigned from the
-*ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of the
-`learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.
+A ContrastiveHebbianMechanism is automatically assigned three `OutputStates <OutputState>`: 
+
+* *OUTPUT_ACTIVITY_OUTPUT:* assigned as the `primary OutputState <OutputState_Primary>`), and contains the pattern
+  of activity the Mechanism is trained to generate.  If **target_size** is specified, then it has the same size as
+  the *TARGET* InputState;  if **target_size** is not specified or is 0, if **separated** is `False`, or if mode is
+  *SIMPLE_HEBBIAN*, then the size of the *OUTPUT_ACTIVITY_OUTPUT* OutputState is the same as the *INPUT* InputState
+  (see `ContrastiveHebbian_Input`).
+
+* *CURRENT_ACTIVITY_OUTPUT:* assigned the value of the `current_activity <ContrastiveHebbianMechanism.current_activity>`
+  attribute after each `execution of the Mechanism <ContrastiveHebbian_Execution>`, which contains the activity of all
+  processing units in the Mechanism (input, hidden and/or target) after each execution;  this is the same size as the
+  *RECURRENT* InputState.
+
+* *ACTIVITY_DIFFERENCE_OUTPUT:* assigned the difference between its `plus_phase_activity
+  <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
+  <ContrastiveHebbianMechanism.minus_phase_activity>` at the `completion of execution
+  <ContrastiveHebbian_Execution>`. If `configured for learning <ContrastiveHebbian_Learning>`, a `MappingProjection`
+  is assigned from the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>` to the
+  *ACTIVATION_INPUT* of the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>`.
 
 A ContrastiveHebbianMechanism also has two additional `Standard OutputStates
 <ContrastiveHebbianMechanism_Standard_OutputStates>` -- *PLUS_PHASE_ACTIVITY_OUTPUT* and *MINUS_PHASE_OUTPUT* --
