@@ -62,7 +62,7 @@ COMMENT:
                     suppressed if a *PARAMETER_STATES* entry is included and set to `NotImplemented` in the
                     paramClassDefaults dictionary of its class definition;  the instantiation of a ParameterState
                     for an individual parameter in user_params can be suppressed by including it in
-                    ClassDefaults.exclude_from_parameter_states for the class (or one of its parent classes)
+                    exclude_from_parameter_states for the class (or one of its parent classes)
                     (see LearningProjection and EVCControlMechanism for examples, and `note
                     <ParameterStates_Suppression>` below for additional information about how
                     to suppress creation of a ParameterState for individual parameters.  This should be done
@@ -101,7 +101,7 @@ Parameters can be specified in one of several places:
     ..
     * In the `assign_params <Component.assign_params>` method for the Component.
     ..
-    * In the **runtime_params** argument of a call to component's `execute <Mechanism_Base.execute>` method.
+    * In the **runtime_params** argument of a call to a Composition's `Run` method
 
 .. _ParameterState_Value_Specification:
 
@@ -136,7 +136,7 @@ The specification of the initial value of a parameter can take any of the follow
     ..
     .. _ParameterState_Tuple_Specification:
 
-    * **2-item tuple:** *(value, Modulatory specification)* -- this creates a default ParameterState, uses the value
+    * **2-item tuple:** *(<value>, <Modulatory specification>)* -- this creates a default ParameterState, uses the value
       specification (1st item) as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
       parameter's name as the name of the ParameterState.  The Modulatory specification (2nd item) is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
@@ -630,7 +630,6 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
@@ -814,30 +813,33 @@ class ParameterState(State_Base):
 
         return state_spec, params_dict
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+    @staticmethod
+    def _get_state_function_value(owner, function, variable):
+        """Return parameter variable (since ParameterState's function never changes the form of its variable"""
+        return variable
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with current parameter value as the variable
 
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         Update its value in call to state's function.
         """
 
-        if function_variable is not None:
-            # return self.function(function_variable, runtime_params, context)
-            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
+        if variable is not None:
+            return super()._execute(variable, runtime_params=runtime_params, context=context)
         else:
             # Most commonly, ParameterState is for the parameter of a function
             try:
-                param_value = getattr(self.owner.function_object, '_'+ self.name)
+                variable = getattr(self.owner.function_object, '_'+ self.name)
                 # param_value = self.owner.function_object.params[self.name]
 
            # Otherwise, should be for an attribute of the ParameterState's owner:
             except AttributeError:
                 # param_value = self.owner.params[self.name]
-                param_value = getattr(self.owner, '_'+ self.name)
+                variable = getattr(self.owner, '_'+ self.name)
 
             return super()._execute(
                 variable=variable,
-                function_variable=param_value,
                 runtime_params=runtime_params,
                 context=context
             )
@@ -890,7 +892,7 @@ def _instantiate_parameter_states(owner, function=None, context=None):
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         # Skip any parameter that has been specifically excluded
-        if param_name in owner.ClassDefaults.exclude_from_parameter_states:
+        if param_name in owner.exclude_from_parameter_states:
             continue
         _instantiate_parameter_state(owner, param_name, param_value, context=context, function=function)
 

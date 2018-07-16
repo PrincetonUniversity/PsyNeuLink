@@ -106,7 +106,7 @@ from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStat
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE,\
     LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.time import TimeScale
 
@@ -194,8 +194,7 @@ class LeabraFunction(Function_Base):
 
     classPreferences = {
         kwPreferenceSetName: 'LeabraFunctionClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -437,8 +436,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     # LeabraMechanism parameter and control signal assignments):
@@ -505,7 +503,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         time_scale=TimeScale.TRIAL,
         # ignore_execution_id=False,
@@ -519,7 +516,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         return super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             # ignore_execution_id=ignore_execution_id,
             context=context

@@ -70,9 +70,10 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
     <GatingSignal,value>`;  see `OutputState_Customization`).
   ..
-  * **2-item tuple** -- the 1st item must be the name of the State (or list of State names), and the 2nd item the
-    Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
-    dictionary (see below), but precludes specification of `parameters <GatingSignal_Structure>` for the GatingSignal.
+  * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- the 1st item must be the name of the
+    State (or list of State names), and the 2nd item the Mechanism to which it (they) belong(s); this is a convenience
+    format, which is simpler to use than a specification dictionary (see below), but precludes specification of
+    `parameters <GatingSignal_Structure>` for the GatingSignal.
 
 .. _GatingSignal_Structure:
 

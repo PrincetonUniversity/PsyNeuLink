@@ -462,7 +462,11 @@ from psyneulink.components.states.modulatorysignals.learningsignal import Learni
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, \
+    PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, \
+    kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -470,7 +474,7 @@ from psyneulink.globals.utilities import append_type_to_name, convert_to_np_arra
 
 __all__ = [
     'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
-    'Process', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+    'Process', 'proc', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
 ]
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -503,21 +507,31 @@ from psyneulink.components.states.outputstate import OutputState
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
+def proc(*args, **kwargs):
+    """Factory method
+
+    **args** can be `Mechanisms <Mechanism>` with our without `Projections <Projection>`, or a list of them,
+    that conform to the format for the `pathway <Process.pathway>` argument of a `Process`.
+
+    **kwargs** can be any arguments of the `Process` constructor.
+    """
+    return Process(pathway=list(args), **kwargs)
+
+
 class Process(Process_Base):
     """
-    Process(process_spec=None,                         \
+    Process(process_spec=None,                           \
     default_variable=None,                               \
-    pathway=None,                                           \
-    initial_values={},                                      \
-    clamp_input:=None,                                      \
-    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
-    learning=None,                                          \
-    learning_rate=None                                      \
-    target=None,                                            \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None,                                             \
-    context=None)
+    pathway=None,                                        \
+    initial_values={},                                   \
+    clamp_input:=None,                                   \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX, \
+    learning=None,                                       \
+    learning_rate=None                                   \
+    target=None,                                         \
+    params=None,                                         \
+    name=None,                                           \
+    prefs=None
 
     Base class for Process.
 
@@ -819,13 +833,11 @@ class Process(Process_Base):
         '_isControllerProcess': False
     })
 
-    default_pathway = []
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 pathway=default_pathway,
+                 pathway=None,
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
@@ -836,6 +848,8 @@ class Process(Process_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
+
+        pathway = pathway or []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
@@ -966,28 +980,35 @@ class Process(Process_Base):
         self._learning_mechs = []
         self._target_mechs = []
 
-        self._standardize_config_entries(pathway=pathway, context=context)
-
         # VALIDATE PATHWAY THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
         self._parse_and_instantiate_mechanism_entries(pathway=pathway, context=context)
 
-        # Identify origin and terminal mechanisms in the process and
-        #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
+        # Identify ORIGIN and TERMINAL Mechanisms in the Process and
+        #    and assign the Mechanism's status in the Process to its entry in the Mechanism's processes dict
+
+        # Move any ControlMechanisms in the pathway to the end
+        from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        for i, item in enumerate(pathway):
+            if len(pathway)>1 and isinstance(item, ControlMechanism):
+                pathway += [pathway.pop(i)]
+
+        # Identify and assign first Mechanism as first_mechanism and ORIGIN
         self.first_mechanism = pathway[0]
-        self.first_mechanism.processes[self] = ORIGIN
+        self.first_mechanism._add_process(self, ORIGIN)
         self._origin_mechs = [pathway[0]]
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
-        # Assign last mechanism in pathway to last_mechanism attribute
+        # Identify and assign last Mechanism as last_mechanism and ORIGIN
         i = -1
-        while not isinstance(pathway[i],Mechanism_Base):
+        while (not isinstance(pathway[i],Mechanism_Base) or
+               (isinstance(pathway[i], ControlMechanism) and len(pathway)>1)):
             i -=1
         self.last_mechanism = pathway[i]
 
         if self.last_mechanism is self.first_mechanism:
-            self.last_mechanism.processes[self] = SINGLETON
+            self.last_mechanism._add_process(self, SINGLETON)
         else:
-            self.last_mechanism.processes[self] = TERMINAL
+            self.last_mechanism._add_process(self, TERMINAL)
         self._terminal_mechs = [pathway[-1]]
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
 
@@ -1022,80 +1043,17 @@ class Process(Process_Base):
             super()._instantiate_value(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            value = self.pathway[-1].output_state.value
+            # MODIFIED 6/24/18 OLD:
+            # value = self.pathway[-1].output_state.value
+            # MODIFIED 6/24/18 NEW:
+            value = self.last_mechanism.output_state.value
+            # MODIFIED 6/24/18 END
             try:
                 # Could be mutable, so assign copy
                 self.instance_defaults.value = value.copy()
             except AttributeError:
                 # Immutable, so just assign value
                 self.instance_defaults.value = value
-
-    def _standardize_config_entries(self, pathway, context=None):
-
-        from psyneulink.components.mechanisms.mechanism import _is_mechanism_spec
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
-        self.runtime_params_dict = {}
-
-        # Kristen modified 5/24
-        # in  ALL mechanism tuples, the middle entry is set to zero (formerly used for specifying runtime params)
-        # rightmost entry is set to zero (formerly phase spec)
-        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to actual runtime params
-
-        for i in range(len(pathway)):
-            config_item = pathway[i]
-            # if this element of the pathway is a tuple
-            if isinstance(config_item, tuple):
-                # and the tuple has 1 item
-                if len(config_item) is 1:
-                    # if the tuple contains either a Mechanism or a Projection
-                    if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-
-                        # Replace it with just the mech or proj
-                        pathway[i] = config_item
-                        # if it's a mechanism, set the runtime params to None
-                        if _is_mechanism_spec(config_item[0]):
-                            self.runtime_params_dict[config_item[0]] = None
-                    # otherwise the tuple is not valid
-                    else:
-                        raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
-                                           " is neither a Mechanism nor a Projection specification".
-                                           format(config_item[0], i, self.name))
-                # If the tuple has two items
-                if len(config_item) is 2:
-
-                    # Replace it with just the mech or proj
-                    pathway[i] = config_item[0]
-
-                    # If it's a mechanism
-                    if _is_mechanism_spec(config_item[0]):
-                        # and its second element is a dict
-                        if isinstance(config_item[1], dict):
-                            # set the mechanism's runtime params to be the second element
-                            self.runtime_params_dict[config_item[0]] = config_item[1]
-                        # if the second element is not a dict, then it's not valid
-                        else:
-                            raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " is not a params dict.".
-                                               format(config_item[1], i, self.name))
-                    # if the first element is not a mechanism, then it's not valid
-                    else:
-                        raise ProcessError("Projection cannot have a runtime params dict".format(config_item[0],
-                                                                                                 i, self.name))
-                # config_item should not have more than 2 elements
-                if len(config_item) > 2:
-                    raise ProcessError("The tuple for item {} of pathway for {} has more than two items {}".
-                                       format(i, self.name, config_item))
-            else:
-                # If the item is a Mechanism or a Projection
-                if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
-                    # if it's a mechanism, set runtime params to None
-                    if _is_mechanism_spec(pathway[i]):
-                        self.runtime_params_dict[pathway[i]] = None
-
-                else:
-                    raise ProcessError("Item of {} of pathway for {}"
-                                       " is neither a Mechanism nor a Projection specification".
-                                       format(i, self.name))
 
     def _parse_and_instantiate_mechanism_entries(self, pathway, context=None):
 
@@ -1108,11 +1066,6 @@ class Process(Process_Base):
 
         for i in range(len(pathway)):
             item = pathway[i]
-
-            # Get max phaseSpec for Mechanisms in pathway
-            # if not phase_spec:
-            #     phase_spec = 0
-            # self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
 
             # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
@@ -1153,10 +1106,9 @@ class Process(Process_Base):
 
             # Entry IS already a Mechanism object
             # Add entry to _mechs and name to mechanism_names list
-            # mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
-                mech.processes[self] = INTERNAL
+                mech._add_process(self, INTERNAL)
                 self._mechs.append(pathway[i])
             # self.mechanism_names.append(mech.name)
 
@@ -1166,7 +1118,7 @@ class Process(Process_Base):
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
-                if any(any(proj.receiver.owner is mech
+                if mech.output_states and any(any(proj.receiver.owner is mech
                            for proj in state.efferents)
                        for state in mech.output_states):
                     for state in mech.output_states:
@@ -1216,356 +1168,383 @@ class Process(Process_Base):
                                  {MATRIX: matrix_spec}}
 
         for i in range(len(pathway)):
-                item = pathway[i]
-                learning_projection_specified = False
-                #region FIRST ENTRY
+            item = pathway[i]
+            learning_projection_specified = False
 
-                # Must be a Mechanism (enforced above)
-                # Assign input(s) from Process to it if it doesn't already have any
-                # Note: does not include learning (even if specified for the process)
-                if i == 0:
-                    # Relabel for clarity
-                    mech = item
+            # FIRST ENTRY
 
-                    # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mech.input_state.path_afferents:
-                        self._issue_warning_about_existing_projections(mech, context)
+            # Must be a Mechanism (enforced above)
+            # Assign input(s) from Process to it if it doesn't already have any
+            # Note: does not include learning (even if specified for the process)
+            if i == 0:
+                # Relabel for clarity
+                mech = item
 
-                    # Assign input Projection from Process
-                    self._assign_process_input_projections(mech, context=context)
+                # Check if first Mechanism already has any projections and, if so, issue appropriate warning
+                if mech.input_state.path_afferents:
+                    self._warn_about_existing_projections_to_first_mechanism(mech, context)
+
+                # Assign input Projection from Process
+                self._assign_process_input_projections(mech, context=context)
+                continue
+
+            # SUBSEQUENT ENTRIES
+
+            # Item is a Mechanism
+            item = item
+            if isinstance(item, Mechanism):
+
+                preceding_item = pathway[i-1]
+
+                # PRECEDING ITEM IS A PROJECTION
+                if isinstance(preceding_item, Projection):
+                    if self.learning:
+
+                        # Check if preceding_item has a matrix ParameterState and, if so, it has any learningSignals
+                        # If it does, assign them to learning_projections
+                        try:
+                            learning_projections = list(projection for
+                                                    projection in
+                                                    preceding_item._parameter_states[MATRIX].mod_afferents
+                                                    if isinstance(projection, LearningProjection))
+
+                        # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
+                        #               NEED TO REFORMAT SPECS FOR state_list BELOW
+                        #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
+                        # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
+                        except AttributeError:
+                            # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
+                            preceding_item._parameter_states = _instantiate_state_list(
+                                                                            owner=preceding_item,
+                                                                            state_list=[(MATRIX,
+                                                                                         self.learning)],
+                                                                            state_type=ParameterState,
+                                                                            state_param_identifier=PARAMETER_STATE,
+                                                                            reference_value=self.learning,
+                                                                            reference_value_name=LEARNING_PROJECTION,
+                                                                            context=context)
+
+                        # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
+                        except KeyError:
+                            # Instantiate ParameterState for MATRIX
+                            preceding_item._parameter_states[MATRIX] = _instantiate_state(
+                                                                            owner=preceding_item,
+                                                                            state_type=ParameterState,
+                                                                            name=MATRIX,
+                                                                            # # FIX: NOT SURE IF THIS IS CORRECT:
+                                                                            # state_spec=PARAMETER_STATE,
+                                                                            reference_value=self.learning,
+                                                                            reference_value_name=LEARNING_PROJECTION,
+                                                                            params=self.learning,
+                                                                            context=context)
+                        # preceding_item has ParameterState for MATRIX,
+                        else:
+                            if not learning_projections:
+                                # Add learningProjection to Projection if it doesn't have one
+                                _add_projection_to(preceding_item,
+                                                  preceding_item._parameter_states[MATRIX],
+                                                  projection_spec=self.learning)
                     continue
-                #endregion
 
-                #region SUBSEQUENT ENTRIES
+                # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
+                # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
+                #    preceding mechanism is the sender of any projections received by the current one's inputState
+# FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
+# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
 
-                # Item is a Mechanism
-                item = item
-                if isinstance(item, Mechanism):
-
-                    preceding_item = pathway[i-1]
-
-
-                    # PRECEDING ITEM IS A PROJECTION
-                    if isinstance(preceding_item, Projection):
+                # PRECEDING ITEM IS A MECHANISM
+                projection_list = item.input_state.path_afferents
+                projection_found = False
+                for projection in projection_list:
+                    # Current mechanism DOES receive a Projection from the preceding item
+                    if preceding_item == projection.sender.owner:
+                        projection_found = True
                         if self.learning:
-
-                            # Check if preceding_item has a matrix ParameterState and, if so, it has any learningSignals
-                            # If it does, assign them to learning_projections
+                            # Make sure Projection includes a learningSignal and add one if it doesn't
                             try:
-                                learning_projections = list(projection for
-                                                        projection in
-                                                        preceding_item._parameter_states[MATRIX].mod_afferents
-                                                        if isinstance(projection, LearningProjection))
+                                matrix_param_state = projection._parameter_states[MATRIX]
 
-                            # FIX: 10/3/17: USE OF TUPLE AS ITEM IN state_list ARGS BELOW IS NO LONGER SUPPORTED
-                            #               NEED TO REFORMAT SPECS FOR state_list BELOW
-                            #               (NOTE: THESE EXCEPTIONS ARE NOT BEING CALLED IN CURRENT TEST SUITES)
-                            # preceding_item doesn't have a _parameter_states attrib, so assign one with self.learning
+                            # Projection doesn't have a _parameter_states attrib, so assign one with self.learning
                             except AttributeError:
-                                # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
-                                preceding_item._parameter_states = _instantiate_state_list(
-                                                                                owner=preceding_item,
-                                                                                state_list=[(MATRIX,
-                                                                                             self.learning)],
-                                                                                state_type=ParameterState,
-                                                                                state_param_identifier=PARAMETER_STATE,
-                                                                                reference_value=self.learning,
-                                                                                reference_value_name=LEARNING_PROJECTION,
-                                                                                context=context)
+                                # Instantiate _parameter_states Ordered dict with ParameterState for self.learning
+                                projection._parameter_states = _instantiate_state_list(
+                                                                            owner=preceding_item,
+                                                                            state_list=[(MATRIX,
+                                                                                         self.learning)],
+                                                                            state_type=ParameterState,
+                                                                            state_param_identifier=PARAMETER_STATE,
+                                                                            reference_value=self.learning,
+                                                                            reference_value_name=LEARNING_PROJECTION,
+                                                                            context=context)
 
-                            # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
+                            # Projection has _parameter_states but not (yet!) one for MATRIX,
+                            #    so instantiate it with self.learning
                             except KeyError:
                                 # Instantiate ParameterState for MATRIX
-                                preceding_item._parameter_states[MATRIX] = _instantiate_state(
-                                                                                owner=preceding_item,
-                                                                                state_type=ParameterState,
-                                                                                name=MATRIX,
-                                                                                # # FIX: NOT SURE IF THIS IS CORRECT:
-                                                                                # state_spec=PARAMETER_STATE,
-                                                                                reference_value=self.learning,
-                                                                                reference_value_name=LEARNING_PROJECTION,
-                                                                                params=self.learning,
-                                                                                context=context)
-                            # preceding_item has ParameterState for MATRIX,
+                                projection._parameter_states[MATRIX] = _instantiate_state(
+                                                                            owner=preceding_item,
+                                                                            state_type=ParameterState,
+                                                                            name=MATRIX,
+                                                                            # state_spec=PARAMETER_STATE,
+                                                                            reference_value=self.learning,
+                                                                            reference_value_name=LEARNING_PROJECTION,
+                                                                            params=self.learning,
+                                                                            context=context)
+
+                            # Check if Projection's matrix param has a learningSignal
                             else:
-                                if not learning_projections:
-                                    # Add learningProjection to Projection if it doesn't have one
-                                    _add_projection_to(preceding_item,
-                                                      preceding_item._parameter_states[MATRIX],
+                                if not (any(isinstance(projection, LearningProjection) for
+                                            projection in matrix_param_state.mod_afferents)):
+                                    _add_projection_to(projection,
+                                                      matrix_param_state,
                                                       projection_spec=self.learning)
-                        continue
 
-                    # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
-                    # Check if Mechanism already has a Projection from the preceding Mechanism, by testing whether the
-                    #    preceding mechanism is the sender of any projections received by the current one's inputState
-    # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
-    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT OutputStates OF) THE SAME MECHANISM
+                            if self.prefs.verbosePref:
+                                print("LearningProjection added to Projection from Mechanism {0} to Mechanism {1} "
+                                      "in pathway of {2}".format(preceding_item.name, item.name, self.name))
+                        break
 
-                    # PRECEDING ITEM IS A MECHANISM
-                    projection_list = item.input_state.path_afferents
-                    projection_found = False
-                    for projection in projection_list:
-                        # Current mechanism DOES receive a Projection from the preceding item
-                        if preceding_item == projection.sender.owner:
-                            projection_found = True
-                            if self.learning:
-                                # Make sure Projection includes a learningSignal and add one if it doesn't
-                                try:
-                                    matrix_param_state = projection._parameter_states[MATRIX]
+                if not projection_found:
+                    # No Projection found, so instantiate MappingProjection from preceding mech to current one;
+                    # Note: if self.learning arg is specified, it has already been added to projection_params above
 
-                                # Projection doesn't have a _parameter_states attrib, so assign one with self.learning
-                                except AttributeError:
-                                    # Instantiate _parameter_states Ordered dict with ParameterState for self.learning
-                                    projection._parameter_states = _instantiate_state_list(
-                                                                                owner=preceding_item,
-                                                                                state_list=[(MATRIX,
-                                                                                             self.learning)],
-                                                                                state_type=ParameterState,
-                                                                                state_param_identifier=PARAMETER_STATE,
-                                                                                reference_value=self.learning,
-                                                                                reference_value_name=LEARNING_PROJECTION,
-                                                                                context=context)
+                    # MODIFIED 9/19/17 NEW:
+                    #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
+                    # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
+                    if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
+                        # If it already has an associated ObjectiveMechanism, make sure it has been implemented
+                        if not isinstance(item.objective_mechanism, Mechanism):
+                            raise ProcessError("{} included in {} for {} ({})"
+                                               "has an {} arugment, but it is not an {}".
+                                               format(ControlMechanism.__name__,
+                                                      PATHWAY,
+                                                      self.name,
+                                                      item.objective_mechanism,
+                                                      OBJECTIVE_MECHANISM,
+                                                      ObjectiveMechanism.name))
+                        # Check whether ObjectiveMechanism already receives a projection
+                        #     from the preceding Mechanism in the pathway
+                        # if not any(projection.sender.owner is preceding_item
+                        #            for projection in item.objective_mechanism.input_state.path_afferents):
+                        if not any(
+                                any(projection.sender.owner is preceding_item
+                                    for projection in input_state.path_afferents)
+                                for input_state in item.objective_mechanism.input_states):
+                            # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
+                            receiver = item.objective_mechanism
 
-                                # Projection has _parameter_states but not (yet!) one for MATRIX,
-                                #    so instantiate it with self.learning
-                                except KeyError:
-                                    # Instantiate ParameterState for MATRIX
-                                    projection._parameter_states[MATRIX] = _instantiate_state(
-                                                                                owner=preceding_item,
-                                                                                state_type=ParameterState,
-                                                                                name=MATRIX,
-                                                                                # state_spec=PARAMETER_STATE,
-                                                                                reference_value=self.learning,
-                                                                                reference_value_name=LEARNING_PROJECTION,
-                                                                                params=self.learning,
-                                                                                context=context)
-
-                                # Check if Projection's matrix param has a learningSignal
-                                else:
-                                    if not (any(isinstance(projection, LearningProjection) for
-                                                projection in matrix_param_state.mod_afferents)):
-                                        _add_projection_to(projection,
-                                                          matrix_param_state,
-                                                          projection_spec=self.learning)
-
-                                if self.prefs.verbosePref:
-                                    print("LearningProjection added to Projection from Mechanism {0} to Mechanism {1} "
-                                          "in pathway of {2}".format(preceding_item.name, item.name, self.name))
-                            break
-
-                    if not projection_found:
-                        # No Projection found, so instantiate MappingProjection from preceding mech to current one;
-                        # Note: if self.learning arg is specified, it has already been added to projection_params above
-
-                        # MODIFIED 9/19/17 NEW:
-                        #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
-                        # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
-                        if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
-                            # If it already has an associated ObjectiveMechanism, make sure it has been implemented
-                            if not isinstance(item.objective_mechanism, Mechanism):
-                                raise ProcessError("{} included in {} for {} ({})"
-                                                   "has an {} arugment, but it is not an {}".
-                                                   format(ControlMechanism.__name__,
-                                                          PATHWAY,
-                                                          self.name,
-                                                          item.objective_mechanism,
-                                                          OBJECTIVE_MECHANISM,
-                                                          ObjectiveMechanism.name))
-                            # Check whether ObjectiveMechanism already receives a projection
-                            #     from the preceding Mechanism in the pathway
-                            # if not any(projection.sender.owner is preceding_item
-                            #            for projection in item.objective_mechanism.input_state.path_afferents):
-                            if not any(
-                                    any(projection.sender.owner is preceding_item
-                                        for projection in input_state.path_afferents)
-                                    for input_state in item.objective_mechanism.input_states):
-                                # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
-                                receiver = item.objective_mechanism
-
-                            else:
-                                # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
-                                continue
                         else:
-                            receiver = item
-                        # MODIFIED 9/19/17 END
+                            # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                            continue
+                    else:
+                        receiver = item
+                    # MODIFIED 9/19/17 END
 
-                        MappingProjection(sender=preceding_item,
-                                          receiver=receiver,
-                                          params=projection_params,
-                                          name='{} from {} to {}'.
-                                          format(MAPPING_PROJECTION, preceding_item.name, item.name)
-                                          )
-                        if self.prefs.verbosePref:
-                            print("MappingProjection added from Mechanism {0} to Mechanism {1}"
-                                  " in pathway of {2}".format(preceding_item.name, item.name, self.name))
+                    MappingProjection(sender=preceding_item,
+                                      receiver=receiver,
+                                      params=projection_params,
+                                      name='{} from {} to {}'.
+                                      format(MAPPING_PROJECTION, preceding_item.name, item.name)
+                                      )
+                    if self.prefs.verbosePref:
+                        print("MappingProjection added from Mechanism {0} to Mechanism {1}"
+                              " in pathway of {2}".format(preceding_item.name, item.name, self.name))
 
-                # Item is a Projection or specification for one
-                else:
-                    # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
-                    # IMPLEMENTATION NOTE:  FOR NOW:
-                    #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
-                    #        + Projection object
-                    #        + Matrix object
-                    # #        +  Matrix keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX)
-                    #        +  Matrix keyword (use "is_projection" to validate)
-                    #    - params IS IGNORED
-    # 9/5/16:
-    # FIX: IMPLEMENT _validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
-    # FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
-    # FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
+            # Item is a Projection or specification for one
+            else:
+                # Instantiate Projection, assigning Mechanism in previous entry as sender and next one as receiver
+                # IMPLEMENTATION NOTE:  FOR NOW:
+                #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
+                #        + Projection object
+                #        + Matrix object
+                # #        +  Matrix keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX)
+                #        +  Matrix keyword (use "is_projection" to validate)
+                #    - params IS IGNORED
+# 9/5/16:
+# FIX: IMPLEMENT _validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
+# FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
+# FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
 
-                    # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
-                    # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                    # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
-                    #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
-                    #           VALIDATION OF PROJECTION OBJECT:
-                    #                MAKE SURE IT IS A MappingProjection
-                    #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
-                    #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
+                # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
+                # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
+                # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
+                #            and _parse_projection_keyword() all to Projection_Base.__init__() and call that
+                #           VALIDATION OF PROJECTION OBJECT:
+                #                MAKE SURE IT IS A MappingProjection
+                #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
+                #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
 
 
-                    # Get sender for Projection
-                    sender_mech=pathway[i-1]
+                # Get sender for Projection
+                sender_mech=pathway[i-1]
 
-                    # Get receiver for Projection
-                    try:
-                        receiver_mech=pathway[i+1]
-                    except IndexError:
-                       # There are no more entries in the pathway
-                       #    so the Projection had better project to a mechanism already in the pathway;
-                       #    otherwise, raise and exception
-                       try:
-                           receiver_mech = item.receiver.owner
-                           if not receiver_mech in [object_item for object_item in pathway]:
-                               raise AttributeError
-                       except AttributeError:
-                           raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
-                                              "so its receiver must be a Mechanism in the pathway".
-                                              format(self.name, item))
+                # Get receiver for Projection
+                try:
+                    receiver_mech=pathway[i+1]
+                except IndexError:
+                   # There are no more entries in the pathway
+                   #    so the Projection had better project to a mechanism already in the pathway;
+                   #    otherwise, raise and exception
+                   try:
+                       receiver_mech = item.receiver.owner
+                       if not receiver_mech in [object_item for object_item in pathway]:
+                           raise AttributeError
+                   except AttributeError:
+                       raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
+                                          "so its receiver must be a Mechanism in the pathway".
+                                          format(self.name, item))
 
-                    # Projection spec is an instance of a MappingProjection
-                    if isinstance(item, MappingProjection):
-                        # Check that Projection's sender and receiver are to the mech before and after it in the list
-                        # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
-    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
+                # # Check if there is already a projection between the sender and receiver
+                # if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
+                #     continue
 
-                        # If initialization of MappingProjection has been deferred,
-                        #    check sender and receiver, assign them if they have not been assigned, and initialize it
-                        if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                            # Check sender arg
-                            try:
-                                sender_arg = item.init_args[SENDER]
-                            except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
-                                                   "but it does not have init_args".
-                                                   format(item, ContextFlags.DEFERRED_INIT.name))
-                            except KeyError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but "
-                                                   "init_args does not have entry for {}".
-                                                   format(item.init_args[NAME],ContextFlags.DEFERRED_INIT.name, SENDER))
-                            else:
-                                # If sender is not specified for the Projection,
-                                #    assign mechanism that precedes in pathway
-                                if sender_arg is None:
-                                    item.init_args[SENDER] = sender_mech
-                                elif sender_arg is not sender_mech:
-                                    raise ProcessError("Sender of Projection ({}) specified in item {} of"
-                                                       " pathway for {} is not the Mechanism ({}) "
-                                                       "that precedes it in the pathway".
-                                                       format(item.init_args[NAME],
-                                                              i, self.name, sender_mech.name))
-                            # Check receiver arg
-                            try:
-                                receiver_arg = item.init_args[kwReceiverArg]
-                            except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
-                                                   "but it does not have init_args".
-                                                   format(item, ContextFlags.DEFERRED_INIT))
-                            except KeyError:
-                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
-                                                   "but init_args does not have entry for {}".
+                # Projection spec is an instance of a MappingProjection
+                if isinstance(item, MappingProjection):
+                    # Check that Projection's sender and receiver are to the mech before and after it in the list
+                    # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
+
+                    # If initialization of MappingProjection has been deferred,
+                    #    check sender and receiver, assign them if they have not been assigned, and initialize it
+                    if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                        # Check sender arg
+                        try:
+                            sender_arg = item.init_args[SENDER]
+                        except AttributeError:
+                            raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                               "but it does not have init_args".
+                                               format(item, ContextFlags.DEFERRED_INIT.name))
+                        except KeyError:
+                            raise ProcessError("PROGRAM ERROR: Value of {} is {} but "
+                                               "init_args does not have entry for {}".
+                                               format(item.init_args[NAME],ContextFlags.DEFERRED_INIT.name, SENDER))
+                        else:
+                            # If sender is not specified for the Projection,
+                            #    assign mechanism that precedes in pathway
+                            if sender_arg is None:
+                                item.init_args[SENDER] = sender_mech
+                            elif sender_arg is not sender_mech:
+                                raise ProcessError("Sender of Projection ({}) specified in item {} of"
+                                                   " pathway for {} is not the Mechanism ({}) "
+                                                   "that precedes it in the pathway".
                                                    format(item.init_args[NAME],
-                                                          ContextFlags.DEFERRED_INIT,
-                                                          kwReceiverArg))
-                            else:
-                                # If receiver is not specified for the Projection,
-                                #    assign mechanism that follows it in the pathway
-                                if receiver_arg is None:
-                                    item.init_args[kwReceiverArg] = receiver_mech
-                                elif receiver_arg is not receiver_mech:
-                                    raise ProcessError("Receiver of Projection ({}) specified in item {} of"
-                                                       " pathway for {} is not the Mechanism ({}) "
-                                                       "that follows it in the pathway".
-                                                       format(item.init_args[NAME],
-                                                              i, self.name, receiver_mech.name))
+                                                          i, self.name, sender_mech.name))
+                        # Check receiver arg
+                        try:
+                            receiver_arg = item.init_args[kwReceiverArg]
+                        except AttributeError:
+                            raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                               "but it does not have init_args".
+                                               format(item, ContextFlags.DEFERRED_INIT))
+                        except KeyError:
+                            raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                               "but init_args does not have entry for {}".
+                                               format(item.init_args[NAME],
+                                                      ContextFlags.DEFERRED_INIT,
+                                                      kwReceiverArg))
+                        else:
+                            # If receiver is not specified for the Projection,
+                            #    assign mechanism that follows it in the pathway
+                            if receiver_arg is None:
+                                item.init_args[kwReceiverArg] = receiver_mech
+                            elif receiver_arg is not receiver_mech:
+                                raise ProcessError("Receiver of Projection ({}) specified in item {} of"
+                                                   " pathway for {} is not the Mechanism ({}) "
+                                                   "that follows it in the pathway".
+                                                   format(item.init_args[NAME],
+                                                          i, self.name, receiver_mech.name))
 
-                            # Check if it is specified for learning
-                            matrix_spec = item.function_params[MATRIX]
-                            if (isinstance(matrix_spec, tuple) and
-                                        (matrix_spec[1] in {LEARNING, LEARNING_PROJECTION} or
-                                             isinstance(matrix_spec[1], (LearningProjection, LearningSignal)))):
-                                self.learning = True
-
-                            # Complete initialization of Projection
-                            item._deferred_init()
-
-                        if not item.sender.owner is sender_mech:
-                            raise ProcessError("Sender of Projection ({}) specified in item {} of pathway for {} "
-                                               "is not the Mechanism ({}) that precedes it in the pathway".
-                                               format(item.name, i, self.name, sender_mech.name))
-                        if not item.receiver.owner is receiver_mech:
-                            raise ProcessError("Receiver of Projection ({}) specified in item {} of pathway for "
-                                               "{} is not the Mechanism ({}) that follows it in the pathway".
-                                               format(item.name, i, self.name, sender_mech.name))
-                        projection = item
-
-                        if projection.has_learning_projection is True:
+                        # Check if it is specified for learning
+                        matrix_spec = item.function_params[MATRIX]
+                        if (isinstance(matrix_spec, tuple) and
+                                    (matrix_spec[1] in {LEARNING, LEARNING_PROJECTION} or
+                                         isinstance(matrix_spec[1], (LearningProjection, LearningSignal)))):
                             self.learning = True
 
-                        # TEST
-                        # if params:
-                        #     projection.matrix = params
+                        # Complete initialization of Projection
+                        item._deferred_init()
 
-                    # Projection spec is a MappingProjection class reference
-                    elif inspect.isclass(item) and issubclass(item, MappingProjection):
-                        # if params:
-                        #     # Note:  If self.learning is specified, it has already been added to projection_params above
-                        #     projection_params = params
-                        projection = MappingProjection(sender=sender_mech,
-                                             receiver=receiver_mech,
-                                             # params=projection_params
-                                                       )
+                    if not item.sender.owner is sender_mech:
+                        raise ProcessError("Sender of Projection ({}) specified in item {} of pathway for {} "
+                                           "is not the Mechanism ({}) that precedes it in the pathway".
+                                           format(item.name, i, self.name, sender_mech.name))
+                    if not item.receiver.owner is receiver_mech:
+                        raise ProcessError("Receiver of Projection ({}) specified in item {} of pathway for "
+                                           "{} is not the Mechanism ({}) that follows it in the pathway".
+                                           format(item.name, i, self.name, sender_mech.name))
+                    projection = item
 
-                    # Projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
-                    # Note: this is tested above by call to _is_projection_spec()
-                    elif (isinstance(item, (np.matrix, str, tuple)) or
-                              (isinstance(item, np.ndarray) and item.ndim == 2)):
-                        # If a LearningProjection is explicitly specified for this Projection, use it
-                        if isinstance(item, tuple):
-                            matrix_spec = item
-                            learning_projection_specified = True
-                        # If a LearningProjection is not specified for this Projection but self.learning is, use that
-                        elif self.learning:
-                            matrix_spec = (item, self.learning)
-                        # Otherwise, do not include any LearningProjection
-                        else:
-                            matrix_spec = item
-                        projection = MappingProjection(sender=sender_mech,
-                                                       receiver=receiver_mech,
-                                                       matrix=matrix_spec)
+                    if projection.has_learning_projection is True:
+                        self.learning = True
+
+                    # TEST
+                    # if params:
+                    #     projection.matrix = params
+
+                # Projection spec is a MappingProjection class reference
+                elif inspect.isclass(item) and issubclass(item, MappingProjection):
+                    # if params:
+                    #     # Note:  If self.learning is specified, it has already been added to projection_params above
+                    #     projection_params = params
+                    projection = MappingProjection(sender=sender_mech,
+                                         receiver=receiver_mech,
+                                         # params=projection_params
+                                                   )
+
+                # Projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
+                # Note: this is tested above by call to _is_projection_spec()
+                elif (isinstance(item, (np.matrix, str, tuple)) or
+                          (isinstance(item, np.ndarray) and item.ndim == 2)):
+                    # If a LearningProjection is explicitly specified for this Projection, use it
+                    if isinstance(item, tuple):
+                        matrix_spec = item
+                        learning_projection_specified = True
+                    # If a LearningProjection is not specified for this Projection but self.learning is, use that
+                    elif self.learning:
+                        matrix_spec = (item, self.learning)
+                    # Otherwise, do not include any LearningProjection
                     else:
-                        raise ProcessError("Item {0} ({1}) of pathway for {2} is not "
-                                           "a valid Mechanism or Projection specification".format(i, item, self.name))
-                    # Reassign Pathway entry
-                    #    with Projection as OBJECT item and original params as PARAMS item of the tuple
-                    # IMPLEMENTATION NOTE:  params is currently ignored
-                    pathway[i] = projection
+                        matrix_spec = item
+                    projection = MappingProjection(sender=sender_mech,
+                                                   receiver=receiver_mech,
+                                                   matrix=matrix_spec)
+                else:
+                    raise ProcessError("Item {0} ({1}) of pathway for {2} is not "
+                                       "a valid Mechanism or Projection specification".format(i, item, self.name))
+                # Reassign Pathway entry
+                #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                # IMPLEMENTATION NOTE:  params is currently ignored
+                pathway[i] = projection
 
         if learning_projection_specified:
             self.learning = LEARNING
 
+    def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
+        '''Check if there is already a projection between sndr_mech and rcvr_mech
+        If so:
+            - if it has just found the same project (e.g., as in case of AutoAssociativeProjection), let pass
+            - otherwise:
+                - if verbosePref, warn
+                - replace proj_spec with existing projection
+        '''
 
-    def _issue_warning_about_existing_projections(self, mechanism, context=None):
+        for input_state in rcvr_mech.input_states:
+            for proj in input_state.path_afferents:
+                if proj.sender.owner is sndr_mech:
+                    # Skip recurrent projections
+                    try:
+                        if self.pathway[pathway_index] == proj:
+                            continue
+                    except:
+                        pass
+                    if self.prefs.verbosePref:
+                        print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
+                              format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))
+                    self.pathway[pathway_index] = proj
+                    return True
+        return False
+
+    def _warn_about_existing_projections_to_first_mechanism(self, mechanism, context=None):
 
         # Check where the Projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.input_state.all_afferents:
@@ -1577,8 +1556,7 @@ class Process(Process_Base):
                 # (B) from another Process, warn if verbose pref is set
                 if not projection.sender.owner is self:
                     if self.prefs.verbosePref:
-                        print("WARNING: {0} in pathway for {1} already has an input from {2} "
-                              "that will be used".
+                        print("WARNING: {0} in pathway for {1} already has an input from {2} that will be used".
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
@@ -1683,10 +1661,10 @@ class Process(Process_Base):
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
-                # MODIFIED 4/3/17 NEW:
-                input_state_variable = mechanism.input_states[i].instance_defaults.variable
-                # MODIFIED 4/3/17 END
+                input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
@@ -1706,6 +1684,8 @@ class Process(Process_Base):
         #     instantiate multiple Process input states each with a Projection to the single mechanism.input_state
         else:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 for j in range(num_process_inputs):
                     if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
@@ -1778,8 +1758,7 @@ class Process(Process_Base):
                 exhaustively check all of Components of each Mechanism,
                     including all projections to its input_states and _parameter_states
                 initialize all items that specified deferred initialization
-                construct a _learning_mechs of Mechanism tuples (mech, params, phase_spec):
-                    assign phase_spec for each LearningMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+                construct a _learning_mechs of Mechanism tuples (mech, params):
                 add _learning_mechs to the Process' _mechs
                 assign input Projection from Process to first Mechanism in _learning_mechs
 
@@ -1837,7 +1816,7 @@ class Process(Process_Base):
                         mech._learning_role is TARGET and
                         self.learning
                             ):
-                    object_item.processes[self] = TARGET
+                    object_item._add_process(self, TARGET)
                 else:
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanism
@@ -1847,7 +1826,7 @@ class Process(Process_Base):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    object_item.processes[self] = LEARNING
+                    object_item._add_process(self, LEARNING)
 
             # Add _learning_mechs to _mechs
             self._mechs.extend(self._learning_mechs)
@@ -1890,9 +1869,8 @@ class Process(Process_Base):
                             else:
                                 # If learning_mechanism is not already in _learning_mechs,
                                 #     pack in tuple and add it
-                                if learning_mechanism and not any(learning_mechanism is object_item for
-                                                                    object_item in self._learning_mechs):
-                                    # learning_object_item = learning_mechanism
+                                if (learning_mechanism and not any(learning_mechanism is object_item for
+                                                                   object_item in self._learning_mechs)) :
                                     self._learning_mechs.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate ParameterStates
@@ -2020,11 +1998,11 @@ class Process(Process_Base):
             target = np.atleast_1d(target)
 
             # Check that length of process' target input matches length of TARGET Mechanism's target input
-            if len(target) != len(target_mech_target.instance_defaults.variable):
+            if len(target) != len(target_mech_target.value):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
                                    format(len(target),
                                           target_mech.name,
-                                          len(target_mech_target.instance_defaults.variable)))
+                                          len(target_mech_target.value)))
 
             target_input_state = ProcessInputState(owner=self,
                                                     variable=target,
@@ -2136,7 +2114,7 @@ class Process(Process_Base):
 
         self.input = self._assign_input_values(input=input, context=context)
 
-        self._check_args(self.input,runtime_params)
+        self._check_args(self.input, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
         variable = self._update_variable(self.input)
@@ -2154,6 +2132,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
+            context = ContextFlags.PROCESS
             mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 
@@ -2242,7 +2221,7 @@ class Process(Process_Base):
                     # Skip learning if Projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
                     #    (this is to prevent "double-training" of projections from mechanisms belonging
-                    #     to different processes when call to _execute_learning() comes from a system)
+                    #     to different processes when call to _execute_learning() comes from a System)
                     sender = projection.sender.owner
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
@@ -2294,7 +2273,7 @@ class Process(Process_Base):
             call_before_trial=None,
             call_after_trial=None,
             call_before_time_step=None,
-            call_after_time_step=None,
+            call_after_time_step=None
     ):
         """Run a sequence of executions
 
@@ -2384,8 +2363,8 @@ class Process(Process_Base):
                    call_before_trial=call_before_trial,
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
-                   call_after_time_step=call_after_time_step,
-        )
+                   call_after_time_step=call_after_time_step)
+
     def _report_process_initiation(self, input=None, separator=False):
         """
         Parameters

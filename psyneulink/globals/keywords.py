@@ -24,16 +24,18 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 #    that are the ones actually used by the code.
 
 __all__ = [
-    'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION', 'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION',
-    'ADAPTIVE_MECHANISM', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
-    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'AUTO_DEPENDENT', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
+    'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
+    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONROLLER_PHASE_SPEC', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
+    'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
-    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY', 'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY',
+    'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
@@ -67,12 +69,13 @@ __all__ = [
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
     'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
-    'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
-    'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
-    'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW',
+    'LCA_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
+    'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
+    'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES',
+    'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
+    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
     'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
@@ -81,13 +84,13 @@ __all__ = [
     'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
     'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
-    'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT',
-    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
+    'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
+    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
     'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM',
     'PRODUCT', 'PROJECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
     'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
-    'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESULT', 'RESULTS', 'RL_FUNCTION', 'RUN', 'SAMPLE',
-    'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR',
+    'BUFFER_FUNCTION', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RELU_FUNCTION', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR',
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE',
     'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
     'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS',
@@ -248,8 +251,11 @@ class DistanceMetrics:
     Attributes
     ----------
 
+    MAX_ABS_DIFF
+        :math:`d = |\\max(a_1-a_2)|`
+
     DIFFERENCE
-        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -259,7 +265,8 @@ class DistanceMetrics:
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
+        a_2}}\\right|`
 
     COMMENT:
     PEARSON
@@ -274,11 +281,12 @@ class DistanceMetrics:
 
     """
     def __init__(self):
+        self.MAX_ABS_DIFF = MAX_ABS_DIFF
         self.DIFFERENCE = DIFFERENCE
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
         self.CORRELATION = CORRELATION
-        self.PEARSON = PEARSON
+        # self.PEARSON = PEARSON
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -300,6 +308,7 @@ class DistanceMetrics:
 
 
 DIFFERENCE = 'difference'
+MAX_ABS_DIFF = 'max_abs_diff'
 EUCLIDEAN = 'euclidean'
 ANGLE = 'angle'
 CORRELATION = 'correlation'
@@ -360,6 +369,7 @@ kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
+STATEFUL_ATTRIBUTES = 'stateful_attributes'
 
 
 #endregion
@@ -412,6 +422,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
+PREVIOUS_VALUE = 'previous_value'
 LABELS = 'labels'
 PARAMS = "params"
 NAME = "name"
@@ -420,6 +431,8 @@ CONTEXT = "context"
 STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
 
 INITIAL_VALUES = 'initial_values'
+CURRENT_EXECUTION_TIME = 'current_execution_time'
+CURRENT_EXECUTION_COUNT = 'current_execution_count'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -435,7 +448,6 @@ USER_PARAMS = 'user_params' # Params available to user for inspection in user_pa
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
-CLASS_DEFAULTS = "ClassDefaults"
 PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
 PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
 PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
@@ -521,6 +533,7 @@ PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 TRANSFER_MECHANISM = "TransferMechanism"
 LEABRA_MECHANISM = "LeabraMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
+CONTRASTIVE_HEBBIAN_MECHANISM = "ContrastiveHebbianMechanism"
 LCA = "LCA"
 KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
@@ -539,21 +552,25 @@ LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
+RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
+BUFFER_FUNCTION = 'Buffer Function'
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
 UTILITY_INTEGRATOR_FUNCTION = "AGTUtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
+LCA_INTEGRATOR_FUNCTION = 'LCAIntegrator Function'
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
+CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbianFunction'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
@@ -582,11 +599,11 @@ SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
 ENABLE_CONTROLLER = "enable_controller"
-CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
 RUN = 'run'
 TRIAL = 'trial'
 
+ROLES = 'roles'
 VALUES = 'values'
 FUNCTIONS = 'functions'
 
@@ -601,7 +618,8 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-LEARNING = 'LEARNING'
+PULSE_CLAMP = "pulse_clamp"
+NO_CLAMP = "no_clamp"
 LEARNING_RATE = "learning_rate"
 CONTROL = 'CONTROL'
 GATING = 'gating'
@@ -623,6 +641,7 @@ kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g.,
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
+CONDITION = 'condition'
 
 # Keywords for OUTPUT_STATE_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
@@ -641,8 +660,10 @@ ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
 CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
+# AUTO_LEARNING = 'AUTO_LEARNING'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
+LEARNING = 'LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'
@@ -809,13 +830,14 @@ CUSTOM_FUNCTION = 'custom_function'
 
 GAIN = 'gain'
 BIAS = 'bias'
+LEAK = 'leak'
 SLOPE = 'slope'
 INTERCEPT = 'intercept'
 RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
-AUTO_DEPENDENT='auto_dependent'
+HAS_INITIALIZERS='has_initializers'
 DRIFT_RATE = 'drift_rate'
 INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'
@@ -848,6 +870,8 @@ PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
 
 INITIALIZER = 'initializer'
+INITIAL_V = 'initial_v'
+INITIAL_W = 'initial_w'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"

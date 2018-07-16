@@ -49,7 +49,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
     * for controlling a single parameter, the dictionary can have the following two entries:
 
         * *NAME*: str
-            the string must be the name of the parameter to be gated;
+            the string must be the name of the parameter to be controlled;
 
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the parameter to be controlled belongs.
@@ -61,10 +61,10 @@ When a ControlSignal is specified in the **control_signals** argument of the con
             and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
-  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
-    the Mechanism to which it (they) belong(s); this is a convenience format, that is simpler to use than a
-    specification dictionary (see above), but precludes specification of any `parameters <ControlSignal_Structure>`
-    for the ControlSignal.
+  * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
+    parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
+    convenience format, that is simpler to use than a specification dictionary (see above), but precludes
+    specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
 
 .. _ControlSignal_Structure:
@@ -406,20 +406,20 @@ class ControlSignalError(Exception):
 
 class ControlSignal(ModulatorySignal):
     """
-    ControlSignal(                                       \
-        owner,                                           \
-        index=SEQUENTIAL,                                \
-        function=Linear(),                               \
-        costs_options=ControlSignalCosts.DEFAULTS,       \
-        intensity_cost_function=Exponential,             \
-        adjustment_cost_function=Linear,                 \
-        duration_cost_function=Integrator,               \
-        cost_combination_function=Reduce(operation=SUM), \
-        allocation_samples=self.ClassDefaults.allocation_samples,   \
-        modulation=ModulationParam.MULTIPLICATIVE        \
-        projections=None                                 \
-        params=None,                                     \
-        name=None,                                       \
+    ControlSignal(                                                \
+        owner,                                                    \
+        index=SEQUENTIAL,                                         \
+        function=Linear(),                                        \
+        costs_options=None,                                       \
+        intensity_cost_function=Exponential,                      \
+        adjustment_cost_function=Linear,                          \
+        duration_cost_function=Integrator,                        \
+        cost_combination_function=Reduce(operation=SUM),          \
+        allocation_samples=self.ClassDefaults.allocation_samples, \
+        modulation=ModulationParam.MULTIPLICATIVE                 \
+        projections=None                                          \
+        params=None,                                              \
+        name=None,                                                \
         prefs=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
@@ -463,7 +463,7 @@ class ControlSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
-    cost_options : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS
+    cost_options : ControlSignalCosts or List[ControlSignalCosts] : None
         specifies the cost components to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
@@ -551,7 +551,7 @@ class ControlSignal(ModulatorySignal):
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
-    cost_options : int
+    cost_options : ControlSignalCosts or None
         boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
         ControlSignal's constructor;  can be modified using the `assign_cost_options` method.
 
@@ -668,7 +668,7 @@ class ControlSignal(ModulatorySignal):
                  index=None,
                  assign=None,
                  function=Linear(),
-                 cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
+                 cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
@@ -948,10 +948,8 @@ class ControlSignal(ModulatorySignal):
 
     def update(self, params=None, context=None):
         super().update(params=params, context=context)
-        self._compute_costs()
-
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
-        return float(super()._execute(variable=variable, function_variable=function_variable, runtime_params=runtime_params, context=context))
+        if self.cost_options:
+            self._compute_costs()
 
     def _compute_costs(self):
         """Compute costs based on self.value."""
@@ -999,7 +997,6 @@ class ControlSignal(ModulatorySignal):
         self.last_intensity = intensity
         self.last_cost = self.cost
         self.last_duration_cost = self.duration_cost
-
 
         # Report new values to stdio
         if self.prefs.verbosePref:

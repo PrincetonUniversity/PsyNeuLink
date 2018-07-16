@@ -1,5 +1,7 @@
 .. image:: https://badge.fury.io/py/psyneulink.svg
     :target: https://badge.fury.io/py/psyneulink
+.. image:: https://travis-ci.org/PrincetonUniversity/PsyNeuLink.svg?branch=master
+    :target: https://travis-ci.org/PrincetonUniversity/PsyNeuLink
 .. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
@@ -56,10 +58,11 @@ PsyNeuLink is:
 
  - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
    individual components, such as:
-   * Neuron (biophysically realistic models of neuronal function)
-   * TensorFlow (ODE's, deep learning);
-   * Emergent (broad class of neurally-plausible connectionist models);
-   * ACT-R (symbolic, production system models).
+
+    * Neuron (biophysically realistic models of neuronal function)
+    * TensorFlow (ODE's, deep learning);
+    * Emergent (broad class of neurally-plausible connectionist models);
+    * ACT-R (symbolic, production system models).
 
 What PsyNeuLink is **NOT**
 --------------------------

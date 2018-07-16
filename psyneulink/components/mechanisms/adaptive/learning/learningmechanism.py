@@ -52,7 +52,8 @@ form, PsyNeuLink is not suitable for conducting large scale learning models (e.g
 once trained, the parameters of such models can easily be incorporated into a PsyNeuLink model for use as part of a
 `System`.  Future extensions of PsyNeuLink will provide an interface for the direct construction and integration
 within the PsyNeuLink environment of objects created in other environments (e.g.,
-`TensorFlow <https://www.tensorflow.org/>`_ or `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
+`TensorFlow <https://www.tensorflow.org/>`_, `PyTorch <https://pytorch.org>`_ or
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
 
 
 .. _LearningMechanism_Creation:
@@ -398,7 +399,7 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
 
     .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
-       :scale: 50%
+       :scale: 150 %
 
        ComparatorMechanism, LearningMechanism and associated Projections created for the `primary_learned_projection`
        and `output_source`.  Each Mechanism is labeled by its type (upper line, in bold) and its designated
@@ -942,12 +943,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         function_variable = np.zeros_like(
             variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_OUTPUT_INDEX])]
         )
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
+        function_variable[ERROR_OUTPUT_INDEX] = variable[ERROR_OUTPUT_INDEX]
 
         return function_variable
 
@@ -1155,7 +1157,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
@@ -1175,7 +1176,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = [s for s in self.error_signal_input_states if
-                                       s.path_afferents[0].sender.owner._execution_id == self._execution_id]
+                                       any(p.sender.owner._execution_id==self._execution_id for p in s.path_afferents)]
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
@@ -1186,10 +1187,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
-            function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
+            variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
-                function_variable=function_variable,
                 error_matrix=error_matrix,
                 runtime_params=runtime_params,
                 context=context

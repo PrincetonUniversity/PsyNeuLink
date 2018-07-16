@@ -15,3 +15,4 @@ Transfer Mechanisms
    RecurrentTransferMechanism
    LCA
    KWTA
+   ContrastiveHebbianMechanism
