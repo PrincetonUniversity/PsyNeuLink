@@ -261,6 +261,53 @@ def test_3_mechanisms_2_origins_1_override_control_1_terminal(benchmark, mode):
     assert np.allclose(output, 150.83865743)
     benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Control composition scalar")
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+def test_3_mechanisms_2_origins_1_disable_control_1_terminal(benchmark, mode):
+    #
+    #   B--A
+    #  /    \
+    # C------D
+    #  \     |
+    #   -----+-> E
+    #
+    # C: 4 x 5 = 20
+    # B: 20 x 1 = 20
+    # A: f(20)[0] = 0.50838675
+    # D: 20 x 5 = 100
+    # E: (20 + 100) x 5 = 600
+
+    comp = Composition()
+    C = TransferMechanism(name="C", function=Linear(slope=5.0))
+    D = TransferMechanism(name="D", function=Linear(slope=5.0))
+    B = ObjectiveMechanism(function=Linear,
+                           #monitored_output_states=[C], #setup later
+                           name='LC ObjectiveMechanism')
+    A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE)
+#                           modulated_mechanisms=D,
+#                           objective_mechanism=B # setup later
+    E = TransferMechanism(name="E", function=Linear(slope=5.0))
+    comp.add_mechanism(A)
+    comp.add_mechanism(B)
+    comp.add_mechanism(C)
+    comp.add_mechanism(D)
+    comp.add_mechanism(E)
+
+    comp.add_projection(A, ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), D)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=B), B)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+    comp.add_projection(B, MappingProjection(sender=B, receiver=A), A)
+    comp._analyze_graph()
+
+    inputs_dict = {C: [4.0]}
+    sched = Scheduler(composition=comp)
+    output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert np.allclose(output, 600)
+    benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Merge composition scalar")
