@@ -887,9 +887,13 @@ class ParameterState(State_Base):
 
             f_mod = builder.load(f_mod_ptr)
 
-            # FIXME: get proper index!!!
-            assert afferent.sender.modulation is MULTIPLICATIVE
-            f_mod_param_idx = 0
+            if afferent.sender.modulation is MULTIPLICATIVE:
+                name = self.function_object.multiplicative_param
+            else:
+                print("Unsupported modulation parameter: ", afferent.sender.modulation)
+                assert False
+
+            f_mod_param_idx = self.function_object.get_param_ids().index(name)
             f_mod_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(f_mod_param_idx)])
             builder.store(f_mod, f_mod_param_ptr)
 
