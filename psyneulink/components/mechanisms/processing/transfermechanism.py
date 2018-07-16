@@ -949,7 +949,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.initial_value = self.instance_defaults.variable
 
         if isinstance(self.convergence_function, Function):
-            self.convergence_function = self.convergence_function.function
+            self._convergence_function = self.convergence_function.function
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
@@ -1044,7 +1044,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        self._update_previous_value()
+        # # MODIFIED 7/14/18 OLD:
+        # self._update_previous_value()
+        # # MODIFIED 7/14/18 NEW:
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1071,12 +1073,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                     )
             value = self._clip_result(clip, value)
 
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     # self.previous_value = self.value
-        #     self._update_previous_value()
-
         # Used by update_previous_value, convergence_function and delta
-        self._current_value = value
+        self._current_value = np.atleast_2d(value)
 
         return value
 
@@ -1143,7 +1141,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @property
     def delta(self):
-        return self.convergence_function([self._current_value, self.previous_value])
+        return self.convergence_function([self._current_value[0], self.previous_value[0]])
 
     @property
     def integrator_mode(self):

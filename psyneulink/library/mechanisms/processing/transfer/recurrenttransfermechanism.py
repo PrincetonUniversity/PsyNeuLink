@@ -169,6 +169,7 @@ Class Reference
 
 import numbers
 from collections import Iterable
+from types import MethodType
 
 import numpy as np
 import typecheck as tc
@@ -190,7 +191,7 @@ from psyneulink.components.states.state import _instantiate_state
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_DIFF, MEAN, MEDIAN, NAME, \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, \
     PARAMS_CURRENT, PREVIOUS_VALUE, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -293,7 +294,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     clip=[float:min, float:max],                     \
     has_recurrent_input_state=False                  \
     combination_function=LinearCombination,          \
-    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_function=Distance(metric=MAX_ABS_DIFF),  \
     convergence_criterion=None,                      \
     max_passes=None,                                 \
     enable_learning=False,                           \
@@ -435,7 +436,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
         value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF)
+    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
         `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
@@ -748,7 +749,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  clip=None,
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
@@ -768,6 +769,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_states is None or output_states is RESULT:
             output_states = [RESULT]
+
+        try:
+            self.recurrent_size
+        except:
+            # Defer determination until Component has parsed size of Mechanism's variable
+            self.recurrent_size = None
 
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
@@ -813,6 +820,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+    #     '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
+    #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
+    #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
+    #     return default_variable
+
+    def _instantiate_defaults(
+            self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
+        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable'''
+        self.recurrent_size = self.recurrent_size or len(variable[0])
+        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
         """
@@ -846,13 +865,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         if MATRIX in target_set:
 
             matrix_param = target_set[MATRIX]
-            size = self.size[0]
 
             if isinstance(matrix_param, AutoAssociativeProjection):
                 matrix = matrix_param.matrix
 
             elif isinstance(matrix_param, str):
-                matrix = get_matrix(matrix_param, size, size)
+                matrix = get_matrix(matrix_param, rows=self.recurrent_size, cols=self.recurrent_size)
 
             elif isinstance(matrix_param, (np.matrix, list)):
                 matrix = np.array(matrix_param)
@@ -860,8 +878,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 matrix = matrix_param
             if matrix is None:
-                rows = cols = size # this is a hack just to skip the tests ahead: if the matrix really is None, that is
-                # checked up ahead, in _instantiate_attributes_before_function()
+                rows = cols = self.recurrent_size # this is a hack just to skip the tests ahead:
+                # if the matrix really is None, that is checked up ahead, in _instantiate_attributes_before_function()
             else:
                 rows = np.array(matrix).shape[0]
                 cols = np.array(matrix).shape[1]
@@ -878,35 +896,35 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError(err_msg)
 
             # Size of matrix must equal length of variable:
-            if rows != size:
-                if (matrix_param, AutoAssociativeProjection):
-                    # if __name__ == '__main__':
+            if rows != self.recurrent_size:
+                if isinstance(matrix_param, AutoAssociativeProjection):
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
-                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.instance_defaults.variable))
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size,
+                                      self.instance_defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
-                               format(MATRIX, self.name, rows, size))
+                               format(MATRIX, self.name, rows, self.recurrent_size))
                 raise RecurrentTransferError(err_msg)
 
         # Validate combination_function
         if COMBINATION_FUNCTION in target_set:
             comb_fct = target_set[COMBINATION_FUNCTION]
             if not (isinstance(comb_fct, LinearCombination) or
-                isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)):
-
+                    (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)) or
+                    (isinstance(comb_fct, MethodType) and comb_fct.__self__==self)):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
                 elif isinstance(comb_fct, (function_type, method_type)):
                     comb_fct = UserDefinedFunction(comb_fct, self.variable)
                 try:
-                    x = comb_fct.execute(self.variable)
+                    cust_fct_result = comb_fct.execute(self.variable)
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
                                                  "take an array with two items ({})".
                                                  format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.variable))
                 try:
-                    assert len(x) == len(self.variable[0])
+                    assert len(cust_fct_result) == len(self.variable[0])
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
                                                  "a result that is the same shape as the input to {} ({})".
@@ -934,7 +952,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_states.key_values
-        specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+
+        specified_matrix = get_matrix(self.params[MATRIX], rows=self.recurrent_size, cols=self.recurrent_size)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
@@ -953,7 +972,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
-            self.auto = d
+            self._auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
@@ -963,7 +982,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
-            self.hetero = m
+            self._hetero = m
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=HETERO,
@@ -979,15 +998,18 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.has_recurrent_input_state:
             comb_fct = self.combination_function
+            # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self._combination_function = comb_fct(default_variable=self.variable)
+                elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
+                    pass
                 else:
                     self._combination_function = UserDefinedFunction(custom_function=comb_fct,
                                                                      default_variable=self.variable)
 
         if self.auto is None and self.hetero is None:
-            self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+            self.matrix = specified_matrix
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
@@ -1044,11 +1066,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.previous_value = self.value
         except:
             self.previous_value = None
-
-    def _parse_function_variable(self, variable, context=None):
-        if self.has_recurrent_input_state:
-            variable = self._linear_combin_func.execute(variable=variable)
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1159,7 +1176,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                           # matrix:is_matrix=HOLLOW_MATRIX,
                                           matrix=HOLLOW_MATRIX,
                                           context=None):
-        """Instantiate a AutoAssociativeProjection from Mechanism to itself
+        """Instantiate an AutoAssociativeProjection from Mechanism to itself
 
         """
 
@@ -1170,6 +1187,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_state:
+            # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
             new_input_state = InputState(owner=self, name=RECURRENT, variable=self.variable[0],
                                          internal_only=True)
             assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
@@ -1246,13 +1264,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
         if learning_condition:
-            self.learning_condition = learning_condition
+            self._learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
             if self.learning_condition is CONVERGENCE:
-                self.learning_condition = WhenFinished(self)
+                self._learning_condition = WhenFinished(self)
             elif self.learning_condition is UPDATE:
-                self.learning_condition = None
+                self._learning_condition = None
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -1279,7 +1297,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
-            variable = self.combination_function.execute(variable = variable)
+            variable = self.combination_function.execute(variable=variable)
 
         return super()._parse_function_variable(variable, context)
 
