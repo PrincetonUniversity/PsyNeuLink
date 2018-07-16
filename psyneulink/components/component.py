@@ -1027,6 +1027,7 @@ class Component(object):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults

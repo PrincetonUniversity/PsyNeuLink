@@ -770,12 +770,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
-        if has_recurrent_input_state:
-            try:
-                self.recurrent_size
-            except:
-                # Defer determination until Component has parsed size of Mechanism's variable
-                self.recurrent_size = None
+        try:
+            self.recurrent_size
+        except:
+            # Defer determination until Component has parsed size of Mechanism's variable
+            self.recurrent_size = None
 
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
@@ -821,11 +820,17 @@ class RecurrentTransferMechanism(TransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
-        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
-        default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
-        self.recurrent_size = self.recurrent_size or len(default_variable[0])
-        return default_variable
+    # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+    #     '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
+    #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
+    #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
+    #     return default_variable
+
+    def _instantiate_defaults(
+            self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
+        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable'''
+        self.recurrent_size = self.recurrent_size or len(variable[0])
+        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
