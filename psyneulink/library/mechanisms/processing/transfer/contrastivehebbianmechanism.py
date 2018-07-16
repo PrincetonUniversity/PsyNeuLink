@@ -211,12 +211,11 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   The result of `function <ContrastiveHebbianMechanism.function>` is assigned to `current_activity
   <ContrastiveHebbianMechanism.current_activity>`. This is compared with the Mechanism's `previous_value`
   <ContrastiveHebbianMechanism.previous_value>` using the `convergence_function
-  <ContrastiveHebbianMechanism.convergence_function>`, and execution continues until the value returned by that
-  function is equal to or below the `convergence_criterion  <ContrastiveHebbianMechanism.convergence_criterion>`
-  (i.e., the Mechanism's `is_converged <ContrastiveHebbianMechanism.is_converged>` property is `True`). At that point,
-  the *plus phase* is completed, the `value <ContrastiveHebbianMechanism.value>` of the ContrastiveHebbianMechanism
-  is assigned to its `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` attribute, and the
-  *minus phase* is begun.
+  <ContrastiveHebbianMechanism.convergence_function>`, to generate `delta <ContrastiveHebbianMechanism.delta>`,
+  and execution continues until that is less than or equal to the `convergence_criterion
+  <ContrastiveHebbianMechanism.convergence_criterion>`. At that point, the *plus phase* is completed, the `value
+  <ContrastiveHebbianMechanism.value>` of the ContrastiveHebbianMechanism is assigned to its `plus_phase_activity
+  <ContrastiveHebbianMechanism.plus_phase_activity>` attribute, and the *minus phase* is begun.
 ..
 
 MENTION continuous HERE
