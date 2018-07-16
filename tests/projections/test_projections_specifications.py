@@ -2,20 +2,6 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
-def clear_registry():
-    from psyneulink.components.component import DeferredInitRegistry
-    from psyneulink.components.system import SystemRegistry
-    from psyneulink.components.process import ProcessRegistry
-    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-    from psyneulink.components.projections.projection import ProjectionRegistry
-    # Clear Registry to have a stable reference for indexed suffixes of default names
-    pnl.clear_registry(DeferredInitRegistry)
-    pnl.clear_registry(SystemRegistry)
-    pnl.clear_registry(ProcessRegistry)
-    pnl.clear_registry(MechanismRegistry)
-    pnl.clear_registry(ProjectionRegistry)
-
-
 class TestProjectionSpecificationFormats:
 
     def test_multiple_modulatory_projection_specs(self):
@@ -166,8 +152,6 @@ class TestProjectionSpecificationFormats:
 
     def test_formats_for_control_specification_for_mechanism_and_function_params(self):
 
-        clear_registry()
-
         control_spec_list = [
             pnl.CONTROL,
             pnl.CONTROL_SIGNAL,
@@ -209,8 +193,6 @@ class TestProjectionSpecificationFormats:
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
     def test_formats_for_gating_specification_of_input_and_output_states(self):
-
-        clear_registry()
 
         gating_spec_list = [
             pnl.GATING,
@@ -302,7 +284,7 @@ class TestProjectionSpecificationFormats:
                                         mask=[[1,2,3],[4,5,6]],
                                         mask_operation=pnl.MULTIPLY
                                         )
-        assert "Shape of the 'mask' for MaskedMappingProjection-3 ((2, 3)) must be the same as its 'matrix' ((2, 2))" \
+        assert "Shape of the 'mask' for MaskedMappingProjection-0 ((2, 3)) must be the same as its 'matrix' ((2, 2))" \
                in str(error_text.value)
 
     def test_duplicate_projection_detection_and_warning(self):

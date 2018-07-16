@@ -17,22 +17,6 @@ mismatches_default_variable_format_error_text = 'is not compatible with its expe
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
-
-@pytest.fixture(scope='module')
-def clear_registry():
-    # Clear Registry to have a stable reference for indexed suffixes of default names
-    from psyneulink.components.component import DeferredInitRegistry
-    from psyneulink.components.system import SystemRegistry
-    from psyneulink.components.process import ProcessRegistry
-    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-    from psyneulink.components.projections.projection import ProjectionRegistry
-    pnl.clear_registry(DeferredInitRegistry)
-    pnl.clear_registry(SystemRegistry)
-    pnl.clear_registry(ProcessRegistry)
-    pnl.clear_registry(MechanismRegistry)
-    pnl.clear_registry(ProjectionRegistry)
-
-
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
 
