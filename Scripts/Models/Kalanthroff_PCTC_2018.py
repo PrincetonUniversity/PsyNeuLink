@@ -70,7 +70,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
         gain=4, bias=1
     ),       # to 4 & bias to 1
     integrator_mode=True,       # Set Integrator mode to True
-    smoothing_factor=Lambda,    # smoothing factor ==  integration rate
+    integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
     output_states=[{                          # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',         # the "my_special_Logistic" function
@@ -86,7 +86,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
         gain=4, bias=1
     ),            # to 4 & bias to 1
     integrator_mode=True,   # Set Integrator mode to True
-    smoothing_factor=Lambda,  # smoothing factor ==  integration rate
+    integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
     output_states=[{              # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
@@ -103,7 +103,7 @@ response_layer = pnl.RecurrentTransferMechanism(
         gain=4, bias=1
     ),           # to 4 & bias to 1
     integrator_mode=True,           # Set Integrator mode to True
-    smoothing_factor=Lambda,        # smoothing factor ==  integration rate
+    integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
     output_states=[{           # Create new output state by applying
         pnl.NAME: 'SPECIAL_LOGISTIC',        # the "my_special_Logistic" function
@@ -121,7 +121,7 @@ task_demand_layer = pnl.RecurrentTransferMechanism(
         gain=4, bias=1
     ),            # to 4 & bias to 1
     integrator_mode=True,   # Set Integrator mode to True
-    smoothing_factor=Lambda,  # smoothing factor ==  integration rate
+    integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer
     output_states=[               # Create new output state by applying
         {

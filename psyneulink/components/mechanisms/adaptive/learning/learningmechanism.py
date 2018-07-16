@@ -943,7 +943,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         function_variable = np.zeros_like(
             variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_OUTPUT_INDEX])]
         )

@@ -324,37 +324,44 @@ class ConditionSet(object):
         self.conditions[key] = value
 
     def add_condition(self, owner, condition):
-        """Add a `Condition` to the ConditionSet. If **owner** already has a Condition, it is overwritten
-        with the new one.
+        """
+        Adds a `Condition` to the ConditionSet. If **owner** already has a Condition, it is overwritten
+        with the new one. If you want to add multiple conditions to a single owner, use the
+        `composite Conditions <Conditions_Composite>` to accurately specify the desired behavior.
 
         Arguments
         ---------
 
         owner : Component
-            specifies the Component with which the **condition** should be associated.
+            specifies the Component with which the **condition** should be associated. **condition**
+            will govern the execution behavior of **owner**
 
         condition : Condition
             specifies the Condition, associated with the **owner** to be added to the ConditionSet.
-
-
         """
         condition.owner = owner
         self.conditions[owner] = condition
 
     def add_condition_set(self, conditions):
-        """Add a collection of `Conditions <Condition>` to the ConditionSet.
+        """
+        Adds a set of `Conditions <Condition>` (in the form of a dict or another ConditionSet) to the ConditionSet.
+        Any Condition added here will overwrite an existing Condition for a given owner.
+        If you want to add multiple conditions to a single owner, add a single `Composite Condition <Conditions_Composite>`
+        to accurately specify the desired behavior.
 
         Arguments
         ---------
 
-        conditions : Dict[`Component <Component>`: `Condition`] or ConditionSet
-            specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
-            each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value), or ConditionSet
+        conditions : dict[`Component <Component>`: `Condition`], `ConditionSet`
+            specifies collection of Conditions to be added to this ConditionSet,
+
+            if a dict is provided:
+                each entry should map an owner `Component` (the `Component` whose execution behavior will be
+                governed) to a `Condition <Condition>`
 
         """
         for owner in conditions:
-            conditions[owner].owner = owner
-            self.conditions[owner] = conditions[owner]
+            self.add_condition(owner, conditions[owner])
 
 
 class Condition(object):

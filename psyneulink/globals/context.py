@@ -167,16 +167,20 @@ class ContextFlags(IntEnum):
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR =   1<<10 # 1024
     """Call from Component's constructor method."""
-    COMPONENT =     1<<11 # 2048
+    INSTANTIATE =   1<<11 # 2048
+    """Call by an instantiation method."""
+    COMPONENT =     1<<12 # 4096
     """Call by Component __init__."""
-    METHOD =        1<<12 # 4096
+    METHOD =        1<<13 # 8192
     """Call by method of the Component other than its constructor."""
-    PROPERTY =      1<<13 # 8192
+    PROPERTY =      1<<14 # 16384
     """Call by property of the Component."""
-    COMPOSITION =   1<<14 # 16384
+    COMPOSITION =   1<<15 # 32768
     """Call by a/the Composition to which the Component belongs."""
 
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
+    PROCESS =   1<<15     # 32768
+
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | PROPERTY | COMPOSITION | PROCESS
     NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK

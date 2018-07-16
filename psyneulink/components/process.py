@@ -462,7 +462,11 @@ from psyneulink.components.states.modulatorysignals.learningsignal import Learni
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, \
+    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, \
+    PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, \
+    kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -985,7 +989,7 @@ class Process(Process_Base):
         # Move any ControlMechanisms in the pathway to the end
         from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
-            if isinstance(item, ControlMechanism):
+            if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
 
         # Identify and assign first Mechanism as first_mechanism and ORIGIN
@@ -996,7 +1000,8 @@ class Process(Process_Base):
 
         # Identify and assign last Mechanism as last_mechanism and ORIGIN
         i = -1
-        while (not isinstance(pathway[i],Mechanism_Base) or isinstance(pathway[i], ControlMechanism)):
+        while (not isinstance(pathway[i],Mechanism_Base) or
+               (isinstance(pathway[i], ControlMechanism) and len(pathway)>1)):
             i -=1
         self.last_mechanism = pathway[i]
 
@@ -1177,7 +1182,7 @@ class Process(Process_Base):
 
                 # Check if first Mechanism already has any projections and, if so, issue appropriate warning
                 if mech.input_state.path_afferents:
-                    self._issue_warning_about_existing_projections(mech, context)
+                    self._warn_about_existing_projections_to_first_mechanism(mech, context)
 
                 # Assign input Projection from Process
                 self._assign_process_input_projections(mech, context=context)
@@ -1347,7 +1352,7 @@ class Process(Process_Base):
 
             # Item is a Projection or specification for one
             else:
-                # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
+                # Instantiate Projection, assigning Mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
                 #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
                 #        + Projection object
@@ -1388,6 +1393,10 @@ class Process(Process_Base):
                        raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
                                           "so its receiver must be a Mechanism in the pathway".
                                           format(self.name, item))
+
+                # # Check if there is already a projection between the sender and receiver
+                # if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
+                #     continue
 
                 # Projection spec is an instance of a MappingProjection
                 if isinstance(item, MappingProjection):
@@ -1510,8 +1519,32 @@ class Process(Process_Base):
         if learning_projection_specified:
             self.learning = LEARNING
 
+    def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
+        '''Check if there is already a projection between sndr_mech and rcvr_mech
+        If so:
+            - if it has just found the same project (e.g., as in case of AutoAssociativeProjection), let pass
+            - otherwise:
+                - if verbosePref, warn
+                - replace proj_spec with existing projection
+        '''
 
-    def _issue_warning_about_existing_projections(self, mechanism, context=None):
+        for input_state in rcvr_mech.input_states:
+            for proj in input_state.path_afferents:
+                if proj.sender.owner is sndr_mech:
+                    # Skip recurrent projections
+                    try:
+                        if self.pathway[pathway_index] == proj:
+                            continue
+                    except:
+                        pass
+                    if self.prefs.verbosePref:
+                        print("WARNING: Duplicate {} specified between {} and {} ({}) in {}; it will be ignored".
+                              format(Projection.__name__, sndr_mech.name, rcvr_mech.name, proj_spec, self.name))
+                    self.pathway[pathway_index] = proj
+                    return True
+        return False
+
+    def _warn_about_existing_projections_to_first_mechanism(self, mechanism, context=None):
 
         # Check where the Projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.input_state.all_afferents:
@@ -1523,8 +1556,7 @@ class Process(Process_Base):
                 # (B) from another Process, warn if verbose pref is set
                 if not projection.sender.owner is self:
                     if self.prefs.verbosePref:
-                        print("WARNING: {0} in pathway for {1} already has an input from {2} "
-                              "that will be used".
+                        print("WARNING: {0} in pathway for {1} already has an input from {2} that will be used".
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
@@ -1629,6 +1661,8 @@ class Process(Process_Base):
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
@@ -1650,6 +1684,8 @@ class Process(Process_Base):
         #     instantiate multiple Process input states each with a Projection to the single mechanism.input_state
         else:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 for j in range(num_process_inputs):
                     if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
@@ -1833,9 +1869,8 @@ class Process(Process_Base):
                             else:
                                 # If learning_mechanism is not already in _learning_mechs,
                                 #     pack in tuple and add it
-                                if learning_mechanism and not any(learning_mechanism is object_item for
-                                                                    object_item in self._learning_mechs):
-                                    # learning_object_item = learning_mechanism
+                                if (learning_mechanism and not any(learning_mechanism is object_item for
+                                                                   object_item in self._learning_mechs)) :
                                     self._learning_mechs.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate ParameterStates
@@ -2097,6 +2132,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
+            context = ContextFlags.PROCESS
             mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 
@@ -2185,7 +2221,7 @@ class Process(Process_Base):
                     # Skip learning if Projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
                     #    (this is to prevent "double-training" of projections from mechanisms belonging
-                    #     to different processes when call to _execute_learning() comes from a system)
+                    #     to different processes when call to _execute_learning() comes from a System)
                     sender = projection.sender.owner
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue

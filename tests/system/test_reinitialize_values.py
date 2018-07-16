@@ -14,7 +14,7 @@ class TestReinitializeValues:
         A = TransferMechanism(name='A')
         B = TransferMechanism(name='B',
                               integrator_mode=True,
-                              smoothing_factor=0.5)
+                              integration_rate=0.5)
         C = TransferMechanism(name='C')
 
         abc_process = Process(pathway=[A, B, C])
@@ -37,7 +37,7 @@ class TestReinitializeValues:
         A = TransferMechanism(name='A')
         B = TransferMechanism(name='B',
                               integrator_mode=True,
-                              smoothing_factor=0.5)
+                              integration_rate=0.5)
         C = TransferMechanism(name='C')
 
         abc_process = Process(pathway=[A, B, C])
@@ -118,7 +118,7 @@ class TestReinitializeValues:
 
         A = TransferMechanism(name='A',
                               integrator_mode=True,
-                              smoothing_factor=0.2)
+                              integration_rate=0.2)
 
         B = IntegratorMechanism(name='B',
                                 function=DriftDiffusionIntegrator(rate=0.1))
@@ -127,8 +127,9 @@ class TestReinitializeValues:
         P = Process(pathway=[A,
                              B,
                              C])
-        S = System(processes=[P])
-        A.reinitialize_when = Never()
+        S = System(processes=[P],
+                   reinitialize_mechanisms_when=Never()
+        )
 
         S.run(inputs={A: [[1.0], [1.0]]})
 

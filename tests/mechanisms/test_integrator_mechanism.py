@@ -9,6 +9,9 @@ from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.scheduling.condition import Never
 from psyneulink.scheduling.time import TimeScale
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
+from psyneulink.scheduling.condition import AtTrial
 
 
 class TestReinitialize:
@@ -980,6 +983,42 @@ class TestIntegratorNoise:
         val = I.execute(2.5)
 
         # np.testing.assert_allclose(val, 4.356601554140335)
+
+class TestStatefulness:
+
+    def test_has_initializers(self):
+        I = IntegratorMechanism()
+        assert I.has_initializers
+        assert hasattr(I, "reinitialize_when")
+
+    def test_reinitialize_when(self):
+        I1 = IntegratorMechanism()
+        I2 = IntegratorMechanism()
+        I2.reinitialize_when = AtTrial(2)
+        P1 = Process(pathway=[I1])
+        P2 = Process(pathway=[I2])
+        S = System(processes=[P1, P2],
+                   reinitialize_mechanisms_when=AtTrial(3))
+
+        S.run(inputs={I1: [[1.0]],
+                      I2: [[1.0]]},
+              num_trials=7)
+
+        expected_results = [[np.array([0.5]), np.array([0.5])],
+                            [np.array([0.75]), np.array([0.75])],
+                            [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+                            [np.array([0.5]), np.array([0.75])],    # I1 reinitializes at Trial 3
+                            [np.array([0.75]), np.array([0.875])],
+                            [np.array([0.875]), np.array([0.9375])],
+                            [np.array([0.9375]), np.array([0.96875])]]
+
+        assert np.allclose(expected_results, S.results)
+
+
+
+
+
+
 
 class TestAGTUtilityIntegrator:
 

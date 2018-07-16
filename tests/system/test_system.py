@@ -430,6 +430,16 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
+class TestInputSpecsExternalInputStatesOnly:
+
+    def test_recurrent_transfer_origin(self):
+        R = RecurrentTransferMechanism(has_recurrent_input_state=True)
+        P = Process(pathway=[R])
+        S = System(processes=[P])
+
+        S.run(inputs={R: [[1.0], [2.0], [3.0]]})
+        print(S.results)
+
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
@@ -461,6 +471,37 @@ class TestInputSpecsHeterogeneousVariables:
         s.run(inputs)
 
 class TestGraphAndInput:
+
+    def test_input_not_provided_to_run(self):
+        T = TransferMechanism(name='T',
+                              default_variable=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+
+        T2 = TransferMechanism(name='T2',
+                               function=Linear(slope=2.0),
+                               default_variable=[[0.0, 0.0]])
+        P = Process(pathway=[T, T2])
+        S = System(processes=[P])
+        run_result = S.run()
+
+        assert np.allclose(T.value, [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+
+    def test_some_inputs_not_provided_to_run(self):
+        Origin1 = TransferMechanism(name='Origin1',
+                                    default_variable=[[1.0, 2.0]])
+        Origin2 = TransferMechanism(name='Origin2',
+                                    default_variable=[[3.0, 4.0]])
+        Terminal = TransferMechanism(name='Terminal')
+
+        P1 = Process(pathway=[Origin1, Terminal])
+        P2 = Process(pathway=[Origin2, Terminal])
+        S = System(processes=[P1, P2])
+        run_result = S.run(inputs={Origin1: [[5.0, 6.0]]})
+        # inputs={Origin1: [[5.0, 6.0], [7.0, 8.0]]}) # NOT currently allowed because inputs would be different lengths
+
+        assert np.allclose(Origin1.value, [[5.0, 6.0]])
+        assert np.allclose(Origin2.value, [[3.0, 4.0]])
+        assert np.allclose(run_result, [[np.array([18.0])]])
 
     def test_branch(self):
         a = TransferMechanism(name='a', default_variable=[0, 0])
@@ -672,9 +713,6 @@ class TestConvergentLearning:
         assert 'LearningMechanism for MappingProjection from M6 to M4' in [m.name for m in S.learningGraph[lm]]
         lm = mech_6.efferents[0].learning_mechanism
         assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
-
-
-
 
 class TestInitialize:
 

@@ -365,15 +365,6 @@ class Composition(object):
         # helper attributes
         self.mechanisms_to_roles = collections.OrderedDict()
 
-        # Create lists to track identity of certain mechanism classes within the
-        # composition.
-        # Explicit classes:
-        self.explicit_input_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_input_mechanisms = []
-        self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_output_mechanisms = []
-        self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
-
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
@@ -428,6 +419,14 @@ class Composition(object):
             self.needs_update_scheduler_learning = False
 
         return self._scheduler_learning
+
+    @property
+    def termination_processing(self):
+        return self.scheduler_processing.termination_conds
+
+    @termination_processing.setter
+    def termination_processing(self, termination_conds):
+        self.scheduler_processing.termination_conds = termination_conds
 
     def _get_unique_id(self):
         return uuid.uuid4()
@@ -723,7 +722,7 @@ class Composition(object):
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
         try:
-            return set([mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]])
+            return [mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]]
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
@@ -869,7 +868,7 @@ class Composition(object):
         # NOTE: This may need to change from default_variable to wherever a default value of the mechanism's variable
         # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
         # its default variable value
-        for mech in origins.difference(set(current_mechanisms)):
+        for mech in set(origins).difference(set(current_mechanisms)):
             self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.value
 
 
@@ -999,6 +998,9 @@ class Composition(object):
 
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
+
+        if termination_processing is None:
+            termination_processing = self.termination_processing
 
         self._assign_values_to_CIM_output_states(inputs)
         # self._assign_values_to_target_CIM_output_states(targets)
@@ -1191,6 +1193,9 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
         self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
@@ -1237,12 +1242,10 @@ class Composition(object):
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
-
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_before_trial()
-
-            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
+            if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                                   execution_id=execution_id):
                 break
 
