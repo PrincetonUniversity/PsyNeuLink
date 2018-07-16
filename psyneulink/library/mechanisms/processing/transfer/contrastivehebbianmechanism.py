@@ -159,9 +159,9 @@ A ContrastiveHebbianMechanism is automatically assigned three `OutputStates <Out
 
 * *OUTPUT_ACTIVITY_OUTPUT:* assigned as the `primary OutputState <OutputState_Primary>`), and contains the pattern
   of activity the Mechanism is trained to generate.  If **target_size** is specified, then it has the same size as
-  the *TARGET* InputState;  if **target_size** is not specified or is 0, if **separated** is `False`, or if mode is
-  *SIMPLE_HEBBIAN*, then the size of the *OUTPUT_ACTIVITY_OUTPUT* OutputState is the same as the *INPUT* InputState
-  (see `ContrastiveHebbian_Input`).
+  the *TARGET* InputState;  if **target_size** is not specified or is 0, if `separated
+  <ContrastiveHebbianMechanism.separated>` is `False`, or if mode is *SIMPLE_HEBBIAN*, then the size of the
+  *OUTPUT_ACTIVITY_OUTPUT* OutputState is the same as the *INPUT* InputState (see `ContrastiveHebbian_Input`).
 ..
 * *CURRENT_ACTIVITY_OUTPUT:* assigned the value of the `current_activity <ContrastiveHebbianMechanism.current_activity>`
   attribute after each `execution of the Mechanism <ContrastiveHebbian_Execution>`, which contains the activity of all
@@ -186,12 +186,6 @@ that it can be assigned, as well as those of a `RecurrentTransferMechanism
 Execution
 ---------
 
-COMMENT:
-    CORRECT/ADD TO DESCRIPTION OF REINTIAILZATION AFTER EACH PHASE
-    CLAMPING BEHAVIOR
-    ASSIGNMENT OF CURRENT AND OUTPUT ACDTIVITIES
-COMMENT
-
 .. _ContrastiveHebbian_Processing:
 
 Processing
@@ -204,11 +198,11 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   `value <InputState.value>` of the *INPUT* InputState as well as the *TARGET* InputState if that
   is specified (see `ContrastiveHebbian_Input`).
 
-  Note that if **separated** is `True` (which it is by default), then the `value <InputState.value>` of *INPUT* and
-  of *TARGET* are combined with different `fields <ContrastiveHebbian_Fields>` of the `value <InputState.value>` of
-  *RECURRENT*:  *INPUT* is combined with the *input_field* and  *TARGET* is combined with the target_field.  Note
-  that if `hidden_size <ContrastiveHebbianMechanism.hidden_size>` is not 0, then those elements are updated only by the
-  `value <AutoAssociativeProjection.value>` of the Mechanism's `recurrent_projection
+  Note that if `separated <ContrastiveHebbianMechanism.separated>` is `True` (which it is by default), then the `value
+  <InputState.value>` of *INPUT* and of *TARGET* are combined with different `fields <ContrastiveHebbian_Fields>` of
+  the `value <InputState.value>` of *RECURRENT*:  *INPUT* is combined with the *input_field* and  *TARGET* is combined
+  with the target_field.  Note that if `hidden_size <ContrastiveHebbianMechanism.hidden_size>` is not 0, then those
+  elements are updated only by the `value <AutoAssociativeProjection.value>` of the Mechanism's `recurrent_projection
   <ContrastiveHebbianMechanism.recurrent_projection>`.
 
   The `value <InputState.value> of the *INPUT* and possibly *TARGET* InptutState(s) are combined with that
@@ -429,18 +423,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     Arguments
     ---------
 
-    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <ContrastiveHebbianMechanism.variable>` for
-        `function <ContrastiveHebbianMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
-        of the Mechanism.
+    input_size : int : default 0
 
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
+    hidden_size : int : default None
 
-    combination_function : function : default LinearCombination
+    target_size : int : default None
+
+    separated : bool : default True
+
+    mode : SIMPLE_HEBBIAN or None : default None
+
+    continuous : bool : default True
+
+    clamp : SOFT_CLAMP or HARD_CLAMP : default HARD_CLAMP
+
+    combination_function : function : default None
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
         must accept a 2d array with one or two items of the same length, and generate a result that is the same size
         as each of these;  the default function adds the two items.
@@ -530,6 +527,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     Attributes
     ----------
+
+input_size:int,
+hidden_size:tc.optional(int)=None,
+target_size:tc.optional(int)=None,
+target_start
+target_end
+separated
+recurrent_size
+continuous:bool=True,
+clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
 
     variable : value
         the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
@@ -702,6 +709,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
                  continuous:bool=True,
                  clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
+                 combination_function:tc.optional(is_function_type)=None,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
                  auto=None,
@@ -774,7 +782,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             else:
                 input_states.append(additional_input_states)
 
-        combination_function = self.combination_function
+        combination_function = combination_function or self.combination_function
 
         output_states = [OUTPUT_ACTIVITY_OUTPUT, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
