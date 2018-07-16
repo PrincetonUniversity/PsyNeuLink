@@ -357,7 +357,7 @@ import typecheck as tc
 import llvmlite.ir as ir
 
 from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.components.functions.function import get_param_value_for_keyword, MULTIPLICATIVE
+from psyneulink.components.functions.function import get_param_value_for_keyword, ModulationParam
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
@@ -887,8 +887,10 @@ class ParameterState(State_Base):
 
             f_mod = builder.load(f_mod_ptr)
 
-            if afferent.sender.modulation is MULTIPLICATIVE:
+            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
                 name = self.function_object.multiplicative_param
+            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
+                name = self.function_object.additive_param
             else:
                 print("Unsupported modulation parameter: ", afferent.sender.modulation)
                 assert False
