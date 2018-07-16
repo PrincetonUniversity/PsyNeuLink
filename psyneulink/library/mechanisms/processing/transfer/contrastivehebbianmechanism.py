@@ -586,6 +586,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  target_size:int,
                  separated:bool=True,
                  mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
+                 continuous:bool=True,
                  clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
@@ -617,10 +618,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
-        self.mode = mode
-        if self.mode is SIMPLE_HEBBIAN:
+        if mode is SIMPLE_HEBBIAN:
             clamp = SOFT_CLAMP
             separated = False
+            continuous = False
 
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -635,7 +636,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
-        self.clamp = clamp
+        # self.clamp = clamp
+        # self.continuous = continuous
 
         default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
 
@@ -659,7 +661,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 output_states.append(additional_output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(input_states=input_states,
+        params = self._assign_args_to_param_dicts(mode=mode,
+                                                  clamp=clamp,
+                                                  continuous=continuous,
+                                                  input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -809,7 +814,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             return self.current_activity
 
         if self.is_converged:
-            # Terminate if this is the end of the minus phase
+            # Terminate if this is the end of the minus phase, prepare for next trial
             if self.execution_phase == MINUS_PHASE:
                 # Store activity from last execution in minus phase
                 self.minus_phase_activity = current_activity
@@ -821,13 +826,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Otherwise, prepare for start of minus phase on next execution
             else:
                 # Store activity from last execution in plus phase
-                self.plus_phase_activity = current_activity
-                # self.plus_phase_activity = self.current_activity
+                self.plus_phase_activity = self.current_activity
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
-                #    and the Mechanism's current activity (which is returned as it input)
-                self.reinitialize(self.initial_value)
-                self.current_activity = self.initial_value
+                #    and the Mechanism's current activity (which is returned as its input)
+                if not self.continuous:
+                    self.reinitialize(self.initial_value)
+                    self.current_activity = self.initial_value
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
