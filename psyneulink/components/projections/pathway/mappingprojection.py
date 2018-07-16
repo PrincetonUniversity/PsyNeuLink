@@ -618,18 +618,6 @@ class MappingProjection(PathwayProjection_Base):
         super()._instantiate_receiver(context=context)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        """
-        If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
-
-        - it should set runtime_params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-          and then call its super().execute
-        - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
-
-        Assumes that if ``self.learning_mechanism`` is assigned *and* ParameterState[MATRIX] has been instantiated
-        then learningSignal exists;  this averts duck typing which otherwise would be required for the most
-        frequent cases (i.e., *no* learningSignal).
-
-        """
 
         self.context.execution_phase = ContextFlags.PROCESSING
         self.context.string = context

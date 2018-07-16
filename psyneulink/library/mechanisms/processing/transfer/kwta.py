@@ -530,7 +530,7 @@ class KWTA(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
         if variable.dtype.char == "U":
             raise KWTAError(
                 "input ({0}) to {1} was a string, which is not supported for {2}".format(

@@ -255,7 +255,7 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+* **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
   the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
   "manually" or programmatically by assigning an integer value directly to the attribute.
@@ -553,6 +553,7 @@ class ParamsDict(UserDict):
         # assign value to attrib
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
+            # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
             setattr(self.owner, key, item)
 
 parameter_keywords = set()
@@ -751,8 +752,8 @@ class Component(object):
     log : Log
         see `log <Component_Log>`
 
-    execution_count : int
-        see `execution_count <Component_Execution_Count>`
+    current_execution_count : int
+        see `current_execution_count <Component_Execution_Count>`
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
@@ -948,7 +949,7 @@ class Component(object):
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
 
-        self._auto_dependent = False
+        self._has_initializers = False
         self._role = None
 
         # self.componentName = self.componentType
@@ -1026,6 +1027,7 @@ class Component(object):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
@@ -1519,7 +1521,13 @@ class Component(object):
             except KeyError:
                 pass
 
+            # MODIFIED 6/29/18 OLD:
             params.update(params_arg)
+            # # MODIFIED 6/29/18 NEW JDC:
+            # for item in params_arg:
+            #     if params_arg[item] is not None:
+            #         params.update({item: params_arg[item]})
+            # MODIFIED 6/29/18 END
 
         # Save user-accessible params
         # self.user_params = params.copy()
@@ -1540,14 +1548,15 @@ class Component(object):
 
             self.user_params.__additem__(param_name, new_param_val)
 
-        # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
+        # Cache a (deep) copy of the user-specified values and put it in user_params_for_instantiation;
+        #    this is to deal with the following:
         #    • _create_attributes_for_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
         #    • since paramsCurrent is a ParamsDict, it assigns the values of its entries to the corresponding attributes
         #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
-        #         the user-specified vaules (from the constructor args) in user_params
+        #         the user-specified values (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
@@ -2139,7 +2148,8 @@ class Component(object):
         if variable is None:
             return variable
 
-        variable = np.atleast_1d(variable)
+        if not isinstance(variable, (list, np.ndarray)):
+            variable = np.atleast_1d(variable)
 
         try:
             # if variable has a single int/float/etc. within some number of dimensions, and the
@@ -2156,7 +2166,7 @@ class Component(object):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable, context):
+    def _parse_function_variable(self, variable, context=None):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
@@ -2592,7 +2602,9 @@ class Component(object):
                                                           context=ContextFlags.INSTANTIATE)
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
-            self.function_object = UserDefinedFunction(default_variable=function_variable, custom_function=function, context=context)
+            self.function_object = UserDefinedFunction(default_variable=function_variable,
+                                                       custom_function=function,
+                                                       context=context)
         elif isinstance(function, Function):
             if not iscompatible(function.instance_defaults.variable, function_variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
@@ -2657,11 +2669,11 @@ class Component(object):
 
         self.function_object.owner = self
 
-        # KAM added 6/14/18 for functions that do not pass their auto_dependent status up to their owner via property
-        # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
-        # auto_dependent status
-        if self.function_object.auto_dependent:
-            self._auto_dependent = True
+        # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
+        # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
+        # has_initializers status
+        if self.function_object.has_initializers:
+            self.has_initializers = True
 
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
@@ -2761,25 +2773,25 @@ class Component(object):
         return value
 
     @property
-    def execution_count(self):
+    def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
         Incremented in the Component's execute method by call to self._increment_execution_count"""
         try:
-            return self._execution_count
+            return self._current_execution_count
         except:
-            self._execution_count = 0
-            return self._execution_count
+            self._current_execution_count = 0
+            return self._current_execution_count
 
-    @execution_count.setter
-    def execution_count(self, count:int):
-        self._execution_count = count
+    @current_execution_count.setter
+    def current_execution_count(self, count:int):
+        self._current_execution_count = count
 
     def _increment_execution_count(self, count=1):
         try:
-            self._execution_count +=count
+            self._current_execution_count +=count
         except:
-            self._execution_count = 1
-        return self._execution_count
+            self._current_execution_count = 1
+        return self._current_execution_count
 
     @property
     def current_execution_time(self):
@@ -3039,40 +3051,23 @@ class Component(object):
         return self.log.logged_items
 
     @property
-    def auto_dependent(self):
-        return self._auto_dependent
+    def has_initializers(self):
+        return self._has_initializers
 
-    @auto_dependent.setter
-    def auto_dependent(self, value):
+    @has_initializers.setter
+    def has_initializers(self, value):
         """
-        Assign auto_dependent status to Component and any of its owners up the hierarchy.
+        Assign has_initializers status to Component and any of its owners up the hierarchy.
 
-        Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
-        reinitialize condition to AtTimeStep(0).
+        Adding reinitialize_when attribute to Components that are now has_initializers, and setting the default
+        reinitialize condition to Never().
         """
-        if self.owner is self:
-            self._auto_dependent = value
-            if value:
-                # self.reinitialize_when = AtTimeStep(0)
-                self.reinitialize_when = Never()
-            # else:
-            #     if hasattr(self, "reinitialize_when"):
-            #         del self.reinitialize_when
-        else:
-            owner = self
-            while owner is not None:
-                try:
-                    owner._auto_dependent = value
-                    if value:
-                        # owner.reinitialize_when = AtTimeStep(0)
-                        owner.reinitialize_when = Never()
-                    # else:
-                    #     if hasattr(owner.reinitialize_when):
-                    #         del owner.reinitialize_when
-                    owner = owner.owner
+        self._has_initializers = value
+        self.reinitialize_when = Never()
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                self.owner.has_initializers = True
 
-                except AttributeError:
-                    owner = None
 
     @property
     def _default_variable_flexibility(self):
