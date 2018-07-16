@@ -4,6 +4,7 @@ Contributors Guide
 * `Introduction`
 * `File_Structure`
 * `Environment_Setup`
+* `Contribution_Checklist`
 * `Components_Overview`
 * `Compositions_Overview`
 * `Scheduler`
@@ -50,6 +51,22 @@ PsyNeuLink is coded in Python 3, and should work in Python 3.6. First install Py
 PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/index.html>` to run its tests. To build documentation, we use Sphinx. **insert Sphinx setup instructions here**
 
 To contribute, make a branch off of the `devel` branch. Make a pull request to `devel` once your changes are complete. `devel` is periodically merged into the `master` branch, which is the branch most users use.
+
+.. _Contribution_Checklist
+
+Contribution Checklist
+----------------------
+
+This is the general workflow for contributing to PsyNeuLink:
+
+* Using git, create a personal branch off of the `devel` branch.
+* Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that they can provide you with relevant tips in advance.
+
+    * While writing code on your branch, be sure to keep pulling from `devel` from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.
+
+* Once you've added your changes, add tests that check that your feature or bugfix functions as expected. This helps ensure that other developers don't accidentally break your code when making their own changes!
+* Once your changes are complete and working, run the Pytest tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.
+* Once tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your changes.
 
 .. _Components_Overview:
 
