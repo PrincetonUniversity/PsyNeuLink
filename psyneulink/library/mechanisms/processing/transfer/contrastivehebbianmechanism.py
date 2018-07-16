@@ -39,19 +39,15 @@ described below.
 Creation
 --------
 
-COMMENT:
-ADD DOCUMENTATION OF SIMPLE_HEBBIAN MODE
-COMMENT
-
-When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
-<RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`.  Its
-**input_size** argument must be specified.  If it is specified on its own, it determines the total number of
-processing units (i.e., it function as the standard **size** argument of a `Component` (see `size <Component.size>`).
-If either the **hidden_size** and/or **target_size** arguments are specified, then those units are treated as distinct
-from the input units (see `ContrastiveHebbian_Input` for details). A ContrastiveHebbianMechanism also must have both
+The **input_size** argument of the ContrastiveHebbianMechanism's constructor must always be specified (this is
+comparable to speciyfing the **size** or *default_variable** arugments of other types of `Mechanism`).  If it is
+specified on its own, it determines the total number of processing units.  If either the **hidden_size** and/or
+**target_size** arguments are specified, then those units are treated as distinct from the input units (see
+`ContrastiveHebbian_Execution` for details). A ContrastiveHebbianMechanism also must have both
 a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
 <ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase of execution completes
-<ContrastiveHebbian_Execution>`. The Mechanism is automatically assigned three of its five `Standard OutputStates
+<ContrastiveHebbian_Execution>`.  Other parameters can be configured that influence processing (see
+`ContrastiveHebbian_Execution`).  The Mechanism is automatically assigned three of its five `Standard OutputStates
 <ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
 and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be
 specified in the **additional_output_states** argument of its constructor.
@@ -815,8 +811,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
-        # USED FOR TEST PRINT BELOW:
-        curr_phase = self.execution_phase
+        # # USED FOR TEST PRINT BELOW:
+        # curr_phase = self.execution_phase
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
@@ -841,23 +837,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.current_activity = current_activity
 
 
-        # TEST PRINT:
-        if self.context.initialization_status == ContextFlags.INITIALIZED:
-            print("--------------------------------------------",
-                  "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
-                                                                self.current_execution_time.pass_,
-                                                                self.current_execution_time.time_step),
-                  "\nCONTEXT: {}".format(self.context.flags_string),
-                  '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-                  '\nvariable: ', variable,
-                  '\ninput:', self.function_object.variable,
-                  '\nMATRIX:', self.matrix,
-                  '\ncurrent activity: ', self.current_activity,
-                  '\noutput activity: ', self.output_activity,
-                  '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
-                  '\ndelta: ', self.delta if self.previous_value is not None else 'None',
-                  '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
-                  )
+        # # TEST PRINT:
+        # if self.context.initialization_status == ContextFlags.INITIALIZED:
+        #     print("--------------------------------------------",
+        #           "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
+        #                                                         self.current_execution_time.pass_,
+        #                                                         self.current_execution_time.time_step),
+        #           "\nCONTEXT: {}".format(self.context.flags_string),
+        #           '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+        #           '\nvariable: ', variable,
+        #           '\ninput:', self.function_object.variable,
+        #           '\nMATRIX:', self.matrix,
+        #           '\ncurrent activity: ', self.current_activity,
+        #           '\noutput activity: ', self.output_activity,
+        #           '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
+        #           '\ndelta: ', self.delta if self.previous_value is not None else 'None',
+        #           '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
+        #           )
 
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
