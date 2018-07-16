@@ -786,19 +786,22 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
 
         # TEST PRINT:
-        print("--------------------------------------------",
-              "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
-                                                            self.current_execution_time.pass_,
-                                                            self.current_execution_time.time_step),
-              "\nCONTEXT: {}".format(self.context.flags_string),
-              '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-              '\nvariable: ', variable,
-              '\ninput:', self.function_object.variable,
-              '\nMATRIX:', self.matrix,
-              '\ncurrent activity: ', self.current_activity,
-              '\ndiff: ', self.output_activity,
-              '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
-              )
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
+            print("--------------------------------------------",
+                  "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
+                                                                self.current_execution_time.pass_,
+                                                                self.current_execution_time.time_step),
+                  "\nCONTEXT: {}".format(self.context.flags_string),
+                  '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+                  '\nvariable: ', variable,
+                  '\ninput:', self.function_object.variable,
+                  '\nMATRIX:', self.matrix,
+                  '\ncurrent activity: ', self.current_activity,
+                  '\noutput activty: ', self.output_activity,
+                  '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
+                  '\ndelta: ', self.delta if self.previous_value is not None else 'None',
+                  '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
+                  )
 
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
