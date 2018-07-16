@@ -556,6 +556,7 @@ class ParamsDict(UserDict):
         # assign value to attrib
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
+            # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
             setattr(self.owner, key, item)
 
 parameter_keywords = set()
@@ -1029,6 +1030,7 @@ class Component(object):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
