@@ -39,6 +39,10 @@ described below.
 Creation
 --------
 
+COMMENT:
+ADD DOCUMENTATION OF SIMPLE_HEBBIAN MODE
+COMMENT
+
 When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
 <RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`.  Its
 **input_size** argument must be specified.  If it is specified on its own, it determines the total number of
@@ -52,9 +56,22 @@ a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and 
 and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be
 specified in the **additional_output_states** argument of its constructor.
 
+*SIMPLE_HEBBIAN* mode
+~~~~~~~~~~~~~~~~~~~~~
+
+This can be used to replicate the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g.,
+for validation or ease in comparing processing outcomes).  When the **mode** argument of the Mechanism's consrtructor
+is specified as **SIMPLE_HEBBIAN**, the following assignments are made:
+
+    **hidden_size** and **target_size**: ignored
+    **separated** = `False`
+    **clamp** = `SOFT_CLAMP`
+    **LearningMechanism = Hebbian
+
+
 .. _ContrastiveHebbian_Learning:
 
-A ConstrastiveHebbianMechanism can be configured for learning in the same manner as a
+A ContrastiveHebbianMechanism can be configured for learning in the same manner as a
 `RecurrentTransferMechanism <Recurrent_Transfer_Learning>`, with the following differences:  it is automatically
 assigned `ContrastiveHebbian` as its `learning_function <ContrastiveHebbianMechanism.learning_function>`;
 its `learning_condition <RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*;
@@ -72,22 +89,25 @@ Structure
 Input
 ~~~~~
 
-When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
-<RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`), and thus
-it always has at least two, and possibly three `InputStates <InputState>`: *RECURRENT*, *EXTERNAL*,
-and possibly *TARGET*.
+A ContrastiveHebbianMechanism always has two, and possibly three `InputStates <InputState>`: *INPUT*, *RECURRENT*,
+and possibly *TARGET*. The sizes of these are determined by arguments in its constructor, as follows:
 
-This is so
-that, during the
-`minus phase of execution <ContrastiveHebbian_Execution>`, it's input can be managed separately from its
-`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.  If
+*"Standard" configuration
+  (**input_size**, **hidden_size** and **target_size** are all specified):
 
-xxx
-, which designates both the number of target processing units and the size of its
-*OUTPUT_ACTIVITY_OUTPUT* `OutputState`
-xxx
+* *INPUT*:  size = **input_size**
+* *RECURRENT*:  size = **input_size** + **hidden_size** + **target_size**
+* *TARGET*:  size = **input_size**
 
+*"Simple" configuration
+  (**target_size** = <None or 0>;  **separated** = `False`; or **mode** = *SIMPLE_HEBBIAN*):
 
+* *INPUT*:  size = **input_size**
+* *RECURRENT*:  size = **input_size** + **hidden_size**
+* *TARGET*:  Not implemented
+
+Note: if **separated** = `False` but **target_size** is specified, it must equal **input_size** or an error will be
+generated.
 
 
 .. _ContrastiveHebbian_Functions:
@@ -199,7 +219,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import \
-    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON, get_matrix
+    ContrastiveHebbian, Distance, Function, Hebbian, Linear, LinearCombination, is_function_type, EPSILON, get_matrix
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -352,7 +372,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         of scalar values.
 
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
-        specifies the matrix to use for `recurrent_projection <ConstrastiveHebbianMechanism.recurrent_projection>`;
+        specifies the matrix to use for `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`;
         see **matrix** argument of `RecurrentTransferMechanism` for details of specification.
 
     auto : number, 1D array, or None : default None
@@ -634,9 +654,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.standard_output_states = StandardOutputStates(self, self.standard_output_states, indices=PRIMARY)
 
         if mode is SIMPLE_HEBBIAN:
-            clamp = SOFT_CLAMP
+            hidden_size=0
+            # target_size=0
             separated = False
+            clamp = SOFT_CLAMP
             continuous = False
+            learning_function = Hebbian
 
         self.input_size = input_size
         self.hidden_size = hidden_size or 0
@@ -646,8 +669,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if separated and target_size:
             self.recurrent_size += target_size
             self.target_start = input_size + hidden_size
+            self._target_included = True
         else:
             self.target_start = 0
+            self._target_included = False
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
@@ -662,7 +687,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Set InputState sizes in _instantiate_input_states,
         #    so that there is no conflict with parsing of Mechanism's size
         input_states = [INPUT, RECURRENT]
-        if target_size:
+        if self._target_included:
             default_variable.append(np.zeros(target_size))
             input_states.append(TARGET)
         # MODIFIED 7/16/18 END
@@ -722,7 +747,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
-        if self.separated and self.target_size and self.input_size != self.target_size:
+        if self._target_included and self.input_size != self.target_size:
             raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
                                           format(repr(SEPARATED), repr(True), self.name,
                                                  repr(INPUT_SIZE), self.input_size,
@@ -739,7 +764,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         super()._instantiate_input_states(input_states, reference_value, context)
 
         self.input_states[RECURRENT].internal_only = True
-        self.input_states[TARGET].internal_only = True
+        if self._target_included:
+            self.input_states[TARGET].internal_only = True
 
     @tc.typecheck
     def _instantiate_recurrent_projection(self,
@@ -782,7 +808,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             #    all  to zeros with size of Mechanism's array
             self._initial_value = self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
                 self.input_states[RECURRENT].socket_template
-            self.output_activity = self.input_states[TARGET].socket_template
+            if self._target_included:
+                self.output_activity = self.input_states[TARGET].socket_template
             self.execution_phase = None
 
         # Initialize execution_phase
