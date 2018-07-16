@@ -344,26 +344,37 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
         `Standard OutputStates <OutputState_Standard>` for `ContrastiveHebbianMechanism` (in addition to those
         for `RecurrentTransferMechanism` and `TransferMechanism`):
 
+        .. _OUTPUT_ACTIVITY_OUTPUT:
+
+        *OUTPUT_ACTIVITY_OUTPUT* : 1d np.array
+            array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+            <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* InputState `is specified
+            <ContrastiveHebbian_Input>`;  otherwise, has activity of the `input_field <ContrastiveHebbian_Fields>` of
+            `current_activity <ContrastiveHebbianMechanism.current_activity>`.
+
         .. _CURRENT_ACTIVITY_OUTPUT:
 
         *CURRENT_ACTIVITY_OUTPUT* : 1d np.array
-            array with current activity of the Mechanism.
+            array with `current_activity <ContrastiveHebbianMechanism.current_activity>`.
 
         .. _ACTIVITY_DIFFERENCE_OUTPUT:
 
         *ACTIVITY_DIFFERENCE_OUTPUT* : 1d np.array
-            array of element-wise differences in activity between the `plus and minus phases of execution
-            <ContrastiveHebbian_Execution>`.
+            array of element-wise differences between `plus_phase_activity
+            <ContrastiveHebbianMechanism.plus_phase_activity>` and `minus_phase_activity
+            <ContrastiveHebbianMechanism.minus_phase_activity>`.
 
         .. _PLUS_PHASE_OUTPUT:
 
         *PLUS_PHASE_OUTPUT* : 1d np.array
-            array of activity at the end of the `plus phase of execution <ContrastiveHebbian_Execution>`.
+            array `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`
+            (i.e., activity at the end of the `plus phase of execution <ContrastiveHebbian_Execution>`.
 
         .. _MINUS_PHASE_OUTPUT:
 
         *MINUS_PHASE_OUTPUT* : 1d np.array
-            array of activity at the end of the `minus phase of execution <ContrastiveHebbian_Execution>`
+            array `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`
+            (i.e., activity at the end of the `minus phase of execution <ContrastiveHebbian_Execution>`.
 
         """
     CURRENT_ACTIVITY_OUTPUT=CURRENT_ACTIVITY_OUTPUT
@@ -371,34 +382,38 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
     MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
 
-
-# IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
-    ContrastiveHebbianMechanism(                     \
-    default_variable=None,                           \
-    size=None,                                       \
-    function=Linear,                                 \
-    combination_function=LinearCombination,          \
-    matrix=HOLLOW_MATRIX,                            \
-    auto=None,                                       \
-    hetero=None,                                     \
-    initial_value=None,                              \
-    noise=0.0,                                       \
-    integration_rate=0.5,                            \
-    integrator_mode=False,                           \
-    integration_rate=0.5,                            \
-    clip=[float:min, float:max],                     \
-    convergence_function=Distance(metric=MAX_ABS_DIFF),  \
-    convergence_criterion=0.01,                      \
-    max_passes=None,                                 \
-    enable_learning=False,                           \
-    learning_rate=None,                              \
-    learning_function=ContrastiveHebbian,            \
-    additional_output_states=None,                   \
-    params=None,                                     \
-    name=None,                                       \
-    prefs=None)
+    ContrastiveHebbianMechanism(                                    \
+                input_size=2,                                       \
+                hidden_size=None,                                   \
+                target_size=None,                                   \
+                separated:bool=True,                                \
+                mode=None,                                          \
+                continuous=True,                                    \
+                clamp=HARD_CLAMP,                                   \
+                function=Linear,                                    \
+                combination_function=LinearCombination,             \
+                matrix=HOLLOW_MATRIX,                               \
+                auto=None,                                          \
+                hetero=None,                                        \
+                initial_value=None,                                 \
+                noise=0.0,                                          \
+                integration_rate=0.5,                               \
+                integrator_mode=False,                              \
+                integration_rate=0.5,                               \
+                clip=[float:min, float:max],                        \
+                convergence_function=Distance(metric=MAX_ABS_DIFF), \
+                convergence_criterion=0.01,                         \
+                max_passes=None,                                    \
+                enable_learning=False,                              \
+                learning_rate=None,                                 \
+                learning_function=ContrastiveHebbian,               \
+                additional_input_states=None,                       \
+                additional_output_states=None,                      \
+                params=None,                                        \
+                name=None,                                          \
+                prefs=None)
 
     Subclass of `RecurrentTransferMechanism` that implements a single-layer auto-recurrent network using two-phases
     of execution and the `Contrastive Hebbian Learning algorithm
@@ -680,8 +695,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 # default_variable=None,
-                 # size=None,
                  input_size:int,
                  hidden_size:tc.optional(int)=None,
                  target_size:tc.optional(int)=None,
