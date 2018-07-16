@@ -124,6 +124,17 @@ The values of **input_size**, **hidden_size** and **target_size** are assigned t
 `input_size <ContrastiveHebbianMechanism.input_size>`, `hidden_size <ContrastiveHebbianMechanism.hidden_size>`,
 and `target_size <ContrastiveHebbianMechanism.target_size>` attributes, respectively.
 
+.. _ContrastiveHebbian_Fields:
+
+The `input_size <ContrastiveHebbianMechanism.input_size>` and `target_size <ContrastiveHebbianMechanism.target_size>`
+(if **separated** is `True`) attribute(s) are used to define the fields of he *RECURRENT* InputState's `value
+<InputState.value>` and the `current_activity <ContrastiveHebbianMechanism>` attribute used for updating values
+during `ContrastiveHebbian_Processing, as follows:
+
+*input_field:*  the leftmost number of elements determined by `input_size <ContrastiveHebbianMechanism.input_size>`;
+
+*target_field:* the rightmost number of elements determined by `target_size <ContrastiveHebbianMechanism.target_size>`.
+
 .. _ContrastiveHebbian_Functions:
 
 Functions
@@ -191,12 +202,12 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
 * *plus phase:* in each execution, the `value <InputState.value>` of the *RECURRENT* InputState
   (received from the `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>` is combined with the
   `value <InputState.value>` of the *INPUT* InputState as well as the *TARGET* InputState if that
-  is specified (see `ContrastiveHebbian_Input`).  Note that if **separated** is `True` (which it is by default),
-  then the `value <InputState.value>` of *INPUT* and of *TARGET* are combined with different fields
-  of the `value <InputState.value>` of *RECURRENT*:  *INPUT* is combined with the leftmost number of
-  elements determined by `input_size <ContrastiveHebbianMechanism.input_size>`;  *TARGET* is combined with the
-  rightmost number of elements determined by `target_size <ContrastiveHebbianMechanism.target_size>`.  Note that if
-  `hidden_size <ContrastiveHebbianMechanism.hidden_size>` is not 0, then those elements are updated only by the
+  is specified (see `ContrastiveHebbian_Input`).
+
+  Note that if **separated** is `True` (which it is by default), then the `value <InputState.value>` of *INPUT* and
+  of *TARGET* are combined with different `fields <ContrastiveHebbian_Fields>` of the `value <InputState.value>` of
+  *RECURRENT*:  *INPUT* is combined with the *input_field* and  *TARGET* is combined with the target_field.  Note
+  that if `hidden_size <ContrastiveHebbianMechanism.hidden_size>` is not 0, then those elements are updated only by the
   `value <AutoAssociativeProjection.value>` of the Mechanism's `recurrent_projection
   <ContrastiveHebbianMechanism.recurrent_projection>`.
 
@@ -218,11 +229,12 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   <ContrastiveHebbianMechanism.plus_phase_activity>` attribute, and the *minus phase* is begun.
 ..
 
-MENTION continuous HERE
-* *minus phase:* the Mechanism's previous `value <ContrastiveHebbianMechanism.value>` is reinitialized
-  to `initial_value <ContrastiveHebbianMechanism.initial_value>`, and then executed using
-  only its *RECURRENT* `input <ContrastiveHebbian_Input>`. Otherwise, execution proceeds
-  as during the plus phase, completing when `is_converged <ContrastiveHebbianMechanism>` is `True`. At that point,
+* *minus phase:*  if `continuous <ContrastiveHebbianMechanism.continuous>` is `False`, the `value <InputState.value>`
+  of the *RECURRENT* InputState (and the Mechanism's previous_value <ContrastiveHebbianMechanism.previous_value>`
+  attribute) are reinitialized to `initial_value <ContrastiveHebbianMechanism.initial_value>`;  otherwise, these
+  retain their value from the last execution in the *plus phase*.  In either case, execution proceeds as during the
+  *plus phase*, completing when `delta <ContrastiveHebbianMechanism.delta>` is equal to or less than
+  `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  At that point,
   the *minus phase* is completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned
   to `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`.
 
@@ -230,8 +242,14 @@ If `max_passes <ContrastiveHebbianMechanism.max_passes>` is specified, and the n
 reaches that value, an error is generated.  Otherwise, once a trial of execution is complete (i.e, after completion
 of the *minus phase*), the following computations and assignments are made:
 
-* the value of `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned to the
-  *CURRENT_ACTIVITY* `OutputState <ContrastiveHebbian_Output>`;
+* if a *TARGET* InputState `has been specified <ContrastiveHebbian_Input>`, then the `*target field*
+  <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>` is assigned as
+  `value <OutputState.value>` of *OUTPUT_ACTIVITY_OUTPUT* `OutputState <ContrastiveHebbian_Output>`;  otherwise,
+  it is assigned the value of the `*input_field* <ContrastiveHebbian_Fields>` of `current_activity
+  <ContrastiveHebbianMechanism.current_activity>`.
+..
+* `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned as the `value
+  <OutputState.value>` of the *CURRENT_ACTIVITY* `OutputState <ContrastiveHebbian_Output>`;
 ..
 * the difference between `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` and
   `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` is assigned as the `value
