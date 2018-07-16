@@ -127,13 +127,17 @@ and `target_size <ContrastiveHebbianMechanism.target_size>` attributes, respecti
 .. _ContrastiveHebbian_Fields:
 
 The `input_size <ContrastiveHebbianMechanism.input_size>` and `target_size <ContrastiveHebbianMechanism.target_size>`
-(if **separated** is `True`) attribute(s) are used to define the fields of he *RECURRENT* InputState's `value
-<InputState.value>` and the `current_activity <ContrastiveHebbianMechanism>` attribute used for updating values
-during `ContrastiveHebbian_Processing, as follows:
+(if **separated** is `True`) attribute(s), together with the `separated <ContrastiveHebbianMechanism>` attribute
+are used to define the fields of the *RECURRENT* InputState's `value <InputState.value>` and the `current_activity
+<ContrastiveHebbianMechanism>` attribute used for updating values during `ContrastiveHebbian_Processing, as follows:
 
 *input_field:*  the leftmost number of elements determined by `input_size <ContrastiveHebbianMechanism.input_size>`;
 
-*target_field:* the rightmost number of elements determined by `target_size <ContrastiveHebbianMechanism.target_size>`.
+*hidden_field:*  the elements of the *RECURRENT* InputState and `current_activity <ContrastiveHebbianMechanism>` that
+    are not within the *input_field* and/or *target_field*;
+
+*target_field:* the rightmost number of elements determined by `target_size <ContrastiveHebbianMechanism.target_size>`
+    if `separated <ContrastiveHebbianMechanism>` is `True`;  otherwise, the same as *input_field*.
 
 .. _ContrastiveHebbian_Functions:
 
@@ -424,8 +428,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     ---------
 
     input_size : int : default 0
+        specifies the size of the *INPUT* `InputState <ContrastiveHebbian_Input>` and number of units in the
+        `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>`.
 
     hidden_size : int : default None
+        specifies the number of units reserved as hidden units in `current_activity <ContrastiveHebbian.current_activity>`.
 
     target_size : int : default None
 
@@ -529,10 +536,34 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     ----------
 
     input_size : int
+        size of the *INPUT* `InputState <ContrastiveHebbian_Input>` and number of units in the `input_field
+        <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>` and
+        `input_activity <ContrastiveHebbianMechanism.input_activity>`
+
+    input_activity : 1d array
+        activity values of units in the `input_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>`.
 
     hidden_size : int
+        number of units in the `hidden_field <ContrastiveHebbian_Fields>` of the *RECURRENT* `InputState
+        <ContrastiveHebbian_Input>` and `current_activity <ContrastiveHebbian.current_activity>` and in
+        `hidden_activity <ContrastiveHebbianMechanism.input_activity>`.
+
+    hidden_activity : 1d array or None
+        activity values of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>`;  `None` if hidden_size = 0 or mode = `SIMPLE_HEBBIAN
+        <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
 
     target_size : int
+        size of the *TARGET* `InputState <ContrastiveHebbian_Input>` `if specified <ContrastiveHebbian_Creation>` and,
+        if so, the number of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbian.current_activity>` and in `target_activity <ContrastiveHebbianMechanism.target_activity>`.
+
+    target_activity : 1d array or None
+        activity values of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>` if *TARGET* `InputState <ContrastiveHebbian_Input>` `is
+        specified <ContrastiveHebbian_Creation>`;  `None` if target_size = 0 or mode = `SIMPLE_HEBBIAN
+        <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
 
     target_start : int
 
