@@ -365,15 +365,6 @@ class Composition(object):
         # helper attributes
         self.mechanisms_to_roles = collections.OrderedDict()
 
-        # Create lists to track identity of certain mechanism classes within the
-        # composition.
-        # Explicit classes:
-        self.explicit_input_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_input_mechanisms = []
-        self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_output_mechanisms = []
-        self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
-
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
@@ -723,7 +714,7 @@ class Composition(object):
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
         try:
-            return set([mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]])
+            return [mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]]
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
@@ -869,7 +860,7 @@ class Composition(object):
         # NOTE: This may need to change from default_variable to wherever a default value of the mechanism's variable
         # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
         # its default variable value
-        for mech in origins.difference(set(current_mechanisms)):
+        for mech in set(origins).difference(set(current_mechanisms)):
             self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.value
 
 
