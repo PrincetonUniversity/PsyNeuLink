@@ -10,6 +10,8 @@
 """
 .. _ContrastiveHebbian_Overview:
 
+*** NEEDS UPDATING ****
+
 Overview
 --------
 
@@ -80,7 +82,7 @@ Functions
 A ContrastiveHebbianMechanism executes to convergence in each `phase of execution <ContrastiveHebbian_Execution>`
 and thus must be assigned both a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and a
 `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  The defaults are a `Distance` Function
-using the `MAX_DIFF` metric, and a `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`
+using the `MAX_ABS_DIFF` metric, and a `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`
 of 0.01. The `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
 `ContrastiveHebbian`, but it can be replaced by any function that takes two 1d arrays ("activity states") and
 compares them to determine the `matrix <MappingProjection.matrix>` of the Mechanism's `recurrent_projection
@@ -181,26 +183,43 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import \
-    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON
+    ContrastiveHebbian, Distance, Function, Linear, LinearCombination, is_function_type, EPSILON, get_matrix
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism, RECURRENT_INDEX, CONVERGENCE
+    RecurrentTransferMechanism, RECURRENT, CONVERGENCE
 from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HOLLOW_MATRIX, MAX_DIFF, NAME, VARIABLE
+    CONTRASTIVE_HEBBIAN_MECHANISM, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, \
+    MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 
 __all__ = [
-    'ConstrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
-    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT',
-    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT',
+    'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
+    'ACTIVITY_DIFFERENCE_OUTPUT', 'CURRENT_ACTIVITY_OUTPUT', 'SIMPLE_HEBBIAN', 'INPUT',
+    'MINUS_PHASE_ACTIVITY', 'MINUS_PHASE_OUTPUT', 'PLUS_PHASE_ACTIVITY', 'PLUS_PHASE_OUTPUT'
 ]
 
+INPUT = 'INPUT'
+
+INPUT_SIZE = 'input_size'
+HIDDEN_SIZE = 'hidden_size'
+TARGET_SIZE = 'target_size'
+SEPARATED = 'separated'
+
+SIMPLE_HEBBIAN = 'SIMPLE_HEBBIAN'
+
+INPUT_INDEX = 0
+TARGET_INDEX = 1
+RECURRENT_INDEX = 2
+
+OUTPUT_ACTIVITY = 'output_activity'
 CURRENT_ACTIVITY = 'current_activity'
 PLUS_PHASE_ACTIVITY = 'plus_phase_activity'
 MINUS_PHASE_ACTIVITY = 'minus_phase_activity'
 
+OUTPUT_ACTIVITY_OUTPUT = 'OUTPUT_ACTIVITY_OUTPUT'
 CURRENT_ACTIVITY_OUTPUT = 'CURRENT_ACTIVITY_OUTPUT'
 ACTIVITY_DIFFERENCE_OUTPUT = 'ACTIVITY_DIFFERENCE_OUTPUT'
 PLUS_PHASE_OUTPUT = 'PLUS_PHASE_OUTPUT'
@@ -210,7 +229,7 @@ PLUS_PHASE  = True
 MINUS_PHASE = False
 
 
-class ConstrastiveHebbianError(Exception):
+class ContrastiveHebbianError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -271,7 +290,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     integrator_mode=False,                           \
     integration_rate=0.5,                            \
     clip=[float:min, float:max],                     \
-    convergence_function=Distance(metric=MAX_DIFF),  \
+    convergence_function=Distance(metric=MAX_ABS_DIFF),  \
     convergence_criterion=0.01,                      \
     max_passes=None,                                 \
     enable_learning=False,                           \
@@ -347,12 +366,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`;
         see `clip <TransferMechanism.clip>` for additional details.
 
-    convergence_function : function : default Distance(metric=MAX_DIFF)
+    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
         by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
         <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
         as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is the `Distance`
-        Function, using the `MAX_DIFF` metric  which computes
+        Function, using the `MAX_ABS_DIFF` metric  which computes
         the elementwise difference between two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
@@ -547,7 +566,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:CURRENT_ACTIVITY_OUTPUT,
+    standard_output_states.extend([{NAME:OUTPUT_ACTIVITY_OUTPUT,
+                                    VARIABLE:OUTPUT_ACTIVITY},
+                                   {NAME:CURRENT_ACTIVITY_OUTPUT,
                                     VARIABLE:CURRENT_ACTIVITY},
                                    {NAME:ACTIVITY_DIFFERENCE_OUTPUT,
                                     VARIABLE:[PLUS_PHASE_ACTIVITY, MINUS_PHASE_ACTIVITY],
@@ -560,10 +581,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
-                 combination_function:is_function_type=LinearCombination,
+                 # default_variable=None,
+                 # size=None,
+                 input_size:int,
+                 hidden_size:int,
+                 target_size:int,
+                 separated:bool=True,
+                 mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
+                 continuous:bool=True,
+                 clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
                  function=Linear,
                  matrix=HOLLOW_MATRIX,
                  auto=None,
@@ -573,25 +599,63 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  integrator_mode:bool=False,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_DIFF),
+                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = ContrastiveHebbian,
+                 additional_input_states:tc.optional(tc.any(list, dict)) = None,
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None):
 
-        """Instantiate ContrastiveHebbianMechanism"""
+        """Instantiate ContrastiveHebbianMechanism
+        :type mode: object
+        :type clamp: object
+        """
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
+        if mode is SIMPLE_HEBBIAN:
+            clamp = SOFT_CLAMP
+            separated = False
+            continuous = False
 
-        output_states = [CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.target_size = target_size
+        self.separated = separated
+        self.recurrent_size = input_size + hidden_size
+        if separated:
+            self.recurrent_size += target_size
+            self.target_start = input_size + hidden_size
+        else:
+            self.target_start = 0
+        self.target_end = self.target_start + self.target_size
+        size = self.recurrent_size
+
+        # self.clamp = clamp
+        # self.continuous = continuous
+
+        default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
+
+        # Set InputState sizes in _instantiate_input_states,
+        #    so that there is no conflict with parsing of Mechanism's size
+        input_states = [INPUT, TARGET, RECURRENT]
+
+        if additional_input_states:
+            if isinstance(additional_input_states, list):
+                input_states += additional_input_states
+            else:
+                input_states.append(additional_input_states)
+
+        combination_function = self.combination_function
+
+        output_states = [OUTPUT_ACTIVITY_OUTPUT, CURRENT_ACTIVITY_OUTPUT, ACTIVITY_DIFFERENCE_OUTPUT]
         if additional_output_states:
             if isinstance(additional_output_states, list):
                 output_states += additional_output_states
@@ -599,10 +663,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 output_states.append(additional_output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(output_states=output_states,
+        params = self._assign_args_to_param_dicts(mode=mode,
+                                                  clamp=clamp,
+                                                  continuous=continuous,
+                                                  input_states=input_states,
+                                                  output_states=output_states,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
+        super().__init__(
+                         default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          combination_function=combination_function,
@@ -628,15 +697,57 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #     # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
+    #     size = self.variable.size
+    #     if self.separated and self.input_size != self.target_size:
+    #         raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
+    #                                       format(repr(SEPARATED), repr(True), self.name,
+    #                                              repr(INPUT_SIZE), self.input_size,
+    #                                              repr(TARGET_SIZE), self.target_size))
+    #
+
+    def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
+
+        # Assign InputState specification dictionaries for required InputStates
+        sizes = dict(INPUT=self.input_size, RECURRENT=self.recurrent_size, TARGET=self.target_size)
+        for i, input_state in enumerate((s for s in self.input_states if s in {INPUT, TARGET, RECURRENT})):
+            self.input_states[i] = {NAME:input_state, SIZE: sizes[input_state]}
+
+        super()._instantiate_input_states(input_states, reference_value, context)
+
+        self.input_states[RECURRENT].internal_only = True
+        self.input_states[TARGET].internal_only = True
+
+    @tc.typecheck
+    def _instantiate_recurrent_projection(self,
+                                          mech: Mechanism,
+                                          # this typecheck was failing, I didn't want to fix (7/19/17 CW)
+                                          # matrix:is_matrix=HOLLOW_MATRIX,
+                                          matrix=HOLLOW_MATRIX,
+                                          context=None):
+        """Instantiate an AutoAssociativeProjection from Mechanism to itself
+        """
+
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+        if isinstance(matrix, str):
+            size = len(mech.instance_defaults.variable[0])
+            matrix = get_matrix(matrix, size, size)
+
+        return AutoAssociativeProjection(owner=mech,
+                                         sender=self.output_states[CURRENT_ACTIVITY_OUTPUT],
+                                         receiver=self.input_states[RECURRENT],
+                                         matrix=matrix,
+                                         name=mech.name + ' recurrent projection')
+
     def _instantiate_attributes_after_function(self, context=None):
 
         # Assign these after instantiation of function, since they are initialized in _execute (see below)
-        self.attributes_dict_entries.update({CURRENT_ACTIVITY:CURRENT_ACTIVITY,
+        self.attributes_dict_entries.update({OUTPUT_ACTIVITY:OUTPUT_ACTIVITY,
+                                             CURRENT_ACTIVITY:CURRENT_ACTIVITY,
                                              PLUS_PHASE_ACTIVITY:PLUS_PHASE_ACTIVITY,
                                              MINUS_PHASE_ACTIVITY:MINUS_PHASE_ACTIVITY})
-
         super()._instantiate_attributes_after_function(context=context)
-
 
     def _execute(self,
                  variable=None,
@@ -648,96 +759,125 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Set plus_phase, minus_phase activity, current_activity and initial_value
             #    all  to zeros with size of Mechanism's array
             self._initial_value = self.current_activity = self.plus_phase_activity = self.minus_phase_activity = \
-                self.input_state.socket_template
+                self.input_states[RECURRENT].socket_template
+            self.output_activity = self.input_states[TARGET].socket_template
             self.execution_phase = None
 
         # Initialize execution_phase
         if self.execution_phase is None:
             self.execution_phase = PLUS_PHASE
-        # # USED FOR TEST PRINT BELOW:
-        # curr_phase = self.execution_phase
+        # USED FOR TEST PRINT BELOW:
+        curr_phase = self.execution_phase
 
         if self.is_finished == True:
             # If current execution follows completion of a previous trial,
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
-            variable[RECURRENT_INDEX] = self.input_state.socket_template
+            variable[RECURRENT_INDEX] = self.input_states[RECURRENT].socket_template
 
         self.is_finished = False
+
+        # Need to store this, as it will be updated in call to super
+        previous_value = self.previous_value
 
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
                                             runtime_params=runtime_params,
                                             context=context)
 
-        if self.previous_value is None:
-            return current_activity
+        self.output_activity = self.current_activity[self.target_start:self.target_end]
 
-        try:
-            current_activity = np.squeeze(current_activity)
-            # Set value of primary OutputState to current activity
-            self.current_activity = current_activity
-        except:
-            assert False
+        current_activity = np.squeeze(current_activity)
+        # Set value of primary OutputState to current activity
+        self.current_activity = current_activity
 
+
+        # TEST PRINT:
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
+            print("--------------------------------------------",
+                  "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
+                                                                self.current_execution_time.pass_,
+                                                                self.current_execution_time.time_step),
+                  "\nCONTEXT: {}".format(self.context.flags_string),
+                  '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
+                  '\nvariable: ', variable,
+                  '\ninput:', self.function_object.variable,
+                  '\nMATRIX:', self.matrix,
+                  '\ncurrent activity: ', self.current_activity,
+                  '\noutput activity: ', self.output_activity,
+                  '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
+                  '\ndelta: ', self.delta if self.previous_value is not None else 'None',
+                  '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
+                  )
+
+        # This is the first trial, so can't test for convergence
+        #    (since that requires comparison with value from previous trial)
+        if previous_value is None:
+            return self.current_activity
 
         if self.is_converged:
-            # Terminate if this is the end of the minus phase
+            # Terminate if this is the end of the minus phase, prepare for next trial
             if self.execution_phase == MINUS_PHASE:
                 # Store activity from last execution in minus phase
                 self.minus_phase_activity = current_activity
                 # Set value of primary outputState to activity at end of plus phase
                 self.current_activity = self.plus_phase_activity
+                self.output_activity = self.current_activity[self.target_start:self.target_end]
                 self.is_finished = True
 
             # Otherwise, prepare for start of minus phase on next execution
             else:
                 # Store activity from last execution in plus phase
-                self.plus_phase_activity = current_activity
-                # self.plus_phase_activity = self.current_activity
+                self.plus_phase_activity = self.current_activity
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
-                #    and the Mechanism's current activity (which is returned as it input)
-                self.reinitialize(self.initial_value)
-                self.current_activity = self.initial_value
-
-            # # USED FOR TEST PRINT BELOW:
-            # curr_phase = self.execution_phase
+                #    and the Mechanism's current activity (which is returned as its input)
+                if not self.continuous:
+                    self.reinitialize(self.initial_value)
+                    self.current_activity = self.initial_value
 
             # Switch execution_phase
             self.execution_phase = not self.execution_phase
-        # MODIFIED 7/7/18 END
-
-        # # TEST PRINT:
-        # print("--------------------------------------------",
-        #       "\nTRIAL: {}  PASS: {}".format(self.current_execution_time.trial, self.current_execution_time.pass_),
-        #       '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-        #       '\nvariable: ', variable,
-        #       '\ninput:', self.function_object.variable,
-        #       '\nMATRIX:', self.matrix,
-        #       '\ncurrent activity: ', self.current_activity,
-        #       '\ndiff: ', self._output,
-        #       '\nis_finished: ', self.is_finished
-        #       )
 
         return current_activity
         # return self.current_activity
 
     def _parse_function_variable(self, variable, context=None):
+        function_variable = self.combination_function(variable, context)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context)
 
-        try:
+    def combination_function(self, variable, context):
+        # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization
+        # IMPLEMENTATION NOTE: separated vs. overlapping input and target handled by assignment of target_start in init
+
+        MINUS_PHASE_INDEX = INPUT_INDEX
+        PLUS_PHASE_INDEX = TARGET_INDEX
+
+        try:  # Execution
             if self.execution_phase == PLUS_PHASE:
-                # Combine RECURRENT and EXTERNAL inputs
-                variable = self.combination_function.execute(variable)
+                if self.clamp == HARD_CLAMP:
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
+                    if self.mode is SIMPLE_HEBBIAN:
+                        return variable[RECURRENT_INDEX]
+                    else:
+                        variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
+                else:
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
+                    if self.mode is SIMPLE_HEBBIAN:
+                        return variable[RECURRENT_INDEX]
+                    else:
+                        variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
             else:
-                # Only use RECURRENT input
-                variable = variable[RECURRENT_INDEX]                     # Original
-                # variable = np.zeros_like(variable[RECURRENT_INDEX])        # New
+                if self.mode is SIMPLE_HEBBIAN:
+                    return variable[RECURRENT_INDEX]
+                if self.clamp == HARD_CLAMP:
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
+                else:
+                    variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
+        except:  # Initialization
+            pass
 
-        except:
-            variable = variable[RECURRENT_INDEX]
-
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(variable, context)
+        return variable[RECURRENT_INDEX]
 
     @property
     def _learning_signal_source(self):

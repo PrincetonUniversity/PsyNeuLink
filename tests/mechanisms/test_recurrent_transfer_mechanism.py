@@ -374,7 +374,7 @@ class TestRecurrentTransferMechanismMatrix:
                 matrix=[[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
             )
 
-        assert "must be same as the size of variable" in str(error_text.value)
+        assert "must be the same as its variable" in str(error_text.value)
 
     def test_recurrent_mech_matrix_too_small(self):
         with pytest.raises(RecurrentTransferError) as error_text:
@@ -383,7 +383,7 @@ class TestRecurrentTransferMechanismMatrix:
                 size=5,
                 matrix=[[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
             )
-        assert "must be same as the size of variable" in str(error_text.value)
+        assert "must be the same as its variable" in str(error_text.value)
 
     def test_recurrent_mech_matrix_strings(self):
         with pytest.raises(UtilitiesError) as error_text:

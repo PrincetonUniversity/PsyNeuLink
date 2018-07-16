@@ -75,7 +75,7 @@ __all__ = [
     'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
+    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
     'CNodeRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
@@ -251,7 +251,7 @@ class DistanceMetrics:
     Attributes
     ----------
 
-    MAX_DIFF
+    MAX_ABS_DIFF
         :math:`d = |\\max(a_1-a_2)|`
 
     DIFFERENCE
@@ -281,7 +281,7 @@ class DistanceMetrics:
 
     """
     def __init__(self):
-        self.MAX_DIFF = MAX_DIFF
+        self.MAX_ABS_DIFF = MAX_ABS_DIFF
         self.DIFFERENCE = DIFFERENCE
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
@@ -308,7 +308,7 @@ class DistanceMetrics:
 
 
 DIFFERENCE = 'difference'
-MAX_DIFF = 'max_diff'
+MAX_ABS_DIFF = 'max_abs_diff'
 EUCLIDEAN = 'euclidean'
 ANGLE = 'angle'
 CORRELATION = 'correlation'

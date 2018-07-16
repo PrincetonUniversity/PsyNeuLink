@@ -438,6 +438,14 @@ class Composition(object):
 
         return self._scheduler_learning
 
+    @property
+    def termination_processing(self):
+        return self.scheduler_processing.termination_conds
+
+    @termination_processing.setter
+    def termination_processing(self, termination_conds):
+        self.scheduler_processing.termination_conds = termination_conds
+
     def _get_unique_id(self):
         return uuid.uuid4()
 
@@ -754,7 +762,8 @@ class Composition(object):
             raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
         try:
-            return set([node for node in self.c_nodes if role in self.c_nodes_to_roles[node]])
+            return [node for node in self.c_nodes if role in self.c_nodes_to_roles[node]]
+
         except KeyError as e:
             raise CompositionError('Node missing from {0}.c_nodes_to_roles: {1}'.format(self, e))
 
@@ -1140,8 +1149,9 @@ class Composition(object):
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs)
 
-        # self._assign_values_to_target_CIM_output_states(targets)
-        # execution_id = self._assign_execution_ids(execution_id)
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -1337,6 +1347,9 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
         self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
@@ -1382,12 +1395,10 @@ class Composition(object):
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
-
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_before_trial()
-
-            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
+            if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                                   execution_id=execution_id):
                 break
 

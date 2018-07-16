@@ -6,7 +6,8 @@ from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
+
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, ARRAY, DDMError, SELECTED_INPUT_ARRAY
 from psyneulink.scheduling.condition import WhenFinished, Never
 from psyneulink.scheduling.time import TimeScale
 
@@ -175,6 +176,18 @@ class TestThreshold:
     #     S = System(processes=[P])
     #
     #     sched = Scheduler(system=S)
+
+class TestOutputStates:
+
+    def test_selected_input_array(self):
+        action_selection = DDM(
+            input_format=ARRAY,
+            function=BogaczEtAl(
+            ),
+            output_states=[SELECTED_INPUT_ARRAY],
+            name='DDM'
+        )
+        action_selection.execute([1.0])
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

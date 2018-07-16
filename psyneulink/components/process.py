@@ -1661,6 +1661,8 @@ class Process(Process_Base):
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
@@ -1682,6 +1684,8 @@ class Process(Process_Base):
         #     instantiate multiple Process input states each with a Projection to the single mechanism.input_state
         else:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 for j in range(num_process_inputs):
                     if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
