@@ -40,13 +40,17 @@ Creation
 --------
 
 When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
-<RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`, and is
-automatically assigned two of its four `Standard OutputStates <ContrastiveHebbianMechanism_Standard_OutputStates>`:
-*CURRENT_ACTIVITY_OUTPUT* and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional
-OutputStates can be specified in the **additional_output_states** argument of its constructor.  A
-ContrastiveHebbianMechanism  must have both a `convergence_function <ContrastiveHebbianMechanism.convergence_function>`
-and `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase
-of execution completes <ContrastiveHebbian_Execution>`.
+<RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`.  Its
+**input_size** argument must be specified.  If it is specified on its own, it determines the total number of
+processing units (i.e., it function as the standard **size** argument of a `Component` (see `size <Component.size>`).
+If either the **hidden_size** and/or **target_size** arguments are specified, then those units are treated as distinct
+from the input units (see `ContrastiveHebbian_Input` for details). A ContrastiveHebbianMechanism also must have both
+a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
+<ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase of execution completes
+<ContrastiveHebbian_Execution>`. The Mechanism is automatically assigned three of its five `Standard OutputStates
+<ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
+and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be
+specified in the **additional_output_states** argument of its constructor.
 
 .. _ContrastiveHebbian_Learning:
 
@@ -70,9 +74,21 @@ Input
 
 When a ContrastiveHebbianMechanism is created, its `has_recurrent_input_state
 <RecurrentTransferMechanism.has_recurrent_input_state>` attribute is automatically assigned as `True`), and thus
-it always has at least two `InputStates <InputState>`: *RECURRENT* and *EXTERNAL*.  This is so that, during the
-`minus phase of execution <ContrastiveHebbian_Execution>`, it's inpuyt can be restricted to it `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>`.
+it always has at least two, and possibly three `InputStates <InputState>`: *RECURRENT*, *EXTERNAL*,
+and possibly *TARGET*.
+
+This is so
+that, during the
+`minus phase of execution <ContrastiveHebbian_Execution>`, it's input can be managed separately from its
+`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.  If
+
+xxx
+, which designates both the number of target processing units and the size of its
+*OUTPUT_ACTIVITY_OUTPUT* `OutputState`
+xxx
+
+
+
 
 .. _ContrastiveHebbian_Functions:
 
@@ -211,8 +227,8 @@ SEPARATED = 'separated'
 SIMPLE_HEBBIAN = 'SIMPLE_HEBBIAN'
 
 INPUT_INDEX = 0
-TARGET_INDEX = 1
-RECURRENT_INDEX = 2
+RECURRENT_INDEX = 1
+TARGET_INDEX = 2
 
 OUTPUT_ACTIVITY = 'output_activity'
 CURRENT_ACTIVITY = 'current_activity'
@@ -584,8 +600,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  # default_variable=None,
                  # size=None,
                  input_size:int,
-                 hidden_size:int,
-                 target_size:int,
+                 hidden_size:tc.optional(int)=None,
+                 target_size:tc.optional(int)=None,
                  separated:bool=True,
                  mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
                  continuous:bool=True,
@@ -612,25 +628,22 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  prefs: is_pref_set=None):
 
         """Instantiate ContrastiveHebbianMechanism
-        :type mode: object
-        :type clamp: object
         """
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
-                                                               indices=PRIMARY)
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states, indices=PRIMARY)
+
         if mode is SIMPLE_HEBBIAN:
             clamp = SOFT_CLAMP
             separated = False
             continuous = False
 
         self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.target_size = target_size
+        self.hidden_size = hidden_size or 0
+        self.target_size = target_size or 0
         self.separated = separated
         self.recurrent_size = input_size + hidden_size
-        if separated:
+        if separated and target_size:
             self.recurrent_size += target_size
             self.target_start = input_size + hidden_size
         else:
@@ -638,14 +651,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
-        # self.clamp = clamp
-        # self.continuous = continuous
 
-        default_variable = [np.zeros(input_size), np.zeros(target_size), np.zeros(self.recurrent_size)]
-
+        # # MODIFIED 7/16/18 OLD:
+        # default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size), np.zeros(target_size)]
+        # # Set InputState sizes in _instantiate_input_states,
+        # #    so that there is no conflict with parsing of Mechanism's size
+        # input_states = [INPUT, RECURRENT, TARGET]
+        # MODIFIED 7/16/18 NEW:
+        default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputState sizes in _instantiate_input_states,
         #    so that there is no conflict with parsing of Mechanism's size
-        input_states = [INPUT, TARGET, RECURRENT]
+        input_states = [INPUT, RECURRENT]
+        if target_size:
+            default_variable.append(np.zeros(target_size))
+            input_states.append(TARGET)
+        # MODIFIED 7/16/18 END
 
         if additional_input_states:
             if isinstance(additional_input_states, list):
@@ -697,15 +717,17 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    # def _validate_params(self, request_set, target_set=None, context=None):
-    #     # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
-    #     size = self.variable.size
-    #     if self.separated and self.input_size != self.target_size:
-    #         raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
-    #                                       format(repr(SEPARATED), repr(True), self.name,
-    #                                              repr(INPUT_SIZE), self.input_size,
-    #                                              repr(TARGET_SIZE), self.target_size))
-    #
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Make sure that the size of the INPUT and TARGET InputStates are <= size of RECURRENT InputState
+        if self.separated and self.target_size and self.input_size != self.target_size:
+            raise ContrastiveHebbianError("{} is {} for {} must equal {} ({}) must equal {} ({})} ".
+                                          format(repr(SEPARATED), repr(True), self.name,
+                                                 repr(INPUT_SIZE), self.input_size,
+                                                 repr(TARGET_SIZE), self.target_size))
+
 
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
 
