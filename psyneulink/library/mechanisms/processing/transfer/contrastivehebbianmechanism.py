@@ -10,6 +10,8 @@
 """
 .. _ContrastiveHebbian_Overview:
 
+*** NEEDS UPDATING ****
+
 Overview
 --------
 
