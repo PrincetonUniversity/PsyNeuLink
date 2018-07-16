@@ -797,7 +797,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                   '\ninput:', self.function_object.variable,
                   '\nMATRIX:', self.matrix,
                   '\ncurrent activity: ', self.current_activity,
-                  '\noutput activty: ', self.output_activity,
+                  '\noutput activity: ', self.output_activity,
                   '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
                   '\ndelta: ', self.delta if self.previous_value is not None else 'None',
                   '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
@@ -815,6 +815,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.minus_phase_activity = current_activity
                 # Set value of primary outputState to activity at end of plus phase
                 self.current_activity = self.plus_phase_activity
+                self.output_activity = self.current_activity[self.target_start:self.target_end]
                 self.is_finished = True
 
             # Otherwise, prepare for start of minus phase on next execution
@@ -863,7 +864,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 if self.mode is SIMPLE_HEBBIAN:
                     return variable[RECURRENT_INDEX]
                 if self.clamp == HARD_CLAMP:
-                    variable[RECURRENT_INDEX][:self.input_size] = vardiable[MINUS_PHASE_INDEX]
+                    variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
         except:  # Initialization

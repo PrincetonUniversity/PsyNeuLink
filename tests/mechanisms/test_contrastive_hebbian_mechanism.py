@@ -179,7 +179,7 @@ class TestContrastiveHebbian:
                 input_size=2, hidden_size=0, target_size=2,
                 mode=pnl.SIMPLE_HEBBIAN,
                 separated=False,
-                matrix=[[0,-1],[-1,0]]
+                matrix=[[0,-.5],[-.5,0]]
         )
 
         with pytest.warns(UserWarning) as record:
@@ -202,4 +202,7 @@ class TestContrastiveHebbian:
         s.scheduler_processing=ms
         results = s.run(inputs=[2,2], num_trials=4)
 
-        np.testing.assert_allclose(results, [[[4.]], [[2.23061754]], [[2.3088827]], [[2.39958265]]])
+        np.testing.assert_allclose(results, [[[2.671875]],
+                                             [[2.84093837]],
+                                             [[3.0510183]],
+                                             [[3.35234623]]])
