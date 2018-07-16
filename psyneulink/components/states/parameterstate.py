@@ -891,6 +891,11 @@ class ParameterState(State_Base):
                 name = self.function_object.multiplicative_param
             elif afferent.sender.modulation is ModulationParam.ADDITIVE:
                 name = self.function_object.additive_param
+            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
+                # Directly store the value in the output array
+                output_ptr = builder.gep(output, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(f_mod, output_ptr)
+                return builder
             else:
                 print("Unsupported modulation parameter: ", afferent.sender.modulation)
                 assert False
