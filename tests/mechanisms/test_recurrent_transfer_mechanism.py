@@ -91,7 +91,10 @@ class TestRecurrentTransferMechanismInputs:
         assert R.recurrent_projection.sender is R.output_state
         assert R.recurrent_projection.receiver is R.input_state
 
-    def test_recurrent_mech_inputs_list_of_ints(self):
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    def test_recurrent_mech_inputs_list_of_ints(self, benchmark):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
@@ -100,14 +103,19 @@ class TestRecurrentTransferMechanismInputs:
         np.testing.assert_allclose(val, [[10.0, 12.0, 0, -1]])
         val = R.execute([1, 2, 3, 0])
         np.testing.assert_allclose(val, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+        benchmark(R.execute, [1, 2, 3, 0])
 
-    def test_recurrent_mech_inputs_list_of_floats(self):
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    def test_recurrent_mech_inputs_list_of_floats(self, benchmark):
         R = RecurrentTransferMechanism(
             name='R',
             size=4
         )
         val = R.execute([10.0, 10.0, 10.0, 10.0])
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        benchmark(R.execute, [1, 2, 3, 0])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -122,13 +130,17 @@ class TestRecurrentTransferMechanismInputs:
     #     for i in range(len(val[0])):
     #         np.testing.assert_allclose(val[0][i], expected[0][i])
 
-    def test_recurrent_mech_no_inputs(self):
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    def test_recurrent_mech_no_inputs(self, benchmark):
         R = RecurrentTransferMechanism(
             name='R'
         )
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
         val = R.execute([10])
         np.testing.assert_allclose(val, [[10.]])
+        benchmark(R.execute, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(UtilitiesError) as error_text:
