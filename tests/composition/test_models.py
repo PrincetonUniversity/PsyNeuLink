@@ -208,3 +208,54 @@ class TestStroopModels:
 
         bidirectional_stroop.run(inputs=input_dict)
 
+
+    def test_DDM(self):
+        myMechanism = pnl.DDM(
+            function=pnl.BogaczEtAl(
+                drift_rate=(1.0),
+                threshold=(10.0),
+                starting_point=0.0,
+            ),
+            name='My_DDM',
+        )
+
+        myMechanism_2 = pnl.DDM(
+            function=pnl.BogaczEtAl(
+                drift_rate=2.0,
+                threshold=20.0),
+            name='My_DDM_2'
+        )
+
+        myMechanism_3 = pnl.DDM(
+            function=pnl.BogaczEtAl(
+                drift_rate=3.0,
+                threshold=30.0
+            ),
+            name='My_DDM_3',
+        )
+
+        z = pnl.Composition()
+        z.add_linear_processing_pathway([myMechanism,
+                                        pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX),
+                                        myMechanism_2,
+                                         pnl.MappingProjection(matrix=pnl.FULL_CONNECTIVITY_MATRIX),
+                                        myMechanism_3])
+
+        result = z.run(inputs={myMechanism: [[40]]})[0][0]
+
+        expected_output = [
+            (myMechanism.input_states[0].value, np.array([40.])),
+            (myMechanism.output_states[0].value, np.array([10.])),
+            (myMechanism_2.input_states[0].value, np.array([10.])),
+            (myMechanism_2.output_states[0].value, np.array([20.])),
+            (myMechanism_3.input_states[0].value, np.array([20.])),
+            (myMechanism_3.output_states[0].value, np.array([30.])),
+            (result, np.array([30.])),
+        ]
+
+        for i in range(len(expected_output)):
+            val, expected = expected_output[i]
+            # setting absolute tolerance to be in accordance with reference_output precision
+            # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+            # which WILL FAIL unless you gather higher precision values to use as reference
+            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
