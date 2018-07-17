@@ -197,6 +197,8 @@ Processing
 
 A ContrastiveHebbianMechanism always executes in two sequential phases, that together constitute a *trial of execution:*
 
+.. _ContrastiveHebbian_Plus_Phase:
+
 * *plus phase:* in each execution, the `value <InputState.value>` of the *RECURRENT* InputState
   (received from the `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>` is combined with the
   `value <InputState.value>` of the *INPUT* InputState as well as the *TARGET* InputState if that
@@ -227,23 +229,26 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   <ContrastiveHebbianMechanism.plus_phase_activity>` attribute, and the *minus phase* is begun.
 ..
 
-* *minus phase:*  if `continuous <ContrastiveHebbianMechanism.continuous>` is `False`, the `value <InputState.value>`
-  of the *RECURRENT* InputState (and the Mechanism's previous_value <ContrastiveHebbianMechanism.previous_value>`
-  attribute) are reinitialized to `initial_value <ContrastiveHebbianMechanism.initial_value>`;  otherwise, these
-  retain their value from the last execution in the *plus phase*.  In either case, execution proceeds as during the
-  *plus phase*, completing when `delta <ContrastiveHebbianMechanism.delta>` is equal to or less than
-  `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  At that point,
-  the *minus phase* is completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned
-  to `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`.
+.. _ContrastiveHebbian_Minus_Phase:
+
+* *minus phase:*  if `continuous <ContrastiveHebbianMechanism.continuous>` is `False`, `current_activity
+  <ContrastiveHebbianMechanism.current_activity>` and the Mechanism's `previous_value
+  <ContrastiveHebbianMechanism.previous_value>` attribute are reinitialized to `initial_value
+  <ContrastiveHebbianMechanism.initial_value>`;  otherwise, these retain their value from the last execution in the
+  *plus phase*.  In either case, execution proceeds as during the *plus phase*, completing when `delta
+  <ContrastiveHebbianMechanism.delta>` is equal to or less than `convergence_criterion
+  <ContrastiveHebbianMechanism.convergence_criterion>`.  At that point, the *minus phase* is completed, and the
+  `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned to `minus_phase_activity
+  <ContrastiveHebbianMechanism.minus_phase_activity>`.
 
 If `max_passes <ContrastiveHebbianMechanism.max_passes>` is specified, and the number of executions in either phase
 reaches that value, an error is generated.  Otherwise, once a trial of execution is complete (i.e, after completion
 of the *minus phase*), the following computations and assignments are made:
 
-* if a *TARGET* InputState `has been specified <ContrastiveHebbian_Input>`, then the `*target field*
+* if a *TARGET* InputState `has been specified <ContrastiveHebbian_Input>`, then the `target field
   <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>` is assigned as
   `value <OutputState.value>` of *OUTPUT_ACTIVITY_OUTPUT* `OutputState <ContrastiveHebbian_Output>`;  otherwise,
-  it is assigned the value of the `*input_field* <ContrastiveHebbian_Fields>` of `current_activity
+  it is assigned the value of the `input_field <ContrastiveHebbian_Fields>` of `current_activity
   <ContrastiveHebbianMechanism.current_activity>`.
 ..
 * `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` is assigned as the `value
@@ -487,10 +492,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
         by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
-        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the same length
-        as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is the `Distance`
-        Function, using the `MAX_ABS_DIFF` metric  which computes
-        the elementwise difference between two arrays and returns the difference with the maximum absolute value.
+        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the
+        same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is
+        the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
+        two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
         specifies the value of the `delta <ContrastiveHebbianMechanism.delta>`
@@ -540,49 +545,47 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>` and
         `input_activity <ContrastiveHebbianMechanism.input_activity>`
 
-    input_activity : 1d array
-        activity values of units in the `input_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbianMechanism.current_activity>`.
-
     hidden_size : int
         number of units in the `hidden_field <ContrastiveHebbian_Fields>` of the *RECURRENT* `InputState
         <ContrastiveHebbian_Input>` and `current_activity <ContrastiveHebbian.current_activity>` and in
         `hidden_activity <ContrastiveHebbianMechanism.input_activity>`.
 
-    hidden_activity : 1d array or None
-        activity values of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbianMechanism.current_activity>`;  `None` if hidden_size = 0 or mode = `SIMPLE_HEBBIAN
-        <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
-
     target_size : int
         size of the *TARGET* `InputState <ContrastiveHebbian_Input>` `if specified <ContrastiveHebbian_Creation>` and,
         if so, the number of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbian.current_activity>` and in `target_activity <ContrastiveHebbianMechanism.target_activity>`.
-
-    target_activity : 1d array or None
-        activity values of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbianMechanism.current_activity>` if *TARGET* `InputState <ContrastiveHebbian_Input>` `is
-        specified <ContrastiveHebbian_Creation>`;  `None` if target_size = 0 or mode = `SIMPLE_HEBBIAN
-        <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
+        <ContrastiveHebbian.current_activity>`, in `target_activity <ContrastiveHebbianMechanism.target_activity>`,
+        and the *OUTPUT_ACTIVITY_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
 
     target_start : int
+        index of first unit of `target_field <ContrastiveHebbian_Fields>`.
 
     target_end : int
+        index of first unit of `target_field <ContrastiveHebbian_Fields>`.
 
-    separated : bool
+    separated : bool : default True
+        determines whether `target_field <ContrastiveHebbian_Fields>` is different from `input_field
+        <ContrastiveHebbian_Fields>` (`True`) or the same (`False`).
 
     recurrent_size : int
-
-    continuous : bool
-
-    clamp : HARD_CLAMP or SOFT_CLAMP
+        size of *RECURRENT* `InputState <ContrastiveHebbian_Input>`, `current_activity
+        <ContrastiveHebbianMechanism.current_activity>` and *CURRENT_ACTIVITY_OUTPUT* `OutputState
+        <ContrastiveHebbian_Output>`.
 
     variable : value
         the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
 
     combination_function : method or function
-        used to combine `value <InputState.value>` of the *RECURRENT* and *EXTERNAL* `inputs
-        <ContrastiveHebbian_Input>`.  The default function adds them.
+        used to combine `value <InputState.value>` of the *INPUT* and *TARGET* (if specified)  `InputStates
+        <ContrastiveHebbian_Input>` are combined with that of the *RECURRENT* `InputState
+        <ContrastiveHebbian_Input>` to determine the `variable <CurrentHebbianMechanism.variable>` passed to the
+        Mechanism's `integrator_function <ContrastiveHebbianMechanism.integrator_function>` and/or its `function
+        <ContrastiveHebbianMechanism.function>`.
+
+    clamp : HARD_CLAMP or SOFT_CLAMP
+        determines whether the `value <InputState.value>` of the *INPUT* and *TARGET* (if specified) `InputStates
+        <ContrastiveHebbian_Input>` replace (*HARD_CLAMP*) or are added to (*SOFT_CLAMP*) the `value <InputState.value>`
+        of the *RECURRENT* InputState by `combination_function <ContrastiveHebbianMechanism.combination_function>`
+        to generate the Mechanism's `variable <ContrastiveHebbianMechanism.variable>` in each execution.
 
     function : Function
         used to transform the input and generate the Mechanism's `value <ContrastiveHebbianMechanism.value>`.
@@ -598,6 +601,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         determines the starting value for time-averaged input if `integrator_mode
         <ContrastiveHebbianMechanism.integrator_mode>` is `True`. See TransferMechanism's `initial_value
         <TransferMechanism.initial_value>` for additional details.
+
+    continuous : bool : default True
+        determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` and the Mechanism's
+        `previous_value <ContrastiveHebbianMechanism.previous_value>` attribute are reinitialized to `initial_value
+        <ContrastiveHebbianMechanism.initial_value>` at the beginning of the `minus phase
+        <ContrastiveHebbian_Minus_Phase>` of execution.
 
     noise : float or function
         When `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`, noise is passed into the
@@ -631,6 +640,25 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         the value of the actvity of the ContrastiveHebbianMechanism at `the current step of execution
         <ContrastiveHebbian_Execution>`.
 
+    input_activity : 1d array of floats
+        activity values of units in the `input_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>`.
+
+    hidden_activity : 1d array of floats or None
+        activity values of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>`;  `None` if hidden_size = 0 or mode = `SIMPLE_HEBBIAN
+        <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
+
+    target_activity : 1d array of floats or None
+        activity values of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>` if *TARGET* `InputState <ContrastiveHebbian_Input>` `is
+        specified <ContrastiveHebbian_Creation>`; same as `input_activity <ContrastiveHebbianMechanism.input_activity>`
+        if `separated <ContrastiveHebbianMechanism.separated>` is `False`;  `None` if target_size = 0 or mode =
+        `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
+
+    recurrent_activity : 1d array of floats
+        same as `current_activity <ContrastiveHebbianMechanism.current_activity>`
+
     plus_phase_activity : 1d array of floats
         the value of the `current_activity <ContrastiveHebbianMechanism.current_activity>` at the end of the
         `plus phase of execution <ContrastiveHebbian_Execution>`.
@@ -643,12 +671,14 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` on the `previous
         execution in the current phase <ContrastiveHebbian_Execution>`.
 
+    XXX
     is_converged : bool
         `True` when the value returned by `converge_function <ContrastiveHebbianMechanism.convergence_function>`.
         is less than or equal to the `converge_criterion <ContrastiveHebbianMechanism.convergence_criterion>`;
         used by the ContrastiveHebbianMechanism to determine when `each phase of execution is complete
         <ContrastiveHebbian_Execution>`.
 
+    XXX
     convergence_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
         <ContrastiveHebbianMechanism.previous_value>`; used to determine when `each phase of execution is complete
@@ -687,6 +717,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
         `output_values <ContrastiveHebbianMechanism.output_values>`.
 
+    XXX
     output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>` by default:
 
@@ -699,6 +730,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
           differences in activity between the plus and minus phases at the end of an execution sequence.
 
+        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
+          differences in activity between the plus and minus phases at the end of an execution sequence.
+
+    XXX
     output_values : List[1d np.array]
         a list with the following items by default:
         * **current_activity_output** at the end of an execution.
@@ -1056,3 +1091,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         '''Override default to use ACTIVITY_DIFFERENCE_OUTPUT as source of learning signal
         '''
         return self.output_states[ACTIVITY_DIFFERENCE_OUTPUT]
+
+    @property
+    def input_activity(self):
+        return self.current_activity[:self.input_size]
+
+    @property
+    def hidden_activity(self):
+        if self.hidden_size:
+            return self.current_activity[self.input_size:self.target_start]
+
+    @property
+    def target_activity(self):
+        if self.target_size:
+            return self.current_activity[self.target_start:self.target_end]
+
+    @property
+    def recurrent_activity(self):
+        return self.current_activity
