@@ -11,7 +11,7 @@
 import numpy as np
 from llvmlite import binding, ir
 import ctypes
-import os
+import os, sys
 
 from psyneulink.llvm import builtins
 
@@ -251,10 +251,20 @@ class LLVMBinaryFunction:
 
 
 def _updateNativeBinaries(module, buffer):
+    to_delete = []
     # update all pointers that might have been modified
     for k, v in _binaries.items():
-        new_ptr = _engine.get_function_address(k)
-        v.ptr = new_ptr
+        # One reference is held by the _binaries dict, second is held
+        # by the k, v tuple here, third by this function, and 4th is the
+        # one passed to getrefcount function
+        if sys.getrefcount(v) == 4:
+            to_delete.append(k)
+        else:
+            new_ptr = _engine.get_function_address(k)
+            v.ptr = new_ptr
+
+    for d in to_delete:
+        del _binaries[d]
 
 
 _engine.set_object_cache(_updateNativeBinaries)
