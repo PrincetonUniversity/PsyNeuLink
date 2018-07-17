@@ -710,8 +710,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
-    current_phase : PLUS or MINUS
-        indicates last `phase of execution <ContrastiveHebbian_Execution>.
+    execution_phase : bool
+        indicates current `phase of execution <ContrastiveHebbian_Execution>`. `True` = `plus phase
+        <ContrastiveHebbian_Plus_Phase>`;  `False` = `minus phase <ContrastiveHebbian_Minus_Phase>`.
 
     learning_enabled : bool
         indicates whether `learning is configured <ContrastiveHebbian_Learning>`;  see `learning_enabled
@@ -1119,5 +1120,3 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def recurrent_activity(self):
         return self.current_activity
 
-    @property
-    def current_phase
