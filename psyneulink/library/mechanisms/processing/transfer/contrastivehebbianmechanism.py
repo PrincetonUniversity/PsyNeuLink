@@ -710,6 +710,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
         if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
 
+    current_phase : PLUS or MINUS
+        indicates last `phase of execution <ContrastiveHebbian_Execution>.
+
     learning_enabled : bool
         indicates whether `learning is configured <ContrastiveHebbian_Learning>`;  see `learning_enabled
         <RecurrentTransferMechanism.learning_enabled>` of RecurrentTransferMechanism for additional details.
@@ -733,27 +736,25 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
         `output_values <ContrastiveHebbianMechanism.output_values>`.
 
-    XXX
     output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>` by default:
 
-        * *CURRENT_ACTIVITY_OUTPUT* -- the  `primary OutputState  <OutputState.primary>` of the Mechanism, the
-          `value <OutputState.value>` of which is a 1d array containing the activity of the ContrastiveHebbianMechanism
-          after each execution;  at the end of an execution sequence (i.e., when `is_finished
-          <ContrastiveHebbianMechanism.is_finished>` is `True`), it is assigned the value of `plus_phase_activity
-          <ContrastiveHebbianMechanism.plus_phase_activity>`.
+        * *OUTPUT_ACTIVITY_OUTPUT*, the  `primary OutputState  <OutputState.primary>` of the Mechanism, the `value
+          <OutputState.value>` of which is `target_activity <ContrastiveHebbianMechanism.target_activity> if a *TARGET*
+          `InputState <ContrastiveHebbian_Input>` is implemented;  otherwise,  `input_activity
+          <ContrastiveHebbianMechanism.input_activity>`.
 
-        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
-          differences in activity between the plus and minus phases at the end of an execution sequence.
+        * *CURRENT_ACTIVITY_OUTPUT* -- the `value <OutputState.value>` of which is a 1d array containing the activity
+          of the ContrastiveHebbianMechanism after each execution;  at the end of an execution sequence, it is assigned
+          the value of `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`.
 
-        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
-          differences in activity between the plus and minus phases at the end of an execution sequence.
+        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the elementwise
+          differences in activity between the plus and minus phases at the end of an `execution sequence
+          <ContrastiveHebbian_Execution>`.
 
-    XXX
     output_values : List[1d np.array]
-        a list with the following items by default:
-        * **current_activity_output** at the end of an execution.
-        * **activity_difference_output** at the end of an execution.
+        a list with the `value <OutputState.value>` of each `OutputState` in `output_states
+        <ContrastiveHebbianMechanism.output_states>.`
 
     name : str
         the name of the ContrastiveHebbianMechanism; if it is not specified in the **name** argument of the constructor,
@@ -1117,3 +1118,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     @property
     def recurrent_activity(self):
         return self.current_activity
+
+    @property
+    def current_phase
