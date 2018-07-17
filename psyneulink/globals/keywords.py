@@ -252,7 +252,7 @@ class DistanceMetrics:
     ----------
 
     MAX_ABS_DIFF
-        :math:`d = |\\max(a_1-a_2)|`
+        :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
