@@ -587,7 +587,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Output>`.
 
     mode : SIMPLE_HEBBIAN or None
-        indicates whether `SIMPLE_HEBBIAN` was used for configuration (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for
+        indicates whether *SIMPLE_HEBBIAN* was used for configuration (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for
         details).
 
     variable : value
@@ -595,19 +595,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     combination_function : method or function
         used to combine `value <InputState.value>` of the *INPUT* and *TARGET* (if specified)  `InputStates
-        <ContrastiveHebbian_Input>` are combined with that of the *RECURRENT* `InputState
-        <ContrastiveHebbian_Input>` to determine the `variable <CurrentHebbianMechanism.variable>` passed to the
-        Mechanism's `integrator_function <ContrastiveHebbianMechanism.integrator_function>` and/or its `function
-        <ContrastiveHebbianMechanism.function>`.
+        <ContrastiveHebbian_Input>` with that of the *RECURRENT* `InputState <ContrastiveHebbian_Input>` to determine
+        the `variable <CurrentHebbianMechanism.variable>` passed to the Mechanism's `integrator_function
+        <ContrastiveHebbianMechanism.integrator_function>` and/or its `function <ContrastiveHebbianMechanism.function>`
+        (see `ContrastiveHebbian_Execution` for details).
 
     clamp : HARD_CLAMP or SOFT_CLAMP
         determines whether the `value <InputState.value>` of the *INPUT* and *TARGET* (if specified) `InputStates
         <ContrastiveHebbian_Input>` replace (*HARD_CLAMP*) or are added to (*SOFT_CLAMP*) the `value <InputState.value>`
-        of the *RECURRENT* InputState by `combination_function <ContrastiveHebbianMechanism.combination_function>`
-        to generate the Mechanism's `variable <ContrastiveHebbianMechanism.variable>` in each execution.
+        of the *RECURRENT* InputState by `combination_function <ContrastiveHebbianMechanism.combination_function>`.
 
     function : Function
         used to transform the input and generate the Mechanism's `value <ContrastiveHebbianMechanism.value>`.
+        XXX SAY MORE HERE and SEE EXECUTION FOR DETAILS
 
     matrix : 2d np.array
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
@@ -645,6 +645,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         of the ContrastiveHebbianMechanism as the `rate <Integrator.rate>` of the ContrastiveHebbianMechanism's
         `integrator_function`; see TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
         for additional details.
+        XXX SAY MORE HERE and SEE EXECUTION FOR DETAILS AND MOVE TO ABOVE FUNCTION
 
     integration_rate : float
         the rate used for exponential time averaging of input when `integrator_mode
