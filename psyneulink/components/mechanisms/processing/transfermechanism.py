@@ -943,7 +943,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # if self.integrator_mode:
-        self.previous_value = None
+        # self.previous_value = None
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 

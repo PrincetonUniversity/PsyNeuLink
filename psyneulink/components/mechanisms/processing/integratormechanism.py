@@ -220,15 +220,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
-    # MODIFIED 7/14/18 NEW:
-    def _update_previous_value(self):
-        pass
-    # MODIFIED 7/14/18 END
 
-    # MODIFIED 6/2/17 NEW:
-    @property
-    def previous_value(self):
-        return self.function_object.previous_value
-    # MODIFIED 6/2/17 END
 
 

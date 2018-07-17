@@ -1,21 +1,6 @@
 import pytest
 import psyneulink as pnl
 
-@pytest.fixture(scope='module')
-def clear_registry():
-    # Clear Registry to have a stable reference for indexed suffixes of default names
-    from psyneulink.components.component import DeferredInitRegistry
-    from psyneulink.components.system import SystemRegistry
-    from psyneulink.components.process import ProcessRegistry
-    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-    from psyneulink.components.projections.projection import ProjectionRegistry
-    pnl.clear_registry(DeferredInitRegistry)
-    pnl.clear_registry(SystemRegistry)
-    pnl.clear_registry(ProcessRegistry)
-    pnl.clear_registry(MechanismRegistry)
-    pnl.clear_registry(ProjectionRegistry)
-
-
 def validate_learning_mechs(sys):
 
     def get_learning_mech(name):
@@ -113,10 +98,8 @@ class TestRumelhartSemanticNetwork:
               #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
               )
 
-    # @pytest.mark.usefixtures('clear_registry')
     def test_rumelhart_semantic_network_convergent(self):
 
-        clear_registry()
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
         rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
@@ -157,10 +140,8 @@ class TestRumelhartSemanticNetwork:
               #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
               #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
               )
-    # @pytest.mark.usefixtures('clear_registry')
     def test_rumelhart_semantic_network_crossing(self):
 
-        clear_registry()
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
         rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
