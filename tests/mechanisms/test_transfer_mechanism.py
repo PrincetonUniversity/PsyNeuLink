@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
+from psyneulink.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
@@ -1382,6 +1382,37 @@ class TestIntegratorMode:
 
         S.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.value, [[0.984375]])
+
+    def test_initial_values_softmax(self):
+        T = TransferMechanism(default_variable=[[0.0, 0.0], [0.0, 0.0]],
+                              function=SoftMax(),
+                              integrator_mode=True,
+                              integration_rate=0.5,
+                              initial_value=[[1.0, 2.0], [3.0, 4.0]])
+        T2 = TransferMechanism()
+        P = Process(pathway=[T, T2])
+        S = System(processes=[P])
+
+        S.run(inputs={T: [[1.5, 2.5], [3.5, 4.5]]})
+
+        result = T.value
+        # Expected results
+        # integrator function:
+        # input = [[1.5, 2.5], [3.5, 4.5]]  |  output = [[1.25, 2.25]], [3.25, 4.25]]
+        integrator_fn = AdaptiveIntegrator(rate=0.5,
+                                           default_variable=[[0.0, 0.0], [0.0, 0.0]],
+                                           initializer=[[1.0, 2.0], [3.0, 4.0]])
+        expected_result_integrator = integrator_fn.function([[1.5, 2.5], [3.5, 4.5]])
+
+        S1 = SoftMax()
+        expected_result_s1 = S1.function([1.25, 2.25])
+
+        S2 = SoftMax()
+        expected_result_s2 = S2.function([3.25, 4.25])
+
+        assert np.allclose(expected_result_integrator, T.integrator_function_value)
+        assert np.allclose(expected_result_s1, result[0])
+        assert np.allclose(expected_result_s2, result[1])
 
 
 

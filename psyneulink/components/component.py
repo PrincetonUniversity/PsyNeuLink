@@ -2197,7 +2197,8 @@ class Component(object):
         if variable is None:
             return variable
 
-        variable = np.atleast_1d(variable)
+        if not isinstance(variable, (list, np.ndarray)):
+            variable = np.atleast_1d(variable)
 
         try:
             # if variable has a single int/float/etc. within some number of dimensions, and the
