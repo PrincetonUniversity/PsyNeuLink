@@ -434,29 +434,30 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     input_size : int : default 0
         specifies the size of the *INPUT* `InputState <ContrastiveHebbian_Input>` and number of units in the
-        `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>`.
+        `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>`.
 
     hidden_size : int : default None
-        specifies the number of units in the `hidden_field <ContrastiveHebbian_Fields>` of current_activity
-        <ContrastiveHebbian.current_activity>`.
+        specifies the number of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>`.
 
     target_size : int : default None
         specifies the size of the *TARGET* `InputState <ContrastiveHebbian_Input>`, number of units in the
-        `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>`,
+        `input_field <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>`,
         and of the `OUTPUT_ACTIVITY_OUTPUT` `OutputState <ContrastiveHebbian_Output>`.
 
     separated : bool : default True
         specifies whether `target_field <ContrastiveHebbian_Fields>` should be different from the `input_field
-         <ContrastiveHebbian_Fields>`.
+        <ContrastiveHebbian_Fields>`.
 
     mode : SIMPLE_HEBBIAN or None : default None
         specifies configuratoin that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning
         (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for details).
 
     combination_function : function : default None
-        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
-        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
-        as each of these;  the default function adds the two items.
+        specifies function used to combine the *INPUT*, *RECURRENT* and *TARGET* (if specified) `InputStates
+        <ContrastiveHebbian_Input>`; must accept a 2d array with two or three items of the same length, and generate a
+        result that is the same size as `recurrent_size <ContrastiveHebbianMechanism.recurrent_size>`;  if `None`,
+        the ContrastiveHebbianMechanism's combination_function method is used.
 
     clamp : HARD_CLAMP or SOFT_CLAMP : default HARD_CLAMP
         specifies the manner in which the `value <InputState.value>` of the  *INPUT* and *TARGET* (if specified)
@@ -506,9 +507,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that determines when `each phase of execution completes<ContrastiveHebbian_Execution>`,
         by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
-        <ContrastiveHebbian.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays of the
-        same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default is
-        the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
+        <ContrastiveHebbianMechanism.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
+        of the same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
+        is the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
         two arrays and returns the difference with the maximum absolute value.
 
     convergence_criterion : float : default 0.01
@@ -556,19 +557,20 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     input_size : int
         size of the *INPUT* `InputState <ContrastiveHebbian_Input>` and number of units in the `input_field
-        <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbian.current_activity>` and
+        <ContrastiveHebbian_Fields>` of `current_activity <ContrastiveHebbianMechanism.current_activity>` and
         `input_activity <ContrastiveHebbianMechanism.input_activity>`
 
     hidden_size : int
         number of units in the `hidden_field <ContrastiveHebbian_Fields>` of the *RECURRENT* `InputState
-        <ContrastiveHebbian_Input>` and `current_activity <ContrastiveHebbian.current_activity>` and in
+        <ContrastiveHebbian_Input>` and `current_activity <ContrastiveHebbianMechanism.current_activity>` and in
         `hidden_activity <ContrastiveHebbianMechanism.input_activity>`.
 
     target_size : int
         size of the *TARGET* `InputState <ContrastiveHebbian_Input>` `if specified <ContrastiveHebbian_Creation>` and,
         if so, the number of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbian.current_activity>`, in `target_activity <ContrastiveHebbianMechanism.target_activity>`,
-        and the *OUTPUT_ACTIVITY_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
+        <ContrastiveHebbianMechanism.current_activity>`, in `target_activity
+        <ContrastiveHebbianMechanism.target_activity>`, and the *OUTPUT_ACTIVITY_OUTPUT* `OutputState
+        <ContrastiveHebbian_Output>`.
 
     target_start : int
         index of first unit of `target_field <ContrastiveHebbian_Fields>`.
