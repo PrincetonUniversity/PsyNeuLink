@@ -39,43 +39,45 @@ described below.
 Creation
 --------
 
-The **input_size** argument of the ContrastiveHebbianMechanism's constructor must always be specified (this is
-comparable to speciyfing the **size** or *default_variable** arugments of other types of `Mechanism`).  If it is
-specified on its own, it determines the total number of processing units.  If either the **hidden_size** and/or
-**target_size** arguments are specified, then those units are treated as distinct from the input units (see
-`ContrastiveHebbian_Execution` for details). A ContrastiveHebbianMechanism also must have both
-a `convergence_function <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
-<ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase of execution completes
-<ContrastiveHebbian_Execution>`.  Other parameters can be configured that influence processing (see
+The **input_size** argument of the constructor must always be specified (this is comparable to speciyfing the
+**size** or *default_variable** arugments of other types of `Mechanism`).  If it is specified on its own,
+it determines the total number of processing units.  If either the **hidden_size** and/or **target_size** arguments
+are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
+details). A ContrastiveHebbianMechanism also must have both a `convergence_function
+<ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
+<ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase of execution
+<ContrastiveHebbian_Execution>` completes.  Other parameters can be configured that influence processing (see
 `ContrastiveHebbian_Execution`).  The Mechanism is automatically assigned three of its five `Standard OutputStates
 <ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
-and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Structure>`). Additional OutputStates can be
-specified in the **additional_output_states** argument of its constructor.
+and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Output>`). Additional OutputStates can be
+specified in the **additional_output_states** argument of the constructor.
+
+.. _ContrastiveHebbian_Learning:
+
+A ContrastiveHebbianMechanism can be configured for learning, with the following differences from a standard
+`RecurrentTransferMechanism <Recurrent_Transfer_Learning>`:  it is automatically assigned `ContrastiveHebbian` as its
+`learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
+<RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*; and it is assigned a
+`MappingProjection` from its *ACTIVITY_DIFFERENCE_OUTPUT* (rather than its `primary <OutputState_Primary>`)
+`OutputState <ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of its `learning_mechanism
+<ContrastiveHebbianMechanism.learning_mechanism>`.
 
 .. _ContrastiveHebbian_SIMPLE_HEBBIAN:
 
 *SIMPLE_HEBBIAN* mode
 ~~~~~~~~~~~~~~~~~~~~~
 
-This can be used to replicate the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g.,
-for validation or ease in comparing processing outcomes).  When the **mode** argument of the Mechanism's consrtructor
-is specified as **SIMPLE_HEBBIAN**, the following assignments are made:
+This replicates the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g., for validation or
+ease in comparing processing outcomes).  It is configured by specifying the **mode** argument as *SIMPLE_HEBBIAN*,
+which automatically makes the following assignments:
 
-    **hidden_size** and **target_size**: ignored
-    **separated** = `False`
-    **clamp** = `SOFT_CLAMP`
-    **LearningMechanism = Hebbian
+|    **separated** = `False`;
+|    **clamp** = `SOFT_CLAMP`;
+|    **learning_function** = `Hebbian`.
+|
+These assignments override any others made in the constructor, and the **hidden_size** and **target_size** arguments
+are ignored.
 
-
-.. _ContrastiveHebbian_Learning:
-
-A ContrastiveHebbianMechanism can be configured for learning in the same manner as a
-`RecurrentTransferMechanism <Recurrent_Transfer_Learning>`, with the following differences:  it is automatically
-assigned `ContrastiveHebbian` as its `learning_function <ContrastiveHebbianMechanism.learning_function>`;
-its `learning_condition <RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*;
-and it is assigned a `MappingProjection` from its *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState
-<ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of its `learning_mechanism
-<ContrastiveHebbianMechanism.learning_mechanism>`.
 
 .. _ContrastiveHebbian_Structure:
 
@@ -89,36 +91,40 @@ Input
 
 A ContrastiveHebbianMechanism always has two, and possibly three `InputStates <InputState>`: 
 
-* *INPUT:* receives external input to the Mechanism;
-..
-* *RECURRENT:* receives the current value of the Mechanism's `recurrent_projection
-  <ContrastiveHebbianMechanism.recurrent_projection>`;
-..
-* *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and
-  mode is not `ContrastiveHebbian_SIMPLE_HEBBIAN`;  receives the `target <Run.target>` specified in the
-  `run <System.run>` method of any `System` to which the Mechanism belongs.
+    * *INPUT:* receives external input to the Mechanism;
+    ..
+    * *RECURRENT:* receives the `value <MappingProjection.value>` of the Mechanism's `recurrent_projection
+      <ContrastiveHebbianMechanism.recurrent_projection>`;
+    ..
+    * *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and
+      mode is not `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`;  receives the `target <Run.target>`
+      specified in the `run <System.run>` method of any `System` to which the Mechanism belongs.
 
-The sizes of these are determined by arguments in its constructor, as follows:
+The sizes of these are determined by arguments in its constructor, which generally conform to one of two
+configurations.
 
-**Standard configuration**
+**Standard Configuration**
 
-**input_size**, **hidden_size** and **target_size** are all specified:
+|    If **input_size**, **hidden_size** and **target_size** are all specified, the sizes of
+|    the InputStates are as follows:
+|
+|    *INPUT*:  size = **input_size**
+|    *RECURRENT*:  size = **input_size** + **hidden_size** + **target_size**
+|    *TARGET*:  size = **input_size**
+|
 
-* *INPUT*:  size = **input_size**
-* *RECURRENT*:  size = **input_size** + **hidden_size** + **target_size**
-* *TARGET*:  size = **input_size**
+**Simple Configuration**
 
-**Simple configuration**
-
-**target_size** = <None or 0>;  **separated** = `False`; or **mode** = *SIMPLE_HEBBIAN*:
-
-* *INPUT*:  size = **input_size**
-* *RECURRENT*:  size = **input_size** + **hidden_size**
-* *TARGET*:  Not implemented
-
+|   If **target_size** = `None` or 0,  **separated** = `False`, and/or **mode** =
+|   *SIMPLE_HEBBIAN*, the sizes of the InputStates are as follows:
+|
+|   *INPUT*:  size = **input_size**
+|   *RECURRENT*:  size = **input_size** + **hidden_size**
+|   *TARGET*:  Not implemented
+|
 .. note::
-   If **separated** = `False` but **target_size** is specified,
-   it must equal **input_size** or an error will be generated.
+   If **separated** = `False` and **target_size** is specified, a *TARGET* InputState will be created, but
+   **target_size** must equal **input_size** or an error will be generated.
 
 The values of **input_size**, **hidden_size** and **target_size** are assigned to the Mechanism's
 `input_size <ContrastiveHebbianMechanism.input_size>`, `hidden_size <ContrastiveHebbianMechanism.hidden_size>`,
@@ -132,10 +138,10 @@ are used to define the fields of the *RECURRENT* InputState's `value <InputState
 <ContrastiveHebbianMechanism>` attribute used for updating values during `ContrastiveHebbian_Processing, as follows:
 
 *input_field:*  the leftmost number of elements determined by `input_size <ContrastiveHebbianMechanism.input_size>`;
-
+..
 *hidden_field:*  the elements of the *RECURRENT* InputState and `current_activity <ContrastiveHebbianMechanism>` that
     are not within the *input_field* and/or *target_field*;
-
+..
 *target_field:* the rightmost number of elements determined by `target_size <ContrastiveHebbianMechanism.target_size>`
     if `separated <ContrastiveHebbianMechanism>` is `True`;  otherwise, the same as *input_field*.
 
