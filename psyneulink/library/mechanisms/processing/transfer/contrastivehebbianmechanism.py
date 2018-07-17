@@ -152,10 +152,11 @@ and thus must be assigned both a `convergence_function <ContrastiveHebbianMechan
 `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`.  The defaults are a `Distance` Function
 using the `MAX_ABS_DIFF` metric, and a `convergence_criterion <ContrastiveHebbianMechanism.convergence_criterion>`
 of 0.01. The `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
-`ContrastiveHebbian` (unless **mode** is specified as `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`),
-but it can be replaced by any function that takes two 1d arrays ("activity states") and compares them to determine
-the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
-<ContrastiveHebbianMechanism.recurrent_projection>`.
+`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity states") and
+compares them to determine the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
+<ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN
+<ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`,
+but can be replaced by any function that takes and returns a 1d array.
 
 .. _ContrastiveHebbian_Output:
 
