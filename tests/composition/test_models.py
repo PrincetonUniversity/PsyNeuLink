@@ -168,37 +168,53 @@ class TestStroopModels:
                                   color_input_weights,
                                   colors_hidden_layer,
                                   color_response_weights,
-                                  response_layer,
-                                  response_color_weights,
-                                  colors_hidden_layer]
+                                  response_layer]
         bidirectional_stroop.add_linear_processing_pathway(pathway=color_response_pathway)
+
+        color_response_pathway_2 = [response_layer,
+                                    response_color_weights,
+                                    colors_hidden_layer]
+        bidirectional_stroop.add_linear_processing_pathway(pathway=color_response_pathway_2)
+
 
         word_response_pathway = [words_input_layer,
                                  word_input_weights,
                                  words_hidden_layer,
                                  word_response_weights,
-                                 response_layer,
-                                 response_color_weights,
-                                 words_hidden_layer]
+                                 response_layer]
         bidirectional_stroop.add_linear_processing_pathway(pathway=word_response_pathway)
+
+        word_response_pathway_2 = [response_layer,
+                                   response_word_weights,
+                                   words_hidden_layer]
+        bidirectional_stroop.add_linear_processing_pathway(pathway=word_response_pathway_2)
+
 
         task_color_response_pathway = [task_input_layer,
                                        task_input_weights,
                                        task_layer,
                                        task_color_weights,
-                                       colors_hidden_layer,
-                                       color_task_weights,
-                                       task_layer]
+                                       colors_hidden_layer]
+
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_color_response_pathway)
 
+        task_color_response_pathway_2 = [colors_hidden_layer,
+                                         color_task_weights,
+                                         task_layer]
+
+        bidirectional_stroop.add_linear_processing_pathway(pathway=task_color_response_pathway_2)
+
         task_word_response_pathway = [task_input_layer,
-                                      task_input_weights,
                                       task_layer,
-                                      task_color_weights,
-                                      colors_hidden_layer,
-                                      color_task_weights,
-                                      task_layer]
+                                      task_word_weights,
+                                      words_hidden_layer]
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway)
+
+        task_word_response_pathway_2 = [words_hidden_layer,
+                                        word_task_weights,
+                                        task_layer]
+
+        bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
 
         bidirectional_stroop._analyze_graph()
 
