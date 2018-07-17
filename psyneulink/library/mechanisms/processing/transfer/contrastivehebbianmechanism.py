@@ -41,7 +41,7 @@ The **input_size** argument of the constructor must always be specified (this is
 **size** or *default_variable** arugments of other types of `Mechanism`).  If it is specified on its own,
 it determines the total number of processing units.  If either the **hidden_size** and/or **target_size** arguments
 are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
-details). A ContrastiveHebbianMechanism also must have both a `convergence_function
+details).  A ContrastiveHebbianMechanism also must have both a `convergence_function
 <ContrastiveHebbianMechanism.convergence_function>` and `convergence_criterion
 <ContrastiveHebbianMechanism.convergence_criterion>`, that determine when `each phase of execution
 <ContrastiveHebbian_Execution>` completes.  Other parameters can be configured that influence processing (see
@@ -52,9 +52,10 @@ specified in the **additional_output_states** argument of the constructor.
 
 .. _ContrastiveHebbian_Learning:
 
-A ContrastiveHebbianMechanism can be configured for learning, with the following differences from a standard
-`RecurrentTransferMechanism <Recurrent_Transfer_Learning>`:  it is automatically assigned `ContrastiveHebbian` as its
-`learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
+A ContrastiveHebbianMechanism can be configured for learning either by specifying **enable_learning** as `True` or using
+the `configure_learning <RecurrentTransferMechanism.configure_learning>` method, with the following differences from a
+standard `RecurrentTransferMechanism <Recurrent_Transfer_Learning>`:  it is automatically assigned `ContrastiveHebbian`
+as its `learning_function <ContrastiveHebbianMechanism.learning_function>`; its `learning_condition
 <RecurrentTransferMechanism.learning_condition>` is automatically assigned as *CONVERGENCE*; and it is assigned a
 `MappingProjection` from its *ACTIVITY_DIFFERENCE_OUTPUT* (rather than its `primary <OutputState_Primary>`)
 `OutputState <ContrastiveHebbian_Output>` to the *ACTIVATION_INPUT* of its `learning_mechanism
@@ -128,7 +129,8 @@ and `target_size <ContrastiveHebbianMechanism.target_size>` attributes, respecti
 The `input_size <ContrastiveHebbianMechanism.input_size>` and `target_size <ContrastiveHebbianMechanism.target_size>`
 (if **separated** is `True`) attribute(s), together with the `separated <ContrastiveHebbianMechanism>` attribute
 are used to define the fields of the *RECURRENT* InputState's `value <InputState.value>` and the `current_activity
-<ContrastiveHebbianMechanism>` attribute used for updating values during `ContrastiveHebbian_Processing, as follows:
+<ContrastiveHebbianMechanism>` attribute used for updating values during `execution <ContrastiveHebbian_Processing>`,
+as follows:
 
     * *input_field:*  the leftmost number of elements determined by `input_size
       <ContrastiveHebbianMechanism.input_size>`;
@@ -351,7 +353,7 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
 
         *OUTPUT_ACTIVITY_OUTPUT* : 1d np.array
             array with activity of the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-            <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* InputState `is specified
+            <ContrastiveHebbianMechanism.current_activity>` if a *TARGET* `InputState is specified
             <ContrastiveHebbian_Input>`;  otherwise, has activity of the `input_field <ContrastiveHebbian_Fields>` of
             `current_activity <ContrastiveHebbianMechanism.current_activity>`.
 
@@ -532,10 +534,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbianMechanism.learning_rate>` for details).
 
     learning_function : function : default ContrastiveHebbian
-        specifies the function for the LearningMechanism if `learning is specified <ContrastiveHebbian_Learning>` for
-        the ContrastiveHebbianMechanism.  It can be any function so long as it takes a list or 1d array of numeric
-        values as its `variable <Function_Base.variable>` and returns a sqaure matrix of numeric values with the same
-        dimensions as the length of the input.
+        specifies the function for the LearningMechanism if `learning is specified <ContrastiveHebbian_Learning>`.
+        It can be any function so long as it takes a list or 1d array of numeric values as its `variable
+        <Function_Base.variable>` and returns a square matrix of numeric values with the same dimensions as the
+        length of the input.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -590,6 +592,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         indicates whether *SIMPLE_HEBBIAN* was used for configuration (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for
         details).
 
+    matrix : 2d np.array
+        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
+
+    recurrent_projection : AutoAssociativeProjection
+        an `AutoAssociativeProjection` that projects from the *CURRENT_ACTIVITY_OUTPUT* `OutputState
+        <ContrastiveHebbian_Output>` to the *RECURRENT* `InputState <ContrastiveHebbian_Input>`.
+
     variable : value
         the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
 
@@ -604,17 +613,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         determines whether the `value <InputState.value>` of the *INPUT* and *TARGET* (if specified) `InputStates
         <ContrastiveHebbian_Input>` replace (*HARD_CLAMP*) or are added to (*SOFT_CLAMP*) the `value <InputState.value>`
         of the *RECURRENT* InputState by `combination_function <ContrastiveHebbianMechanism.combination_function>`.
-
-    function : Function
-        used to transform the input and generate the Mechanism's `value <ContrastiveHebbianMechanism.value>`.
-        XXX SAY MORE HERE and SEE EXECUTION FOR DETAILS
-
-    matrix : 2d np.array
-        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
-
-    recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        to its `primary InputState <Mechanism_InputStates>`;
 
     continuous : bool : default True
         determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` is reinitialized
@@ -644,35 +642,38 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `True`.  Uses the `integration_rate  <ContrastiveHebbianMechanism.integration_rate>` parameter
         of the ContrastiveHebbianMechanism as the `rate <Integrator.rate>` of the ContrastiveHebbianMechanism's
         `integrator_function`; see TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
-        for additional details.
-        XXX SAY MORE HERE and SEE EXECUTION FOR DETAILS AND MOVE TO ABOVE FUNCTION
+        and `ContrastiveHebbian_Execution` above for additional details).
 
     integration_rate : float
         the rate used for exponential time averaging of input when `integrator_mode
         <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`;  see TransferMechanism's
         `integration_rate <TransferMechanism.integration_rate>` for additional details.
 
+    function : Function
+        used to transform the input and generate the Mechanism's `value <ContrastiveHebbianMechanism.value>`
+        (see `ContrastiveHebbian_Execution` for additional details).
+
     clip : list [float, float]
         determines the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`
         see TransferMechanism's `clip <TransferMechanism.clip>` for additional details.
 
     current_activity : 1d array of floats
-        the value of the actvity of the ContrastiveHebbianMechanism at `the current step of execution
+        the value of the actvity of the ContrastiveHebbianMechanism following its last `execution
         <ContrastiveHebbian_Execution>`.
 
     input_activity : 1d array of floats
-        activity values of units in the `input_field <ContrastiveHebbian_Fields>` of `current_activity
+        value of units in the `input_field <ContrastiveHebbian_Fields>` of `current_activity
         <ContrastiveHebbianMechanism.current_activity>`.
 
     hidden_activity : 1d array of floats or None
-        activity values of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
+        value of units in the `hidden_field <ContrastiveHebbian_Fields>` of `current_activity
         <ContrastiveHebbianMechanism.current_activity>`;  `None` if hidden_size = 0 or mode = `SIMPLE_HEBBIAN
         <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
 
     target_activity : 1d array of floats or None
-        activity values of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
-        <ContrastiveHebbianMechanism.current_activity>` if *TARGET* `InputState <ContrastiveHebbian_Input>` `is
-        specified <ContrastiveHebbian_Creation>`; same as `input_activity <ContrastiveHebbianMechanism.input_activity>`
+        value of units in the `target_field <ContrastiveHebbian_Fields>` of `current_activity
+        <ContrastiveHebbianMechanism.current_activity>` if *TARGET* `InputState is specified
+        <ContrastiveHebbian_Input>`. Same as `input_activity <ContrastiveHebbianMechanism.input_activity>`
         if `separated <ContrastiveHebbianMechanism.separated>` is `False`;  `None` if target_size = 0 or mode =
         `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`.
 
@@ -696,20 +697,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
 
     is_converged : bool
-        `True` when the value returned by `converge_function <ContrastiveHebbianMechanism.convergence_function>`.
-        is less than or equal to the `converge_criterion <ContrastiveHebbianMechanism.convergence_criterion>`;
-        used by the ContrastiveHebbianMechanism to determine when `each phase of execution is complete
-        <ContrastiveHebbian_Execution>`.
+        `True` when `delta <ContrastiveHebbianMechanism.delta>` is less than or equal to the `convergence_criterion
+        <ContrastiveHebbianMechanism.convergence_criterion>`; used by the ContrastiveHebbianMechanism to determine
+        when `each phase of execution is complete <ContrastiveHebbian_Execution>`.
 
     convergence_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
-        <ContrastiveHebbianMechanism.previous_value>`; used to determine when each `phase of execution
+        <ContrastiveHebbianMechanism.previous_value>`; result is assigned as the value of `delta
+        <ContrastiveHebbianMechanism.delta>.  Used to determine when each `phase of execution
         <ContrastiveHebbian_Execution>`  is complete (i.e., when `is_converged
         <ContrastiveHebbianMechanism.is_converged>` is `True`.
     
     convergence_criterion : float
-        determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which `each phase of execution completes
-        <ContrastiveHebbian_Execution>` (i.e., `is_converged <ContrastiveHebbianMechanism.is_converged>` is `True`).
+        determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which `each phase of execution
+        <ContrastiveHebbian_Execution>`  completes. (i.e., `is_converged <ContrastiveHebbianMechanism.is_converged>`
+        is `True`).
 
     max_passes : int or None
         determines the maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
@@ -722,7 +724,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Plus_Phase>`;  `False` = `minus phase <ContrastiveHebbian_Minus_Phase>`.
 
     learning_enabled : bool
-        indicates whether `learning is configured <ContrastiveHebbian_Learning>`;  see `learning_enabled
+        indicates whether `learning is enabled <ContrastiveHebbian_Learning>`;  see `learning_enabled
         <RecurrentTransferMechanism.learning_enabled>` of RecurrentTransferMechanism for additional details.
 
     learning_mechanism : LearningMechanism
@@ -738,7 +740,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     learning_function : function
         the function used by the `learning_mechanism <ContrastiveHebbianMechanism.learning_mechanism>` to train the
         `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>` if `learning is configured
-        <ContrastiveHebbian_Learning>`.
+        <ContrastiveHebbian_Learning>`;  default is `ContrastiveHebbian`.
 
     value : 2d np.array
         result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
@@ -747,14 +749,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>` by default:
 
-        * *OUTPUT_ACTIVITY_OUTPUT*, the  `primary OutputState  <OutputState.primary>` of the Mechanism, the `value
-          <OutputState.value>` of which is `target_activity <ContrastiveHebbianMechanism.target_activity> if a *TARGET*
-          `InputState <ContrastiveHebbian_Input>` is implemented;  otherwise,  `input_activity
-          <ContrastiveHebbianMechanism.input_activity>`.
+        * *OUTPUT_ACTIVITY_OUTPUT*, the  `primary OutputState  <OutputState_Primary>` of the Mechanism, the `value
+          <OutputState.value>` of which is `target_activity <ContrastiveHebbianMechanism.target_activity>` if a
+          *TARGET* `InputState <ContrastiveHebbian_Input>` is implemented;  otherwise,  `input_activity
+          <ContrastiveHebbianMechanism.input_activity>` is assigned as its `value <OutputState.value>`.
 
         * *CURRENT_ACTIVITY_OUTPUT* -- the `value <OutputState.value>` of which is a 1d array containing the activity
-          of the ContrastiveHebbianMechanism after each execution;  at the end of an execution sequence, it is assigned
-          the value of `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>`.
+          of the ContrastiveHebbianMechanism after each execution;  at the end of an `execution sequence
+          <ContrastiveHebbian_Execution>`, it is assigned the value of `plus_phase_activity
+          <ContrastiveHebbianMechanism.plus_phase_activity>`.
 
         * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the elementwise
           differences in activity between the plus and minus phases at the end of an `execution sequence
@@ -762,7 +765,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     output_values : List[1d np.array]
         a list with the `value <OutputState.value>` of each `OutputState` in `output_states
-        <ContrastiveHebbianMechanism.output_states>.`
+        <ContrastiveHebbianMechanism.output_states>`.
 
     name : str
         the name of the ContrastiveHebbianMechanism; if it is not specified in the **name** argument of the constructor,
