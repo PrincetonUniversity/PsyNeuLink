@@ -450,9 +450,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
          <ContrastiveHebbian_Fields>`.
 
     mode : SIMPLE_HEBBIAN or None : default None
-        specifies configuratoin that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning.
-        If `True`, sets **hidden_size**=0, **separated**=`False`, **clamp**=*SOFT_CLAMP*, **continous**=`False`,
-        and **learning_function**=`Hebbian`.
+        specifies configuratoin that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning
+        (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for details).
 
     combination_function : function : default None
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
@@ -585,6 +584,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         size of *RECURRENT* `InputState <ContrastiveHebbian_Input>`, `current_activity
         <ContrastiveHebbianMechanism.current_activity>` and *CURRENT_ACTIVITY_OUTPUT* `OutputState
         <ContrastiveHebbian_Output>`.
+
+    mode : SIMPLE_HEBBIAN or None
+        indicates whether `SIMPLE_HEBBIAN` was used for configuration (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for
+        details).
 
     variable : value
         the input to Mechanism's `function <ContrastiveHebbianMechanism.variable>`.
@@ -847,13 +850,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         self.target_end = self.target_start + self.target_size
         size = self.recurrent_size
 
-
-        # # MODIFIED 7/16/18 OLD:
-        # default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size), np.zeros(target_size)]
-        # # Set InputState sizes in _instantiate_input_states,
-        # #    so that there is no conflict with parsing of Mechanism's size
-        # input_states = [INPUT, RECURRENT, TARGET]
-        # MODIFIED 7/16/18 NEW:
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputState sizes in _instantiate_input_states,
         #    so that there is no conflict with parsing of Mechanism's size
@@ -861,7 +857,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             default_variable.append(np.zeros(target_size))
             input_states.append(TARGET)
-        # MODIFIED 7/16/18 END
 
         if additional_input_states:
             if isinstance(additional_input_states, list):
