@@ -737,7 +737,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         result of executing `function <ContrastiveHebbianMechanism.function>`; same value as first item of
         `output_values <ContrastiveHebbianMechanism.output_values>`.
 
-    XXX
     output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>` by default:
 
@@ -753,9 +752,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the elementwise
           differences in activity between the plus and minus phases at the end of an `execution sequence
           <ContrastiveHebbian_Execution>`.
-
-        * *ACTIVITY_DIFFERENCE_OUTPUT*, the `value <OutputState.value>` of which is a 1d array with the element-wise
-          differences in activity between the plus and minus phases at the end of an execution sequence.
 
     output_values : List[1d np.array]
         a list with the `value <OutputState.value>` of each `OutputState` in `output_states
