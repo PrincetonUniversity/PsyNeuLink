@@ -22,19 +22,6 @@ matrix:
   include:
   - python: 3.7
     dist: xenial # Python 3.7 is only available on xenial because of deps
-    # Remove after https://github.com/numba/llvmlite/issues/376 is resolved
-    addons:
-      apt:
-        sources:
-          # Use LLVM upstream packages. Unlike Ubuntu,
-          # these are built using system compiler.
-          - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main'
-        packages:
-          # we need llvm-dev to build llvm-lite since python3.7 whl is not available
-          - llvm-6.0-dev
-          - graphviz
-    env:
-        - LLVM_CONFIG="llvm-config-6.0"
 
   - os: osx
     python: 3.5
@@ -114,12 +101,6 @@ before_install: |
     python -m pip install -U setuptools-git
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-    if [ "$PYTHON" == "3.7.0" ]; then
-        HOMEBREW_NO_AUTO_UPDATE=1 brew install llvm
-        export PATH="/usr/local/opt/llvm/bin:$PATH"
-        # Homebrew installs llvm-5 so temporarily downgrade our llvmlite version
-        pip install llvmlite==0.22
-    fi
   fi
 
 script:
