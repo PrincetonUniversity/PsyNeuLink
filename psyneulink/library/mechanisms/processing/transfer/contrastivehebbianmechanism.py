@@ -877,8 +877,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mode=mode,
-                                                  clamp=clamp,
                                                   continuous=continuous,
+                                                  clamp=clamp,
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
