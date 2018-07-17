@@ -454,20 +454,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         If `True`, sets **hidden_size**=0, **separated**=`False`, **clamp**=*SOFT_CLAMP*, **continous**=`False`,
         and **learning_function**=`Hebbian`.
 
-    continuous : bool : default True
-        specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism>` at the beginning of
-        the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
+    combination_function : function : default None
+        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
+        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
+        as each of these;  the default function adds the two items.
 
     clamp : HARD_CLAMP or SOFT_CLAMP : default HARD_CLAMP
         specifies the manner in which the `value <InputState.value>` of the  *INPUT* and *TARGET* (if specified)
         `InputStates <ContrastiveHebbian_Input>` are combined with the *RECURRENT* `InputState
         <ContrastiveHebbian_Input>` in each execution (see `clamp <ContrastiveHebbianMechanism.clamp>` for additional
         details.
-
-    combination_function : function : default None
-        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
-        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
-        as each of these;  the default function adds the two items.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be any function that takes and returns a 1d array
@@ -484,6 +480,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     hetero : number, 2D array, or None : default None
         specifies a hollow matrix with all non-diagonal entries equal to **hetero**;  see **hetero** argument of
         `RecurrentTransferMechanism` for details of specification.
+
+    continuous : bool : default True
+        specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism>` at the beginning of
+        the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input if `integrator_mode
@@ -612,16 +612,16 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         to its `primary InputState <Mechanism_InputStates>`;
 
-    initial_value :  value, list or np.ndarray
-        determines the starting value for time-averaged input if `integrator_mode
-        <ContrastiveHebbianMechanism.integrator_mode>` is `True`. See TransferMechanism's `initial_value
-        <TransferMechanism.initial_value>` for additional details.
-
     continuous : bool : default True
         determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` is reinitialized
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of execution. If `False`, it (and
         the Mechanism's `previous_value <ContrastiveHebbianMechanism.previous_value>` attribute) are set to
         `initial_value <ContrastiveHebbianMechanism.initial_value>`.
+
+    initial_value :  value, list or np.ndarray
+        determines the starting value for time-averaged input if `integrator_mode
+        <ContrastiveHebbianMechanism.integrator_mode>` is `True`. See TransferMechanism's `initial_value
+        <TransferMechanism.initial_value>` for additional details.
 
     noise : float or function
         When `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>` is set to `True`, noise is passed into the
