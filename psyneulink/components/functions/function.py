@@ -3062,13 +3062,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
         except TypeError:
-            # If variable is an array with mixed sizes or types, try item-by-item operation
-            if variable.dtype == object:
-                result = np.zeros_like(variable)
-                for i, item in enumerate(variable):
-                    result[i] = variable[i] * slope + intercept
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = variable[i] * slope + intercept
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], np.array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(np.multiply(variable_item, slope) + intercept)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
         # MODIFIED 11/9/17 END
 
 
@@ -5087,7 +5098,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
+        if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
