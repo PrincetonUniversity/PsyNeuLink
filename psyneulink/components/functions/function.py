@@ -3479,10 +3479,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result. 
+        result is greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0. 
+        from it if (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3499,13 +3499,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0. 
+        (variable - bias) is greater than 0.
     bias : float : default 0.0
         value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result. 
+        greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0. 
+        (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3517,15 +3517,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
-    
-    
+
+
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
-    
+
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -3555,9 +3555,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  context=None):
         """
         Return:
-            
+
             :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
-            
+
         Arguments
         ---------
         variable : number or np.array : default ClassDefaults.variable
@@ -3570,13 +3570,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
         ReLU transformation of variable : number or np.array
         """
-        
+
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
-        
+
         return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
     def derivative(self, output):
@@ -3590,7 +3590,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
-        
+
         if (output > 0): return gain
         else: return leak
 
@@ -3930,7 +3930,7 @@ class SoftMax(NormalizingFunction):
     additive_param = None
 
     class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
+        variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -3953,6 +3953,15 @@ class SoftMax(NormalizingFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        if variable is None:
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
+
+        return np.asarray(variable)
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
