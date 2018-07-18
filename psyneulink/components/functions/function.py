@@ -216,7 +216,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
-    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ELEMENT, \
+    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
     PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
@@ -3939,14 +3939,14 @@ class SoftMax(NormalizingFunction):
                  default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 per_element = True,
+                 per_item = True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
-                                                  per_element=per_element,
+                                                  per_item=per_item,
                                                   output=output,
                                                   params=params)
 
@@ -4027,10 +4027,10 @@ class SoftMax(NormalizingFunction):
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         gain = self.get_current_function_param(GAIN)
-        per_element = self.get_current_function_param(PER_ELEMENT)
+        per_item = self.get_current_function_param(PER_ITEM)
         # Compute softmax and assign to sm
 
-        if per_element and len(np.shape(variable)) > 1:
+        if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:
                 output.append(self.apply_softmax(item, gain, output_type))
