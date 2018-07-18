@@ -434,6 +434,7 @@ class Scheduler(object):
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
     def _init_consideration_queue_from_system(self, system):
+        print(system.execution_graph)
         dependencies = []
         for dependency_set in list(toposort(system.execution_graph)):
             new_set = set()
@@ -443,14 +444,21 @@ class Scheduler(object):
         self.consideration_queue = dependencies
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
 
-    def _init_consideration_queue_from_graph(self, graph):
+    def _call_toposort(self, graph):
+
         dependencies = {}
         for vert in graph.vertices:
             dependencies[vert.component] = set()
             for parent in graph.get_parents_from_component(vert.component):
                 dependencies[vert.component].add(parent.component)
+                try:
+                    list(toposort(dependencies))
+                except ValueError:
+                    dependencies[vert.component].remove(parent.component)
+        return list(toposort(dependencies))
 
-        self.consideration_queue = list(toposort(dependencies))
+    def _init_consideration_queue_from_graph(self, graph):
+        self.consideration_queue = self._call_toposort(graph)
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         '''
