@@ -2,6 +2,7 @@ import itertools as it
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, Linear, NormalDist, SimpleIntegrator
@@ -370,6 +371,52 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_input(self, mode):
+        I = IntegratorMechanism(
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[1], [2]],
+            input_states=['a', 'b'],
+        )
+        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[3]])
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_output(self, mode):
+        I = IntegratorMechanism(
+            default_variable=[5],
+            output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
+        )
+        val = I.execute([5], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[2.5], [2.5]])
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_input_output(self, mode):
+        I = IntegratorMechanism(
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[1], [2]],
+            input_states=['a', 'b'],
+            output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
+                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
+        )
+        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[5], [3]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
