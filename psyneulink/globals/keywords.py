@@ -868,6 +868,7 @@ MAX_ABS_INDICATOR = 'MAX_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
+PER_ELEMENT = 'per_element'
 
 INITIALIZER = 'initializer'
 INITIAL_V = 'initial_v'
