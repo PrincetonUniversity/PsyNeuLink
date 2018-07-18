@@ -694,6 +694,9 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
 
+        toposorted_graph = self.scheduler_processing._call_toposort(graph)
+        for node in toposorted_graph[len(toposorted_graph) - 1]:
+            self._add_c_node_role(node, CNodeRole.TERMINAL)
         self._create_CIM_states()
 
         self.needs_update_graph = False
