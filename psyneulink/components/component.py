@@ -3267,9 +3267,7 @@ class Component(object, metaclass=ComponentsMeta):
         if self.function_object.has_initializers:
             self.has_initializers = True
 
-        # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
-        # that ultimately doesn't end up assigning the attribute
-        # self._function_params = self.function_object.user_params
+        self._parse_param_state_sources()
 
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_states"):
@@ -3362,6 +3360,14 @@ class Component(object, metaclass=ComponentsMeta):
         fct_context_attrib.execution_phase = ContextFlags.IDLE
 
         return value
+
+    def _parse_param_state_sources(self):
+        try:
+            for param_state in self._parameter_states:
+                if param_state.source is FUNCTION:
+                    param_state.source = self.function_object
+        except AttributeError:
+            pass
 
     @property
     def current_execution_count(self):
@@ -3714,6 +3720,16 @@ class Component(object, metaclass=ComponentsMeta):
             return self.function_object.function
         except AttributeError:
             return None
+
+    @property
+    def function_object(self):
+        return self._function_object
+
+    @function_object.setter
+    def function_object(self, value):
+        # TODO: currently no validation, should replicate from _instantiate_function
+        self._function_object = value
+        self._parse_param_state_sources()
 
     @property
     def function_params(self):
