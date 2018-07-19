@@ -843,7 +843,7 @@ print(avg_MSE)
 
 
 
-'''
+
 # AND GATE
 
 print("\n")
@@ -873,11 +873,10 @@ for i in range(2):
             for l in range(2):
                 input_val = torch.tensor([i, j, k, l]).float()
                 PT_and_ins.append([input_val])
-'''
 
 
 
-'''
+
 print(PT_and_ins)
 print("\n")
 
@@ -937,7 +936,6 @@ percentage_acc, percentage_err, avg_MSE = autodiff_checking(and_parsed_pytorch, 
 print(percentage_acc)
 print(percentage_err)
 print(avg_MSE)
-'''
 
 
 
