@@ -351,6 +351,7 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.c_nodes = []
+        self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
         self.input_CIM_states = {}
@@ -695,8 +696,13 @@ class Composition(object):
                             next_visit_stack.append(child)
 
         toposorted_graph = self.scheduler_processing._call_toposort(graph)
-        for node in toposorted_graph[len(toposorted_graph) - 1]:
-            self._add_c_node_role(node, CNodeRole.TERMINAL)
+        # print(toposorted_graph)
+        # if len(toposorted_graph) > 0:
+        #     for node in toposorted_graph[-1]:
+        #         self._add_c_node_role(node, CNodeRole.TERMINAL)
+        for node_role_pair in self.required_c_node_roles:
+            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+
         self._create_CIM_states()
 
         self.needs_update_graph = False
@@ -796,6 +802,22 @@ class Composition(object):
             raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
         self.c_nodes_to_roles[c_node].remove(role)
+
+    def add_required_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+
+        node_role_pair = (c_node, role)
+        if node_role_pair not in self.required_c_node_roles:
+            self.required_c_node_roles.append(node_role_pair)
+
+    def remove_required_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+
+        node_role_pair = (c_node, role)
+        if node_role_pair in self.required_c_node_roles:
+            self.required_c_node_roles.remove(node_role_pair)
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
