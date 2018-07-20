@@ -3874,6 +3874,10 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3908,6 +3912,10 @@ class SoftMax(NormalizingFunction):
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
     owner : Component
@@ -3939,7 +3947,7 @@ class SoftMax(NormalizingFunction):
                  default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 per_item = True,
+                 per_item=True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
