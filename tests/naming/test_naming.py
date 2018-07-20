@@ -2,23 +2,6 @@ import pytest
 
 import psyneulink as pnl
 
-
-@pytest.fixture
-def clear_registry():
-    # Clear Registry to have a stable reference for indexed suffixes of default names
-    from psyneulink.components.component import DeferredInitRegistry
-    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
-    from psyneulink.components.projections.projection import ProjectionRegistry
-    from psyneulink.components.process import ProcessRegistry
-    from psyneulink.components.system import SystemRegistry
-    pnl.clear_registry(DeferredInitRegistry)
-    pnl.clear_registry(MechanismRegistry)
-    pnl.clear_registry(ProjectionRegistry)
-    pnl.clear_registry(ProcessRegistry)
-    pnl.clear_registry(SystemRegistry)
-
-
-@pytest.mark.usefixtures('clear_registry')
 class TestNaming:
     # ------------------------------------------------------------------------------------------------
 

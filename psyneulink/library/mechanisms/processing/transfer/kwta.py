@@ -185,7 +185,7 @@ class KWTA(RecurrentTransferMechanism):
     hetero=None,                \
     initial_value=None,         \
     noise=0.0,                  \
-    smoothing_factor=1.0,          \
+    integration_rate=1.0,          \
     k_value=0.5,                \
     threshold=0,                \
     ratio=0.5,                  \
@@ -242,7 +242,7 @@ class KWTA(RecurrentTransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `smoothing_factor <KWTA.smoothing_factor>` is not 1.0).
+        `integration_rate <KWTA.integration_rate>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -252,12 +252,12 @@ class KWTA(RecurrentTransferMechanism):
         <KWTA.integrator_function>`, depending on whether `integrator_mode <KWTA.integrator_mode>` is True or False. See
         `noise <KWTA.noise>` for more details.
 
-    smoothing_factor : float : default 0.5
+    integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
         to True ::
 
-         result = (smoothing_factor * current input) +
-         (1-smoothing_factor * result on previous time_step)
+         result = (integration_rate * current input) +
+         (1-integration_rate * result on previous time_step)
 
     k_value : number : default 0.5
         specifies the proportion or number of the elements of `variable <KWTA.variable>` that should be at or above
@@ -326,7 +326,7 @@ class KWTA(RecurrentTransferMechanism):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `smoothing_factor <KWTA.smoothing_factor>` parameter is not 1.0).
+        (only relevant if `integration_rate <KWTA.integration_rate>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -347,11 +347,11 @@ class KWTA(RecurrentTransferMechanism):
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
             the noise will simply be an offset that remains the same across all executions.
 
-    smoothing_factor : float : default 0.5
+    integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
         to True::
 
-          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
+          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
     k_value : number
         determines the number or proportion of elements of `variable <KWTA.variable>` that should be above the
@@ -386,7 +386,7 @@ class KWTA(RecurrentTransferMechanism):
     integrator_function:
         When *integrator_mode* is set to True, the KWTA executes its `integrator_function <KWTA.integrator_function>`,
         which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
-        Keep in mind that the `smoothing_factor <KWTA.smoothing_factor>` parameter of the `KWTA` corresponds to the
+        Keep in mind that the `integration_rate <KWTA.integration_rate>` parameter of the `KWTA` corresponds to the
         `rate <KWTAIntegrator.rate>` of the `KWTAIntegrator`.
 
     integrator_mode:
@@ -477,7 +477,7 @@ class KWTA(RecurrentTransferMechanism):
                  hetero: is_numeric_or_none=None,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
-                 smoothing_factor: is_numeric_or_none = 0.5,
+                 integration_rate: is_numeric_or_none = 0.5,
                  integrator_mode=False,
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
@@ -523,14 +523,14 @@ class KWTA(RecurrentTransferMechanism):
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
-                         smoothing_factor=smoothing_factor,
+                         integration_rate=integration_rate,
                          clip=clip,
                          output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable):
+    def _parse_function_variable(self, variable, context=None):
         if variable.dtype.char == "U":
             raise KWTAError(
                 "input ({0}) to {1} was a string, which is not supported for {2}".format(
@@ -668,7 +668,7 @@ class KWTA(RecurrentTransferMechanism):
         # variable (float): set to self.value (= self.input_value)
         # - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
         #     + NOISE (float)
-        #     + SMOOTHING_FACTOR (float)
+        #     + INTEGRATION_RATE (float)
         #     + RANGE ([float, float])
         # - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         # - context (str)
@@ -708,7 +708,7 @@ class KWTA(RecurrentTransferMechanism):
         #
         # #region ASSIGN PARAMETER VALUES
         #
-        # smoothing_factor = self.smoothing_factor
+        # integration_rate = self.integration_rate
         # range = self.range
         # noise = self.noise
         #
@@ -728,7 +728,7 @@ class KWTA(RecurrentTransferMechanism):
         #                                     self.instance_defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
-        #                                     rate = self.smoothing_factor
+        #                                     rate = self.integration_rate
         #                                     )
         #
         #     current_input = self.integrator_function.execute(variable,
@@ -736,7 +736,7 @@ class KWTA(RecurrentTransferMechanism):
         #                                                      # params={INITIALIZER: self.previous_input,
         #                                                      #         INTEGRATION_TYPE: ADAPTIVE,
         #                                                      #         NOISE: self.noise,
-        #                                                      #         RATE: self.smoothing_factor}
+        #                                                      #         RATE: self.integration_rate}
         #                                                      # context=context
         #                                                      # name=Integrator.componentName + '_for_' + self.name
         #                                                      )

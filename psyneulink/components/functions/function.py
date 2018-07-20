@@ -57,6 +57,7 @@ Objective Functions:
 
 Learning Functions:
   * `Hebbian`
+  * `ContrastiveHebbian`
   * `Reinforcement`
   * `BackPropagation`
   * `TDLearning`
@@ -197,11 +198,11 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, ACCUMULATOR_INTEGRATOR_FUNCTION, \
-    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, HAS_INITIALIZERS, \
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, \
-    CROSS_ENTROPY, CUSTOM_FUNCTION, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
     DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
     ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
@@ -211,7 +212,8 @@ from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, 
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
     LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
-    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
+    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
@@ -232,7 +234,7 @@ __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
     'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
     'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
-    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'DISABLE',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
     'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
@@ -3060,13 +3062,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
         except TypeError:
-            # If variable is an array with mixed sizes or types, try item-by-item operation
-            if variable.dtype == object:
-                result = np.zeros_like(variable)
-                for i, item in enumerate(variable):
-                    result[i] = variable[i] * slope + intercept
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = variable[i] * slope + intercept
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], np.array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(np.multiply(variable_item, slope) + intercept)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
         # MODIFIED 11/9/17 END
 
 
@@ -3466,10 +3479,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result. 
+        result is greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0. 
+        from it if (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3486,13 +3499,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0. 
+        (variable - bias) is greater than 0.
     bias : float : default 0.0
         value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result. 
+        greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0. 
+        (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3504,15 +3517,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
-    
-    
+
+
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
-    
+
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -3542,9 +3555,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  context=None):
         """
         Return:
-            
+
             :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
-            
+
         Arguments
         ---------
         variable : number or np.array : default ClassDefaults.variable
@@ -3557,13 +3570,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
         ReLU transformation of variable : number or np.array
         """
-        
+
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
-        
+
         return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
     def derivative(self, output):
@@ -3577,7 +3590,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
-        
+
         if (output > 0): return gain
         else: return leak
 
@@ -3917,7 +3930,7 @@ class SoftMax(NormalizingFunction):
     additive_param = None
 
     class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
+        variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -3940,6 +3953,15 @@ class SoftMax(NormalizingFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        if variable is None:
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
+
+        return np.asarray(variable)
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
@@ -4304,7 +4326,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if param_name in function_keywords:
                     continue
 
-                if param_name is AUTO_DEPENDENT:
+                if param_name is HAS_INITIALIZERS:
                     continue
 
                 # Matrix specification param
@@ -4825,7 +4847,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
@@ -4953,7 +4975,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             initializer_value = getattr(self, self.initializers[i]).copy()
             setattr(self, attr_name, initializer_value)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -5085,7 +5107,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
+        if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
@@ -5284,7 +5306,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -5498,7 +5520,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         # Reassign to initializer in case default value was overridden
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_rate(self, rate):
         # unlike other Integrators, variable does not need to match rate
@@ -5716,7 +5738,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
@@ -5725,7 +5747,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def reinitialize(self, *args):
         """
@@ -5968,7 +5990,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -6293,7 +6315,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6529,7 +6551,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -7517,7 +7539,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
@@ -7762,7 +7784,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -8032,7 +8054,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -9410,7 +9432,7 @@ class Stability(ObjectiveFunction):
     <Stability.variable>`.
 
 COMMENT:
-*** 11/11/17 - DELETE THIS ONE Stability IS STABLE:
+*** 11/11/17 - DELETE THIS ONCE Stability IS STABLE:
     Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
     where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
     :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
@@ -9625,11 +9647,7 @@ COMMENT
 
         """
 
-        # MODIFIED 11/25/17 OLD:
-        # size = len(np.squeeze(self.instance_defaults.variable))
-        # MODIFIED 11/25/17 NEW:
         size = len(self.instance_defaults.variable)
-        # MODIFIED 11/25/17 END
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
@@ -9642,17 +9660,10 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
-        # # MODIFIED 11/12/17 OLD:
-        # if self.metric is ENTROPY:
-        #     self._metric_fct = Distance(metric=CROSS_ENTROPY)
-        # elif self.metric in DISTANCE_METRICS:
-        #     self._metric_fct = Distance(metric=self.metric)
-        # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
-        # MODIFIED 11/12/17 END
 
 
     def function(self,
@@ -9836,6 +9847,12 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def correlation(v1, v2):
+        v1_norm = v1-np.mean(v1)
+        v2_norm = v2-np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
+
     def function(self,
                  variable=None,
                  params=None,
@@ -9858,8 +9875,12 @@ class Distance(ObjectiveFunction):
         v1 = variable[0]
         v2 = variable[1]
 
-        # Simple Hadamard difference of v1 and v2
-        if self.metric is DIFFERENCE:
+        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        if self.metric is MAX_ABS_DIFF:
+            result = np.max(abs(v1 - v2))
+
+        # Simple Hadamard (elementwise) difference of v1 and v2
+        elif self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
         # Euclidean distance between v1 and v2
@@ -9873,11 +9894,8 @@ class Distance(ObjectiveFunction):
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
-            result = np.correlate(v1, v2)
-
-        # Pearson Correlation of v1 and v2
-        elif self.metric is PEARSON:
-            result = np.corrcoef(v1, v2)
+            # result = np.correlate(v1, v2)
+            return 1-np.abs(Distance.correlation(v1, v2))
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -9894,15 +9912,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
-            # # MODIFIED 11/12/17 OLD:
-            # result /= len(variable[0])
-            # MODIFIED 11/12/17 NEW:
+        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
                 result /= len(v1)
-            # MODIFIED 11/12/17 END
 
         return result
 
@@ -10210,6 +10224,228 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
             variable = variable * learning_rate
+
+        # Generate the column array from the variable
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
+
+        # Calculate weight chhange matrix
+        weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
+        if self.learning_rate_dim in {0, 2}:
+            weight_change_matrix = weight_change_matrix * learning_rate
+
+        return weight_change_matrix
+
+
+class ContrastiveHebbian(LearningFunction):  # -------------------------------------------------------------------------
+    """
+    ContrastiveHebbian(         \
+        default_variable=None,  \
+        learning_rate=None,     \
+        params=None,            \
+        name=None,              \
+        prefs=None)
+
+    Implements a function that calculates a matrix of weight changes using the `ContrastiveHebbian learning rule
+    <https://www.sciencedirect.com/science/article/pii/B978148321448150007X>`_.
+
+    Arguments
+    ---------
+
+    variable : List[number] or 1d np.array : default ClassDefaults.variable
+       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+
+    COMMENT:
+    activation_function : Function or function : SoftMax
+        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
+        in `variable <ContrastiveHebbian.variable>`.
+    COMMENT
+
+    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+        specifies the learning rate used by the `function <ContrastiveHebbian.function>`; supersedes any specification
+        for the `Process` and/or `System` to which the function's `owner <ContrastiveHebbian.owner>` belongs (see
+        `learning_rate <ContrastiveHebbian.learning_rate>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+        of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    Attributes
+    ----------
+
+    variable: 1d np.array
+        activation values, the pair-wise products of which are used to generate the weight change matrix returned by
+        the `function <ContrastiveHebbian.function>`.
+
+    COMMENT:
+    activation_function : Function or function : SoftMax
+        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
+        `variable <ContrastiveHebbian.variable>`.
+    COMMENT
+
+    learning_rate : float, 1d or 2d np.array
+        used by the `function <ContrastiveHebbian.function>` to scale the weight change matrix returned by the `function
+        <ContrastiveHebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
+        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner
+        <ContrastiveHebbian.owner>` belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
+        is a 1d np.array, it is multiplied Hadamard (elementwise) by the `variable` <ContrastiveHebbian.variable>`
+        before calculating the weight change matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by
+        the weight change matrix; if it is `None`, then the `learning_rate <Process.learning_rate>` specified for the
+        Process to which the `owner <ContrastiveHebbian.owner>` belongs is used;  and, if that is `None`, then the
+        `learning_rate <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <ContrastiveHebbian.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <ContrastiveHebbian.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         calculates the pairwise product of all elements in the `variable <ContrastiveHebbian.variable>`, and then
+         scales that by the `learning_rate <ContrastiveHebbian.learning_rate>` to generate the weight change matrix
+         returned by the function.
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+
+    componentName = CONTRASTIVE_HEBBIAN_FUNCTION
+
+    class ClassDefaults(LearningFunction.ClassDefaults):
+        variable = np.array([0, 0])
+
+    default_learning_rate = 0.05
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 default_variable=None,
+                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(
+                # activation_function=activation_function,
+                learning_rate=learning_rate,
+                params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super()._validate_variable(variable, context))
+
+        variable = np.squeeze(np.array(variable))
+
+        if not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
+                                 format(self.name, variable))
+        if variable.ndim == 0:
+            raise ComponentError("Variable for {} is a single number ({}) "
+                                 "which doesn't make much sense for associative learning".
+                                 format(self.name, variable))
+        if variable.ndim > 1:
+            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
+                                 format(self.name, variable))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """Calculate a matrix of weight changes from a 1d array of activity values using ContrastiveHebbian
+        learning function.
+
+        The weight change matrix is calculated as:
+
+        COMMENT:
+        THE FOLOWING NEEDS TO BE REPLACED WITH CONTRASTIVE HEBBIAN LEARNING RULE:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <ContrastiveHebbian.variable>`.
+        COMMENT
+
+        Arguments
+        ---------
+
+        variable : List[number] or 1d np.array : default ClassDefaults.variable
+            array of activity values, the pairwise products of which are used to generate a weight change matrix.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            matrix of pairwise products of elements of `variable <ContrastiveHebbian.variable>` scaled by the
+            `learning_rate <ContrastiveHebbian.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+
+        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
+
+        # MODIFIED 9/21/17 NEW:
+        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 9/21/17 END
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if self.learning_rate_dim == 1:
+            variable = variable * learning_rate
+
+        # IMPLEMENTATION NOTE:  THE FOLLOWING NEEDS TO BE REPLACED BY THE CONTRASTIVE HEBBIAN LEARNING RULE:
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
