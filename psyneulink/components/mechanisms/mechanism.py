@@ -1934,7 +1934,7 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
+        self.previous_value = None
         self._instantiate_input_states(context=context)
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -2252,6 +2252,10 @@ class Mechanism_Base(Mechanism):
             target_set=runtime_params,
         )
 
+        # MODIFIED 7/14/18 NEW:
+        self._update_previous_value()
+        # MODIFIED 7/14/18 END
+
         # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
@@ -2322,6 +2326,9 @@ class Mechanism_Base(Mechanism):
         if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
             self._increment_execution_count()
             self._update_current_execution_time(context=context)
+
+        # Used by sublcasses with update_previous_value and/or convergence_function and delta
+        self._current_value = value
 
         return self.value
 
@@ -2402,6 +2409,12 @@ class Mechanism_Base(Mechanism):
                 )
 
         return np.array(self.input_values)
+
+    def _update_previous_value(self):
+        try:
+            self.previous_value = self.value
+        except:
+            self.previous_value = None
 
     def _update_input_states(self, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:

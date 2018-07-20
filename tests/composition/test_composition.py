@@ -501,13 +501,13 @@ class TestGetMechanismsByRole:
 
         for role in list(CNodeRole):
             if role is CNodeRole.ORIGIN:
-                assert comp.get_c_nodes_by_role(role) == {mechs[0]}
+                assert comp.get_c_nodes_by_role(role) == [mechs[0]]
             elif role is CNodeRole.INTERNAL:
-                assert comp.get_c_nodes_by_role(role) == set([mechs[1], mechs[2]])
+                assert comp.get_c_nodes_by_role(role) == [mechs[1], mechs[2]]
             elif role is CNodeRole.CYCLE:
-                assert comp.get_c_nodes_by_role(role) == {mechs[3]}
+                assert comp.get_c_nodes_by_role(role) == [mechs[3]]
             else:
-                assert comp.get_c_nodes_by_role(role) == set()
+                assert comp.get_c_nodes_by_role(role) == []
 
     def test_nonexistent_role(self):
 

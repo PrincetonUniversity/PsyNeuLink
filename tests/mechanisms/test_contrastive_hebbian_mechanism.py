@@ -7,11 +7,16 @@ class TestContrastiveHebbian:
     def test_scheduled_contrastive_hebbian(self):
         o = pnl.TransferMechanism()
         m = pnl.ContrastiveHebbianMechanism(
-            integrator_mode=True,
-            enable_learning=False,
-            auto=0,
-            hetero=-1,
-            size=2,
+                input_size=2,
+                hidden_size=0,
+                target_size=2,
+                separated=False,
+                mode=pnl.SIMPLE_HEBBIAN,
+                integrator_mode=True,
+                enable_learning=False,
+                matrix=[[0,-1],[-1, 0]],
+            # auto=0,
+            # hetero=-1,
         )
         s = pnl.sys(m, o)
         ms = pnl.Scheduler(system=s)
@@ -28,14 +33,17 @@ class TestContrastiveHebbian:
         '''Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
 
         Tests that ContrastiveHebbianMechanism behaves like RecurrentTransferMechanism with Hebbian LearningFunction
-        (allowing for epsilon differences due CONVERGENCE CRITERION (executes one extra time for each input).
+        (allowing for epsilon differences due CONVERGENCE CRITERION.
         '''
         size=4
         R = pnl.ContrastiveHebbianMechanism(
-                size=size,
+                input_size=4,
+                hidden_size=0,
+                target_size=4,
+                mode=pnl.SIMPLE_HEBBIAN,
+                enable_learning=True,
                 function=pnl.Linear,
                 learning_function=pnl.Hebbian,
-                enable_learning=True,
                 convergence_criterion=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
@@ -46,12 +54,12 @@ class TestContrastiveHebbian:
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
-        assert R.current_execution_time.pass_ == 4
+        assert R.current_execution_time.pass_ == 5
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(R.plus_phase_activity, [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(R.minus_phase_activity, [0.0, 0.0, 0.0, 0.0])
-        np.testing.assert_allclose(R.output_state.value, [1.20074767, 0.0, 1.20074767, 0.0])
+        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].value, [1.20074767, 0.0, 1.20074767, 0.0])
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
@@ -76,7 +84,7 @@ class TestContrastiveHebbian:
                 [0.0,        0.2399363,   0.0,        0.0      ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.value, [0.0, 1.20074767, 0.0, 1.20074767])
+        np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value, [0.0, 1.20074767, 0.0, 1.20074767])
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [ 0.0, 1.20074767, 0.0, 1.20074767])
         np.testing.assert_allclose(R.plus_phase_activity, [0.0, 1.20074767, 0.0, 1.20074767])
@@ -90,12 +98,16 @@ class TestContrastiveHebbian:
         '''
         size=4
         R = pnl.ContrastiveHebbianMechanism(
-                size=size,
+                input_size=4,
+                hidden_size=0,
+                target_size=4,
+                separated=False,
+                mode=pnl.SIMPLE_HEBBIAN,
+                enable_learning=True,
                 function=pnl.Linear,
                 integrator_mode=True,
-                learning_function=pnl.Hebbian,
-                enable_learning=True,
                 integration_rate=0.2,
+                learning_function=pnl.Hebbian,
                 convergence_criterion=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
@@ -106,12 +118,13 @@ class TestContrastiveHebbian:
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
-        assert R.current_execution_time.pass_ == 18
+        assert R.current_execution_time.pass_ == 19
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.plus_phase_activity, [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.minus_phase_activity, [0.0, 0.0, 0.0, 0.0])
-        np.testing.assert_allclose(R.output_state.value, [1.1414229612568625, 0.0, 1.1414229612568625, 0.0])
+        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].value,
+                                   [1.1414229612568625, 0.0, 1.1414229612568625, 0.0])
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
@@ -135,7 +148,8 @@ class TestContrastiveHebbian:
                 [0.0,        0.22035998, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.value, [0.0, 1.1414229612568625, 0.0, 1.1414229612568625])
+        np.testing.assert_allclose(R.output_states[pnl.CURRENT_ACTIVITY_OUTPUT].value,
+                                   [0.0, 1.1414229612568625, 0.0, 1.1414229612568625])
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [ 0.0, 1.14142296, 0.0, 1.14142296])
         np.testing.assert_allclose(R.plus_phase_activity, [0.0, 1.14142296, 0.0, 1.14142296])
@@ -143,15 +157,29 @@ class TestContrastiveHebbian:
 
 
     def test_additional_output_states(self):
-        CHL = pnl.ContrastiveHebbianMechanism(size=2,
-                                              additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
-        assert len(CHL.output_states)==4
-        assert pnl.PLUS_PHASE_OUTPUT in CHL.output_states.names
+        CHL1 = pnl.ContrastiveHebbianMechanism(
+                input_size=2, hidden_size=0, target_size=2,
+                additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT])
+        assert len(CHL1.output_states)==5
+        assert pnl.PLUS_PHASE_OUTPUT in CHL1.output_states.names
+
+        CHL2 = pnl.ContrastiveHebbianMechanism(
+                input_size=2, hidden_size=0, target_size=2,
+                additional_output_states=[pnl.PLUS_PHASE_OUTPUT, pnl.MINUS_PHASE_OUTPUT],
+                separated=False)
+        assert len(CHL2.output_states)==5
+        assert pnl.PLUS_PHASE_OUTPUT in CHL2.output_states.names
+
 
     def test_configure_learning(self):
 
         o = pnl.TransferMechanism()
-        m = pnl.ContrastiveHebbianMechanism(size=2,matrix=[[0,-1],[-1,0]])
+        m = pnl.ContrastiveHebbianMechanism(
+                input_size=2, hidden_size=0, target_size=2,
+                mode=pnl.SIMPLE_HEBBIAN,
+                separated=False,
+                matrix=[[0,-.5],[-.5,0]]
+        )
 
         with pytest.warns(UserWarning) as record:
             m.learning_enabled = True
@@ -173,4 +201,7 @@ class TestContrastiveHebbian:
         s.scheduler_processing=ms
         results = s.run(inputs=[2,2], num_trials=4)
 
-        np.testing.assert_allclose(results, [[[4.]], [[2.23061754]], [[2.3088827]], [[2.39958265]]])
+        np.testing.assert_allclose(results, [[[2.671875]],
+                                             [[2.84093837]],
+                                             [[3.0510183]],
+                                             [[3.35234623]]])
