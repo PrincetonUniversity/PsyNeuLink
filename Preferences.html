@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.4.7.1 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.4.7.1+228.gdc03db6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.7.1+228.gdc03db6 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.7.1
+                0.4.7.1+228
               </div>
             
           
@@ -248,7 +248,6 @@ the owner is set dynamically, to insure context-relevant PreferenceLevels for re
 <li>kpReportOutputPref: report object’s ouptut during execution</li>
 <li>kpLogPref: record attribute data for the object during execution</li>
 <li>kpRuntimeParamModulationPref: modulate parameters using runtime specification (in pathway)</li>
-<li>kpRuntimeParamStickAssignmentPref: assignments remain in effect until replaced</li>
 </ul>
 </dd>
 </dl>
@@ -342,20 +341,6 @@ of owner’s Preference object</dd>
 <dd>assigns the value of the setting arg to the runtimeParamModulationPref of the owner’s Preference object</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>runtimeParamStickyAssignmentPref():</dt>
-<dd><dl class="first last docutils">
-<dt>returns setting for runtimeParamStickyAssignment preference at level specified in</dt>
-<dd>runtimeParamStickyAssignment PreferenceEntry of owner’s Preference object</dd>
-</dl>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>runtimeParamStickyAssignmentPref(setting=&lt;value&gt;):</dt>
-<dd>assigns value of the setting arg to the runtimeParamStickyAssignmentPref of the owner’s Preference object</dd>
-</dl>
-</li>
 </ul>
 </dd>
 </dl>
@@ -391,16 +376,50 @@ of owner’s Preference object</dd>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref">
-<code class="descname">runtimeParamStickyAssignmentPref</code><a class="headerlink" href="#psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns owner’s runtimeParamStickyAssignmentPref
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.globals.preferences.ComponentPreferenceSet.verbosePref">
 <code class="descname">verbosePref</code><a class="headerlink" href="#psyneulink.globals.preferences.ComponentPreferenceSet.verbosePref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return setting of owner’s verbosePref at level specified in its PreferenceEntry.level
+:param level:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.globals.preferences.SystemPreferenceSet">
+<em class="property">class </em><code class="descclassname">psyneulink.globals.preferences.</code><code class="descname">SystemPreferenceSet</code><span class="sig-paren">(</span><em>record_simulation_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.preferences.SystemPreferenceSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends ComponentPreferenceSet to include Mechanism-specific preferences</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><dl class="first last docutils">
+<dt>Implements the following preference:</dt>
+<dd><ul class="first last simple">
+<li>recordSimulation (bool): uses specification of run-time params to update execute method params</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Class methods:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>recordSimulationPref():</dt>
+<dd>returns setting for recordSimulation preference at level specified in recordSimulation
+PreferenceEntry of owner’s Preference object</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>recordSimulationPref(setting=&lt;value&gt;):</dt>
+<dd>assigns the value of the setting item in the recordSimulationPref PreferenceEntry of the
+owner’s Preference object</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="psyneulink.globals.preferences.SystemPreferenceSet.recordSimulationPref">
+<code class="descname">recordSimulationPref</code><a class="headerlink" href="#psyneulink.globals.preferences.SystemPreferenceSet.recordSimulationPref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return setting of owner’s recordSimulationPref at level specified in its PreferenceEntry.level
 :param level:
 :return:</p>
 </dd></dl>
@@ -456,40 +475,6 @@ owner’s Preference object</dd>
 <dd>returns PreferenceEntry for the runtimeParamModulationPref attribute of the owner’s Preference object</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPref():</dt>
-<dd>returns setting for runtimeParamStickyAssignment preference at level specified in
-runtimeParamStickyAssignment
-PreferenceEntry of owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPref(setting=&lt;value&gt;):</dt>
-<dd>assigns the value of the setting item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
-owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPrefLevel()</dt>
-<dd>returns level in the RuntimeParamStickyAssignmentPref PreferenceEntry of the owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPrefLevel(level=&lt;PreferenceLevel&gt;):</dt>
-<dd>assigns the value of the level item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
-owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPrefEntry():</dt>
-<dd>assigns PreferenceEntry to RuntimeParamStickyAssignmentPref attribute of the owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>RuntimeParamStickyAssignmentPrefEntry(entry=&lt;PreferenceEntry&gt;):</dt>
-<dd>returns PreferenceEntry for the RuntimeParamStickyAssignmentPref attribute of the owner’s Preference object</dd>
-</dl>
-</li>
 </ul>
 </dd>
 </dl>
@@ -512,28 +497,6 @@ owner’s Preference object</dd>
 <dt id="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamModulationPrefLevel">
 <code class="descname">runtimeParamModulationPrefLevel</code><a class="headerlink" href="#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamModulationPrefLevel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns level for owner’s runtimeParamModulation pref
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref">
-<code class="descname">runtimeParamStickyAssignmentPref</code><a class="headerlink" href="#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns setting of owner’s runtimeParamStickyAssignment pref at level specified in its PreferenceEntry.level
-:param level:
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPrefEntry">
-<code class="descname">runtimeParamStickyAssignmentPrefEntry</code><a class="headerlink" href="#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPrefEntry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns owner’s runtimeParamStickyAssignment PreferenceEntry tuple (setting, level)
-:return:</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPrefLevel">
-<code class="descname">runtimeParamStickyAssignmentPrefLevel</code><a class="headerlink" href="#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPrefLevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns level for owner’s runtimeParamStickyAssignment pref
 :return:</p>
 </dd></dl>
 
@@ -914,7 +877,7 @@ pref_ivar_name=&lt;str&gt;):</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1',
+            VERSION:'0.4.7.1+228.gdc03db6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

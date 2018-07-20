@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.4.7.1 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.4.7.1+228.gdc03db6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+228.gdc03db6 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1
+                0.4.7.1+228
               </div>
             
           
@@ -305,20 +305,20 @@ execution, over which every Component in the Composition has been considered for
 same <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> may be assigned to execute on each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, since different Conditions may be satisfied.</p>
 <p>The Scheduler continues to make <code class="xref any docutils literal"><span class="pre">PASS`es</span> <span class="pre">through</span> <span class="pre">the</span> <span class="pre">`consideration_queue</span></code> until a
 <a class="reference internal" href="#scheduler-termination-conditions"><span class="std std-ref">termination Condition</span></a> is satisfied. If no termination Conditions are specified,
-the Scheduler terminates a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> when every Component has been specified for execution at least once (corresponding
+the Scheduler terminates a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> when every Component has been specified for execution at least once (corresponding
 to the <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.AllHaveRun" title="psyneulink.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a> Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
-to terminate a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> earlier  or later (e.g., when the  Condition for a particular Component or set of Components
-is met).  When the Scheduler terminates a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input
-specified in the call to its <a class="reference internal" href="Composition.html#psyneulink.composition.Composition.run" title="psyneulink.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  Thus, a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing
+to terminate a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> earlier  or later (e.g., when the  Condition for a particular Component or set of Components
+is met).  When the Scheduler terminates a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input
+specified in the call to its <code class="xref any docutils literal"><span class="pre">run</span></code> method.  Thus, a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing
 associated with a given input to the Composition.</p>
 <div class="section" id="termination-conditions">
 <span id="scheduler-termination-conditions"></span><h3>Termination Conditions<a class="headerlink" href="#termination-conditions" title="Permalink to this headline">¶</a></h3>
-<p>Termination conditions are <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when the open-ended units of time - <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
-and <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> - have ended.  By default, the termination condition for a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.AllHaveRun" title="psyneulink.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a>, which is satisfied
+<p>Termination conditions are <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when the open-ended units of time - <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
+and <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> - have ended.  By default, the termination condition for a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.AllHaveRun" title="psyneulink.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a>, which is satisfied
 when all Components have run at least once within the trial, and the termination condition for a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale" title="psyneulink.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the
-<strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.composition.Composition.run" title="psyneulink.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing),
+<strong>termination_processing</strong> argument of a call to <code class="xref any docutils literal"><span class="pre">Composition.run</span></code> (to terminate the execution of processing),
 or its <strong>termination_learning</strong> argument to terminate the execution of learning:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">System</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
@@ -500,13 +500,17 @@ For example, <code class="xref any docutils literal"><span class="pre">times[Tim
 <dl class="method">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.add_condition">
 <code class="descname">add_condition</code><span class="sig-paren">(</span><em>owner</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to the Scheduler. If <strong>owner</strong> already has a Condition, it is overwritten
+with the new one. If you want to add multiple conditions to a single owner, use the
+<a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">composite Conditions</span></a> to accurately specify the desired behavior.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> – the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that is dependent on the <a class="reference internal" href="Condition.html#module-psyneulink.scheduling.condition" title="psyneulink.scheduling.condition"><code class="xref any py py-mod docutils literal"><span class="pre">condition</span></code></a></li>
-<li><strong>condition</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> (including All or Any)</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – specifies the Component with which the <strong>condition</strong> should be associated. <strong>condition</strong>
+will govern the execution behavior of <strong>owner</strong></li>
+<li><strong>condition</strong> (<a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.Condition" title="psyneulink.scheduling.condition.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
 </ul>
 </td>
 </tr>
@@ -517,12 +521,21 @@ For example, <code class="xref any docutils literal"><span class="pre">times[Tim
 <dl class="method">
 <dt id="psyneulink.scheduling.scheduler.Scheduler.add_condition_set">
 <code class="descname">add_condition_set</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.scheduling.scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Adds a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> (in the form of a dict or another ConditionSet) to the Scheduler.
+Any Condition added here will overwrite an existing Condition for a given owner.
+If you want to add multiple conditions to a single owner, add a single <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a>
+to accurately specify the desired behavior.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> – a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <code class="xref any docutils literal"><span class="pre">Component`s</span> <span class="pre">to</span> <span class="pre">`Condition`s,</span>
-<span class="pre">which</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">added</span> <span class="pre">later</span> <span class="pre">with</span> <span class="pre">`add_condition</span></code></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> (dict[<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>], <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.ConditionSet" title="psyneulink.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a>) – <p>specifies collection of Conditions to be added to this ConditionSet,</p>
+<dl class="docutils">
+<dt>if a dict is provided:</dt>
+<dd>each entry should map an owner <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> whose execution behavior will be
+governed) to a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -595,7 +608,7 @@ executions at each iteration</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1',
+            VERSION:'0.4.7.1+228.gdc03db6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

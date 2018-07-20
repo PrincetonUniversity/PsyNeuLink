@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.4.7.1 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.4.7.1+228.gdc03db6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+228.gdc03db6 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
         <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1
+                0.4.7.1+228
               </div>
             
           
@@ -385,8 +385,8 @@ if Mechanism(s) are specified, which of their primary States are used (see State
 by specifying other Components with which it should be connected by Projection(s). Different States support
 different forms, but all support the following two forms:</p>
 <ul class="simple" id="state-2-item-tuple">
-<li><strong>2-item tuple: (State name or list of State names, Mechanism)</strong> - 1st item is the name of a State or list of
-State names, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
+<li><strong>2-item tuple:</strong> <em>(&lt;State name or list of State names&gt;, &lt;Mechanism&gt;)</em> – 1st item is the name of a State or
+list of them, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
 of the States specified.  The type of Projection depends on the type of State being created, and the type of
 States specified in the tuple  (see <a class="reference internal" href="Projection.html#projection-table"><span class="std std-ref">Sender, Receiver and Attribute Assignments for Projection Types</span></a>).  For example, if the State being created is an
 InputState, and the States specified in the tuple are OutputStates, then <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> are used; if <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> are specified, then the corresponding
@@ -491,7 +491,7 @@ assigned to it.</p>
 Mechanism; if its owner not specified, then its initialization is <a class="reference internal" href="#state-deferred-initialization"><span class="std std-ref">deferred</span></a>.
 Its initialization is completed automatically when it is assigned to an owner <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal"><span class="pre">Mechanism</span></code></a> using the
 owner’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  If the State is not assigned to an owner, it will not be
-functional (i.e., used during the execution of <code class="xref any docutils literal"><span class="pre">Mechanisms</span></code> and/or <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">Compositions</span></a>, irrespective of whether it has any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> assigned to it.</p>
+functional (i.e., used during the execution of <code class="xref any docutils literal"><span class="pre">Mechanisms</span></code> and/or <code class="xref any docutils literal"><span class="pre">Compositions</span></code>, irrespective of whether it has any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> assigned to it.</p>
 </div>
 </div>
 <div class="section" id="structure">
@@ -585,7 +585,7 @@ or to disable modulation, using one of the values of <a class="reference interna
 ParameterStates belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputStates are
 updated after the Mechanism’s function is called.  When a State is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.components.states.state.State_Base.all_afferents" title="psyneulink.components.states.state.State_Base.all_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.path_afferents" title="psyneulink.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#psyneulink.components.states.state.State_Base.path_afferents" title="psyneulink.components.states.state.State_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.components.states.state.State_Base.function" title="psyneulink.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
@@ -610,7 +610,7 @@ TransferMechanism:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputState</span> <span class="n">InputState</span><span class="o">-</span><span class="mi">0</span><span class="p">)]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_states</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="p">[(</span><span class="n">ParameterState</span> <span class="n">intercept</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">slope</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">noise</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">smoothing_factor</span><span class="p">)]</span>
+<span class="o">&gt;</span> <span class="p">[(</span><span class="n">ParameterState</span> <span class="n">intercept</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">slope</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">noise</span><span class="p">),</span> <span class="p">(</span><span class="n">ParameterState</span> <span class="n">integration_rate</span><span class="p">)]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">output_states</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[(</span><span class="n">OutputState</span> <span class="n">RESULT</span><span class="p">)]</span>
 </pre></div>
@@ -982,7 +982,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1',
+            VERSION:'0.4.7.1+228.gdc03db6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -165,8 +165,11 @@ LC.set_log_conditions('value')
 for output_state in LC.output_states:
     output_state.value *= G + k * initial_w
 
+LC_process = pnl.Process(pathway=[LC])
+
 # Now, we specify the processes of the System, which in this case is just the decision_process
-task = pnl.System(processes=[decision_process])
+task = pnl.System(processes=[decision_process, LC_process],
+                  reinitialize_mechanisms_when=pnl.Never(),)
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
@@ -209,32 +212,35 @@ task.run(stim_list_dict, num_trials=trials)
 LC_results = LC.log.nparray()        # get logged results
 LC_results_w = np.zeros([trials])    # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[4][i+1][3][0]
+    LC_results_w[i] = LC_results[4][i + 1][3][0]
 LC_results_v = np.zeros([trials])    # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[4][i+1][2][0]
+    LC_results_v[i] = LC_results[4][i + 1][2][0]
+
 
 def h_v(v, C, d):                   # Compute h(v)
     return C * v + (1 - C) * d
+
+
 LC_results_hv = np.zeros([trials])    # get LC_results_hv
 for i in range(trials):
-    LC_results_hv[i] = h_v(LC_results_v[i],C,d)
+    LC_results_hv[i] = h_v(LC_results_v[i], C, d)
 
 
-#Plot the Figure 3 from the paper
-t = np.linspace(0,trials,trials)            # Create array for x axis with same length then LC_results_v
+# Plot the Figure 3 from the paper
+t = np.linspace(0, trials, trials)            # Create array for x axis with same length then LC_results_v
 fig = plt.figure()                          # Instantiate figure
 ax = plt.gca()                              # Get current axis for plotting
 ax2 = ax.twinx()                            # Create twin axis with a different y-axis on the right side of the figure
 ax.plot(t, LC_results_hv, label="h(v)")      # Plot h(v)
-ax2.plot(t, LC_results_w, label="w", color = 'red') # Plot w
+ax2.plot(t, LC_results_w, label="w", color='red')  # Plot w
 h1, l1 = ax.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax.legend(h1 + h2, l1 + l2, loc=2)          # Create legend on one side
 ax.set_xlabel('Time (ms)')                  # Set x axis lable
 ax.set_ylabel('LC Activity')                # Set left y axis label
 ax2.set_ylabel('NE Output')                 # Set right y axis label
-plt.title('Nieuwenhaus 2005 PsyNeuLink Lag 2 without noise', fontweight='bold') # Set title
-ax.set_ylim((-0.2,1.0))                     # Set left y axis limits
+plt.title('Nieuwenhuis 2005 PsyNeuLink Lag 2 without noise', fontweight='bold')  # Set title
+ax.set_ylim((-0.2, 1.0))                     # Set left y axis limits
 ax2.set_ylim((0.0, 0.4))                    # Set right y axis limits
-plt.show()        
+plt.show()

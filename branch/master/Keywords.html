@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Keywords &mdash; PsyNeuLink 0.4.7.1 documentation</title>
+  <title>Keywords &mdash; PsyNeuLink 0.4.7.1+228.gdc03db6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.7.1+228.gdc03db6 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.7.1
+                0.4.7.1+228
               </div>
             
           
@@ -299,9 +299,15 @@ for which <em>len</em> is their length, <span class="math">\(\bar{a}\)</span> is
 deviation of an array, and <span class="math">\(w_{a_1a_2}\)</span> a coupling coefficient (“weight”) between a pair of elements,
 one from each array:</p>
 <dl class="attribute">
+<dt id="psyneulink.globals.keywords.DistanceMetrics.MAX_ABS_DIFF">
+<code class="descname">MAX_ABS_DIFF</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.MAX_ABS_DIFF" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \max(|a_1-a_2|)\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.globals.keywords.DistanceMetrics.DIFFERENCE">
 <code class="descname">DIFFERENCE</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.DIFFERENCE" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math">\(d = \sum\limits^{len}(a_1-a_2)\)</span></p>
+<dd><p><span class="math">\(d = \sum\limits^{len}(|a_1-a_2|)\)</span></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -313,7 +319,8 @@ one from each array:</p>
 <dl class="attribute">
 <dt id="psyneulink.globals.keywords.DistanceMetrics.CORRELATION">
 <code class="descname">CORRELATION</code><a class="headerlink" href="#psyneulink.globals.keywords.DistanceMetrics.CORRELATION" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math">\(d = \frac{\sum\limits^{len}(a_1-\bar{a}_1)(a_2-\bar{a}_2)}{(len-1)\sigma_{a_1}\sigma_{a_2}}\)</span></p>
+<dd><p><span class="math">\(d = 1 - \left|\frac{\sum\limits^{len}(a_1-\bar{a}_1)(a_2-\bar{a}_2)}{(len-1)\sigma_{a_1}\sigma_{
+a_2}}\right|\)</span></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -367,7 +374,7 @@ one from each array:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1',
+            VERSION:'0.4.7.1+228.gdc03db6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
