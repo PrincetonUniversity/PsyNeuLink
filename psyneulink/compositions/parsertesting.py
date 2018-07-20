@@ -25,6 +25,7 @@ from collections import Iterable, OrderedDict
 import logging
 
 import numpy as np
+import timeit
 
 import torch
 from torch import nn
@@ -439,6 +440,210 @@ class ModelInPytorch(torch.nn.Module):
 
 
 
+'''
+# Pytorch nn module subclass
+class ModelInPytorch(torch.nn.Module):
+    
+    
+    
+    # HELPER METHODS
+    
+    
+    # method for creating ordered execution sets from processing graph
+    def get_ordered_exec_sets(self, processing_graph):
+        
+        # initialize lists of ordered execution sets, terminal nodes
+        ordered_exec_sets = []
+        terminal_nodes = []
+        
+        # create list of terminal nodes in processing graph
+        for i in range(len(processing_graph.vertices)):
+            node = processing_graph.vertices[i]
+            if len(node.children) == 0:
+                terminal_nodes.append(node)
+        
+        # iterate over terminal nodes, call recursive function to create ordered execution sets
+        for i in range(len(terminal_nodes)):
+            node = terminal_nodes[i]
+            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
+        
+        return ordered_exec_sets
+    
+    
+    # helper recursive method for creating ordered execution sets from processing graph
+    def get_node_pos(self, node, ordered_exec_sets):
+        
+        # check if current node has already been put in an execution set
+        for i in range(len(ordered_exec_sets)):
+            if (node in ordered_exec_sets[i]):
+                return ordered_exec_sets, i
+            
+        # check if we are at a node with no parents
+        if len(node.parents) == 0:
+            if len(ordered_exec_sets) < 1:
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[0].append(node)
+            return ordered_exec_sets, 0
+            
+        # if we are at a node with parents
+        else:
+            
+            # iterate over parents, find parent path with maximum length
+            max_dist = -1
+            for i in range(len(node.parents)):
+                parent = node.parents[i]
+                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
+                dist += 1
+                if dist > max_dist: 
+                    max_dist = dist
+            
+            # set node at position = max_dist in the ordered execution sets list
+            if len(ordered_exec_sets) < (max_dist+1):
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[max_dist].append(node)
+            return ordered_exec_sets, max_dist
+    
+    
+    # helper function creator
+    def activation_function_creator(self, node):
+        
+        # linear function case
+        if isinstance(node.component.function_object, Linear):
+            slope = node.component.function_object.params['slope']
+            intercept = node.component.function_object.params['intercept']
+            return lambda x: x * slope + intercept
+        
+        # logistic function case
+        elif isinstance(node.component.function_object, Logistic):
+            gain = node.component.function_object.params['gain']
+            bias = node.component.function_object.params['bias']
+            offset = node.component.function_object.params['offset']
+            return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
+        
+        # relu function case
+        else:
+            gain = node.component.function_object.params['gain']
+            bias = node.component.function_object.params['bias']
+            leak = node.component.function_object.params['leak']
+            return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).float()) * gain + 
+                              torch.min(input=(x-bias), other=torch.tensor([0]).float()) * leak)
+    
+    
+    
+    # initialization
+    def __init__(self, processing_graph):
+        
+        # do superclass init
+        super(ModelInPytorch, self).__init__()
+        
+        # instance variables
+        self.ordered_execution_sets = self.get_ordered_exec_sets(processing_graph) # execution sets
+        self.processing_graph = processing_graph # processing graph of model
+        self.node_to_feedforward_info = {} # map from PNL node to feedforward information
+        self.projections_to_torch_weights = {} # map from PNL projections to corresponding params in pytorch
+        self.params = nn.ParameterList() # list of parameters for Pytorch to take note of
+        self.layer_list = []
+        
+        # go through nodes in the execution sets one by one, set up above dictionaries for each
+        for i in range(len(self.ordered_execution_sets)):
+            for j in range(len(self.ordered_execution_sets[i])):
+                
+                # get current node
+                node = self.ordered_execution_sets[i][j]
+                
+                # create feedforward information list for node
+                node_feedforward_info = []
+                
+                # set up node's tensor, activation function, afferent inputs information
+                layer = torch.zeros(len(node.component.input_states[0].variable))
+                activation_function = self.activation_function_creator(node)
+                afferents = {}
+                
+                # add tensor, activation function to node's feedforward information
+                node_feedforward_info.append(layer)
+                node_feedforward_info.append(activation_function)
+                self.layer_list.append(layer)
+                
+                # add to afferent inputs information if we don't have origin node
+                if len(node.parents) > 0:
+                    
+                    for k in range(len(node.component.path_afferents)):
+                        mapping_proj = node.component.path_afferents[k]
+                        input_component = mapping_proj.sender.owner
+                        input_node = self.processing_graph.comp_to_vertex[input_component]
+                        weights = nn.Parameter(torch.randn(len(input_component.input_states[0].variable), 
+                                                           len(node.component.input_states[0].variable)).float())
+                        biases = nn.Parameter(torch.randn(len(node.component.input_states[0].variable)).float())
+                        self.params.append(weights)
+                        self.params.append(biases)
+                        afferents[input_node] = [weights, biases]
+                        self.projections_to_torch_weights[mapping_proj] = [weights, biases]
+                
+                # add afferent inputs information to node's feedforward information
+                node_feedforward_info.append(afferents)
+                
+                # add feedforward information to dictionary
+                self.node_to_feedforward_info[node] = node_feedforward_info
+    
+    
+    # feedforward method
+    def forward(self, inputs):
+        
+        # set up output list
+        outputs = []
+        
+        # DON'T RESET LAYER TENSORS FOR NOW
+        
+        # iterate over nodes in execution sets
+        for i in range(len(self.ordered_execution_sets)):
+            for j in range(len(self.ordered_execution_sets[i])):
+                
+                # get current node, feedforward information for it
+                node = self.ordered_execution_sets[i][j]
+                ff_info = self.node_to_feedforward_info[node]
+                layer = ff_info[0]
+                activation_function = ff_info[1]
+                afferents = ff_info[2]
+                
+                # feedforward step if we have origin node
+                if (i == 0):
+                    layer = activation_function(inputs[j])
+                
+                # feedforward step if we do not have origin node
+                else:
+                    layer = torch.zeros(len(node.component.input_states[0].variable))
+                    for input_node, param_list in afferents.items():
+                        layer += (torch.matmul(self.node_to_feedforward_info[input_node][0], param_list[0]) + param_list[1])
+                    layer = activation_function(layer)
+                
+                # put layer in correct place in the dictionary
+                self.node_to_feedforward_info[node][0] = layer
+                
+                # if we're at a node in the last execution set
+                if i == len(self.ordered_execution_sets)-1:
+                    outputs.append(layer)
+        
+        return outputs
+    
+    
+    
+    # method for retreiving the weights, biases corresponding to psyneulink projections
+    def get_parameters_for_projections(self):
+        return self.projections_to_torch_weights
+'''
+
+
+
+
+
+
+
+
+
+
+
 
 
 # takes inputs and targets for pytorch model and trains them 
@@ -448,12 +653,13 @@ def autodiff_training(model, inputs, targets, learning_rate, epochs_or_stop_lear
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     outputs = np.empty([len(inputs)], dtype=object)
     
+    # times = np.zeros(epochs_or_stop_learning_condition*len(inputs))
+    
     # iterate over epochs
     for epoch in range(epochs_or_stop_learning_condition):
         
         if (epoch % 10 == 0):
             print(epoch)
-            print("\n")
         
         # set a random number seed
         torch.manual_seed(epoch)
@@ -464,12 +670,11 @@ def autodiff_training(model, inputs, targets, learning_rate, epochs_or_stop_lear
         # iterate over inputs/targets
         for t in range(len(inputs)):
             
-            # print(t)
-            # print("\n")
-            
             # get current inputs, targets
             curr_tensor_inputs = inputs[rand_train_order[t]]
             curr_tensor_targets = targets[rand_train_order[t]]
+            
+            # start_time = timeit.default_timer()
             
             # run the model on inputs
             curr_tensor_outputs = model.forward(curr_tensor_inputs)
@@ -480,21 +685,20 @@ def autodiff_training(model, inputs, targets, learning_rate, epochs_or_stop_lear
                 loss += criterion(curr_tensor_outputs[i], curr_tensor_targets[i])
             
             
-            # dot = make_dot(loss)
-            # dot.format = 'svg'
-            # dot.render()
-            
-            
-            # if (t == 1):
-                # dot = make_dot(loss)
-                # dot.format = 'svg'
-                # dot.render()
+            if (t == 12):
+                dot = make_dot(loss)
+                dot.format = 'svg'
+                dot.render()
             
             
             # compute gradients and perform parameter update
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            
+            # end_time = timeit.default_timer()
+            # index = epoch*len(inputs) + t
+            # times[index] = end_time - start_time
             
             # save outputs of model if this is final epoch
             if epoch == epochs_or_stop_learning_condition - 1:
@@ -503,12 +707,12 @@ def autodiff_training(model, inputs, targets, learning_rate, epochs_or_stop_lear
                     curr_output_list.append(curr_tensor_outputs[i])
                 outputs[rand_train_order[t]] = curr_output_list
     
-    
+    # save outputs in a list, return the list
     outputs_list = []
     for i in range(len(outputs)):
         outputs_list.append(outputs[i])
     
-    return outputs_list
+    return outputs_list# , times
 
 
 
@@ -547,11 +751,11 @@ def autodiff_checking(model, inputs, targets):
             # compute MSE loss on current output
             for i in range(len(curr_outputs)):
                 total_MSE += criterion(curr_outputs[i], curr_targets[i])
-                print("Rounded model output: ")
-                print(torch.round(curr_outputs[i]))
-                print("Actual value: ")
-                print(curr_targets[i])
-                print("\n")
+                # print("Rounded model output: ")
+                # print(torch.round(curr_outputs[i]))
+                # print("Actual value: ")
+                # print(curr_targets[i])
+                # print("\n")
             
             # iterate over output entries to get correctness of rounded output
             correct_or_nah = 0
@@ -560,6 +764,8 @@ def autodiff_checking(model, inputs, targets):
                     if (torch.round(curr_outputs[i][j]) != curr_targets[i][j]):
                         correct_or_nah = 1
                         break
+                if (correct_or_nah == 1):
+                    break
             if (correct_or_nah == 0):
                 num_correct_rounded += 1
         
@@ -586,7 +792,7 @@ def autodiff_checking(model, inputs, targets):
 
 
 
-'''
+
 # RUMELHART'S SEMANTIC MODEL
 
 # Mechanisms:
@@ -783,7 +989,7 @@ print("\n")
 print("\n")
 print("\n")
 
-
+'''
 print("Checking tensors for inputs, outputs: ")
 print(PT_nouns)
 print(PT_nouns.shape)
@@ -808,7 +1014,7 @@ print("\n")
 print(PT_truth_can)
 print(PT_truth_can.shape)
 print("\n")
-
+'''
 
 print("Tryna run this bitch: ")
 print("\n")
@@ -820,11 +1026,23 @@ ready_targets = []
 
 for i in range(len(PT_nouns)):
     for j in range(len(PT_rels)):
-        
         ready_inputs.append([PT_rels[j], PT_nouns[i]])
         ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
 
+# start_time = timeit.default_timer()
+
 test_training = autodiff_training(rumel_parsed_pytorch, ready_inputs, ready_targets, learning_rate=0.001, epochs_or_stop_learning_condition=1000)
+
+# end_time = timeit.default_timer()
+# print(end_time - start_time)
+
+print("\n")
+
+# print(times[:20])
+# print(np.shape(times))
+# print(np.mean(times))
+# print("\n")
+
 # print(test_training)
 
 percentage_acc, percentage_err, avg_MSE = autodiff_checking(rumel_parsed_pytorch, ready_inputs, ready_targets)
@@ -832,18 +1050,18 @@ percentage_acc, percentage_err, avg_MSE = autodiff_checking(rumel_parsed_pytorch
 print(percentage_acc)
 print(percentage_err)
 print(avg_MSE)
+
+
+
+
+
+
+
+
+
+
+
 '''
-
-
-
-
-
-
-
-
-
-
-
 # AND GATE
 
 print("\n")
@@ -936,7 +1154,7 @@ percentage_acc, percentage_err, avg_MSE = autodiff_checking(and_parsed_pytorch, 
 print(percentage_acc)
 print(percentage_err)
 print(avg_MSE)
-
+'''
 
 
 
