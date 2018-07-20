@@ -1,4 +1,5 @@
 import numpy as np
+import psyneulink as pnl
 import pytest
 
 from psyneulink.components.functions.function import LinearCombination, Reduce
@@ -7,14 +8,14 @@ from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import ProjectionError
-from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.inputstate import InputState, InputStateError
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
-mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
+mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
-
 
 class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
@@ -43,12 +44,12 @@ class TestInputStateSpec:
 
     def test_mismatch_with_default_variable_error(self):
 
-        with pytest.raises(MechanismError) as error_text:
+        with pytest.raises(InputStateError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[[32, 24], 'HELLO']
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_default_variable_format_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -209,7 +210,7 @@ class TestInputStateSpec:
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.input_state.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -222,7 +223,7 @@ class TestInputStateSpec:
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -234,8 +235,8 @@ class TestInputStateSpec:
         T = TransferMechanism(input_states=[([0,0], R2)])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert T.input_state.path_afferents[0].sender.socket_width == 3
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -247,8 +248,8 @@ class TestInputStateSpec:
         T = TransferMechanism(size=2, input_states=[(R2, None, None, np.zeros((3, 2)))])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert T.input_state.path_afferents[0].sender.instance_defaults.variable.shape[-1] == 3
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -381,7 +382,7 @@ class TestInputStateSpec:
                 default_variable=[[0]],
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 23
@@ -395,7 +396,7 @@ class TestInputStateSpec:
                     {NAME: 'SECOND', VARIABLE: [0]}
                 ]
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 24
@@ -479,7 +480,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             i = InputState(reference_value=[0, 0, 0])
             TransferMechanism(default_variable=[0, 0], input_states=[i])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 31
@@ -500,7 +501,7 @@ class TestInputStateSpec:
             m = TransferMechanism(size=2)
             p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
             TransferMechanism(default_variable=[0, 0], input_states=[p])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33
@@ -550,7 +551,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 38
@@ -559,7 +560,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 26
@@ -641,15 +642,15 @@ class TestInputStateSpec:
     def test_2_item_tuple_with_state_name_list_and_mechanism(self):
 
         # T1 has OutputStates of with same lengths,
-        #    so T2 should use that length for its InputState (since it is not otherwise specified
+        #    so T2 should use that length for its InputState variable (since it is not otherwise specified)
         T1 = TransferMechanism(input_states=[[0,0],[0,0]])
         T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
         assert len(T2.input_states[0].value) == 2
         assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
         assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
 
-        # T1 has OutputStates with different lengths,
-        #    so T2 should use its variable default to as format for its InputStates (since it is not otherwise specified
+        # T1 has OutputStates with different lengths both of which are specified by T2 to project to a singe InputState,
+        #    so T2 should use its variable default as format for the InputState (since it is not otherwise specified)
         T1 = TransferMechanism(input_states=[[0,0],[0,0,0]])
         T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
         assert len(T2.input_states[0].value) == 1
@@ -758,5 +759,17 @@ class TestInputStateSpec:
             size=size,
             input_states=input_states
         )
-        assert len(T.input_states[0].instance_defaults.variable) == variable_len_state
-        assert len(T.instance_defaults.variable[0]) == variable_len_mech
+        assert T.input_states[0].socket_width == variable_len_state
+        assert T.instance_defaults.variable.shape[-1] == variable_len_mech
+
+    def test_input_states_arg_no_list(self):
+        T = TransferMechanism(input_states={VARIABLE: [0, 0, 0]})
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1
+
+    def test_input_states_params_no_list(self):
+        T = TransferMechanism(params={INPUT_STATES: {VARIABLE: [0, 0, 0]}})
+
+        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0, 0]]))
+        assert len(T.input_states) == 1

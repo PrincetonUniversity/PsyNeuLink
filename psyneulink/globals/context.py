@@ -93,17 +93,15 @@ Class Reference
 """
 
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 from uuid import UUID
 
 import typecheck as tc
 
-from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
-
-from psyneulink.globals.keywords import \
-    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
-# from psyneulink.composition import Composition
+from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
+from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
 
 
 __all__ = [
@@ -169,16 +167,20 @@ class ContextFlags(IntEnum):
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR =   1<<10 # 1024
     """Call from Component's constructor method."""
-    COMPONENT =     1<<11 # 2048
+    INSTANTIATE =   1<<11 # 2048
+    """Call by an instantiation method."""
+    COMPONENT =     1<<12 # 4096
     """Call by Component __init__."""
-    METHOD =        1<<12 # 4096
+    METHOD =        1<<13 # 8192
     """Call by method of the Component other than its constructor."""
-    PROPERTY =      1<<13 # 8192
+    PROPERTY =      1<<14 # 16384
     """Call by property of the Component."""
-    COMPOSITION =   1<<14 # 16384
+    COMPOSITION =   1<<15 # 32768
     """Call by a/the Composition to which the Component belongs."""
 
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
+    PROCESS =   1<<15     # 32768
+
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | PROPERTY | COMPOSITION | PROCESS
     NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
@@ -305,6 +307,10 @@ class Context():
         `initialization_status <Context.initialization_status>`, `execution_phase <Context.initialization_status>`,
         and `source <Context.source>` (described below).
 
+    flags_string : str
+        contains the names of the flags currently set in each of the fields of the `flags <Context.flags>` attribute;
+        note that this is *not* the same as the `string <Context.string>` attribute (see `note <Context_String_Note>`).
+
     initialization_status : field of flags attribute
         indicates the state of initialization of the Component;
         one and only one of the following flags is always set:
@@ -337,13 +343,6 @@ class Context():
             * `COMPONENT <ContextFlags.COMPONENT>`
             * `COMPOSITION <ContextFlags.COMPOSITION>`
 
-    COMMENT:
-       REINSTATE ONCE flags_string property IS SUPPRESSED IN Context.rst
-    flags_string : str
-        contains the names of the flags currently set in each of the fields of the `flags <Context.flags>` attribute;
-        note that this is *not* the same as the `string <Context.string>` attribute (see `note <Context_String_Note>`).
-    COMMENT
-
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
 
@@ -362,6 +361,8 @@ class Context():
     """
 
     __name__ = 'Context'
+    _deepcopy_shared_keys = {'owner'}
+
     def __init__(self,
                  owner=None,
                  composition=None,
@@ -399,6 +400,8 @@ class Context():
         self.execution_time = None
         self.string = string
 
+    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+
     @property
     def composition(self):
         try:
@@ -410,7 +413,7 @@ class Context():
     def composition(self, composition):
         # from psyneulink.composition import Composition
         # if isinstance(composition, Composition):
-        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
+        if composition is None or composition.__class__.__name__ in {'Composition', 'SystemComposition', 'PathwayComposition', 'System', 'Process'}:
             self._composition = composition
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
@@ -431,6 +434,10 @@ class Context():
         else:
             raise ContextError("\'{}\'{} argument in call to {} must be a {} or an int".
                                format(FLAGS, flags, self.__name__, ContextFlags.__name__))
+
+    @property
+    def flags_string(self):
+        return ContextFlags._get_context_string(self.flags)
 
     @property
     def initialization_status(self):
@@ -513,12 +520,11 @@ class Context():
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
 
-    @property
-    def flags_string(self, string=None):
-        """String with names of flags currently set in the owner's `flags <Context.flags>` attribute,
-        possibly prepended by an additional string.
-        """
-        return ContextFlags._get_context_string(self.owner.context.flags, string=string)
+    def add_to_string(self, string):
+        if self.string is None:
+            self.string = string
+        else:
+            self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
 
 
 @tc.typecheck

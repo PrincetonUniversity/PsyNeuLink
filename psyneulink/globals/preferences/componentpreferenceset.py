@@ -23,8 +23,7 @@ __all__ = [
     'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set', 'kwCategoryDefaultPreferences',
     'kwInstanceDefaultPreferences', 'kwSubtypeDefaultPreferences', 'kwSystemDefaultPreferences', 'kwTypeDefaultPreferences',
     'LOG_PREF', 'PARAM_VALIDATION_PREF', 'REPORT_OUTPUT_PREF', 'RUNTIME_PARAM_MODULATION_PREF',
-    'RUNTIME_PARAM_STICKY_ASSIGNMENT_PREF', 'SubtypeDefaultPreferencesDict', 'SystemDefaultPreferencesDict',
-    'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
+    'SubtypeDefaultPreferencesDict', 'SystemDefaultPreferencesDict', 'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
 ]
 
 # Keypaths for preferences:
@@ -33,7 +32,6 @@ LOG_PREF = kpLogPref = '_log_pref'
 PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
 VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
 RUNTIME_PARAM_MODULATION_PREF = kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
-RUNTIME_PARAM_STICKY_ASSIGNMENT_PREF = kpRuntimeParamStickyAssignmentPref = '_runtime_param_sticky_assignment_pref'
 
 # Keywords for generic level default preference sets
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
@@ -49,8 +47,7 @@ ComponentPreferenceSetPrefs = {
     kpParamValidationPref,
     kpReportOutputPref,
     kpLogPref,
-    kpRuntimeParamModulationPref,
-    kpRuntimeParamStickyAssignmentPref
+    kpRuntimeParamModulationPref
 }
 
 SystemDefaultPreferencesDict = {
@@ -59,8 +56,7 @@ SystemDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
-    kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)}
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
 CategoryDefaultPreferencesDict = {
     kwPreferenceSetName: kwCategoryDefaultPreferences,
@@ -68,8 +64,7 @@ CategoryDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
-    kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
 TypeDefaultPreferencesDict = {
     kwPreferenceSetName: kwTypeDefaultPreferences,
@@ -77,8 +72,7 @@ TypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
     kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE),
-    kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.TYPE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE)}
 
 SubtypeDefaultPreferencesDict = {
     kwPreferenceSetName: kwSubtypeDefaultPreferences,
@@ -86,8 +80,7 @@ SubtypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE),
-    kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE)}
 
 InstanceDefaultPreferencesDict = {
     kwPreferenceSetName: kwInstanceDefaultPreferences,
@@ -95,8 +88,7 @@ InstanceDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE),
-    kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
 ComponentDefaultPrefDicts = {
@@ -176,7 +168,6 @@ class ComponentPreferenceSet(PreferenceSet):
                 + kpReportOutputPref: report object's ouptut during execution
                 + kpLogPref: record attribute data for the object during execution
                 + kpRuntimeParamModulationPref: modulate parameters using runtime specification (in pathway)
-                + kpRuntimeParamStickAssignmentPref: assignments remain in effect until replaced
             value that is either a PreferenceSet, valid setting for the preference, or a PreferenceLevel; defaults
         - level (PreferenceLevel): ??
         - name (str): name of PreferenceSet
@@ -216,11 +207,6 @@ class ComponentPreferenceSet(PreferenceSet):
              runtimeParamModulation PreferenceEntry of owner's Preference object
         - runtimeParamModulationPref(setting=<value>):
             assigns the value of the setting arg to the runtimeParamModulationPref of the owner's Preference object
-        - runtimeParamStickyAssignmentPref():
-            returns setting for runtimeParamStickyAssignment preference at level specified in
-             runtimeParamStickyAssignment PreferenceEntry of owner's Preference object
-        - runtimeParamStickyAssignmentPref(setting=<value>):
-            assigns value of the setting arg to the runtimeParamStickyAssignmentPref of the owner's Preference object
     """
 
     # Use this as both:
@@ -232,8 +218,7 @@ class ComponentPreferenceSet(PreferenceSet):
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-            kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
-            kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)
+            kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)
 
     }
 
@@ -436,20 +421,3 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
-
-    @property
-    def runtimeParamStickyAssignmentPref(self):
-        """Returns owner's runtimeParamStickyAssignmentPref
-        :return:
-        """
-        # return self._runtime_param_sticky_assignment_pref
-        return self.get_pref_setting_for_level(kpRuntimeParamStickyAssignmentPref,
-                                        self._runtime_param_sticky_assignment_pref.level)[0]
-
-    @runtimeParamStickyAssignmentPref.setter
-    def runtimeParamStickyAssignmentPref(self, setting):
-        """Assign runtimeParamStickyAssignmentPref
-        :param entry:
-        :return:
-        """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamStickyAssignmentPref)

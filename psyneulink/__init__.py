@@ -20,19 +20,18 @@ please contact psyneulinkhelp@princeton.edu.
 '''
 
 import logging as _logging
+
 import numpy as _numpy
 
-from ._version import get_versions
-
+from psyneulink.compositions import composition
+from psyneulink.compositions.composition import *
 # starred imports to allow user imports from top level
 from . import components
-from . import composition
 from . import globals
 from . import library
 from . import scheduling
-
+from ._version import get_versions
 from .components import *
-from .composition import *
 from .globals import *
 from .library import *
 from .scheduling import *

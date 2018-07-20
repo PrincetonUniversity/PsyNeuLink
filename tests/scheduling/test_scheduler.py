@@ -1,16 +1,19 @@
 import logging
-
+import numpy as np
 import pytest
 import uuid
 
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import Linear, DriftDiffusionIntegrator
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.composition import Composition
-from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, WhenFinished
+from psyneulink.compositions.composition import Composition
+from psyneulink.components.system import System
+from psyneulink.components.process import Process
+from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, Never, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
-
+from psyneulink.globals.keywords import VALUE
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ class TestScheduler:
 
     def test_create_multiple_contexts(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_mechanism(A)
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
@@ -47,7 +50,7 @@ class TestScheduler:
     def test_two_compositions_one_scheduler(self):
         comp1 = Composition()
         comp2 = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp1.add_mechanism(A)
         comp2.add_mechanism(A)
 
@@ -86,7 +89,7 @@ class TestScheduler:
 
     def test_one_composition_two_contexts(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_mechanism(A)
 
         sched = Scheduler(composition=comp)
@@ -140,14 +143,50 @@ class TestScheduler:
         # pprint.pprint(output)
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    def test_change_termination_condition(self):
+        D = DDM(function=DriftDiffusionIntegrator(threshold=10))
+        P = Process(pathway=[D])
+        S = System(processes=[P])
+
+        D.set_log_conditions(VALUE)
+
+        def change_termination_processing():
+            if S.termination_processing is None:
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            else:
+                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
+
+        change_termination_processing()
+        S.run(inputs={D: [[1.0], [2.0]]},
+              # termination_processing={TimeScale.TRIAL: WhenFinished(D)},
+              call_after_trial=change_termination_processing,
+              num_trials=4)
+        # Trial 0:
+        # input = 1.0, termination condition = WhenFinished
+        # 10 passes (value = 1.0, 2.0 ... 9.0, 10.0)
+        # Trial 1:
+        # input = 2.0, termination condition = AllHaveRun
+        # 1 pass (value = 2.0)
+        expected_results = [[np.array([[10.]]), np.array([[10.]])],
+                            [np.array([[2.]]), np.array([[1.]])],
+                            [np.array([[10.]]), np.array([[10.]])],
+                            [np.array([[2.]]), np.array([[1.]])]]
+        assert np.allclose(expected_results, S.results)
+
+
 
 class TestLinear:
 
     def test_no_termination_conds(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -170,9 +209,9 @@ class TestLinear:
     # tests below are copied from old scheduler, need renaming
     def test_1(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -200,9 +239,9 @@ class TestLinear:
 
     def test_1b(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -230,9 +269,9 @@ class TestLinear:
 
     def test_2(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -254,9 +293,9 @@ class TestLinear:
 
     def test_3(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -281,9 +320,9 @@ class TestLinear:
 
     def test_6(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -308,9 +347,9 @@ class TestLinear:
 
     def test_6_two_trials(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -341,8 +380,8 @@ class TestLinear:
 
     def test_7(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -362,8 +401,8 @@ class TestLinear:
 
     def test_8(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -383,8 +422,8 @@ class TestLinear:
 
     def test_9(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -411,9 +450,9 @@ class TestLinear:
 
     def test_9b(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         A.is_finished = False
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -433,9 +472,9 @@ class TestLinear:
 
     def test_10(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         A.is_finished = True
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
             comp.add_mechanism(m)
@@ -456,9 +495,9 @@ class TestLinear:
 
     def test_10b(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         A.is_finished = False
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
             comp.add_mechanism(m)
@@ -479,9 +518,9 @@ class TestLinear:
 
     def test_10c(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         A.is_finished = True
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
             comp.add_mechanism(m)
@@ -502,9 +541,9 @@ class TestLinear:
 
     def test_10d(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         A.is_finished = False
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
             comp.add_mechanism(m)
@@ -528,8 +567,8 @@ class TestLinear:
     ########################################
     def test_linear_AAB(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -549,8 +588,8 @@ class TestLinear:
 
     def test_linear_ABB(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -570,9 +609,9 @@ class TestLinear:
 
     def test_linear_ABBCC(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -594,9 +633,9 @@ class TestLinear:
 
     def test_linear_ABCBC(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -628,9 +667,9 @@ class TestBranching:
 
     def test_triangle_1(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -657,9 +696,9 @@ class TestBranching:
 
     def test_triangle_2(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -689,9 +728,9 @@ class TestBranching:
 
     def test_triangle_3(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -717,9 +756,9 @@ class TestBranching:
     # this is test 11 of original constraint_scheduler.py
     def test_triangle_4(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
 
         for m in [A, B, C]:
             comp.add_mechanism(m)
@@ -749,9 +788,9 @@ class TestBranching:
 
     def test_triangle_4b(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
 
         for m in [A, B, C]:
             comp.add_mechanism(m)
@@ -787,9 +826,9 @@ class TestBranching:
     # this test has an implicit priority set of A<B !
     def test_invtriangle_1(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
@@ -816,9 +855,9 @@ class TestBranching:
     # this test has an implicit priority set of A<B !
     def test_invtriangle_2(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
         for m in [A, B, C]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
@@ -849,10 +888,10 @@ class TestBranching:
     # testing toposort
     def test_checkmark_1(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        D = TransferMechanism(function=Linear(intercept=.5), name='D')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
+        D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -878,10 +917,10 @@ class TestBranching:
 
     def test_checkmark_2(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        D = TransferMechanism(function=Linear(intercept=.5), name='D')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
+        D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -907,10 +946,10 @@ class TestBranching:
 
     def test_checkmark2_1(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-        D = TransferMechanism(function=Linear(intercept=.5), name='D')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
+        C = TransferMechanism(function=Linear(intercept=1.5), name='scheduler-pytests-C')
+        D = TransferMechanism(function=Linear(intercept=.5), name='scheduler-pytests-D')
         for m in [A, B, C, D]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
@@ -1024,8 +1063,8 @@ class TestTermination:
 
     def test_termination_conditions_reset(self):
         comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)

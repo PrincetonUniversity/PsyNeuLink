@@ -403,7 +403,7 @@ class Scheduler(object):
             TimeScale.RUN: Never(),
             TimeScale.TRIAL: AllHaveRun(),
         }
-        self.update_termination_conditions(termination_conds)
+        self.termination_conds = termination_conds
 
         if system is not None:
             self.nodes = [m for m in system.execution_list]
@@ -546,10 +546,15 @@ class Scheduler(object):
         }
 
     def update_termination_conditions(self, termination_conds):
-        self.termination_conds = dict(self.default_termination_conds)
+        if termination_conds is None:
+            termination_conds = self.termination_conds
+        if self.termination_conds is None:
+            termination_conds = dict(self.default_termination_conds)
         if termination_conds is not None:
-            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.default_termination_conds))
-            self.termination_conds.update(termination_conds)
+            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
+        current_conditions = self.termination_conds.copy()
+        current_conditions.update(termination_conds)
+        return current_conditions
 
     def _parse_termination_conditions(self, termination_conds):
         if termination_conds is None:
@@ -568,17 +573,41 @@ class Scheduler(object):
         return self.condition_set.__contains__(item)
 
     def add_condition(self, owner, condition):
-        '''
-        :param owner: the `Component <Component>` that is dependent on the `condition`
-        :param condition: a `Condition` (including All or Any)
-        '''
+        """
+        Adds a `Condition` to the Scheduler. If **owner** already has a Condition, it is overwritten
+        with the new one. If you want to add multiple conditions to a single owner, use the
+        `composite Conditions <Conditions_Composite>` to accurately specify the desired behavior.
+
+        Arguments
+        ---------
+
+        owner : Component
+            specifies the Component with which the **condition** should be associated. **condition**
+            will govern the execution behavior of **owner**
+
+        condition : Condition
+            specifies the Condition, associated with the **owner** to be added to the ConditionSet.
+        """
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
-        '''
-        :param conditions: a `dict` mapping `Component`s to `Condition`s,
-               which can be added later with `add_condition`
-        '''
+        """
+        Adds a set of `Conditions <Condition>` (in the form of a dict or another ConditionSet) to the Scheduler.
+        Any Condition added here will overwrite an existing Condition for a given owner.
+        If you want to add multiple conditions to a single owner, add a single `Composite Condition <Conditions_Composite>`
+        to accurately specify the desired behavior.
+
+        Arguments
+        ---------
+
+        conditions : dict[`Component <Component>`: `Condition`], `ConditionSet`
+            specifies collection of Conditions to be added to this ConditionSet,
+
+            if a dict is provided:
+                each entry should map an owner `Component` (the `Component` whose execution behavior will be
+                governed) to a `Condition <Condition>`
+
+        """
         self.condition_set.add_condition_set(conditions)
 
     ################################################################################
@@ -610,7 +639,7 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
+        termination_conds = self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
 
         if execution_id is None:
             execution_id = self.default_execution_id
@@ -620,8 +649,8 @@ class Scheduler(object):
         self._reset_counts_total(TimeScale.TRIAL, execution_id)
 
         while (
-            not self.termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-            and not self.termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
+            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
         ):
             self._reset_counts_total(TimeScale.PASS, execution_id)
 
@@ -630,8 +659,8 @@ class Scheduler(object):
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not self.termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-                and not self.termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
+                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -699,7 +728,7 @@ class Scheduler(object):
 
         self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
-        if self.termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id):
+        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id):
             self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list[execution_id]
@@ -707,3 +736,14 @@ class Scheduler(object):
     @property
     def clock(self):
         return self.clocks[self.default_execution_id]
+
+    @property
+    def termination_conds(self):
+        return self._termination_conds
+
+    @termination_conds.setter
+    def termination_conds(self, termination_conds):
+        if termination_conds is None:
+            self._termination_conds = self.default_termination_conds
+        else:
+            self._termination_conds.update(termination_conds)

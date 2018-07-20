@@ -6,8 +6,9 @@ from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
-from psyneulink.scheduling.condition import WhenFinished
+
+from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, ARRAY, DDMError, SELECTED_INPUT_ARRAY
+from psyneulink.scheduling.condition import WhenFinished, Never
 from psyneulink.scheduling.time import TimeScale
 
 class TestReinitialize:
@@ -27,7 +28,7 @@ class TestReinitialize:
 
         # reinitialize function
         D.function_object.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.value[0], 2.0)
         assert np.allclose(D.function_object.previous_value, 2.0)
         assert np.allclose(D.function_object.previous_time, 0.1)
         assert np.allclose(D.value,  [[1.0], [1.0]])
@@ -36,7 +37,7 @@ class TestReinitialize:
 
         # reinitialize function without value spec
         D.function_object.reinitialize()
-        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.value[0], 0.0)
         assert np.allclose(D.function_object.previous_value, 0.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.value, [[1.0], [1.0]])
@@ -45,7 +46,7 @@ class TestReinitialize:
 
         # reinitialize mechanism
         D.reinitialize(2.0, 0.1)
-        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.value[0], 2.0)
         assert np.allclose(D.function_object.previous_value, 2.0)
         assert np.allclose(D.function_object.previous_time, 0.1)
         assert np.allclose(D.value, [[2.0], [0.1]])
@@ -60,15 +61,17 @@ class TestReinitialize:
 
         # reinitialize mechanism without value spec
         D.reinitialize()
-        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.value[0], 0.0)
         assert np.allclose(D.function_object.previous_value, 0.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 0.0)
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
         # reinitialize only decision variable
-        D.reinitialize(1.0)
-        assert np.allclose(D.function_object.value, 1.0)
+        D.function_object.initializer = 1.0
+        D.function_object.t0 = 0.0
+        D.reinitialize()
+        assert np.allclose(D.function_object.value[0], 1.0)
         assert np.allclose(D.function_object.previous_value, 1.0)
         assert np.allclose(D.function_object.previous_time, 0.0)
         assert np.allclose(D.output_states[0].value[0], 1.0)
@@ -154,10 +157,11 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
         P = Process(pathway=[D])
-        S = System(processes=[P])
-
+        S = System(processes=[P],
+                   reinitialize_mechanisms_when=Never())
         S.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
+
         # decision variable's value should match threshold
         assert D.value[0] == 10.0
         # it should have taken 5 executions (and time_step_size = 1.0)
@@ -172,6 +176,18 @@ class TestThreshold:
     #     S = System(processes=[P])
     #
     #     sched = Scheduler(system=S)
+
+class TestOutputStates:
+
+    def test_selected_input_array(self):
+        action_selection = DDM(
+            input_format=ARRAY,
+            function=BogaczEtAl(
+            ),
+            output_states=[SELECTED_INPUT_ARRAY],
+            name='DDM'
+        )
+        action_selection.execute([1.0])
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -246,7 +262,7 @@ def test_DDM_noise_0_5():
 
     val = float(T.execute(stim)[0])
 
-    assert val == 11.320562919094161
+    assert val == 9.308960184035778
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -264,7 +280,7 @@ def test_DDM_noise_2_0():
         )
     )
     val = float(T.execute(stim)[0])
-    assert val == 12.641125838188323
+    assert val == 8.617920368071555
 
 # ------------------------------------------------------------------------------------------------
 

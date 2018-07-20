@@ -75,10 +75,12 @@ OTHER
 
 """
 
+import copy
 import inspect
 import logging
 import numbers
 import warnings
+
 from enum import Enum, EnumMeta, IntEnum
 
 import collections
@@ -617,6 +619,35 @@ def multi_getattr(obj, attr, default = None):
 #                          #object
 
 
+# based off the answer here https://stackoverflow.com/a/15774013/3131666
+def get_deepcopy_with_shared_keys(shared_keys_iter):
+    '''
+        Arguments
+        ---------
+            shared_keys_iter
+                an Iterable containing a list of strings that should be shallow copied
+
+        Returns
+        -------
+            a __deepcopy__ function
+    '''
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k in shared_keys_iter:
+            if k in self.__dict__:
+                setattr(result, k, self.__dict__[k])
+
+        for k, v in self.__dict__.items():
+            if k not in shared_keys_iter:
+                res_val = copy.deepcopy(v, memo)
+                setattr(result, k, res_val)
+        return result
+
+    return __deepcopy__
+
+
 #region NUMPY ARRAY METHODS ******************************************************************************************
 
 def np_array_less_than_2d(array):
@@ -641,7 +672,22 @@ def convert_to_np_array(value, dimension):
         return None
 
     if dimension is 1:
-        value = np.atleast_1d(value)
+        # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
+        # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
+        # Which is due to a custom output state variable that includes an owner value, owner param, and owner input
+        # state variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
+
+        try:
+            value = np.atleast_1d(value)
+
+        # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
+        # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
+        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputState variable])
+        # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
+        # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
+        except ValueError:
+            return value
+
     elif dimension is 2:
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
@@ -1080,15 +1126,17 @@ def is_instance_or_subclass(candidate, spec):
     return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
 
 
-def make_readonly_property(val):
+def make_readonly_property(val, name=None):
     """Return property that provides read-only access to its value
     """
+    if name is None:
+        name = val
 
     def getter(self):
         return val
 
     def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+        raise UtilitiesError("{} is read-only property of {}".format(name, self.__class__.__name__))
 
     # Create the property
     prop = property(getter).setter(setter)
@@ -1199,12 +1247,9 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-def prune_unused_args(func, args, kwargs):
+def prune_unused_args(func, args=None, kwargs=None):
     # use the func signature to filter out arguments that aren't compatible
     sig = inspect.signature(func)
-
-    args_to_pass = list(args)
-    kwargs_to_pass = dict(kwargs)
 
     has_args_param = False
     has_kwargs_param = False
@@ -1221,19 +1266,38 @@ def prune_unused_args(func, args, kwargs):
                 count_positional += 1
             func_kwargs_names.add(name)
 
-    if not has_args_param:
-        num_extra_args = len(args_to_pass) - count_positional
-        if num_extra_args > 0:
-            logger.info('{1} extra arguments specified to function {0}, will be ignored (values: {2})'.format(func, num_extra_args, args_to_pass[-num_extra_args:]))
-        args = args[:count_positional+1]
+    if args is not None:
+        try:
+            args = list(args)
+        except TypeError:
+            args = [args]
 
-    if not has_kwargs_param:
-        filtered = set()
-        for kw in kwargs_to_pass:
-            if kw not in func_kwargs_names:
-                filtered.add(kw)
-        logger.info('{1} extra keyword arguments specified to function {0}, will be ignored (values: {2})'.format(func, len(filtered), filtered))
-        for kw in filtered:
-            del kwargs_to_pass[kw]
+        if not has_args_param:
+            num_extra_args = len(args) - count_positional
+            if num_extra_args > 0:
+                logger.debug('{1} extra arguments specified to function {0}, will be ignored (values: {2})'.format(func, num_extra_args, args[-num_extra_args:]))
+            args = args[:count_positional]
+    else:
+        args = []
 
-    return args_to_pass, kwargs_to_pass
+    if kwargs is not None:
+        kwargs = dict(kwargs)
+
+        if not has_kwargs_param:
+            filtered = set()
+            for kw in kwargs:
+                if kw not in func_kwargs_names:
+                    filtered.add(kw)
+            if len(filtered) > 0:
+                logger.debug('{1} extra keyword arguments specified to function {0}, will be ignored (values: {2})'.format(func, len(filtered), filtered))
+            for kw in filtered:
+                del kwargs[kw]
+    else:
+        kwargs = {}
+
+    return args, kwargs
+
+
+def call_with_pruned_args(func, *args, **kwargs):
+    args, kwargs = prune_unused_args(func, args, kwargs)
+    return func(*args, **kwargs)

@@ -74,7 +74,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import AdaptiveIntegrator
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CLASS_DEFAULTS, INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
+from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -95,12 +95,12 @@ class IntegratorMechanismError(Exception):
 
 class IntegratorMechanism(ProcessingMechanism_Base):
     """
-    IntegratorMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
+    IntegratorMechanism(                   \
+    default_variable=None,                 \
+    size=None,                             \
     function=AdaptiveIntegrator(rate=0.5), \
-    params=None,                                            \
-    name=None,                                              \
+    params=None,                           \
+    name=None,                             \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
@@ -184,10 +184,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # setting owner to a string to avoid using this exact instance
-        # in the future, best to make this a sort of spec that can be used to
-        # construct a default instance
-        function = AdaptiveIntegrator(rate=0.5, owner=CLASS_DEFAULTS)
+        function = AdaptiveIntegrator(rate=0.5)
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({
@@ -213,14 +210,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   function=function,
                                                   params=params)
 
-        # if default_variable is NotImplemented:
-        #     default_variable = SigmoidLayer_DEFAULT_NET_INPUT
-
-        # self.size = size
-
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
-                                                  # input_states=input_states,
                                                   function=function,
                                                   params=params,
                                                   name=name,
@@ -229,10 +220,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
-    # MODIFIED 6/2/17 NEW:
-    @property
-    def previous_value(self):
-        return self.function_object.previous_value
-    # MODIFIED 6/2/17 END
+
 
 

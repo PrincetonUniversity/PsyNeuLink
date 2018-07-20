@@ -8,7 +8,7 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
+from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -272,6 +272,68 @@ class TestBranching:
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
         s.scheduler_processing = sched
+
+        s.run(
+            inputs=stim_list,
+            termination_processing=term_conds
+        )
+
+        terminal_mechs = [B, C]
+        expected_output = [
+            [
+                numpy.array([1.]),
+            ],
+            [
+                numpy.array([2.]),
+            ],
+        ]
+
+        for m in range(len(terminal_mechs)):
+            for i in range(len(expected_output[m])):
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
+
+    def test_three_ABAC_convenience(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_variable=[0],
+            function=SimpleIntegrator(
+                rate=.5
+            )
+        )
+
+        B = TransferMechanism(
+            name='B',
+            default_variable=[0],
+            function=Linear(slope=2.0),
+        )
+        C = TransferMechanism(
+            name='C',
+            default_variable=[0],
+            function=Linear(slope=2.0),
+        )
+
+        p = Process(
+            default_variable=[0],
+            pathway=[A, B],
+            name='p'
+        )
+
+        q = Process(
+            default_variable=[0],
+            pathway=[A, C],
+            name='q'
+        )
+
+        s = System(
+            processes=[p, q],
+            name='s'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
+        stim_list = {A: [[1]]}
+
+        s.scheduler_processing.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
+        s.scheduler_processing.add_condition(C, EveryNCalls(A, 2))
 
         s.run(
             inputs=stim_list,
@@ -981,9 +1043,9 @@ class TestTermination:
 
         s = System(
             processes=[p],
-            name='s'
+            name='s',
+            reinitialize_mechanisms_when=Never()
         )
-
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 

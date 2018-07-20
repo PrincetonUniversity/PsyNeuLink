@@ -274,7 +274,8 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
 
     Instance to be removed can be specified by a reference to the component or its name.
     Instance count for the category is decremented
-    If the name of the instance was a
+    If the name of the instance was a default name, and it was the last in the sequence,
+        decrement renamed_instance_counts and if it was the only one, remove that name from the renamed_instance list
     """
 
     registry_entry = registry[category]
@@ -298,17 +299,16 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
 
     # IMPLEMENTATION NOTE:
     #    Don't decrement renamed_instance_counts as:
-    #        - doing so would requure checking that the item being removed is the last in the sequence
+    #        - doing so would require checking that the item being removed is the last in the sequence
     #          (to avoid fouling subsequent indexing);
     #        - it might be confusing for a subsequently added item to have the same name as one previously removed.
-
-    # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
-    for base_name, count in registry_entry.renamed_instance_counts.items():
-        if base_name in name:
-            registry_entry.renamed_instance_counts[base_name] -= 1
-            if registry_entry.renamed_instance_counts[base_name] == 0:
-                del registry_entry.renamed_instance_counts[base_name]
-            break
+    # # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
+    # for base_name, count in registry_entry.renamed_instance_counts.items():
+    #     if base_name in name:
+    #         registry_entry.renamed_instance_counts[base_name] -= 1
+    #         if registry_entry.renamed_instance_counts[base_name] == 0:
+    #             del registry_entry.renamed_instance_counts[base_name]
+    #         break
     # Reassign entry with new values
     registry[category] = RegistryEntry(registry_entry.subclass,
                                        registry_entry.instanceDict,
