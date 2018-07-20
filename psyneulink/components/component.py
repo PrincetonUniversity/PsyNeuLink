@@ -553,6 +553,7 @@ class ParamsDict(UserDict):
         # assign value to attrib
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
+            # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
             setattr(self.owner, key, item)
 
 parameter_keywords = set()
@@ -1026,6 +1027,7 @@ class Component(object):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
@@ -2146,7 +2148,8 @@ class Component(object):
         if variable is None:
             return variable
 
-        variable = np.atleast_1d(variable)
+        if not isinstance(variable, (list, np.ndarray)):
+            variable = np.atleast_1d(variable)
 
         try:
             # if variable has a single int/float/etc. within some number of dimensions, and the
@@ -2591,9 +2594,6 @@ class Component(object):
         """
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
-
-        if isinstance(self, Function):
-            return
 
         function_variable = self._parse_function_variable(self.instance_defaults.variable,
                                                           context=ContextFlags.INSTANTIATE)

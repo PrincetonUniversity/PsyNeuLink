@@ -213,7 +213,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
-    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_DIFF, MAX_INDICATOR, MAX_VAL, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
@@ -3062,13 +3062,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
         except TypeError:
-            # If variable is an array with mixed sizes or types, try item-by-item operation
-            if variable.dtype == object:
-                result = np.zeros_like(variable)
-                for i, item in enumerate(variable):
-                    result[i] = variable[i] * slope + intercept
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = variable[i] * slope + intercept
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], np.array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(np.multiply(variable_item, slope) + intercept)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
         # MODIFIED 11/9/17 END
 
 
@@ -3468,10 +3479,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result. 
+        result is greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0. 
+        from it if (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3488,13 +3499,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0. 
+        (variable - bias) is greater than 0.
     bias : float : default 0.0
         value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result. 
+        greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0. 
+        (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3506,15 +3517,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
-    
-    
+
+
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
-    
+
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -3544,9 +3555,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  context=None):
         """
         Return:
-            
+
             :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
-            
+
         Arguments
         ---------
         variable : number or np.array : default ClassDefaults.variable
@@ -3559,13 +3570,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
         ReLU transformation of variable : number or np.array
         """
-        
+
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
-        
+
         return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
     def derivative(self, output):
@@ -3579,7 +3590,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
-        
+
         if (output > 0): return gain
         else: return leak
 
@@ -3919,7 +3930,7 @@ class SoftMax(NormalizingFunction):
     additive_param = None
 
     class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
+        variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -3942,6 +3953,15 @@ class SoftMax(NormalizingFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        if variable is None:
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
+
+        return np.asarray(variable)
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
@@ -5087,7 +5107,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
+        if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
@@ -9856,7 +9876,7 @@ class Distance(ObjectiveFunction):
         v2 = variable[1]
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
-        if self.metric is MAX_DIFF:
+        if self.metric is MAX_ABS_DIFF:
             result = np.max(abs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
@@ -9892,7 +9912,7 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize and not self.metric in {MAX_DIFF, CORRELATION}:
+        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
