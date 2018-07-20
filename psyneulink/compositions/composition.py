@@ -471,7 +471,7 @@ class Composition(object):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
-    def add_projection(self, sender=None, projection=None, receiver=None):
+    def add_projection(self, projection=None, sender=None, receiver=None):
         '''
             Adds a projection to the Composition, if it is not already added
 
@@ -491,21 +491,28 @@ class Composition(object):
         if sender is None:
             if projection is not None:
                 if projection.sender:
-                    sender = projection.sender
+                    sender = projection.sender.owner
                 else:
                     raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
                                            "either on the Projection or in the call to Composition.add_projection(). {}"
                                            " is missing a sender specification. ".format(projection.name))
+            else:
+                raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). {}"
+                                       " is missing a sender specification. ".format(projection.name))
+
         if receiver is None:
             if projection is not None:
                 if projection.receiver:
-                    receiver = projection.receiver
+                    receiver = projection.receiver.owner
                 else:
                     raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
                                            "either on the Projection or in the call to Composition.add_projection(). {}"
                                            " is missing a receiver specification. ".format(projection.name))
-
-
+            else:
+                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). {}"
+                                       " is missing a receiver specification. ".format(projection.name))
 
         if projection not in [vertex.component for vertex in self.graph.vertices]:
 
@@ -558,7 +565,7 @@ class Composition(object):
 
         # then projections
         for p in projections:
-            self.add_projection(p.sender.owner, p, p.receiver.owner)
+            self.add_projection(p, p.sender.owner, p.receiver.owner)
 
         self._analyze_graph()
 
@@ -585,14 +592,10 @@ class Composition(object):
             if isinstance(pathway[c], (Mechanism, Composition)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(
-                        pathway[c - 1],
-                        MappingProjection(
-                            sender=pathway[c - 1],
-                            receiver=pathway[c]
-                        ),
-                        pathway[c]
-                    )
+                    self.add_projection(MappingProjection(
+                        sender=pathway[c - 1],
+                        receiver=pathway[c]
+                    ), pathway[c - 1], pathway[c])
             # if the current item is a Projection
             elif isinstance(pathway[c], Projection):
                 if c == len(pathway) - 1:
@@ -601,7 +604,7 @@ class Composition(object):
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
-                    self.add_projection(pathway[c - 1], pathway[c], pathway[c + 1])
+                    self.add_projection(pathway[c], pathway[c - 1], pathway[c + 1])
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "

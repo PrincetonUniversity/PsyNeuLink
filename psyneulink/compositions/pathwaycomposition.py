@@ -53,14 +53,10 @@ class PathwayComposition(Composition):
             if isinstance(pathway[c], Mechanism):
                 if isinstance(pathway[c - 1], Mechanism):
                     # if the previous item was also a mechanism, add a mapping projection between them
-                    self.add_projection(
-                        pathway[c - 1],
-                        MappingProjection(
-                            sender=pathway[c - 1],
-                            receiver=pathway[c]
-                        ),
-                        pathway[c]
-                    )
+                    self.add_projection(MappingProjection(
+                        sender=pathway[c - 1],
+                        receiver=pathway[c]
+                    ), pathway[c - 1], pathway[c])
             # if the current item is a projection
             elif isinstance(pathway[c], Projection):
                 if c == len(pathway) - 1:
@@ -68,7 +64,7 @@ class PathwayComposition(Composition):
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two mechanisms, then add the projection
                 if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c + 1], Mechanism):
-                    self.add_projection(pathway[c - 1], pathway[c], pathway[c + 1])
+                    self.add_projection(pathway[c], pathway[c - 1], pathway[c + 1])
                 else:
                     raise PathwayCompositionError(
                         "{} is not between two mechanisms. A projection in a linear processing pathway must be preceded"
