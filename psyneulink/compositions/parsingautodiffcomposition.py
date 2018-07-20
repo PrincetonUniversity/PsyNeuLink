@@ -47,8 +47,73 @@ class ParsingAutodiffComposition(Composition):
         
         self.model = None # reference to instance of pytorch nn module subclass object
     
-
-
+    
+    '''
+    # ordered execution set creator
+    def get_ordered_exec_sets(self, processing_graph):
+        
+        if (processing_graph is None):
+            processing_graph = self.graph_processing
+        
+        # initialize lists of ordered execution sets, terminal nodes
+        ordered_exec_sets = []
+        terminal_nodes = []
+        
+        # create list of terminal nodes in processing graph
+        for i in range(len(processing_graph.vertices)):
+            node = processing_graph.vertices[i]
+            if len(node.children) == 0:
+                terminal_nodes.append(node)
+        
+        # iterate over terminal nodes, call recursive function to create ordered execution sets
+        for i in range(len(terminal_nodes)):
+            node = terminal_nodes[i]
+            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
+        
+        return ordered_exec_sets
+    
+    
+    
+    # helper recursive method for creating ordered execution sets
+    def get_node_pos(self, node, ordered_exec_sets):
+        
+        # check if current node has already been put in an execution set
+        for i in range(len(ordered_exec_sets)):
+            if (node in ordered_exec_sets[i]):
+                return ordered_exec_sets, i
+            
+        # check if we are at a node with no parents
+        if len(node.parents) == 0:
+            if len(ordered_exec_sets) < 1:
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[0].append(node)
+            return ordered_exec_sets, 0
+            
+        # if we are at a node with parents
+        else:
+            
+            # iterate over parents, find parent path with maximum length
+            max_dist = -1
+            for i in range(len(node.parents)):
+                parent = node.parents[i]
+                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
+                dist += 1
+                if dist > max_dist: 
+                    max_dist = dist
+            
+            # set node at position = max_dist in the ordered execution sets list
+            if len(ordered_exec_sets) < (max_dist+1):
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[max_dist].append(node)
+            return ordered_exec_sets, max_dist
+    '''
+    
+    
+    # method to create pytorch model
+    def model_creator():
+        self.model = ModelInPytorch(processing_graph)
 
 
 
