@@ -19,6 +19,8 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.compositions.composition import Graph
+from psyneulink.compositions.composition import Composition
 
 import collections
 from collections import Iterable, OrderedDict
@@ -44,8 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
+'''
 # ERRORS
 class CompositionError(Exception):
 
@@ -68,34 +69,7 @@ class CompositionError(Exception):
 # VERTEX ABSTRACTION (copied from composition)
 
 class Vertex(object):
-    '''
-        Stores a Component for use with a `Graph`
-
-        Arguments
-        ---------
-
-        component : Component
-            the `Component <Component>` represented by this Vertex
-
-        parents : list[Vertex]
-            the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
-
-        children : list[Vertex]
-            the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
-
-        Attributes
-        ----------
-
-        component : Component
-            the `Component <Component>` represented by this Vertex
-
-        parents : list[Vertex]
-            the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
-
-        children : list[Vertex]
-            the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
-    '''
-
+    
     def __init__(self, component, parents=None, children=None):
         self.component = component
         if parents is not None:
@@ -123,32 +97,12 @@ class Vertex(object):
 # GRAPH ABSTRACTION (copied from composition)
 
 class Graph(object):
-    '''
-        A Graph of vertices and edges/
-
-        Attributes
-        ----------
-
-        comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
-            maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
-
-        vertices : List[Vertex]
-            the `Vertices <Vertex>` contained in this Graph.
-
-    '''
-
+    
     def __init__(self):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
-        '''
-            Returns
-            -------
-
-            A copy of the Graph. `Vertices <Vertex>` are distinct from their originals, and point to the same
-            `Component <Component>` object : `Graph`
-        '''
         g = Graph()
 
         for vertex in self.vertices:
@@ -200,36 +154,11 @@ class Graph(object):
             child.parents.append(parent)
 
     def get_parents_from_component(self, component):
-        '''
-            Arguments
-            ---------
-
-            component : Component
-                the Component whose parents will be returned
-
-            Returns
-            -------
-
-            A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
         return self.comp_to_vertex[component].parents
 
     def get_children_from_component(self, component):
-        '''
-            Arguments
-            ---------
-
-            component : Component
-                the Component whose children will be returned
-
-            Returns
-            -------
-
-            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
         return self.comp_to_vertex[component].children
-
-
+'''
 
 
 
@@ -372,9 +301,9 @@ class ModelInPytorch(torch.nn.Module):
                         mapping_proj = node.component.path_afferents[k]
                         input_component = mapping_proj.sender.owner
                         input_node = self.processing_graph.comp_to_vertex[input_component]
-                        weights = nn.Parameter(torch.randn(len(input_component.input_states[0].variable), 
-                                                           len(node.component.input_states[0].variable)).float())
-                        biases = nn.Parameter(torch.randn(len(node.component.input_states[0].variable)).float())
+                        weights = nn.Parameter(torch.randn(len(input_component.input_states[0].value), 
+                                                           len(node.component.input_states[0].value)).float())
+                        biases = nn.Parameter(torch.randn(len(node.component.input_states[0].value)).float())
                         self.params.append(weights)
                         self.params.append(biases)
                         afferents[input_node] = [weights, biases]
@@ -408,7 +337,7 @@ class ModelInPytorch(torch.nn.Module):
                 
                 # feedforward step if we do not have origin node
                 else:
-                    layer = torch.zeros(len(node.component.input_states[0].variable))
+                    layer = torch.zeros(len(node.component.input_states[0].value))
                     for input_node, param_list in afferents.items():
                         layer += (torch.matmul(self.node_to_feedforward_info[input_node][0], param_list[0]) + param_list[1])
                     layer = activation_function(layer)
@@ -685,7 +614,7 @@ def autodiff_training(model, inputs, targets, learning_rate, epochs_or_stop_lear
                 loss += criterion(curr_tensor_outputs[i], curr_tensor_targets[i])
             
             
-            if (t == 12):
+            if (epoch == 5 and t == 12):
                 dot = make_dot(loss)
                 dot.format = 'svg'
                 dot.render()
@@ -844,11 +773,11 @@ map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
                                  receiver=h1
                                  )
 
-map_rel_h2 = MappingProjection(matrix=np.random.rand(3,15),
-                               name="map_relh2",
-                               sender=rels_in,
-                               receiver=h2
-                               )
+map_rels_h2 = MappingProjection(matrix=np.random.rand(3,15),
+                                name="map_rels_h2",
+                                sender=rels_in,
+                                receiver=h2
+                                )
 
 map_h1_h2 = MappingProjection(matrix=np.random.rand(8,15),
                               name="map_h1_h2",
@@ -879,6 +808,9 @@ map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
                                sender=h2,
                                receiver=out_sig_can
                                )
+'''
+
+# DOING SHIT WITH A GRAPH
 
 # Graph with Semantic Model parts
 
@@ -900,6 +832,32 @@ rumel_processing_graph.connect_components(h2, out_sig_I)
 rumel_processing_graph.connect_components(h2, out_sig_is)
 rumel_processing_graph.connect_components(h2, out_sig_has)
 rumel_processing_graph.connect_components(h2, out_sig_can)
+'''
+
+
+# DOING SHIT DIRECTLY WITH A COMPOSITION
+rumel_composition = Composition()
+
+rumel_composition.add_c_node(nouns_in)
+rumel_composition.add_c_node(rels_in)
+rumel_composition.add_c_node(h1)
+rumel_composition.add_c_node(h2)
+rumel_composition.add_c_node(out_sig_I)
+rumel_composition.add_c_node(out_sig_is)
+rumel_composition.add_c_node(out_sig_has)
+rumel_composition.add_c_node(out_sig_can)
+
+rumel_composition.add_projection(nouns_in, map_nouns_h1, h1)
+rumel_composition.add_projection(rels_in, map_rels_h2, h2)
+rumel_composition.add_projection(h1, map_h1_h2, h2)
+rumel_composition.add_projection(h2, map_h2_I, out_sig_I)
+rumel_composition.add_projection(h2, map_h2_is, out_sig_is)
+rumel_composition.add_projection(h2, map_h2_has, out_sig_has)
+rumel_composition.add_projection(h2, map_h2_can, out_sig_can)
+
+rumel_composition._update_processing_graph()
+
+rumel_processing_graph = rumel_composition._graph_processing
 
 # test the graph
 
@@ -907,8 +865,23 @@ print("Checking the vertices of the processing graph for the semantic model: ")
 print("\n")
 for i in range(len(rumel_processing_graph.vertices)):
     vertex = rumel_processing_graph.vertices[i]
+    component = vertex.component
     print(vertex)
+    '''
+    print(component)
+    print(component.variable)
+    print(np.shape(component.variable))
+    print(component.value)
+    print(np.shape(component.value))
+    print(component.input_states)
+    print(component.input_states[0])
+    print(component.input_states[0].variable)
+    print(component.input_states[0].value)
+    print(np.shape(component.input_states[0].variable))
+    print(np.shape(component.input_states[0].value))
     print("\n")
+    '''
+
 
 # Create Pytorch model by parsing the processing graph, exec sets 
 
@@ -1026,7 +999,7 @@ ready_targets = []
 
 for i in range(len(PT_nouns)):
     for j in range(len(PT_rels)):
-        ready_inputs.append([PT_rels[j], PT_nouns[i]])
+        ready_inputs.append([PT_nouns[i], PT_rels[j]])
         ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
 
 # start_time = timeit.default_timer()
