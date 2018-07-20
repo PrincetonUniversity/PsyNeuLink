@@ -219,6 +219,7 @@ class TestAnalyzeGraph:
         comp.add_c_node(A)
         comp.add_c_node(B)
         comp.add_projection(A, MappingProjection(), B)
+
         comp.add_projection(B, MappingProjection(), A)
         comp._analyze_graph()
         assert A not in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
@@ -249,6 +250,16 @@ class TestAnalyzeGraph:
         assert D in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert B in comp.get_c_nodes_by_role(CNodeRole.CYCLE)
         assert C in comp.get_c_nodes_by_role(CNodeRole.RECURRENT_INIT)
+
+class TestGraphCycles:
+
+    def test_recurrent_transfer_mechanisms(self):
+        R1 = RecurrentTransferMechanism()
+        R2 = RecurrentTransferMechanism()
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[R1, R2])
+
+        comp.run(inputs={R1: [1.0]})
 
 
 # class TestValidateFeedDict:

@@ -1,28 +1,69 @@
 import psyneulink as pnl
+import numpy as np
 
 class TestControlMechanisms:
-    def test_lc_control_mechanism(self):
-        T_1 = pnl.TransferMechanism(name='T_1')
-        T_2 = pnl.TransferMechanism(name='T_2')
+    def test_default_lc_control_mechanism(self):
+        G = 1.0
+        k = 0.5
+        starting_value_LC = 2.0
+        user_specified_gain = 1.0
 
-        LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
-                                    modulated_mechanisms=pnl.ALL
-                                    )
-        T_3 = pnl.TransferMechanism()
-        comp = pnl.Composition()
-        comp.add_linear_processing_pathway([T_1, T_2, LC, T_3])
-        # comp.add_c_node(T_1)
-        # comp.add_c_node(T_2)
-        # comp.add_c_node(LC)
-        # comp.add_projection(T_1, pnl.MappingProjection(), T_2)
-        # comp.add_projection(T_2, pnl.MappingProjection(), LC)
-        comp._analyze_graph()
-        # comp._add_c_node_role(LC, pnl.CNodeRole.TERMINAL)
+        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
+        # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
-        assert len(LC.control_signals) == 1
-        assert len(LC.control_signals[0].efferents) == 2
-        assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
-        assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+        LC = pnl.LCControlMechanism(
+            modulated_mechanisms=[A, B],
+            base_level_gain=G,
+            scaling_factor_gain=k,
+            objective_mechanism=pnl.ObjectiveMechanism(
+                function=pnl.Linear,
+                monitored_output_states=[B],
+                name='LC ObjectiveMechanism'
+            )
+        )
+        for output_state in LC.output_states:
+            output_state.value *= starting_value_LC
+
+        path = [A, B, LC]
+        S = pnl.Composition()
+        S.add_linear_processing_pathway(pathway=path)
+        LC.reinitialize_when = pnl.Never()
+        # THIS CURRENTLY DOES NOT WORK:
+        # P = pnl.Process(pathway=[A, B])
+        # P2 = pnl.Process(pathway=[LC])
+        # S = pnl.System(processes=[P, P2])
+        # S.show_graph()
+
+        gain_created_by_LC_output_state_1 = []
+        mod_gain_assigned_to_A = []
+        base_gain_assigned_to_A = []
+        mod_gain_assigned_to_B = []
+        base_gain_assigned_to_B = []
+
+        def report_trial():
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
+            mod_gain_assigned_to_A.append(A.mod_gain)
+            mod_gain_assigned_to_B.append(B.mod_gain)
+            base_gain_assigned_to_A.append(A.function_object.gain)
+            base_gain_assigned_to_B.append(B.function_object.gain)
+
+        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+              call_after_trial=report_trial)
+
+        # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
+        assert mod_gain_assigned_to_A[0] == starting_value_LC
+
+        # (2) _gain should always be set to user-specified value
+        for i in range(5):
+            assert base_gain_assigned_to_A[i] == user_specified_gain
+            assert base_gain_assigned_to_B[i] == user_specified_gain
+
+        # (3) LC output on trial n becomes gain of A and B on trial n + 1
+        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
+
+        # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
+        assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
 
     def test_control_mechanism(self):
         Tx = pnl.TransferMechanism(name='Tx')
