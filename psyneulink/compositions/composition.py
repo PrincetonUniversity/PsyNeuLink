@@ -471,7 +471,7 @@ class Composition(object):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
-    def add_projection(self, sender, projection, receiver):
+    def add_projection(self, sender=None, projection=None, receiver=None):
         '''
             Adds a projection to the Composition, if it is not already added
 
@@ -487,14 +487,43 @@ class Composition(object):
             receiver : Mechanism, Composition, or OutputState
                 the receiver of **projection**
         '''
+
+        if sender is None:
+            if projection is not None:
+                if projection.sender:
+                    sender = projection.sender
+                else:
+                    raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
+                                           "either on the Projection or in the call to Composition.add_projection(). {}"
+                                           " is missing a sender specification. ".format(projection.name))
+        if receiver is None:
+            if projection is not None:
+                if projection.receiver:
+                    receiver = projection.receiver
+                else:
+                    raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
+                                           "either on the Projection or in the call to Composition.add_projection(). {}"
+                                           " is missing a receiver specification. ".format(projection.name))
+
+
+
         if projection not in [vertex.component for vertex in self.graph.vertices]:
+
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection)
 
             # Add connections between nodes and the projection
-            self.graph.connect_components(sender, projection)
-            self.graph.connect_components(projection, receiver)
+            graph_sender = sender
+            if isinstance(graph_sender, OutputState):
+                graph_sender = sender.owner
+
+            graph_receiver = receiver
+            if isinstance(graph_receiver, InputState):
+                graph_receiver = receiver.owner
+
+            self.graph.connect_components(graph_sender, projection)
+            self.graph.connect_components(projection, graph_receiver)
             self._validate_projection(sender, projection, receiver)
 
             self.needs_update_graph = True
