@@ -185,7 +185,7 @@ class ParsingAutodiffComposition(Composition):
             del self.target_CIM_states[output_state]
     
     
-    
+    '''
     @property
     def model(self):
         
@@ -196,8 +196,8 @@ class ParsingAutodiffComposition(Composition):
         
         else:
             return self.model
-    
     '''
+    
     def model(self):
         
         processing_graph = self.graph_processing
@@ -207,7 +207,7 @@ class ParsingAutodiffComposition(Composition):
         
         else:
             return self.model
-    '''
+    
     
     
     

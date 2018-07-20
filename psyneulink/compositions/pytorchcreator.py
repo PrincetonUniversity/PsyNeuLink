@@ -101,6 +101,10 @@ class PytorchCreator(torch.nn.Module):
     def get_parameters_for_projections(self):
         return self.projections_to_torch_weights
     
+    # returns ordered execution sets
+    def get_ordered_execution_sets(self):
+        return self.ordered_execution_sets
+    
     
     
     # INIT AND FEEDFORWARD
