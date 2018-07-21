@@ -52,7 +52,7 @@ PsyNeuLink uses `pytest <https://docs.pytest.org/en/latest/index.html>` to run i
 
 To contribute, make a branch off of the `devel` branch. Make a pull request to `devel` once your changes are complete. `devel` is periodically merged into the `master` branch, which is the branch most users use.
 
-.. _Contribution_Checklist
+.. _Contribution_Checklist:
 
 Contribution Checklist
 ----------------------
