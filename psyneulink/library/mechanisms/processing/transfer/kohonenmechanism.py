@@ -170,17 +170,17 @@ class KWTA(RecurrentTransferMechanism):
     ratio : number : default 0.5
         specifies the offset used to adjust the elements of `variable <KWTA.variable>` so that there are the number
         specified by `k_value <KWTA.k_value>` at or above the `threshold <KWTA.threshold>`;  it must be a
-        number from 0 to 1 (see `ratio <KWTA_ratio>` for additional information).
+        number from 0 to 1 (see `ratio <KWTARecurrentMechanism_ratio>` for additional information).
 
     average_based : boolean : default False
         specifies whether the average-based scaling is used to determine the scope of offsets (see `average_based
-        <KWTA_average_based>` for additional information).
+        <KWTARecurrentMechanism_average_based>` for additional information).
 
     inhibition_only : boolean : default True
         specifies whether positive offsets can be applied to the `variable <KWTA.variable>` in an effort to achieve
         `k_value <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If set to `False`, any offset
         is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
-        (see `inhibition_only <KWTA_inhibition_only>` for additional information).
+        (see `inhibition_only <KWTARecurrentMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <KWTA.function>` the item in index 0 specifies the
@@ -252,7 +252,7 @@ class KWTA(RecurrentTransferMechanism):
 
     k_value : number
         determines the number or proportion of elements of `variable <KWTA.variable>` that should be above the
-        `threshold <KWTA.threshold>` of the KWTA (see `k_value <KWTA_k_value>` for additional information).
+        `threshold <KWTA.threshold>` of the KWTA (see `k_value <KWTARecurrentMechanism_k_value>` for additional information).
 
     threshold : number
         determines the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
@@ -260,18 +260,18 @@ class KWTA(RecurrentTransferMechanism):
 
     ratio : number
         determines the offset used to adjust the elements of `variable <KWTA.variable>` so that there are `k_value
-        <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>` (see `ratio <KWTA_ratio>` for additional
+        <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>` (see `ratio <KWTARecurrentMechanism_ratio>` for additional
         information).
 
     average_based : boolean : default False
         determines the way in which the scope of offsets is determined, from which the one is selected that is applied
-        to the elements of the `variable <KWTA.variable>` (see `average_based <KWTA_average_based>` for additional
+        to the elements of the `variable <KWTA.variable>` (see `average_based <KWTARecurrentMechanism_average_based>` for additional
         information).
 
     inhibition_only : boolean : default True
         determines whether a positive offset is allowed;  if it is `True`, then the value of the offset is
         "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
-        `inhibition_only <KWTA_inhibition_only>` for additional information).
+        `inhibition_only <KWTARecurrentMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <KWTA.function>`
