@@ -633,7 +633,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Use self.input_states (containing specs from **input_states** arg of constructor) or
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
-            # return super()._instantiate_input_states(input_states=input_states, context=context)
             input_states = super()._instantiate_input_states(input_states=input_states, context=context)
 
         else:
