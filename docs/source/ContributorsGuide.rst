@@ -28,7 +28,7 @@ In the PsyNeuLink repo, there are many files. The following folders and files ar
 - *docs* contains the documentation files, including the Contributors Guide
 
     * *source* contains the Sphinx files used to generate the HTML documentation
-    * *build* contains the generated HTML documentation, which is generated using the Sphinx `html` command
+    * *build* contains the generated HTML documentation, which is generated using Sphinx commands
 
 ..
 - *Scripts* contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated
@@ -59,7 +59,7 @@ Contribution Checklist
 
 This is the general workflow for contributing to PsyNeuLink:
 
-* Using git, create a personal branch off of the `devel` branch.
+* Using git, create a branch off of the `devel` branch.
 * Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that they can provide you with relevant tips in advance.
 
     * While writing code on your branch, be sure to keep pulling from `devel` from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.
@@ -103,3 +103,10 @@ Testing
 
 Documentation
 -------------
+
+Documentation is done through the Sphinx library. Documentation for the `master` and `devel` branches can be found `here <https://princetonuniversity.github.io/PsyNeuLink/>
+` and `here <https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html>`, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.
+
+To understand Sphinx syntax, start `here <http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`.
+
+However, when editing documentation, you should generate Sphinx documentation in order to preview your changes before publishing to `devel`. To generate Sphinx documentation from your local branch, run `make html` in Terminal, while in the `docs` folder. The resulting HTML should be in your `docs/build` folder. (Do not commit these built HTML files to Github. They are simply for testing/preview purposes.)
