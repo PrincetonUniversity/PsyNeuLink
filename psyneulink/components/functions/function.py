@@ -10057,16 +10057,142 @@ class LearningFunction(Function_Base):
                 raise FunctionError("{} arg for {} ({}) must be a single value".
                                     format(LEARNING_RATE, self.name, learning_rate))
 
-class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
+
+    def __init__(self,
+                 default_variable=None,
+                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(
+                # activation_function=activation_function,
+                learning_rate=learning_rate,
+                params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super()._validate_variable(variable, context))
+
+        variable = np.squeeze(np.array(variable))
+
+        if not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
+                                 format(self.name, variable))
+        if variable.ndim == 0:
+            raise ComponentError("Variable for {} is a single number ({}) "
+                                 "which doesn't make much sense for associative learning".
+                                 format(self.name, variable))
+        if variable.ndim > 1:
+            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
+                                 format(self.name, variable))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
+
+        Arguments
+        ---------
+
+        variable : List[number] or 1d np.array : default ClassDefaults.variable
+            array of activity values, the pairwise products of which are used to generate a weight change matrix.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+
+        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
+
+        # MODIFIED 9/21/17 NEW:
+        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 9/21/17 END
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if self.learning_rate_dim == 1:
+            variable = variable * learning_rate
+
+        # Generate the column array from the variable
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
+
+        # Calculate weight chhange matrix
+        weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
+        if self.learning_rate_dim in {0, 2}:
+            weight_change_matrix = weight_change_matrix * learning_rate
+
+        return weight_change_matrix
+
+class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
     """
-    Hebbian(                    \
-        default_variable=None,  \
-        learning_rate=None,     \
-        params=None,            \
-        name=None,              \
+    Kohonen(                       \
+        default_variable=None,     \
+        learning_rate=None,        \
+        distance_measure=GAUSSIAN, \
+        params=None,               \
+        name=None,                 \
         prefs=None)
 
-    Implements a function that calculates a matrix of weight changes using the Hebbian (correlational) learning rule.
+    Implements a function that calculates a matrix of weight changes using the Kohenen (SOM) learning rule.
 
     Arguments
     ---------
@@ -10074,16 +10200,12 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     variable : List[number] or 1d np.array : default ClassDefaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
-        in `variable <Hebbian.variable>`.
-    COMMENT
-
     learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
+
+    distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, or function
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.

@@ -1644,7 +1644,7 @@ class System(System_Base):
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
             # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
-            # origin mechanism (useful only if the origin mechanism is a KWTA) Check, for each ORIGIN mechanism,
+            # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):

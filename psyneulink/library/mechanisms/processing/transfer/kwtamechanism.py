@@ -175,7 +175,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Logistic
-from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESULT, THRESHOLD
+from psyneulink.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -462,14 +462,9 @@ class KWTAMechanism(RecurrentTransferMechanism):
           note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function).
 
-    output_values : List[array(float64), float, float]
-        a list with the following items:
-
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT OutputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN OutputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
-        * **energy** of the result (``value`` of ENERGY OutputState);
-        * **entropy** of the result (if the ENTROPY OutputState is present).
+    output_values : List[array(float64), array(float64)]
+        a list with the `value <OutputState.value>` of each of the Mechanism's `output_states
+        <KohonenMechanism.output_states>`.
 
     name : str
         the name of the KWTAMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -486,7 +481,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     """
 
-    componentType = KWTA
+    componentType = KWTA_MECHANISM
 
     class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
         function = Logistic

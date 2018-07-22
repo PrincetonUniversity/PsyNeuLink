@@ -52,11 +52,17 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, Gaussian, Kohonen, OneHot
+from psyneulink.components.functions.function import Linear, Kohonen, OneHot, is_function_type
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, INITIALIZING, MAX_VAL, RESULT
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ACTIVATION_INPUT
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.globals.keywords import \
+    FULL_CONNECTIVITY_MATRIX, FUNCTION, INITIALIZING, KOHONEN_MECHANISM, \
+    LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, RESULT, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
+from psyneulink.globals.context import ContextFlags
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 __all__ = [
@@ -72,22 +78,23 @@ class KohonenError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
+MAX_ACTIVITY_OUTPUT = 'MAX_ACTIVITY_OUTPUT'
+
 class KohonenMechanism(TransferMechanism):
     """
-    KohonenMechanism(                        \
-    default_variable=None,                   \
-    size=None,                               \
-    function=Linear,                         \
-    selection_function=OneHot(mode=MAX_VAL), \
-    distance_function=Gaussian               \
-    learning_function=Kohonen,               \
-    matrix=None,                             \
-    initial_value=None,                      \
-    noise=0.0,                               \
-    integration_rate=1.0,                    \
-    clip=None,                               \
-    params=None,                             \
-    name=None,                               \
+    KohonenMechanism(                                      \
+    default_variable=None,                                 \
+    size=None,                                             \
+    function=Linear,                                       \
+    learning_function=Kohonen(distance_measure=GAUSSIAN),  \
+    matrix=None,                                           \
+    initial_value=None,                                    \
+    noise=0.0,                                             \
+    integration_rate=1.0,                                  \
+    clip=None,                                             \
+    params=None,                                           \
+    name=None,                                             \
     prefs=None)
 
     Subclass of `TransferMechanism` that learns a `self-organized <https://en.wikipedia.org/wiki/Self-organizing_map>`_
@@ -111,18 +118,15 @@ class KohonenMechanism(TransferMechanism):
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear
-        specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
-        or a custom function.
+        specifies the function used to transform the input.
 
+    COMMENT:
     selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
         specifes the function used to select the element of the input used to train the `matrix
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
+    COMMENT
 
-    distance_function : Function, function or method : default Gaussian
-        specifes the function used to determine the distance of each element from the one identified by
-        `selection_function <KohonenMechanism.selection_function>`.
-
-    learning_function : LearningFunction, function or method
+    learning_function : LearningFunction, function or method : default Kohonen(distance_measure=GUASSIAN)
         specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
         <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
 
@@ -179,14 +183,15 @@ class KohonenMechanism(TransferMechanism):
     function : Function
         the Function used to transform the input.
 
+    COMMENT:
     selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
         determines the function used to select the element of the input used to train the `matrix
         <MappingProjection.matrix>` of the `learned_projection <KohonenMechanism.learned_projection>`.
+    COMMENT
 
     distance_function : Function, function or method : default Gaussian
-        determines the function used to determine the distance of each element from the one identified by
-        `selection_function <KohonenMechanism.selection_function>` and the corresponding size of the changes in
-        the weight of the MappingProjection
+        determines the function used to evaluate the distance of each element from the most active one
+        one identified by `selection_function <KohonenMechanism.selection_function>`
 
     matrix : 2d np.array
         `matrix <AutoAssociativeProjection.matrix>` parameter of the `learned_projection
@@ -284,24 +289,17 @@ class KohonenMechanism(TransferMechanism):
     output_states : Dict[str, OutputState]
         an OrderedDict with the following `OutputStates <OutputState>`:
 
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <KWTA.function>`;
-        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
-          calculated using the `Stability` Function with the ENERGY metric;
-        * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric;
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
-          (e.g., the `Logistic` function).
+        * `TRANSFER_RESULT`, the `value <OutputState.value>` of which is the **result** of `function
+          <KohonenMechanism.function>`;
 
-    output_values : List[array(float64), float, float]
-        a list with the following items:
+        * `MOST_ACTIVE`, the `value <OutputState.value>` of which is a "one hot" encoding of the most active
+          element of the Mechanism's `value <KohonenMechanism.value>` in the last execution (used by the
+          `learning_mechanism <KohonenMechanisms.learning_mechanism>` to modify the `learned_projection
+          <KohonenMechanism.learned_projection>`.
 
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT OutputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN OutputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
-        * **energy** of the result (``value`` of ENERGY OutputState);
-        * **entropy** of the result (if the ENTROPY OutputState is present).
+    output_values : List[array(float64), array(float64)]
+        a list with the `value <OutputState.value>` of each of the Mechanism's `output_states
+        <KohonenMechanism.output_states>`.
 
     name : str
         the name of the KWTA Mechanism; if it is not specified in the **name** argument of the constructor, a
@@ -314,7 +312,7 @@ class KohonenMechanism(TransferMechanism):
 
     Returns
     -------
-    instance of KWTA : KWTA
+    instance of KohonenMechanism : KohonenMechanism
 
     """
 
@@ -327,22 +325,25 @@ class KohonenMechanism(TransferMechanism):
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
+    standard_output_states.extend([{NAME:MAX_ACTIVITY_OUTPUT,
+                                    VARIABLE:(OWNER_VALUE,0),
+                                    FUNCTION: OneHot(mode=MAX_INDICATOR)},
+                                   ])
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  function=Linear,
-                 selection_function=OneHot(mode=MAX_VAL),
-                 distance_function=Gaussian,
-                 enable_learning=True,
-                 learning_function=Kohonen,
-                 matrix=FULL_CONNECTIVITY_MATRIX,
+                 # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,
                  integrator_mode=False,
                  clip=None,
+                 enable_learning=True,
+                 learning_function:is_function_type=Kohonen(distance_measure=GAUSSIAN),
+                 learned_projection:tc.optional(MappingProjection)=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
@@ -358,16 +359,15 @@ class KohonenMechanism(TransferMechanism):
 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   integrator_mode=integrator_mode,
-                                                  selection_function=selection_function,
-                                                  distance_function=distance_function,
+                                                  # selection_function=selection_function,
                                                   learning_function=learning_function,
+                                                  learned_projection=learned_projection,
                                                   enable_learning=enable_learning)
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=function,
-                         matrix=matrix,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
@@ -378,119 +378,90 @@ class KohonenMechanism(TransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable, context=None):
-        if variable.dtype.char == "U":
-            raise KohonenError(
-                "input ({0}) to {1} was a string, which is not supported for {2}".format(
-                    variable, self, self.__class__.__name__
-                )
-            )
-
-        return self._kwta_scale(variable)
-
-    # adds indexOfInhibitionInputState to the attributes of KWTA
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        super()._instantiate_attributes_before_function(function=function, context=context)
-
-        # this index is saved so the KWTA mechanism knows which input state represents inhibition
-        # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
-        # so it shouldn't be a problem)
-        self.indexOfInhibitionInputState = len(self.input_states) - 1
-
-    def _kwta_scale(self, current_input, context=None):
-        k_value = self.get_current_mechanism_param("k_value")
-        threshold = self.get_current_mechanism_param("threshold")
-        average_based = self.get_current_mechanism_param("average_based")
-        ratio = self.get_current_mechanism_param("ratio")
-        inhibition_only = self.get_current_mechanism_param("inhibition_only")
-
-        try:
-            int_k_value = int(k_value[0])
-        except TypeError: # if k_value is a single value rather than a list or array
-            int_k_value = int(k_value)
-        # ^ this is hacky but necessary for now, since something is
-        # incorrectly turning k_value into an array of floats
-        n = self.size[0]
-        if (k_value[0] > 0) and (k_value[0] < 1):
-            k = int(round(k_value[0] * n))
-        elif (int_k_value < 0):
-            k = n - int_k_value
-        else:
-            k = int_k_value
-        # k = self.int_k
-
-        diffs = threshold - current_input[0]
-
-        sorted_diffs = sorted(diffs)
-
-        if average_based:
-            top_k_mean = np.mean(sorted_diffs[0:k])
-            other_mean = np.mean(sorted_diffs[k:n])
-            final_diff = other_mean * ratio + top_k_mean * (1 - ratio)
-        else:
-            if k == 0:
-                final_diff = sorted_diffs[k]
-            elif k == len(sorted_diffs):
-                final_diff = sorted_diffs[k - 1]
-            elif k > len(sorted_diffs):
-                raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
-                                format(k, current_input[0], self.name))
-            else:
-                final_diff = sorted_diffs[k] * ratio + sorted_diffs[k-1] * (1 - ratio)
-
-
-
-        if inhibition_only and final_diff > 0:
-            final_diff = 0
-
-        new_input = np.array(current_input[0] + final_diff)
-        if (sum(new_input > threshold) > k) and not average_based:
-            warnings.warn("KWTA scaling was not successful: the result was too high. The original input was {}, "
-                          "and the KWTA-scaled result was {}".format(current_input, new_input))
-        new_input = list(new_input)
-        for i in range(1, len(current_input)):
-            new_input.append(current_input[i])
-        return np.atleast_2d(new_input)
-
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate shape and size of matrix.
+        super()._validate_params(request_set, target_set, context)
+
+        if LEARNED_PROJECTION in target_set and target_set[LEARNED_PROJECTION]:
+            if target_set[LEARNED_PROJECTION].receiver.owner != self:
+                raise KohonenError("{} specified in {} argument for {} projects to a different Mechanism ({})".
+                                   format(MappingProjection.__name__,
+                                          repr(LEARNED_PROJECTION), self.name,
+                                          target_set[LEARNED_PROJECTION].receiver.owner.name))
+
+    def _instantiate_attributes_after_function(self, context=None):
+        super()._instantiate_attributes_after_function(context)
+        if self.learning_enabled:
+            self.configure_learning(context=context)
+
+    def configure_learning(self,
+                           learning_function:tc.optional(tc.any(is_function_type))=None,
+                           learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
+                           learned_projection:tc.optional(MappingProjection)=None,
+                           context=None):
+        """Provide user-accessible-interface to _instantiate_learning_mechanism
+
+        Configure KohonenMechanism for learning. Creates the following Components:
+
+        * a `LearningMechanism` -- if the **learning_function** and/or **learning_rate** arguments are
+          specified, they are used to construct the LearningMechanism, otherwise the values specified in the
+          KohonenMechanism's constructor are used;
+        ..
+        * a `MappingProjection` from the KohonenMechanism's `primary OutputState <OutputState_Primary>`
+          to the LearningMechanism's *ACTIVATION_INPUT* InputState;
+        ..
+        * a `LearningProjection` from the LearningMechanism's *LEARNING_SIGNAL* OutputState to the learned_projection;
+          by default this is the KohonenMechanism's `learned_projection <KohonenMechanism.learned_projection>`;
+          however a different one can be specified.
+
         """
+        # This insures that these are validated if the method is called from the command line (i.e., by the user)
+        if learning_function:
+            self.learning_function = learning_function
+        if learning_rate:
+            self.learning_rate = learning_rate
+        if learned_projection:
+            self.learned_projection = learned_projection
+        self.learned_projection = self.learned_projection or self.input_state[0].path_afferents[0]
+        if not self.learned_projection:
+            raise KohonenError("Configuring learning for {} requires that it "
+                               "receive at least one {} or that the {} be specified".
+                               format(self.name, MappingProjection.__name__, repr(LEARNED_PROJECTION)))
 
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        context = context or ContextFlags.COMMAND_LINE
+        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
-        if RATIO in target_set:
-            ratio_param = target_set[RATIO]
-            if not isinstance(ratio_param, numbers.Real):
-                if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
-                    raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
+        self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
+                                                                       learning_rate=self.learning_rate,
+                                                                       learned_projection=self.learned_projection,
+                                                                       context=context)
 
-            if ratio_param > 1 or ratio_param < 0:
-                raise KWTAError("ratio parameter ({}) for {} must be between 0 and 1".format(ratio_param, self))
+        self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
 
-        if K_VALUE in target_set:
-            k_param = target_set[K_VALUE]
-            if not isinstance(k_param, numbers.Real):
-                if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
-                    raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
-            if (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
-                k_num = k_param[0]
-            else:
-                k_num = k_param
-            if not isinstance(k_num, int):
-                try:
-                    if not k_num.is_integer() and (k_num > 1 or k_num < 0):
-                        raise KWTAError("k-value parameter ({}) for {} must be an integer, or between 0 and 1.".
-                                        format(k_param, self))
-                except AttributeError:
-                    raise KWTAError("k-value parameter ({}) for {} was an unexpected type.".format(k_param, self))
-            if abs(k_num) > self.size[0]:
-                raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
-                                format(k_param, self))
+        if self.learning_mechanism is None:
+            self.learning_enabled = False
 
-        if THRESHOLD in target_set:
-            threshold_param = target_set[THRESHOLD]
-            if not isinstance(threshold_param, numbers.Real):
-                if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
-                    raise KWTAError("k-value parameter ({}) for {} must be a single number".
-                                    format(threshold_param, self))
+    def _instantiate_learning_mechanism(self,
+                                        learning_function,
+                                        learning_rate,
+                                        learned_projection,
+                                        context=None):
+
+        learning_mechanism = LearningMechanism(default_variable=[self.output_state.value],
+                                               learning_signals=[learned_projection],
+                                               function=learning_function,
+                                               learning_rate=learning_rate,
+                                               name="{} for {}".format(
+                                                       LearningMechanism.className,
+                                                       self.name))
+
+        # Instantiate Projection from Mechanism's output to LearningMechanism
+        MappingProjection(sender=self,
+                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          name="Error Projection for {}".format(learning_mechanism.name))
+
+        # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
+        LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
+                           # receiver=learned_projection.parameter_states[MATRIX],
+                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
+
+        return learning_mechanism
