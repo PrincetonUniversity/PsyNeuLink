@@ -455,7 +455,7 @@ class KohonenMechanism(TransferMechanism):
                                                        self.name))
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
-        MappingProjection(sender=self,
+        MappingProjection(sender=self.input_state.variable[0],
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                           name="Error Projection for {}".format(learning_mechanism.name))
 

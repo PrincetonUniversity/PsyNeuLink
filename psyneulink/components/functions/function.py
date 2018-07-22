@@ -212,13 +212,14 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
     DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
+    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, \
+    GAIN, GAUSSIAN, GAMMA_DIST_FUNCTION, \
     HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
-    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
+    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, SELECTION_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
@@ -10201,9 +10202,9 @@ class Kohonen(LearningFunction):  # --------------------------------------------
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
     learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
-        specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
+        specifies the learning rate used by the `function <Kohonen.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
-        <Hebbian.learning_rate>` for details).
+        <Kohonen.learning_rate>` for details).
 
     distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, or function
 
@@ -10225,32 +10226,32 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     variable: 1d np.array
         activation values, the pair-wise products of which are used to generate the weight change matrix returned by
-        the `function <Hebbian.function>`.
+        the `function <Kohonen.function>`.
 
     COMMENT:
     activation_function : Function or function : SoftMax
         the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
-        `variable <Hebbian.variable>`.
+        `variable <Kohonen.variable>`.
     COMMENT
 
     learning_rate : float, 1d or 2d np.array
-        used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
-        <Hebbian.function>`.  If specified, it supersedes any learning_rate specified for the `Process
-        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Hebbian.owner>`
+        used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
+        <Kohonen.function>`.  If specified, it supersedes any learning_rate specified for the `Process
+        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Kohonen.owner>`
         belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
-        multiplied Hadamard (elementwise) by the `variable` <Hebbian.variable>` before calculating the weight change
+        multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight change
         matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
         `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
-        <Hebbian.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
+        <Kohonen.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
         for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
-        <Hebbian.default_learning_rate>` is used.
+        <Kohonen.default_learning_rate>` is used.
 
     default_learning_rate : float
-        the value used for the `learning_rate <Hebbian.learning_rate>` if it is not otherwise specified.
+        the value used for the `learning_rate <Kohonen.learning_rate>` if it is not otherwise specified.
 
     function : function
-         calculates the pairwise product of all elements in the `variable <Hebbian.variable>`, and then
-         scales that by the `learning_rate <Hebbian.learning_rate>` to generate the weight change matrix
+         calculates the pairwise product of all elements in the `variable <Kohonen.variable>`, and then
+         scales that by the `learning_rate <Kohonen.learning_rate>` to generate the weight change matrix
          returned by the function.
 
     owner : Component
@@ -10270,16 +10271,15 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
+                 distance_measure:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                # activation_function=activation_function,
                 learning_rate=learning_rate,
                 params=params)
 
@@ -10301,7 +10301,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                                  format(self.name, variable))
         if variable.ndim == 0:
             raise ComponentError("Variable for {} is a single number ({}) "
-                                 "which doesn't make much sense for associative learning".
+                                 "which doesn't make much sense for the this LearningFunction".
                                  format(self.name, variable))
         if variable.ndim > 1:
             raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
@@ -10319,13 +10319,16 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  variable=None,
                  params=None,
                  context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+        """Calculate a matrix of weight changes from a 1d array of activity values using Kohonen learning rule.
 
         The weight change matrix is calculated as:
 
-           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+           *learning_rate* * :math:`distance_j' * *variable*-:math:`w_j`
 
-        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
+        where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>` from the
+        element with the greatest value, and :math:`w_j` is the column of weights in the `matrix
+        <MappingProjection.matrix>` being trained that corresponds to the jth element of `variable
+        <Kohonen.variable>`.
 
         Arguments
         ---------
@@ -10342,7 +10345,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            matrix of pairwise products of elements of `variable <Kohonen.variable>` scaled by the `learning_rate
             <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
@@ -10557,7 +10560,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         weight change matrix : 2d np.array
             matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
-            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+            <HebbianMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 
