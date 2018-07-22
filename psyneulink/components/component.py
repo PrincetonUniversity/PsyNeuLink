@@ -2644,9 +2644,6 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        if isinstance(self, Function):
-            return
-
         function_variable = self._parse_function_variable(self.instance_defaults.variable,
                                                           context=ContextFlags.INSTANTIATE)
 

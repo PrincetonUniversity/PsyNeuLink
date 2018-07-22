@@ -216,8 +216,8 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
-    OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
@@ -3747,10 +3747,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result. 
+        result is greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0. 
+        from it if (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3767,13 +3767,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0. 
+        (variable - bias) is greater than 0.
     bias : float : default 0.0
         value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result. 
+        greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0. 
+        (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3785,15 +3785,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
-    
-    
+
+
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
-    
+
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -3823,9 +3823,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  context=None):
         """
         Return:
-            
+
             :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
-            
+
         Arguments
         ---------
         variable : number or np.array : default ClassDefaults.variable
@@ -3838,13 +3838,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
         ReLU transformation of variable : number or np.array
         """
-        
+
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
-        
+
         return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
     def derivative(self, output):
@@ -3858,7 +3858,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
-        
+
         if (output > 0): return gain
         else: return leak
 
@@ -4142,6 +4142,10 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -4176,6 +4180,10 @@ class SoftMax(NormalizingFunction):
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
     owner : Component
@@ -4198,7 +4206,7 @@ class SoftMax(NormalizingFunction):
     additive_param = None
 
     class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
+        variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4207,12 +4215,14 @@ class SoftMax(NormalizingFunction):
                  default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 per_item=True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
+                                                  per_item=per_item,
                                                   output=output,
                                                   params=params)
 
@@ -4221,6 +4231,15 @@ class SoftMax(NormalizingFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        if variable is None:
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
+
+        return np.asarray(variable)
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
@@ -4328,6 +4347,25 @@ class SoftMax(NormalizingFunction):
 
         return builder
 
+    def apply_softmax(self, input_value, gain, output_type):
+        # Modulate input_value by gain
+        v = gain * input_value
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # Generate one-hot encoding based on selected output_type
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            return self.one_hot_function(sm)
+        elif output_type in {PROB, PROB_INDICATOR}:
+            return self.one_hot_function([input_value, sm])
+        else:
+            return sm
+
     def function(self,
                  variable=None,
                  params=None,
@@ -4360,26 +4398,17 @@ class SoftMax(NormalizingFunction):
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         gain = self.get_current_function_param(GAIN)
-
+        per_item = self.get_current_function_param(PER_ITEM)
         # Compute softmax and assign to sm
 
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # Generate one-hot encoding based on selected output_type
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
-            return self.one_hot_function(sm)
-        elif output_type in {PROB, PROB_INDICATOR}:
-            return self.one_hot_function([variable, sm])
+        if per_item and len(np.shape(variable)) > 1:
+            output = []
+            for item in variable:
+                output.append(self.apply_softmax(item, gain, output_type))
         else:
-            return sm
+            output = self.apply_softmax(variable, gain, output_type)
+
+        return output
 
     def derivative(self, output, input=None):
         """

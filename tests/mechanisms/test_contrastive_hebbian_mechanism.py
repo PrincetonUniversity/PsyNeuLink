@@ -40,7 +40,6 @@ class TestContrastiveHebbian:
                 input_size=4,
                 hidden_size=0,
                 target_size=4,
-                # separated=False,
                 mode=pnl.SIMPLE_HEBBIAN,
                 enable_learning=True,
                 function=pnl.Linear,

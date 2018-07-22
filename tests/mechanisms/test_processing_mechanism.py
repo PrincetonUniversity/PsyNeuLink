@@ -43,7 +43,7 @@ class TestProcessingMechanismFunctions:
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_SoftMax_function(self):
-        PM1 = ProcessingMechanism(function=SoftMax)
+        PM1 = ProcessingMechanism(function=SoftMax(per_item=False))
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 

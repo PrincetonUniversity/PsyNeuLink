@@ -252,7 +252,7 @@ class DistanceMetrics:
     ----------
 
     MAX_ABS_DIFF
-        :math:`d = |\\max(a_1-a_2)|`
+        :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
@@ -868,6 +868,7 @@ MAX_ABS_INDICATOR = 'MAX_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
+PER_ITEM = 'per_item'
 
 INITIALIZER = 'initializer'
 INITIAL_V = 'initial_v'
