@@ -13,7 +13,7 @@ Transfer Mechanisms
    :maxdepth: 1
 
    RecurrentTransferMechanism
-   LCA
-   KWTARecurrentMechanism
+   LCAMechanism
+   KWTAMechanism
    KohonenMechanism
    ContrastiveHebbianMechanism

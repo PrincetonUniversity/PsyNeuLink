@@ -52,48 +52,46 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Logistic
-from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESULT, THRESHOLD
+from psyneulink.components.functions.function import Linear, Gaussian, Kohonen, OneHot
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, INITIALIZING, MAX_VAL, RESULT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 __all__ = [
-    'KWTA', 'KWTAError',
+    'KohonenMechanism', 'KohonenError',
 ]
 
 logger = logging.getLogger(__name__)
 
-class KWTAError(Exception):
+class KohonenError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
 
-class KWTA(RecurrentTransferMechanism):
+class KohonenMechanism(TransferMechanism):
     """
-    KWTA(                       \
-    default_variable=None,      \
-    size=None,                  \
-    function=Logistic,          \
-    matrix=None,                \
-    auto=None,                  \
-    hetero=None,                \
-    initial_value=None,         \
-    noise=0.0,                  \
-    integration_rate=1.0,          \
-    k_value=0.5,                \
-    threshold=0,                \
-    ratio=0.5,                  \
-    average_based=False,        \
-    inhibition_only=True,       \
-    clip=None,                 \
-    params=None,                \
-    name=None,                  \
+    KohonenMechanism(                        \
+    default_variable=None,                   \
+    size=None,                               \
+    function=Linear,                         \
+    selection_function=OneHot(mode=MAX_VAL), \
+    distance_function=Gaussian               \
+    learning_function=Kohonen,               \
+    matrix=None,                             \
+    initial_value=None,                      \
+    noise=0.0,                               \
+    integration_rate=1.0,                    \
+    clip=None,                               \
+    params=None,                             \
+    name=None,                               \
     prefs=None)
 
-    Subclass of `RecurrentTransferMechanism` that dynamically regulates its input relative to a given threshold.
+    Subclass of `TransferMechanism` that learns a `self-organized <https://en.wikipedia.org/wiki/Self-organizing_map>`_
+    map of its input.
 
     Arguments
     ---------
@@ -116,26 +114,22 @@ class KWTA(RecurrentTransferMechanism):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
+    selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
+        specifes the function used to select the element of the input used to train the `matrix
+        <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
+
+    distance_function : Function, function or method : default Gaussian
+        specifes the function used to determine the distance of each element from the one identified by
+        `selection_function <KohonenMechanism.selection_function>`.
+
+    learning_function : LearningFunction, function or method
+        specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
         or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
-
-    auto : number, 1D array, or None : default None
-        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
-        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
-        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
-
-    hetero : number, 2D array, or None : default None
-        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
-        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
-        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -155,32 +149,6 @@ class KWTA(RecurrentTransferMechanism):
 
          result = (integration_rate * current input) +
          (1-integration_rate * result on previous time_step)
-
-    k_value : number : default 0.5
-        specifies the proportion or number of the elements of `variable <KWTA.variable>` that should be at or above
-        the `threshold <KWTA.threshold>`. A value between 0 and 1 specifies the proportion of elements that should be at
-        or above the `threshold <KWTA.threshold>`, while a positive integer specifies the number of values that should
-        be at or above the `threshold <KWTA.threshold>`. A negative integer specifies the number of elements that should
-        be below the `threshold <KWTA.threshold>`.
-
-    threshold : number : default 0
-        specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
-        `variable <KWTA.variable>`.
-
-    ratio : number : default 0.5
-        specifies the offset used to adjust the elements of `variable <KWTA.variable>` so that there are the number
-        specified by `k_value <KWTA.k_value>` at or above the `threshold <KWTA.threshold>`;  it must be a
-        number from 0 to 1 (see `ratio <KWTARecurrentMechanism_ratio>` for additional information).
-
-    average_based : boolean : default False
-        specifies whether the average-based scaling is used to determine the scope of offsets (see `average_based
-        <KWTARecurrentMechanism_average_based>` for additional information).
-
-    inhibition_only : boolean : default True
-        specifies whether positive offsets can be applied to the `variable <KWTA.variable>` in an effort to achieve
-        `k_value <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If set to `False`, any offset
-        is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
-        (see `inhibition_only <KWTARecurrentMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <KWTA.function>` the item in index 0 specifies the
@@ -206,21 +174,40 @@ class KWTA(RecurrentTransferMechanism):
     ----------
 
     variable : value
-        the input to Mechanism's `function <KWTA.variable>`.
+        the input to Mechanism's `function <KohonenMechanism.variable>`.
 
     function : Function
         the Function used to transform the input.
 
+    selection_function : SelectionFunction, function or method : default OneHot(mode=MAX_VAL)
+        determines the function used to select the element of the input used to train the `matrix
+        <MappingProjection.matrix>` of the `learned_projection <KohonenMechanism.learned_projection>`.
+
+    distance_function : Function, function or method : default Gaussian
+        determines the function used to determine the distance of each element from the one identified by
+        `selection_function <KohonenMechanism.selection_function>` and the corresponding size of the changes in
+        the weight of the MappingProjection
+
     matrix : 2d np.array
-        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
+        `matrix <AutoAssociativeProjection.matrix>` parameter of the `learned_projection
+        <KohonenMechanism.learned_projection>`.
 
-    recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-        back to its `primary inputState <Mechanism_InputStates>`.
+    learning_enabled : bool
+        indicates whether `learning is enabled <Kohonen_Learning>`;  see `learning_enabled
+        <Kohonen.learning_enabled>` for additional details.
 
-    COMMENT:
-       THE FOLLOWING IS THE CURRENT ASSIGNMENT
-    COMMENT
+    learned_projection : MappingProjection
+        `MappingProjection` that projects to the Mechanism and is trained by its `learning_mechanism
+        <KohonenMechanism.learning_mechanism>`.
+
+    learning_function : LearningFunction, function or method
+        function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+
+    learning_mechanism : LearningMechanism
+        created automatically if `learning is specified <KohonenMechanism_Learning>`, and used to train the
+        `learned_projection <KohonenMechanism.learned_projection>`.
+
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
         (only relevant if `integration_rate <KWTA.integration_rate>` parameter is not 1.0).
@@ -249,29 +236,6 @@ class KWTA(RecurrentTransferMechanism):
         to True::
 
           result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
-
-    k_value : number
-        determines the number or proportion of elements of `variable <KWTA.variable>` that should be above the
-        `threshold <KWTA.threshold>` of the KWTA (see `k_value <KWTARecurrentMechanism_k_value>` for additional information).
-
-    threshold : number
-        determines the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
-        `variable <KWTA.variable>`.
-
-    ratio : number
-        determines the offset used to adjust the elements of `variable <KWTA.variable>` so that there are `k_value
-        <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>` (see `ratio <KWTARecurrentMechanism_ratio>` for additional
-        information).
-
-    average_based : boolean : default False
-        determines the way in which the scope of offsets is determined, from which the one is selected that is applied
-        to the elements of the `variable <KWTA.variable>` (see `average_based <KWTARecurrentMechanism_average_based>` for additional
-        information).
-
-    inhibition_only : boolean : default True
-        determines whether a positive offset is allowed;  if it is `True`, then the value of the offset is
-        "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
-        `inhibition_only <KWTARecurrentMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <KWTA.function>`
@@ -354,33 +318,30 @@ class KWTA(RecurrentTransferMechanism):
 
     """
 
-    componentType = KWTA
+    componentType = KOHONEN_MECHANISM
 
-    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        function = Logistic
+    class ClassDefaults(TransferMechanism.ClassDefaults):
+        function = Linear
 
-    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
+    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
+    paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
 
-    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
+    standard_output_states = TransferMechanism.standard_output_states.copy()
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=Logistic,
-                 matrix=None,
-                 auto: is_numeric_or_none=None,
-                 hetero: is_numeric_or_none=None,
+                 function=Linear,
+                 selection_function=OneHot(mode=MAX_VAL),
+                 distance_function=Gaussian,
+                 enable_learning=True,
+                 learning_function=Kohonen,
+                 matrix=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
                  integration_rate: is_numeric_or_none = 0.5,
                  integrator_mode=False,
-                 k_value: is_numeric_or_none = 0.5,
-                 threshold: is_numeric_or_none = 0,
-                 ratio: is_numeric_or_none = 0.5,
-                 average_based=False,
-                 inhibition_only=True,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
@@ -397,26 +358,16 @@ class KWTA(RecurrentTransferMechanism):
 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   integrator_mode=integrator_mode,
-                                                  k_value=k_value,
-                                                  threshold=threshold,
-                                                  ratio=ratio,
-                                                  inhibition_only=inhibition_only,
-                                                  average_based=average_based)
-
-        # this defaults the matrix to be an identity matrix (self excitation)
-        if matrix is None:
-            if auto is None:
-                auto = 5 # this value is bad: there should be a better way to estimate this?
-            if hetero is None:
-                hetero = 0
+                                                  selection_function=selection_function,
+                                                  distance_function=distance_function,
+                                                  learning_function=learning_function,
+                                                  enable_learning=enable_learning)
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=function,
                          matrix=matrix,
-                         auto=auto,
-                         hetero=hetero,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
@@ -429,7 +380,7 @@ class KWTA(RecurrentTransferMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         if variable.dtype.char == "U":
-            raise KWTAError(
+            raise KohonenError(
                 "input ({0}) to {1} was a string, which is not supported for {2}".format(
                     variable, self, self.__class__.__name__
                 )

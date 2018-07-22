@@ -19,14 +19,6 @@ Combination Functions:
   * `CombineMeans`
   * `PredictionErrorDeltaFunction`
 
-Selection Functions:
-  * `OneHot`
-  COMMENT:
-  * TBI Threshold
-  * TBI MaxVal
-  COMMENT
-  * `KWTA`
-
 Transfer Functions:
   * `Linear`
   * `Exponential`
@@ -34,6 +26,14 @@ Transfer Functions:
   * `ReLU`
   * `SoftMax`
   * `LinearMatrix`
+
+Selection Functions:
+  * `OneHot`
+  COMMENT:
+  * TBI Threshold
+  * TBI MaxVal
+  COMMENT
+  * `KWTA`
 
 Integrator Functions:
   * `Integrator`
@@ -217,7 +217,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     GAIN, GAMMA_DIST_FUNCTION, \
     HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
+    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
@@ -4489,7 +4489,8 @@ class SelectionFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
-class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
+
+class OneHot(SelectionFunction):
     """
     OneHot(                \
          default_variable, \
@@ -7773,7 +7774,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = LCA_INTEGRATOR_FUNCTION
+    componentName = LCAMechanism_INTEGRATOR_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})

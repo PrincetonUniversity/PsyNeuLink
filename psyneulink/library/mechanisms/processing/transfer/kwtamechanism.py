@@ -5,161 +5,161 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# ********************************************* KWTARecurrentMechanism *************************************************
+# ********************************************* KWTAMechanism *************************************************
 
 """
 
 Overview
 --------
 
-A KWTARecurrentMechanism is a subclass of `RecurrentTransferMechanism` that implements a k-winners-take-all (kWTA)
-constraint on the number of elements of the Mechanism's `variable <KWTARecurrentMechanism.variable>` that are above a
+A KWTAMechanism is a subclass of `RecurrentTransferMechanism` that implements a k-winners-take-all (kWTA)
+constraint on the number of elements of the Mechanism's `variable <KWTAMechanism.variable>` that are above a
 specified threshold.  The implementation is based on the one  described in `O'Reilly and Munakata, 2012
 <https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations>`_.
 
-.. _KWTARecurrentMechanism_Creation:
+.. _KWTAMechanism_Creation:
 
-Creating a KWTARecurrentMechanism
+Creating a KWTAMechanism
 ---------------
 
-A KWTARecurrentMechanism can be created directly by calling its constructor. The **k_value**, **threshold**,
-and **ratio** arguments can be used to specify the function of the KWTARecurrentMechanism, and default to a condition
-in which half of the elements in the KWTARecurrentMechanism's `variable <KWTARecurrentMechanism.variable>`
+A KWTAMechanism can be created directly by calling its constructor. The **k_value**, **threshold**,
+and **ratio** arguments can be used to specify the function of the KWTAMechanism, and default to a condition
+in which half of the elements in the KWTAMechanism's `variable <KWTAMechanism.variable>`
 (**k_value** = 0.5) are above 0 and half are below (**threshold** = 0), achieved using an intermediate degree of
 value displacement (**ratio** = 0.5).
 
-.. _KWTARecurrentMechanism_Structure:
+.. _KWTAMechanism_Structure:
 
 Structure
 ---------
 
-The KWTARecurrentMechanism calculates an offset to apply to all elements of the Mechanism's `variable
-<KWTARecurrentMechanism.variable>` array so that it has a specified number of the elements that are at or above a
+The KWTAMechanism calculates an offset to apply to all elements of the Mechanism's `variable
+<KWTAMechanism.variable>` array so that it has a specified number of the elements that are at or above a
 specified threshold value.  Typically, this constraint can be satisfied in a number of ways;  how it is satisfied is
-determined by three parameters and two options of the KWTARecurrentMechanism:
+determined by three parameters and two options of the KWTAMechanism:
 
-.. _KWTARecurrentMechanism_k_value:
+.. _KWTAMechanism_k_value:
 
-* `k_value <KWTARecurrentMechanism.k_value>` parameter -- determines the number of elements of its `variable
-  <KWTARecurrentMechanism.variable>` that should be at or above the specified `threshold
-  <KWTARecurrentMechanism.threshold>`.  A value between 0 and 1 specifies the *proportion* of elements that should be
-  at or above the `threshold <KWTARecurrentMechanism.threshold>`, while a positive integer specifies the *number* of
-  elements that should be at or above the `threshold <KWTARecurrentMechanism.threshold>`.  A negative integer specifies
-  the number of elements that should be below the `threshold <KWTARecurrentMechanism.threshold>`.  Whether or not the
-  exact specification is achieved depends on the settings of the `average_based <KWTARecurrentMechanism.average_based>`
-  and `inhibition_only <KWTARecurrentMechanism.inhibition_only>` options (see below).
+* `k_value <KWTAMechanism.k_value>` parameter -- determines the number of elements of its `variable
+  <KWTAMechanism.variable>` that should be at or above the specified `threshold
+  <KWTAMechanism.threshold>`.  A value between 0 and 1 specifies the *proportion* of elements that should be
+  at or above the `threshold <KWTAMechanism.threshold>`, while a positive integer specifies the *number* of
+  elements that should be at or above the `threshold <KWTAMechanism.threshold>`.  A negative integer specifies
+  the number of elements that should be below the `threshold <KWTAMechanism.threshold>`.  Whether or not the
+  exact specification is achieved depends on the settings of the `average_based <KWTAMechanism.average_based>`
+  and `inhibition_only <KWTAMechanism.inhibition_only>` options (see below).
 
-.. _KWTARecurrentMechanism_threshold:
+.. _KWTAMechanism_threshold:
 
-* `threshold <KWTARecurrentMechanism.threshold>` parameter -- determines the value at or above which the KTWA seeks to
-  assign `k_value <KWTARecurrentMechanism.k_value>` elements of its `variable <KWTARecurrentMechanism.variable>`.
+* `threshold <KWTAMechanism.threshold>` parameter -- determines the value at or above which the KTWA seeks to
+  assign `k_value <KWTAMechanism.k_value>` elements of its `variable <KWTAMechanism.variable>`.
 
-.. _KWTARecurrentMechanism_ratio:
+.. _KWTAMechanism_ratio:
 
-* `ratio <KWTARecurrentMechanism.ratio>` parameter -- determines how the offset applied to the elements of the
-  KWTARecurrentMechanism's `variable
-  <KWTARecurrentMechanism.variable>` is selected from the scope of possible values;  the `ratio
-  <KWTARecurrentMechanism.ratio>` must be a number between 0 and 1.  An offset is picked that is above the low end of
-  the scope by a proportion of the scope equal to the `ratio <KWTARecurrentMechanism.ratio>` parameter.  How the scope
-  is calculated is determined by the `average_based <KWTARecurrentMechanism.average_based>` option, as described below.
+* `ratio <KWTAMechanism.ratio>` parameter -- determines how the offset applied to the elements of the
+  KWTAMechanism's `variable
+  <KWTAMechanism.variable>` is selected from the scope of possible values;  the `ratio
+  <KWTAMechanism.ratio>` must be a number between 0 and 1.  An offset is picked that is above the low end of
+  the scope by a proportion of the scope equal to the `ratio <KWTAMechanism.ratio>` parameter.  How the scope
+  is calculated is determined by the `average_based <KWTAMechanism.average_based>` option, as described below.
 
-.. _KWTARecurrentMechanism_average_based:
+.. _KWTAMechanism_average_based:
 
-* `average_based <KWTARecurrentMechanism.average_based>` option -- determines how the scope of values is calculated
-  from which the offset applied to the elements of the KWTARecurrentMechanism's `variable
-  <KWTARecurrentMechanism.variable>` is selected;  If `average_based <KWTARecurrentMechanism.average_based>` is
+* `average_based <KWTAMechanism.average_based>` option -- determines how the scope of values is calculated
+  from which the offset applied to the elements of the KWTAMechanism's `variable
+  <KWTAMechanism.variable>` is selected;  If `average_based <KWTAMechanism.average_based>` is
   `False`, the low end of the scope is the offset that sets the k-th highest element exactly at the threshold
-  (that is, the smallest value that insures that `k_value <KWTARecurrentMechanism.k_value>` elements are at or above
-  the `threshold <KWTARecurrentMechanism.threshold>`;  the high end of the scope is the offset that sets the k+1-th
+  (that is, the smallest value that insures that `k_value <KWTAMechanism.k_value>` elements are at or above
+  the `threshold <KWTAMechanism.threshold>`;  the high end of the scope is the offset that sets the k+1-th
   highest element exactly at the threshold (that is, the largest possible value, such that the `k_value
-  <KWTARecurrentMechanism.k_value>` elements but no more are above the `threshold <KWTARecurrentMechanism.threshold>`
+  <KWTAMechanism.k_value>` elements but no more are above the `threshold <KWTAMechanism.threshold>`
   (i.e., the next one is exactly at it). With this setting, all values of offset within the scope generate exactly
-  `k_value <KTWA.k_value>` elements at or above the `threshold <KWTARecurrentMechanism.threshold>`.  If `average_based
-  <KWTARecurrentMechanism.average_based>` is `True`, the low end of the scope is the offset that places the *average*
-  of the elements with the `k_value <KWTARecurrentMechanism.k_value>` highest values at the `threshold
-  <KWTARecurrentMechanism.threshold>`, and the high end of the scope is the offset that places the average of the
-  remaining elements at the `threshold <KWTARecurrentMechanism.threshold>`.  In this case, the lowest values of
-  offset within the scope may produce fewer than `k_value <KWTARecurrentMechanism.k_value>` elements at or above the
-  `threshold <KWTARecurrentMechanism.threshold>`, while the highest values within the scope may produce more.  An
-  offset is picked from the scope as specified by the `ratio <KWTARecurrentMechanism.ratio>` parameter (see `above
-  <KWTARecurrentMechanism_ratio>`).
+  `k_value <KTWA.k_value>` elements at or above the `threshold <KWTAMechanism.threshold>`.  If `average_based
+  <KWTAMechanism.average_based>` is `True`, the low end of the scope is the offset that places the *average*
+  of the elements with the `k_value <KWTAMechanism.k_value>` highest values at the `threshold
+  <KWTAMechanism.threshold>`, and the high end of the scope is the offset that places the average of the
+  remaining elements at the `threshold <KWTAMechanism.threshold>`.  In this case, the lowest values of
+  offset within the scope may produce fewer than `k_value <KWTAMechanism.k_value>` elements at or above the
+  `threshold <KWTAMechanism.threshold>`, while the highest values within the scope may produce more.  An
+  offset is picked from the scope as specified by the `ratio <KWTAMechanism.ratio>` parameter (see `above
+  <KWTAMechanism_ratio>`).
 
   .. note::
-     If the `average_based <KWTARecurrentMechanism.average_based>` option is `False` (the default), the
-     KWTARecurrentMechanism's `variable <KWTARecurrentMechanism.variable>`
+     If the `average_based <KWTAMechanism.average_based>` option is `False` (the default), the
+     KWTAMechanism's `variable <KWTAMechanism.variable>`
      is guaranteed to have exactly `k_value <KTWA.k_value>` elements at or above the `threshold
-     <KWTARecurrentMechanism.threshold>` (that is, for *any* value of the `ratio <KTWA.ratio>`).  However, if
-     `average_based <KWTARecurrentMechanism.average_based>` is `True`, this guarantee does not hold;  `variable
-     <KWTARecurrentMechanism.variable>` may have fewer than `k_value <KWTARecurrentMechanism.k_value>` elements at or
-     above the `threshold <KWTARecurrentMechanism.threshold>` (if the `ratio <KWTARecurrentMechanism.ratio>` is low),
-     or more than `k_value <KWTARecurrentMechanism.k_value>` (if the `ratio <KWTARecurrentMechanism.ratio>` is high).
+     <KWTAMechanism.threshold>` (that is, for *any* value of the `ratio <KTWA.ratio>`).  However, if
+     `average_based <KWTAMechanism.average_based>` is `True`, this guarantee does not hold;  `variable
+     <KWTAMechanism.variable>` may have fewer than `k_value <KWTAMechanism.k_value>` elements at or
+     above the `threshold <KWTAMechanism.threshold>` (if the `ratio <KWTAMechanism.ratio>` is low),
+     or more than `k_value <KWTAMechanism.k_value>` (if the `ratio <KWTAMechanism.ratio>` is high).
 
-  Although setting the `average_based <KWTARecurrentMechanism.average_based>` option to `True` does not guarantee that
-  *exactly* `k_value <KWTARecurrentMechanism.k_value>` elements will be above the threshold, the additional
-  flexibility it affords in the Mechanism's `variable <KWTARecurrentMechanism.variable>` attribute  can be useful in
+  Although setting the `average_based <KWTAMechanism.average_based>` option to `True` does not guarantee that
+  *exactly* `k_value <KWTAMechanism.k_value>` elements will be above the threshold, the additional
+  flexibility it affords in the Mechanism's `variable <KWTAMechanism.variable>` attribute  can be useful in
   some settings -- for example, when training hidden layers in a `multilayered network
   <LearningMechanism_Multilayer_Learning>`, which may require different numbers of elements to be above the
-  specified `threshold <KWTARecurrentMechanism.threshold>` for different input-target pairings.
+  specified `threshold <KWTAMechanism.threshold>` for different input-target pairings.
 
-.. KWTARecurrentMechanism_Inhibition_only:
+.. KWTAMechanism_Inhibition_only:
 
-* `inhibition_only <KWTARecurrentMechanism.inhibition_only>` option -- determines whether the offset applied to the
-  elements of the KWTARecurrentMechanism's `variable <KWTARecurrentMechanism.variable>` is allowed to be positive
-  (i.e., whether the KWTARecurrentMechanism can increase the value of any elements of its `variable
-  <KWTARecurrentMechanism.variable>`).  If set to `False`, the KWTARecurrentMechanism will use any offset value
-  determined by the `ratio <KWTARecurrentMechanism.ratio>` parameter from the scope determined by the `average_based
+* `inhibition_only <KWTAMechanism.inhibition_only>` option -- determines whether the offset applied to the
+  elements of the KWTAMechanism's `variable <KWTAMechanism.variable>` is allowed to be positive
+  (i.e., whether the KWTAMechanism can increase the value of any elements of its `variable
+  <KWTAMechanism.variable>`).  If set to `False`, the KWTAMechanism will use any offset value
+  determined by the `ratio <KWTAMechanism.ratio>` parameter from the scope determined by the `average_based
   <KTWA.average_based>` option (including positive offsets). If `inhibition_only
-  <KWTARecurrentMechanism.inhibition_only>` is `True`, then any positive offset selected is "clipped" at (i.e
-  re-assigned a value of) 0.  This ensures that the values of the elements of the KWTARecurrentMechanism's
-  `variable <KWTARecurrentMechanism.variable>` are never increased.
+  <KWTAMechanism.inhibition_only>` is `True`, then any positive offset selected is "clipped" at (i.e
+  re-assigned a value of) 0.  This ensures that the values of the elements of the KWTAMechanism's
+  `variable <KWTAMechanism.variable>` are never increased.
 
 COMMENT:
   .. note::
-     If the `inhibition_only <KWTARecurrentMechanism.inhibition_only>` option is set to `True`, the number of elements
-     at or above the `threshold <KWTARecurrentMechanism.threshold>` may fall below `k_value
-     <KWTARecurrentMechanism.k_value>`; and, if the input to the KWTARecurrentMechanism is sufficiently low,
-     the value of all elements may decay to 0 (depending on the value of the `decay <KWTARecurrentMechanism.decay>`
+     If the `inhibition_only <KWTAMechanism.inhibition_only>` option is set to `True`, the number of elements
+     at or above the `threshold <KWTAMechanism.threshold>` may fall below `k_value
+     <KWTAMechanism.k_value>`; and, if the input to the KWTAMechanism is sufficiently low,
+     the value of all elements may decay to 0 (depending on the value of the `decay <KWTAMechanism.decay>`
      parameter.
 COMMENT
 
-In all other respects, a KWTARecurrentMechanism has the same attributes and is specified in the same way as a standard
+In all other respects, a KWTAMechanism has the same attributes and is specified in the same way as a standard
 `RecurrentTransferMechanism`.
 
 
-.. _KWTARecurrentMechanism_Execution:
+.. _KWTAMechanism_Execution:
 
 Execution
 ---------
 
-When a KTWA is executed, it first determines its `variable <KWTARecurrentMechanism.variable>` as follows:
+When a KTWA is executed, it first determines its `variable <KWTAMechanism.variable>` as follows:
 
 * First, like every `RecurrentTransferMechanism`, it combines the input it receives from its recurrent
   `AutoAssociativeProjection` (see `Recurrent_Transfer_Structure <Recurrent_Transfer_Structure>`) with the input
   from any other `MappingProjections <MappingProjection>` it receives, and assigns this to its `variable
-  <KWTARecurrentMechanism.variable>` attribute.
+  <KWTAMechanism.variable>` attribute.
 ..
-* Then it modifies its `variable <KWTARecurrentMechanism.variable>`, by calculating and assigning an offset to its
-  elements, so that as close to `k_value <KWTARecurrentMechanism.k_value>` elements as possible are at or above the
-  `threshold <KWTARecurrentMechanism.threshold>`.  The offset is determined by carrying out the following steps in
+* Then it modifies its `variable <KWTAMechanism.variable>`, by calculating and assigning an offset to its
+  elements, so that as close to `k_value <KWTAMechanism.k_value>` elements as possible are at or above the
+  `threshold <KWTAMechanism.threshold>`.  The offset is determined by carrying out the following steps in
   each execution of the KTWA:
 
   - calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
-    `average_based <KWTARecurrentMechanism.average_based>` attribute (see `above
-    <KWTARecurrentMechanism_average_based>`);
+    `average_based <KWTAMechanism.average_based>` attribute (see `above
+    <KWTAMechanism_average_based>`);
   |
-  - select an offset from the scope based on the `ratio <KWTARecurrentMechanism.ratio>` option (see `above
-    <KWTARecurrentMechanism_ratio>`);
+  - select an offset from the scope based on the `ratio <KWTAMechanism.ratio>` option (see `above
+    <KWTAMechanism_ratio>`);
   |
-  - constrain the offset to be 0 or negative if the `inhibition_only <KWTARecurrentMechanism.inhibition_only>` option
-    is set (see `above <KWTARecurrentMechanism_inhibition_only>`;
+  - constrain the offset to be 0 or negative if the `inhibition_only <KWTAMechanism.inhibition_only>` option
+    is set (see `above <KWTAMechanism_inhibition_only>`;
   |
-  - apply the offset to all elements of the `variable <KWTARecurrentMechanism.variable>`.
+  - apply the offset to all elements of the `variable <KWTAMechanism.variable>`.
 ..
-The modified `variable <KWTARecurrentMechanism.variable>` is then passed to the KWTARecurrentMechanism's `function
-<KWTARecurrentMechanism.function>` to determine its `value <KWTARecurrentMechanism.value>`.
+The modified `variable <KWTAMechanism.variable>` is then passed to the KWTAMechanism's `function
+<KWTAMechanism.function>` to determine its `value <KWTAMechanism.value>`.
 
 
-.. _KWTARecurrentMechanism_Reference:
+.. _KWTAMechanism_Reference:
 
 Class Reference
 ---------------
@@ -181,7 +181,7 @@ from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 __all__ = [
-    'KWTARecurrentMechanism', 'KWTAError',
+    'KWTAMechanism', 'KWTAError',
 ]
 
 logger = logging.getLogger(__name__)
@@ -193,9 +193,9 @@ class KWTAError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-class KWTARecurrentMechanism(RecurrentTransferMechanism):
+class KWTAMechanism(RecurrentTransferMechanism):
     """
-    KWTARecurrentMechanism(     \
+    KWTAMechanism(     \
     default_variable=None,      \
     size=None,                  \
     function=Logistic,          \
@@ -205,12 +205,12 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
     initial_value=None,         \
     noise=0.0,                  \
     integration_rate=1.0,       \
+    clip=None,                  \
     k_value=0.5,                \
     threshold=0,                \
     ratio=0.5,                  \
     average_based=False,        \
     inhibition_only=True,       \
-    clip=None,                  \
     params=None,                \
     name=None,                  \
     prefs=None)
@@ -223,8 +223,8 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <KWTARecurrentMechanism.variable>` for
-        `function <KWTARecurrentMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        also serves as a template to specify the length of `variable <KWTAMechanism.variable>` for
+        `function <KWTAMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
         of the mechanism.
 
     size : int, list or np.ndarray of ints
@@ -261,70 +261,70 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `integration_rate <KWTARecurrentMechanism.integration_rate>` is not 1.0).
+        `integration_rate <KWTAMechanism.integration_rate>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     noise : float or function : default 0.0
-        a value added to the result of the `function <KWTARecurrentMechanism.function>` or to the result of
-        `integrator_function <KWTARecurrentMechanism.integrator_function>`, depending on whether `integrator_mode
-        <KWTARecurrentMechanism.integrator_mode>` is True or False. See `noise <KWTARecurrentMechanism.noise>` for
+        a value added to the result of the `function <KWTAMechanism.function>` or to the result of
+        `integrator_function <KWTAMechanism.integrator_function>`, depending on whether `integrator_mode
+        <KWTAMechanism.integrator_mode>` is True or False. See `noise <KWTAMechanism.noise>` for
         more details.
 
     integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
-        <KWTARecurrentMechanism.integrator_mode>` is set
+        <KWTAMechanism.integrator_mode>` is set
         to True ::
 
          result = (integration_rate * current input) +
          (1-integration_rate * result on previous time_step)
 
     k_value : number : default 0.5
-        specifies the proportion or number of the elements of `variable <KWTARecurrentMechanism.variable>` that should
-        be at or above the `threshold <KWTARecurrentMechanism.threshold>`. A value between 0 and 1 specifies the
-        proportion of elements that should be at or above the `threshold <KWTARecurrentMechanism.threshold>`, while a
+        specifies the proportion or number of the elements of `variable <KWTAMechanism.variable>` that should
+        be at or above the `threshold <KWTAMechanism.threshold>`. A value between 0 and 1 specifies the
+        proportion of elements that should be at or above the `threshold <KWTAMechanism.threshold>`, while a
         positive integer specifies the number of values that should be at or above the `threshold
-        <KWTARecurrentMechanism.threshold>`. A negative integer specifies the number of elements that should be below
-        the `threshold <KWTARecurrentMechanism.threshold>`.
+        <KWTAMechanism.threshold>`. A negative integer specifies the number of elements that should be below
+        the `threshold <KWTAMechanism.threshold>`.
 
     threshold : number : default 0
-        specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTARecurrentMechanism.k_value>`
-        elements of its `variable <KWTARecurrentMechanism.variable>`.
+        specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTAMechanism.k_value>`
+        elements of its `variable <KWTAMechanism.variable>`.
 
     ratio : number : default 0.5
-        specifies the offset used to adjust the elements of `variable <KWTARecurrentMechanism.variable>` so that there
-        are the number specified by `k_value <KWTARecurrentMechanism.k_value>` at or above the `threshold
-        <KWTARecurrentMechanism.threshold>`;  it must be a number from 0 to 1 (see `ratio
-        <KWTARecurrentMechanism_ratio>` for additional information).
+        specifies the offset used to adjust the elements of `variable <KWTAMechanism.variable>` so that there
+        are the number specified by `k_value <KWTAMechanism.k_value>` at or above the `threshold
+        <KWTAMechanism.threshold>`;  it must be a number from 0 to 1 (see `ratio
+        <KWTAMechanism_ratio>` for additional information).
 
     average_based : boolean : default False
         specifies whether the average-based scaling is used to determine the scope of offsets (see `average_based
-        <KWTARecurrentMechanism_average_based>` for additional information).
+        <KWTAMechanism_average_based>` for additional information).
 
     inhibition_only : boolean : default True
-        specifies whether positive offsets can be applied to the `variable <KWTARecurrentMechanism.variable>` in an
-        effort to achieve `k_value <KWTARecurrentMechanism.k_value>` elements at or above the `threshold
-        <KWTARecurrentMechanism.threshold>`.  If set to `False`, any offset is allowed, including positive offsets;
+        specifies whether positive offsets can be applied to the `variable <KWTAMechanism.variable>` in an
+        effort to achieve `k_value <KWTAMechanism.k_value>` elements at or above the `threshold
+        <KWTAMechanism.threshold>`.  If set to `False`, any offset is allowed, including positive offsets;
         if set to `True`, a positive offset will be re-assigned the value of 0 (see `inhibition_only
-        <KWTARecurrentMechanism_inhibition_only>` for additional information).
+        <KWTAMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KWTARecurrentMechanism.function>` the item in
+        specifies the allowable range for the result of `function <KWTAMechanism.function>` the item in
         index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
-        value of `clip <KWTARecurrentMechanism.clip>` that it exceeds.
+        value of `clip <KWTAMechanism.clip>` that it exceeds.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <KWTARecurrentMechanism.name>`
-        specifies the name of the KWTARecurrentMechanism.
+    name : str : default see `name <KWTAMechanism.name>`
+        specifies the name of the KWTAMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the KWTARecurrentMechanism; see `prefs <KWTARecurrentMechanism.prefs>` for
+        specifies the `PreferenceSet` for the KWTAMechanism; see `prefs <KWTAMechanism.prefs>` for
         details.
 
     context : str : default componentType+INITIALIZING
@@ -334,7 +334,7 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
     ----------
 
     variable : value
-        the input to Mechanism's `function <KWTARecurrentMechanism.variable>`.
+        the input to Mechanism's `function <KWTAMechanism.variable>`.
 
     function : Function
         the Function used to transform the input.
@@ -351,19 +351,19 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `integration_rate <KWTARecurrentMechanism.integration_rate>` parameter is not 1.0).
+        (only relevant if `integration_rate <KWTAMechanism.integration_rate>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
     noise : float or function : default 0.0
-        When `integrator_mode <KWTARecurrentMechanism.integrator_mode>` is set to True, noise is passed into the
-        `integrator_function <KWTARecurrentMechanism.integrator_function>`. Otherwise, noise is added to the output
-        of the `function <KWTARecurrentMechanism.function>`.
+        When `integrator_mode <KWTAMechanism.integrator_mode>` is set to True, noise is passed into the
+        `integrator_function <KWTAMechanism.integrator_function>`. Otherwise, noise is added to the output
+        of the `function <KWTAMechanism.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <KWTARecurrentMechanism.default_variable>`.
+        If noise is a list or array, it must be the same length as `variable <KWTAMechanism.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <KWTARecurrentMechanism.variable>` is a
+        If noise is specified as a single float or function, while `variable <KWTAMechanism.variable>` is a
         list or array, noise will be applied to each variable element. In the case of a noise function, this means
         that the function will be executed separately for each variable element.
 
@@ -375,46 +375,46 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
 
     integration_rate : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
-        <KWTARecurrentMechanism.integrator_mode>` is set to True::
+        <KWTAMechanism.integrator_mode>` is set to True::
 
           result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
 
     k_value : number
-        determines the number or proportion of elements of `variable <KWTARecurrentMechanism.variable>` that should be
-        above the `threshold <KWTARecurrentMechanism.threshold>` of the KWTARecurrentMechanism (see `k_value
-        <KWTARecurrentMechanism_k_value>` for additional information).
+        determines the number or proportion of elements of `variable <KWTAMechanism.variable>` that should be
+        above the `threshold <KWTAMechanism.threshold>` of the KWTAMechanism (see `k_value
+        <KWTAMechanism_k_value>` for additional information).
 
     threshold : number
-        determines the threshold at or above which the KTWA seeks to assign `k_value <KWTARecurrentMechanism.k_value>`
-        elements of its `variable <KWTARecurrentMechanism.variable>`.
+        determines the threshold at or above which the KTWA seeks to assign `k_value <KWTAMechanism.k_value>`
+        elements of its `variable <KWTAMechanism.variable>`.
 
     ratio : number
-        determines the offset used to adjust the elements of `variable <KWTARecurrentMechanism.variable>` so that there
-        are `k_value <KWTARecurrentMechanism.k_value>` elements at or above the `threshold
-        <KWTARecurrentMechanism.threshold>` (see `ratio <KWTARecurrentMechanism_ratio>` for additional information).
+        determines the offset used to adjust the elements of `variable <KWTAMechanism.variable>` so that there
+        are `k_value <KWTAMechanism.k_value>` elements at or above the `threshold
+        <KWTAMechanism.threshold>` (see `ratio <KWTAMechanism_ratio>` for additional information).
 
     average_based : boolean : default False
         determines the way in which the scope of offsets is determined, from which the one is selected that is applied
-        to the elements of the `variable <KWTARecurrentMechanism.variable>` (see `average_based
-        <KWTARecurrentMechanism_average_based>` for additional information).
+        to the elements of the `variable <KWTAMechanism.variable>` (see `average_based
+        <KWTAMechanism_average_based>` for additional information).
 
     inhibition_only : boolean : default True
         determines whether a positive offset is allowed;  if it is `True`, then the value of the offset is
         "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
-        `inhibition_only <KWTARecurrentMechanism_inhibition_only>` for additional information).
+        `inhibition_only <KWTAMechanism_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KWTARecurrentMechanism.function>`
+        specifies the allowable range for the result of `function <KWTAMechanism.function>`
 
         the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
-        to the value of `clip <KWTARecurrentMechanism.clip>` that it exceeds.
+        to the value of `clip <KWTAMechanism.clip>` that it exceeds.
 
     integrator_function:
-        When *integrator_mode* is set to True, the KWTARecurrentMechanism executes its `integrator_function
-        <KWTARecurrentMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
+        When *integrator_mode* is set to True, the KWTAMechanism executes its `integrator_function
+        <KWTAMechanism.integrator_function>`, which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator
         <AdaptiveIntegrator>` for more details on what it computes. Keep in mind that the `integration_rate
-        <KWTARecurrentMechanism.integration_rate>` parameter of the `KWTARecurrentMechanism` corresponds to the
+        <KWTAMechanism.integration_rate>` parameter of the `KWTAMechanism` corresponds to the
         `rate <KWTAIntegrator.rate>` of the `KWTAIntegrator`.
 
     integrator_mode:
@@ -426,20 +426,20 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
             value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
 
         The result of the integrator function above is then passed into the `mechanism's function
-        <KWTARecurrentMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
+        <KWTAMechanism.function>`. Note that on the first execution, *initial_value* sets previous_value.
 
         **When integrator_mode is set to False:**
 
-        The variable of the Mechanism is passed into the `function of the mechanism <KWTARecurrentMechanism.function>`.
-        The Mechanism's `integrator_function <KWTARecurrentMechanism.integrator_function>` is skipped entirely,
+        The variable of the Mechanism is passed into the `function of the mechanism <KWTAMechanism.function>`.
+        The Mechanism's `integrator_function <KWTAMechanism.integrator_function>` is skipped entirely,
         and all related arguments (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <KWTARecurrentMechanism.function>`; same value as first item of
-        `output_values <KWTARecurrentMechanism.output_values>`.
+        result of executing `function <KWTAMechanism.function>`; same value as first item of
+        `output_values <KWTAMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -452,7 +452,7 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
         an OrderedDict with the following `OutputStates <OutputState>`:
 
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function
-          <KWTARecurrentMechanism.function>`;
+          <KWTAMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
         * `ENERGY`, the :keyword:`value` of which is the energy of the result,
@@ -472,17 +472,17 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
         * **entropy** of the result (if the ENTROPY OutputState is present).
 
     name : str
-        the name of the KWTARecurrentMechanism; if it is not specified in the **name** argument of the constructor, a
+        the name of the KWTAMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the KWTARecurrentMechanism; if it is not specified in the **prefs** argument of the
+        the `PreferenceSet` for the KWTAMechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     Returns
     -------
-    instance of KWTARecurrentMechanism : KWTARecurrentMechanism
+    instance of KWTAMechanism : KWTAMechanism
 
     """
 
@@ -569,12 +569,12 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
 
         return self._kwta_scale(variable)
 
-    # adds indexOfInhibitionInputState to the attributes of KWTARecurrentMechanism
+    # adds indexOfInhibitionInputState to the attributes of KWTAMechanism
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        # this index is saved so the KWTARecurrentMechanism mechanism knows which input state represents inhibition
+        # this index is saved so the KWTAMechanism mechanism knows which input state represents inhibition
         # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
@@ -615,20 +615,18 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
             elif k == len(sorted_diffs):
                 final_diff = sorted_diffs[k - 1]
             elif k > len(sorted_diffs):
-                raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTARecurrentMechanism mechanism {}".
+                raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTAMechanism mechanism {}".
                                 format(k, current_input[0], self.name))
             else:
                 final_diff = sorted_diffs[k] * ratio + sorted_diffs[k-1] * (1 - ratio)
-
-
 
         if inhibition_only and final_diff > 0:
             final_diff = 0
 
         new_input = np.array(current_input[0] + final_diff)
         if (sum(new_input > threshold) > k) and not average_based:
-            warnings.warn("KWTARecurrentMechanism scaling was not successful: the result was too high. The original input was {}, "
-                          "and the KWTARecurrentMechanism-scaled result was {}".format(current_input, new_input))
+            warnings.warn("KWTAMechanism scaling was not successful: the result was too high. The original input was {}, "
+                          "and the KWTAMechanism-scaled result was {}".format(current_input, new_input))
         new_input = list(new_input)
         for i in range(1, len(current_input)):
             new_input.append(current_input[i])
@@ -676,7 +674,7 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".
                                     format(threshold_param, self))
 
-        # NOTE 7/10/17 CW: this version of KWTARecurrentMechanism executes scaling _before_ noise or integration is applied. This can be
+        # NOTE 7/10/17 CW: this version of KWTAMechanism executes scaling _before_ noise or integration is applied. This can be
         # changed, but I think it requires overriding the whole _execute function (as below),
         # rather than calling super._execute()
         #
@@ -787,9 +785,9 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
         #
         #     current_input = self.input_state.value + noise
         # else:
-        #     raise MechanismError("time_scale not specified for KWTARecurrentMechanism")
+        #     raise MechanismError("time_scale not specified for KWTAMechanism")
         #
-        # # this is the primary line that's different in KWTARecurrentMechanism compared to TransferMechanism
+        # # this is the primary line that's different in KWTAMechanism compared to TransferMechanism
         # # this scales the current_input properly
         # current_input = self._kwta_scale(current_input)
         #
@@ -831,11 +829,11 @@ class KWTARecurrentMechanism(RecurrentTransferMechanism):
 
     # @property
     # def k_value(self):
-    #     return super(KWTARecurrentMechanism, self.__class__).k_value.fget(self)
+    #     return super(KWTAMechanism, self.__class__).k_value.fget(self)
     #
     # @k_value.setter
     # def k_value(self, setting):
-    #     super(KWTARecurrentMechanism, self.__class__).k_value.fset(self, setting)
+    #     super(KWTAMechanism, self.__class__).k_value.fset(self, setting)
     #     try:
     #         int_k_value = int(setting[0])
     #     except TypeError: # if setting is a single value rather than a list or array
