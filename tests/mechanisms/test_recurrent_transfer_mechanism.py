@@ -94,28 +94,30 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_ints(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        val = R.execute([10, 12, 0, -1])
+        val = R.execute([10, 12, 0, -1], bin_execute=(mode=='LLVM'))
         np.testing.assert_allclose(val, [[10.0, 12.0, 0, -1]])
-        val = R.execute([1, 2, 3, 0])
+        val = R.execute([1, 2, 3, 0], bin_execute=(mode=='LLVM'))
         np.testing.assert_allclose(val, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
-        benchmark(R.execute, [1, 2, 3, 0])
+        benchmark(R.execute, [1, 2, 3, 0], bin_execute=(mode=='LLVM'))
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_inputs_list_of_floats(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R',
             size=4
         )
-        val = R.execute([10.0, 10.0, 10.0, 10.0])
+        val = R.execute([10.0, 10.0, 10.0, 10.0], bin_execute=(mode=='LLVM'))
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
-        benchmark(R.execute, [1, 2, 3, 0])
+        benchmark(R.execute, [1, 2, 3, 0], bin_execute=(mode=='LLVM'))
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -133,14 +135,15 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    def test_recurrent_mech_no_inputs(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_recurrent_mech_no_inputs(self, benchmark, mode):
         R = RecurrentTransferMechanism(
             name='R'
         )
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
-        val = R.execute([10])
+        val = R.execute([10], bin_execute=(mode=='LLVM'))
         np.testing.assert_allclose(val, [[10.]])
-        benchmark(R.execute, [1])
+        benchmark(R.execute, [1], bin_execute=(mode=='LLVM'))
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(UtilitiesError) as error_text:
