@@ -1421,7 +1421,7 @@ class Composition(object):
     def __bin_initialize(self, inputs, reinit=False):
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         # Read provided or default input
-        data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in origin_mechanisms]
+        data = [inputs[m] if m in inputs else m.instance_defaults.variable for m in origin_mechanisms]
         # Every input state takes 2d input. Mechanism thus takes vector of
         # 2d inputs, and data is a vector of mechanism inputs
         data = [[np.atleast_2d(i) for i in elem] for elem in data]
