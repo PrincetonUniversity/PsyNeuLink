@@ -1419,16 +1419,17 @@ class Composition(object):
 
 
     def __bin_initialize(self, inputs, reinit=False):
-        #FIXME this is an ugly hack to make us work with vectors
-        #FIXME converts instance default variable to arrays of floats
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        # Read provided or default input
         data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in origin_mechanisms]
+        # Every input state takes 2d input. Mechanism thus takes vector of
+        # 2d inputs, and data is a vector of mechanism inputs
+        data = [[np.atleast_2d(i) for i in elem] for elem in data]
         c_data = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
         def tupleize(x):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
-            return tuple([x])
-        data = [np.atleast_2d(elem) for elem in data]
+            return x
         self.__data_struct = c_data(tupleize(data))
 
         if reinit or self.__params_struct is None:
