@@ -53,6 +53,12 @@ KVO
 
 * observe_value_at_keypath
 
+MATHEMATICAL
+~~~~~~~~~~~~
+
+* norm
+* sinusoid
+
 
 OTHER
 ~~~~~
@@ -97,7 +103,8 @@ __all__ = [
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
     'object_has_single_value', 'optional_parameter_spec',
-    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match',
+    'normpdf',
+    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'sinusoid', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError',
 ]
 
@@ -506,6 +513,14 @@ def iscompatible(candidate, reference=None, **kargs):
             return True
     else:
         return False
+
+def normpdf(x, mu=0, sigma=1):
+    u = float((x-mu) / abs(sigma))
+    y = np.exp(-u*u/2) / (np.sqrt(2*np.pi) * abs(sigma))
+    return y
+
+def sinusoid(x, amplitude=1, frequency=1, phase=0):
+    return amplitude * np.sin(2 * np.pi * frequency * x + phase)
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function

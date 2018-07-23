@@ -6,74 +6,77 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *************************************  AutoAssociativeLearningMechanism **********************************************
+# *************************************  KohonenLearningMechanism **********************************************
 
 """
-.. _AutoAssociativeLearningMechanism_Overview:
+.. _KohonenLearningMechanism_Overview:
 
 Overview
 --------
 
-An AutoAssociativeLearningMechanism is a subclass of `LearningMechanism`, modified for use with a
-`RecurrentTransferMechanism` to train its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
+An KohonenLearningMechanism is a subclass of `LearningMechanism <LearningMechanism>`, modified for use with a
+`KohonenMechanism`.  It implements a form of unsupervised learning used to train a `MappingProjection` to the
+KohonenMechanism, to implement a `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_.
 
-.. _AutoAssociativeLearningMechanism_Creation:
+.. _KohonenLearningMechanism_Creation:
 
-Creating an AutoAssociativeLearningMechanism
+Creating an KohonenLearningMechanism
 --------------------------------------------
 
-An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
-created automatically when a RecurrentTransferMechanism is `configured for learning <Recurrent_Transfer_Learning>`,
-(identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+An KohonenLearningMechanism can be created directly by calling its constructor, but most commonly it is
+created automatically when a KohonenMechanism is `configured for learning <Kohonen_Learning>`.
 
-.. _AutoAssociativeLearningMechanism_Structure:
+.. _KohonenLearningMechanism_Structure:
 
 Structure
 ---------
 
-An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
+An KohonenLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
 
-  * it has only a single *ACTIVATION_INPUT* `InputState`, that receives a `MappingProjection` from an `OutputState` of
-    the `RecurrentTransferMechanism` with which it is associated (identified by the `activity_source
-    <AutoAssociativeLearningMechanism.activity_source>`);
+  * its *ACTIVATION_INPUT* InputState receives its `Projection` from the `sender <MappingProjection.sender>` of the
+    `learned_projection <KohonenMechanism.learned_projection>` for the `KohonenMechanisms with which it is associated
+    (identified by the `activity_source <KohonenLearningMechanism.activity_source>` attribute);  and its
+    *ACTIVATION_OUTPUT* InputState receives its input from the `receiver <MappingProjection.receiver>` of the
+    `learned_projection <KohonenMechanism.learned_projection>`. It does not have a *LEARNING_SIGNAL* `InputState`
+    (since it implements a form of unsupervised learning).
 
   * it has a single *LEARNING_SIGNAL* `OutputState` that sends a `LearningProjection` to the `matrix
-    <AutoAssociativeProjection.matrix>` parameter of an 'AutoAssociativeProjection` (typically, the
-    `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism),
-    but not an *ERROR_SIGNAL* OutputState.
+    <MappingProjection.matrix>` parameter of the KohonenMechanism's `learned_projection
+    <KohonenMechanism.learned_projection>`.
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
-    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source
-    <AutoAssociativeLearningMechanism.activity_source>` attribute that identifies the source of the activity vector
-    used by the Mechanism's `function <AutoAssociativeLearningProjection.function>`.
+    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `matrix
+    <KohonenLearningMechanism.matrix>` attribute that identifies the `matrix <MappingProjection.matrix>` parameter of
+    the KohonenMechanism's `learned_projection <KohonenMechanism.learned_projection>`.
 
-  * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
-    a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
-    *ACTIVATION_INPUT* InputState; and it returns a `learning_signal <LearningMechanism.learning_signal>`
-    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not necessarily an
-    `error_signal <LearningMechanism.error_signal>`.
+  * its `function <KohonenLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
+    a list containing two 1d arrays (the `value <InputState.value>` of its *ACTIVATION_INPUT* and *ACTIVATION_OUTPUT*
+    InputStates) and a 2d array (the current weight matrix of its `matrix <KohonenLearningMechanism.matrix>`
+    attribute), and it returns a `learning_signal <LearningMechanism.learning_signal>`
+    (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not an `error_signal
+    <LearningMechanism.error_signal>`.
 
-  * its `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` can be specified as a 1d or 2d array (or
+  * its `learning_rate <KohonenLearningMechanism.learning_rate>` can be specified as a 1d or 2d array (or
     matrix) to scale the contribution made, respectively, by individual elements or connections among them,
     to the weight change matrix;  as with a standard `LearningMechanism`, a scalar can also be specified to scale
-    the entire weight change matrix (see `learning_rate <AutoAssociativeLearningMechanism.learning_rate>` for
+    the entire weight change matrix (see `learning_rate <KohonenLearningMechanism.learning_rate>` for
     additional details).
 
-.. _AutoAssociativeLearningMechanism_Learning:
+.. _KohonenLearningMechanism_Learning:
 
 Execution
 ---------
 
-An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
+An KohonenLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
 * 1) its execution can be enabled or disabled by setting the the `learning_enabled
-  <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
-  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+  <KohonenMechanism.learning_enabled>` attribute of the `KohonenMechanism` with which it is
+  associated (identified in its `activity_source <KohonenLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
   that are executed during the `learning phase <System_Execution>` of a System's execution
 
 
-.. _AutoAssociativeLearningMechanism_Class_Reference:
+.. _KohonenLearningMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -85,19 +88,20 @@ import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
+    KOHONEN_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
-    'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
+    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'DefaultTrainingMechanism',
     'input_state_names', 'output_state_names',
 ]
 
@@ -106,12 +110,13 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names =  [ACTIVATION_INPUT]
+input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_state_names = [LEARNING_SIGNAL]
 
-DefaultTrainingMechanism = ObjectiveMechanism
+# DefaultTrainingMechanism = ObjectiveMechanism
 
-class AutoAssociativeLearningMechanismError(Exception):
+
+class KohonenLearningMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -119,31 +124,32 @@ class AutoAssociativeLearningMechanismError(Exception):
         return repr(self.error_value)
 
 
-class AutoAssociativeLearningMechanism(LearningMechanism):
+class KohonenLearningMechanism(LearningMechanism):
     """
-    AutoAssociativeLearningMechanism(              \
-        variable,                                  \
-        function=Hebbian,                          \
-        learning_rate=None,                        \
-        learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.ADDITIVE,       \
-        params=None,                               \
-        name=None,                                 \
+    KohonenLearningMechanism(                \
+        variable,                            \
+        function=Hebbian,                    \
+        matrix=None,                         \
+        learning_rate=None,                  \
+        learning_signals=LEARNING_SIGNAL,    \
+        modulation=ModulationParam.ADDITIVE, \
+        params=None,                         \
+        name=None,                           \
         prefs=None)
 
-    Implements a `LearningMechanism` that modifies the `matrix <MappingProjection.matrix>` parameter of an
-    `AutoAssociativeProjection` (typically the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-    of a `RecurrentTransferMechanism`).
+    Implements a `LearningMechanism` that modifies the `matrix <MappingProjection.matrix>` parameter of the
+    `learning_projection <KohonenMechanism.learning_projection` of the associated `KohonenMechanism`
+    (`activity_source <KohonenLearningMechanism.activity_source>`).
 
 
     Arguments
     ---------
 
-    variable : List or 2d np.array : default None
-        it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
-        `function <AutoAssociativeLearningMechanism.function>`;  it must each be compatible (in number and type)
+    variable : List[1d array, 1d array] or 2d np.array : default None
+        it must have a two items that corresponds to the value required by the KohonenLearningMechanism's
+        `function <KohonenLearningMechanism.function>`;  it must each be compatible (in number and type)
         with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
-        `variable <AutoAssociativeLearningMechanism.variable>` for additional details).
+        `variable <KohonenLearningMechanism.variable>` for additional details).
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
     : default None
@@ -151,19 +157,18 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         <LearningMechanism.learning_signals>` for details of specification).
 
     modulation : ModulationParam : default ModulationParam.ADDITIVE
-        specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
+        specifies the default form of modulation used by the KohonenLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
-    function : LearningFunction or function : default Hebbian
-        specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
-        <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
-        list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array or np.matrix
-        representing a square matrix with dimensions that equal the length of its variable (the "weight change
-        matrix").
+    function : LearningFunction or function : default Kohonen
+        specifies the function used to calculate the KohonenLearningMechanism's `learning_signal
+        <KohonenLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
+        list of three items (two 1d arrays and one 2d array, all of numeric values) and return a list, 2d np.array or
+        np.matrix that is a square matrix with the same dimensions as the third item of the **variable** arugment).
 
     learning_rate : float : default None
-        specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
-        <AutoAssociativeLearningMechanism.learning_rate>` for details).
+        specifies the learning rate for the KohonenLearningMechanism. (see `learning_rate
+        <KohonenLearningMechanism.learning_rate>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -171,11 +176,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <AutoAssociativeLearningMechanism.name>`
-        specifies the name of the AutoAssociativeLearningMechanism.
+    name : str : default see `name <KohonenLearningMechanism.name>`
+        specifies the name of the KohonenLearningMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the AutoAssociativeLearningMechanism; see `prefs <AutoAssociativeLearningMechanism.prefs>` for details.
+        specifies the `PreferenceSet` for the KohonenLearningMechanism; see `prefs <KohonenLearningMechanism.prefs>` for details.
 
 
     Attributes
@@ -185,103 +190,94 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         componentType : LEARNING_MECHANISM
     COMMENT
 
-    variable : 2d np.array
-        has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism's
-        `function <AutoAssociativeLearningMechanism.function>`, corresponding to the `value
-        <OutputState.value>` of the `activity_source <AutoAssociativeLearningMechanism.activity_source>`.
+    variable : List[1d array, 1d array]
+        has two items, corresponding to the `value <InputState.value>` of its *ACTIVATION_INPUT* and
+        *ACTIVATION_OUTPUT* InputStates.
 
-    activity_source : OutputState
-        the `OutputState` that is the `sender <AutoAssociativeProjection.sender>` of the `AutoAssociativeProjection`
-        that the Mechanism trains.
+    activity_source : KohonenMechanism
+        the `KohonenMechanism` with which the KohonenLearningMechanism is associated.
 
     input_states : ContentAddressableList[OutputState]
-        has a single item, that contains the AutoAssociativeLearningMechanism's single *ACTIVATION_INPUT* `InputState`.
+        has a two items, that contains the KohonenLearningMechanism's *ACTIVATION_INPUT*  and *ACTIVATION_OUTPUT*
+        `InputStates`.
 
-    primary_learned_projection : AutoAssociativeProjection
-        the `Projection` with the `matrix <AutoAssociativeProjection.matrix>` parameter being trained by the
-        AutoAssociativeLearningMechanism.  It is always the first Projection listed in the
-        AutoAssociativeLearningMechanism's `learned_projections <AutoAssociativeLearningMechanism.learned_projections>`
-        attribute.
+    learned_projection : MappingProjection
+        the `learning_projection <KohonenMechanism.learning_projection>` of the `KohoneMechanism` with which the
+        KohonenLearningMechanism is associated.
 
-    learned_projections : List[MappingProjection]
-        all of the `AutoAssociativeProjections <AutoAssociativeProjection>` modified by the
-        AutoAssociativeLearningMechanism;  the first item in the list is always the `primary_learned_projection
-        <AutoAssociativeLearningMechanism.primary_learned_projection>`.
-
-    function : LearningFunction or function : default Hebbian
-        the function used to calculate the `learning_signal <AutoAssociativeLearningMechanism.learning_signal>`
-        (assigned to the AutoAssociativeLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
-        It's `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
-        length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputState_Primary>`) InputState.
+    function : LearningFunction or function : default Kohonen
+        the function used to calculate the `learning_signal <KohonenLearningMechanism.learning_signal>`
+        (assigned to the KohonenLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
+        It's `variable <Function_Base.variable>` must be a list of three items (two 1d arrays and one 2d array, all of
+        numeric values);  returns a list, 2d np.array or np.matrix that is a square matrix with the same dimensions
+        as the third item of its `variable <Kohonen.variable>`).
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
-        determines the learning rate used by the AutoAssociativeLearningMechanism's `function
-        <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+        determines the learning rate used by the KohonenLearningMechanism's `function
+        <KohonenLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is
+        used to multiply the weight change matrix;  if it is a 2d array or matrix,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
-        to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputState.value>` of the
-        AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* `InputState <AutoAssociativeLearningMechanism_Structure>`,
+        to the `function <KohonenLearningMechanism.function>` (i.e., the `value <InputState.value>` of the
+        KohonenLearningMechanism's *ACTIVATION_INPUT* `InputState <KohonenLearningMechanism_Structure>`,
         allowing the contribution of individual *units* to be scaled). If specified, the value supersedes the
-        learning_rate assigned to any `Process` or `System` to which the AutoAssociativeLearningMechanism belongs.
+        learning_rate assigned to any `Process` or `System` to which the KohonenLearningMechanism belongs.
         If it is `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the
-        AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
+        KohonenLearningMechanism belongs belongs is used;  and, if that is `None`, then the `learning_rate
         <System.learning_rate>` for the System to which it belongs is used. If all are `None`, then the
         `default_learning_rate <LearningFunction.default_learning_rate>` for the `function
-        <AutoAssociativeLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
+        <KohonenLearningMechanism.function>` is used (see `learning_rate <LearningMechanism_Learning_Rate>`
         for additional details).
 
     learning_signal : 2d ndarray or matrix of numeric values
-        the value returned by `function <AutoAssociativeLearningMechanism.function>`, that specifies
-        the changes to the weights of the `matrix <AutoAssociativeProjection.matrix>` parameter for the
-        AutoAssociativeLearningMechanism's`learned_projections <AutoAssociativeLearningMechanism.learned_projections>`;
-        It is assigned as the value of the AutoAssociativeLearningMechanism's `LearningSignal(s)
+        the value returned by `function <KohonenLearningMechanism.function>`, that specifies
+        the changes to the weights of the `matrix <KohonenLearningMechanism.matrix>`.
+        It is assigned as the `value <LearningSignal.value>` of the KohonenLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>` and, in turn, its `LearningProjection(s) <LearningProjection>`.
 
     learning_signals : List[LearningSignal]
-        list of all of the `LearningSignals <LearningSignal>` for the AutoAssociativeLearningMechanism, each of which
+        list of all of the `LearningSignals <LearningSignal>` for the KohonenLearningMechanism, each of which
         sends one or more `LearningProjections <LearningProjection>` to the `ParameterState(s) <ParameterState>` for
-        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `AutoAssociativeProjection(s)
-        <AutoAssociativeProjection>` trained by the AutoAssociativeLearningMechanism.  Although in most instances an
-        AutoAssociativeLearningMechanism is used to train a single AutoAssociativeProjection, like a standard
+        the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection(s)
+        <MappingProjection>` trained by the KohonenLearningMechanism.  Although in most instances a
+        KohonenLearningMechanism is used to train a single MappingProjection, like a standard
         `LearningMechanism`, it can be assigned additional LearningSignals and/or LearningProjections to train
         additional ones;  in such cases, the `value <LearningSignal>` for all of the LearningSignals is the
-        the same:  the AutoAssociativeLearningMechanism's `learning_signal
-        <AutoAssociativeLearningMechanism.learning_signal>` attribute, based on its `activity_source
-        <AutoAssociativeLearningMechanism.activity_source>`.  Since LearningSignals are `OutputStates
-        <OutputState>`, they are also listed in the AutoAssociativeLearningMechanism's `output_states
-        <AutoAssociativeLearningMechanism.output_states>` attribute.
+        the same:  the KohonenLearningMechanism's `learning_signal
+        <KohonenLearningMechanism.learning_signal>` attribute.  Since LearningSignals are `OutputStates
+        <OutputState>`, they are also listed in the KohonenLearningMechanism's `output_states
+        <KohonenLearningMechanism.output_states>` attribute.
 
     learning_projections : List[LearningProjection]
-        list of all of the LearningProjections <LearningProjection>` from the AutoAssociativeLearningMechanism, listed
+        list of all of the LearningProjections <LearningProjection>` from the KohonenLearningMechanism, listed
         in the order of the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are
-        listed in the `learning_signals <AutoAssociativeLearningMechanism.learning_signals>` attribute).
+        listed in the `learning_signals <KohonenLearningMechanism.learning_signals>` attribute).
 
     output_states : ContentAddressableList[OutputState]
-        list of the AutoAssociativeLearningMechanism's `OutputStates <OutputState>`, beginning with its
-        `learning_signals <AutoAssociativeLearningMechanism.learning_signals>`, and followed by any additional
+        list of the KohonenLearningMechanism's `OutputStates <OutputState>`, beginning with its
+        `learning_signals <KohonenLearningMechanism.learning_signals>`, and followed by any additional
         (user-specified) `OutputStates <OutputState>`.
 
     output_values : 2d np.array
         the first item is the `value <OutputState.value>` of the LearningMechanism's `learning_signal
-        <AutoAssociativeLearningMechanism.learning_signal>`, followed by the `value <OutputState.value>`\\s
-        of any additional (user-specified) OutputStates.
+        <KohonenLearningMechanism.learning_signal>`.
 
     modulation : ModulationParam
-        the default form of modulation used by the AutoAssociativeLearningMechanism's `LearningSignal(s)
+        the default form of modulation used by the KohonenLearningMechanism's `LearningSignal(s)
         <LearningMechanism_LearningSignal>`, unless they are `individually specified <LearningSignal_Specification>`.
 
     name : str
-        the name of the AutoAssociativeLearningMechanism; if it is not specified in the **name** argument of the
+        the name of the KohonenLearningMechanism; if it is not specified in the **name** argument of the
         constructor, a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and
         duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the AutoAssociativeLearningMechanism; if it is not specified in the **prefs** argument
+        the `PreferenceSet` for the KohonenLearningMechanism; if it is not specified in the **prefs** argument
         of the constructor, a default is assigned using `classPreferences` defined in __init__.py (see
         `PreferenceSet <LINK>` for details).
     """
 
-    componentType = AUTOASSOCIATIVE_LEARNING_MECHANISM
+    componentType = KOHONEN_LEARNING_MECHANISM
     className = componentType
     suffix = " " + className
 
@@ -348,7 +344,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # MODIFIED 6/29/18 NEWER JDC: ALLOW size=1, AND DEFER FAILURE TO LearningFunction IF enbale_learning=True
         if np.array(variable)[0].ndim != 1 or not is_numeric(variable):
         # MODIFIED 9/22/17 END
-            raise AutoAssociativeLearningMechanismError("Variable for {} ({}) must be "
+            raise KohonenLearningMechanismError("Variable for {} ({}) must be "
                                                         "a list or 1d np.array containing only numbers".
                                                         format(self.name, variable))
         return variable
@@ -358,7 +354,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  runtime_params=None,
                  context=None
                  ):
-        """Execute AutoAssociativeLearningMechanism. function and return learning_signal
+        """Execute KohonenLearningMechanism. function and return learning_signal
 
         :return: (2D np.array) self.learning_signal
         """
@@ -381,7 +377,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                 time = self.context.composition.scheduler_processing.clock.simple_time
             else:
                 time = self.current_execution_time
-            print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
+            print("\nEXECUTED KohonenLearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
                 format(self.context.flags_string,
                        time.trial,
                        # self.pass_,
@@ -392,7 +388,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         return self.value
 
     def _update_output_states(self, runtime_params=None, context=None):
-        '''Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
+        '''Update the weights for the AutoAssociativeProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned

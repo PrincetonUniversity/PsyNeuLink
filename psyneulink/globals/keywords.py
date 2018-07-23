@@ -56,7 +56,8 @@ __all__ = [
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
     'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
     'INPUTS_DIM', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE',
-    'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'KOHONEN_MECHANISM', 'KWTA_MECHANISM',
+    'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL',
+    'K_VALUE', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
     'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
     'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
     'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
@@ -481,6 +482,7 @@ LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
+KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -888,6 +890,7 @@ ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 EXPONENTIAL = 'exponential'
 GAUSSIAN = 'gaussian'
+SINUSOID = 'sinusoid'
 
 REWARD = 'reward'
 NETWORK = 'network'

@@ -227,7 +227,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
     PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
-    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
+    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SINUSOID, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
     VARIABLE, \
@@ -236,7 +236,9 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import \
+    call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, \
+    np_array_less_than_2d, normpdf, parameter_spec, sinusoid
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -10058,131 +10060,6 @@ class LearningFunction(Function_Base):
                 raise FunctionError("{} arg for {} ({}) must be a single value".
                                     format(LEARNING_RATE, self.name, learning_rate))
 
-
-    def __init__(self,
-                 default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 # learning_rate: tc.optional(parameter_spec) = None,
-                 learning_rate=None,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
-                # activation_function=activation_function,
-                learning_rate=learning_rate,
-                params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-        self.functionOutputType = None
-
-    def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
-
-        variable = np.squeeze(np.array(variable))
-
-        if not is_numeric(variable):
-            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
-                                 format(self.name, variable))
-        if variable.ndim == 0:
-            raise ComponentError("Variable for {} is a single number ({}) "
-                                 "which doesn't make much sense for associative learning".
-                                 format(self.name, variable))
-        if variable.ndim > 1:
-            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
-                                 format(self.name, variable))
-        return variable
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate learning_rate
-        """
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
-            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
-
-        The weight change matrix is calculated as:
-
-           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
-
-        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
-
-        Arguments
-        ---------
-
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
-            array of activity values, the pairwise products of which are used to generate a weight change matrix.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
-            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
-            of the constructor.
-
-        Returns
-        -------
-
-        weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
-            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
-
-        """
-
-        self._check_args(variable=variable, params=params, context=context)
-
-        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
-        #                          so that the process or system can see it is free to be assigned
-        #                      2) if neither the system nor the process assigns a value to the learning_rate,
-        #                          then need to assign it to the default value
-        # If learning_rate was not specified for instance or composition, use default value
-        if self.learning_rate is None:
-            learning_rate = self.default_learning_rate
-        else:
-            learning_rate = self.learning_rate
-
-        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
-        self.learning_rate_dim = None
-        if learning_rate is not None:
-            self.learning_rate_dim = np.array(learning_rate).ndim
-
-        # MODIFIED 9/21/17 NEW:
-        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
-        if not isinstance(variable, np.ndarray):
-            variable = np.array(variable)
-        if variable.ndim > 1:
-            variable = np.squeeze(variable)
-        # MODIFIED 9/21/17 END
-
-        # If learning_rate is a 1d array, multiply it by variable
-        if self.learning_rate_dim == 1:
-            variable = variable * learning_rate
-
-        # Generate the column array from the variable
-        # col = variable.reshape(len(variable),1)
-        col = np.array(np.matrix(variable).T)
-
-        # Calculate weight chhange matrix
-        weight_change_matrix = variable * col
-        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
-        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
-
-        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
-        if self.learning_rate_dim in {0, 2}:
-            weight_change_matrix = weight_change_matrix * learning_rate
-
-        return weight_change_matrix
-
 class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Kohonen(                       \
@@ -10194,19 +10071,23 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         prefs=None)
 
     Implements a function that calculates a matrix of weight changes using the Kohenen (SOM) learning rule.
+    This modifies the weights to each element in proportion to their difference from the current input pattern
+    and the distance of that element from the one with the weights most similar to the current input pattern.
 
     Arguments
     ---------
 
-    variable : List[number] or 1d np.array : default ClassDefaults.variable
-       specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
+    variable: List[array(float64), array(float64), 2d np.array[[float64]]] : default ClassDefaults.variable
+        input pattern, array of activation values, and matrix used to calculate the weights changes.
 
     learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Kohonen.function>`; supersedes any specification  for the
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Kohonen.learning_rate>` for details).
 
-    distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, or function
+    distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, SINUSOID or function
+        specifies the method used to calculate the distance of each element in `variable <Kohonen.variable>`\[2]
+        from the one with the greatest value.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
@@ -10221,18 +10102,13 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
     Attributes
     ----------
 
-    variable: 1d np.array
-        activation values, the pair-wise products of which are used to generate the weight change matrix returned by
-        the `function <Kohonen.function>`.
-
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
-        `variable <Kohonen.variable>`.
-    COMMENT
+    variable: List[array(float64), array(float64), 2d np.array[[float64]]]
+        input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
+        returned by `function <Kohonen.function>`.
 
     learning_rate : float, 1d or 2d np.array
         used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
@@ -10250,9 +10126,11 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         the value used for the `learning_rate <Kohonen.learning_rate>` if it is not otherwise specified.
 
     function : function
-         calculates the pairwise product of all elements in the `variable <Kohonen.variable>`, and then
-         scales that by the `learning_rate <Kohonen.learning_rate>` to generate the weight change matrix
-         returned by the function.
+         calculates a matrix of weight changes from: i) the difference between an input pattern (variable
+         <Kohonen.variable>`\[0]) and the weights in a weigh matrix (`variable <Kohonen.variable>`\[2]) to each
+         element of an activity array (`variable <Kohonen.variable>`\[1]); and ii) the distance of each element of
+         the activity array (variable <Kohonen.variable>`\[1])) from the one with the weights most similar to the
+         input array (variable <Kohonen.variable>`\[0])) using `distance_measure <Kohonen.distance_measure>`.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -10263,7 +10141,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     componentName = HEBBIAN_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = np.array([0, 0])
+        variable = [[0, 0], [0, 0] [[0,0],[0,0]] ]
 
     default_learning_rate = 0.05
 
@@ -10273,7 +10151,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  default_variable=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
-                 distance_measure:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
+                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -10294,18 +10172,47 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
-        variable = np.squeeze(np.array(variable))
+        # variable = np.squeeze(np.array(variable))
+
+        name = self.name
+        if self.owner.name:
+            name = name + " for {}".format(self.owner.name)
 
         if not is_numeric(variable):
             raise ComponentError("Variable for {} ({}) contains non-numeric entries".
-                                 format(self.name, variable))
-        if variable.ndim == 0:
-            raise ComponentError("Variable for {} is a single number ({}) "
-                                 "which doesn't make much sense for the this LearningFunction".
-                                 format(self.name, variable))
-        if variable.ndim > 1:
-            raise ComponentError("Variable for {} ({}) must be a list or 1d np.array of numbers".
-                                 format(self.name, variable))
+                                 format(name, variable))
+
+        if len(variable)!=3:
+            raise FunctionError("variable for {} has {} items ({}) but must have three:  "
+                                "input pattern (1d array), activity array (1d array) and matrix (2d array)"
+                                "".format(name, len(variable), variable))
+
+        input = np.array(variable[0])
+        activity = np.array(variable[1])
+        matrix = np.array(variable[2])
+
+        if input.ndim != 1:
+            raise FunctionError("First item of variable ({}) for {} must be a 1d array".
+                                format(input, name))
+
+        if activity.ndim != 1:
+            raise FunctionError("Second item of variable ({}) for {} must be a 1d array".
+                                format(activity, name))
+
+        if matrix.ndim != 2:
+            raise FunctionError("Third item of variable ({}) for {} must be a 2d array or matrix".
+                                format(activity, name))
+
+        if len(input) != len(activity):
+            raise FunctionError("Length of first ({}) and second ({}) items of variable for {} must be the same".
+                                format(len(input), len(activity), name))
+
+        #     VALIDATE THAT len(variable[0])==len(variable[1])==len(variable[2].shape)
+        if len(input) != matrix.shape(0) or matrix.shape(0) != matrix.shape(1):
+            raise FunctionError("Third item of variable for {} ({}) must be a square matrix the dimension of which "
+                                "must be the same as the length ({}) of the first and second items of the variable".
+                                format(name, matrix, len(input)))
+
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -10319,22 +10226,29 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  variable=None,
                  params=None,
                  context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values using Kohonen learning rule.
+        """Calculate a matrix of weight changes from an array of activity values and a weight matrix that generated
+        them using the Kohonen learning rule.
 
         The weight change matrix is calculated as:
 
-           *learning_rate* * :math:`distance_j' * *variable*-:math:`w_j`
+           *learning_rate* * :math:`distance_j' * *variable[0]*-:math:`w_j`
 
-        where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>` from the
-        element with the greatest value, and :math:`w_j` is the column of weights in the `matrix
-        <MappingProjection.matrix>` being trained that corresponds to the jth element of `variable
-        <Kohonen.variable>`.
+        where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>`\[1] from the
+        element with the weights most similar to activity array in `variable <Kohonen.variable>`\[1],
+        and :math:`w_j` is the column of the matrix in `variable <Kohonen.variable>`\[2] that corresponds to
+        the jth element of the activity array `variable <Kohonen.variable>`\[1].
+
+        .. _note::
+           the array of activities in `variable <Kohonen.variable>`\[1] is assumed to have been generated by the
+           dot product of the input pattern in `variable <Kohonen.variable>`\[0] and the matrix in `variable
+           <Kohonen.variable>`\[2], and thus the element with the greatest value in `variable <Kohonen.variable>`\[1]
+           can be assumed to be the one with weights most similar to the input pattern.
 
         Arguments
         ---------
 
-        variable : List[number] or 1d np.array : default ClassDefaults.variable
-            array of activity values, the pairwise products of which are used to generate a weight change matrix.
+        variable : np.array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+           input pattern, array of activation values, and matrix used to calculate the weights changes.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
@@ -10345,8 +10259,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Kohonen.variable>` scaled by the `learning_rate
-            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+            matrix of weight changes scaled by difference of the current weights from the input pattern and the
+            distance of each element from the one with the weights most similar to the input pattern.
 
         """
 
@@ -10380,21 +10294,55 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         if self.learning_rate_dim == 1:
             variable = variable * learning_rate
 
-        # Generate the column array from the variable
-        # col = variable.reshape(len(variable),1)
-        col = np.array(np.matrix(variable).T)
 
-        # Calculate weight chhange matrix
-        weight_change_matrix = variable * col
-        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
-        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+        # # Generate the column array from the variable
+        # # col = variable.reshape(len(variable),1)
+        # col = np.array(np.matrix(variable).T)
+        #
+        # # Calculate weight chhange matrix
+        # weight_change_matrix = variable * col
+        # # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        # weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+        #
+        # # If learning_rate is scalar or 2d, multiply it by the weight change matrix
+        # if self.learning_rate_dim in {0, 2}:
+        #     weight_change_matrix = weight_change_matrix * learning_rate
 
-        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
-        if self.learning_rate_dim in {0, 2}:
-            weight_change_matrix = weight_change_matrix * learning_rate
+        # √ CALCULATE ARRAY OF DISTANCES convert to col array
+        # CONVERT variable[0]  and variable[1] to column arrays
+        # Replicate variable[0] * width of variable[1]
+        # SUBTRACT EACH COLUMN OF WEIGHTS FROM variable[0]
+        # MULTIPLY EACH BY DISTANCE
+
+        input_pattern = np.array(np.matrix(variable[0]).T)
+        activities = np.array(np.matrix(variable[1]).T)
+        matrix = variable[2]
+
+        # Calculate I-w[j]
+        input_cols = np.repeat(input_pattern,len(input_pattern),1)
+        differences = matrix - input_cols
+
+        # Calculate distances
+        index_of_max = activities.index(max(activities))
+        distances = np.zeros_like(activities)
+        for i, item in enumerate(activities):
+            distances[i]=self.distance_function(abs(i-index_of_max))
+        distances = 1-np.array(np.matrix(distances).T)
+
+        # Multiply distances by differences and learning_rate
+        weight_change_matrix = distances * differences * learning_rate
 
         return weight_change_matrix
 
+    def _distance_function(self, measure, value, scale=1, offset=0):
+        if measure is GAUSSIAN:
+            return normpdf(value, scale, offset)
+        if measure is LINEAR:
+            return scale*value+offset
+        if measure is EXPONENTIAL:
+            return np.exp(scale*value+offset)
+        if measure is SINUSOID:
+            return sinusoid(value, frequency=scale, phase=offset)
 
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
@@ -10537,7 +10485,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  params=None,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
-
         The weight change matrix is calculated as:
 
            *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`

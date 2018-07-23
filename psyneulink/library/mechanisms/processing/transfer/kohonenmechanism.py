@@ -14,7 +14,10 @@ Overview
 
 A KohonenMechanism is a subclass of `RecurrentTransferMechanism` that implements a `Kohonen network
 <http://www.scholarpedia.org/article/Kohonen_network>`_ (`brief explanation
-<https://www.cs.bham.ac.uk/~jlw/sem2a2/Web/Kohonen.htm>`_; `nice demo <https://www.youtube.com/watch?v=QvI6L-KqsT4>`_).
+<https://www.cs.bham.ac.uk/~jlw/sem2a2/Web/Kohonen.htm>`_; `nice demo <https://www.youtube.com/watch?v=QvI6L-KqsT4>`_),
+which is a particular form of `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_.
+By default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction` to implement
+implement a form of unsupervised learning that produces the self-organized map.
 
 .. _Kohonen_Creation:
 
@@ -29,6 +32,9 @@ Structure
 ---------
 
 XXX
+
+.. _Kohonen_Learning:
+
 
 .. _Kohonen_Execution:
 
@@ -54,22 +60,23 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, Kohonen, OneHot, is_function_type
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ACTIVATION_INPUT
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.globals.keywords import \
-    FULL_CONNECTIVITY_MATRIX, FUNCTION, INITIALIZING, KOHONEN_MECHANISM, \
+    FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
     LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, RESULT, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.globals.context import ContextFlags
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 __all__ = [
     'KohonenMechanism', 'KohonenError',
 ]
 
 logger = logging.getLogger(__name__)
+
 
 class KohonenError(Exception):
     def __init__(self, error_value):
@@ -81,13 +88,14 @@ class KohonenError(Exception):
 
 MAX_ACTIVITY_OUTPUT = 'MAX_ACTIVITY_OUTPUT'
 
+
 class KohonenMechanism(TransferMechanism):
     """
     KohonenMechanism(                                      \
     default_variable=None,                                 \
     size=None,                                             \
     function=Linear,                                       \
-    learning_function=Kohonen(distance_measure=GAUSSIAN),  \
+    learning_function=Kohonen(distance_function=GAUSSIAN), \
     matrix=None,                                           \
     initial_value=None,                                    \
     noise=0.0,                                             \
@@ -126,14 +134,9 @@ class KohonenMechanism(TransferMechanism):
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
     COMMENT
 
-    learning_function : LearningFunction, function or method : default Kohonen(distance_measure=GUASSIAN)
+    learning_function : LearningFunction, function or method : default Kohonen(distance_function=GUASSIAN)
         specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
         <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
-
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
-        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
-        will be ignored in favor of those arguments.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -342,7 +345,7 @@ class KohonenMechanism(TransferMechanism):
                  integrator_mode=False,
                  clip=None,
                  enable_learning=True,
-                 learning_function:is_function_type=Kohonen(distance_measure=GAUSSIAN),
+                 learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
                  learned_projection:tc.optional(MappingProjection)=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
@@ -393,6 +396,7 @@ class KohonenMechanism(TransferMechanism):
         if self.learning_enabled:
             self.configure_learning(context=context)
 
+    # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
                            learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
@@ -421,11 +425,14 @@ class KohonenMechanism(TransferMechanism):
             self.learning_rate = learning_rate
         if learned_projection:
             self.learned_projection = learned_projection
+        # Assign learned_projection, using as default the first Projection to the Mechanism's primary InputState
         self.learned_projection = self.learned_projection or self.input_state[0].path_afferents[0]
         if not self.learned_projection:
             raise KohonenError("Configuring learning for {} requires that it "
                                "receive at least one {} or that the {} be specified".
                                format(self.name, MappingProjection.__name__, repr(LEARNED_PROJECTION)))
+
+        self.matrix = self.learned_projection.parameter_states[MATRIX],
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -440,28 +447,40 @@ class KohonenMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
+    # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
                                         learning_function,
                                         learning_rate,
                                         learned_projection,
                                         context=None):
 
-        learning_mechanism = LearningMechanism(default_variable=[self.output_state.value],
-                                               learning_signals=[learned_projection],
-                                               function=learning_function,
-                                               learning_rate=learning_rate,
-                                               name="{} for {}".format(
-                                                       LearningMechanism.className,
-                                                       self.name))
+        learning_mechanism = KohonenLearningMechanism(default_variable=[self.learned_projection.sender,
+                                                                        self.learned_projection.receiver,
+                                                                        self.learned_projection.matrix],
+                                                      matrix=self.matrix,
+                                                      function=learning_function,
+                                                      learning_rate=learning_rate,
+                                                      learning_signals=[learned_projection],
+                                                      supervised=False,
+                                                      name="{} for {}".format(
+                                                              LearningMechanism.className,
+                                                              self.name))
 
-        # Instantiate Projection from Mechanism's output to LearningMechanism
-        MappingProjection(sender=self.input_state.variable[0],
+        # Instantiate Projection from learned_projection's sender to LearningMechanism
+        MappingProjection(sender=self.learned_projection.sender,
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
 
-        # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
+        # Instantiate Projection from learned_projection's receiver (Mechanism's input) to LearningMechanism
+        MappingProjection(sender=self.learned_projection.receiver,
+                          receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
+                          matrix=IDENTITY_MATRIX,
+                          name="Error Projection for {}".format(learning_mechanism.name))
+
+        # Instantiate Projection from LearningMechanism to learned_projection
         LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
-                           # receiver=learned_projection.parameter_states[MATRIX],
-                           name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
+                           receiver=self.matrix,
+                           name="{} for {}".format(LearningProjection.className, self.learned_projection.name))
 
         return learning_mechanism
