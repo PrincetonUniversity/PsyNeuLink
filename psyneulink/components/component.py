@@ -417,7 +417,7 @@ from psyneulink.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, ParamsTemplate, ReadOnlyOrderedDict, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_np_array, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared_keys, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, parse_execution_context, prune_unused_args
+from psyneulink.globals.utilities import ContentAddressableList, ParamsTemplate, ReadOnlyOrderedDict, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_np_array, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, parse_execution_context, prune_unused_args
 from psyneulink.scheduling.condition import AtTimeStep, Never
 
 import psyneulink.llvm as pnlvm
@@ -434,6 +434,10 @@ logger = logging.getLogger(__name__)
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
+
+
+def get_deepcopy_with_shared_Components(shared_keys=None):
+    return get_deepcopy_with_shared(shared_keys, (Component, ))
 
 
 class ResetMode(Enum):
@@ -1427,9 +1431,8 @@ class Component(object, metaclass=ComponentsMeta):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
-    deepcopy_shared_keys = set([
-        'owner',
-        'function_object'
+    _deepcopy_shared_keys = set([
+        'init_args'
     ])
 
     def __init__(self,
@@ -1669,7 +1672,7 @@ class Component(object, metaclass=ComponentsMeta):
         #return '{1}'.format(type(self).__name__, self.name)
 
     def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_keys(self.deepcopy_shared_keys)
+        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
         newone.__dict__['_Component__llvm_function_name'] = None
         newone.__dict__['_Component__llvm_bin_function'] = None

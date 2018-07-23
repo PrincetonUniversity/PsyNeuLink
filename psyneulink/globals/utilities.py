@@ -95,8 +95,7 @@ from enum import Enum, EnumMeta, IntEnum
 import collections
 import numpy as np
 
-from psyneulink.globals.keywords import \
-    DISTANCE_METRICS, EXPONENTIAL,GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
@@ -656,27 +655,40 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared_keys(shared_keys_iter):
+def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
     '''
         Arguments
         ---------
-            shared_keys_iter
-                an Iterable containing a list of strings that should be shallow copied
+            shared_keys
+                an Iterable containing strings that should be shallow copied
+
+            shared_types
+                an Iterable containing types that when objects of that type are encountered
+                will be shallow copied
 
         Returns
         -------
             a __deepcopy__ function
     '''
+    try:
+        shared_types = tuple(shared_types)
+    except TypeError:
+        shared_types = ()
+
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        for k in shared_keys_iter:
+
+        for k in shared_keys:
             if k in self.__dict__:
                 setattr(result, k, self.__dict__[k])
 
         for k, v in self.__dict__.items():
-            if k not in shared_keys_iter:
+            if isinstance(self.__dict__[k], shared_types):
+                res_val = self.__dict__[k]
+                setattr(result, k, res_val)
+            elif k not in shared_keys:
                 res_val = copy.deepcopy(v, memo)
                 setattr(result, k, res_val)
         return result
@@ -761,7 +773,7 @@ class ParamsTemplate:
     def __str__(self):
         return self.show()
 
-    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
