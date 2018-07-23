@@ -1,6 +1,7 @@
 from psyneulink.components.functions.function import Linear, SimpleIntegrator, ModulationParam
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
@@ -427,3 +428,21 @@ def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(benchmark, mode):
     sched = Scheduler(composition=comp)
     output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
     assert np.allclose([[650]], output)
+
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Recurrent")
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+def test_run_recurrent_transfer_mechanism(benchmark, mode):
+    comp = Composition()
+    A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
+    comp.add_mechanism(A)
+    comp._analyze_graph()
+    sched = Scheduler(composition=comp)
+    output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+    assert np.allclose([5.0, 10.0, 15.0], output1)
+    output2 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+    # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
+    #                          ( 5 + 15 + 2) * 5 = 110,
+    #                          ( 5 + 10 + 3) * 5 = 90
+    assert np.allclose([130.0, 110.0, 90.0], output2)
+    benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
