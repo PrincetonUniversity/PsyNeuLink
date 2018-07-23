@@ -191,6 +191,7 @@ class TestAddProjection:
         comp.add_projection(sender=A.output_states[0], receiver=B.input_states[0])
         comp.add_projection(sender=A.output_states[1], receiver=B.input_states[1])
 
+        print(comp.run(inputs={A: [[1.0], [2.0]]}))
 
     def test_add_conflicting_projection_object(self):
         comp = Composition()
@@ -332,14 +333,6 @@ class TestAnalyzeGraph:
         assert D in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert B in comp.get_c_nodes_by_role(CNodeRole.CYCLE)
         assert C in comp.get_c_nodes_by_role(CNodeRole.RECURRENT_INIT)
-
-
-def run_twice_in_system(mech, input1, input2=None):
-    if input2 is None:
-        input2 = input1
-    first_output = simple_system.run(inputs={mech: [input1]})
-    second_output = simple_system.run(inputs={mech: [input2]})
-    return second_output[1][0]
 
 class TestGraphCycles:
 
