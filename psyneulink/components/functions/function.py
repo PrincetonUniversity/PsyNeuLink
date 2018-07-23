@@ -2431,16 +2431,16 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-        # Some times we output to 2d array
-        if isinstance(vo.type.pointee, ir.ArrayType) and isinstance(vo.type.pointee.element, ir.ArrayType):
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        # Sometimes we arg_out to 2d array
+        out_t = arg_out.type.pointee
+        if isinstance(out_t, ir.ArrayType) and isinstance(out_t.element, ir.ArrayType):
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "params": params}
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self.__gen_llvm_combine, **kwargs)
 
-        vector_length = ctx.int32_ty(vo.type.pointee.count)
+        vector_length = ctx.int32_ty(arg_out.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
         return builder
 
@@ -3094,24 +3094,22 @@ class TransferFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
-        assert isinstance(vi.type.pointee, ir.ArrayType)
-        if isinstance(vi.type.pointee.element, ir.ArrayType):
-            assert vi.type == vo.type
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+            assert arg_in.type == arg_out.type
             # Array elements need all to be of the same size
-            length = vi.type.pointee.count * vi.type.pointee.element.count
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, length).as_pointer())
-            vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
+            arg_in = builder.bitcast(arg_in, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_out = builder.bitcast(arg_out, ir.ArrayType(ctx.float_ty, length).as_pointer())
 
-        kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "params": params}
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
-        assert vi.type.pointee.count == vo.type.pointee.count
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        assert arg_in.type.pointee.count == arg_out.type.pointee.count
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "transfer_loop")
 
         return builder
@@ -4305,9 +4303,7 @@ class SoftMax(NormalizingFunction):
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
 
@@ -4319,23 +4315,23 @@ class SoftMax(NormalizingFunction):
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
-        kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
         if output_type == ALL:
-            kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "gain": gain, "exp_sum": exp_sum}
+            kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
         elif output_type == MAX_VAL:
-            ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+            ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
             val = builder.fmul(orig_val, gain)
@@ -4906,9 +4902,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def get_param_ids(self):
         return [MATRIX]
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
         assert self.instance_defaults.variable.ndim == 1
 
@@ -4916,11 +4910,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        input_length = ctx.int32_ty(vi.type.pointee.count)
-        output_length = ctx.int32_ty(vo.type.pointee.count)
+        input_length = ctx.int32_ty(arg_in.type.pointee.count)
+        output_length = ctx.int32_ty(arg_out.type.pointee.count)
         builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
@@ -6536,19 +6530,17 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, state, vi, vo = builder.function.args
-
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         # Eliminate one dimension for 2d variable
         if self.instance_defaults.variable.ndim > 1:
             assert self.instance_defaults.variable.shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        kwargs = {"ctx": ctx, "vi": vi, "vo": vo, "params": params, "state": state}
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
         return builder
@@ -7903,25 +7895,24 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         time = self.previous_time if np.isscalar(self.previous_time) else tuple(self.previous_time)
         return (v, w, time)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, previous, vi, out = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         zero_i32 = ctx.int32_ty(0)
 
         # Get rid of 2d array
-        assert isinstance(vi.type.pointee, ir.ArrayType)
-        if isinstance(vi.type.pointee.element, ir.ArrayType):
-            assert(vi.type.pointee.count == 1)
-            vi = builder.gep(vi, [zero_i32, zero_i32])
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+            assert(arg_in.type.pointee.count == 1)
+            arg_in = builder.gep(arg_in, [zero_i32, zero_i32])
 
-        # Load previous values
-        previous_v_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(0)])
-        previous_w_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(1)])
-        previous_time_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(2)])
+        # Load context values
+        previous_v_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(0)])
+        previous_w_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(1)])
+        previous_time_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(2)])
 
         # Output locations
-        out_v_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(0)])
-        out_w_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(1)])
-        out_time_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(2)])
+        out_v_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(0)])
+        out_w_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(1)])
+        out_time_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(2)])
 
         # Load parameters
         param_vals = {}
@@ -7930,7 +7921,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
                                             builder, param_ptr)
 
-        inner_args = {"ctx": ctx, "var_ptr": vi, "param_vals": param_vals,
+        inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
                       "out_v": out_v_ptr, "out_w": out_w_ptr,
                       "out_time": out_time_ptr,
                       "previous_v_ptr": previous_v_ptr,
@@ -7946,12 +7937,12 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, func, method + "_body")
 
         # Save context
-        result = builder.load(out)
-        builder.store(result, previous)
+        result = builder.load(arg_out)
+        builder.store(result, context)
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
@@ -10726,11 +10717,9 @@ class Distance(ObjectiveFunction):
         acc_y2_val = builder.fadd(acc_y2_val, y2)
         builder.store(acc_y2_val, acc_y2)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
-        v1 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
-        v2 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
         acc_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), acc_ptr)
@@ -10768,11 +10757,11 @@ class Distance(ObjectiveFunction):
         else:
             raise RuntimeError('Unsupported metric')
 
-        assert isinstance(vi.type.pointee, ir.ArrayType)
-        assert isinstance(vi.type.pointee.element, ir.ArrayType)
-        assert vi.type.pointee.count == 2
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+        assert arg_in.type.pointee.count == 2
 
-        input_length = vi.type.pointee.element.count
+        input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
         sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
@@ -10842,7 +10831,7 @@ class Distance(ObjectiveFunction):
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-        builder.store(ret, vo)
+        builder.store(ret, arg_out)
 
         return builder
 

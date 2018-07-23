@@ -862,13 +862,11 @@ class ParameterState(State_Base):
             input_types.append(mod.get_output_struct_type())
         return ir.LiteralStructType(input_types)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-
-        params, state, input, output = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         state_f = ctx.get_llvm_function(self.function_object.llvmSymbolName)
 
         # Extract the original mechanism function's param value
-        f_input = builder.gep(input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
 
         # Create a local copy of the function parameters
@@ -883,7 +881,7 @@ class ParameterState(State_Base):
             # Modulatory projections are ordered after that
             # FIXME: It's expected to be a single element array,
             #        so why is the parameter below a scalar?
-            f_mod_ptr = builder.gep(input, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
 
             f_mod = builder.load(f_mod_ptr)
 
@@ -895,7 +893,7 @@ class ParameterState(State_Base):
                 name = None
             elif afferent.sender.modulation is ModulationParam.OVERRIDE:
                 # Directly store the value in the output array
-                output_ptr = builder.gep(output, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(f_mod, output_ptr)
                 return builder
             else:
@@ -908,7 +906,7 @@ class ParameterState(State_Base):
                 builder.store(f_mod, f_mod_param_ptr)
 
 
-        builder.call(state_f, [f_params, state, f_input, output])
+        builder.call(state_f, [f_params, context, f_input, arg_out])
         return builder
 
 def _instantiate_parameter_states(owner, function=None, context=None):

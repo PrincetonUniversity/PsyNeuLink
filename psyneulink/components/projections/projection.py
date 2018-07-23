@@ -950,11 +950,9 @@ class Projection_Base(Projection):
 
     # Provide invocation wrapper for easier debuging
     # This can be replaced by redirecting llvmSymbolName to self.function_object
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, state, vi, vo = builder.function.args
-
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        builder.call(main_function, [params, state, vi, vo])
+        builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
 

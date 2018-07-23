@@ -1116,10 +1116,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, context, si, so = builder.function.args
-
-        is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, si)
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
 
         # Params and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -1129,7 +1127,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Integrator function is the second in the function param aggregate
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, si)
+            if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function, if_params, if_context, is_out)
         else:
@@ -1138,7 +1136,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Main function is the first in the function param aggregate
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, si)
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, arg_in)
 
 
         if isinstance(self.function_object, NormalizingFunction):
@@ -1161,7 +1159,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
                 builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
 
-        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, so)
+        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
 
         return builder
 

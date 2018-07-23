@@ -1112,8 +1112,8 @@ class Component(object):
 
             func_name = ctx.module.get_unique_name(self.name)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            params, context, si, so = llvm_func.args
-            for p in params, context, si, so:
+            params, context, arg_in, arg_out = llvm_func.args
+            for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
                 p.attributes.add('noalias')
 
@@ -1121,7 +1121,7 @@ class Component(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            builder = self._gen_llvm_function_body(ctx, builder)
+            builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
 
             builder.ret_void()
         return func_name
