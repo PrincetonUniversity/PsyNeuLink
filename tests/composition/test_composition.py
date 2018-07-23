@@ -121,7 +121,9 @@ class TestAddProjection:
         comp.add_c_node(B)
         proj = MappingProjection()
         comp.add_projection(proj, A, B)
-        comp.add_projection(proj, A, B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(proj, A, B)
+        assert "This Projection is already in the Compositon" in str(error_text)
 
     def test_add_fully_specified_projection_object(self):
         comp = Composition()
@@ -131,6 +133,64 @@ class TestAddProjection:
         comp.add_c_node(B)
         proj = MappingProjection(sender=A, receiver=B)
         comp.add_projection(proj)
+
+    def test_add_proj_sender_and_receiver_only(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(sender=A, receiver=B)
+        result = comp.run(inputs={A: [1.0]})
+        assert np.allclose(result, [[np.array([2.])]])
+
+    def test_add_proj_missing_sender(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(receiver=B)
+        assert "a sender must be specified" in str(error_text)
+
+    def test_add_proj_missing_receiver(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A)
+        assert "a receiver must be specified" in str(error_text)
+
+    def test_add_proj_invalid_projection_spec(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection("projection")
+        assert "Invalid projection" in str(error_text)
+
+    def test_add_proj_states_as_sender_and_receiver(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A',
+                              default_variable=[[0.], [0.]])
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0),
+                              default_variable=[[0.], [0.]])
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+
+        comp.add_projection(sender=A.output_states[0], receiver=B.input_states[0])
+        comp.add_projection(sender=A.output_states[1], receiver=B.input_states[1])
+
 
     def test_add_conflicting_projection_object(self):
         comp = Composition()
@@ -804,7 +864,7 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
+        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -825,7 +885,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
 
-        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
+        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
     def test_run_5_mechanisms_2_origins_1_terminal(self):
         # A ----> C --

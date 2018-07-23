@@ -473,7 +473,18 @@ class Composition(object):
 
     def add_projection(self, projection=None, sender=None, receiver=None):
         '''
-            Adds a projection to the Composition, if it is not already added
+
+            Adds a projection to the Composition, if it is not already added.
+
+            If a projection is not specified, then a default MappingProjection is created.
+
+            The sender and receiver of a particular Projection vertex within the Composition (the sender and receiver
+            arguments) must match the sender and receiver specified on the Projection object itself.
+
+                - If the sender and/or receiver arguments are not specified, then the sender and/or receiver attributes
+                  of the Projection object set the missing value(s).
+                - If the sender and receiver attributes of the Projection object are not specified, then the sender
+                  and/or receiver arguments set the missing value(s).
 
             Arguments
             ---------
@@ -488,27 +499,23 @@ class Composition(object):
                 the receiver of **projection**
         '''
 
+        if projection is None:
+            projection = MappingProjection()
+        elif not isinstance(projection, Projection):
+            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
+                                   .format(projection, self.name))
+
         if sender is None:
-            if projection is not None:
-                if projection.sender:
-                    sender = projection.sender.owner
-                else:
-                    raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
-                                           "either on the Projection or in the call to Composition.add_projection(). {}"
-                                           " is missing a sender specification. ".format(projection.name))
+            if hasattr(projection, "sender"):
+                sender = projection.sender.owner
             else:
                 raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a sender specification. ".format(projection.name))
 
         if receiver is None:
-            if projection is not None:
-                if projection.receiver:
-                    receiver = projection.receiver.owner
-                else:
-                    raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
-                                           "either on the Projection or in the call to Composition.add_projection(). {}"
-                                           " is missing a receiver specification. ".format(projection.name))
+            if hasattr(projection, "receiver"):
+                receiver = projection.receiver.owner
             else:
                 raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
@@ -531,12 +538,17 @@ class Composition(object):
 
             self.graph.connect_components(graph_sender, projection)
             self.graph.connect_components(projection, graph_receiver)
-            self._validate_projection(sender, projection, receiver)
+            self._validate_projection(sender, projection, receiver, graph_sender, graph_receiver)
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+
+        else:
+            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
+                                   .format(projection.name))
+        return projection
 
     def add_pathway(self, path):
         '''
@@ -615,45 +627,25 @@ class Composition(object):
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
 
-    def _validate_projection(self, sender, projection, receiver):
+    def _validate_projection(self, sender, projection, receiver, graph_sender, graph_receiver):
 
-        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
-            # the sender and receiver were passed directly to the Projection object AND to compositions'
-            # add_projection() method -- confirm that these are consistent
-            true_sender_owner = sender
-            true_receiver_owner = receiver
-            if isinstance(sender, Composition):
-                true_sender_owner = sender.output_CIM
-            if isinstance(receiver, Composition):
-                true_receiver_owner = receiver.input_CIM
+        if isinstance(graph_sender, Composition):
+            graph_sender = sender.output_CIM
+        if isinstance(graph_receiver, Composition):
+            graph_receiver = receiver.input_CIM
 
-            if projection.sender.owner != true_sender_owner:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in their Composition.".format(projection, sender))
-
-            if projection.receiver.owner != true_receiver_owner:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in their Composition.".format(projection, receiver))
-        else:
-            # sender and receiver were NOT passed directly to the Projection object
-            # assign them based on the sender and receiver passed into add_projection()
-            projection_object_sender = sender
-            projection_object_receiver = receiver
-            if isinstance(sender, Composition):
-                projection_object_sender = sender.output_CIM
-            if isinstance(receiver, Composition):
-                projection_object_receiver = receiver.input_CIM
-            projection.init_args['sender'] = projection_object_sender
-            projection.init_args['receiver'] = projection_object_receiver
+        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
+            projection.init_args['sender'] = graph_sender
+            projection.init_args['receiver'] = graph_receiver
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
-            if projection.sender.owner != projection_object_sender:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, sender))
-            if projection.receiver.owner != projection_object_receiver:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, receiver))
+        if projection.sender.owner != graph_sender:
+            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                   "Components in the Composition.".format(projection, sender))
+        if projection.receiver.owner != graph_receiver:
+            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                   "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None):
         ########
