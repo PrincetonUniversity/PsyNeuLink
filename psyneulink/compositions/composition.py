@@ -494,14 +494,16 @@ class Composition(object):
             sender : Mechanism, Composition, or OutputState
                 the sender of **projection**
 
-            projection : Projection
+            projection : Projection, matrix
                 the projection to add
 
             receiver : Mechanism, Composition, or OutputState
                 the receiver of **projection**
         '''
 
-        if projection is None:
+        if isinstance(projection, (np.ndarray, np.matrix, list)):
+            projection = MappingProjection(matrix=projection)
+        elif projection is None:
             projection = MappingProjection()
         elif not isinstance(projection, Projection):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
@@ -597,10 +599,8 @@ class Composition(object):
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway):
-        # First, verify that the pathway begins with a mechanism
-        if isinstance(pathway[0], Mechanism):
-            self.add_c_node(pathway[0])
-        elif isinstance(pathway[0], Composition):
+        # First, verify that the pathway begins with a node
+        if isinstance(pathway[0], (Mechanism, Composition)):
             self.add_c_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -624,14 +624,19 @@ class Composition(object):
                         receiver=pathway[c]
                     ), pathway[c - 1], pathway[c])
             # if the current item is a Projection
-            elif isinstance(pathway[c], Projection):
+            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
-                    self.add_projection(pathway[c], pathway[c - 1], pathway[c + 1])
+                    proj = pathway[c]
+                    if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                        proj = MappingProjection(sender=pathway[c - 1],
+                                                 matrix=pathway[c],
+                                                 receiver=pathway[c + 1])
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1])
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
