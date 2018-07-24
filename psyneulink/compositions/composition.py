@@ -647,8 +647,6 @@ class Composition(object):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
-                             sender_mechanism,
-                             receiver_mechanism
                              ):
 
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):

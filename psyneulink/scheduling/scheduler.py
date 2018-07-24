@@ -434,7 +434,6 @@ class Scheduler(object):
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
     def _init_consideration_queue_from_system(self, system):
-        print(system.execution_graph)
         dependencies = []
         for dependency_set in list(toposort(system.execution_graph)):
             new_set = set()

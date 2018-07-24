@@ -1058,7 +1058,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
-            if state.name != AUTO or state.name != HETERO:
+            if state.name != AUTO and state.name != HETERO:
                 state.update(params=runtime_params, context=context)
 
     def _update_previous_value(self):

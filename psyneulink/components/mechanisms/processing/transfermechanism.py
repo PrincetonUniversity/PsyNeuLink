@@ -963,13 +963,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_output_states(context=context)
 
     def _get_instantaneous_function_input(self, function_variable, noise):
-        if isinstance(self.function_object, NormalizingFunction):
-            if self._current_variable_index == 0:
-                self._current_noise = self._try_execute_param(noise, function_variable)
-            noise = self._current_noise[self._current_variable_index]
-            function_variable = function_variable[self._current_variable_index]
-        else:
-            noise = self._try_execute_param(noise, function_variable)
+        noise = self._try_execute_param(noise, function_variable)
         if (np.array(noise) != 0).any():
             current_input = function_variable + noise
         else:
@@ -1061,25 +1055,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
-        if isinstance(self.function_object, NormalizingFunction):
-            # Apply TransferMechanism's function to each input state separately
-            value = []
-            for i in range(len(variable)):
-                self._current_variable_index = i
-                value_item = super(Mechanism, self)._execute(variable=variable,
-                                                             runtime_params=runtime_params,
-                                                             context=context)
-                value_item = self._clip_result(clip, value_item)
-                # execute returns 2d even though we passed in 1d
-                # (we passed in one item of a 2d variable)
-                value.append(np.squeeze(value_item))
-
-        else:
-            value = super(Mechanism, self)._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context
-                                                    )
-            value = self._clip_result(clip, value)
+        value = super(Mechanism, self)._execute(variable=variable,
+                                                runtime_params=runtime_params,
+                                                context=context
+                                                )
+        value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
         self._current_value = np.atleast_2d(value)
@@ -1110,22 +1090,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
-            if isinstance(self.function_object, NormalizingFunction):
-                # only execute integrator function once, even though component.execute is called for each item in var
-                if self._current_variable_index == 0:
-                    self.integrator_function_value = self._get_integrated_function_input(variable,
-                                                                                         initial_value,
-                                                                                         noise,
-                                                                                         context)
-                # grab the item of integrator function value that corresponds to current iteration through variable
-                return self.integrator_function_value[self._current_variable_index]
 
-            else:
-                self.integrator_function_value = self._get_integrated_function_input(variable,
-                                                                                     initial_value,
-                                                                                     noise,
-                                                                                     context)
-                return self.integrator_function_value
+            self.integrator_function_value = self._get_integrated_function_input(variable,
+                                                                                 initial_value,
+                                                                                 noise,
+                                                                                 context)
+            return self.integrator_function_value
 
         else:
             return self._get_instantaneous_function_input(variable, noise)
