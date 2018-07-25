@@ -35,8 +35,8 @@ specified, its initialization is `deferred <GatingProjection_Deferred_Initializa
 
 .. _GatingProjection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a GatingProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows

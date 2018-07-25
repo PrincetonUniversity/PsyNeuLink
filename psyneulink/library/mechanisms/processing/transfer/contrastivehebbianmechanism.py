@@ -37,24 +37,36 @@ described below.
 Creation
 --------
 
+*Size*
+~~~~~~
+
 The **input_size** argument of the constructor must always be specified (this is comparable to specifying the
 **size** or *default_variable** arugments of other types of `Mechanism`).  If it is specified on its own,
 it determines the total number of processing units.  If either the **hidden_size** and/or **target_size** arguments
 are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
-details).  A ContrastiveHebbianMechanism also has **minus_phase_termination_condition** and
-*plus_phase_termination_condition* arguments, and corresponding **minus_phase_termination_criterion** and
-*plus_phase_termination_criterion* arguments, that deterimine how the respective `phases of execution
-<ContrastiveHebbian_Execution>` are terminated.  The termination condition arguments can be assigned as *COUNT* or
-*CONVERGENCE*.  If *COUNT* is specified, then the phase terminates after the number of executions specified in the
-corresponding termination_criterion argument.  If *CONVERGENCE* is specified, then the phase terminates when the value
-returned by its `convergence_function <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to the
-convergence_criterion specified for the phase.  Other parameters can also be configured that influence processing (
-see `ContrastiveHebbian_Execution`).  The Mechanism is automatically assigned three of its five `Standard 
-OutputStates <ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, 
-*CURRENT_ACTIVITY_OUTPUT*, and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Output>`). Additional 
-OutputStates can be specified in the **additional_output_states** argument of the constructor.
+details).
+
+*Phases*
+~~~~~~~~
+
+A ContrastiveHebbianMechanism `executes in two phases <ContrastiveHebbian_Execution>`, and has
+**minus_phase_termination_condition** and **plus_phase_termination_condition** arguments, and corresponding
+**minus_phase_termination_criterion** and **plus_phase_termination_criterion** arguments, that determine when the
+respective phases of execution are terminated.  Other parameters can also be configured that influence processing (see
+`ContrastiveHebbian_Execution`).
+
+*OututStates*
+~~~~~~~~~~~~~
+
+The Mechanism is automatically assigned three of its five `Standard OutputStates
+<ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*,
+and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Output>`). Additional OutputStates can be specified
+in the **additional_output_states** argument of the constructor.
 
 .. _ContrastiveHebbian_Learning:
+
+*Learning*
+~~~~~~~~~~
 
 A ContrastiveHebbianMechanism can be configured for learning either by specifying **enable_learning** as `True` or using
 the `configure_learning <RecurrentTransferMechanism.configure_learning>` method, with the following differences from a
@@ -67,7 +79,7 @@ as its `learning_function <ContrastiveHebbianMechanism.learning_function>`; its 
 
 .. _ContrastiveHebbian_SIMPLE_HEBBIAN:
 
-*SIMPLE_HEBBIAN* mode
+*SIMPLE_HEBBIAN mode*
 ~~~~~~~~~~~~~~~~~~~~~
 
 This replicates the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g., for validation or
@@ -89,8 +101,8 @@ Structure
 
 .. _ContrastiveHebbian_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 A ContrastiveHebbianMechanism always has two, and possibly three `InputStates <InputState>`: 
 
@@ -148,8 +160,8 @@ as follows:
 
 .. _ContrastiveHebbian_Functions:
 
-Functions
-~~~~~~~~~
+*Functions*
+~~~~~~~~~~~
 
 In addition to its primary `function <ContrastiveHebbianMechanism.function>`, if either the
 `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>` or
@@ -165,8 +177,8 @@ but can be replaced by any function that takes and returns a 1d array.
 
 .. _ContrastiveHebbian_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 A ContrastiveHebbianMechanism is automatically assigned three `OutputStates <OutputState>`: 
 
@@ -200,8 +212,8 @@ Execution
 
 .. _ContrastiveHebbian_Processing:
 
-Processing
-~~~~~~~~~~
+*Processing*
+~~~~~~~~~~~~
 
 A ContrastiveHebbianMechanism always executes in two sequential phases, that together constitute a *trial of execution:*
 
@@ -269,8 +281,8 @@ of the *minus phase*), the following computations and assignments are made:
 
 .. _ContrastiveHebbian_Learning_Execution:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 If a ContrastiveHebbianMechanism is `configured for learning <ContrastiveHebbian_Learning>`, at the end of each
 `trial of execution <ContrastiveHebbian_Processing>` the `value <OutputState.value>` of its *ACTIVITY_DIFFERENCE_OUTPUT*
@@ -464,7 +476,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     mode : SIMPLE_HEBBIAN or None : default None
         specifies configuratoin that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning
-        (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for details).
+        (see `SIMPLE_HEBBIAN mode <ContrastiveHebbian_SIMPLE_HEBBIAN>` for details).
 
     combination_function : function : default None
         specifies function used to combine the *INPUT*, *RECURRENT* and *TARGET* (if specified) `InputStates
@@ -615,8 +627,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Output>`.
 
     mode : SIMPLE_HEBBIAN or None
-        indicates whether *SIMPLE_HEBBIAN* was used for configuration (see `ContrastiveHebbian_SIMPLE_HEBBIAN` for
-        details).
+        indicates whether *SIMPLE_HEBBIAN* was used for configuration (see
+        `SIMPLE_HEBBIAN mode <ContrastiveHebbian_SIMPLE_HEBBIAN>` for details).
 
     matrix : 2d np.array
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
@@ -740,7 +752,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
         `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`;
-        if it is *CONVERGENCE*, execution continues until the value returned by *convergence_function
+        if it is *CONVERGENCE*, execution continues until the value returned by `convergence_function
         <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
         `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`. 
 
@@ -753,7 +765,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         determines the type of condition used to terminate the `plus_phase <ContrastiveHebbian_Plus_Phase>` of
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
         `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`;
-        if it is *CONVERGENCE*, execution continues until the value returned by *convergence_function
+        if it is *CONVERGENCE*, execution continues until the value returned by `convergence_function
         <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
         `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`. 
 

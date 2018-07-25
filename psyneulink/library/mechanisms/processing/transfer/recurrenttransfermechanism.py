@@ -68,8 +68,8 @@ In all other respects, a RecurrentTransferMechanism is specified in the same way
 
 .. _Recurrent_Transfer_Learning:
 
-Configuring Learning
-~~~~~~~~~~~~~~~~~~~~
+*Configuring Learning*
+~~~~~~~~~~~~~~~~~~~~~~
 
 A RecurrentTransferMechanism can be configured for learning when it is created by assigning `True` to the
 **enable_learning** argument of its constructor.  This creates an `AutoAssociativeLearningMechanism` that is used to

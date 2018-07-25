@@ -37,8 +37,8 @@ An EVCControlMechanism is similar to a standard `ControlMechanism`, with the fol
 
 .. _EVCControlMechanism_EVC:
 
-Expected Value of Control (EVC)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Expected Value of Control (EVC)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its
 `system <EVCControlMechanism.system>`.  In the `default configuration <EVCControlMechanism_Default_Configuration>`,
@@ -94,8 +94,8 @@ its `ControlSignals <EVCControlMechanism_ControlSignals>`.  Each of these specia
 
 .. _EVCControlMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 .. _EVCControlMechanism_ObjectiveMechanism:
 
@@ -192,8 +192,8 @@ The prediction mechanisms for an EVCControlMechanism are listed in its `predicti
 
 .. _EVCControlMechanism_Functions:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 By default, the primary `function <EVCControlMechanism.function>` is `ControlSignalGridSearch` (see
 `EVCControlMechanism_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the
@@ -283,8 +283,8 @@ function (see note below).
 
 .. _EVCControlMechanism_ControlSignals:
 
-ControlSignals
-~~~~~~~~~~~~~~
+*ControlSignals*
+~~~~~~~~~~~~~~~~
 
 The OutputStates of an EVCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <EVCControlMechanism.control_signals>` attribute (as well as
