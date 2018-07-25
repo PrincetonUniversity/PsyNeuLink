@@ -64,6 +64,7 @@ from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import
     LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.library.mechanisms.adaptive.learning.kohonenlearningmechanism import KohonenLearningMechanism
 from psyneulink.globals.keywords import \
     FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
     LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, RESULT, VARIABLE

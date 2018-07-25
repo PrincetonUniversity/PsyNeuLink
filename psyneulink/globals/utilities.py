@@ -58,6 +58,7 @@ MATHEMATICAL
 
 * norm
 * sinusoid
+* scalar_distance
 
 
 OTHER
@@ -92,7 +93,8 @@ from enum import Enum, EnumMeta, IntEnum
 import collections
 import numpy as np
 
-from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
+from psyneulink.globals.keywords import \
+    DISTANCE_METRICS, EXPONENTIAL,GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
@@ -104,7 +106,8 @@ __all__ = [
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
     'object_has_single_value', 'optional_parameter_spec',
     'normpdf',
-    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'sinusoid', 'TEST_CONDTION', 'type_match',
+    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError',
 ]
 
@@ -514,6 +517,9 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         return False
 
+
+# MATHEMATICAL  ********************************************************************************************************
+
 def normpdf(x, mu=0, sigma=1):
     u = float((x-mu) / abs(sigma))
     y = np.exp(-u*u/2) / (np.sqrt(2*np.pi) * abs(sigma))
@@ -521,6 +527,19 @@ def normpdf(x, mu=0, sigma=1):
 
 def sinusoid(x, amplitude=1, frequency=1, phase=0):
     return amplitude * np.sin(2 * np.pi * frequency * x + phase)
+
+def scalar_distance(measure, value, scale=1, offset=0):
+    if measure is GAUSSIAN:
+        return normpdf(value, offset, scale)
+    if measure is LINEAR:
+        return scale*value+offset
+    if measure is EXPONENTIAL:
+        return np.exp(scale*value+offset)
+    if measure is SINUSOID:
+        return sinusoid(value, frequency=scale, phase=offset)
+
+
+# OTHER ****************************************************************************************************************
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function

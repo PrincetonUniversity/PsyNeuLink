@@ -139,10 +139,11 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next, SelectionFunction
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
+from psyneulink.globals.keywords import \
+    BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, MEAN, MEDIAN, NAME, NOISE, \
+    RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
@@ -492,7 +493,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     instance of LCAMechanism : LCAMechanism
 
     """
-    componentType = LCA
+    componentType = LCA_MECHANISM
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({

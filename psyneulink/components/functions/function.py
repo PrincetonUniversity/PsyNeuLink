@@ -218,7 +218,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     GAIN, GAUSSIAN, GAMMA_DIST_FUNCTION, \
     HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
@@ -227,18 +227,17 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
     PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
-    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SINUSOID, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
+    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, \
-    WALD_DIST_FUNCTION, WEIGHTS, \
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, \
     kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import \
     call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, \
-    np_array_less_than_2d, normpdf, parameter_spec, sinusoid
+    np_array_less_than_2d, parameter_spec, scalar_distance
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -10138,10 +10137,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
 
-    componentName = HEBBIAN_FUNCTION
+    componentName = KOHONEN_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[0, 0], [0, 0] [[0,0],[0,0]] ]
+        variable = [[0, 0], [0, 0], [[0,0],[0,0]] ]
 
     default_learning_rate = 0.05
 
@@ -10157,9 +10156,9 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
-                learning_rate=learning_rate,
-                params=params)
+        params = self._assign_args_to_param_dicts(distance_function=distance_function,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -10175,7 +10174,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         # variable = np.squeeze(np.array(variable))
 
         name = self.name
-        if self.owner.name:
+        if self.owner and self.owner.name:
             name = name + " for {}".format(self.owner.name)
 
         if not is_numeric(variable):
@@ -10208,7 +10207,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                                 format(len(input), len(activity), name))
 
         #     VALIDATE THAT len(variable[0])==len(variable[1])==len(variable[2].shape)
-        if len(input) != matrix.shape(0) or matrix.shape(0) != matrix.shape(1):
+        if (len(input) != matrix.shape[0]) or (matrix.shape[0] != matrix.shape[1]):
             raise FunctionError("Third item of variable for {} ({}) must be a square matrix the dimension of which "
                                 "must be the same as the length ({}) of the first and second items of the variable".
                                 format(name, matrix, len(input)))
@@ -10221,6 +10220,13 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        super()._instantiate_attributes_before_function(function, context)
+
+        if isinstance(self.distance_function, str):
+            self.measure=self.distance_function
+            self.distance_function = scalar_distance
 
     def function(self,
                  variable=None,
@@ -10264,7 +10270,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable, params, context))
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -10282,67 +10288,30 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         if learning_rate is not None:
             self.learning_rate_dim = np.array(learning_rate).ndim
 
-        # MODIFIED 9/21/17 NEW:
-        # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
-        if not isinstance(variable, np.ndarray):
-            variable = np.array(variable)
-        if variable.ndim > 1:
-            variable = np.squeeze(variable)
-        # MODIFIED 9/21/17 END
-
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
             variable = variable * learning_rate
 
-
-        # # Generate the column array from the variable
-        # # col = variable.reshape(len(variable),1)
-        # col = np.array(np.matrix(variable).T)
-        #
-        # # Calculate weight chhange matrix
-        # weight_change_matrix = variable * col
-        # # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
-        # weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
-        #
-        # # If learning_rate is scalar or 2d, multiply it by the weight change matrix
-        # if self.learning_rate_dim in {0, 2}:
-        #     weight_change_matrix = weight_change_matrix * learning_rate
-
-        # √ CALCULATE ARRAY OF DISTANCES convert to col array
-        # CONVERT variable[0]  and variable[1] to column arrays
-        # Replicate variable[0] * width of variable[1]
-        # SUBTRACT EACH COLUMN OF WEIGHTS FROM variable[0]
-        # MULTIPLY EACH BY DISTANCE
-
         input_pattern = np.array(np.matrix(variable[0]).T)
         activities = np.array(np.matrix(variable[1]).T)
         matrix = variable[2]
+        measure = self.distance_function
 
         # Calculate I-w[j]
         input_cols = np.repeat(input_pattern,len(input_pattern),1)
         differences = matrix - input_cols
 
         # Calculate distances
-        index_of_max = activities.index(max(activities))
+        index_of_max = list(activities).index(max(activities))
         distances = np.zeros_like(activities)
         for i, item in enumerate(activities):
-            distances[i]=self.distance_function(abs(i-index_of_max))
+            distances[i]=self.distance_function(self.measure, abs(i-index_of_max))
         distances = 1-np.array(np.matrix(distances).T)
 
         # Multiply distances by differences and learning_rate
         weight_change_matrix = distances * differences * learning_rate
 
         return weight_change_matrix
-
-    def _distance_function(self, measure, value, scale=1, offset=0):
-        if measure is GAUSSIAN:
-            return normpdf(value, scale, offset)
-        if measure is LINEAR:
-            return scale*value+offset
-        if measure is EXPONENTIAL:
-            return np.exp(scale*value+offset)
-        if measure is SINUSOID:
-            return sinusoid(value, frequency=scale, phase=offset)
 
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """

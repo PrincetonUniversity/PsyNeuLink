@@ -90,7 +90,7 @@ from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
@@ -101,8 +101,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
 
 __all__ = [
-    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'DefaultTrainingMechanism',
-    'input_state_names', 'output_state_names',
+    'KohonenLearningMechanism', 'KohonenLearningMechanismError', 'input_state_names', 'output_state_names',
 ]
 
 # Params:
@@ -295,6 +294,7 @@ class KohonenLearningMechanism(LearningMechanism):
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
+                 matrix:tc.optional(ParameterState)=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
@@ -304,7 +304,8 @@ class KohonenLearningMechanism(LearningMechanism):
                  prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  function=function,
                                                   learning_signals=learning_signals,
                                                   params=params)
 
@@ -342,10 +343,10 @@ class KohonenLearningMechanism(LearningMechanism):
         # # MODIFIED 9/22/17 NEW: [HACK] JDC: 6/29/18 -> CAUSES DEFAULT variable [[0]] OR ANYTHING OF size=1 TO FAIL
         # if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
         # MODIFIED 6/29/18 NEWER JDC: ALLOW size=1, AND DEFER FAILURE TO LearningFunction IF enbale_learning=True
-        if np.array(variable)[0].ndim != 1 or not is_numeric(variable):
+        if np.array(variable)[0].ndim != 2 or not is_numeric(variable):
         # MODIFIED 9/22/17 END
-            raise KohonenLearningMechanismError("Variable for {} ({}) must be "
-                                                        "a list or 1d np.array containing only numbers".
+            raise KohonenLearningMechanismError("Variable for {} ({}) must be a list with two items "
+                                                "or a 2d np.array and contain only numbers".
                                                         format(self.name, variable))
         return variable
 
@@ -363,10 +364,11 @@ class KohonenLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
+        matrix = self.matrix.value
+        variable = list(self.variable).append(matrix)
         self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
                                                                        runtime_params=runtime_params,
-                                                                       context=context
-                                                                       )
+                                                                       context=context)
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
@@ -388,7 +390,7 @@ class KohonenLearningMechanism(LearningMechanism):
         return self.value
 
     def _update_output_states(self, runtime_params=None, context=None):
-        '''Update the weights for the AutoAssociativeProjection for which this is the KohonenLearningMechanism
+        '''Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
