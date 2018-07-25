@@ -2098,15 +2098,15 @@ class Mechanism_Base(Mechanism):
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
-                if hasattr(self, "integrator_mode"):
-                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an accumulator to reinitialize.) If this Mechanism "
-                                         "should be stateful, try setting the integrator_mode argument to True. "
-                                         .format(self.name))
-                else:
-                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
-                                         "(It does not have an accumulator to reinitialize).".format(self.name))
-
+                # if hasattr(self, "integrator_mode"):
+                #     raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                #                          "(It does not have an accumulator to reinitialize.) If this Mechanism "
+                #                          "should be stateful, try setting the integrator_mode argument to True. "
+                #                          .format(self.name))
+                # else:
+                #     raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                #                          "(It does not have an accumulator to reinitialize).".format(self.name))
+                pass
             else:
                 raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
                                      "Integrator type function, therefore the Mechanism does not have an accumulator to"
