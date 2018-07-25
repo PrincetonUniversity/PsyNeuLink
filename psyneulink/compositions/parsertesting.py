@@ -21,6 +21,7 @@ from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.composition import Graph
 from psyneulink.compositions.composition import Composition
+from psyneulink.scheduling.scheduler import Scheduler
 
 import collections
 from collections import Iterable, OrderedDict
@@ -808,7 +809,7 @@ map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
                                sender=h2,
                                receiver=out_sig_can
                                )
-'''
+
 
 # DOING SHIT WITH A GRAPH
 
@@ -832,9 +833,9 @@ rumel_processing_graph.connect_components(h2, out_sig_I)
 rumel_processing_graph.connect_components(h2, out_sig_is)
 rumel_processing_graph.connect_components(h2, out_sig_has)
 rumel_processing_graph.connect_components(h2, out_sig_can)
+
+
 '''
-
-
 # DOING SHIT DIRECTLY WITH A COMPOSITION
 rumel_composition = Composition()
 
@@ -858,7 +859,7 @@ rumel_composition.add_projection(h2, map_h2_can, out_sig_can)
 rumel_composition._update_processing_graph()
 
 rumel_processing_graph = rumel_composition._graph_processing
-
+'''
 # test the graph
 
 print("Checking the vertices of the processing graph for the semantic model: ")
@@ -899,6 +900,12 @@ print("\n")
 for i in range(len(rumel_parsed_pytorch.ordered_execution_sets)):
     print(rumel_parsed_pytorch.ordered_execution_sets[i])
     print("\n")
+
+print("\n")
+print("Checking the execution sets created by the scheduler: ")
+rumel_parsed_sched = Scheduler(graph=rumel_processing_graph)
+print(rumel_parsed_sched.consideration_queue)
+print("\n")
 
 # create inputs, outputs for semantic model
 
@@ -999,7 +1006,7 @@ ready_targets = []
 
 for i in range(len(PT_nouns)):
     for j in range(len(PT_rels)):
-        ready_inputs.append([PT_nouns[i], PT_rels[j]])
+        ready_inputs.append([PT_rels[j], PT_nouns[i]])
         ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
 
 # start_time = timeit.default_timer()

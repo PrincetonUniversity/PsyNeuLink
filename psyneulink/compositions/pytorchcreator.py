@@ -6,6 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 import torch
 from torch import nn
+import numpy as np
 
 
 
@@ -14,9 +15,7 @@ from torch import nn
 
 class PytorchCreator(torch.nn.Module):
     
-    
-    
-    # HELPER METHODS
+    # HELPER METHODS ----------------------------------------------------------------------------------------
     
     # creates ordered execution sets from processing graph
     def get_ordered_exec_sets(self, processing_graph):
@@ -97,18 +96,27 @@ class PytorchCreator(torch.nn.Module):
             return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).float()) * gain + 
                               torch.min(input=(x-bias), other=torch.tensor([0]).float()) * leak)
     
-    # returns dict mapping psyneulink projections to corresponding pytorch parameters
-    def get_parameters_for_projections(self):
-        return self.projections_to_torch_weights
+    # returns dict mapping psyneulink projections to corresponding pytorch weights (provided in separate numpy arrays)
+    def get_weights_for_projections(self):
+        copied_to_numpy = {}
+        for projection, weights in self.projections_to_torch_weights.items():
+            copied_to_numpy[projection] = weights.detach().numpy().copy()
+        return copied_to_numpy
+    
+    # returns dict mapping psyneulink mechanisms to corresponding pytorch biases (provided in separate numpy arrays)
+    def get_biases_for_mechanisms(self):
+        copied_to_numpy = {}
+        for mechanism, biases in self.mechanisms_to_torch_biases.items():
+            copied_to_numpy[mechanism] = biases.detach().numpy().copy()
+        return copied_to_numpy
     
     # returns ordered execution sets
     def get_ordered_execution_sets(self):
         return self.ordered_execution_sets
     
+    # INIT AND FEEDFORWARD ----------------------------------------------------------------------------------
     
-    
-    # INIT AND FEEDFORWARD
-    
+    # sets up parameters of model, information for performing feedfoward step
     def __init__(self, processing_graph):
         
         super(PytorchCreator, self).__init__()
@@ -118,6 +126,7 @@ class PytorchCreator(torch.nn.Module):
         self.processing_graph = processing_graph # processing graph
         self.node_to_feedforward_info = {} # dict mapping PNL nodes to feedforward info
         self.projections_to_torch_weights = {} # dict mapping PNL projections to pytorch parameters
+        self.mechanisms_to_torch_biases = {} # dict mapping PNL mechanisms to pytorch biases
         self.params = nn.ParameterList() # list of parameters for Pytorch to keep track of
         
         # iterate over nodes in execution sets, set up feedforward info for each
@@ -128,17 +137,21 @@ class PytorchCreator(torch.nn.Module):
                 node = self.ordered_execution_sets[i][j]
                 node_feedforward_info = []
                 
-                # set up node's tensor, activation function, afferent inputs info
+                # set up node's tensor, biases, activation function, afferent inputs info
                 layer = None
+                biases = None
                 activation_function = self.activation_function_creator(node)
                 afferents = {}
                 
-                # add tensor, activation function to node's feedforward info
-                node_feedforward_info.append(layer)
-                node_feedforward_info.append(activation_function)
-                
-                # add to afferent inputs info if we don't have origin node
+                # if we don't have origin node: set up biases, add to afferent inputs info
                 if len(node.parents) > 0:
+                    
+                    # set up biases for node/mechanism
+                    biases = nn.Parameter(torch.randn(len(node.component.input_states[0].value)).float())
+                    
+                    # add biases to params list and to mechanisms_to_torch_biases dict
+                    self.params.append(biases)
+                    self.mechanisms_to_torch_biases[node.component] = biases
                     
                     # iterate over projections to node
                     for k in range(len(node.component.path_afferents)):
@@ -148,21 +161,25 @@ class PytorchCreator(torch.nn.Module):
                         input_component = mapping_proj.sender.owner
                         input_node = self.processing_graph.comp_to_vertex[input_component]
                         
-                        # set up pytorch parameters that correspond to projection
-                        weights = nn.Parameter(torch.randn(len(input_component.input_states[0].value), 
-                                                           len(node.component.input_states[0].value)).float())
-                        biases = nn.Parameter(torch.randn(len(node.component.input_states[0].value)).float())
+                        # set up pytorch weights that correspond to projection
+                        weights = nn.Parameter(torch.randn(np.shape(mapping_proj.matrix)).float())
                         
-                        # add parameters to params list, afferent inputs info, projection to parameter dict
+                        # add node-weights mapping to afferent inputs info, add weights to params list,
+                        # add weights to projections_to_torch_weights dict
+                        afferents[input_node] = weights
                         self.params.append(weights)
-                        self.params.append(biases)
-                        afferents[input_node] = [weights, biases]
-                        self.projections_to_torch_weights[mapping_proj] = [weights, biases]
+                        self.projections_to_torch_weights[mapping_proj] = weights
                 
-                # add afferent inputs info to node's feedforward info, node's feedforward info to feedforward info dict
+                # append node's tensor, biases, activation function, afferent inputs info to node's feedforward info
+                node_feedforward_info.append(layer)
+                node_feedforward_info.append(biases)
+                node_feedforward_info.append(activation_function)
                 node_feedforward_info.append(afferents)
+                
+                # add node's feedforward info to feedforward info dict
                 self.node_to_feedforward_info[node] = node_feedforward_info
     
+    # performs feedfoward computation for the model, creating its computational graph
     def forward(self, inputs):
         
         # set up output list
@@ -172,10 +189,11 @@ class PytorchCreator(torch.nn.Module):
         for i in range(len(self.ordered_execution_sets)):
             for j in range(len(self.ordered_execution_sets[i])):
                 
-                # get current node, node's activation function & afferent info
+                # get current node, node's biases, activation function & afferent info
                 node = self.ordered_execution_sets[i][j]
-                activation_function = self.node_to_feedforward_info[node][1]
-                afferents = self.node_to_feedforward_info[node][2]
+                biases = self.node_to_feedforward_info[node][1]
+                activation_function = self.node_to_feedforward_info[node][2]
+                afferents = self.node_to_feedforward_info[node][3]
                 
                 # feedforward step if we have origin node
                 if (i == 0):
@@ -184,9 +202,9 @@ class PytorchCreator(torch.nn.Module):
                 # feedforward step if we do not have origin node
                 else:
                     layer = torch.zeros(len(node.component.input_states[0].value))
-                    for input_node, param_list in afferents.items():
-                        layer += (torch.matmul(self.node_to_feedforward_info[input_node][0], param_list[0]) + param_list[1])
-                    layer = activation_function(layer)
+                    for input_node, weights in afferents.items():
+                        layer += torch.matmul(self.node_to_feedforward_info[input_node][0], weights)
+                    layer = activation_function(layer + biases)
                 
                 # put layer in correct place in the feedforward info dict
                 self.node_to_feedforward_info[node][0] = layer
@@ -196,7 +214,8 @@ class PytorchCreator(torch.nn.Module):
                     outputs.append(layer)
         
         return outputs
-    
-    
-    
-    
+
+
+
+
+
