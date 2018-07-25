@@ -522,7 +522,8 @@ class TestStroopModels:
         my_Stroop.run(inputs=trial_dict(0, 1, 1, 0, 1, 0),
                       # termination_processing=change_termination_processing,
                       num_trials=4,
-                      call_after_trial=switch_trial_type)
+                      call_after_trial=switch_trial_type
+                      )
 
         # {colors_input_layer: [[0, 0], [1, 0]],
         #                       words_input_layer: [[0, 0], [1, 0]],
