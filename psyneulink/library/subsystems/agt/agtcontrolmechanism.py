@@ -47,8 +47,8 @@ Structure
 
 .. _AGTControlMechanism_Input:
 
-Input: ObjectiveMechanism and Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Input: ObjectiveMechanism and Monitored OutputStates*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
@@ -63,8 +63,8 @@ attribute.  They can be displayed using the AGTControlMechanism's `show <AGTCont
 
 .. _AGTControlMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 An AGTControlMechanism uses the default function for a `ControlMechanism` (a default `Linear` Function), that simply passes
 its input to its output.  Thus, it is the output of the AGTControlMechanism's `objective_mechanism
@@ -73,8 +73,8 @@ and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <Contro
 
 .. _AGTControlMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 An AGTControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the

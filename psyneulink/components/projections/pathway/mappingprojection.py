@@ -54,8 +54,8 @@ MappingProjections are also generated automatically in the following circumstanc
 
 .. _Mapping_Matrix_Specification:
 
-Specifying the Matrix Parameter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying the Matrix Parameter*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a MappingProjection is created explicitly, the **matrix** argument of its constructor can be used to specify
 its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingProjection's `function
@@ -90,8 +90,8 @@ following ways:
 
 .. _MappingProjection_Learning_Specification:
 
-Specifying Learning
-~~~~~~~~~~~~~~~~~~~
+*Specifying Learning*
+~~~~~~~~~~~~~~~~~~~~~
 
 A MappingProjection is specified for learning in any of the following ways:
 
@@ -135,8 +135,8 @@ the second item of the tuple must be a learning specification, which can be any 
 
 .. _MappingProjection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a MappingProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>` have been fully specified.  This
@@ -221,8 +221,8 @@ for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
 of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`.
