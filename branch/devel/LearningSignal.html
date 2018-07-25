@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningSignal &mdash; PsyNeuLink 0.4.8.0+1.g6096d05 documentation</title>
+  <title>LearningSignal &mdash; PsyNeuLink 0.4.8.0+2.gc39a79e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1.g6096d05 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+2.gc39a79e documentation" href="index.html"/>
         <link rel="up" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="next" title="ControlSignal" href="ControlSignal.html"/>
         <link rel="prev" title="Modulatory Signals" href="ModulatorySignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1
+                0.4.8.0+2
               </div>
             
           
@@ -210,7 +210,7 @@ for a <a class="reference internal" href="LearningMechanism.html"><span class="d
 other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an OutputState</span></a>), this is neither necessary nor advisable, as a
 LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.</p>
 <div class="section" id="specifying-learningsignals">
-<span id="learningsignal-specification"></span><h3>Specifying LearningSignals<a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-specification"></span><h3><em>Specifying LearningSignals</em><a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningSignal is specified in the <strong>learning_signals</strong> argument of the constructor for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>,
 the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState(s)</span></a> of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> being learning must be
 specified.  This can take any of the following forms:</p>
@@ -260,7 +260,7 @@ attributes.</p>
 by modulating the value of their <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameters.  This is governed by three
 attributes of the LearningSignal, as described below.</p>
 <div class="section" id="projections">
-<span id="learningsignal-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningSignal is created, it can be assigned one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>,
 using either the <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the
 <strong>params</strong> argument with the key <em>PROJECTIONS</em>.  These will be assigned to its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.  See <a class="reference internal" href="State.html#state-projections"><span class="std std-ref">State Projections</span></a> for additional details
@@ -275,7 +275,7 @@ networks</a>.</p>
 </div>
 </div>
 <div class="section" id="modulation">
-<span id="learningsignal-modulation"></span><h3>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-modulation"></span><h3><em>Modulation</em><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>A LearningSignal has a <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.modulation" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute that determines how the LearningSignal’s
 <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (i.e., its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>) is used by the
 ParameterState(s) to which it projects to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter(s) of their
@@ -292,7 +292,7 @@ specification dictionary where the LearningSignal itself is specified, as descri
 used by all of the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that project from that LearningSignal.</p>
 </div>
 <div class="section" id="learning-rate-and-function">
-<span id="learningsignal-learning-rate"></span><h3>Learning Rate and Function<a class="headerlink" href="#learning-rate-and-function" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-learning-rate"></span><h3><em>Learning Rate and Function</em><a class="headerlink" href="#learning-rate-and-function" title="Permalink to this headline">¶</a></h3>
 <p>A LearningSignal has a <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_rate" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute that can be used to specify the
 <a class="reference internal" href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> parameter for its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>
 (i.e., those listed in its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute).  If specified, it is applied
@@ -321,7 +321,7 @@ attributes of a LearningSignal are automatically assigned and should not be modi
 executed.  When this occurs, the LearningMechanism provides the LearningSignal with a
 <a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>, that is used by its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
 compute its <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (i.e., its own <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> for that
-<a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. That value is used by its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to which the LearningSignal
+<a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. That value is used by its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to which the LearningSignal
 projects.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -492,7 +492,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1.g6096d05',
+            VERSION:'0.4.8.0+2.gc39a79e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

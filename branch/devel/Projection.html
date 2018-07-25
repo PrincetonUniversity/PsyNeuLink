@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.4.8.0+1.g6096d05 documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.4.8.0+2.gc39a79e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1.g6096d05 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+2.gc39a79e documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Pathway Projections" href="PathwayProjection.html"/>
         <link rel="prev" title="Gating Mechanism" href="GatingMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1
+                0.4.8.0+2
               </div>
             
           
@@ -261,7 +261,7 @@ State’s <a class="reference internal" href="State.html#psyneulink.components.s
 commonly, however, Projections are either specified <a class="reference internal" href="#projection-specification"><span class="std std-ref">in context</span></a>, or are <a class="reference internal" href="#projection-automatic-creation"><span class="std std-ref">created
 automatically</span></a>, as described below.</p>
 <div class="section" id="specifying-a-projection">
-<span id="projection-specification"></span><h3>Specifying a Projection<a class="headerlink" href="#specifying-a-projection" title="Permalink to this headline">¶</a></h3>
+<span id="projection-specification"></span><h3><em>Specifying a Projection</em><a class="headerlink" href="#specifying-a-projection" title="Permalink to this headline">¶</a></h3>
 <p>Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, where the value of a parameter is specified
 (e.g., to assign a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>) or where a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is specified  (to assign it a
@@ -414,13 +414,13 @@ be compatible  (see <a class="reference internal" href="State.html#state-project
 </div></blockquote>
 </div>
 <div class="section" id="automatic-creation">
-<span id="projection-automatic-creation"></span><h3>Automatic creation<a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
+<span id="projection-automatic-creation"></span><h3><em>Automatic creation</em><a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
 <p>Under some circumstances Projections are created automatically. For example, a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> automatically creates a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in its <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> if none is specified; and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically created
 when <code class="xref std std-keyword docutils literal"><span class="pre">learning</span></code> is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>).</p>
 </div>
 <div class="section" id="deferred-initialization">
-<span id="projection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
+<span id="projection-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a Projection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows a
 Projection to be created before its <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have
 been created (e.g., before them in a script), by calling its constructor without specifying its <strong>sender</strong> or
@@ -482,7 +482,7 @@ of a State are listed in its <a class="reference internal" href="State.html#psyn
 </tbody>
 </table>
 <div class="section" id="sender">
-<span id="projection-sender"></span><h3>Sender<a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
+<span id="projection-sender"></span><h3><em>Sender</em><a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
 <p>This must be an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> or a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> (a subclass of OutputState specialized for
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>).  The Projection is assigned to the OutputState or ModulatorySignal’s
 <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.efferents" title="psyneulink.components.states.state.State_Base.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
@@ -504,7 +504,7 @@ specification is not associated with a Mechanism that can be determined from con
 Projection is <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p>
 </div>
 <div class="section" id="receiver">
-<span id="projection-receiver"></span><h3>Receiver<a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
+<span id="projection-receiver"></span><h3><em>Receiver</em><a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.receiver" title="psyneulink.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> required by a Projection depends on its type, as listed below:</p>
 <blockquote>
 <div><ul class="simple">
@@ -531,7 +531,7 @@ determined by the type of Projection —&nbsp;see subclasses for details).</li>
 </div></blockquote>
 </div>
 <div class="section" id="weight-and-exponent">
-<span id="projection-weight-exponent"></span><h3>Weight and Exponent<a class="headerlink" href="#weight-and-exponent" title="Permalink to this headline">¶</a></h3>
+<span id="projection-weight-exponent"></span><h3><em>Weight and Exponent</em><a class="headerlink" href="#weight-and-exponent" title="Permalink to this headline">¶</a></h3>
 <p>Every Projection has a <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.weight" title="psyneulink.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.exponent" title="psyneulink.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute. These
 are applied to its <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.value" title="psyneulink.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> before combining it with other Projections that project to the same
 <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  If both are specified, the <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.exponent" title="psyneulink.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> is applied before the <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.weight" title="psyneulink.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>.  These attributes determine both how the Projection’s <code class="xref any docutils literal"><span class="pre">value</span></code> is combined
@@ -545,7 +545,7 @@ they project.</p>
 </div>
 </div>
 <div class="section" id="parameterstates-and-parameters">
-<h3>ParameterStates and Parameters<a class="headerlink" href="#parameterstates-and-parameters" title="Permalink to this headline">¶</a></h3>
+<h3><em>ParameterStates and Parameters</em><a class="headerlink" href="#parameterstates-and-parameters" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> provide the value for each parameter of a Projection and its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  ParameterStates and their associated parameters are handled in the same way by
 Projections as they are for Mechanisms (see <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates and Parameters</span></a> for details).  The ParameterStates for a
 Projection are listed in its <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.parameter_states" title="psyneulink.components.projections.projection.Projection_Base.parameter_states"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_states</span></code></a> attribute.</p>
@@ -692,7 +692,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1.g6096d05',
+            VERSION:'0.4.8.0+2.gc39a79e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

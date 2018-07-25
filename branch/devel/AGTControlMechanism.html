@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.4.8.0+1.g6096d05 documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.4.8.0+2.gc39a79e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1.g6096d05 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+2.gc39a79e documentation" href="index.html"/>
         <link rel="up" title="AGT" href="AGT.html"/>
         <link rel="next" title="LCControlMechanism" href="LCControlMechanism.html"/>
         <link rel="prev" title="AGT" href="AGT.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1
+                0.4.8.0+2
               </div>
             
           
@@ -207,7 +207,7 @@ in the <a class="reference internal" href="ControlMechanism.html#controlmechanis
 <div class="section" id="structure">
 <span id="agtcontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="input-objectivemechanism-and-monitored-outputstates">
-<span id="agtcontrolmechanism-input"></span><h3>Input: ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#input-objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
+<span id="agtcontrolmechanism-input"></span><h3><em>Input: ObjectiveMechanism and Monitored OutputStates</em><a class="headerlink" href="#input-objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <p>An AGTControlMechanism has a single (primary) <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">InputState</span></a> that receives its input via a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
 The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.AGTUtilityIntegrator" title="psyneulink.components.functions.function.AGTUtilityIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AGTUtilityIntegrator</span></code></a> as its
@@ -219,13 +219,13 @@ attribute, are also listed in the AGTControlMechanism’s <code class="xref any 
 attribute.  They can be displayed using the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.show" title="psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method.</p>
 </div>
 <div class="section" id="function">
-<span id="agtcontrolmechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
+<span id="agtcontrolmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>An AGTControlMechanism uses the default function for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> (a default <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> Function), that simply passes
 its input to its output.  Thus, it is the output of the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> that determines its <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
 and the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</p>
 </div>
 <div class="section" id="output">
-<span id="agtcontrolmechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<span id="agtcontrolmechanism-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
 <p>An AGTControlMechanism has a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each parameter specified in its <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, that sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the
 corresponding parameter. ControlSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and so they are also listed in the
 AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute. The parameters modulated by an
@@ -247,7 +247,7 @@ its <a class="reference internal" href="ControlSignal.html"><span class="doc">Co
 receives from its <a class="reference internal" href="#psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.subsystems.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to all of its ControlSignals.  Each
 ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterState(s) for the parameter(s) it
-controls, which are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+controls, which are then used in the subsequent <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
@@ -432,7 +432,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1.g6096d05',
+            VERSION:'0.4.8.0+2.gc39a79e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
