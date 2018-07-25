@@ -215,7 +215,7 @@ class TestStroopModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_c_node_role(task_layer, pnl.CNodeRole.TERMINAL)
+        bidirectional_stroop.add_required_c_node_role(response_layer, pnl.CNodeRole.TERMINAL)
         bidirectional_stroop._analyze_graph()
 
         input_dict = {colors_input_layer: [0, 0, 0],
@@ -225,6 +225,8 @@ class TestStroopModels:
         bidirectional_stroop.run(inputs=input_dict)
         print(bidirectional_stroop.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL))
         print(bidirectional_stroop.output_values)
+        for node in bidirectional_stroop.c_nodes:
+            print(node.name, " Value: ", node.output_values)
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
