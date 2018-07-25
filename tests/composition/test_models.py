@@ -404,52 +404,47 @@ class TestStroopModels:
         respond_green_differencing_weights = pnl.MappingProjection(matrix=np.matrix([[-1.0], [1.0]]),
                                                                    name='RESPOND_GREEN_WEIGHTS')
 
+        my_Stroop = pnl.Composition()
+
         #   CREATE PATHWAYS
         #   Words pathway
-        words_process = pnl.Process(pathway=[words_input_layer,
-                                             word_weights,
-                                             words_hidden_layer,
-                                             word_response_weights,
-                                             response_layer], name='WORDS_PROCESS')
+        words_pathway = [words_input_layer,
+                         word_weights,
+                         words_hidden_layer,
+                         word_response_weights,
+                         response_layer]
+        my_Stroop.add_linear_processing_pathway(words_pathway)
 
         #   Colors pathway
-        colors_process = pnl.Process(pathway=[colors_input_layer,
-                                              color_weights,
-                                              colors_hidden_layer,
-                                              color_response_weights,
-                                              response_layer], name='COLORS_PROCESS')
+        colors_pathway = [colors_input_layer,
+                          color_weights,
+                          colors_hidden_layer,
+                          color_response_weights,
+                          response_layer]
+        my_Stroop.add_linear_processing_pathway(colors_pathway)
 
         #   Task representation pathway
-        task_CN_process = pnl.Process(pathway=[task_layer,
-                                               task_CN_weights,
-                                               colors_hidden_layer],
-                                      name='TASK_CN_PROCESS')
-        task_WR_process = pnl.Process(pathway=[task_layer,
-                                               task_WR_weights,
-                                               words_hidden_layer],
-                                      name='TASK_WR_PROCESS')
+        task_CN_pathway = [task_layer,
+                           task_CN_weights,
+                           colors_hidden_layer]
+        my_Stroop.add_linear_processing_pathway(task_CN_pathway)
+
+        #   Task representation pathway
+        task_WR_pathway = [task_layer,
+                           task_WR_weights,
+                           words_hidden_layer]
+        my_Stroop.add_linear_processing_pathway(task_WR_pathway)
 
         #   Evidence accumulation pathway
-        respond_red_process = pnl.Process(pathway=[response_layer,
-                                                   respond_red_differencing_weights,
-                                                   respond_red_accumulator],
-                                          name='RESPOND_RED_PROCESS')
-        respond_green_process = pnl.Process(pathway=[response_layer,
-                                                     respond_green_differencing_weights,
-                                                     respond_green_accumulator],
-                                            name='RESPOND_GREEN_PROCESS')
+        respond_red_pathway = [response_layer,
+                               respond_red_differencing_weights,
+                               respond_red_accumulator]
+        my_Stroop.add_linear_processing_pathway(respond_red_pathway)
 
-        #   CREATE SYSTEM
-        my_Stroop = pnl.System(processes=[colors_process,
-                                          words_process,
-                                          task_CN_process,
-                                          task_WR_process,
-                                          respond_red_process,
-                                          respond_green_process],
-                               name='FEEDFORWARD_STROOP_SYSTEM')
-
-        # my_Stroop.show()
-        # my_Stroop.show_graph(show_dimensions=pnl.ALL)
+        respond_green_pathway = [response_layer,
+                                 respond_green_differencing_weights,
+                                 respond_green_accumulator]
+        my_Stroop.add_linear_processing_pathway(respond_green_pathway)
 
         # Function to create test trials
         # a RED word input is [1,0] to words_input_layer and GREEN word is [0,1]
