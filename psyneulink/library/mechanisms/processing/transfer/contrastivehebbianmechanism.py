@@ -1019,6 +1019,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Initialize execution_phase as minus_phase
         if self.execution_phase is None:
             self.execution_phase = MINUS_PHASE
+
+        if self.execution_phase is MINUS_PHASE:
             self.termination_criterion = self.minus_phase_termination_criterion
             self.termination_condition = self.minus_phase_termination_condition
             self.phase_execution_count = 0
@@ -1095,7 +1097,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # self.current_activity = self.plus_phase_activity
                 self.current_activity = current_activity
                 self.output_activity = current_activity[self.target_start:self.target_end]
-                self.execution_phase = None
+                # self.execution_phase = None
                 self.is_finished = True
 
             # Otherwise, prepare for start of plus phase on next execution
