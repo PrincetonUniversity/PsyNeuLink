@@ -117,8 +117,8 @@ Structure
 
 .. _Function_Core_Attributes:
 
-Core Attributes
-~~~~~~~~~~~~~~~
+*Core Attributes*
+~~~~~~~~~~~~~~~~~
 
 Every Function has the following core attributes:
 
@@ -133,8 +133,8 @@ Every Function has the following core attributes:
 
 A Function also has an attribute for each of the parameters of its `function <Function_Base.function>`.
 
-Owner
-~~~~~
+*Owner*
+~~~~~~~
 
 If a Function has been assigned to another `Component`, then it also has an `owner <Function_Base.owner>` attribute
 that refers to that Component.  The Function itself is assigned as the Component's
@@ -161,8 +161,8 @@ COMMENT
 
 .. _Function_Modulatory_Params:
 
-Modulatory Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Modulatory Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Some classes of Functions also implement a pair of modulatory parameters: `multiplicative_param` and `additive_param`.
 Each of these is assigned the name of one of the function's parameters. These are used by `ModulatorySignals

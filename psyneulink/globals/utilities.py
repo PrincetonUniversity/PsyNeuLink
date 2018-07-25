@@ -20,8 +20,8 @@
 CONTENTS
 --------
 
-TYPE CHECKING VALUE COMPARISON
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*TYPE CHECKING VALUE COMPARISON*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
@@ -38,31 +38,32 @@ TYPE CHECKING VALUE COMPARISON
 * `is_same_function_spec`
 * `is_component`
 
-ENUM
-~~~~
+*ENUM*
+~~~~~~
 
 * `Autonumber`
 * `Modulation`
 * `get_modulationOperation_name`
 
-KVO
-~~~
+*KVO*
+~~~~~
 
 .. note::
    This is for potential future use;  not currently used by PsyNeuLink objects
 
 * observe_value_at_keypath
 
-MATHEMATICAL
-~~~~~~~~~~~~
+*MATHEMATICAL*
+~~~~~~~~~~~~~~
 
 * norm
 * sinusoid
 * scalar_distance
 
 
-OTHER
-~~~~~
+*OTHER*
+~~~~~~~
+
 * `get_args`
 * `recursive_update`
 * `merge_param_dicts`

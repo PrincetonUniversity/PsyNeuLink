@@ -79,8 +79,8 @@ COMMENT
 
 .. _ParameterState_Specification:
 
-Specifying Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Parameters can be specified in one of several places:
 
@@ -164,8 +164,8 @@ of a parameter named *param* is assigned to an attribute named ``param`` that ca
 
 .. _ParameterState_Specification_Examples:
 
-Examples
-~~~~~~~~
+*Examples*
+~~~~~~~~~~
 
 In the following example, a Mechanism is created by specifying two of its parameters, as well as its
 `function <Component.function>` and two of that function's parameters, each using a different specification format::

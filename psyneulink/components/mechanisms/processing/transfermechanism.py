@@ -100,8 +100,8 @@ Structure
 
 .. _TransferMechanism_InputStates:
 
-InputStates
-~~~~~~~~~~~
+*InputStates*
+~~~~~~~~~~~~~
 
 By default, a TransferMechanism has a single `InputState`;  however, more than one can be specified
 using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
@@ -113,8 +113,8 @@ modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to tran
 
 .. _TransferMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 *Function*.  The default function for a TransferMechanism is `Linear`.  A custom function can be specified in the
 **function** argument of the constructor.  This can be any PsyNeuLink `Function <Function>` that is a subtype of
@@ -129,8 +129,8 @@ is:
 
 .. _TransferMechanism_OutputStates:
 
-OutputStates
-~~~~~~~~~~~~
+*OutputStates*
+~~~~~~~~~~~~~~
 
 By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
 <OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
@@ -197,8 +197,8 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 
 .. _Transfer_Reinitialization:
 
-Reinitialization
-~~~~~~~~~~~~~~~~
+*Reinitialization*
+~~~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
