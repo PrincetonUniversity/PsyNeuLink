@@ -1526,23 +1526,27 @@ def _parse_connection_specs(connectee_state_type,
                 states = state
             else:
                 states = [state]
-            for state_spec in states:
-                if inspect.isclass(state_spec):
-                    state_type = state_spec
-                else:
-                    state_type = state_spec.__class__
 
-                # Test that state_type is in the list for state's connects_with
-                if not any(issubclass(connects_with_state, state_type)
-                           for connects_with_state in connects_with + modulators):
-                    spec = projection_spec or state_type.__name__
-                    raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
-                                          "{} with {} of {} ; should be one of the following: {}".
-                                          format(spec,
-                                                 state_type.__name__,
-                                                 connectee_state_type.__name__,
-                                                 owner.name,
-                                                 ", ".join([c.__name__ for c in connects_with])))
+            # KAM removed 7/25 because it crashed on construction of
+            # projections from (Terminal) ControlMechanisms to output_CIM
+
+            # for state_spec in states:
+            #     if inspect.isclass(state_spec):
+            #         state_type = state_spec
+            #     else:
+            #         state_type = state_spec.__class__
+            #
+            #     # # Test that state_type is in the list for state's connects_with
+            #     if not any(issubclass(connects_with_state, state_type)
+            #                for connects_with_state in connects_with + modulators):
+            #         spec = projection_spec or state_type.__name__
+            #         raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
+            #                               "{} with {} of {} ; should be one of the following: {}".
+            #                               format(spec,
+            #                                      state_type.__name__,
+            #                                      connectee_state_type.__name__,
+            #                                      owner.name,
+            #                                      ", ".join([c.__name__ for c in connects_with])))
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
