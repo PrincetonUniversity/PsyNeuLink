@@ -48,12 +48,11 @@ details).  A ContrastiveHebbianMechanism also has **minus_phase_termination_cond
 *CONVERGENCE*.  If *COUNT* is specified, then the phase terminates after the number of executions specified in the
 corresponding termination_criterion argument.  If *CONVERGENCE* is specified, then the phase terminates when the value
 returned by its `convergence_function <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to the
-convergence_criterion specified for the phase (see `ContrastiveHebbian_Execution` for additional details).  Other
-parameters can also be configured that influence processing (see `ContrastiveHebbian_Execution`).  The Mechanism is
-automatically assigned three of its five `Standard OutputStates <ContrastiveHebbianMechanism_Standard_OutputStates>`:
-*OUTPUT_ACTIVITY_OUTPUT*, *CURRENT_ACTIVITY_OUTPUT*, and *ACTIVITY_DIFFERENT_OUTPUT* (see `below
-<ContrastiveHebbian_Output>`). Additional OutputStates can be specified in the **additional_output_states** argument
-of the constructor.
+convergence_criterion specified for the phase.  Other parameters can also be configured that influence processing (
+see `ContrastiveHebbian_Execution`).  The Mechanism is automatically assigned three of its five `Standard 
+OutputStates <ContrastiveHebbianMechanism_Standard_OutputStates>`: *OUTPUT_ACTIVITY_OUTPUT*, 
+*CURRENT_ACTIVITY_OUTPUT*, and *ACTIVITY_DIFFERENT_OUTPUT* (see `below <ContrastiveHebbian_Output>`). Additional 
+OutputStates can be specified in the **additional_output_states** argument of the constructor.
 
 .. _ContrastiveHebbian_Learning:
 
@@ -155,12 +154,11 @@ Functions
 In addition to its primary `function <ContrastiveHebbianMechanism.function>`, if either the
 `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>` or
 `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
-is specified as *CONVERGENCE*, then it must also have a `convergence_function
-<ContrastiveHebbianMechanism.convergence_function>`, that is used to determine when the corresponding
-`phase of execution <ContrastiveHebbian_Execution>` is complete.  Its `learning_function
-<ContrastiveHebbianMechanism.learning_function>` is automatically assigned as `ContrastiveHebbian`, but this can be
-replaced by any function that takes two 1d arrays ("activity states") and compares them to determine the `matrix
-<MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
+is specified as *CONVERGENCE*, then its `convergence_function <ContrastiveHebbianMechanism.convergence_function>`, 
+that is used to determine when the corresponding `phase of execution <ContrastiveHebbian_Execution>` is complete.  
+Its `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as 
+`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity states") and 
+compares them to determine the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
 <ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN
 <ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`,
 but can be replaced by any function that takes and returns a 1d array.
@@ -214,24 +212,9 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   InputState's `value <InputState.value>`. The result of `function <ContrastiveHebbianMechanism.function>` is
   assigned to `current_activity <ContrastiveHebbianMechanism.current_activity>`.  The Mechanism is executed repeatedly
   until its `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>` is met.
-  If this is *COUNT*, then itterminates when it has been executed the number of times specified in its
-  `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>` attribute;
-  if it is *CONVERGENCE*, then it is `current_value
-
-
-  terminates when the value returned by its `convergence_function
-  <ContrastiveHebbianMechanism.convergence_function>` (indicated by `delta <ContrastiveHebbianMechanism.delta>`)
-  it less than or equal to the value of its `minus_phase_termnination_criterion
-  <ContrastiveHebbianMechanism.minus_phase_termination_criterion>` attribute.
-
-
-  This is compared with the Mechanism's `previous_value
-  <ContrastiveHebbianMechanism.previous_value>` using the `convergence_function
-  <ContrastiveHebbianMechanism.convergence_function>` to generate `delta <ContrastiveHebbianMechanism.delta>`.
-  Execution continues until that is less than or equal to the `minus_phase_termination_criterion
-  <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`. At that point, the *minus phase* is completed,
-  the `value <ContrastiveHebbianMechanism.value>` of the ContrastiveHebbianMechanism is assigned to its
-  `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` attribute, and the *plus phase* is begun.
+  At that point, the *minus phase* is completed, the `value <ContrastiveHebbianMechanism.value>` of the
+  ContrastiveHebbianMechanism is assigned to its `minus_phase_activity
+  <ContrastiveHebbianMechanism.minus_phase_activity>` attribute, and the *plus phase* is begun.
 ..
 
 .. _ContrastiveHebbian_Plus_Phase:
@@ -251,9 +234,9 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
   specified, then the `hidden_field <ContrastiveHebbian_Fields>` of the *RECURRENT* InputState's  `value
   <InputState.value>` is determined only by the `value <AutoAssociativeProjection.value>` of the Mechanism's
   `recurrent_projection <ContrastiveHebbianMechanism.recurrent_projection>`.  Execution then proceeds as during the
-  *minus phase*, completing when `delta <ContrastiveHebbianMechanism.delta>` is equal to or less than
-  `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`.  At that point,
-  the *plus phase* is completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned to
+  *minus phase*, completing when its `plus_phase_termination_condition
+  <ContrastiveHebbianMechanism.plus_phase_termination_condition>` is met.  At that point, the *plus phase* is
+  completed, and the `value <ContrastiveHebbianMechanism.value>` of the Mechanism is assigned to
   `plus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>`.
 
 The `value <InputState.value>` of the *INPUT*, and possibly *TARGET*, InptutState(s) are combined with that of its
@@ -264,7 +247,10 @@ it is *HARD_CLAMP* they are used to replace the corresponding fields of *RECURRE
 <ContrastiveHebbianMechanism.integrator_function>` (if `integrator_mode <ContrastiveHebbianMechanism.integrator_mode>`
 is `True`) and then its `function <ContrastiveHebbianMechanism.function>`.
 
-If `max_passes <ContrastiveHebbianMechanism.max_passes>` is specified, and the number of executions in either phase
+If the termination condition for either phase is specified as *CONVERGENCE*, it uses the Mechanism's
+`convergence_function <ContrastiveHebbianMechanism.convergence_function>`, together with the convergence criterion
+for that phase, to determine when execution of that phase terminates.  If
+`max_passes <ContrastiveHebbianMechanism.max_passes>` is specified, and the number of executions in either phase
 reaches that value, an error is generated.  Otherwise, once a trial of execution is complete (i.e, after completion
 of the *minus phase*), the following computations and assignments are made:
 
@@ -531,21 +517,32 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         specifies the allowable range for the result of `function <ContrastiveHebbianMechanism.function>`;
         see `clip <TransferMechanism.clip>` for additional details.
 
-    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
-        specifies the function that determines when each `phase of execution <ContrastiveHebbian_Execution>` completes,
-        by comparing `current_activity <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
-        <ContrastiveHebbianMechanism.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
-        of the same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
-        is the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
-        two arrays and returns the difference with the maximum absolute value.
+    minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
+        specifies the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
+        execution (see `minus_phase_termination_condition
+        <ContrastiveHebbianMechanism.minus_phase_termination_condition>` for additional details).
 
     minus_phase_termination_criterion : float : default 0.01
         specifies the value of `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when the `minus_phase <ContrastiveHebbian_Minus_Phase>` completes.
 
+    plus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
+        specifies the type of condition used to terminate the `plus_phase <ContrastiveHebbian_Plus_Phase>` of
+        execution (see `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
+        for additional details).
+
     plus_phase_termination_criterion : float : default 0.01
         specifies the value of `delta <ContrastiveHebbianMechanism.delta>`
         used to determine when the `plus_phase <ContrastiveHebbian_Plus_Phase>` completes.
+
+    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
+        specifies the function that determines when a `phase of execution <ContrastiveHebbian_Execution>` complete
+        if the termination condition for that phase is specified as *CONVERGENCE*, by comparing `current_activity 
+        <ContrastiveHebbianMechanism.current_activity>` with the `previous_value 
+        <ContrastiveHebbianMechanism.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
+        of the same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
+        is the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
+        two arrays and returns the difference with the maximum absolute value.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in an `execution phase
@@ -730,22 +727,39 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>` in the
         `minus_phase <ContrastiveHebbian_Minus_Phase>`) or `plus_phase_termination_criterion
         <ContrastiveHebbianMechanism.plus_phase_termination_criterion>` in the `minus_phase
-        <ContrastiveHebbian_Minus_Phase>`); used by the ContrastiveHebbianMechanism to determine when `each phase of
-        execution is complete <ContrastiveHebbian_Execution>`.
+        <ContrastiveHebbian_Minus_Phase>`).
 
     convergence_function : function
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
         <ContrastiveHebbianMechanism.previous_value>`; result is assigned as the value of `delta
-        <ContrastiveHebbianMechanism.delta>.  Used to determine when each `phase of execution
-        <ContrastiveHebbian_Execution>`  is complete (i.e., when `is_converged
-        <ContrastiveHebbianMechanism.is_converged>` is `True`.
+        <ContrastiveHebbianMechanism.delta>.  Used to determine when a `phase of execution
+        <ContrastiveHebbian_Execution>` is complete if the termination condition for that phase is specified as 
+        *CONVERGENCE*.
     
+    minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
+        determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
+        execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
+        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`;
+        if it is *CONVERGENCE*, execution continues until the value returned by *convergence_function
+        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
+        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`. 
+
     minus_phase_termination_criterion : float
-        determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which the `minus phase of execution
+        the value used for the specified `minus_phase_termination_condition 
+        <ContrastiveHebbianMechanism.minus_phase_termination_condition>` to determine when the `minus phase of execution
         <ContrastiveHebbian_Minus_Phase>` completes.
 
+    plus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
+        determines the type of condition used to terminate the `plus_phase <ContrastiveHebbian_Plus_Phase>` of
+        execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
+        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`;
+        if it is *CONVERGENCE*, execution continues until the value returned by *convergence_function
+        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
+        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`. 
+
     plus_phase_termination_criterion : float
-        determines the value of `delta <ContrastiveHebbianMechanism.delta>` at which the `minus phase of execution
+        the value used for the specified `plus_phase_termination_condition 
+        <ContrastiveHebbianMechanism.plus_phase_termination_condition>` to determine when the `plus phase of execution
         <ContrastiveHebbian_Plus_Phase>` completes.
 
     max_passes : int or None
