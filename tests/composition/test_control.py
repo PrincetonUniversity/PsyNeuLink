@@ -29,17 +29,15 @@ class TestControlMechanisms:
         S = pnl.Composition()
         S.add_linear_processing_pathway(pathway=path)
         LC.reinitialize_when = pnl.Never()
-        # THIS CURRENTLY DOES NOT WORK:
-        # P = pnl.Process(pathway=[A, B])
-        # P2 = pnl.Process(pathway=[LC])
-        # S = pnl.System(processes=[P, P2])
-        # S.show_graph()
 
         gain_created_by_LC_output_state_1 = []
         mod_gain_assigned_to_A = []
         base_gain_assigned_to_A = []
         mod_gain_assigned_to_B = []
         base_gain_assigned_to_B = []
+        A_value = []
+        B_value = []
+        LC_value = []
 
         def report_trial():
             gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
@@ -47,9 +45,12 @@ class TestControlMechanisms:
             mod_gain_assigned_to_B.append(B.mod_gain)
             base_gain_assigned_to_A.append(A.function_object.gain)
             base_gain_assigned_to_B.append(B.function_object.gain)
+            A_value.append(A.value)
+            B_value.append(B.value)
+            LC_value.append(LC.value)
 
-        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-              call_after_trial=report_trial)
+        result = S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+                      call_after_trial=report_trial)
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
         assert mod_gain_assigned_to_A[0] == starting_value_LC
@@ -65,29 +66,43 @@ class TestControlMechanisms:
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
 
+        # (5) validate output of each mechanism (using original "devel" output as a benchmark)
+        expected_A_value = [np.array([[0.88079708]]),
+                            np.array([[0.73133331]]),
+                            np.array([[0.73162414]]),
+                            np.array([[0.73192822]]),
+                            np.array([[0.73224618]])]
+        assert np.allclose(A_value, expected_A_value)
+
+        expected_B_value = [np.array([[0.8534092]]),
+                            np.array([[0.67532197]]),
+                            np.array([[0.67562328]]),
+                            np.array([[0.67593854]]),
+                            np.array([[0.67626842]])]
+        assert np.allclose(B_value, expected_B_value)
+
+        expected_LC_value = [np.array([[[1.00139776]], [[0.04375488]], [[0.00279552]], [[0.05]]]),
+                             np.array([[[1.00287843]], [[0.08047501]], [[0.00575686]], [[0.1]]]),
+                             np.array([[[1.00442769]], [[0.11892843]], [[0.00885538]], [[0.15]]]),
+                             np.array([[[1.00604878]], [[0.15918152]], [[0.01209756]], [[0.2]]]),
+                             np.array([[[1.00774507]], [[0.20129484]], [[0.01549014]], [[0.25]]])]
+        assert np.allclose(LC_value, expected_LC_value)
+
+    # UNSTABLE OUTPUT:
     def test_control_mechanism(self):
         Tx = pnl.TransferMechanism(name='Tx')
         Ty = pnl.TransferMechanism(name='Ty')
         Tz = pnl.TransferMechanism(name='Tz')
-        C =  pnl.ControlMechanism(
-                # function=pnl.Linear,
-                default_variable=[1],
-                monitor_for_control=Ty,
-                control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
-                                                  projections=(pnl.SLOPE,Tz)))
+        C = pnl.ControlMechanism(default_variable=[1],
+                                 monitor_for_control=Ty,
+                                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
+                                                                   projections=(pnl.SLOPE, Tz)))
         comp = pnl.Composition()
-        comp.add_c_node(Tx)
-        comp.add_c_node(Tz)
-        comp.add_c_node(Ty)
-        comp.add_c_node(C)
-        comp.add_projection(pnl.MappingProjection(), Tx, Tz)
-        comp.add_projection(pnl.MappingProjection(), Ty, C)
-        # comp.add_linear_processing_pathway([Tx,Tz])
-        # comp.add_linear_processing_pathway([Ty, C])
-        # P1=pnl.Process(pathway=[Tx,Tz])
-        # P2=pnl.Process(pathway=[Ty, C])
-        # S=pnl.System(processes=[P1, P2])
+        comp.add_linear_processing_pathway([Tx, Tz])
+        comp.add_linear_processing_pathway([Ty, C])
 
         assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
-        result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert result == [[[4.], [4.]], [[4.], [4.]]]
+        result = comp.run(inputs={Tx: [1, 1],
+                                  Ty: [4, 4]})
+        assert np.allclose(result, [[[4.], [4.]],
+                                    [[4.], [4.]]])
