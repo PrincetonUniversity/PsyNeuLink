@@ -1,6 +1,3 @@
-
-# imports
-
 from psyneulink.compositions.composition import Composition
 from psyneulink.compositions.composition import CompositionError
 from psyneulink.compositions.composition import RunError
@@ -273,17 +270,7 @@ class ParsingAutodiffComposition(Composition):
     
     
     def _throw_through_output_CIM(self, outputs):
-        '''
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the list of outputs going into CIM in throw through output CIM before mod'ing: ")
-        print("\n")
-        print(outputs)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # get order
         exec_sets = self.model.get_ordered_execution_sets()
         order = exec_sets[len(exec_sets)-1]
@@ -303,53 +290,9 @@ class ParsingAutodiffComposition(Composition):
             
             output_CIM_list.append(value)
         
-        '''
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the list of values going into output CIM in throw through output CIM: ")
-        print("\n")
-        print(output_CIM_list)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
         # execute output CIM
         self.output_CIM.execute(output_CIM_list)
-        '''
-        # check CIM's
-        print("\n")
-        print("\n")
-        print("\n")
-        print("After executing output CIM in throw through output CIM: ")
-        print("\n")
-        print("For the input CIM: ")
-        print("\n")
-        print(self.input_CIM.variable)
-        print(self.input_CIM.input_states)
-        print(self.input_CIM.value)
-        print(self.input_CIM.output_states)
-        print(self.input_CIM.output_values)
-        print("\n")
-        print("For the output CIM: ")
-        print("\n")
-        print(self.output_CIM.variable)
-        print(self.output_CIM.input_states)
-        print(self.output_CIM.value)
-        print(self.output_CIM.output_states)
-        print(self.output_CIM.output_values)
-        print("\n")
-        print("For the target CIM: ")
-        print("\n")
-        print(self.target_CIM.variable)
-        print(self.target_CIM.input_states)
-        print(self.target_CIM.value)
-        print(self.target_CIM.output_states)
-        print(self.target_CIM.output_values)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # collect CIM output, return it
         output_values = []
         for i in range(len(self.output_CIM.output_states)):
@@ -361,10 +304,6 @@ class ParsingAutodiffComposition(Composition):
     
     # overriden to provide execution id for target CIM
     def _assign_execution_ids(self, execution_id=None):
-        '''
-            assigns the same uuid to each Node in the composition's processing graph as well as the CIMs. The uuid is
-            either specified in the user's call to run(), or generated randomly at run time.
-        '''
         
         # Traverse processing graph and assign one uuid to all of its nodes
         if execution_id is None:
@@ -448,15 +387,7 @@ class ParsingAutodiffComposition(Composition):
             output_values = []
             for i in range(len(outputs)):
                 output_values.append(self._throw_through_output_CIM(outputs[i]))
-            '''
-            print("\n")
-            print("\n")
-            print("Printing output values at the end of execute: ")
-            print("\n")
-            print(output_values)
-            print("\n")
-            print("\n")
-            '''
+            
             return output_values
     
     
@@ -471,23 +402,7 @@ class ParsingAutodiffComposition(Composition):
         scheduler_processing=None,
         execution_id=None,
     ):
-        '''
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the inputs as they come in: ")
-        print("\n")
-        print(inputs)
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the targets as they come in: ")
-        print("\n")
-        print(targets)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # set up the pytorch model, if not set up yet
         if self.model is None:
             self.model = PytorchCreator(self.graph_processing)
@@ -516,40 +431,7 @@ class ParsingAutodiffComposition(Composition):
         # validate properties of parsing autodiff composition, get node roles, set up CIM's
         self._validate_params()
         self._analyze_graph()
-        '''
-        # check CIM's
-        print("\n")
-        print("\n")
-        print("\n")
-        print("After setting up CIM's: ")
-        print("\n")
-        print("For the input CIM: ")
-        print("\n")
-        print(self.input_CIM.variable)
-        print(self.input_CIM.input_states)
-        print(self.input_CIM.value)
-        print(self.input_CIM.output_states)
-        print(self.input_CIM.output_values)
-        print("\n")
-        print("For the output CIM: ")
-        print("\n")
-        print(self.output_CIM.variable)
-        print(self.output_CIM.input_states)
-        print(self.output_CIM.value)
-        print(self.output_CIM.output_states)
-        print(self.output_CIM.output_values)
-        print("\n")
-        print("For the target CIM: ")
-        print("\n")
-        print(self.target_CIM.variable)
-        print(self.target_CIM.input_states)
-        print(self.output_CIM.value)
-        print(self.target_CIM.output_states)
-        print(self.target_CIM.output_values)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # get execution id, do some stuff with processing scheduler
         execution_id = self._assign_execution_ids(execution_id)
         scheduler_processing._init_counts(execution_id=execution_id)
@@ -638,23 +520,7 @@ class ParsingAutodiffComposition(Composition):
                 raise ParsingAutodiffCompositionError("Number of input trial sets ({}) provided and number of "
                                                       "target trial sets ({}) provided are different."
                                                .format(num_input_sets, num_target_sets))
-            '''
-            print("\n")
-            print("\n")
-            print("\n")
-            print("Printing the inputs just after adjusting: ")
-            print("\n")
-            print(inputs)
-            print("\n")
-            print("\n")
-            print("\n")
-            print("Printing the targets just after adjusting: ")
-            print("\n")
-            print(targets)
-            print("\n")
-            print("\n")
-            print("\n")
-            '''
+            
             
             # LEARNING --------------------------------------------------------------------------
             
@@ -705,25 +571,9 @@ class ParsingAutodiffComposition(Composition):
         optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         outputs = []
         rand_train_order_reverse = np.zeros(len(inputs))
-        '''
-        print("\n")
-        print("\n")
-        print("Inputs as they come into autodiff_training: ")
-        print("\n")
-        print(inputs)
-        print("\n")
-        print("Targets as they come into autodiff_training: ")
-        print("\n")
-        print(targets)
-        print("\n")
-        print("\n")
-        '''
+        
         # iterate over epochs
         for epoch in range(epochs):
-            
-            '''
-            print("Epoch number: ", epoch)
-            '''
             
             # set a random number seed
             torch.manual_seed(epoch)
@@ -752,23 +602,6 @@ class ParsingAutodiffComposition(Composition):
                 for i in range(len(curr_tensor_outputs)):
                     loss += criterion(curr_tensor_outputs[i], curr_tensor_targets[i])
                 
-                
-                '''
-                if (epoch == 5 and t == 12):
-                    dot = make_dot(loss)
-                    dot.format = 'svg'
-                    dot.render()
-                '''
-                
-                '''
-                if ((epoch%5 == 0 or epoch == epochs-1) and t == len(inputs)-1):
-                    print("\n")
-                    print("Loss on this epoch: ")
-                    print("\n")
-                    print(loss)
-                    print("\n")
-                '''
-                
                 # compute gradients and perform parameter update
                 optimizer.zero_grad()
                 loss.backward()
@@ -780,55 +613,12 @@ class ParsingAutodiffComposition(Composition):
                     for i in range(len(curr_tensor_outputs)):
                         curr_output_list.append(curr_tensor_outputs[i].detach().numpy().copy())
                     outputs.append(curr_output_list)
-            
-            '''
-            if (epoch%5 == 0 or epoch == epochs-1):
-                num_correct = 0
-                for i in range(len(outputs)):
-                    correct_or_nah = 0
-                    for j in range(len(outputs[i])):
-                        # print("Where we are: (", i, ", ", j, ")")
-                        # print("Correct answer: ")
-                        # print(targets[int(rand_train_order[i])][j])
-                        # print("Predicted answer: ")
-                        # print(np.round(outputs[i][j]))
-                        # print("\n")
-                        
-                        # if (np.round(outputs[i][j]) != targets[int(rand_train_order[i])][j]):
-                            # correct_or_nah = 1
-                            # break
-                    # if (correct_or_nah == 0):
-                        # num_correct += 1
-                        
-                        for k in range(len(outputs[i][j])):
-                            if (np.round(outputs[i][j][k]) != targets[int(rand_train_order[i])][j][k]):
-                                correct_or_nah = 1
-                                break
-                        if (correct_or_nah == 1):
-                            break
-                    if (correct_or_nah == 0):
-                        num_correct += 1
-                
-                print("Number correct on this epoch: ")
-                print(num_correct)
-                print("\n")
-                print("\n")
-            '''
-        
         
         # save outputs in a list in correct order, return this list
         outputs_list = []
         for i in range(len(outputs)):
             outputs_list.append(outputs[int(rand_train_order_reverse[i])])
-        '''
-        print("\n")
-        print("\n")
-        print("Outputs after being collected at the end of autodiff training: ")
-        print("\n")
-        print(outputs_list)
-        print("\n")
-        print("\n")
-        '''
+        
         return outputs_list
     
     
@@ -980,443 +770,3 @@ class ParsingAutodiffComposition(Composition):
                                                           "Parsing Autodiff Compositions currently do not support recurrence."
                                                           .format(node.component, parent.component, self.name))
 
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-# RUMELHART'S SEMANTIC MODEL
-
-# Mechanisms:
-
-nouns_in = TransferMechanism(name="nouns_input", 
-                             default_variable=np.zeros(8)
-                             )
-
-rels_in = TransferMechanism(name="rels_input", 
-                            default_variable=np.zeros(3)
-                            )
-
-h1 = TransferMechanism(name="hidden_nouns",
-                       default_variable=np.zeros(8),
-                       function=Logistic()
-                       )
-
-h2 = TransferMechanism(name="hidden_mixed",
-                       default_variable=np.zeros(15),
-                       function=Logistic()
-                       )
-
-out_sig_I = TransferMechanism(name="sig_outs_I",
-                              default_variable=np.zeros(8),
-                              function=Logistic()
-                              )
-
-out_sig_is = TransferMechanism(name="sig_outs_is",
-                               default_variable=np.zeros(12),
-                               function=Logistic()
-                               )
-
-out_sig_has = TransferMechanism(name="sig_outs_has",
-                                default_variable=np.zeros(9),
-                                function=Logistic()
-                                )
-
-out_sig_can = TransferMechanism(name="sig_outs_can",
-                                default_variable=np.zeros(9),
-                                function=Logistic()
-                                )
-
-
-# Projections:
-'''
-map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
-                                 name="map_nouns_h1",
-                                 sender=nouns_in,
-                                 receiver=h1
-                                 )
-
-map_rels_h2 = MappingProjection(matrix=np.random.rand(3,15),
-                                name="map_rels_h2",
-                                sender=rels_in,
-                                receiver=h2
-                                )
-
-map_h1_h2 = MappingProjection(matrix=np.random.rand(8,15),
-                              name="map_h1_h2",
-                              sender=h1,
-                              receiver=h2
-                              )
-
-map_h2_I = MappingProjection(matrix=np.random.rand(15,8),
-                             name="map_h2_I",
-                             sender=h2,
-                             receiver=out_sig_I
-                             )
-
-map_h2_is = MappingProjection(matrix=np.random.rand(15,12),
-                              name="map_h2_is",
-                              sender=h2,
-                              receiver=out_sig_is
-                              )
-
-map_h2_has = MappingProjection(matrix=np.random.rand(15,9),
-                               name="map_h2_has",
-                               sender=h2,
-                               receiver=out_sig_has
-                               )
-
-map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
-                               name="map_h2_can",
-                               sender=h2,
-                               receiver=out_sig_can
-                               )
-'''
-
-'''
-# DOING SHIT DIRECTLY WITH A COMPOSITION
-rumel_composition = ParsingAutodiffComposition()
-
-rumel_composition.add_c_node(nouns_in)
-rumel_composition.add_c_node(rels_in)
-rumel_composition.add_c_node(h1)
-rumel_composition.add_c_node(h2)
-rumel_composition.add_c_node(out_sig_I)
-rumel_composition.add_c_node(out_sig_is)
-rumel_composition.add_c_node(out_sig_has)
-rumel_composition.add_c_node(out_sig_can)
-
-rumel_composition.add_projection(nouns_in, map_nouns_h1, h1)
-rumel_composition.add_projection(rels_in, map_rels_h2, h2)
-rumel_composition.add_projection(h1, map_h1_h2, h2)
-rumel_composition.add_projection(h2, map_h2_I, out_sig_I)
-rumel_composition.add_projection(h2, map_h2_is, out_sig_is)
-rumel_composition.add_projection(h2, map_h2_has, out_sig_has)
-rumel_composition.add_projection(h2, map_h2_can, out_sig_can)
-'''
-
-# DOING SHIT DIRECTLY WITH A COMPOSITION (AGAIN)
-rumel_composition = ParsingAutodiffComposition()
-
-rumel_composition.add_c_node(nouns_in)
-rumel_composition.add_c_node(rels_in)
-rumel_composition.add_c_node(h1)
-rumel_composition.add_c_node(h2)
-rumel_composition.add_c_node(out_sig_I)
-rumel_composition.add_c_node(out_sig_is)
-rumel_composition.add_c_node(out_sig_has)
-rumel_composition.add_c_node(out_sig_can)
-
-rumel_composition.add_projection(nouns_in, MappingProjection(sender=nouns_in, receiver=h1), h1)
-rumel_composition.add_projection(rels_in, MappingProjection(sender=rels_in, receiver=h2), h2)
-rumel_composition.add_projection(h1, MappingProjection(sender=h1, receiver=h2), h2)
-rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_I), out_sig_I)
-rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_is), out_sig_is)
-rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_has), out_sig_has)
-rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_can), out_sig_can)
-
-'''
-rumel_composition._update_processing_graph()
-
-rumel_processing_graph = rumel_composition._graph_processing
-
-# test the graph
-
-print("Checking the vertices of the processing graph for the semantic model: ")
-print("\n")
-for i in range(len(rumel_processing_graph.vertices)):
-    vertex = rumel_processing_graph.vertices[i]
-    component = vertex.component
-    print(vertex)
-    print(component)
-    print(component.variable)
-    print(np.shape(component.variable))
-    print(component.value)
-    print(np.shape(component.value))
-    print(component.input_states)
-    print(component.input_states[0])
-    print(component.input_states[0].variable)
-    print(component.input_states[0].value)
-    print(np.shape(component.input_states[0].variable))
-    print(np.shape(component.input_states[0].value))
-    print("\n")
-'''
-
-'''
-# Create Pytorch model by parsing the processing graph, exec sets 
-
-rumel_parsed_pytorch = ModelInPytorch(rumel_processing_graph)
-
-print("\n")
-print("Checking the parameters of the pytorch object representing the semantic model: ")
-print("\n")
-print(rumel_parsed_pytorch)
-print("\n")
-
-print("\n")
-print("Checking the execution sets created by the pytorch object: ")
-print("\n")
-for i in range(len(rumel_parsed_pytorch.ordered_execution_sets)):
-    print(rumel_parsed_pytorch.ordered_execution_sets[i])
-    print("\n")
-
-print("\n")
-print("Checking the execution sets created by the scheduler: ")
-rumel_parsed_sched = Scheduler(graph=rumel_processing_graph)
-print(rumel_parsed_sched.consideration_queue)
-print("\n")
-'''
-
-
-# create inputs, outputs for semantic model
-
-nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
-relations = ['is', 'has', 'can']
-is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
-           'yellow']
-has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
-can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
-descriptors = [nouns, is_list, has_list, can_list]
-
-truth_nouns = np.identity(len(nouns))
-
-truth_is = np.zeros((len(nouns), len(is_list)))
-
-truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
-truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
-
-truth_has = np.zeros((len(nouns), len(has_list)))
-
-truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
-truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
-truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
-truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
-truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
-truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
-truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
-truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
-
-truth_can = np.zeros((len(nouns), len(can_list)))
-
-truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
-truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
-truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
-truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
-
-truths = [[truth_nouns], [truth_is], [truth_has], [truth_can]]
-
-nouns_input = np.identity(len(nouns))
-rels_input = np.identity(len(relations))
-
-inputs_dict = {}
-inputs_dict[nouns_in] = []
-inputs_dict[rels_in] = []
-
-targets_dict = {}
-targets_dict[out_sig_I] = []
-targets_dict[out_sig_is] = []
-targets_dict[out_sig_has] = []
-targets_dict[out_sig_can] = []
-
-
-
-# Training on all input-output pairs
-
-for i in range(len(nouns)):
-    for j in range(len(relations)):
-        inputs_dict[nouns_in].append(nouns_input[i])
-        inputs_dict[rels_in].append(rels_input[j])
-        targets_dict[out_sig_I].append(truth_nouns[i])
-        targets_dict[out_sig_is].append(truth_is[i])
-        targets_dict[out_sig_has].append(truth_has[i])
-        targets_dict[out_sig_can].append(truth_can[i])
-
-
-'''
-# Training on one input-output pair
-inputs_dict[nouns_in].append(nouns_input[0])
-inputs_dict[rels_in].append(rels_input[0])
-targets_dict[out_sig_I].append(truth_nouns[0])
-targets_dict[out_sig_is].append(truth_is[0])
-targets_dict[out_sig_has].append(truth_has[0])
-targets_dict[out_sig_can].append(truth_can[0])
-'''
-'''
-print("\n")
-print(inputs_dict[nouns_in])
-print(np.shape(inputs_dict[nouns_in]))
-print("\n")
-print(inputs_dict[rels_in])
-print(np.shape(inputs_dict[rels_in]))
-print("\n")
-'''
-
-'''
-# Try running this shit
-result = rumel_composition.run(inputs=inputs_dict)
-
-print("\n")
-print("\n")
-print("\n")
-print("\n")
-print("Checking result: ")
-print("\n")
-print(result)
-print("\n")
-print(len(result))
-print("\n")
-for i in range(len(result)):
-    print(len(result[i]))
-    print(result[i])
-    print("\n")
-    for j in range(len(result[i])):
-        print(len(result[i][j]))
-        print("\n")
-'''
-
-'''
-# Try training this shit
-start = timeit.default_timer()
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=400)
-end = timeit.default_timer()
-print(end - start)
-# print(result[0][0])
-'''
-
-'''
-print("\n")
-print("\n")
-print("Printing the result after everything: ")
-print("\n")
-print(result)
-print("\n")
-print(len(result))
-'''
-
-'''
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=1)
-
-print("\n")
-print("\n")
-print("Printing the result: ")
-print("\n")
-print(result)
-print(len(result))
-'''
-
-'''
-# set up the inputs for pytorch for both models
-
-
-
-
-torch.set_default_tensor_type(torch.FloatTensor)
-
-PT_nouns = torch.eye(len(nouns)).float()
-PT_rels = torch.eye(len(relations)).float()
-PT_truth_nouns = torch.from_numpy(truth_nouns).float()
-PT_truth_is = torch.from_numpy(truth_is).float()
-PT_truth_has = torch.from_numpy(truth_has).float()
-PT_truth_can = torch.from_numpy(truth_can).float()
-
-print("\n")
-print("\n")
-print("\n")
-
-
-print("Checking tensors for inputs, outputs: ")
-print(PT_nouns)
-print(PT_nouns.shape)
-print("\n")
-
-print(PT_rels)
-print(PT_rels.shape)
-print("\n")
-
-print(PT_truth_nouns)
-print(PT_truth_nouns.shape)
-print("\n")
-
-print(PT_truth_is)
-print(PT_truth_is.shape)
-print("\n")
-
-print(PT_truth_has)
-print(PT_truth_has.shape)
-print("\n")
-
-print(PT_truth_can)
-print(PT_truth_can.shape)
-print("\n")
-
-
-print("Tryna run this thing: ")
-print("Running parsing autodiff composition: ")
-print("\n")
-print("\n")
-print("\n")
-
-ready_inputs = []
-ready_targets = []
-
-for i in range(len(PT_nouns)):
-    for j in range(len(PT_rels)):
-        ready_inputs.append([PT_rels[j], PT_nouns[i]])
-        ready_targets.append([PT_truth_nouns[i], PT_truth_is[i], PT_truth_has[i], PT_truth_can[i]])
-
-# start_time = timeit.default_timer()
-
-test_training = autodiff_training(rumel_parsed_pytorch, ready_inputs, ready_targets, learning_rate=0.001, epochs_or_stop_learning_condition=1000)
-
-# end_time = timeit.default_timer()
-# print(end_time - start_time)
-
-print("\n")
-
-# print(times[:20])
-# print(np.shape(times))
-# print(np.mean(times))
-# print("\n")
-
-# print(test_training)
-
-percentage_acc, percentage_err, avg_MSE = autodiff_checking(rumel_parsed_pytorch, ready_inputs, ready_targets)
-
-print(percentage_acc)
-print(percentage_err)
-print(avg_MSE)
-    
-'''
-    
-    
-    
-    
