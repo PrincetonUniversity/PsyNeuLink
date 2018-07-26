@@ -218,17 +218,7 @@ class ParsingAutodiffComposition(Composition):
     # assigns inputs to input & target CIM of parsing autodiff composition,
     # executes them, and puts them in appropriate form for underlying pytorch model
     def _throw_through_input_CIM(self, stimuli, inputs_or_targets):
-        '''
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the list of values going into CIM in \"throw through input CIM's\" before mod'ing: ")
-        print("\n")
-        print(stimuli)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # get execution sets
         exec_sets = self.model.get_ordered_execution_sets()
         
@@ -261,53 +251,10 @@ class ParsingAutodiffComposition(Composition):
                         value = node.instance_defaults.variable[index]
             
             CIM_list.append(value)
-        '''
-        print("\n")
-        print("\n")
-        print("\n")
-        print("Printing the list of values going into CIM in \"throw through input CIM's\": ")
-        print("\n")
-        print(CIM_list)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # execute CIM with CIM list
         CIM.execute(CIM_list)
-        '''
-        # check CIM's
-        print("\n")
-        print("\n")
-        print("\n")
-        print("After executing input/target CIM in \"throw through input CIM's \": ")
-        print("\n")
-        print("For the input CIM: ")
-        print("\n")
-        print(self.input_CIM.variable)
-        print(self.input_CIM.input_states)
-        print(self.input_CIM.value)
-        print(self.input_CIM.output_states)
-        print(self.input_CIM.output_values)
-        print("\n")
-        print("For the output CIM: ")
-        print("\n")
-        print(self.output_CIM.variable)
-        print(self.output_CIM.input_states)
-        print(self.output_CIM.value)
-        print(self.output_CIM.output_states)
-        print(self.output_CIM.output_values)
-        print("\n")
-        print("For the target CIM: ")
-        print("\n")
-        print(self.target_CIM.variable)
-        print(self.target_CIM.input_states)
-        print(self.target_CIM.value)
-        print(self.target_CIM.output_states)
-        print(self.target_CIM.output_values)
-        print("\n")
-        print("\n")
-        print("\n")
-        '''
+        
         # set up list that will hold inputs for pytorch
         pytorch_list = []
         
