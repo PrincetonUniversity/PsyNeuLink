@@ -1432,7 +1432,8 @@ print(PT_truth_can.shape)
 print("\n")
 
 
-print("Tryna run this bitch: ")
+print("Tryna run this thing: ")
+print("Running parsing autodiff composition: ")
 print("\n")
 print("\n")
 print("\n")
