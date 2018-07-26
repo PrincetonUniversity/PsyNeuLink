@@ -159,6 +159,60 @@ class TestRun:
         for i in range(len(results[9999])):
             assert np.allclose(np.round(results[9999][i][0]), xor_targets[i])
     
+    @pytest.mark.sarumanthewhite
+    def test_xor_training_then_processing(self):
+        
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+        
+        xor = ParsingAutodiffComposition()
+        
+        xor.add_c_node(xor_in)
+        xor.add_c_node(xor_hid)
+        xor.add_c_node(xor_out)
+        
+        xor.add_projection(xor_in, hid_map, xor_hid)
+        xor.add_projection(xor_hid, out_map, xor_out)
+        
+        xor_inputs = np.zeros((4,2))
+        xor_inputs[0] = [0, 0]
+        xor_inputs[1] = [0, 1]
+        xor_inputs[2] = [1, 0]
+        xor_inputs[3] = [1, 1]
+        
+        xor_targets = np.zeros((4,1))
+        xor_targets[0] = [0]
+        xor_targets[1] = [1]
+        xor_targets[2] = [1]
+        xor_targets[3] = [0]
+        
+        results_before_proc = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=10000)
+        weights_before_proc, biases_before_proc = xor.get_parameters()
+        
+        results_proc = xor.run(inputs={xor_in:xor_inputs})
+        weights_after_proc, biases_after_proc = xor.get_parameters()
+        
+        assert(np.shape(results_before_proc) == np.shape(results_proc))
+        
+        for i in range(4):
+            assert np.allclose(results_before_proc[0][i][0], results_proc[1][i][0], atol=0.001)
+        
+        assert np.allclose(weights_before_proc[hid_map], weights_after_proc[hid_map])
+        assert np.allclose(weights_before_proc[out_map], weights_after_proc[out_map])
+        assert np.allclose(biases_before_proc[xor_hid], biases_after_proc[xor_hid])
+        assert np.allclose(biases_before_proc[xor_out], biases_after_proc[xor_out])
+    
     @pytest.mark.parametrize(
         'eps', [
             1,
@@ -618,16 +672,6 @@ class TestSemanticNetTraining:
         msg = 'completed training semantic net as ParsingAutodiffComposition() for {0} epochs in {1} seconds'.format(eps, time)
         print(msg)
         logger.info(msg)
-
-
-
-
-
-
-
-
-# a = TestSemanticNet()
-# a.test_sem_net_training()
 
 
 

@@ -71,7 +71,7 @@ print("\n")
 print("\n")
 print("\n")
 '''
-
+'''
 compy = Composition()
 
 print(compy._graph_processing)
@@ -85,7 +85,7 @@ compy.add_c_node(big_mech)
 compy.add_projection(mech1, proj1, big_mech)
 compy.add_projection(mech2, proj2, big_mech)
 compy.add_projection(mech3, proj3, big_mech)
-
+'''
 
 '''
 for i in range(len(compy._graph_processing.vertices)):
@@ -113,7 +113,7 @@ b = 3
 if not (a > 3 and b > 13):
     print("butts")
 '''
-
+'''
 inputs_dict = {}
 inputs_dict[mech1] = np.ones(10)
 inputs_dict[mech2] = np.ones(10)
@@ -130,6 +130,7 @@ print("\n")
 
 # check if mechanism can have vector bias
 '''
+'''
 n = np.ones(10)
 
 test_mech = TransferMechanism(name='test_mech',
@@ -143,6 +144,8 @@ print(test_mech.execute(np.ones(10)))
 
 hoity = ParsingAutodiffComposition()
 hoity.run()
+'''
+
 '''
 print("\n")
 print("\n")
@@ -176,8 +179,143 @@ print("\n")
 print(compoid._graph_processing.vertices)
 print("\n")
 print(result)
+'''
 
+# testing toposort
+nouns_in = TransferMechanism(name="nouns_input", 
+                             default_variable=np.zeros(8))
+        
+rels_in = TransferMechanism(name="rels_input", 
+                            default_variable=np.zeros(3))
+        
+h1 = TransferMechanism(name="hidden_nouns",
+                       default_variable=np.zeros(8),
+                       function=Logistic())
+        
+h2 = TransferMechanism(name="hidden_mixed",
+                       default_variable=np.zeros(15),
+                       function=Logistic())
+        
+out_sig_I = TransferMechanism(name="sig_outs_I",
+                              default_variable=np.zeros(8),
+                              function=Logistic())
+        
+out_sig_is = TransferMechanism(name="sig_outs_is",
+                               default_variable=np.zeros(12),
+                               function=Logistic())
+        
+out_sig_has = TransferMechanism(name="sig_outs_has",
+                                default_variable=np.zeros(9),
+                                function=Logistic())
+        
+out_sig_can = TransferMechanism(name="sig_outs_can",
+                                default_variable=np.zeros(9),
+                                function=Logistic())
+        
+# COMPOSITION FOR SEMANTIC NET
+        
+sem_net = Composition()
+        
+sem_net.add_c_node(nouns_in)
+sem_net.add_c_node(rels_in)
+sem_net.add_c_node(h1)
+sem_net.add_c_node(h2)
+sem_net.add_c_node(out_sig_I)
+sem_net.add_c_node(out_sig_is)
+sem_net.add_c_node(out_sig_has)
+sem_net.add_c_node(out_sig_can)
+    
+sem_net.add_projection(nouns_in, MappingProjection(sender=nouns_in, receiver=h1), h1)
+sem_net.add_projection(rels_in, MappingProjection(sender=rels_in, receiver=h2), h2)
+sem_net.add_projection(h1, MappingProjection(sender=h1, receiver=h2), h2)
+sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_I), out_sig_I)
+sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_is), out_sig_is)
+sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_has), out_sig_has)
+sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_can), out_sig_can)
+# sem_net.add_projection(h1, MappingProjection(sender=h1, receiver=nouns_in), nouns_in)
 
+sem_net._update_processing_graph()
+
+trainable_params = [vert.component for vert in sem_net.graph.vertices if isinstance(vert.component, MappingProjection)]
+print(trainable_params)
+
+print("\n")
+print("\n")
+print("\n")
+
+dependencies = {}
+for vert in sem_net._graph_processing.vertices:
+    dependencies[vert.component] = set()
+    for parent in sem_net._graph_processing.get_parents_from_component(vert.component):
+        dependencies[vert.component].add(parent.component)
+
+print(dependencies)
+print("\n")
+topoed = list(toposort(dependencies))
+print(topoed)
+print("\n")
+print(type(topoed))
+print("\n")
+
+for i in range(len(topoed)):
+    print(type(topoed[i]))
+    topoed[i] = list(topoed[i])
+    print(type(topoed[i]))
+    for j in range(len(topoed[i])):
+        print(topoed[i][j])
+    print("\n")
+    
+print("\n")
+print("\n")
+print("\n")
+
+dependencies = {}
+for vert in sem_net._graph_processing.vertices:
+    dependencies[vert.component] = set()
+    for parent in sem_net._graph_processing.get_parents_from_component(vert.component):
+        dependencies[vert.component].add(parent.component)
+
+print(dependencies)
+print("\n")
+topoed = list(toposort(dependencies))
+print(topoed)
+print("\n")
+print(type(topoed))
+print("\n")
+
+for i in range(len(topoed)):
+    print(type(topoed[i]))
+    topoed[i] = list(topoed[i])
+    print(type(topoed[i]))
+    for j in range(len(topoed[i])):
+        print(topoed[i][j])
+    print("\n")
+
+print("\n")
+print("\n")
+print("\n")
+
+dependencies = {}
+for vert in sem_net._graph_processing.vertices:
+    dependencies[vert.component] = set()
+    for parent in sem_net._graph_processing.get_parents_from_component(vert.component):
+        dependencies[vert.component].add(parent.component)
+
+print(dependencies)
+print("\n")
+topoed = list(toposort(dependencies))
+print(topoed)
+print("\n")
+print(type(topoed))
+print("\n")
+
+for i in range(len(topoed)):
+    print(type(topoed[i]))
+    topoed[i] = list(topoed[i])
+    print(type(topoed[i]))
+    for j in range(len(topoed[i])):
+        print(topoed[i][j])
+    print("\n")
 
 
 

@@ -53,8 +53,12 @@ class ParsingAutodiffCompositionError(CompositionError):
 
 class ParsingAutodiffComposition(Composition):
     
-    # setup added for target CIM and model, output reporting switched off by default for CIM's
-    def __init__(self):
+    # setup added for name, target CIM, and model, output reporting switched off by default for CIM's
+    def __init__(self, name=None):
+        
+        if (name is None):
+            name = "parsing_autodiff_composition"
+        self.name = name
         
         super(ParsingAutodiffComposition, self).__init__()
         
@@ -268,7 +272,9 @@ class ParsingAutodiffComposition(Composition):
         return pytorch_list
     
     
-    
+    # similar method to _assign_values_to_input_CIM - however, this gets pytorch output from execute,
+    # assigns it to output CIM of parsing autodiff composition, executes the CIM, and sends
+    # its output in a list back to execute
     def _throw_through_output_CIM(self, outputs):
         
         # get order
@@ -410,18 +416,16 @@ class ParsingAutodiffComposition(Composition):
         # make sure the presence/absence of targets and number of training epochs are consistent
         if targets is None:
             if epochs is not None:
-                raise ParsingAutodiffCompositionError("Number of training epochs specified for Parsing Autodiff "
-                                                      "Composition \"{0}\" but no targets."
+                raise ParsingAutodiffCompositionError("Number of training epochs specified for {0} but no targets given."
                                                       .format(self.name))
         else:
             if epochs is None:
-                raise ParsingAutodiffCompositionError("Targets specified for Parsing Autodiff Composition \"{0}\" "
-                                                      "but no number of training epochs."
+                raise ParsingAutodiffCompositionError("Targets specified for {0}, but no number of training epochs given."
                                                       .format(self.name))
             
             if len(self.model.get_weights_for_projections()) == 0:
-                raise ParsingAutodiffCompositionError("Targets specified for training Parsing Autodiff Composition \"{0}\" "
-                                                      "but Composition has no trainable parameters."
+                raise ParsingAutodiffCompositionError("Targets specified for training {0}, but {0} has no trainable "
+                                                      "parameters."
                                                       .format(self.name))
         
         # set up processing scheduler
@@ -442,18 +446,18 @@ class ParsingAutodiffComposition(Composition):
             if len(origin_nodes) == 1:
                 inputs = {next(iter(origin_nodes)): inputs}
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of "
-                                       "its {} origin nodes."
-                                       .format(self.name, len(origin_nodes)))
+                raise ParsingAutodiffCompositionError("Inputs to {0} must be specified in a dictionary with a "
+                                                      "key for each of its {1} origin nodes."
+                                                      .format(self.name, len(origin_nodes)))
         elif not isinstance(inputs, dict):
             if len(origin_nodes) == 1:
-                raise CompositionError("Inputs to {} must be specified in a list or in a dictionary with the "
-                                       "origin mechanism({}) as its only key"
-                                       .format(self.name, next(iter(origin_nodes)).name))
+                raise ParsingAutodiffCompositionError("Inputs to {0} must be specified in a list or in a "
+                                                      "dictionary with the origin mechanism({1}) as its only key."
+                                                      .format(self.name, next(iter(origin_nodes)).name))
             else:
-                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of "
-                                       "its {} origin nodes."
-                                       .format(self.name, len(origin_nodes)))
+                raise ParsingAutodiffCompositionError("Inputs to {0} must be specified in a dictionary with a "
+                                                      "key for each of its {1} origin nodes."
+                                                      .format(self.name, len(origin_nodes)))
         
         # validate inputs, get adjusted inputs, number of input trial sets
         inputs, num_input_sets = self._adjust_stimulus_dict(inputs, 'inputs')
@@ -464,6 +468,8 @@ class ParsingAutodiffComposition(Composition):
         
         # if we're just doing step-by-step processing
         if targets is None:
+            
+            results = []
             
             # --- RESET FOR NEXT TRIAL ---
             for trial_num in range(num_input_sets):
@@ -487,7 +493,9 @@ class ParsingAutodiffComposition(Composition):
                     result_copy = trial_output.copy()
                 else:
                     result_copy = trial_output
-                self.results.append(result_copy)
+                results.append(result_copy)
+            
+            self.results.append(results)
         
         
         # if we're doing batch learning
@@ -499,27 +507,27 @@ class ParsingAutodiffComposition(Composition):
                 if len(terminal_nodes) == 1:
                     targets = {next(iter(terminal_nodes)): targets}
                 else:
-                    raise CompositionError("Targets to {} must be specified in a dictionary with a key for each "
-                                           "of its {} terminal nodes."
-                                           .format(self.name, len(terminal_nodes)))
+                    raise ParsingAutodiffCompositionError("Targets to {0} must be specified in a dictionary with a "
+                                                          "key for each of its {1} terminal nodes."
+                                                          .format(self.name, len(terminal_nodes)))
             elif not isinstance(targets, dict):
                 if len(terminal_nodes) == 1:
-                    raise CompositionError("Targets to {} must be specified in a list or in a dictionary with "
-                                           "the terminal mechanism({}) as its only key"
-                                           .format(self.name, next(iter(terminal_nodes)).name))
+                    raise ParsingAutodiffCompositionError("Targets to {0} must be specified in a list or in a "
+                                                          "dictionary with the terminal mechanism({1}) as its only key."
+                                                          .format(self.name, next(iter(terminal_nodes)).name))
                 else:
-                    raise CompositionError("Targets to {} must be specified in a dictionary with a key for each "
-                                           "of its {} terminal nodes."
-                                           .format(self.name, len(terminal_nodes)))
-        
+                    raise ParsingAutodiffCompositionError("Targets to {0} must be specified in a dictionary with a "
+                                                          "key for each of its {1} terminal nodes."
+                                                          .format(self.name, len(terminal_nodes)))
+            
             # validate targets, get adjusted targets, number of target trial sets
             targets, num_target_sets = self._adjust_stimulus_dict(targets, 'targets')
             
             # check that number of target trial sets and number of input trial sets are the same
             if num_input_sets != num_target_sets:
-                raise ParsingAutodiffCompositionError("Number of input trial sets ({}) provided and number of "
-                                                      "target trial sets ({}) provided are different."
-                                               .format(num_input_sets, num_target_sets))
+                raise ParsingAutodiffCompositionError("Number of input trial sets ({0}) provided and number of "
+                                                      "target trial sets ({1}) provided to {2} are different."
+                                                      .format(num_input_sets, num_target_sets, self.name))
             
             
             # LEARNING --------------------------------------------------------------------------
@@ -666,11 +674,11 @@ class ParsingAutodiffComposition(Composition):
         for node in stimuli.keys():
             if not node in nodes:
                 if inputs_or_targets == 'inputs':
-                    raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
-                                           format(node.name, self.name))
+                    raise ParsingAutodiffCompositionError("{0} in inputs dict for {1} is not one of its ORIGIN nodes".
+                                                          format(node.name, self.name))
                 else:
-                    raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
-                                           format(node.name, self.name))
+                    raise ParsingAutodiffCompositionError("{0} in inputs dict for {1} is not one of its TERMINAL nodes".
+                                                          format(node.name, self.name))
         
         # Check that all of the ORIGIN/TERMINAL nodes are represented - if not, use default_variable
         for node in nodes:
@@ -696,9 +704,9 @@ class ParsingAutodiffComposition(Composition):
                 if num_sets == -1:
                     num_sets = 1
                 elif num_sets != 1:
-                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
-                                   "conflicts with at least one other node's input specification.".format(self.name,
-                                                                                                               node.name))
+                    raise RunError("Input specification for {0} is not valid. The number of inputs (1) provided for {1}"
+                                   "conflicts with at least one other node's input specification."
+                                   .format(self.name, node.name))
             
             else:
                 adjusted_stimuli[node] = []
@@ -707,7 +715,7 @@ class ParsingAutodiffComposition(Composition):
                     # check if we have 1 trial's worth of correct inputs
                     check_spec_type = self._input_matches_variable(stim, input_must_match)
                     if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).".\
+                        err_msg = "Input stimulus ({0}) for {1} is incompatible with its external_input_values ({2}).".\
                             format(stim, node.name, input_must_match)
                         if "KWTA" in str(type(node)):
                             err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
@@ -721,26 +729,30 @@ class ParsingAutodiffComposition(Composition):
                 if num_sets == -1:
                     num_sets = len(stimuli[node])
                 elif num_sets != len(stimuli[node]):
-                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                    raise RunError("Input specification for {0} is not valid. The number of inputs ({1}) provided for {2}"
                                    "conflicts with at least one other node's input specification."
-                                   .format(self.name, (stimuli[node]), node.name))
+                                   .format(self.name, len(stimuli[node]), node.name))
         
         return adjusted_stimuli, num_sets
     
     
     
     # method to validate params of parsing autodiff composition
-    def _validate_params(self):
+    def _validate_params(self, training=None):
         
+        # set up processing graph, dictionary for checking recurrence using topological sort
         processing_graph = self.graph_processing
         topo_dict = {}
+        
+        # STEP 1: ENSURE THAT COMPOSITION HAS SOMETHING INSIDE IT
+        
         
         # iterate over nodes in processing graph
         for node in processing_graph.vertices:
             
             # raise error if node is a composition
             if isinstance(node.component, Composition):
-                raise ParsingAutodiffCompositionError("Composition {0} was added as a node to {1}. Compositions cannot be "
+                raise ParsingAutodiffCompositionError("{0} was added as a node to {1}. Compositions cannot be "
                                                       "added as nodes to Parsing Autodiff Compositions."
                                                       .format(node.component, self.name))
             
@@ -769,4 +781,19 @@ class ParsingAutodiffComposition(Composition):
                     raise ParsingAutodiffCompositionError("Mechanisms {0} and {1} are part of a recurrent path in {2}. "
                                                           "Parsing Autodiff Compositions currently do not support recurrence."
                                                           .format(node.component, parent.component, self.name))
-
+            
+            # tests if training is to take place:
+            if training is not None:
+                
+                # make sure some trainable parameters are present
+                if len([vert.component for vert in sem_net.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
+                    raise ParsingAutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
+                                                          .format(self.name))
+                
+                # 
+                
+                # make sure model's mechanisms and projections make up a single, unbroken directed acyclic graph 
+                # (there should be no dangling projections, no isolated mechanisms)
+            
+                
+                
