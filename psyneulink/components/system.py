@@ -1354,11 +1354,9 @@ class System(System_Base):
                         for output_state in sender_mech.output_states):
                     pass
 
-                # If sender_mech projects to an AutoAssociativeLearningMechanism,
-                #    let it pass, as that is a legitimate dependent that should be including in the execution_list
+                # If sender_mech projects to an LearningMechanism that executes in the execution phase,
+                #    let it pass, as that is a legitimate dependent that should be included in the execution_list
                 elif any(
-                        # Projection to a ControlMechanism that is not the System's controller
-                        # (isinstance(projection.receiver.owner, AutoAssociativeLearningMechanism)
                         (projection.receiver.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                          for projection in output_state.efferents)
                         for output_state in sender_mech.output_states):
@@ -1405,11 +1403,11 @@ class System(System_Base):
                                 or (self.controller is not None and
                                     isinstance(receiver, self.controller.objective_mechanism))
                                 or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
-                            # If it is an AutoAssociativeLearningMechanism for the sender_mech, include it
-                            #    (since these are executed during execute_processing rather than execute_learning)
-                            # if isinstance(receiver, AutoAssociativeLearningMechanism):
+                            # If it is a LearningMechanism for the sender_mech that executes in the execution phase,
+                            #    include it
                             if (isinstance(receiver, LearningMechanism) and
                                     receiver.learning_timing is LearningTiming.EXECUTION_PHASE):
+                                # If it is an AutoassociativeLearningMechanism, check that it projects to itself
                                 if isinstance(receiver, AutoAssociativeLearningMechanism):
                                     if not receiver == sender_mech.learning_mechanism:
                                         raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection "
@@ -1700,8 +1698,8 @@ class System(System_Base):
                 return
 
             # MODIFIED 6/30/18 NEW:
-            # Exclude AutoAssociativeLearningMechanisms as they are included in (and executed as part of) System.graph
-            # elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
+            # Exclude LearningMechanisms that execute in the execution phase
+            #    as they are included in (and executed as part of) System.graph
             elif (isinstance(sender_mech, LearningMechanism) and
                   sender_mech.learning_timing is LearningTiming.EXECUTION_PHASE):
                 return
@@ -2837,8 +2835,7 @@ class System(System_Base):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
                 mechanism.context.execution_phase = self.context.execution_phase
 
-                # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
-                # if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if (isinstance(mechanism, LearningMechanism) and
                         mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
                     mechanism.context.execution_phase = ContextFlags.LEARNING
@@ -3856,7 +3853,6 @@ class System(System_Base):
                 rcvr_color = default_node_color
                 rcvr_penwidth = default_width
 
-            # if isinstance(rcvr, AutoAssociativeLearningMechanism) and not show_learning:
             if isinstance(rcvr, LearningMechanism):
                 if rcvr.learning_timing is LearningTiming.EXECUTION_PHASE and not show_learning:
                     return
@@ -3894,7 +3890,7 @@ class System(System_Base):
                     except AttributeError:
                         has_learning = None
 
-                    # Handle learning components for autoassociative projection
+                    # Handle learning components for AutoassociativeProjection
                     #  calls _assign_learning_components,
                     #  but need to manage it from here since MappingProjection needs be shown as node rather than edge
                     if show_learning and has_learning:
