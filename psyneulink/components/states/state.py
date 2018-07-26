@@ -2688,8 +2688,8 @@ def _parse_state_spec(state_type=None,
 
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
-            # if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
-            if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
+            # if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value
             else:

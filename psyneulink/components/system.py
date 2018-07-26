@@ -442,7 +442,7 @@ from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import \
     _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, OUTCOME, \
@@ -556,8 +556,9 @@ def sys(*args, **kwargs):
         for arg in args:
             if isinstance(arg, Process):
                 proc = arg
-            elif not isinstance(arg, list):
-                arg = [arg]
+            else:
+                if not isinstance(arg, list):
+                    arg = [arg]
                 proc = Process(pathway=arg)
             processes.append(proc)
 
@@ -1357,7 +1358,8 @@ class System(System_Base):
                 #    let it pass, as that is a legitimate dependent that should be including in the execution_list
                 elif any(
                         # Projection to a ControlMechanism that is not the System's controller
-                        (isinstance(projection.receiver.owner, AutoAssociativeLearningMechanism)
+                        # (isinstance(projection.receiver.owner, AutoAssociativeLearningMechanism)
+                        (projection.receiver.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                          for projection in output_state.efferents)
                         for output_state in sender_mech.output_states):
                     pass
@@ -1405,12 +1407,17 @@ class System(System_Base):
                                 or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
                             # If it is an AutoAssociativeLearningMechanism for the sender_mech, include it
                             #    (since these are executed during execute_processing rather than execute_learning)
-                            if isinstance(receiver, AutoAssociativeLearningMechanism):
-                                if not receiver == sender_mech.learning_mechanism:
-                                    raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection from {} "
-                                                      "but does not project to its {}".
-                                                      format(receiver.name, AutoAssociativeLearningMechanism.__name__,
-                                                             sender_mech.name, AutoAssociativeProjection.__name__))
+                            # if isinstance(receiver, AutoAssociativeLearningMechanism):
+                            if (isinstance(receiver, LearningMechanism) and
+                                    receiver.learning_timing is LearningTiming.EXECUTION_PHASE):
+                                if isinstance(receiver, AutoAssociativeLearningMechanism):
+                                    if not receiver == sender_mech.learning_mechanism:
+                                        raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection "
+                                                          "from {} but does not project to its {}".
+                                                          format(receiver.name,
+                                                                 AutoAssociativeLearningMechanism.__name__,
+                                                                 sender_mech.name,
+                                                                 AutoAssociativeProjection.__name__))
                             # Otherwise, exclude from execute_graph
                             else:
                                 continue
@@ -1694,7 +1701,9 @@ class System(System_Base):
 
             # MODIFIED 6/30/18 NEW:
             # Exclude AutoAssociativeLearningMechanisms as they are included in (and executed as part of) System.graph
-            elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
+            # elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
+            elif (isinstance(sender_mech, LearningMechanism) and
+                  sender_mech.learning_timing is LearningTiming.EXECUTION_PHASE):
                 return
 
             # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
@@ -2829,7 +2838,9 @@ class System(System_Base):
                 mechanism.context.execution_phase = self.context.execution_phase
 
                 # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
-                if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                # if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                if (isinstance(mechanism, LearningMechanism) and
+                        mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
                     mechanism.context.execution_phase = ContextFlags.LEARNING
 
                 # Execute
@@ -3845,8 +3856,10 @@ class System(System_Base):
                 rcvr_color = default_node_color
                 rcvr_penwidth = default_width
 
-            if isinstance(rcvr, AutoAssociativeLearningMechanism) and not show_learning:
-                return
+            # if isinstance(rcvr, AutoAssociativeLearningMechanism) and not show_learning:
+            if isinstance(rcvr, LearningMechanism):
+                if rcvr.learning_timing is LearningTiming.EXECUTION_PHASE and not show_learning:
+                    return
 
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
