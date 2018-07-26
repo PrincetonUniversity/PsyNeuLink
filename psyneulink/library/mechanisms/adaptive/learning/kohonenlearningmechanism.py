@@ -89,7 +89,7 @@ import typecheck as tc
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
+    LearningMechanism, LearningType, LearningTiming, ACTIVATION_INPUT, ACTIVATION_OUTPUT
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
@@ -282,6 +282,9 @@ class KohonenLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    learning_type = LearningType.UNSUPERVISED
+    learning_timing = LearningTiming.EXECUTION_PHASE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -328,7 +331,8 @@ class KohonenLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
