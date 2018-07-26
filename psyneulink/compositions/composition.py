@@ -56,6 +56,7 @@ import uuid
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
@@ -460,6 +461,7 @@ class Composition(object):
             node : `Mechanism` or `Composition`
                 the node to add
         '''
+
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
@@ -470,6 +472,17 @@ class Composition(object):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+
+        if isinstance(node, ControlMechanism):
+            self.add_control_mechanism(node)
+
+    def add_control_mechanism(self, control_mechanism):
+
+        if not isinstance(control_mechanism, ControlMechanism):
+            raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
+        for input_state in control_mechanism._objective_mechanism.input_states:
+            input_state.internal_only = True
+        self.add_c_node(control_mechanism._objective_mechanism)
 
     def add_projection(self, projection=None, sender=None, receiver=None):
         '''
@@ -1624,6 +1637,10 @@ class Composition(object):
 
             # excludes any input states marked "internal_only" (usually recurrent)
             input_must_match = node.external_input_values
+
+            if input_must_match == []:
+                # all input states are internal_only
+                continue
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
