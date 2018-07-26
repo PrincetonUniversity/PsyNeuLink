@@ -59,6 +59,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, Kohonen, OneHot, is_function_type
+from psyneulink.components.process import Process
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
@@ -361,6 +363,8 @@ class KohonenMechanism(TransferMechanism):
         if output_states is None:
             output_states = [RESULT]
 
+        self._learning_enabled = enable_learning
+
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   integrator_mode=integrator_mode,
                                                   # selection_function=selection_function,
@@ -426,12 +430,24 @@ class KohonenMechanism(TransferMechanism):
             self.learning_rate = learning_rate
         if learned_projection:
             self.learned_projection = learned_projection
+
         # Assign learned_projection, using as default the first Projection to the Mechanism's primary InputState
-        self.learned_projection = self.learned_projection or self.input_state[0].path_afferents[0]
+        try:
+            self.learned_projection = self.learned_projection or self.input_state.path_afferents[0]
+        except:
+            self.learned_projection = None
         if not self.learned_projection:
-            raise KohonenError("Configuring learning for {} requires that it "
-                               "receive at least one {} or that the {} be specified".
-                               format(self.name, MappingProjection.__name__, repr(LEARNED_PROJECTION)))
+            # Mechanism already belongs to a Process or System, so should have a MappingProjection by now
+            if (self.processes or self.systems):
+                raise KohonenError("Configuring learning for {} requires that it receive a {} "
+                                   "from another {} within a {} to which it belongs".
+                                   format(self.name, MappingProjection.__name__, Mechanism.__name__, Process.__name__))
+                                   # "receive at least one {} or that the {} be specified".
+                                   # format(self.name, MappingProjection.__name__, repr(LEARNED_PROJECTION)))
+            # Mechanism doesn't yet belong to a Process or System, so wait until then to configure learning
+            #  (this method will be called again from _add_projection_to_mechanism if a Projection is added)
+            else:
+                return
 
         self.matrix = self.learned_projection.parameter_states[MATRIX],
 
@@ -485,3 +501,23 @@ class KohonenMechanism(TransferMechanism):
                            name="{} for {}".format(LearningProjection.className, self.learned_projection.name))
 
         return learning_mechanism
+
+    def _projection_added(self, projection, context=None):
+        super()._projection_added(projection, context)
+
+    @property
+    def learning_enabled(self):
+        return self._learning_enabled
+
+    @learning_enabled.setter
+    def learning_enabled(self, value:bool):
+
+        self._learning_enabled = value
+        # Enable learning for RecurrentTransferMechanism's learning_mechanism
+        if hasattr(self, 'learning_mechanism'):
+            self.learning_mechanism.learning_enabled = value
+        # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
+        elif value is True:
+            warnings.warn("Learning cannot be enabled for {} because it has no {}".
+                  format(self.name, LearningMechanism.__name__))
+            return
