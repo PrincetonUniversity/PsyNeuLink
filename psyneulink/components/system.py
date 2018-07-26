@@ -550,13 +550,16 @@ def sys(*args, **kwargs):
     """
 
     processes = []
-    if not any(isinstance(arg, list) for arg in args):
+    if not any(isinstance(arg, (list, Process)) for arg in args):
         processes = Process(pathway=list(args))
     else:
         for arg in args:
-            if not isinstance(arg, list):
+            if isinstance(arg, Process):
+                proc = arg
+            elif not isinstance(arg, list):
                 arg = [arg]
-            processes.append(Process(pathway=arg))
+                proc = Process(pathway=arg)
+            processes.append(proc)
 
     return System(processes=processes, **kwargs)
 
