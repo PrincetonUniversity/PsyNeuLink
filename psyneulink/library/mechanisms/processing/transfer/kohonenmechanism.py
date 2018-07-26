@@ -69,9 +69,9 @@ from psyneulink.components.projections.modulatory.learningprojection import Lear
 from psyneulink.library.mechanisms.adaptive.learning.kohonenlearningmechanism import KohonenLearningMechanism
 from psyneulink.globals.keywords import \
     FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
-    LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, RESULT, VARIABLE
+    LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.utilities import is_numeric_or_none
+from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.globals.context import ContextFlags
 
 __all__ = [
@@ -90,6 +90,7 @@ class KohonenError(Exception):
 
 
 MAX_ACTIVITY_OUTPUT = 'MAX_ACTIVITY_OUTPUT'
+INPUT_PATTERN = 'INPUT_PATTERN'
 
 
 class KohonenMechanism(TransferMechanism):
@@ -98,12 +99,14 @@ class KohonenMechanism(TransferMechanism):
     default_variable=None,                                 \
     size=None,                                             \
     function=Linear,                                       \
-    learning_function=Kohonen(distance_function=GAUSSIAN), \
     matrix=None,                                           \
     initial_value=None,                                    \
     noise=0.0,                                             \
     integration_rate=1.0,                                  \
     clip=None,                                             \
+    enable_learning=False,                                 \
+    learning_function=Kohonen(distance_function=GAUSSIAN), \
+    learning_rate=None,                                    \
     params=None,                                           \
     name=None,                                             \
     prefs=None)
@@ -137,10 +140,6 @@ class KohonenMechanism(TransferMechanism):
         <MappingProjection.matrix>` of afferent `MappingProjection` to the Mechanism.
     COMMENT
 
-    learning_function : LearningFunction, function or method : default Kohonen(distance_function=GUASSIAN)
-        specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
-        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
-
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
         `integration_rate <KWTA.integration_rate>` is not 1.0).
@@ -165,6 +164,21 @@ class KohonenMechanism(TransferMechanism):
         minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
         element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <KWTA.clip>` that it exceeds.
+
+    enable_learning : boolean : default False
+        specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
+        cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
+        <KohonenMechanism.configure_learning>` method.
+
+    learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
+        specifies the learning rate used by its `learning function <KohonenMechanism.learning_function>`.
+        If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
+        used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
+        <KohonenMechanism.learning_rate>` for details).
+
+    learning_function : LearningFunction, function or method : default Kohonen(distance_function=GUASSIAN)
+        specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -206,6 +220,11 @@ class KohonenMechanism(TransferMechanism):
     learning_enabled : bool
         indicates whether `learning is enabled <Kohonen_Learning>`;  see `learning_enabled
         <Kohonen.learning_enabled>` for additional details.
+
+    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+        determines the learning rate used by the `learning_function <KohonenMechanism.learning_function>`
+        of the `learning_mechanism <KohonenMechanism.learning_mechanism>` (see `learning_rate
+        <KohonenLearningMechanism.learning_rate>` for details concerning specification and default value assignment).
 
     learned_projection : MappingProjection
         `MappingProjection` that projects to the Mechanism and is trained by its `learning_mechanism
@@ -325,6 +344,7 @@ class KohonenMechanism(TransferMechanism):
     componentType = KOHONEN_MECHANISM
 
     class ClassDefaults(TransferMechanism.ClassDefaults):
+        # variable = [0,0]
         function = Linear
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
@@ -333,7 +353,7 @@ class KohonenMechanism(TransferMechanism):
     standard_output_states = TransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:MAX_ACTIVITY_OUTPUT,
                                     VARIABLE:(OWNER_VALUE,0),
-                                    FUNCTION: OneHot(mode=MAX_INDICATOR)},
+                                    FUNCTION: OneHot(mode=MAX_INDICATOR)}
                                    ])
 
     @tc.typecheck
@@ -348,33 +368,45 @@ class KohonenMechanism(TransferMechanism):
                  integrator_mode=False,
                  clip=None,
                  enable_learning=True,
+                 learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
                  learned_projection:tc.optional(MappingProjection)=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 # input_states:tc.optional(tc.any(list, dict)) = None,
+                 additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING,
                  ):
-        # Default output_states is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None:
-            output_states = [RESULT]
+        # # Default output_states is specified in constructor as a string rather than a list
+        # # to avoid "gotcha" associated with mutable default arguments
+        # # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
+        # if output_states is None:
+        #     output_states = [RESULT]
+
+        output_states = [RESULT, {NAME: INPUT_PATTERN, VARIABLE: OWNER_VARIABLE}]
+        if additional_output_states:
+            if isinstance(additional_output_states, list):
+                output_states += additional_output_states
+            else:
+                output_states.append(additional_output_states)
 
         self._learning_enabled = enable_learning
+        self._learning_enable_deferred = False
 
-        params = self._assign_args_to_param_dicts(input_states=input_states,
-                                                  integrator_mode=integrator_mode,
-                                                  # selection_function=selection_function,
-                                                  learning_function=learning_function,
-                                                  learned_projection=learned_projection,
-                                                  enable_learning=enable_learning)
+        params = self._assign_args_to_param_dicts(
+                # input_states=input_states,
+                integrator_mode=integrator_mode,
+                # selection_function=selection_function,
+                learning_rate=learning_rate,
+                learning_function=learning_function,
+                learned_projection=learned_projection,
+                enable_learning=enable_learning,
+                output_states=output_states)
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         input_states=input_states,
+                         # input_states=input_states,
                          function=function,
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
@@ -447,9 +479,10 @@ class KohonenMechanism(TransferMechanism):
             # Mechanism doesn't yet belong to a Process or System, so wait until then to configure learning
             #  (this method will be called again from _add_projection_to_mechanism if a Projection is added)
             else:
+                self._learning_enable_deferred = True
                 return
 
-        self.matrix = self.learned_projection.parameter_states[MATRIX],
+        self.matrix = self.learned_projection.parameter_states[MATRIX]
 
         context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
@@ -471,14 +504,12 @@ class KohonenMechanism(TransferMechanism):
                                         learned_projection,
                                         context=None):
 
-        learning_mechanism = KohonenLearningMechanism(default_variable=[self.learned_projection.sender,
-                                                                        self.learned_projection.receiver,
-                                                                        self.learned_projection.matrix],
+        learning_mechanism = KohonenLearningMechanism(default_variable=[self.learned_projection.sender.value,
+                                                                        self.learned_projection.receiver.value],
                                                       matrix=self.matrix,
                                                       function=learning_function,
                                                       learning_rate=learning_rate,
-                                                      learning_signals=[learned_projection],
-                                                      supervised=False,
+                                                      # learning_signals=[self.matrix],
                                                       name="{} for {}".format(
                                                               LearningMechanism.className,
                                                               self.name))
@@ -490,7 +521,7 @@ class KohonenMechanism(TransferMechanism):
                           name="Error Projection for {}".format(learning_mechanism.name))
 
         # Instantiate Projection from learned_projection's receiver (Mechanism's input) to LearningMechanism
-        MappingProjection(sender=self.learned_projection.receiver,
+        MappingProjection(sender=self.output_states[INPUT_PATTERN],
                           receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
                           matrix=IDENTITY_MATRIX,
                           name="Error Projection for {}".format(learning_mechanism.name))
@@ -504,6 +535,8 @@ class KohonenMechanism(TransferMechanism):
 
     def _projection_added(self, projection, context=None):
         super()._projection_added(projection, context)
+        if self._learning_enable_deferred:
+            self.configure_learning(context=context)
 
     @property
     def learning_enabled(self):
