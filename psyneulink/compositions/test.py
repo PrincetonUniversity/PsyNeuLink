@@ -9,6 +9,8 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.functions.function import Linear, Logistic, ReLU, SoftMax
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.composition import Composition
+from psyneulink.compositions.parsingautodiffcomposition import ParsingAutodiffComposition
+from psyneulink.compositions.pytorchcreator import PytorchCreator
 from toposort import toposort
 
 
@@ -127,7 +129,7 @@ print("\n")
 print("\n")
 
 # check if mechanism can have vector bias
-
+'''
 n = np.ones(10)
 
 test_mech = TransferMechanism(name='test_mech',
@@ -139,9 +141,41 @@ test_mech = TransferMechanism(name='test_mech',
 print(test_mech.execute(np.ones(10)))
 
 
+hoity = ParsingAutodiffComposition()
+hoity.run()
+'''
+print("\n")
+print("\n")
 
+mecho = TransferMechanism()
+mecho2 = TransferMechanism()
+print(mecho.variable)
+print(mecho.input_states)
+print(mecho.output_states)
+print("\n")
 
-
+compoid = ParsingAutodiffComposition()
+compoid.add_c_node(mecho)
+compoid.add_c_node(mecho2)
+# compoid.add_projection(mecho2, MappingProjection(sender=mecho2, receiver=mecho), mecho)
+print(compoid._graph_processing.vertices)
+print("\n")
+compoid._update_processing_graph()
+print(compoid._graph_processing.vertices)
+compoid.model = PytorchCreator(compoid._graph_processing)
+print(compoid.model.parameters)
+a = compoid.model.get_weights_for_projections()
+print(len(a))
+result = compoid.run(inputs={mecho:np.ones(1), mecho2:np.ones(1)})
+print(result)
+print("\n")
+print(compoid.graph.vertices)
+print("\n")
+result = compoid.run(inputs={mecho2:np.ones(1)}, targets={mecho:np.zeros(1)}, epochs=1)
+print("\n")
+print(compoid._graph_processing.vertices)
+print("\n")
+print(result)
 
 
 

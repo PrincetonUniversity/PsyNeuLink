@@ -147,7 +147,7 @@ class PytorchCreator(torch.nn.Module):
                 if len(node.parents) > 0:
                     
                     # set up biases for node/mechanism
-                    biases = nn.Parameter(torch.randn(len(node.component.input_states[0].value)).float())
+                    biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).float())
                     
                     # add biases to params list and to mechanisms_to_torch_biases dict
                     self.params.append(biases)
@@ -162,7 +162,7 @@ class PytorchCreator(torch.nn.Module):
                         input_node = self.processing_graph.comp_to_vertex[input_component]
                         
                         # set up pytorch weights that correspond to projection
-                        weights = nn.Parameter(torch.randn(np.shape(mapping_proj.matrix)).float())
+                        weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).float())
                         
                         # add node-weights mapping to afferent inputs info, add weights to params list,
                         # add weights to projections_to_torch_weights dict

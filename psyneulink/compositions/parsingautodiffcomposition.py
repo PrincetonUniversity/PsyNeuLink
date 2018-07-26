@@ -20,6 +20,8 @@ import numpy as np
 from toposort import toposort
 from collections import Iterable
 
+import timeit as timeit
+
 import torch
 from torch import nn
 import torch.optim as optim
@@ -547,12 +549,17 @@ class ParsingAutodiffComposition(Composition):
         if targets is None:
             if epochs is not None:
                 raise ParsingAutodiffCompositionError("Number of training epochs specified for Parsing Autodiff "
-                                                      "Composition {0} but no targets."
+                                                      "Composition \"{0}\" but no targets."
                                                       .format(self.name))
         else:
             if epochs is None:
-                raise ParsingAutodiffCompositionError("Targets specified for Parsing Autodiff Composition {0} "
+                raise ParsingAutodiffCompositionError("Targets specified for Parsing Autodiff Composition \"{0}\" "
                                                       "but no number of training epochs."
+                                                      .format(self.name))
+            
+            if len(self.model.get_weights_for_projections()) == 0:
+                raise ParsingAutodiffCompositionError("Targets specified for training Parsing Autodiff Composition \"{0}\" "
+                                                      "but Composition has no trainable parameters."
                                                       .format(self.name))
         
         # set up processing scheduler
@@ -767,7 +774,9 @@ class ParsingAutodiffComposition(Composition):
         # iterate over epochs
         for epoch in range(epochs):
             
+            '''
             print("Epoch number: ", epoch)
+            '''
             
             # set a random number seed
             torch.manual_seed(epoch)
@@ -857,8 +866,8 @@ class ParsingAutodiffComposition(Composition):
                 print(num_correct)
                 print("\n")
                 print("\n")
-                '''
-            
+            '''
+        
         
         # save outputs in a list in correct order, return this list
         outputs_list = []
@@ -874,6 +883,19 @@ class ParsingAutodiffComposition(Composition):
         print("\n")
         '''
         return outputs_list
+    
+    
+    
+    # method for giving user pytorch weights and biases
+    def get_parameters(self):
+        
+        if self.model is None:
+            self.model = PytorchCreator(self.graph_processing)
+        
+        weights = self.model.get_weights_for_projections()
+        biases = self.model.get_biases_for_mechanisms()
+        
+        return weights, biases
     
     
     
@@ -1029,7 +1051,7 @@ class ParsingAutodiffComposition(Composition):
     
     
     
-''' 
+
 # RUMELHART'S SEMANTIC MODEL
 
 # Mechanisms:
@@ -1074,7 +1096,7 @@ out_sig_can = TransferMechanism(name="sig_outs_can",
 
 
 # Projections:
-
+'''
 map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
                                  name="map_nouns_h1",
                                  sender=nouns_in,
@@ -1116,9 +1138,9 @@ map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
                                sender=h2,
                                receiver=out_sig_can
                                )
+'''
 
-
-
+'''
 # DOING SHIT DIRECTLY WITH A COMPOSITION
 rumel_composition = ParsingAutodiffComposition()
 
@@ -1139,6 +1161,26 @@ rumel_composition.add_projection(h2, map_h2_is, out_sig_is)
 rumel_composition.add_projection(h2, map_h2_has, out_sig_has)
 rumel_composition.add_projection(h2, map_h2_can, out_sig_can)
 '''
+
+# DOING SHIT DIRECTLY WITH A COMPOSITION (AGAIN)
+rumel_composition = ParsingAutodiffComposition()
+
+rumel_composition.add_c_node(nouns_in)
+rumel_composition.add_c_node(rels_in)
+rumel_composition.add_c_node(h1)
+rumel_composition.add_c_node(h2)
+rumel_composition.add_c_node(out_sig_I)
+rumel_composition.add_c_node(out_sig_is)
+rumel_composition.add_c_node(out_sig_has)
+rumel_composition.add_c_node(out_sig_can)
+
+rumel_composition.add_projection(nouns_in, MappingProjection(sender=nouns_in, receiver=h1), h1)
+rumel_composition.add_projection(rels_in, MappingProjection(sender=rels_in, receiver=h2), h2)
+rumel_composition.add_projection(h1, MappingProjection(sender=h1, receiver=h2), h2)
+rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_I), out_sig_I)
+rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_is), out_sig_is)
+rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_has), out_sig_has)
+rumel_composition.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_can), out_sig_can)
 
 '''
 rumel_composition._update_processing_graph()
@@ -1192,7 +1234,7 @@ print(rumel_parsed_sched.consideration_queue)
 print("\n")
 '''
 
-'''
+
 # create inputs, outputs for semantic model
 
 nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -1253,6 +1295,8 @@ targets_dict[out_sig_is] = []
 targets_dict[out_sig_has] = []
 targets_dict[out_sig_can] = []
 
+
+
 # Training on all input-output pairs
 
 for i in range(len(nouns)):
@@ -1263,7 +1307,7 @@ for i in range(len(nouns)):
         targets_dict[out_sig_is].append(truth_is[i])
         targets_dict[out_sig_has].append(truth_has[i])
         targets_dict[out_sig_can].append(truth_can[i])
-'''
+
 
 '''
 # Training on one input-output pair
@@ -1307,9 +1351,15 @@ for i in range(len(result)):
         print("\n")
 '''
 
-
+'''
 # Try training this shit
-# result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=400)
+start = timeit.default_timer()
+result = rumel_composition.run(inputs=inputs_dict, targets=targets_dict, epochs=400)
+end = timeit.default_timer()
+print(end - start)
+# print(result[0][0])
+'''
+
 '''
 print("\n")
 print("\n")
