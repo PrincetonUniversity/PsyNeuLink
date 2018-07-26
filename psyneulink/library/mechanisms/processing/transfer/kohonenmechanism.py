@@ -104,7 +104,7 @@ class KohonenMechanism(TransferMechanism):
     noise=0.0,                                             \
     integration_rate=1.0,                                  \
     clip=None,                                             \
-    enable_learning=False,                                 \
+    enable_learning=True,                                  \
     learning_function=Kohonen(distance_function=GAUSSIAN), \
     learning_rate=None,                                    \
     params=None,                                           \
@@ -165,7 +165,7 @@ class KohonenMechanism(TransferMechanism):
         element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <KWTA.clip>` that it exceeds.
 
-    enable_learning : boolean : default False
+    enable_learning : boolean : default True
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
         cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
         <KohonenMechanism.configure_learning>` method.
