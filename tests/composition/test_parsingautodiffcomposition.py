@@ -15,6 +15,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
 from psyneulink.compositions.parsingautodiffcomposition import ParsingAutodiffComposition, ParsingAutodiffCompositionError
@@ -98,8 +99,8 @@ class TestRun:
         xor.add_c_node(xor_hid)
         xor.add_c_node(xor_out)
         
-        xor.add_projection(xor_in, MappingProjection(), xor_hid)
-        xor.add_projection(xor_hid, MappingProjection(), xor_out)
+        xor.add_projection(sender=xor_in, projection=MappingProjection(), receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=MappingProjection(), receiver=xor_out)
         
         xor_inputs = np.zeros((4,2))
         xor_inputs[0] = [0, 0]
@@ -137,8 +138,8 @@ class TestRun:
         xor.add_c_node(xor_hid)
         xor.add_c_node(xor_out)
         
-        xor.add_projection(xor_in, MappingProjection(), xor_hid)
-        xor.add_projection(xor_hid, MappingProjection(), xor_out)
+        xor.add_projection(sender=xor_in, projection=MappingProjection(), receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=MappingProjection(), receiver=xor_out)
         
         xor_inputs = np.zeros((4,2))
         xor_inputs[0] = [0, 0]
@@ -182,8 +183,8 @@ class TestRun:
         xor.add_c_node(xor_hid)
         xor.add_c_node(xor_out)
         
-        xor.add_projection(xor_in, hid_map, xor_hid)
-        xor.add_projection(xor_hid, out_map, xor_out)
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
         
         xor_inputs = np.zeros((4,2))
         xor_inputs[0] = [0, 0]
@@ -242,8 +243,8 @@ class TestRun:
         xor.add_c_node(xor_hid)
         xor.add_c_node(xor_out)
         
-        xor.add_projection(xor_in, MappingProjection(), xor_hid)
-        xor.add_projection(xor_hid, MappingProjection(), xor_out)
+        xor.add_projection(sender=xor_in, projection=MappingProjection(), receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=MappingProjection(), receiver=xor_out)
         
         xor_inputs = np.zeros((4,2))
         xor_inputs[0] = [0, 0]
@@ -316,8 +317,8 @@ class TestRun:
         xor_comp.add_c_node(xor_hid_comp)
         xor_comp.add_c_node(xor_out_comp)
         
-        xor_comp.add_projection(xor_in_comp, MappingProjection(), xor_hid_comp)
-        xor_comp.add_projection(xor_hid_comp, MappingProjection(), xor_out_comp)
+        xor_comp.add_projection(sender=xor_in_comp, projection=MappingProjection(), receiver=xor_hid_comp)
+        xor_comp.add_projection(sender=xor_hid_comp, projection=MappingProjection(), receiver=xor_out_comp)
         
         # SET UP INPUTS FOR SYSTEM
         
@@ -433,13 +434,13 @@ class TestSemanticNetTraining:
         sem_net.add_c_node(out_sig_has)
         sem_net.add_c_node(out_sig_can)
         
-        sem_net.add_projection(nouns_in, MappingProjection(sender=nouns_in, receiver=h1), h1)
-        sem_net.add_projection(rels_in, MappingProjection(sender=rels_in, receiver=h2), h2)
-        sem_net.add_projection(h1, MappingProjection(sender=h1, receiver=h2), h2)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_I), out_sig_I)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_is), out_sig_is)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_has), out_sig_has)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_can), out_sig_can)
+        sem_net.add_projection(sender=nouns_in, projection=MappingProjection(sender=nouns_in, receiver=h1), receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=MappingProjection(sender=rels_in, receiver=h2), receiver=h2)
+        sem_net.add_projection(sender=h1, projection=MappingProjection(sender=h1, receiver=h2), receiver=h2)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_I), receiver=out_sig_I)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_is), receiver=out_sig_is)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_has), receiver=out_sig_has)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_can), receiver=out_sig_can)
         
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
         
@@ -586,13 +587,13 @@ class TestSemanticNetTraining:
         sem_net.add_c_node(out_sig_has)
         sem_net.add_c_node(out_sig_can)
         
-        sem_net.add_projection(nouns_in, MappingProjection(sender=nouns_in, receiver=h1), h1)
-        sem_net.add_projection(rels_in, MappingProjection(sender=rels_in, receiver=h2), h2)
-        sem_net.add_projection(h1, MappingProjection(sender=h1, receiver=h2), h2)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_I), out_sig_I)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_is), out_sig_is)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_has), out_sig_has)
-        sem_net.add_projection(h2, MappingProjection(sender=h2, receiver=out_sig_can), out_sig_can)
+        sem_net.add_projection(sender=nouns_in, projection=MappingProjection(sender=nouns_in, receiver=h1), receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=MappingProjection(sender=rels_in, receiver=h2), receiver=h2)
+        sem_net.add_projection(sender=h1, projection=MappingProjection(sender=h1, receiver=h2), receiver=h2)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_I), receiver=out_sig_I)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_is), receiver=out_sig_is)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_has), receiver=out_sig_has)
+        sem_net.add_projection(sender=h2, projection=MappingProjection(sender=h2, receiver=out_sig_can), receiver=out_sig_can)
         
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
         
@@ -672,19 +673,6 @@ class TestSemanticNetTraining:
         msg = 'completed training semantic net as ParsingAutodiffComposition() for {0} epochs in {1} seconds'.format(eps, time)
         print(msg)
         logger.info(msg)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

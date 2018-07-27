@@ -781,7 +781,7 @@ class ParsingAutodiffComposition(Composition):
                     raise ParsingAutodiffCompositionError("Mechanisms {0} and {1} are part of a recurrent path in {2}. "
                                                           "Parsing Autodiff Compositions currently do not support recurrence."
                                                           .format(node.component, parent.component, self.name))
-            
+            '''
             # tests if training is to take place:
             if training is not None:
                 
@@ -797,3 +797,11 @@ class ParsingAutodiffComposition(Composition):
             
                 
                 
+'''
+'''
+comp = 
+'''
+
+
+
+
