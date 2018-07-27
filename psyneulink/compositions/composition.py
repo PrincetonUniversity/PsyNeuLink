@@ -62,7 +62,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
@@ -523,6 +523,11 @@ class Composition(object):
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             projection = MappingProjection(matrix=projection)
+        elif isinstance(projection, str):
+            if projection in MATRIX_KEYWORD_VALUES:
+                projection = MappingProjection(matrix=projection)
+            else:
+                raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
         elif projection is None:
             projection = MappingProjection()
         elif not isinstance(projection, Projection):
@@ -644,7 +649,7 @@ class Composition(object):
                         receiver=pathway[c]
                     ), pathway[c - 1], pathway[c])
             # if the current item is a Projection
-            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, list)):
+            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
