@@ -77,7 +77,7 @@ class TestExecuteCIM:
         comp.add_c_node(A)
         comp.add_c_node(B)
 
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
         comp._analyze_graph()
 
@@ -107,8 +107,8 @@ class TestExecuteCIM:
         comp.add_c_node(A)
         comp.add_c_node(B)
 
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.add_projection(A, MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A, B)
 
         comp._analyze_graph()
         inputs_dict = {
@@ -141,7 +141,7 @@ class TestConnectCompositionsViaCIMS:
         comp1.add_c_node(A)
         comp1.add_c_node(B)
 
-        comp1.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
         comp1._analyze_graph()
         inputs_dict = {
@@ -162,7 +162,7 @@ class TestConnectCompositionsViaCIMS:
         comp2.add_c_node(A2)
         comp2.add_c_node(B2)
 
-        comp2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
+        comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
 
         comp2._analyze_graph()
         sched = Scheduler(composition=comp2)
@@ -170,7 +170,7 @@ class TestConnectCompositionsViaCIMS:
         comp3 = Composition(name="outer_composition")
         comp3.add_c_node(comp1)
         comp3.add_c_node(comp2)
-        comp3.add_projection(comp1, MappingProjection(), comp2)
+        comp3.add_projection(MappingProjection(), comp1, comp2)
 
         # comp1:
         # input = 5.0
@@ -207,8 +207,9 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_c_node(A)
         inner_composition_1.add_c_node(B)
 
-        inner_composition_1.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        inner_composition_1.add_projection(A, MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), B)
+        inner_composition_1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A,
+                                           B)
 
         inner_composition_1._analyze_graph()
 
@@ -225,8 +226,9 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_c_node(A2)
         inner_composition_2.add_c_node(B2)
 
-        inner_composition_2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
-        inner_composition_2.add_projection(A2, MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]), B2)
+        inner_composition_2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
+        inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]),
+                                           A2, B2)
 
         inner_composition_2._analyze_graph()
 
@@ -235,11 +237,12 @@ class TestConnectCompositionsViaCIMS:
         outer_composition.add_c_node(inner_composition_1)
         outer_composition.add_c_node(inner_composition_2)
 
-        outer_composition.add_projection(sender=inner_composition_1, projection=MappingProjection(), receiver=inner_composition_2)
-        outer_composition.add_projection(sender=inner_composition_1,
-                                         projection=MappingProjection(sender=inner_composition_1.output_CIM.output_states[1],
-                                                                      receiver=inner_composition_2.input_CIM.input_states[1]),
+        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=inner_composition_2)
+        outer_composition.add_projection(
+            projection=MappingProjection(sender=inner_composition_1.output_CIM.output_states[1],
+                                         receiver=inner_composition_2.input_CIM.input_states[1]),
+            sender=inner_composition_1, receiver=inner_composition_2)
 
         sched = Scheduler(composition=outer_composition)
         outer_composition._analyze_graph()
@@ -269,8 +272,8 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_c_node(B)
         inner_composition_1.add_c_node(C)
 
-        inner_composition_1.add_projection(A, MappingProjection(), C)
-        inner_composition_1.add_projection(B, MappingProjection(), C)
+        inner_composition_1.add_projection(MappingProjection(), A, C)
+        inner_composition_1.add_projection(MappingProjection(), B, C)
 
         inner_composition_1._analyze_graph()
 
@@ -285,7 +288,7 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_c_node(A2)
         inner_composition_2.add_c_node(B2)
 
-        inner_composition_2.add_projection(A2, MappingProjection(), B2)
+        inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
         inner_composition_2._analyze_graph()
 
@@ -298,11 +301,9 @@ class TestConnectCompositionsViaCIMS:
         outer_composition.add_c_node(inner_composition_2)
         outer_composition.add_c_node(mechanism_d)
 
-        outer_composition.add_projection(sender=inner_composition_1,
-                                         projection=MappingProjection(),
+        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
-        outer_composition.add_projection(sender=inner_composition_2,
-                                         projection=MappingProjection(),
+        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_2,
                                          receiver=mechanism_d)
 
         sched = Scheduler(composition=outer_composition)
@@ -345,8 +346,8 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_c_node(B)
         inner_composition_1.add_c_node(C)
 
-        inner_composition_1.add_projection(A, MappingProjection(), C)
-        inner_composition_1.add_projection(B, MappingProjection(), C)
+        inner_composition_1.add_projection(MappingProjection(), A, C)
+        inner_composition_1.add_projection(MappingProjection(), B, C)
 
         inner_composition_1._analyze_graph()
 
@@ -361,7 +362,7 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_c_node(A2)
         inner_composition_2.add_c_node(B2)
 
-        inner_composition_2.add_projection(A2, MappingProjection(), B2)
+        inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
         inner_composition_2._analyze_graph()
 
@@ -374,11 +375,9 @@ class TestConnectCompositionsViaCIMS:
         outer_composition.add_c_node(inner_composition_2)
         outer_composition.add_c_node(mechanism_d)
 
-        outer_composition.add_projection(sender=inner_composition_1,
-                                         projection=MappingProjection(),
+        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
-        outer_composition.add_projection(sender=inner_composition_2,
-                                         projection=MappingProjection(),
+        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_2,
                                          receiver=mechanism_d)
 
         sched = Scheduler(composition=outer_composition)
@@ -425,8 +424,8 @@ class TestConnectCompositionsViaCIMS:
 
         level_0.add_c_node(A0)
         level_0.add_c_node(B0)
-        level_0.add_projection(A0, MappingProjection(), B0)
-        level_0.add_projection(A0, MappingProjection(sender=A0.output_states[1], receiver=B0), B0)
+        level_0.add_projection(MappingProjection(), A0, B0)
+        level_0.add_projection(MappingProjection(sender=A0.output_states[1], receiver=B0), A0, B0)
         level_0._analyze_graph()
 
         # level_1 composition ---------------------------------
@@ -440,8 +439,8 @@ class TestConnectCompositionsViaCIMS:
         level_1.add_c_node(level_0)
         level_1.add_c_node(A1)
         level_1.add_c_node(B1)
-        level_1.add_projection(level_0, MappingProjection(), B1)
-        level_1.add_projection(A1, MappingProjection(), B1)
+        level_1.add_projection(MappingProjection(), level_0, B1)
+        level_1.add_projection(MappingProjection(), A1, B1)
         level_1._analyze_graph()
 
         # level_2 composition --------------------------------- outermost composition
@@ -456,8 +455,8 @@ class TestConnectCompositionsViaCIMS:
         level_2.add_c_node(level_1)
         level_2.add_c_node(A2)
         level_2.add_c_node(B2)
-        level_2.add_projection(level_1, MappingProjection(), B2)
-        level_2.add_projection(A2, MappingProjection(), B2)
+        level_2.add_projection(MappingProjection(), level_1, B2)
+        level_2.add_projection(MappingProjection(), A2, B2)
         level_2._analyze_graph()
 
         sched = Scheduler(composition=level_2)

@@ -351,6 +351,7 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.c_nodes = []
+        self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
         self.input_CIM_states = {}
@@ -470,9 +471,22 @@ class Composition(object):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
-    def add_projection(self, sender, projection, receiver):
+    def add_projection(self, projection=None, sender=None, receiver=None):
         '''
-            Adds a projection to the Composition, if it is not already added
+
+            Adds a projection to the Composition, if it is not already added.
+
+            If a *projection* is not specified, then a default MappingProjection is created.
+
+            The sender and receiver of a particular Projection vertex within the Composition (the *sender* and
+            *receiver* arguments of add_projection) must match the `sender <Projection.sender>` and `receiver
+            <Projection.receiver>` specified on the Projection object itself.
+
+                - If the *sender* and/or *receiver* arguments are not specified, then the `sender <Projection.sender>`
+                  and/or `receiver <Projection.receiver>` attributes of the Projection object set the missing value(s).
+                - If the `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes of the
+                  Projection object are not specified, then the *sender* and/or *receiver* arguments set the missing
+                  value(s).
 
             Arguments
             ---------
@@ -480,26 +494,78 @@ class Composition(object):
             sender : Mechanism, Composition, or OutputState
                 the sender of **projection**
 
-            projection : Projection
+            projection : Projection, matrix
                 the projection to add
 
             receiver : Mechanism, Composition, or OutputState
                 the receiver of **projection**
         '''
+
+        if isinstance(projection, (np.ndarray, np.matrix, list)):
+            projection = MappingProjection(matrix=projection)
+        elif projection is None:
+            projection = MappingProjection()
+        elif not isinstance(projection, Projection):
+            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
+                                   .format(projection, self.name))
+
+        if sender is None:
+            if hasattr(projection, "sender"):
+                sender = projection.sender.owner
+            else:
+                raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). {}"
+                                       " is missing a sender specification. ".format(projection.name))
+
+        sender_mechanism = sender
+        graph_sender = sender
+        if isinstance(sender, OutputState):
+            sender_mechanism = sender.owner
+            graph_sender = sender.owner
+        elif isinstance(sender, Composition):
+            sender_mechanism = sender.output_CIM
+
+        if hasattr(projection, "sender"):
+            if projection.sender.owner != sender and \
+               projection.sender.owner != graph_sender and \
+               projection.sender.owner != sender_mechanism:
+                raise CompositionError("The position of {} in {} conflicts with its sender attribute."
+                                       .format(projection.name, self.name))
+        if receiver is None:
+            if hasattr(projection, "receiver"):
+                receiver = projection.receiver.owner
+            else:
+                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). {}"
+                                       " is missing a receiver specification. ".format(projection.name))
+
+        receiver_mechanism = receiver
+        graph_receiver = receiver
+        if isinstance(receiver, InputState):
+            receiver_mechanism = receiver.owner
+            graph_receiver = receiver.owner
+        elif isinstance(receiver, Composition):
+            receiver_mechanism = receiver.input_CIM
+
         if projection not in [vertex.component for vertex in self.graph.vertices]:
+
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection)
 
-            # Add connections between nodes and the projection
-            self.graph.connect_components(sender, projection)
-            self.graph.connect_components(projection, receiver)
-            self._validate_projection(sender, projection, receiver)
+            self.graph.connect_components(graph_sender, projection)
+            self.graph.connect_components(projection, graph_receiver)
+            self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism)
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+
+        else:
+            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
+                                   .format(projection.name))
+        return projection
 
     def add_pathway(self, path):
         '''
@@ -528,15 +594,13 @@ class Composition(object):
 
         # then projections
         for p in projections:
-            self.add_projection(p.sender.owner, p, p.receiver.owner)
+            self.add_projection(p, p.sender.owner, p.receiver.owner)
 
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway):
-        # First, verify that the pathway begins with a mechanism
-        if isinstance(pathway[0], Mechanism):
-            self.add_c_node(pathway[0])
-        elif isinstance(pathway[0], Composition):
+        # First, verify that the pathway begins with a node
+        if isinstance(pathway[0], (Mechanism, Composition)):
             self.add_c_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -555,23 +619,24 @@ class Composition(object):
             if isinstance(pathway[c], (Mechanism, Composition)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(
-                        pathway[c - 1],
-                        MappingProjection(
-                            sender=pathway[c - 1],
-                            receiver=pathway[c]
-                        ),
-                        pathway[c]
-                    )
+                    self.add_projection(MappingProjection(
+                        sender=pathway[c - 1],
+                        receiver=pathway[c]
+                    ), pathway[c - 1], pathway[c])
             # if the current item is a Projection
-            elif isinstance(pathway[c], Projection):
+            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
-                    self.add_projection(pathway[c - 1], pathway[c], pathway[c + 1])
+                    proj = pathway[c]
+                    if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                        proj = MappingProjection(sender=pathway[c - 1],
+                                                 matrix=pathway[c],
+                                                 receiver=pathway[c + 1])
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1])
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
@@ -582,45 +647,25 @@ class Composition(object):
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
 
-    def _validate_projection(self, sender, projection, receiver):
+    def _validate_projection(self,
+                             projection,
+                             sender, receiver,
+                             graph_sender,
+                             graph_receiver,
+                             ):
 
-        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
-            # the sender and receiver were passed directly to the Projection object AND to compositions'
-            # add_projection() method -- confirm that these are consistent
-            true_sender_owner = sender
-            true_receiver_owner = receiver
-            if isinstance(sender, Composition):
-                true_sender_owner = sender.output_CIM
-            if isinstance(receiver, Composition):
-                true_receiver_owner = receiver.input_CIM
-
-            if projection.sender.owner != true_sender_owner:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in their Composition.".format(projection, sender))
-
-            if projection.receiver.owner != true_receiver_owner:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in their Composition.".format(projection, receiver))
-        else:
-            # sender and receiver were NOT passed directly to the Projection object
-            # assign them based on the sender and receiver passed into add_projection()
-            projection_object_sender = sender
-            projection_object_receiver = receiver
-            if isinstance(sender, Composition):
-                projection_object_sender = sender.output_CIM
-            if isinstance(receiver, Composition):
-                projection_object_receiver = receiver.input_CIM
-            projection.init_args['sender'] = projection_object_sender
-            projection.init_args['receiver'] = projection_object_receiver
+        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
+            projection.init_args['sender'] = graph_sender
+            projection.init_args['receiver'] = graph_receiver
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
-            if projection.sender.owner != projection_object_sender:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, sender))
-            if projection.receiver.owner != projection_object_receiver:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, receiver))
+        if projection.sender.owner != graph_sender:
+            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                   "Components in the Composition.".format(projection, sender))
+        if projection.receiver.owner != graph_receiver:
+            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                   "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None):
         ########
@@ -695,8 +740,13 @@ class Composition(object):
                             next_visit_stack.append(child)
 
         toposorted_graph = self.scheduler_processing._call_toposort(graph)
-        for node in toposorted_graph[len(toposorted_graph) - 1]:
-            self._add_c_node_role(node, CNodeRole.TERMINAL)
+        # print(toposorted_graph)
+        # if len(toposorted_graph) > 0:
+        #     for node in toposorted_graph[-1]:
+        #         self._add_c_node_role(node, CNodeRole.TERMINAL)
+        for node_role_pair in self.required_c_node_roles:
+            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+
         self._create_CIM_states()
 
         self.needs_update_graph = False
@@ -796,6 +846,22 @@ class Composition(object):
             raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
         self.c_nodes_to_roles[c_node].remove(role)
+
+    def add_required_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+
+        node_role_pair = (c_node, role)
+        if node_role_pair not in self.required_c_node_roles:
+            self.required_c_node_roles.append(node_role_pair)
+
+    def remove_required_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
+
+        node_role_pair = (c_node, role)
+        if node_role_pair in self.required_c_node_roles:
+            self.required_c_node_roles.remove(node_role_pair)
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type

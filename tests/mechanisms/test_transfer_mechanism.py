@@ -1249,10 +1249,10 @@ class TestIntegratorMode:
         expected_result_integrator = integrator_fn.function([[1.5, 2.5], [3.5, 4.5]])
 
         S1 = SoftMax()
-        expected_result_s1 = S1.function([1.25, 2.25])
+        expected_result_s1 = S1.function([[1.25, 2.25]])
 
         S2 = SoftMax()
-        expected_result_s2 = S2.function([3.25, 4.25])
+        expected_result_s2 = S2.function([[3.25, 4.25]])
 
         assert np.allclose(expected_result_integrator, T.integrator_function_value)
         assert np.allclose(expected_result_s1, result[0])

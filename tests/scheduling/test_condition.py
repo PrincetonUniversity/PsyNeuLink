@@ -187,7 +187,7 @@ class TestCondition:
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
             for m in [A, B]:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), B)
+            comp.add_projection(MappingProjection(), A, B)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
@@ -227,7 +227,7 @@ class TestCondition:
             comp.add_c_node(A)
             comp.add_c_node(B)
 
-            comp.add_projection(A, MappingProjection(), B)
+            comp.add_projection(MappingProjection(), A, B)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTimeStep(2))
@@ -295,8 +295,8 @@ class TestCondition:
             C = TransferMechanism(function=Linear(intercept=1.5), name='C')
             for m in [A, B, C]:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), B)
-            comp.add_projection(B, MappingProjection(), C)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
@@ -555,8 +555,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -591,8 +591,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -617,8 +617,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -641,8 +641,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
@@ -676,8 +676,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -702,8 +702,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -726,8 +726,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
@@ -759,8 +759,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -784,8 +784,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -809,8 +809,8 @@ class TestCondition:
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))

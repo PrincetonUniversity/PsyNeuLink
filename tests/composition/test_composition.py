@@ -102,7 +102,7 @@ class TestAddProjection:
         B = TransferMechanism(name='composition-pytests-B')
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(), B)
+        comp.add_projection(MappingProjection(), A, B)
 
     def test_add_twice(self):
         comp = Composition()
@@ -110,8 +110,8 @@ class TestAddProjection:
         B = TransferMechanism(name='composition-pytests-B')
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(A, MappingProjection(), B)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), A, B)
 
     def test_add_same_twice(self):
         comp = Composition()
@@ -120,8 +120,125 @@ class TestAddProjection:
         comp.add_c_node(A)
         comp.add_c_node(B)
         proj = MappingProjection()
-        comp.add_projection(A, proj, B)
-        comp.add_projection(A, proj, B)
+        comp.add_projection(proj, A, B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(proj, A, B)
+        assert "This Projection is already in the Compositon" in str(error_text)
+
+    def test_add_fully_specified_projection_object(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        proj = MappingProjection(sender=A, receiver=B)
+        comp.add_projection(proj)
+
+    def test_add_proj_sender_and_receiver_only(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(sender=A, receiver=B)
+        result = comp.run(inputs={A: [1.0]})
+        assert np.allclose(result, [[np.array([2.])]])
+
+    def test_add_proj_missing_sender(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(receiver=B)
+        assert "a sender must be specified" in str(error_text)
+
+    def test_add_proj_missing_receiver(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A)
+        assert "a receiver must be specified" in str(error_text)
+
+    def test_add_proj_invalid_projection_spec(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection("projection")
+        assert "Invalid projection" in str(error_text)
+
+    # KAM commented out this test 7/24/18 because it does not work. Should it work?
+    # Or should the add_projection method of Composition only consider composition nodes as senders and receivers
+
+    # def test_add_proj_states_as_sender_and_receiver(self):
+    #     comp = Composition()
+    #     A = TransferMechanism(name='composition-pytests-A',
+    #                           default_variable=[[0.], [0.]])
+    #     B = TransferMechanism(name='composition-pytests-B',
+    #                           function=Linear(slope=2.0),
+    #                           default_variable=[[0.], [0.]])
+    #     comp.add_c_node(A)
+    #     comp.add_c_node(B)
+    #
+    #     comp.add_projection(sender=A.output_states[0], receiver=B.input_states[0])
+    #     comp.add_projection(sender=A.output_states[1], receiver=B.input_states[1])
+    #
+    #     print(comp.run(inputs={A: [[1.0], [2.0]]}))
+
+    def test_add_proj_weights_only(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A',
+                              default_variable=[[0., 0., 0.]])
+        B = TransferMechanism(name='composition-pytests-B',
+                              default_variable=[[0., 0.]],
+                              function=Linear(slope=2.0))
+        weights = [[1., 2.], [3., 4.], [5., 6.]]
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        proj = comp.add_projection(weights, A, B)
+        comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
+        assert np.allclose(A.value, [[1.1, 1.2, 1.3]])
+        assert np.allclose(B.input_values, [[11.2,  14.8]])
+        assert np.allclose(B.value, [[22.4,  29.6]])
+        assert np.allclose(proj.matrix, weights)
+
+    def test_linear_processing_pathway_weights_only(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A',
+                              default_variable=[[0., 0., 0.]])
+        B = TransferMechanism(name='composition-pytests-B',
+                              default_variable=[[0., 0.]],
+                              function=Linear(slope=2.0))
+        weights = [[1., 2.], [3., 4.], [5., 6.]]
+        comp.add_linear_processing_pathway([A, weights, B])
+        comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
+        assert np.allclose(A.value, [[1.1, 1.2, 1.3]])
+        assert np.allclose(B.input_values, [[11.2,  14.8]])
+        assert np.allclose(B.value, [[22.4,  29.6]])
+
+    def test_add_conflicting_projection_object(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+        proj = MappingProjection(sender=A, receiver=B)
+        with pytest.raises(CompositionError) as error:
+            comp.add_projection(projection=proj, receiver=C)
+        assert "receiver assignment" in str(error) and "incompatible" in str(error)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -204,7 +321,7 @@ class TestAnalyzeGraph:
         B = TransferMechanism(name='composition-pytests-B')
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(), B)
+        comp.add_projection(MappingProjection(), A, B)
         comp._analyze_graph()
         assert A in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert B not in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
@@ -218,8 +335,9 @@ class TestAnalyzeGraph:
         B = TransferMechanism(name='composition-pytests-B')
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), A)
+        comp.add_projection(MappingProjection(), A, B)
+
+        comp.add_projection(MappingProjection(), B, A)
         comp._analyze_graph()
         assert A not in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert B not in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
@@ -240,16 +358,42 @@ class TestAnalyzeGraph:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(C, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
-        comp.add_projection(D, MappingProjection(), C)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), C, B)
+        comp.add_projection(MappingProjection(), B, C)
+        comp.add_projection(MappingProjection(), D, C)
         comp._analyze_graph()
         assert A in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert D in comp.get_c_nodes_by_role(CNodeRole.ORIGIN)
         assert B in comp.get_c_nodes_by_role(CNodeRole.CYCLE)
         assert C in comp.get_c_nodes_by_role(CNodeRole.RECURRENT_INIT)
 
+class TestGraphCycles:
+
+    def test_recurrent_transfer_mechanisms(self):
+        R1 = RecurrentTransferMechanism(auto=1.0)
+        R2 = RecurrentTransferMechanism(auto=1.0,
+                                        function=Linear(slope=2.0))
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[R1, R2])
+
+        # Trial 0:
+        # input to R1 = 1.0, output from R1 = 1.0
+        # input to R2 = 1.0, output from R2 = 2.0
+
+        # Trial 1:
+        # input to R1 = 1.0 + 1.0, output from R1 = 2.0
+        # input to R2 = 2.0 + 2.0, output from R2 = 8.0
+
+        # Trial 2:
+        # input to R1 = 1.0 + 2.0, output from R1 = 3.0
+        # input to R2 = 3.0 + 8.0, output from R2 = 22.0
+
+
+        output = comp.run(inputs={R1: [1.0]},
+                          num_trials=3)
+
+        assert np.allclose(output, [[np.array([2.])], [np.array([8.])], [np.array([22.])]])
 
 # class TestValidateFeedDict:
 #
@@ -551,8 +695,8 @@ class TestGraph:
             mechs = [A, B, C]
             for m in mechs:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), B)
-            comp.add_projection(B, MappingProjection(), C)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
 
             assert len(comp.graph_processing.vertices) == 3
             assert len(comp.graph_processing.comp_to_vertex) == 3
@@ -577,10 +721,10 @@ class TestGraph:
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), C)
-            comp.add_projection(B, MappingProjection(), C)
-            comp.add_projection(C, MappingProjection(), D)
-            comp.add_projection(C, MappingProjection(), E)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
 
             assert len(comp.graph_processing.vertices) == 5
             assert len(comp.graph_processing.comp_to_vertex) == 5
@@ -613,9 +757,9 @@ class TestGraph:
             mechs = [A, B, C]
             for m in mechs:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), B)
-            comp.add_projection(B, MappingProjection(), C)
-            comp.add_projection(C, MappingProjection(), A)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, A)
 
             assert len(comp.graph_processing.vertices) == 3
             assert len(comp.graph_processing.comp_to_vertex) == 3
@@ -640,12 +784,12 @@ class TestGraph:
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), C)
-            comp.add_projection(B, MappingProjection(), C)
-            comp.add_projection(C, MappingProjection(), D)
-            comp.add_projection(C, MappingProjection(), E)
-            comp.add_projection(D, MappingProjection(), A)
-            comp.add_projection(E, MappingProjection(), B)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
+            comp.add_projection(MappingProjection(), D, A)
+            comp.add_projection(MappingProjection(), E, B)
 
             assert len(comp.graph_processing.vertices) == 5
             assert len(comp.graph_processing.comp_to_vertex) == 5
@@ -680,14 +824,14 @@ class TestGraph:
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_c_node(m)
-            comp.add_projection(A, MappingProjection(), C)
-            comp.add_projection(B, MappingProjection(), C)
-            comp.add_projection(C, MappingProjection(), D)
-            comp.add_projection(C, MappingProjection(), E)
-            comp.add_projection(D, MappingProjection(), A)
-            comp.add_projection(D, MappingProjection(), B)
-            comp.add_projection(E, MappingProjection(), A)
-            comp.add_projection(E, MappingProjection(), B)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
+            comp.add_projection(MappingProjection(), D, A)
+            comp.add_projection(MappingProjection(), D, B)
+            comp.add_projection(MappingProjection(), E, A)
+            comp.add_projection(MappingProjection(), E, B)
 
             assert len(comp.graph_processing.vertices) == 5
             assert len(comp.graph_processing.comp_to_vertex) == 5
@@ -747,7 +891,7 @@ class TestRun:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
@@ -768,10 +912,10 @@ class TestRun:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+        comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
-            comp.add_projection(B, MappingProjection(sender=B, receiver=D), C)
-        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
+            comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
+        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -788,11 +932,11 @@ class TestRun:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+        comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
-            comp.add_projection(B, MappingProjection(sender=B, receiver=C), D)
+            comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
 
-        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
+        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
     def test_run_5_mechanisms_2_origins_1_terminal(self):
         # A ----> C --
@@ -813,11 +957,11 @@ class TestRun:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+        comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_c_node(E)
-        comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
-        comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
         comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
@@ -839,7 +983,7 @@ class TestRun:
         # value = 10.0 * 5.0 --> return 50.0
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
@@ -862,7 +1006,7 @@ class TestRun:
         # value = 10.0 * 5.0 --> return 50.0
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
@@ -880,7 +1024,7 @@ class TestRun:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
@@ -898,7 +1042,7 @@ class TestRun:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(), B)
+        comp.add_projection(MappingProjection(), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
@@ -916,7 +1060,7 @@ class TestRun:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
@@ -933,7 +1077,7 @@ class TestRun:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
@@ -951,7 +1095,7 @@ class TestRun:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
@@ -1085,7 +1229,7 @@ class TestCallBeforeAfterTimescale:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
@@ -1148,7 +1292,7 @@ class TestCallBeforeAfterTimescale:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
@@ -1230,7 +1374,7 @@ class TestCallBeforeAfterTimescale:
         B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2]}
         sched = Scheduler(composition=comp)
@@ -1656,7 +1800,7 @@ class TestSystemComposition:
         B = TransferMechanism(function=Linear(slope=5.0))
         sys.add_c_node(A)
         sys.add_c_node(B)
-        sys.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        sys.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         sys._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=sys)
@@ -1685,7 +1829,7 @@ class TestSystemComposition:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [[1],[ 2], [3], [4]]}
         sched = Scheduler(composition=comp)
@@ -1768,7 +1912,7 @@ class TestSystemComposition:
         B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [[1], [2]]}
         sched = Scheduler(composition=comp)
@@ -2145,8 +2289,8 @@ class TestNestedCompositions:
         tree1.add_c_node(myMech1)
         tree1.add_c_node(myMech2)
         tree1.add_c_node(myMech3)
-        tree1.add_projection(myMech1, MappingProjection(sender=myMech1, receiver=myMech3), myMech3)
-        tree1.add_projection(myMech2, MappingProjection(sender=myMech2, receiver=myMech3), myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
 
         # validate first composition ---------------------------------------------
 
@@ -2169,8 +2313,8 @@ class TestNestedCompositions:
         tree2.add_c_node(myMech4)
         tree2.add_c_node(myMech5)
         tree2.add_c_node(myMech6)
-        tree2.add_projection(myMech4, MappingProjection(sender=myMech4, receiver=myMech6), myMech6)
-        tree2.add_projection(myMech5, MappingProjection(sender=myMech5, receiver=myMech6), myMech6)
+        tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech6), myMech4, myMech6)
+        tree2.add_projection(MappingProjection(sender=myMech5, receiver=myMech6), myMech5, myMech6)
 
         # validate second composition ----------------------------------------------
 
@@ -2213,7 +2357,7 @@ class TestNestedCompositions:
         # Mech2 --                          --> Mech6
         #                          Mech5 --
 
-        tree1.add_projection(myMech3, MappingProjection(sender=myMech3, receiver=myMech4), myMech4)
+        tree1.add_projection(MappingProjection(sender=myMech3, receiver=myMech4), myMech3, myMech4)
         tree1._analyze_graph()
 
         origins = tree1.get_c_nodes_by_role(CNodeRole.ORIGIN)
@@ -2250,8 +2394,8 @@ class TestNestedCompositions:
             tree1.add_c_node(myMech1)
             tree1.add_c_node(myMech2)
             tree1.add_c_node(myMech3)
-            tree1.add_projection(myMech1, MappingProjection(sender=myMech1, receiver=myMech3), myMech3)
-            tree1.add_projection(myMech2, MappingProjection(sender=myMech2, receiver=myMech3), myMech3)
+            tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
+            tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
 
             # validate first composition ---------------------------------------------
 
@@ -2274,8 +2418,8 @@ class TestNestedCompositions:
             tree2.add_c_node(myMech3)
             tree2.add_c_node(myMech4)
             tree2.add_c_node(myMech5)
-            tree2.add_projection(myMech3, MappingProjection(sender=myMech3, receiver=myMech5), myMech5)
-            tree2.add_projection(myMech4, MappingProjection(sender=myMech4, receiver=myMech5), myMech5)
+            tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
+            tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
 
             # validate second composition ----------------------------------------------
 
@@ -2411,10 +2555,8 @@ class TestNestedCompositions:
         sys = SystemComposition()
         sys.add_pathway(myPath)
         sys.add_pathway(myPath2)
-        sys.add_projection(sender=myMech3,
-                           projection=MappingProjection(sender=myMech3,
-                                                        receiver=myMech4),
-                           receiver=myMech4)
+        sys.add_projection(projection=MappingProjection(sender=myMech3,
+                                                        receiver=myMech4), sender=myMech3, receiver=myMech4)
 
         # assign input to origin mechs
         # myMech4 ignores its input from the outside world because it is no longer considered an origin!
@@ -2502,11 +2644,11 @@ class TestCompositionInterface:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+        comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_c_node(E)
-        comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
-        comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
         comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
@@ -2551,11 +2693,11 @@ class TestCompositionInterface:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+        comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_c_node(E)
-        comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
-        comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
         comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
@@ -2597,8 +2739,8 @@ class TestCompositionInterface:
         G = TransferMechanism(name="composition-pytests-G", function=Linear(slope=2.0))
         comp.add_c_node(F)
         comp.add_c_node(G)
-        comp.add_projection(sender=F, projection=MappingProjection(sender=F, receiver=G), receiver=G)
-        comp.add_projection(sender=G, projection=MappingProjection(sender=G, receiver=E), receiver=E)
+        comp.add_projection(projection=MappingProjection(sender=F, receiver=G), sender=F, receiver=G)
+        comp.add_projection(projection=MappingProjection(sender=G, receiver=E), sender=G, receiver=E)
 
         # reassign roles
         comp._analyze_graph()
@@ -2630,8 +2772,8 @@ class TestCompositionInterface:
         comp.add_c_node(A)
         comp.add_c_node(B)
         comp.add_c_node(C)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
         comp._analyze_graph()
         inputs_dict = {A: [[5.]]}
         sched = Scheduler(composition=comp)
@@ -2646,7 +2788,7 @@ class TestCompositionInterface:
         # add a new origin to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))
         comp.add_c_node(F)
-        comp.add_projection(sender=F, projection=MappingProjection(sender=F, receiver=A), receiver=A)
+        comp.add_projection(projection=MappingProjection(sender=F, receiver=A), sender=F, receiver=A)
 
         # reassign roles
         comp._analyze_graph()
@@ -2730,8 +2872,8 @@ class TestCompositionInterface:
         comp.add_c_node(A)
         comp.add_c_node(B)
         comp.add_c_node(C)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
         comp._analyze_graph()
 
         inputs_dict = {A: [[5.], [5.]]}
@@ -2760,7 +2902,7 @@ class TestCompositionInterface:
             function=my_fun
         )
         comp.add_c_node(D)
-        comp.add_projection(D, MappingProjection(sender=D, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=D, receiver=B), D, B)
         # Need to analyze graph again (identify D as an origin so that we can assign input) AND create the scheduler
         # again (sched, even though it is tied to comp, will not update according to changes in comp)
         comp._analyze_graph()
@@ -2797,8 +2939,8 @@ class TestCompositionInterface:
         comp.add_c_node(B)
         comp.add_c_node(C)
 
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
 
         comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
@@ -2834,10 +2976,10 @@ class TestCompositionInterface:
         comp.add_c_node(C)
         comp.add_c_node(D)
         comp.add_c_node(E)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=E), E)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
+        comp.add_projection(MappingProjection(sender=B, receiver=E), B, E)
         comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
@@ -3059,9 +3201,9 @@ class TestInputSpecifications:
         comp.add_c_node(B)
         comp.add_c_node(C)
         comp.add_c_node(D)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=D), D)
-        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
-        comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
+        comp.add_projection(MappingProjection(sender=A, receiver=D), A, D)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
+        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
         comp._analyze_graph()
         inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
                   B: [[0, 0], [1, 1], [2, 2]],
@@ -3082,7 +3224,7 @@ class TestInputSpecifications:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
@@ -3098,7 +3240,7 @@ class TestInputSpecifications:
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_c_node(A)
         comp.add_c_node(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
