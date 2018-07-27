@@ -62,7 +62,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
@@ -149,6 +149,7 @@ class CNodeRole(Enum):
     LEARNING = 7
     TARGET = 8
     RECURRENT_INIT = 9
+    OBJECTIVE = 10
 
 class CompositionError(Exception):
 
@@ -482,7 +483,13 @@ class Composition(object):
             raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
         for input_state in control_mechanism._objective_mechanism.input_states:
             input_state.internal_only = True
-        self.add_c_node(control_mechanism._objective_mechanism)
+        objective_node = control_mechanism._objective_mechanism
+        self.add_c_node(objective_node)
+        self.add_projection(objective_node.path_afferents[0])
+        self.add_projection(objective_node.efferents[0])
+        self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
+        self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
+
 
     def add_projection(self, projection=None, sender=None, receiver=None):
         '''
@@ -1296,9 +1303,10 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.context.execution_phase = ContextFlags.PROCESSING
+                    if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node)):
 
-                    node.execute(runtime_params=execution_runtime_params,
-                                 context=ContextFlags.COMPOSITION)
+                        node.execute(runtime_params=execution_runtime_params,
+                                     context=ContextFlags.COMPOSITION)
 
                     for key in node._runtime_params_reset:
                         node._set_parameter_value(key, node._runtime_params_reset[key])
