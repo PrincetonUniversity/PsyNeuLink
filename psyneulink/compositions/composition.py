@@ -345,7 +345,10 @@ class Composition(object):
 
     '''
 
-    def __init__(self, name=None):
+    def __init__(self, 
+                 name=None,
+                 controller=None,
+                 enable_controller=None):
         # core attributes
         if name is None:
             name = "composition"
@@ -360,7 +363,9 @@ class Composition(object):
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
         self.output_CIM_states = {}
+        self.enable_controller = enable_controller
         self.execution_ids = []
+        self.controller = controller
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -477,6 +482,10 @@ class Composition(object):
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
+    def add_controller(self, node):
+        self.controller = node
+        # self.add_c_node(node)
+
     def add_control_mechanism(self, control_mechanism):
 
         if not isinstance(control_mechanism, ControlMechanism):
@@ -489,7 +498,6 @@ class Composition(object):
         self.add_projection(objective_node.efferents[0])
         self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
         self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
-
 
     def add_projection(self, projection=None, sender=None, receiver=None):
         '''
@@ -1308,7 +1316,7 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.context.execution_phase = ContextFlags.PROCESSING
-                    if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node)):
+                    if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
 
                         node.execute(runtime_params=execution_runtime_params,
                                      context=ContextFlags.COMPOSITION)
@@ -1345,6 +1353,14 @@ class Composition(object):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].value)
+
+        # control phase
+        if self.controller:
+            if self.enable_controller:
+
+                self.controller.before_simulation()
+                self.run_simulation()
+                self.controller.after_simulation()
 
         return output_values
 
@@ -1578,6 +1594,8 @@ class Composition(object):
 
         return self.results
 
+    def run_simulation(self):
+        print("simulation runs now")
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):

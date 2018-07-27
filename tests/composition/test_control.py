@@ -12,7 +12,9 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 from psyneulink.compositions.composition import Composition
 
+
 class TestControlMechanisms:
+
     def test_default_lc_control_mechanism(self):
         G = 1.0
         k = 0.5
@@ -115,7 +117,7 @@ class TestControlMechanisms:
         comp.add_linear_processing_pathway([Ty, C])
         comp._analyze_graph()
         comp._scheduler_processing.add_condition(Tz, pnl.AllHaveRun(C))
-        print(comp.c_nodes)
+
         # assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = comp.run(inputs={Tx: [1, 1],
                                   Ty: [4, 4]})
@@ -166,14 +168,14 @@ class TestControllers:
             name='Decision',
         )
 
-        comp = Composition()
+        comp = Composition(name="evc")
 
         task_execution_pathway = [Input, IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_c_node(Reward)
-
-        # TBI: comp.enable controller
+        comp.add_controller(EVCControlMechanism())
+        comp.enable_controller = True
         # TBI: comp.monitor for control
 
         # Stimuli
