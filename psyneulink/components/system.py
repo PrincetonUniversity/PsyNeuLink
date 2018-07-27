@@ -1697,7 +1697,6 @@ class System(System_Base):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # MODIFIED 6/30/18 NEW:
             # Exclude LearningMechanisms that execute in the execution phase
             #    as they are included in (and executed as part of) System.graph
             elif (isinstance(sender_mech, LearningMechanism) and
@@ -3913,13 +3912,8 @@ class System(System_Base):
                         # show projection as edge
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
 
-            # MODIFIED 7/27/18 OLD:
             # if rcvr is a LearningMechanism, break, as those are handled below
             if isinstance(rcvr, LearningMechanism):
-            # MODIFIED 7/27/18 NEW:
-            # # if rcvr is a LearningMechanism not executed in the execution phase, break, as those are handled below
-            # if isinstance(rcvr, LearningMechanism) and rcvr.learning_timing != LearningTiming.EXECUTION_PHASE:
-            # MODIFIED 7/27/18 END
                 return
             # if recvr is ObjectiveMechanism for System's controller, break, as those handled below
             if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
