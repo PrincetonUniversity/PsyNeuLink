@@ -3871,6 +3871,7 @@ class System(System_Base):
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
+
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
@@ -3912,12 +3913,15 @@ class System(System_Base):
                         # show projection as edge
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
 
-            # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-            #    break, as those are handled below
+            # MODIFIED 7/27/18 OLD:
+            # if rcvr is a LearningMechanism, break, as those are handled below
             if isinstance(rcvr, LearningMechanism):
+            # MODIFIED 7/27/18 NEW:
+            # # if rcvr is a LearningMechanism not executed in the execution phase, break, as those are handled below
+            # if isinstance(rcvr, LearningMechanism) and rcvr.learning_timing != LearningTiming.EXECUTION_PHASE:
+            # MODIFIED 7/27/18 END
                 return
-            # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-            #    break, as those handled below
+            # if recvr is ObjectiveMechanism for System's controller, break, as those handled below
             if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
                 return
 
@@ -3930,10 +3934,6 @@ class System(System_Base):
                 # Set sndr info
 
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                if sndr is active_item:
-                    sndr_color = active_color
-                else:
-                    sndr_color = default_node_color
 
                     # find edge name
                     for output_state in sndr.output_states:
@@ -3955,11 +3955,14 @@ class System(System_Base):
                                     has_learning = proj.has_learning_projection
                                 except AttributeError:
                                     has_learning = None
+                                selected_proj = proj
                     edge_label = edge_name
 
                     # Render projections
-                    if proj is active_item:
+                    if selected_proj is active_item:
                         proj_color = active_color
+                    elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                        proj_color = learning_color
                     else:
                         proj_color = default_node_color
                     proc_mech_label = edge_label
@@ -3967,6 +3970,15 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
+
+                        # FIX: CHECK FOR AND RENDER LEARNING PROJECTION FROM EXECUTION_PHASE LEARNING MECHANISM
+                        # FIX: USE _assign_learning_components??
+                        if selected_proj.has_learning_projection:
+                            learning_mech = selected_proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                            learning_rcvrs = [learning_mech, selected_proj]
+                            learning_graph={selected_proj:{learning_mech}}
+                            for lr in learning_rcvrs:
+                                _assign_learning_components(G, sg, learning_graph, lr, processes)
 
                         # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
                         #     assignment of nodes for Projections to it will be taken care of below
