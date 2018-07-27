@@ -2010,7 +2010,7 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                self._mod_proj_values[mod_meta_param].append(mod_value)
+                    self._mod_proj_values[mod_meta_param].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
