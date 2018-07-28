@@ -1178,13 +1178,10 @@ class System(System_Base):
 
             process._all_mechanisms = MechanismList(process, components_list=process._mechs)
 
-        # MODIFIED 6/24/18 NEW:
         # Call all ControlMechanisms to allow them to implement specification of ALL
         #    in monitor_for_control and/or control_signals arguments of their constructors
         for mech in self.mechanisms:
             pass
-        # MODIFIED 6/24/18 END
-
 
         # # Instantiate processList using process_tuples, and point self.processes to it
         # # Note: this also points self.params[PROCESSES] to self.processes
@@ -1278,10 +1275,7 @@ class System(System_Base):
                 # If sender is a ControlMechanism that is not the controller for the System,
                 #    assign its dependency to its ObjectiveMechanism and label as INTERNAL
                 elif (isinstance(sender_mech, ControlMechanism)
-                      # MODIFIED 6/24/18 NEW:
-                      and is_in_system(sender_mech)
-                      # MODIFIED 6/24/18 END:
-                ):
+                      and is_in_system(sender_mech)):
                     sender_mech._add_system(self, INTERNAL)
 
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
@@ -1367,10 +1361,8 @@ class System(System_Base):
 
             # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
-            # MODIFIED 6/24/18 NEW:
             if not sender_mech.output_states:
                 return
-            # MODIFIED 6/24/18 END
 
             for output_state in sender_mech.output_states:
 
@@ -1388,10 +1380,8 @@ class System(System_Base):
                             # FIX:      THAT SHOULD BE IDENTIFIED AS CYCLES AND ASSIGNED INITIALIZATION ROLE
                             receiver is sender_mech
                             # MODIFIED 7/8/17 END
-                            # MODIFIED 6/24/18 NEW:
                             # Exclude any Mechanisms not in any processes belonging to the current System
                             or not is_in_system(receiver)
-                            # MODIFIED 6/24/18 END
                     ):
                         continue
                     if is_monitoring_mech(receiver):
@@ -1456,11 +1446,7 @@ class System(System_Base):
                             if not sender_mech.systems or not (sender_mech.systems[self] in
                                                                {ORIGIN, SINGLETON,TERMINAL}):
                                 sender_mech._add_system(self, INITIALIZE_CYCLE)
-                            # # MODIFIED 6/24/18 OLD:
-                            # if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
-                            # MODIFIED 6/24/18 NEW:
                             if not (receiver.systems[self] in {ORIGIN, SINGLETON, TERMINAL}):
-                            # MODIFIED 6/24/18 END
                                 receiver._add_system(self, CYCLE)
                             continue
 
@@ -1967,17 +1953,12 @@ class System(System_Base):
                                   "is okay if the learning (e.g. Hebbian learning) does not need a target.".
                                   format(self.name))
                 return
-            # # MODIFIED 6/25/17 OLD:
-            # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
-            #                   format(self.name))
-            # MODIFIED 6/25/17 NEW:
             # target arg was not specified in System's constructor,
             #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
             self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
-            # MODIFIED 6/25/17 END
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
 
