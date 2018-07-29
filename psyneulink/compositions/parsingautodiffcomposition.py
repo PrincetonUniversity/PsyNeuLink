@@ -433,7 +433,7 @@ class ParsingAutodiffComposition(Composition):
             scheduler_processing = self.scheduler_processing
         
         # validate properties of parsing autodiff composition, get node roles, set up CIM's
-        self._validate_params()
+        self._validate_params(targets)
         self._analyze_graph()
         
         # get execution id, do some stuff with processing scheduler
@@ -738,7 +738,7 @@ class ParsingAutodiffComposition(Composition):
     
     
     # method to validate params of parsing autodiff composition
-    def _validate_params(self, training=None):
+    def _validate_params(self, targets):
         
         # set up processing graph, dictionary for checking recurrence using topological sort
         processing_graph = self.graph_processing
@@ -790,16 +790,13 @@ class ParsingAutodiffComposition(Composition):
             
         # STEP 3: CHECK PROPERTIES THAT MUST APPLY IF TRAINING IS TO TAKE PLACE
             
-        if training is not None:
+        if targets is not None:
                 
             # raise error if no trainable parameters are present
             if len([vert.component for vert in self.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
                 raise ParsingAutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
                                                       .format(self.name))
-                
-            # raise error if model's mechanisms and projections do not constitute a single, unbroken DAG
-            # currently assume there are no dangling projections
-
+    
 
 
 
