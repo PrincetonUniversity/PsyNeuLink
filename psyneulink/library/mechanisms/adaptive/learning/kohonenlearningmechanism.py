@@ -202,7 +202,8 @@ class KohonenLearningMechanism(LearningMechanism):
 
     learned_projection : MappingProjection
         the `learning_projection <KohonenMechanism.learning_projection>` of the `KohoneMechanism` with which the
-        KohonenLearningMechanism is associated.
+        KohonenLearningMechanism is associated (same as its `primary_learned_projection
+        <LearningMechanism.primary_learned_projection>`.
 
     function : LearningFunction or function : default Kohonen
         the function used to calculate the `learning_signal <KohonenLearningMechanism.learning_signal>`
@@ -400,11 +401,14 @@ class KohonenLearningMechanism(LearningMechanism):
         super()._update_output_states(runtime_params, context)
 
         if self.context.composition:
-            learned_projection = self.activity_source.recurrent_projection
-            learned_projection.execute(context=ContextFlags.LEARNING)
-            learned_projection.context.execution_phase = ContextFlags.IDLE
+            self.learned_projection.execute(context=ContextFlags.LEARNING)
+            self.learned_projection.context.execution_phase = ContextFlags.IDLE
 
+    @property
+    def learned_projection(self):
+        return self.primary_learned_projection
 
     @property
     def activity_source(self):
-        return self.input_state.path_afferents[0].sender.owner
+        # return self.input_state.path_afferents[0].sender.owner
+        return self.primary_learned_projection.sender.owner

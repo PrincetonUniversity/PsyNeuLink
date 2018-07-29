@@ -4499,7 +4499,8 @@ class System(System_Base):
         # return
         if output_fmt == 'pdf':
             # G.format = 'svg'
-            # x = G.render()
+            G.format = 'gif'
+            x = G.render()
             G.view(self.name.replace(" ", "-"), cleanup=True, )
         elif output_fmt == 'jupyter':
             return G
