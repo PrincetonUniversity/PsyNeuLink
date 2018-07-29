@@ -22,7 +22,7 @@ import timeit as timeit
 import torch
 from torch import nn
 import torch.optim as optim
-from torchviz import make_dot
+# from torchviz import make_dot
 
 import logging
 logger = logging.getLogger(__name__)
@@ -746,6 +746,11 @@ class ParsingAutodiffComposition(Composition):
         
         # STEP 1: ENSURE THAT COMPOSITION HAS SOMETHING INSIDE IT
         
+        if len([vert.component for vert in self.graph.vertices]) == 0:
+            raise ParsingAutodiffCompositionError("{0} has no mechanisms or projections to execute."
+                                                  .format(self.name))
+        
+        # STEP 2: CHECK PROPERTIES OF EACH NODE/MECHANISM IN PARSING AUTODIFF COMPOSITION
         
         # iterate over nodes in processing graph
         for node in processing_graph.vertices:
@@ -772,6 +777,7 @@ class ParsingAutodiffComposition(Composition):
                                                       "Pytorch model."
                                                       .format(node.component, self.name))
             
+            # raise error if any parent of current node creates a cycle in the composition
             topo_dict[node.component] = set()
             for parent in processing_graph.get_parents_from_component(node.component):
                 topo_dict[node.component].add(parent.component)
@@ -781,26 +787,18 @@ class ParsingAutodiffComposition(Composition):
                     raise ParsingAutodiffCompositionError("Mechanisms {0} and {1} are part of a recurrent path in {2}. "
                                                           "Parsing Autodiff Compositions currently do not support recurrence."
                                                           .format(node.component, parent.component, self.name))
-            '''
-            # tests if training is to take place:
-            if training is not None:
-                
-                # make sure some trainable parameters are present
-                if len([vert.component for vert in sem_net.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
-                    raise ParsingAutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
-                                                          .format(self.name))
-                
-                # 
-                
-                # make sure model's mechanisms and projections make up a single, unbroken directed acyclic graph 
-                # (there should be no dangling projections, no isolated mechanisms)
             
+        # STEP 3: CHECK PROPERTIES THAT MUST APPLY IF TRAINING IS TO TAKE PLACE
+            
+        if training is not None:
                 
+            # raise error if no trainable parameters are present
+            if len([vert.component for vert in self.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
+                raise ParsingAutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
+                                                      .format(self.name))
                 
-'''
-'''
-comp = 
-'''
+            # raise error if model's mechanisms and projections do not constitute a single, unbroken DAG
+            # currently assume there are no dangling projections
 
 
 

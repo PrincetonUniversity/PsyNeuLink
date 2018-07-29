@@ -1,4 +1,3 @@
-
 # IMPORTS
 
 from psyneulink.components.functions.function import Linear, Logistic
