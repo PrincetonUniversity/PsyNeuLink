@@ -56,12 +56,13 @@ import uuid
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
@@ -148,6 +149,7 @@ class CNodeRole(Enum):
     LEARNING = 7
     TARGET = 8
     RECURRENT_INIT = 9
+    OBJECTIVE = 10
 
 class CompositionError(Exception):
 
@@ -343,7 +345,10 @@ class Composition(object):
 
     '''
 
-    def __init__(self, name=None):
+    def __init__(self, 
+                 name=None,
+                 controller=None,
+                 enable_controller=None):
         # core attributes
         if name is None:
             name = "composition"
@@ -358,7 +363,9 @@ class Composition(object):
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
         self.output_CIM_states = {}
+        self.enable_controller = enable_controller
         self.execution_ids = []
+        self.controller = controller
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -460,6 +467,7 @@ class Composition(object):
             node : `Mechanism` or `Composition`
                 the node to add
         '''
+
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
             self.graph.add_component(node)  # Set incoming edge list of node to empty
@@ -470,6 +478,26 @@ class Composition(object):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+
+        if isinstance(node, ControlMechanism):
+            self.add_control_mechanism(node)
+
+    def add_controller(self, node):
+        self.controller = node
+        # self.add_c_node(node)
+
+    def add_control_mechanism(self, control_mechanism):
+
+        if not isinstance(control_mechanism, ControlMechanism):
+            raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
+        for input_state in control_mechanism._objective_mechanism.input_states:
+            input_state.internal_only = True
+        objective_node = control_mechanism._objective_mechanism
+        self.add_c_node(objective_node)
+        self.add_projection(objective_node.path_afferents[0])
+        self.add_projection(objective_node.efferents[0])
+        self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
+        self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
 
     def add_projection(self, projection=None, sender=None, receiver=None):
         '''
@@ -503,6 +531,11 @@ class Composition(object):
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             projection = MappingProjection(matrix=projection)
+        elif isinstance(projection, str):
+            if projection in MATRIX_KEYWORD_VALUES:
+                projection = MappingProjection(matrix=projection)
+            else:
+                raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
         elif projection is None:
             projection = MappingProjection()
         elif not isinstance(projection, Projection):
@@ -624,7 +657,7 @@ class Composition(object):
                         receiver=pathway[c]
                     ), pathway[c - 1], pathway[c])
             # if the current item is a Projection
-            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, list)):
+            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
@@ -1283,9 +1316,10 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.context.execution_phase = ContextFlags.PROCESSING
+                    if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
 
-                    node.execute(runtime_params=execution_runtime_params,
-                                 context=ContextFlags.COMPOSITION)
+                        node.execute(runtime_params=execution_runtime_params,
+                                     context=ContextFlags.COMPOSITION)
 
                     for key in node._runtime_params_reset:
                         node._set_parameter_value(key, node._runtime_params_reset[key])
@@ -1319,6 +1353,14 @@ class Composition(object):
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].value)
+
+        # control phase
+        if self.controller:
+            if self.enable_controller:
+
+                self.controller.before_simulation()
+                self.run_simulation()
+                self.controller.after_simulation()
 
         return output_values
 
@@ -1552,6 +1594,8 @@ class Composition(object):
 
         return self.results
 
+    def run_simulation(self):
+        print("simulation runs now")
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):
@@ -1624,6 +1668,10 @@ class Composition(object):
 
             # excludes any input states marked "internal_only" (usually recurrent)
             input_must_match = node.external_input_values
+
+            if input_must_match == []:
+                # all input states are internal_only
+                continue
 
             check_spec_type = self._input_matches_variable(stim_list, input_must_match)
             # If a node provided a single input, wrap it in one more list in order to represent trials
