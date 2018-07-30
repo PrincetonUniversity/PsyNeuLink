@@ -539,7 +539,7 @@ class ParsingAutodiffComposition(Composition):
                                         scheduler_processing=scheduler_processing,
                                         execution_id=execution_id)
             
-            # ---------------------------------------------------------------------------------
+            # -----------------------------------------------------------------------------------
             
             # store the result of this execute
             if isinstance(trial_output, Iterable):
