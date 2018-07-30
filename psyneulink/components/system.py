@@ -2825,6 +2825,11 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
+                # MODIFIED 7/29 NEW:
+                self.show_graph(show_learning=ALL, active_item=mechanism)
+                self._component_execution_count += 1
+                # MODIFIED 7/29 END
+
                 # Reset runtime params and context
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
@@ -2930,6 +2935,11 @@ class System(System_Base):
                 component.execute(runtime_params=params, context=context)
 
                 component.context.execution_phase = ContextFlags.IDLE
+
+                # MODIFIED 7/29 NEW:
+                self.show_graph(show_learning=ALL, active_item=component)
+                self._component_execution_count += 1
+                # MODIFIED 7/29 END
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
@@ -3083,6 +3093,8 @@ class System(System_Base):
             mechanism.reinitialize(*reinitialize_values[mechanism])
 
         self.initial_values = initial_values
+
+        self._component_execution_count=0
 
         logger.debug(inputs)
 
@@ -3814,7 +3826,7 @@ class System(System_Base):
             # Set rcvr color and penwidth info
             if rcvr is active_item:
                 rcvr_color = active_color
-                rcvr_penwidth = bold_width
+                rcvr_penwidth = active_width
             elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
                 rcvr_color = origin_and_terminal_color
                 rcvr_penwidth = bold_width
@@ -3867,7 +3879,7 @@ class System(System_Base):
                     else:
                         edge_label = ''
                     try:
-                        has_learning = proj.has_learning_projection
+                        has_learning = proj.has_learning_projection is not None
                     except AttributeError:
                         has_learning = None
 
@@ -3878,10 +3890,12 @@ class System(System_Base):
                         # show projection as node
                         if proj is active_item:
                             proj_color = active_color
+                            proj_width = active_width
                         else:
                             proj_color = default_node_color
+                            proj_width = default_width
                         proj_label = self._get_label(proj, show_dimensions, show_roles)
-                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        sg.node(proj_label, shape=projection_shape, color=proj_color, penwidth=proj_width)
                         G.edge(sndr_proj_label, proj_label, arrowhead='none')
                         G.edge(proj_label, proc_mech_rcvr_label)
                         learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
@@ -3891,7 +3905,14 @@ class System(System_Base):
                             _assign_learning_components(G, sg, learning_graph, lr, processes)
                     else:
                         # show projection as edge
-                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
+                        if proj.sender is active_item:
+                            proj_color = active_color
+                            proj_width = active_width
+                        else:
+                            proj_color = default_node_color
+                            proj_width = default_width
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
+                               color=proj_color, penwidth=proj_width)
 
             # if rcvr is a LearningMechanism, break, as those are handled below
             if isinstance(rcvr, LearningMechanism):
@@ -3927,19 +3948,22 @@ class System(System_Base):
                                 edge_name = self._get_label(proj, show_dimensions, show_roles)
                                 # edge_shape = proj.matrix.shape
                                 try:
-                                    has_learning = proj.has_learning_projection
+                                    has_learning = proj.has_learning_projection is not None
                                 except AttributeError:
                                     has_learning = None
                                 selected_proj = proj
                     edge_label = edge_name
 
                     # Render projections
-                    if selected_proj is active_item:
+                    if selected_proj.sender.owner is active_item:
                         proj_color = active_color
+                        proj_width = active_width
                     elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                         proj_color = learning_color
+                        proj_width = default_width
                     else:
                         proj_color = default_node_color
+                        proj_width = default_width
                     proc_mech_label = edge_label
 
                     if show_learning and has_learning:
@@ -3948,7 +3972,11 @@ class System(System_Base):
 
                         # FIX: CHECK FOR AND RENDER LEARNING PROJECTION FROM EXECUTION_PHASE LEARNING MECHANISM
                         # FIX: USE _assign_learning_components??
-                        if selected_proj.has_learning_projection:
+                        # if projection has a LearningProjection from a LearningMechanism
+                        #    that executes in the execution_phase, include it here
+                        if (selected_proj.has_learning_projection and
+                                selected_proj.has_learning_projection.sender.owner.learning_timing is
+                                LearningTiming.EXECUTION_PHASE):
                             learning_mech = selected_proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
                             learning_rcvrs = [learning_mech, selected_proj]
                             learning_graph={selected_proj:{learning_mech}}
@@ -3968,10 +3996,12 @@ class System(System_Base):
                                    for proj in rcvr.efferents)):
                                 continue
 
-                        sg.node(proc_mech_label, shape=projection_shape, color=proj_color)
+                        sg.node(proc_mech_label, shape=projection_shape, color=proj_color, penwidth=proj_width)
                         # Edges to and from Projection node
-                        G.edge(sndr_proj_label, proc_mech_label, arrowhead='none', color=proj_color)
-                        G.edge(proc_mech_label, proc_mech_rcvr_label, color=proj_color)
+                        G.edge(sndr_proj_label, proc_mech_label, arrowhead='none',
+                               color=proj_color, penwidth=proj_width)
+                        G.edge(proc_mech_label, proc_mech_rcvr_label,
+                               color=proj_color, penwidth=proj_width)
 
                     else:
                         # Render Projection normally (as edge)
@@ -3979,7 +4009,8 @@ class System(System_Base):
                             label = proc_mech_label
                         else:
                             label = ''
-                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label, color=proj_color)
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                               color=proj_color, penwidth=proj_width)
 
             # Add node for Projection to the last Mechanism in a learning sequence in its originating Process
             # (i.e., the Process to which its sender belongs)
@@ -4349,6 +4380,7 @@ class System(System_Base):
 
         bold_width = '3'
         default_width = '1'
+        active_width = '5'
 
         pos = None
 
@@ -4496,12 +4528,20 @@ class System(System_Base):
             else:
                 _assign_control_components(G, G)
 
-        # return
+        # GENERATE OUTPUT
+
         if output_fmt == 'pdf':
             # G.format = 'svg'
-            # G.format = 'gif'
-            # x = G.render()
-            G.view(self.name.replace(" ", "-"), cleanup=True, )
+            if active_item:
+                G.format = 'gif'
+                prefix = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
+                         repr(self._component_execution_count) + '-'
+                G.render(filename = prefix + active_item.name,
+                         directory='show_graph OUTPUT/'+self.name+" GIFS",
+                         cleanup=True,
+                         view=True)
+            # G.format = 'pdf'
+            # G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
         elif output_fmt == 'jupyter':
             return G
 

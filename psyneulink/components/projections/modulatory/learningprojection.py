@@ -601,7 +601,7 @@ class LearningProjection(ModulatoryProjection_Base):
             #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
         learned_projection.learning_mechanism = learning_mechanism
-        learned_projection.has_learning_projection = True
+        learned_projection.has_learning_projection = self
 
     def _execute(self, variable, runtime_params=None, context=None):
         """
