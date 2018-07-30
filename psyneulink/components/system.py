@@ -2973,6 +2973,7 @@ class System(System_Base):
                                                                              component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+                self.show_graph(show_learning=ALL, active_item=component)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -3967,40 +3968,16 @@ class System(System_Base):
                     proc_mech_label = edge_label
 
                     if show_learning and has_learning:
-                        # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
-
-                        # If Projection has a LearningProjection from a LearningMechanism
-                        #    that executes in the execution_phase, include it here
-                        if (selected_proj.has_learning_projection and
-                                selected_proj.has_learning_projection.sender.owner.learning_timing is
-                                LearningTiming.EXECUTION_PHASE):
-                            learning_mech = selected_proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
-                            learning_rcvrs = [learning_mech, selected_proj]
-                            learning_graph={selected_proj:{learning_mech}}
-                            for lr in learning_rcvrs:
-                                _assign_learning_components(G, sg, learning_graph, lr, processes)
-
-                        # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
-                        #     assignment of nodes for Projections to it will be taken care of below
-                        #     to insure that they are assigned to the Process(es) from which they originate
-                        if processes:
-                            # Get any processes to which recvr belongs
-                            procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
-                            # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
-                            if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
-                                   and proj.receiver.owner._role == LEARNING
-                                   and set(procs).intersection(proj.receiver.owner.processes)
-                                   for proj in rcvr.efferents)):
-                                continue
-
-                        sg.node(proc_mech_label, shape=projection_shape, color=proj_color, penwidth=proj_width)
-                        # Edges to and from Projection node
-                        G.edge(sndr_proj_label, proc_mech_label, arrowhead='none',
-                               color=proj_color, penwidth=proj_width)
-                        G.edge(proc_mech_label, proc_mech_rcvr_label,
-                               color=proj_color, penwidth=proj_width)
-
+                        deferred = not render_projection_as_node(G=G, sg=sg, processes=processes,
+                                                                 proj=selected_proj,
+                                                                 label=proc_mech_label,
+                                                                 rcvr_label=proc_mech_rcvr_label,
+                                                                 sndr_label=sndr_proj_label,
+                                                                 proj_color=proj_color,
+                                                                 proj_width=proj_width)
+                        if deferred:
+                            continue
                     else:
                         # Render Projection normally (as edge)
                         if show_projection_labels:
@@ -4061,6 +4038,20 @@ class System(System_Base):
 
             # if rcvr is projection (i.e., recipient of a LearningProjection)
             if isinstance(rcvr, MappingProjection):
+
+                # Don't render if LearningProjection to rcvr is from LearningMechanism that executes in execution_phase
+                #    (it was already rendered in _assign_processing_components)
+                if not rcvr.has_learning_projection.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE:
+
+                    # If Projection's receiver is the active_item, skip rendering,
+                    #   since it has already been shown in the active color
+                    if not rcvr.receiver.owner is active_item:
+                        render_projection_as_node(G=G, sg=sg, processes=processes,
+                                                  proj=rcvr,
+                                                  label=rcvr_label,
+                                                  proj_color=rcvr_color,
+                                                  proj_width=rcvr_width)
+
                 # for each sndr of rcvr
                 sndrs = lg[rcvr]
                 for sndr in sndrs:
@@ -4187,6 +4178,49 @@ class System(System_Base):
                             else:
                                 G.edge(sndr_label, rcvr_label, label=edge_label,
                                        color=learning_proj_color, penwidth=learning_proj_width)
+
+        def render_projection_as_node(G, sg, processes,
+                                      proj,
+                                      label, 
+                                      proj_color, proj_width,
+                                      sndr_label=None,
+                                      rcvr_label=None):
+            from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
+            # If Projection has a LearningProjection from a LearningMechanism
+            #    that executes in the execution_phase, include it here
+            if (proj.has_learning_projection and
+                    proj.has_learning_projection.sender.owner.learning_timing is
+                    LearningTiming.EXECUTION_PHASE):
+                learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                learning_rcvrs = [learning_mech, proj]
+                learning_graph={proj:{learning_mech}}
+                for lr in learning_rcvrs:
+                    _assign_learning_components(G, sg, learning_graph, lr, processes)
+
+            # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
+            #     assignment of nodes for Projections to it will be taken care of below
+            #     to insure that they are assigned to the Process(es) from which they originate
+            if processes:
+                # Get any processes to which recvr belongs
+                procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
+                if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
+                       and proj.receiver.owner._role == LEARNING
+                       and set(procs).intersection(proj.receiver.owner.processes)
+                       for proj in rcvr.efferents)):
+                    return False
+
+            sg.node(label, shape=projection_shape, color=proj_color, penwidth=proj_width)
+            # Edges to and from Projection node
+            if sndr_label:
+                G.edge(sndr_label, label, arrowhead='none',
+                       color=proj_color, penwidth=proj_width)
+            if rcvr_label:
+                G.edge(label, rcvr_label,
+                       color=proj_color, penwidth=proj_width)
+            return True
+
 
         def _assign_control_components(G, sg):
             '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
