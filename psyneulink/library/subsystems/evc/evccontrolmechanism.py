@@ -1046,6 +1046,49 @@ class EVCControlMechanism(ControlMechanism):
 
         return allocation_policy
 
+    def composition_execute(self,
+                           variable=None,
+                           runtime_params=None,
+                           context=None):
+        """Determine `allocation_policy <EVCControlMechanism.allocation_policy>` for next run of System
+
+        Update prediction mechanisms
+        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
+            * get `allocation_samples` for each ControlSignal in `control_signals`
+            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
+              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
+        Call self.function -- default is ControlSignalGridSearch
+        Return an allocation_policy
+        """
+
+        # CONSTRUCT SEARCH SPACE
+
+        control_signal_sample_lists = []
+        control_signals = self.control_signals
+
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy = super(ControlMechanism, self)._execute(
+            controller=self,
+            variable=variable,
+            runtime_params=runtime_params,
+            context=context
+        )
+
+        return allocation_policy
+
     def _update_predicted_input(self):
         """Assign values of prediction mechanisms to predicted_input
 
@@ -1070,7 +1113,6 @@ class EVCControlMechanism(ControlMechanism):
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def before_simulation(self,
-                       inputs,
                        allocation_vector,
                        runtime_params=None,
                        reinitialize_values=None,
@@ -1090,10 +1132,7 @@ class EVCControlMechanism(ControlMechanism):
         self.system.context.execution_phase = ContextFlags.SIMULATION
 
     def after_simulation(self,
-                         inputs,
-                         allocation_vector,
                          runtime_params=None,
-                         reinitialize_values=None,
                          context=None
                          ):
         self.system.context.execution_phase = ContextFlags.IDLE
