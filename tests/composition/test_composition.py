@@ -19,7 +19,7 @@ from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
+from psyneulink.globals.keywords import IDENTITY_MATRIX, NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
 
 logger = logging.getLogger(__name__)
 
@@ -1181,8 +1181,9 @@ class TestRun:
             error_text.value)
 
     def test_LPP_wrong_component(self):
+        from psyneulink.components.states.inputstate import InputState
         comp = Composition()
-        Nonsense = "string"
+        Nonsense = InputState()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
@@ -1190,6 +1191,16 @@ class TestRun:
 
         assert "A linear processing pathway must be made up of Projections and Composition Nodes." in str(
             error_text.value)
+
+    def test_lpp_invalid_matrix_keyword(self):
+        comp = Composition()
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
+        with pytest.raises(CompositionError) as error_text:
+        # Typo in IdentityMatrix
+            comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
+
+        assert "Invalid projection" in str(error_text.value)
 
     def test_LPP_two_origins_one_terminal(self):
         # A ----> C --
