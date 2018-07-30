@@ -1357,8 +1357,8 @@ class Composition(object):
         # control phase
         if self.controller:
             if self.enable_controller:
-
-                self.controller.before_simulation()
+                allocation_policy = self.controller.composition_execute(context=ContextFlags.PROCESSING)
+                self.controller.before_simulation(allocation_policy=allocation_policy)
                 self.run_simulation()
                 self.controller.after_simulation()
 
