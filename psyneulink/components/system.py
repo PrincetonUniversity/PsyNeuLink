@@ -4052,23 +4052,28 @@ class System(System_Base):
                                                   proj_color=rcvr_color,
                                                   proj_width=rcvr_width)
 
-                # for each sndr of rcvr
-                sndrs = lg[rcvr]
-                for sndr in sndrs:
-                    sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                    if show_projection_labels:
-                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                    else:
-                        edge_label = ''
-                    if show_mechanism_structure:
-                        # G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                        G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                               self._get_label(rcvr, show_dimensions, show_roles),
-                               label=edge_label, color=rcvr_color, penwidth=rcvr_width)
-                    else:
-                        G.edge(self._get_label(sndr, show_dimensions, show_roles),
-                               self._get_label(rcvr, show_dimensions, show_roles),
-                               label = edge_label, color=rcvr_color, penwidth=rcvr_width)
+                # FIX: MOVE TO render_learning_projections FUNCTION, AND
+                # FIX: ALSO CALL IN _assign_processing_components FOR MAPPING PROJECTIONS THAT ARE GETTING RENDERED
+                # FIX: ALTERNATIVELY, MOVED THIS TO render_projection_as_node
+
+                # # for each sndr of rcvr
+                # sndrs = lg[rcvr]
+                # for sndr in sndrs:
+                #     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+                #     if show_projection_labels:
+                #         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                #     else:
+                #         edge_label = ''
+                #     if show_mechanism_structure:
+                #         # G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                #         G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                #                self._get_label(rcvr, show_dimensions, show_roles),
+                #                label=edge_label, color=rcvr_color, penwidth=rcvr_width)
+                #     else:
+                #         G.edge(self._get_label(sndr, show_dimensions, show_roles),
+                #                self._get_label(rcvr, show_dimensions, show_roles),
+                #                label = edge_label, color=rcvr_color, penwidth=rcvr_width)
+                # FIX: END OF MOVED
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             else:
@@ -4219,6 +4224,8 @@ class System(System_Base):
             if rcvr_label:
                 G.edge(label, rcvr_label,
                        color=proj_color, penwidth=proj_width)
+
+
             return True
 
 

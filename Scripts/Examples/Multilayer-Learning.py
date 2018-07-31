@@ -122,7 +122,7 @@ stim_list = {Input_Layer: ['red']}
 target_list = {Output_Layer: [[0, 0, 1]]}
 
 mySystem.run(
-    num_trials=10,
+    num_trials=1,
     inputs=stim_list,
     targets=target_list,
     call_before_trial=functools.partial(print_header, mySystem),
