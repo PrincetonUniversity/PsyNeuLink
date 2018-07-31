@@ -80,6 +80,7 @@ class TestPACConstructor:
 
 class TestRun:
     
+    @pytest.mark.sarumanthewhite
     def test_xor_training_correctness(self):
         
         xor_in = TransferMechanism(name='xor_in',
@@ -114,11 +115,12 @@ class TestRun:
         xor_targets[2] = [1]
         xor_targets[3] = [0]
         
-        results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=10000)
+        results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=10000, optimizer='adam')
         
         for i in range(len(results[0])):
             assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
     
+    @pytest.mark.sarumanthewhite
     def test_xor_training_correctness_with_multiple_run_calls(self):
         
         xor_in = TransferMechanism(name='xor_in',
@@ -154,13 +156,13 @@ class TestRun:
         xor_targets[3] = [0]
         
         results = None
-        for i in range(10000):
+        results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=1, optimizer='adam')
+        for i in range(9999):
             results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=1)
             
         for i in range(len(results[9999])):
             assert np.allclose(np.round(results[9999][i][0]), xor_targets[i])
     
-    @pytest.mark.sarumanthewhite
     def test_xor_training_then_processing(self):
         
         xor_in = TransferMechanism(name='xor_in',
@@ -267,10 +269,12 @@ class TestRun:
         print(msg)
         logger.info(msg)
     
+    @pytest.mark.gandalfthegrey
     @pytest.mark.parametrize(
         'eps', [
-            10 # ,
-            # 100
+            10,
+            100 # ,
+            # 1000
         ]
     )
     def test_xor_as_system_vs_autodiff_composition(self, eps):
@@ -334,6 +338,9 @@ class TestRun:
         xor_targets_sys[2] = [1]
         xor_targets_sys[3] = [0]
         
+        xor_inputs_sys = np.tile(xor_inputs_sys, (eps, 1))
+        xor_targets_sys = np.tile(xor_targets_sys, (eps, 1))
+        
         # SET UP INPUTS FOR COMPOSITION
         
         xor_inputs_comp = np.zeros((4,2))
@@ -351,13 +358,19 @@ class TestRun:
         # TRAIN THE SYSTEM, TIME IT
         
         start = timeit.default_timer()
-        for i in range(eps):
-            for j in range(4):
-                
-                results = xor_system.run(inputs={xor_in_sys:xor_inputs_sys},
+        results = xor_system.run(inputs={xor_in_sys:xor_inputs_sys}, 
                                          targets={xor_out_sys:xor_targets_sys})
         end = timeit.default_timer()
         sys_time = end - start
+        
+        '''
+        start = timeit.default_timer()
+        for i in range(eps):
+            results = xor_system.run(inputs={xor_in_sys:xor_inputs_sys},
+                                     targets={xor_out_sys:xor_targets_sys})
+        end = timeit.default_timer()
+        sys_time = end - start
+        '''
         
         msg = 'completed training xor model as System for {0} epochs in {1} seconds'.format(eps, sys_time)
         print(msg)
@@ -366,7 +379,8 @@ class TestRun:
         # TRAIN THE AUTODIFF COMPOSITION, TIME IT
         
         start = timeit.default_timer()
-        result = xor_comp.run(inputs={xor_in_comp:xor_inputs_comp}, targets={xor_out_comp:xor_targets_comp}, epochs=eps) 
+        result = xor_comp.run(inputs={xor_in_comp:xor_inputs_comp}, 
+                              targets={xor_out_comp:xor_targets_comp}, epochs=eps, optimizer='adam') 
         end = timeit.default_timer()
         comp_time = end - start
         
@@ -386,7 +400,7 @@ class TestRun:
 
 class TestSemanticNetTraining:
     
-    @pytest.mark.whatwearedoing
+    @pytest.mark.sarumanthewhite
     def test_sem_net_training_correctness(self):
         
         # MECHANISMS FOR SEMANTIC NET:
@@ -513,7 +527,7 @@ class TestSemanticNetTraining:
         
         # TRAIN THE MODEL
         
-        result = sem_net.run(inputs=inputs_dict, targets=targets_dict, epochs=2000) # enough epochs to learn fully
+        result = sem_net.run(inputs=inputs_dict, targets=targets_dict, epochs=1000, optimizer='adam') # enough epochs to learn fully
         
         # CHECK CORRECTNESS
         

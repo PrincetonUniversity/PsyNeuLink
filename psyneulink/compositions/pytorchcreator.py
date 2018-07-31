@@ -116,7 +116,7 @@ class PytorchCreator(torch.nn.Module):
     # INIT AND FEEDFORWARD ----------------------------------------------------------------------------------
     
     # sets up parameters of model, information for performing feedfoward step
-    def __init__(self, processing_graph):
+    def __init__(self, processing_graph, param_init_from_pnl):
         
         super(PytorchCreator, self).__init__()
         
@@ -145,12 +145,12 @@ class PytorchCreator(torch.nn.Module):
                 # if we don't have origin node: set up biases, add to afferent inputs info
                 if len(node.parents) > 0:
                     
-                    # set up biases for node/mechanism
-                    biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).float())
-                    
-                    # add biases to params list and to mechanisms_to_torch_biases dict
-                    self.params.append(biases)
-                    self.mechanisms_to_torch_biases[node.component] = biases
+                    # if not copying params from psyneulink, set up biases for node/mechanism,
+                    # add biases to params list, mechanisms_to_torch_biases dict
+                    if param_init_from_pnl == False:
+                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).float())
+                        self.params.append(biases)
+                        self.mechanisms_to_torch_biases[node.component] = biases
                     
                     # iterate over projections to node
                     for k in range(len(node.component.path_afferents)):
@@ -160,8 +160,12 @@ class PytorchCreator(torch.nn.Module):
                         input_component = mapping_proj.sender.owner
                         input_node = self.processing_graph.comp_to_vertex[input_component]
                         
-                        # set up pytorch weights that correspond to projection
-                        weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).float())
+                        # set up pytorch weights that correspond to projection. If copying params from psyneulink,
+                        # copy weight values from projection. Otherwise, use random values.
+                        if param_init_from_pnl == True:
+                            weights = nn.Parameter(torch.tensor(mapping_proj.matrix.copy()).float())
+                        else:
+                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).float())
                         
                         # add node-weights mapping to afferent inputs info, add weights to params list,
                         # add weights to projections_to_torch_weights dict
@@ -203,7 +207,9 @@ class PytorchCreator(torch.nn.Module):
                     layer = torch.zeros(len(node.component.input_states[0].value))
                     for input_node, weights in afferents.items():
                         layer += torch.matmul(self.node_to_feedforward_info[input_node][0], weights)
-                    layer = activation_function(layer + biases)
+                    if biases is not None:
+                        layer = layer + biases
+                    layer = activation_function(layer)
                 
                 # put layer in correct place in the feedforward info dict
                 self.node_to_feedforward_info[node][0] = layer

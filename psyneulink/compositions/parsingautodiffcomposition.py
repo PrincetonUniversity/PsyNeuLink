@@ -53,24 +53,34 @@ class ParsingAutodiffCompositionError(CompositionError):
 
 class ParsingAutodiffComposition(Composition):
     
-    # setup added for name, target CIM, and model, output reporting switched off by default for CIM's
-    def __init__(self, name=None):
+    def __init__(self, param_init_from_pnl=False, name=None):
         
+        # set up name
         if (name is None):
             name = "parsing_autodiff_composition"
         self.name = name
         
         super(ParsingAutodiffComposition, self).__init__()
         
+        # set up target CIM
         self.target_CIM = CompositionInterfaceMechanism(name=self.name + " Target_CIM",
                                                         composition=self)
         self.target_CIM_states = {}
         
+        # default is to switch off output reporting for CIM's
         self.input_CIM.reportOutputPref = False
         self.output_CIM.reportOutputPref = False
         self.target_CIM.reportOutputPref = False
         
+        # model and associated parameters
         self.model = None
+        self.learning_rate = None
+        self.optimizer = None
+        self.loss = None
+        self.param_init_from_pnl = param_init_from_pnl
+        
+        # keeps track of average loss per epoch
+        self.losses = []
     
     
     
@@ -338,6 +348,7 @@ class ParsingAutodiffComposition(Composition):
         inputs=None,
         targets=None,
         epochs=None,
+        randomize=False,
         scheduler_processing=None,
         execution_id=None,
     ):
@@ -387,7 +398,7 @@ class ParsingAutodiffComposition(Composition):
                 autodiff_targets.append(self._throw_through_input_CIM(target_stimuli, 'targets'))
                 
             # call learning function
-            outputs = self.autodiff_training(autodiff_inputs, autodiff_targets, epochs)
+            outputs = self.autodiff_training(autodiff_inputs, autodiff_targets, epochs, randomize=randomize)
             
             # get outputs in correct form for output CIM, push them through output CIM
             output_values = []
@@ -405,15 +416,56 @@ class ParsingAutodiffComposition(Composition):
         inputs=None,
         targets=None,
         epochs=None,
+        learning_rate=None,
+        optimizer=None,
+        loss=None,
+        randomize=False,
+        refresh_losses=False,
         scheduler_processing=None,
         execution_id=None,
     ):
         
-        # set up the pytorch model, if not set up yet
+        # set up model/training parameters, check that arguments provided are consistent
         if self.model is None:
-            self.model = PytorchCreator(self.graph_processing)
+            self.model = PytorchCreator(self.graph_processing, self.param_init_from_pnl)
         
-        # make sure the presence/absence of targets and number of training epochs are consistent
+        if learning_rate is None:
+            if self.learning_rate is None:
+                self.learning_rate = 0.001
+        else:
+            if not isinstance(learning_rate, (int, float)):
+                raise ParsingAutodiffCompositionError("Learning rate must be an integer or float value.")
+            self.learning_rate = learning_rate
+        
+        if optimizer is None:
+            if self.optimizer is None:
+                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
+        else:
+            if optimizer not in ['sgd', 'adam']:
+                raise ParsingAutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                                      "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                                      "optimizers (specified as 'sgd' or 'adam').")
+            if optimizer == 'sgd':
+                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
+            else:
+                self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        
+        if loss is None:
+            if self.loss is None:
+                self.loss = nn.MSELoss()
+        else:
+            if loss not in ['mse', 'crossentropy']:
+                raise ParsingAutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                                      "Currently, Mean Squared Error and Cross Entropy are the only "
+                                                      "available loss functions (specified as 'mse' or 'crossentropy').")
+            if loss == 'mse':
+                self.loss = nn.MSELoss()
+            else:
+                self.loss = nn.CrossEntropyLoss()
+        
+        if refresh_losses == True:
+            self.losses = []
+        
         if targets is None:
             if epochs is not None:
                 raise ParsingAutodiffCompositionError("Number of training epochs specified for {0} but no targets given."
@@ -427,6 +479,7 @@ class ParsingAutodiffComposition(Composition):
                 raise ParsingAutodiffCompositionError("Targets specified for training {0}, but {0} has no trainable "
                                                       "parameters."
                                                       .format(self.name))
+        
         
         # set up processing scheduler
         if scheduler_processing is None:
@@ -486,7 +539,7 @@ class ParsingAutodiffComposition(Composition):
                                             scheduler_processing=scheduler_processing,
                                             execution_id=execution_id)
                 
-                # ---------------------------------------------------------------------------------
+                # -----------------------------------------------------------------------------------
                 
                 # store the result of this execute in case it will be the final result
                 if isinstance(trial_output, Iterable):
@@ -529,17 +582,17 @@ class ParsingAutodiffComposition(Composition):
                                                       "target trial sets ({1}) provided to {2} are different."
                                                       .format(num_input_sets, num_target_sets, self.name))
             
-            
-            # LEARNING --------------------------------------------------------------------------
+            # LEARNING ------------------------------------------------------------------------------
             
             # call execute method
             trial_output = self.execute(inputs=inputs,
                                         targets=targets,
                                         epochs=epochs,
+                                        randomize=randomize,
                                         scheduler_processing=scheduler_processing,
                                         execution_id=execution_id)
             
-            # -----------------------------------------------------------------------------------
+            # ---------------------------------------------------------------------------------------
             
             # store the result of this execute
             if isinstance(trial_output, Iterable):
@@ -572,60 +625,74 @@ class ParsingAutodiffComposition(Composition):
     
     
     # uses inputs and targets to train model for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs):
+    def autodiff_training(self, inputs, targets, epochs, randomize):
         
-        learning_rate = 0.001
-        criterion = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
-        outputs = []
-        rand_train_order_reverse = np.zeros(len(inputs))
+        # training over trial sets in random order, set up array for mapping random order back to original order
+        if randomize == True:
+            rand_train_order_reverse = np.zeros(len(inputs))
         
         # iterate over epochs
         for epoch in range(epochs):
             
-            # set a random number seed
-            torch.manual_seed(epoch)
+            # if training in random order, set random number seed, generate random order
+            if randomize == True:
+                torch.manual_seed(epoch)
+                rand_train_order = np.random.permutation(len(inputs))
             
-            # get a random permutation of input/target trial sets
-            rand_train_order = np.random.permutation(len(inputs))
+            # set up array to keep track of losses on epoch
+            curr_losses = np.zeros(len(inputs))
             
-            # if we're on final epoch, get mapping back to original order of input/target trial sets
+            # if we're on final epoch, set up temporary list to keep track of outputs,
+            # and if training in random order, set up mapping from random order back to original order
             if epoch == epochs-1:
-                rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
-            
-            outputs = []
+                outputs = []
+                if randomize == True:
+                    rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
             
             # iterate over trial sets
             for t in range(len(inputs)):
                 
                 # get current inputs, targets
-                curr_tensor_inputs = inputs[rand_train_order[t]]
-                curr_tensor_targets = targets[rand_train_order[t]]
+                if randomize == True:
+                    curr_tensor_inputs = inputs[rand_train_order[t]]
+                    curr_tensor_targets = targets[rand_train_order[t]]
+                else:
+                    curr_tensor_inputs = inputs[t]
+                    curr_tensor_targets = targets[t]
                 
                 # run the model on inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
                 
                 # compute loss
-                loss = torch.zeros(1).float()
+                curr_loss = torch.zeros(1).float()
                 for i in range(len(curr_tensor_outputs)):
-                    loss += criterion(curr_tensor_outputs[i], curr_tensor_targets[i])
+                    curr_loss += self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
+                
+                # save loss on current trial
+                curr_losses[t] = curr_loss[0].item()
                 
                 # compute gradients and perform parameter update
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                self.optimizer.zero_grad()
+                curr_loss.backward()
+                self.optimizer.step()
                 
                 # save outputs of model if this is final epoch
-                if epoch%5 == 0 or epoch == epochs-1:
+                if epoch == epochs-1:
                     curr_output_list = []
                     for i in range(len(curr_tensor_outputs)):
                         curr_output_list.append(curr_tensor_outputs[i].detach().numpy().copy())
                     outputs.append(curr_output_list)
+            
+            # save loss on current epoch
+            self.losses.append(np.mean(curr_losses))
         
         # save outputs in a list in correct order, return this list
         outputs_list = []
         for i in range(len(outputs)):
-            outputs_list.append(outputs[int(rand_train_order_reverse[i])])
+            if randomize == True:
+                outputs_list.append(outputs[int(rand_train_order_reverse[i])])
+            else:
+                outputs_list.append(outputs[i])
         
         return outputs_list
     
