@@ -71,8 +71,8 @@ Structure
 
 .. _Process_Pathway:
 
-Pathway
-~~~~~~~
+*Pathway*
+~~~~~~~~~
 
 A Process is defined by its `pathway <Process.pathway>` attribute, which is a list of `Mechanisms <Mechanism>` and
 `Projections <Projection>`, that are executed in the order in which they are specified in the list. Each Mechanism in
@@ -97,8 +97,8 @@ Specifying the Components of a pathway is described in detail below.
 
 .. _Process_Mechanisms:
 
-Mechanisms
-~~~~~~~~~~
+*Mechanisms*
+~~~~~~~~~~~~
 
 The `Mechanisms <Mechanism>` of a Process must be listed explicitly in the **pathway** argument of the `Process`
 class, in the order they are to be executed when the Process (or any System to which it belongs) is `executed
@@ -140,8 +140,8 @@ recurrent processing loop (another is to specify this in the Projections -- see 
 
 .. _Process_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 `MappingProjections <MappingProjection>` between Mechanisms in the `pathway <Process.pathway>` of a Process can be
 specified in any of the following ways:
@@ -178,8 +178,8 @@ specified in any of the following ways:
 
 .. _Process_Input_And_Output:
 
-Process input and output
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Process input and output*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `input <Process.input>` of a Process is a list or 2d np.array provided as the **input** argument in its
 `execute <Process.execute>` method, or the **inputs** argument of its `run <Process.run>` method. When a
@@ -211,8 +211,8 @@ Mechanism.
 
 .. _Process_Learning_Sequence:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 Learning operates over a *learning sequence*: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` in
 a Process `pathway <Process.pathway>`, and the `MappingProjections <MappingProjection>` between them, that have
@@ -294,7 +294,14 @@ Execution
 A Process can be executed as part of a `System <System_Execution>` or on its own.  On its own, it is executed by calling
 either its `execute <Process.execute>` or `run <Process.run>` method.  `execute <Process.execute>` executes
 the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`\\s to be
-executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process.origin_mechanism>`
+executed.
+
+. _Process_Processing
+
+*Processing*
+~~~~~~~~~~~~
+
+When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process.origin_mechanism>`
 (the first Mechanism in the `pathway <Process.pathway>`).  By default, the the input is presented only once.  If
 the `origin_mechanism <Process.origin_mechanism>` is executed again in the same `PASS` of execution (e.g., if it
 appears again in the pathway, or receives recurrent projections), the input is not presented again. However, the input
@@ -332,8 +339,8 @@ see `Run` documentation for additional details of formatting `Run_Input` and `Ru
 
 .. _Process_Execution_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 If `learning <Process_Learning_Sequence>` has been specified for the Process or any of the projections in its `pathway
 <Process.pathway>`, then the learning Components described `above <Process_Learning_Components>` are executed after

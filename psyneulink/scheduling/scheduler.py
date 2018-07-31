@@ -167,8 +167,8 @@ associated with a given input to the Composition.
 
 .. _Scheduler_Termination_Conditions:
 
-Termination Conditions
-~~~~~~~~~~~~~~~~~~~~~~
+*Termination Conditions*
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
 and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is satisfied
@@ -182,6 +182,7 @@ or its **termination_learning** argument to terminate the execution of learning:
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
+
 Examples
 --------
 

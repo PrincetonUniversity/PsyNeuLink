@@ -68,8 +68,8 @@ In all other respects, a RecurrentTransferMechanism is specified in the same way
 
 .. _Recurrent_Transfer_Learning:
 
-Configuring Learning
-~~~~~~~~~~~~~~~~~~~~
+*Configuring Learning*
+~~~~~~~~~~~~~~~~~~~~~~
 
 A RecurrentTransferMechanism can be configured for learning when it is created by assigning `True` to the
 **enable_learning** argument of its constructor.  This creates an `AutoAssociativeLearningMechanism` that is used to
@@ -784,9 +784,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   integrator_mode=integrator_mode,
-                                                  # convergence_function=convergence_function,
-                                                  # convergence_criterion=convergence_criterion,
-                                                  # max_passes=max_passes,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
                                                   learning_condition=learning_condition,
@@ -1013,9 +1010,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
-
-        # if isinstance(self.convergence_function, Function):
-        #     self.convergence_function = self.convergence_function.function
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
@@ -1318,25 +1312,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             super().reinitialize(*args)
         self.previous_value = None
 
-    # @property
-    # def is_converged(self):
-    #     # Check for convergence
-    #     if (self.convergence_criterion is not None and
-    #             self.previous_value is not None and
-    #             self.context.initialization_status != ContextFlags.INITIALIZING):
-    #         if self.convergence_function([self._output, self.previous_value]) <= self.convergence_criterion:
-    #             return True
-    #         elif self.current_execution_time.pass_ >= self.max_passes:
-    #             raise RecurrentTransferError("Maximum number of executions ({}) has occurred before reaching "
-    #                                          "convergence_criterion ({}) for {} in trial {} of run {}".
-    #                                          format(self.max_passes, self.convergence_criterion, self.name,
-    #                                                 self.current_execution_time.trial, self.current_execution_time.run))
-    #         else:
-    #             return False
-    #     # Otherwise just return True
-    #     else:
-    #         return None
-    #
     @property
     def _learning_signal_source(self):
         '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`

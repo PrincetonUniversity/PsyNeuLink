@@ -36,8 +36,8 @@ Execution <System_Execution>`).
 
 .. _LearningMechanism_Note
 
-A Note about the Implementation of Learning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*A Note about the Implementation of Learning*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The implementation of learning in PsyNeuLink was designed for flexibility and "transparency" rather than efficiency.
 Unlike its implementation in most other environments -- where the learning algorithm is tightly integrated with the
@@ -66,8 +66,8 @@ More commonly, however, LearningMechanisms are created automatically.
 
 .. LearningMechanism_Automatic_Creation:
 
-Automatic Creation
-~~~~~~~~~~~~~~~~~~
+*Automatic Creation*
+~~~~~~~~~~~~~~~~~~~~
 
 A LearningMechanism is created automatically when:
 
@@ -86,8 +86,8 @@ required to implement learning that do not already exist are also instantiated. 
 
 .. _LearningMechanism_Explicit_Creation
 
-Explicit Creation
-~~~~~~~~~~~~~~~~~
+*Explicit Creation*
+~~~~~~~~~~~~~~~~~~~
 
 If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_sources**
 arguments must be specified.  The **variable** must have at leaset three items that are compatible (in number and type)
@@ -115,8 +115,8 @@ it has several attributes that govern and provide access to its operation.  Thes
 
 .. _LearningMechanism_InputStates:
 
-InputStates
-~~~~~~~~~~~
+*InputStates*
+~~~~~~~~~~~~~
 
 These receive the information required by the LearningMechanism's `function <LearningMechanism.function>`.  They are
 listed in the LearningMechanism's `input_states <LearningMechanism.input_states>` attribute.  They have the following
@@ -170,8 +170,8 @@ and `error_sources <LearningMechanism.error_sources>` attributes, respectively (
 
 .. _LearningMechanism_Function:
 
-Learning Function
-~~~~~~~~~~~~~~~~~
+*Learning Function*
+~~~~~~~~~~~~~~~~~~~
 
 The `function <LearningMechanism.function>` of a LearningMechanism uses the values received by the Mechanism's
 InputStates (described `above <LearningMechanism_InputStates>`) to calculate the value of its `learning_signal
@@ -218,8 +218,8 @@ as described below.
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates
-~~~~~~~~~~~~
+*OutputStates*
+~~~~~~~~~~~~~~
 
 By default, a LearningMechanism has two `OutputStates <OutputState>`, the first of which is named *ERROR_SIGNAL* and
 is assigned the value of the `error_signal <LearningMechanism.error_signal>` returned by the LearningMechanism's
@@ -283,8 +283,8 @@ They are each described below:
 
 .. _LearningMechanism_Additional_Attributes:
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+*Additional Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `InputStates <LearningMechanism_InputStates>`, `function <LearningMechanism_Function>` and
 `OutputStates <LearningMechanism_OutputStates>`, a LearningMechanism has the following attributes that
@@ -353,8 +353,8 @@ COMMENT:
 @@@ THE FOLLOWING SECTIONS SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
 COMMENT
 
-Learning Configurations
-~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Configurations*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When learning is specified for a `MappingProjection <Mapping_Matrix_Specification>`, a `Process
 <Process_Learning_Sequence>`, or a `System <System_Execution_Learning>`, all of the Components required for learning are

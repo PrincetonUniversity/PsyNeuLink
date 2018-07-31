@@ -34,7 +34,7 @@ __all__ = [
     'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
-    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY',
+    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
     'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
@@ -45,31 +45,34 @@ __all__ = [
     'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
     'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
     'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_PHASE', 'EXECUTION_TIME',
-    'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
+    'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
-    'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING',
-    'GATING_MECHANISM', 'GATING_POLICY', 'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
-    'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GILZENRAT_INTEGRATOR_FUNCTION', 'HARD_CLAMP',
-    'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION',
+    'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING', 'GATING_MECHANISM', 'GATING_POLICY',
+    'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
+    'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GAUSSIAN', 'GILZENRAT_INTEGRATOR_FUNCTION',
+    'HARD_CLAMP', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT__EXECUTE__METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
     'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
     'INPUTS_DIM', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE',
-    'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'kpMechanismControlAllocationsLogEntry',
-    'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry', 'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry',
-    'kwAddInputState', 'kwAddOutputState', 'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet',
-    'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
-    'kwMechanismComponentCategory', 'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue',
-    'kwMechanismDefaultParams', 'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
+    'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL',
+    'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
+    'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
+    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
+    'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
+    'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction', 'kwMechanismComponentCategory',
+    'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue', 'kwMechanismDefaultParams',
+    'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
     'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
     'kwMechanismParamValue', 'kwMechanismPerformance', 'kwMechanismTerminateFunction', 'kwMechanismType', 'kwParams',
     'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
-    'LCA_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
+    'kwSystemComponentCategory', 'kwThreshold',
+    'LABELS', 'LCA_MECHANISM', 'LEARNED_PARAM', 'LEARNING',
+    'LCAMechanism_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES',
     'LOGISTIC_FUNCTION', 'LOW',
@@ -370,7 +373,7 @@ CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
 STATEFUL_ATTRIBUTES = 'stateful_attributes'
-
+COUNT = 'COUNT'
 
 #endregion
 
@@ -479,6 +482,7 @@ LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
+KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -517,6 +521,7 @@ OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 NORMALIZING_FUNCTION_TYPE = "NORMALIZING FUNCTION TYPE"
 INTERFACE_FUNCTION_TYPE = "INTERFACE FUNCTION TYPE"
+SELECTION_FUNCTION_TYPE = "SELECTION FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
@@ -535,8 +540,9 @@ TRANSFER_MECHANISM = "TransferMechanism"
 LEABRA_MECHANISM = "LeabraMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 CONTRASTIVE_HEBBIAN_MECHANISM = "ContrastiveHebbianMechanism"
-LCA = "LCA"
-KWTA = "KWTA"
+LCA_MECHANISM = "LCAMechanism"
+KOHONEN_MECHANISM = 'KohonenMechanism'
+KWTA_MECHANISM = "KWTAMechanism"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
@@ -564,14 +570,15 @@ ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
 UTILITY_INTEGRATOR_FUNCTION = "AGTUtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
-LCA_INTEGRATOR_FUNCTION = 'LCAIntegrator Function'
+LCAMechanism_INTEGRATOR_FUNCTION = 'LCAIntegrator Function'
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
-CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbianFunction'
+CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
+KOHONEN_FUNCTION = 'Kohonen Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
@@ -714,6 +721,7 @@ MODULATION = 'modulation'
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
 LEARNED_PARAM = 'learned_param'
+LEARNED_PROJECTION = 'learned_projection'
 
 # ControlMechanism / EVCControlMechanism
 OBJECTIVE_MECHANISM = "objective_mechanism"
@@ -884,6 +892,9 @@ CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
+EXPONENTIAL = 'exponential'
+GAUSSIAN = 'gaussian'
+SINUSOID = 'sinusoid'
 
 REWARD = 'reward'
 NETWORK = 'network'

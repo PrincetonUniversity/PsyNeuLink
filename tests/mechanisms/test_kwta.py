@@ -10,21 +10,21 @@ from psyneulink.components.system import System
 from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.library.mechanisms.processing.transfer.kwta import KWTA, KWTAError
+from psyneulink.library.mechanisms.processing.transfer.kwtamechanism import KWTAMechanism, KWTAError
 from psyneulink.scheduling.time import TimeScale
 
 class TestKWTAInputs:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_kwta_empty_spec(self):
-        K = KWTA()
+        K = KWTAMechanism()
         assert(K.value is None)
         assert(K.instance_defaults.variable == [[0]])
         assert(K.size == [1])
         assert(K.matrix == [[5]])
 
     def test_kwta_check_attrs(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=3
         )
@@ -36,7 +36,7 @@ class TestKWTAInputs:
         assert(K.recurrent_projection.receiver is K.input_state)
 
     def test_kwta_inputs_list_of_ints(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             default_variable=[0, 0, 0, 0]
         )
@@ -46,7 +46,7 @@ class TestKWTAInputs:
         assert(np.allclose(val, [[0.3775406687981454, 0.6224593312018546, 0.8175744761936437, 0.18242552380635635]]))
 
     def test_kwta_no_inputs(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K'
         )
         assert(K.instance_defaults.variable == [[0]])
@@ -55,7 +55,7 @@ class TestKWTAInputs:
 
     def test_kwta_inputs_list_of_strings(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size = 4,
             )
@@ -64,7 +64,7 @@ class TestKWTAInputs:
 
     def test_kwta_var_list_of_strings(self):
         with pytest.raises(UtilitiesError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 default_variable=['a', 'b', 'c', 'd'],
                 integrator_mode=True
@@ -73,7 +73,7 @@ class TestKWTAInputs:
 
     def test_recurrent_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4
             )
@@ -82,7 +82,7 @@ class TestKWTAInputs:
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
         with pytest.raises(MechanismError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=6
             )
@@ -95,7 +95,7 @@ class TestKWTAFunction:
     def test_kwta_function_various_spec(self):
         specs = [Logistic, Linear, Linear(slope=3), Logistic(gain=2, offset=-4.2)]
         for s in specs:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=5,
                 function=s,
@@ -104,7 +104,7 @@ class TestKWTAFunction:
             K.execute([1, 2, 5, -2, .3])
 
     def test_kwta_log_gain(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=3,
             function=Logistic(gain=2),
@@ -114,7 +114,7 @@ class TestKWTAFunction:
         assert np.allclose(val, [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]])
 
     def test_kwta_log_offset(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=3,
             function=Logistic(offset=-.2),
@@ -125,7 +125,7 @@ class TestKWTAFunction:
 
     # the inhibition would have to be positive in order to get the desired activity level: thus, inhibition is set to 0
     def test_kwta_log_gain_offset(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=2,
             function=Logistic(gain=-.2, offset=4),
@@ -135,7 +135,7 @@ class TestKWTAFunction:
         assert np.allclose(val, [[0.017636340339722684, 0.039165722796764356]])
 
     def test_kwta_linear(self): # inhibition would be positive: so instead it is set to zero
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             threshold=3,
             size=3,
@@ -146,7 +146,7 @@ class TestKWTAFunction:
         assert np.allclose(val, [[1, 3, 4]])
 
     def test_kwta_linear_slope(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             threshold=.5,
             size=5,
@@ -157,7 +157,7 @@ class TestKWTAFunction:
         assert np.allclose(val, [[-2, 2, 4, 0, -2]])
 
     def test_kwta_linear_system(self):
-        K=KWTA(
+        K=KWTAMechanism(
             name='K',
             size=4,
             k_value=3,
@@ -170,7 +170,7 @@ class TestKWTAMatrix:
 
         for m in MATRIX_KEYWORD_VALUES:
             if m != RANDOM_CONNECTIVITY_MATRIX:
-                K = KWTA(
+                K = KWTAMechanism(
                     name='K',
                     size=4,
                     matrix=m
@@ -179,7 +179,7 @@ class TestKWTAMatrix:
                 assert(np.allclose(val, [[.5, .5, .5, .5]]))
 
     def test_kwta_matrix_auto_hetero_spec(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             auto=3,
@@ -188,7 +188,7 @@ class TestKWTAMatrix:
         assert(np.allclose(K.recurrent_projection.matrix, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]))
 
     def test_kwta_matrix_hetero_spec(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=3,
             hetero=-.5,
@@ -196,7 +196,7 @@ class TestKWTAMatrix:
         assert(np.allclose(K.recurrent_projection.matrix, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]]))
 
     def test_kwta_matrix_auto_spec(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=3,
             auto=-.5,
@@ -208,7 +208,7 @@ class TestKWTARatio:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_kwta_ratio_empty(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4
         )
@@ -222,7 +222,7 @@ class TestKWTARatio:
 
 
     def test_kwta_ratio_1(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             ratio=1
@@ -237,7 +237,7 @@ class TestKWTARatio:
 
 
     def test_kwta_ratio_0(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             ratio=0
@@ -254,7 +254,7 @@ class TestKWTARatio:
     # answers for this tests should be exactly 70% of the way between the answers for ratio=0 and ratio=1
     # (after taking the inverse of the Logistic function on the output)
     def test_kwta_ratio_0_3(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             ratio=0.3
@@ -270,7 +270,7 @@ class TestKWTARatio:
 
     def test_kwta_ratio_2(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 ratio=2
@@ -279,7 +279,7 @@ class TestKWTARatio:
 
     def test_kwta_ratio_neg_1(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 ratio=-1
@@ -289,7 +289,7 @@ class TestKWTARatio:
 
 class TestKWTAKValue:
     def test_kwta_k_value_empty_size_4(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4
         )
@@ -302,7 +302,7 @@ class TestKWTAKValue:
 
 
     def test_kwta_k_value_empty_size_6(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=6
         )
@@ -316,7 +316,7 @@ class TestKWTAKValue:
 
 
     def test_kwta_k_value_int_size_5(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=5,
             k_value=3
@@ -342,7 +342,7 @@ class TestKWTAKValue:
 
     def test_kwta_k_value_bad_float(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 k_value=2.5
@@ -351,7 +351,7 @@ class TestKWTAKValue:
 
     def test_kwta_k_value_list(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 k_value=[1, 2]
@@ -360,7 +360,7 @@ class TestKWTAKValue:
 
     def test_kwta_k_value_too_large(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 k_value=5
@@ -369,7 +369,7 @@ class TestKWTAKValue:
 
     def test_kwta_k_value_too_low(self):
         with pytest.raises(KWTAError) as error_text:
-            K = KWTA(
+            K = KWTAMechanism(
                 name='K',
                 size=4,
                 k_value=-5
@@ -381,14 +381,14 @@ class TestKWTAThreshold:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_kwta_threshold_empty(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4
         )
         assert K.threshold == 0
 
     def test_kwta_threshold_int(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             threshold=-1
@@ -400,7 +400,7 @@ class TestKWTAThreshold:
         assert np.allclose(K.value, [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]])
 
     def test_kwta_threshold_float(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             threshold=0.5
@@ -421,7 +421,7 @@ class TestKWTALongTerm:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_kwta_size_10_k_3_threshold_1(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=10,
             k_value=3,
@@ -455,7 +455,7 @@ class TestKWTAAverageBased:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_kwta_average_k_2(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             k_value=2,
@@ -470,7 +470,7 @@ class TestKWTAAverageBased:
         assert np.allclose(K.value, [[-1.5, -0.5, 0.5, 1.5]])
 
     def test_kwta_average_k_1(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             k_value=1,
@@ -485,7 +485,7 @@ class TestKWTAAverageBased:
         assert np.allclose(K.value, [[-2, -1, 0, 1]])
 
     def test_kwta_average_k_1_ratio_0_2(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             k_value=1,
@@ -501,7 +501,7 @@ class TestKWTAAverageBased:
         assert np.allclose(K.value, [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]])
 
     def test_kwta_average_k_1_ratio_0_8(self):
-        K = KWTA(
+        K = KWTAMechanism(
             name='K',
             size=4,
             k_value=1,

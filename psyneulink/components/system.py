@@ -56,8 +56,8 @@ class, and listed in its `processes <System.processes>` attribute.
 
 .. _System_Control_Specification:
 
-Specifying Control
-~~~~~~~~~~~~~~~~~~
+*Specifying Control*
+~~~~~~~~~~~~~~~~~~~~
 
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
@@ -129,8 +129,8 @@ The Components of a System are shown in the figure below and summarized in the s
 
 .. _System_Mechanisms:
 
-Mechanisms
-~~~~~~~~~~
+*Mechanisms*
+~~~~~~~~~~~~
 
 The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph
 <System.graph>` and/or the role they play in a System:
@@ -169,8 +169,8 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
 
 .. _System_Graph:
 
-Graph
-~~~~~
+*Graph*
+~~~~~~~
 
 When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
 `Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System.graph>` attribute.  A
@@ -192,8 +192,8 @@ COMMENT
 
 .. _System_Scheduler:
 
-Scheduler
-~~~~~~~~~
+*Scheduler*
+~~~~~~~~~~~
 
 Every System has two `Schedulers <Scheduler>`, one that handles the ordering of execution of its Components for
 `processing <System_Execution_Processing>` (assigned to its `scheduler_processing` attribute), and one that
@@ -209,8 +209,8 @@ additional details).  Both schedulers maintain a `Clock` that can be used to acc
 
 .. _System_Control:
 
-Control
-~~~~~~~
+*Control*
+~~~~~~~~~
 
 A System can be assigned a `ControlMechanism` as its `controller <System.controller>`, that can be  used to
 control parameters of other `Mechanisms <Mechanism>` in the System. Although any number of ControlMechanism can be
@@ -237,8 +237,8 @@ when a System is executed. The control Components of a System can be displayed u
 
 .. _System_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
 <System.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
@@ -267,8 +267,8 @@ met.  The execution of each `TRIAL` occurs in four phases: `initialization <Syst
 
 .. _System_Execution_Input_And_Initialization:
 
-Input and Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Input and Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The input to a System is specified in the **input** argument of either its `execute <System.execute>` or
 `run <System.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
@@ -286,8 +286,8 @@ and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mec
 
 .. _System_Execution_Processing:
 
-Processing
-~~~~~~~~~~
+*Processing*
+~~~~~~~~~~~~
 
 Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are executed
 in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is executed,
@@ -304,8 +304,8 @@ settle before another one execute -- see `example <Condition_Recurrent_Example>`
 
 .. _System_Execution_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 A System executes learning if it is specified for one or more `Processes <Process_Learning_Sequence>` in the System.
 The System's `learning <System.learning>` attribute indicates whether learning is enabled for the System. Learning
@@ -328,8 +328,8 @@ that a target value be provided for each `TARGET` Mechanism of the System (liste
 
 .. _System_Execution_Control:
 
-Control
-~~~~~~~
+*Control*
+~~~~~~~~~
 
 The System's `controller <System.controller>` is executed in the last phase of execution in a `TRIAL`, after all
 other Mechanisms in the System have executed.  Although a System may have more than one `ControlMechanism`, only one
@@ -359,8 +359,8 @@ COMMENT
 
 .. _System_Control_Examples:
 
-Specifying Control for a System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying Control for a System*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
 that include two `Mechanisms <Mechanism>` (not shown)::
@@ -1644,7 +1644,7 @@ class System(System_Base):
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
             # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
-            # origin mechanism (useful only if the origin mechanism is a KWTA) Check, for each ORIGIN mechanism,
+            # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
@@ -4499,7 +4499,9 @@ class System(System_Base):
 
         # return
         if output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
+            # G.format = 'svg'
+            # x = G.render()
+            G.view(self.name.replace(" ", "-"), cleanup=True, )
         elif output_fmt == 'jupyter':
             return G
 
