@@ -121,8 +121,8 @@ class TestControlMechanisms:
         # assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = comp.run(inputs={Tx: [1, 1],
                                   Ty: [4, 4]})
-        # assert np.allclose(result, [[[4.], [4.]],
-        #                             [[4.], [4.]]])
+        assert np.allclose(result, [[[4.], [4.]],
+                                    [[4.], [4.]]])
 
 
 class TestControllers:
@@ -174,7 +174,7 @@ class TestControllers:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_c_node(Reward)
-        comp.add_controller(EVCControlMechanism())
+        comp.add_controller(EVCControlMechanism(name="controller"))
         comp.enable_controller = True
         # TBI: comp.monitor for control
 
