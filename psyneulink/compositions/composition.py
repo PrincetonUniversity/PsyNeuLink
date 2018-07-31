@@ -1509,8 +1509,9 @@ class Composition(object):
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_before_trial()
+
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
-                                                                                  execution_id=execution_id):
+                                                                  execution_id=execution_id):
                 break
 
         # PROCESSING ------------------------------------------------------------------------
