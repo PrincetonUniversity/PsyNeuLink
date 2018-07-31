@@ -742,7 +742,7 @@ class TestRun:
     #     assert 25 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -755,7 +755,8 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 125 == output[0][0]
 
@@ -797,7 +798,7 @@ class TestRun:
         assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
         #              ==> E
@@ -828,12 +829,13 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 250 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator 
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
@@ -851,12 +853,13 @@ class TestRun:
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 50.0 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
 
@@ -875,12 +878,13 @@ class TestRun:
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 50.0 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
 
@@ -894,13 +898,14 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
 
         assert 40.0 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
 
@@ -914,13 +919,14 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
 
         assert 40.0 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -934,12 +940,13 @@ class TestRun:
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            num_trials=5
+            num_trials=5,
+            bin_execute=(mode=='LLVM')
         )
         assert 125 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -953,12 +960,13 @@ class TestRun:
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            num_trials=3
+            num_trials=3,
+            bin_execute=(mode=='LLVM')
         )
         assert 75 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_execute_composition(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -971,12 +979,13 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 75 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_LPP(self, mode):
 
         comp = Composition()
@@ -991,12 +1000,13 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 32 == output[0][0]
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_LPP_with_projections(self, mode):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))  # 1 x 2 = 2
@@ -1012,7 +1022,8 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 32 == output[0][0]
 
@@ -1067,7 +1078,7 @@ class TestRun:
             error_text.value)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
         #              ==> E
@@ -1091,7 +1102,8 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert 250 == output[0][0]
 
