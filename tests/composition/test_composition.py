@@ -741,7 +741,9 @@ class TestRun:
     #     )
     #     assert 25 == output[0][0]
 
-    def test_run_2_mechanisms_input_5(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -794,7 +796,9 @@ class TestRun:
 
         assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
 
-    def test_run_5_mechanisms_2_origins_1_terminal(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
         #              ==> E
         # B ----> D --
@@ -828,7 +832,9 @@ class TestRun:
         )
         assert 250 == output[0][0]
 
-    def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
         A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
@@ -849,7 +855,9 @@ class TestRun:
         )
         assert 50.0 == output[0][0]
 
-    def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -871,7 +879,9 @@ class TestRun:
         )
         assert 50.0 == output[0][0]
 
-    def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -889,7 +899,9 @@ class TestRun:
 
         assert 40.0 == output[0][0]
 
-    def test_sender_receiver_not_specified(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -907,7 +919,9 @@ class TestRun:
 
         assert 40.0 == output[0][0]
 
-    def test_run_2_mechanisms_reuse_input(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -924,7 +938,9 @@ class TestRun:
         )
         assert 125 == output[0][0]
 
-    def test_run_2_mechanisms_double_trial_specs(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -941,7 +957,9 @@ class TestRun:
         )
         assert 75 == output[0][0]
 
-    def test_execute_composition(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_execute_composition(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -957,7 +975,9 @@ class TestRun:
         )
         assert 75 == output[0][0]
 
-    def test_LPP(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_LPP(self, mode):
 
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))   # 1 x 2 = 2
@@ -975,7 +995,9 @@ class TestRun:
         )
         assert 32 == output[0][0]
 
-    def test_LPP_with_projections(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_LPP_with_projections(self, mode):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))  # 1 x 2 = 2
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))  # 2 x 2 = 4
@@ -1044,7 +1066,9 @@ class TestRun:
         assert "A linear processing pathway must be made up of Projections and Mechanisms." in str(
             error_text.value)
 
-    def test_LPP_two_origins_one_terminal(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
         #              ==> E
         # B ----> D --
