@@ -4250,22 +4250,6 @@ class SoftMax(NormalizingFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    # FIXME: Transfermechanism initializes this function on 2d array
-    #        while its expected to run on 1d array
-    def get_input_struct_type(self):
-        default_var = np.atleast_2d(self.instance_defaults.variable)
-        assert default_var.ndim == 2
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
-
-    # FIXME: Transfermechanism initializes this function on 2d array
-    #        while its expected to run on 1d array
-    def get_output_struct_type(self):
-        default_val = np.atleast_2d(self.instance_defaults.value)
-        assert default_val.ndim == 2
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val[0])
-
     def get_param_ids(self):
         return [GAIN]
 
@@ -4303,7 +4287,7 @@ class SoftMax(NormalizingFunction):
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
 
@@ -4342,6 +4326,19 @@ class SoftMax(NormalizingFunction):
             builder.store(ctx.float_ty(1), ptro)
 
         return builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        if self.get_current_function_param(PER_ITEM):
+            print(self.get_current_function_param(PER_ITEM))
+            assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply(ctx, builder, params, _, inner_in, inner_out)
+            return builder
+        else:
+            return self.__gen_llvm_apply(ctx, builder, params, _, arg_in, arg_out)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain

@@ -1138,17 +1138,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, arg_in)
 
-
-        if isinstance(self.function_object, NormalizingFunction):
-            # Call for each input state separately
-            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            mf_out = builder.alloca(ir.ArrayType(main_function.args[3].type.pointee, len(self.input_states)), 1)
-            for i, state in enumerate(self.input_states):
-                mf_in_local = builder.gep(mf_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder.call(main_function, [mf_params, mf_context, mf_in_local, mf_out_local])
-        else:
-            mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_context, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_context, mf_in)
 
         clip = self.get_current_mechanism_param("clip")
         if clip is not None:

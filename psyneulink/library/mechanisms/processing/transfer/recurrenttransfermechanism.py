@@ -182,7 +182,7 @@ from llvmlite import ir
 
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
-    Function, Distance, Hebbian, Linear, LinearCombination, NormalizingFunction, Stability, UserDefinedFunction, get_matrix, is_function_type
+    Function, Distance, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
