@@ -42,8 +42,8 @@ are `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjecti
 
 .. _Auto_Associative_Configurable_Attributes:
 
-Configurable Attributes
-~~~~~~~~~~~~~~~~~~~~~~~
+*Configurable Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the `variable` is
 determined by the format of the output of the RecurrentTransferMechanism, the `function` is always LinearMatrix, and so

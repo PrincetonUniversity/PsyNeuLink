@@ -116,8 +116,8 @@ mentioned above, or using one of the following:
 
 .. _Mechanism_State_Specification:
 
-Specifying States
-~~~~~~~~~~~~~~~~~
+*Specifying States*
+~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
@@ -179,8 +179,8 @@ See `State <State_Examples>` for additional examples of specifying the States of
 
 .. _Mechanism_Parameter_Specification:
 
-Specifying Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
 current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
@@ -198,8 +198,8 @@ Structure
 
 .. _Mechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
@@ -347,8 +347,8 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 
 .. _Mechanism_States:
 
-States
-~~~~~~
+*States*
+~~~~~~~~
 
 Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
 `ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
@@ -613,8 +613,8 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 
 .. _Mechanism_Additional_Attributes:
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+*Additional Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Mechanism_Constructor_Arguments:
 
@@ -816,8 +816,8 @@ Finally, a Mechanism has an attribute that contains a dictionary of its attribut
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
-Role in Processes and Systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Role in Processes and Systems*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mechanisms that are part of one or more `Processes <Process>` are assigned designations that indicate the
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
@@ -849,8 +849,8 @@ tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Pa
 
 .. _Mechanism_Runtime_Parameters:
 
-Runtime Parameters
-~~~~~~~~~~~~~~~~~~
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This is an advanced feature, and is generally not required for most applications.

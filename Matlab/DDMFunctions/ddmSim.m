@@ -12,7 +12,7 @@ import EVC.DDM.*;
     % allVpairs = for entering a series of value pairs to determine a series of drift rates (based on value difference) while retaining *overall* value as well
     % actualChoices = binary choices from actual expt (if generating simulated RTs conditioned on correct vs. error choice)
     % sepCDFs [default 0] = produce estimated cumul. dens. fxn for correct vs. error trials?
-    % numNDDMsims [default 0] = how many simulations to run of "neural DDM" (a DDM implementation from Hare et al., 2011 that is almost identical to an LCA, meant for comparison to their models)
+    % numNDDMsims [default 0] = how many simulations to run of "neural DDM" (a DDM implementation from Hare et al., 2011 that is almost identical to an LCAMechanism, meant for comparison to their models)
 % OUTPUTS:
     % allERs = avg error rates corresponding to each drift rate tested (e.g., based on relative option values)
     % allDTs = avg decision times (i.e., first passage times; not including non-decision components) corresponding to each drift rate tested

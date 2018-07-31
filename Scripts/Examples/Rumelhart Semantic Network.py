@@ -94,5 +94,6 @@ S = pnl.System(processes=[rep_hidden_proc,
 
 # Shows all of the learning components:
 # S.show_graph(show_learning=pnl.ALL)
-# S.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
-S.show_graph(show_processes=True)
+S.show_graph(show_mechanism_structure=True)
+# S.show_graph(show_processes=True)
+# S.show_graph()

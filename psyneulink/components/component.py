@@ -34,8 +34,8 @@ and `Informational Attributes` below).
 
 .. _Component_Deferred_Init:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
@@ -55,7 +55,7 @@ Component Structure
 
 .. _Component_Structural_Attributes:
 
-Core Structural Attributes
+*Core Structural Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
@@ -173,8 +173,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _User_Modifiable_Parameters:
 
-User-modifiable Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+*User-modifiable Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Component_User_Params:
 
@@ -246,8 +246,8 @@ User-modifiable Parameters
 
 .. _Informational_Attributes:
 
-Informational Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Informational Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `user-modifiable parameters <Component_User_Params>`, a Component has attributes that provide
 information about its contents and/or state, but do not directly affect its operation.  Every Component has the
@@ -286,8 +286,8 @@ COMMENT
 
 .. _Component_Methods:
 
-Component Methods
-~~~~~~~~~~~~~~~~~
+*Component Methods*
+~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
    FOR DEVELOPERS:
