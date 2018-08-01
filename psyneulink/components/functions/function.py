@@ -10422,6 +10422,57 @@ COMMENT
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
+    def get_param_ids(self):
+        return MATRIX,
+
+    def get_param_struct_type(self):
+        my_params = super().get_param_struct_type()
+        metric_params = self._metric_fct.get_param_struct_type()
+        transfer_params = self.transfer_fct.get_param_struct_type() if self.transfer_fct is not None else ir.LiteralStructType([])
+        return ir.LiteralStructType([my_params, metric_params, transfer_params])
+
+    def get_param_initializer(self):
+        my_params = super().get_param_initializer()
+        metric_params = self._metric_fct.get_param_initializer()
+        transfer_params = self.transfer_fct.get_param_initializer() if self.transfer_fct is not None else tuple()
+        return tuple([my_params, metric_params, transfer_params])
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        # Dot product
+        dot_out = builder.alloca(arg_in.type.pointee)
+        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        matrix, builder = self.get_param_ptr(ctx, builder, my_params, MATRIX)
+
+        # Convert array pointer to pointer to the fist element
+        matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(dot_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        input_length = ctx.int32_ty(arg_in.type.pointee.count)
+        output_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
+
+        # Prepare metric function
+        metric_fun = ctx.get_llvm_function(self._metric_fct.llvmSymbolName)
+        metric_in = builder.alloca(metric_fun.args[2].type.pointee)
+
+        # Transfer Function if configured
+        trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        if self.transfer_fct is not None:
+            assert False
+        else:
+            builder.store(builder.load(dot_out), trans_out)
+
+        # Copy original variable
+        builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+
+        # Distance Function
+        metric_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        metric_state = state
+        metric_out = arg_out
+        builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
+        return builder
 
     def function(self,
                  variable=None,
