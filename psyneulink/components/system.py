@@ -4218,10 +4218,14 @@ class System(System_Base):
 
             proj_receiver = proj.receiver.owner
             proj_learning_in_execution_phase = (proj.has_learning_projection and
-                                                proj.has_learning_projection.sender.owner.learning_timing)
+                                                proj.has_learning_projection.sender.owner.learning_timing is
+                                                LearningTiming.EXECUTION_PHASE)
 
             # If Projection has a LearningProjection from a LearningMechanism
             #    that executes in the execution_phase, include it here
+            # if (proj.has_learning_projection and
+            #         proj.has_learning_projection.sender.owner.learning_timing is
+            #         LearningTiming.EXECUTION_PHASE):
             if proj_learning_in_execution_phase:
                 learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
                 learning_rcvrs = [learning_mech, proj]
