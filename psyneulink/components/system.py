@@ -2826,7 +2826,8 @@ class System(System_Base):
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
                 # MODIFIED 7/29 NEW:
-                self.show_graph(show_learning=ALL, active_item=mechanism)
+                if self.animate:
+                    self.show_graph(show_learning=ALL, active_item=mechanism)
                 self._component_execution_count += 1
                 # MODIFIED 7/29 END
 
@@ -2937,7 +2938,8 @@ class System(System_Base):
                 component.context.execution_phase = ContextFlags.IDLE
 
                 # MODIFIED 7/29 NEW:
-                self.show_graph(show_learning=ALL, active_item=component)
+                if self.animate:
+                    self.show_graph(show_learning=ALL, active_item=component)
                 self._component_execution_count += 1
                 # MODIFIED 7/29 END
 
@@ -2973,7 +2975,8 @@ class System(System_Base):
                                                                              component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                self.show_graph(show_learning=ALL, active_item=component)
+                if self.animate:
+                    self.show_graph(show_learning=ALL, active_item=component)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -3016,6 +3019,7 @@ class System(System_Base):
             termination_learning=None,
             runtime_params=None,
             reinitialize_values=None,
+            animate=False,
             context=None):
 
         """Run a sequence of executions
@@ -3096,6 +3100,7 @@ class System(System_Base):
         self.initial_values = initial_values
 
         self._component_execution_count=0
+        self.animate = animate
 
         logger.debug(inputs)
 
@@ -3928,7 +3933,7 @@ class System(System_Base):
             for sndr in sndrs:
                 if not processes or any(p in processes for p in sndr.processes.keys()):
 
-                # Set sndr info
+                    # Set sndr info
 
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
 
@@ -3956,19 +3961,25 @@ class System(System_Base):
                     edge_label = edge_name
 
                     # Render projections
-                    if selected_proj.receiver.owner is active_item:
+                    if active_item in {selected_proj, selected_proj.receiver.owner}:
                         proj_color = active_color
                         proj_width = active_width
+
+                    # Projection to or from a LearningMechanism
                     elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                         proj_color = learning_color
                         proj_width = default_width
+
                     else:
                         proj_color = default_node_color
                         proj_width = default_width
                     proc_mech_label = edge_label
 
                     if show_learning and has_learning:
-                        # Note: Projections can't yet use structured nodes:
+                        # Render Projection as node
+                        #    (do it here rather than in _assign_learning_components,
+                        #     as it needs afferent and efferent edges to other nodes)
+                        # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
                         deferred = not render_projection_as_node(G=G, sg=sg, processes=processes,
                                                                  proj=selected_proj,
                                                                  label=proc_mech_label,
@@ -3976,6 +3987,8 @@ class System(System_Base):
                                                                  sndr_label=sndr_proj_label,
                                                                  proj_color=proj_color,
                                                                  proj_width=proj_width)
+                        # Deferred if it is the last Mechanism in a learning sequence
+                        # (see _render_projection_as_node
                         if deferred:
                             continue
                     else:
@@ -4038,42 +4051,54 @@ class System(System_Base):
 
             # if rcvr is projection (i.e., recipient of a LearningProjection)
             if isinstance(rcvr, MappingProjection):
+                pass
 
-                # Don't render if LearningProjection to rcvr is from LearningMechanism that executes in execution_phase
-                #    (it was already rendered in _assign_processing_components)
-                if not rcvr.has_learning_projection.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE:
+                # # MODIFIED 8/1/18 OLD:
+                # if rcvr is active_item:
+                #
+                #     # Don't render if LearningProjection to rcvr is from LearningMechanism that executes in execution_phase
+                #     #    (it was already rendered in _assign_processing_components)
+                #     if not rcvr.has_learning_projection.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE:
+                #
+                #         # If Projection's receiver is the active_item, skip rendering,
+                #         #   since it has already been shown in the active color
+                #         if not rcvr.receiver.owner is active_item:
+                #             # else, render
+                #             if rcvr is active_item:
+                #                 proj_color = active_color
+                #             else:
+                #                 proj_color = default_node_color
+                #             proj_width = rcvr_width
+                #
+                #             render_projection_as_node(G=G, sg=sg, processes=processes,
+                #                                       proj=rcvr,
+                #                                       label=rcvr_label,
+                #                                       proj_color=proj_color,
+                #                                       proj_width=proj_width)
+                # # MODIFIED 8/1/18 END
 
-                    # If Projection's receiver is the active_item, skip rendering,
-                    #   since it has already been shown in the active color
-                    if not rcvr.receiver.owner is active_item:
-                        render_projection_as_node(G=G, sg=sg, processes=processes,
-                                                  proj=rcvr,
-                                                  label=rcvr_label,
-                                                  proj_color=rcvr_color,
-                                                  proj_width=rcvr_width)
+                    # FIX: MOVE TO render_learning_projections FUNCTION, AND
+                    # FIX: ALSO CALL IN _assign_processing_components FOR MAPPING PROJECTIONS THAT ARE GETTING RENDERED
+                    # FIX: ALTERNATIVELY, MOVED THIS TO render_projection_as_node
 
-                # FIX: MOVE TO render_learning_projections FUNCTION, AND
-                # FIX: ALSO CALL IN _assign_processing_components FOR MAPPING PROJECTIONS THAT ARE GETTING RENDERED
-                # FIX: ALTERNATIVELY, MOVED THIS TO render_projection_as_node
-
-                # # for each sndr of rcvr
-                # sndrs = lg[rcvr]
-                # for sndr in sndrs:
-                #     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                #     if show_projection_labels:
-                #         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                #     else:
-                #         edge_label = ''
-                #     if show_mechanism_structure:
-                #         # G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                #         G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                #                self._get_label(rcvr, show_dimensions, show_roles),
-                #                label=edge_label, color=rcvr_color, penwidth=rcvr_width)
-                #     else:
-                #         G.edge(self._get_label(sndr, show_dimensions, show_roles),
-                #                self._get_label(rcvr, show_dimensions, show_roles),
-                #                label = edge_label, color=rcvr_color, penwidth=rcvr_width)
-                # FIX: END OF MOVED
+                    # # for each sndr of rcvr
+                    # sndrs = lg[rcvr]
+                    # for sndr in sndrs:
+                    #     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+                    #     if show_projection_labels:
+                    #         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                    #     else:
+                    #         edge_label = ''
+                    #     if show_mechanism_structure:
+                    #         # G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                    #         G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                    #                self._get_label(rcvr, show_dimensions, show_roles),
+                    #                label=edge_label, color=rcvr_color, penwidth=rcvr_width)
+                    #     else:
+                    #         G.edge(self._get_label(sndr, show_dimensions, show_roles),
+                    #                self._get_label(rcvr, show_dimensions, show_roles),
+                    #                label = edge_label, color=rcvr_color, penwidth=rcvr_width)
+                    # FIX: END OF MOVED
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             else:
@@ -4185,8 +4210,7 @@ class System(System_Base):
                                        color=learning_proj_color, penwidth=learning_proj_width)
 
         def render_projection_as_node(G, sg, processes,
-                                      proj,
-                                      label, 
+                                      proj, label,
                                       proj_color, proj_width,
                                       sndr_label=None,
                                       rcvr_label=None):
@@ -4216,15 +4240,50 @@ class System(System_Base):
                        for proj in rcvr.efferents)):
                     return False
 
+            # Node for Projection
             sg.node(label, shape=projection_shape, color=proj_color, penwidth=proj_width)
+
+            if proj.receiver.owner is active_item:
+                edge_color = proj_color
+                edge_width = proj_width
+            else:
+                edge_color = default_node_color
+                edge_width = default_width
+
             # Edges to and from Projection node
             if sndr_label:
                 G.edge(sndr_label, label, arrowhead='none',
-                       color=proj_color, penwidth=proj_width)
+                       color=edge_color, penwidth=edge_width)
             if rcvr_label:
                 G.edge(label, rcvr_label,
-                       color=proj_color, penwidth=proj_width)
+                       color=edge_color, penwidth=edge_width)
 
+
+            # FIX: MOVED FROM _assign_learning_compo;nents
+            # LearningProjection(s) to node
+            if proj is active_item:
+                learning_proj_color = active_color
+                learning_proj_width = active_width
+            else:
+                learning_proj_color = learning_color
+                learning_proj_width = default_width
+            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            for sndr in sndrs:
+                sndr_label = self._get_label(sndr.sender.owner, show_dimensions, show_roles)
+                rcvr_label = self._get_label(proj, show_dimensions, show_roles)
+                if show_projection_labels:
+                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                else:
+                    edge_label = ''
+                if show_mechanism_structure:
+                    G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                           rcvr_label,
+                           label=edge_label,
+                           color=learning_proj_color, penwidth=learning_proj_width)
+                else:
+                    G.edge(sndr_label, rcvr_label, label = edge_label,
+                           color=learning_proj_color, penwidth=learning_proj_width)
+            # FIX: END OF MOVED
 
             return True
 
@@ -4458,7 +4517,7 @@ class System(System_Base):
         # learning_rcvrs = list(learning_graph.keys())
         learning_rcvrs = self.learning_execution_list
 
-        # MANAGE ProcessMechanisms
+        # MANAGE ProcessingMechanisms and LearningMechanisms
 
         # if show_processes is specified, create subgraphs for each Process
         if show_processes:
@@ -4577,7 +4636,7 @@ class System(System_Base):
                          cleanup=True,
                          view=True)
             # G.format = 'pdf'
-            # G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
         elif output_fmt == 'jupyter':
             return G
 
