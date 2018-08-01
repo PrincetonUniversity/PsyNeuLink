@@ -2595,8 +2595,12 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable,
-                                                          context=ContextFlags.INSTANTIATE)
+        function_variable = copy.deepcopy(
+            self._parse_function_variable(
+                self.instance_defaults.variable,
+                context=ContextFlags.INSTANTIATE
+            )
+        )
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable,
