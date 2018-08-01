@@ -2151,15 +2151,6 @@ class Component(object):
         if not isinstance(variable, (list, np.ndarray)):
             variable = np.atleast_1d(variable)
 
-        try:
-            # if variable has a single int/float/etc. within some number of dimensions, and the
-            # instance default variable expects a single value within another number of dimensions,
-            # convert variable to match instance default
-            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
-                variable.resize(self.instance_defaults.variable.shape)
-        except AttributeError:
-            pass
-
         return convert_all_elements_to_np_array(variable)
 
     # ---------------------------------------------------------
