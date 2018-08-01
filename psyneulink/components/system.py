@@ -4216,11 +4216,13 @@ class System(System_Base):
                                       rcvr_label=None):
             from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
+            proj_receiver = proj.receiver.owner
+            proj_learning_in_execution_phase = (proj.has_learning_projection and
+                                                proj.has_learning_projection.sender.owner.learning_timing)
+
             # If Projection has a LearningProjection from a LearningMechanism
             #    that executes in the execution_phase, include it here
-            if (proj.has_learning_projection and
-                    proj.has_learning_projection.sender.owner.learning_timing is
-                    LearningTiming.EXECUTION_PHASE):
+            if proj_learning_in_execution_phase:
                 learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
                 learning_rcvrs = [learning_mech, proj]
                 learning_graph={proj:{learning_mech}}
@@ -4234,16 +4236,16 @@ class System(System_Base):
                 # Get any processes to which recvr belongs
                 procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
                 # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
-                if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
-                       and proj.receiver.owner._role == LEARNING
-                       and set(procs).intersection(proj.receiver.owner.processes)
+                if (any(isinstance(proj_receiver, ComparatorMechanism)
+                       and proj_receiver._role == LEARNING
+                       and set(procs).intersection(proj_receiver.processes)
                        for proj in rcvr.efferents)):
                     return False
 
             # Node for Projection
             sg.node(label, shape=projection_shape, color=proj_color, penwidth=proj_width)
 
-            if proj.receiver.owner is active_item:
+            if proj_receiver is active_item:
                 edge_color = proj_color
                 edge_width = proj_width
             else:
@@ -4258,10 +4260,9 @@ class System(System_Base):
                 G.edge(label, rcvr_label,
                        color=edge_color, penwidth=edge_width)
 
-
             # FIX: MOVED FROM _assign_learning_compo;nents
             # LearningProjection(s) to node
-            if proj is active_item:
+            if proj is active_item or (proj_learning_in_execution_phase and proj_receiver is active_item):
                 learning_proj_color = active_color
                 learning_proj_width = active_width
             else:
