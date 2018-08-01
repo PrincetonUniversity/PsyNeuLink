@@ -223,10 +223,10 @@ class TestModels:
                       task_input_layer: [0, 1]}
 
         bidirectional_stroop.run(inputs=input_dict)
-        print(bidirectional_stroop.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL))
-        print(bidirectional_stroop.output_values)
-        for node in bidirectional_stroop.c_nodes:
-            print(node.name, " Value: ", node.output_values)
+        # print(bidirectional_stroop.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL))
+        # print(bidirectional_stroop.output_values)
+        # for node in bidirectional_stroop.c_nodes:
+        #     print(node.name, " Value: ", node.output_values)
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
@@ -831,14 +831,14 @@ class TestModels:
 
         # results_1 is all zeros due to output state function
 
-        assert np.allclose(words_input_layer.value, [[1., 0.]],  rtol=1e-03)
-        assert np.allclose(word_feature_layer.value, [[0.00550112, 0.00550112]],  rtol=1e-03)
-        assert np.allclose(response_layer.value, [[0.01798621, 0.01798621]],  rtol=1e-03)
-        assert np.allclose(colors_input_layer.value, [[1., 0.]],  rtol=1e-03)
-        assert np.allclose(color_feature_layer.value,  [[0.00554086,  0.00554086]],  rtol=1e-03)
-        assert np.allclose(task_input_layer.value, [[0.025, 0.]],  rtol=1e-03)
-        assert np.allclose(task_demand_layer.value, [[0.01983591, 0.01774496]],  rtol=1e-03)
-        assert np.allclose(bias_input.value, [[-0.3, -0.3]],  rtol=1e-03)
+        assert np.allclose(words_input_layer.value, [[1., 0.]])
+        assert np.allclose(word_feature_layer.value, [[0.00550112, 0.00550112]])
+        assert np.allclose(response_layer.value, [[0.01798621, 0.01798621]])
+        assert np.allclose(colors_input_layer.value, [[1., 0.]])
+        assert np.allclose(color_feature_layer.value,  [[0.00554086,  0.00554086]])
+        assert np.allclose(task_input_layer.value, [[0.025, 0.]])
+        assert np.allclose(task_demand_layer.value, [[0.01983591, 0.01774496]])
+        assert np.allclose(bias_input.value, [[-0.3, -0.3]])
 
         color_input_weights.matrix = np.array([
             [1.0, 0.0],  # set color input projections to 1 on the diagonals to e.g.
@@ -851,12 +851,11 @@ class TestModels:
 
         results_2 = PCTC.run(inputs=congruent_input,
                              termination_processing=terminate_trial)  # run system with congruent stimulus input until
-
         assert np.allclose(words_input_layer.value, [[1., 0.]])
-        assert np.allclose(word_feature_layer.value, [[0.23271063, 0.0017892]],  rtol=1e-04)
-        assert np.allclose(response_layer.value, [[0.72332318, 0.00110829]])
+        assert np.allclose(word_feature_layer.value, [[0.23271063, 0.0017892]],  rtol=1e-02)
+        assert np.allclose(response_layer.value, [[0.72332318, 0.00110829]], rtol=1e-02)
         assert np.allclose(colors_input_layer.value, [[1., 0.]])
-        assert np.allclose(color_feature_layer.value, [[0.50484897, 0.00194202]])
+        assert np.allclose(color_feature_layer.value, [[0.50484897, 0.00194202]], rtol=1e-02)
         assert np.allclose(task_input_layer.value, [[0.025, 0.]])
-        assert np.allclose(task_demand_layer.value, [[0.39605925, 0.01018448]])
+        assert np.allclose(task_demand_layer.value, [[0.39605925, 0.01018448]], rtol=1e-02)
         assert np.allclose(bias_input.value, [[-0.3, -0.3]])
