@@ -57,15 +57,18 @@ from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import PredictionMechanism
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import PREDICTION_MECHANISM, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.context import Context
 
 __all__ = [
     'Composition', 'CompositionError', 'CNodeRole',
@@ -352,6 +355,7 @@ class Composition(object):
         # core attributes
         if name is None:
             name = "composition"
+        self.context = Context()
         self.name = name
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
@@ -393,6 +397,34 @@ class Composition(object):
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
+    def _instantiate_prediction_mechanisms(self, context=None):
+
+        if self.controller and self.enable_controller:
+
+            self.prediction_mechanisms = []
+            self.prediction_projections = {}
+            self.prediction_origin_pairs = {}
+            self.origin_prediction_pairs = {}
+
+            for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
+                new_prediction_mechanism = IntegratorMechanism(name=node.name + " " + PREDICTION_MECHANISM,
+                                                               default_variable=node.external_input_values)
+                self.prediction_mechanisms.append(new_prediction_mechanism)
+                self.prediction_origin_pairs[new_prediction_mechanism] = node
+                self.origin_prediction_pairs[node] = new_prediction_mechanism
+
+                for i in range(len(node.external_input_states)):
+                    input_state = node.external_input_states[i]
+                    input_cim_output_state = self.input_CIM_states[input_state][1]
+                    new_projection = MappingProjection(sender=input_cim_output_state,
+                                                       receiver=new_prediction_mechanism._input_states[i])
+
+                    self.prediction_projections[node] = new_projection
+
+    def _execute_prediction_mechanisms(self, context=None):
+
+        for prediction_mechanism in self.prediction_mechanisms:
+            prediction_mechanism.execute(context=context)
 
     @property
     def graph_processing(self):
@@ -700,7 +732,7 @@ class Composition(object):
             raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                    "Components in the Composition.".format(projection, receiver))
 
-    def _analyze_graph(self, graph=None):
+    def _analyze_graph(self, graph=None, context=None):
         ########
         # Determines identity of significant nodes of the graph
         # Each node falls into one or more of the following categories
@@ -780,7 +812,7 @@ class Composition(object):
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
-        self._create_CIM_states()
+        self._create_CIM_states(context=context)
 
         self.needs_update_graph = False
 
@@ -955,7 +987,7 @@ class Composition(object):
                                          "{!s} where the InputState takes values of length {!s}".
                                          format(i, mech.name, val_length, state_length))
 
-    def _create_CIM_states(self):
+    def _create_CIM_states(self, context=None):
         '''
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
@@ -1079,6 +1111,8 @@ class Composition(object):
             self.output_CIM.input_states.remove(self.output_CIM_states[output_state][0])
             self.output_CIM.output_states.remove(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
+
+        self._instantiate_prediction_mechanisms(context=context)
 
     def _assign_values_to_input_CIM(self, inputs):
         """
@@ -1355,14 +1389,24 @@ class Composition(object):
             output_values.append(self.output_CIM.output_states[i].value)
 
         # control phase
-        if self.controller:
-            if self.enable_controller:
-                allocation_policy = self.controller.composition_execute(context=ContextFlags.PROCESSING)
-                self.controller.before_simulation(allocation_policy=allocation_policy)
-                self.run_simulation()
-                self.controller.after_simulation()
+        if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            if self.controller:
+                simulation_input_dict = self.update_predicted_input()
+                self.controller.before_simulation(context=ContextFlags.PROCESSING)
+                self.run_simulation(simulation_inputs=simulation_input_dict,
+                                    context=ContextFlags.SIMULATION)
+                # self.controller.composition_execute(context=ContextFlags.PROCESSING)
 
         return output_values
+
+    def update_predicted_input(self, context=None):
+        predicted_input = {}
+        for prediction_mechanism in self.prediction_mechanisms:
+            origin_node = self.prediction_origin_pairs[prediction_mechanism]
+            predicted_input[origin_node] = prediction_mechanism.value
+
+        return predicted_input
+
 
     def run(
         self,
@@ -1381,7 +1425,8 @@ class Composition(object):
         call_after_trial=None,
         clamp_input=SOFT_CLAMP,
         targets=None,
-        runtime_params=None
+        runtime_params=None,
+        context=None
     ):
         '''
             Passes inputs to compositions, then executes
@@ -1513,7 +1558,7 @@ class Composition(object):
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_id=execution_id):
                 break
-
+            self._execute_prediction_mechanisms()
         # PROCESSING ------------------------------------------------------------------------
 
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
@@ -1595,8 +1640,10 @@ class Composition(object):
 
         return self.results
 
-    def run_simulation(self):
-        print("simulation runs now")
+    def run_simulation(self, simulation_inputs, context=None):
+        self.context.execution_phase = ContextFlags.SIMULATION
+        self.run(inputs=simulation_inputs)
+
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):

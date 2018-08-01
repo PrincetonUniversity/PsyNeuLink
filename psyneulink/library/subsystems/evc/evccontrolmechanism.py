@@ -1113,23 +1113,26 @@ class EVCControlMechanism(ControlMechanism):
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def before_simulation(self,
-                       allocation_vector,
-                       runtime_params=None,
-                       reinitialize_values=None,
                        context=None):
 
-        if self.value is None:
-            # Initialize value if it is None
-            self.value = np.empty(len(self.control_signals))
+        # CONSTRUCT SEARCH SPACE
 
-        # Implement the current allocation_policy over ControlSignals (OutputStates),
-        #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
-        for i in range(len(self.control_signals)):
-            self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        control_signal_sample_lists = []
+        control_signals = self.control_signals
 
-        # Run simulation
-        self.system.context.execution_phase = ContextFlags.SIMULATION
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+
 
     def after_simulation(self,
                          runtime_params=None,
