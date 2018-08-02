@@ -400,7 +400,9 @@ class Composition(object):
     def _instantiate_prediction_mechanisms(self, context=None):
 
         if self.controller and self.enable_controller:
-
+            if hasattr(self, "prediction_mechanisms"):
+                for mechanism in self.prediction_mechanisms:
+                    del mechanism
             self.prediction_mechanisms = []
             self.prediction_projections = {}
             self.prediction_origin_pairs = {}
@@ -1392,9 +1394,10 @@ class Composition(object):
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
             if self.controller:
                 simulation_input_dict = self.update_predicted_input()
-                self.controller.before_simulation(context=ContextFlags.PROCESSING)
-                self.run_simulation(simulation_inputs=simulation_input_dict,
-                                    context=ContextFlags.SIMULATION)
+                search_space = self.controller.before_simulation(context=ContextFlags.PROCESSING)
+                for allocation_vector in search_space:
+                    self.run_simulation(simulation_inputs=simulation_input_dict,
+                                        context=ContextFlags.SIMULATION)
                 # self.controller.composition_execute(context=ContextFlags.PROCESSING)
 
         return output_values
@@ -1404,7 +1407,6 @@ class Composition(object):
         for prediction_mechanism in self.prediction_mechanisms:
             origin_node = self.prediction_origin_pairs[prediction_mechanism]
             predicted_input[origin_node] = prediction_mechanism.value
-
         return predicted_input
 
 
@@ -1558,7 +1560,8 @@ class Composition(object):
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_id=execution_id):
                 break
-            self._execute_prediction_mechanisms()
+            if hasattr(self, "prediction_mechanisms"):
+                self._execute_prediction_mechanisms()
         # PROCESSING ------------------------------------------------------------------------
 
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
@@ -1641,8 +1644,13 @@ class Composition(object):
         return self.results
 
     def run_simulation(self, simulation_inputs, context=None):
+
         self.context.execution_phase = ContextFlags.SIMULATION
-        self.run(inputs=simulation_inputs)
+        new_execution_id = self._get_unique_id()
+        self._assign_execution_ids(new_execution_id)
+        print("running simulation")
+        self.run(inputs=simulation_inputs,
+                 execution_id=new_execution_id)
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform

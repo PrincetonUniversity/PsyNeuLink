@@ -1113,7 +1113,7 @@ class EVCControlMechanism(ControlMechanism):
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def before_simulation(self,
-                       context=None):
+                        context=None):
 
         # CONSTRUCT SEARCH SPACE
 
@@ -1133,24 +1133,7 @@ class EVCControlMechanism(ControlMechanism):
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
-
-    def after_simulation(self,
-                         runtime_params=None,
-                         context=None
-                         ):
-        self.system.context.execution_phase = ContextFlags.IDLE
-
-        # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.input_states)
-        # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
-
-        for i in range(len(self.control_signals)):
-            self.control_signal_costs[i] = self.control_signals[i].cost
-
-        return monitored_states
-
-
+        return self.control_signal_search_space
 
     def run_simulation(self,
                        inputs,
