@@ -128,7 +128,7 @@ mySystem.run(
         call_before_trial=functools.partial(print_header, mySystem),
         call_after_trial=functools.partial(show_target, mySystem),
         termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
-        animate=True)
+        animate={'show_learning':pnl.ALL})
 
 # Print out logged weights for Middle_Weights
 # print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.nparray(entries='Middle Weights', header=False))
