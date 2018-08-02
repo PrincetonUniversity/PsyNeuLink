@@ -2826,11 +2826,9 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
-                # MODIFIED 7/29 NEW:
                 if not self.animate is False:
                     self.show_graph(active_item=mechanism, **self.animate)
                 self._component_execution_count += 1
-                # MODIFIED 7/29 END
 
                 # Reset runtime params and context
                 for key in mechanism._runtime_params_reset:
@@ -2938,11 +2936,9 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # MODIFIED 7/29 NEW:
                 if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
                     self.show_graph(active_item=component, **self.animate)
                 self._component_execution_count += 1
-                # MODIFIED 7/29 END
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
@@ -2978,6 +2974,7 @@ class System(System_Base):
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
                 if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
                     self.show_graph(active_item=component, **self.animate)
+                self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
 
