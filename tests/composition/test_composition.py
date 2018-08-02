@@ -745,6 +745,48 @@ class TestRun:
     #     )
     #     assert 25 == output[0][0]
 
+    @pytest.mark.projection
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_input_grow(self, mode):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=[1.0, 2.0], function=Linear(slope=5.0))
+        B = TransferMechanism(default_variable=[1.0, 2.0, 3.0], function=Linear(slope=5.0))
+        P = MappingProjection(sender=A, receiver=B)
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, P, B)
+        comp._analyze_graph()
+        inputs_dict = {A: [5, 4]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
+        )
+        assert np.allclose(output, [[225, 225, 225]])
+
+    @pytest.mark.projection
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_input_shrink(self, mode):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=[1.0, 2.0, 3.0], function=Linear(slope=5.0))
+        B = TransferMechanism(default_variable=[4.0, 5.0], function=Linear(slope=5.0))
+        P = MappingProjection(sender=A, receiver=B)
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, P, B)
+        comp._analyze_graph()
+        inputs_dict = {A: [5, 4, 3]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
+        )
+        assert np.allclose(output, [[300, 300]])
+
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_2_mechanisms_input_5(self, mode):
