@@ -523,6 +523,7 @@ EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
 MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
+SHOW_LEARNING = 'show_learning'
 
 class SystemWarning(Warning):
      def __init__(self, error_value):
@@ -2826,8 +2827,8 @@ class System(System_Base):
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
                 # MODIFIED 7/29 NEW:
-                if self.animate:
-                    self.show_graph(show_learning=ALL, active_item=mechanism)
+                if not self.animate is False:
+                    self.show_graph(active_item=mechanism, **self.animate)
                 self._component_execution_count += 1
                 # MODIFIED 7/29 END
 
@@ -2938,8 +2939,8 @@ class System(System_Base):
                 component.context.execution_phase = ContextFlags.IDLE
 
                 # MODIFIED 7/29 NEW:
-                if self.animate:
-                    self.show_graph(show_learning=ALL, active_item=component)
+                if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
+                    self.show_graph(active_item=component, **self.animate)
                 self._component_execution_count += 1
                 # MODIFIED 7/29 END
 
@@ -2975,8 +2976,8 @@ class System(System_Base):
                                                                              component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                if self.animate:
-                    self.show_graph(show_learning=ALL, active_item=component)
+                if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
+                    self.show_graph(active_item=component, **self.animate)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -3100,7 +3101,13 @@ class System(System_Base):
         self.initial_values = initial_values
 
         self._component_execution_count=0
-        self.animate = animate
+        if animate is True:
+            animate = {}
+        self.animate = animate or {}
+        if not isinstance(self.animate, dict):
+            raise SystemError("{} argument for {} method of {} ({}) must boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self.animate, repr('show_graph')))
 
         logger.debug(inputs)
 
