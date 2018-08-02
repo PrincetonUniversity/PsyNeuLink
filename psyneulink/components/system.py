@@ -3079,6 +3079,14 @@ class System(System_Base):
             that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
             <Component.reinitialize_when>` Condition is satisfied.
 
+        animate : bool or dict : False
+            specifies whether to use the `show_graph <System.show_graph> method to generate a series of gif files, one
+            for the execution of each `Component` in the System showing that Component in the color specified by
+            the **active_color** argument of `show_graph <System.show_graph>`.  If *True*, `show_graph
+            <System.show_graph>` is called for each execution without any options;  if a dict is specified, it must
+            contain entires the key of which is an argument of the `show_graph <System.show_graph>` method,
+            and the value of which is the specification for that argument.
+
         Returns
         -------
 
