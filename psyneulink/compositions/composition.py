@@ -772,8 +772,7 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
 
-        toposorted_graph = self.scheduler_processing._call_toposort(graph)
-        # print(toposorted_graph)
+        # toposorted_graph = self.scheduler_processing._call_toposort(graph)[0]
         # if len(toposorted_graph) > 0:
         #     for node in toposorted_graph[-1]:
         #         self._add_c_node_role(node, CNodeRole.TERMINAL)
