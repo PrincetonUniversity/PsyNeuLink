@@ -3122,11 +3122,12 @@ class System(System_Base):
             self._animate = self._animate or animate
         except:
             self._animate = animate
-        if not animate is False and not isinstance(self._animate, dict):
+        if isinstance(self._animate, dict):
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+        elif self._animate:
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
                               "a dictionary of argument specifications for its {} method".
                               format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
-        self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
 
         logger.debug(inputs)
 
@@ -3838,8 +3839,8 @@ class System(System_Base):
 
         """
 
-        if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
-            return
+        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        #     return
 
         # IMPLEMENTATION NOTE:
         #    The helper methods below (_assign_XXX__components) all take the main graph *and* subgraph as arguments:
