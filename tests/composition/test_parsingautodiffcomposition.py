@@ -3,6 +3,10 @@ import logging
 import timeit as timeit
 
 import numpy as np
+import torch
+from torch import nn
+
+
 import pytest
 
 import psyneulink as pnl
@@ -78,7 +82,7 @@ class TestPACConstructor:
 
 
 
-class TestRun:
+class TestRunTrainingSpeedCorrectness:
     
     @pytest.mark.sarumanthewhite
     def test_xor_training_correctness(self):
@@ -159,7 +163,7 @@ class TestRun:
         results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=1, optimizer='adam')
         for i in range(9999):
             results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=1)
-            
+        
         for i in range(len(results[9999])):
             assert np.allclose(np.round(results[9999][i][0]), xor_targets[i])
     
@@ -220,8 +224,8 @@ class TestRun:
         'eps', [
             1,
             10,
-            100,
-            1000 # ,
+            100 # ,
+            # 1000 # ,
             # 10000 # ,
             # 100000
         ]
@@ -269,11 +273,12 @@ class TestRun:
         print(msg)
         logger.info(msg)
     
+    @pytest.mark.mordor
     @pytest.mark.gandalfthegrey
     @pytest.mark.parametrize(
         'eps', [
             10,
-            100 # ,
+            100# ,
             # 1000
         ]
     )
@@ -282,7 +287,7 @@ class TestRun:
         # SET UP SYSTEM
         
         xor_in_sys = TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(3))
+                                       default_variable=np.zeros(2))
         
         xor_hid_sys = TransferMechanism(name='xor_hid',
                                         default_variable=np.zeros(10),
@@ -326,20 +331,17 @@ class TestRun:
         
         # SET UP INPUTS FOR SYSTEM
         
-        xor_inputs_sys = np.zeros((4,3))
-        xor_inputs_sys[0] = [0, 0, 1]
-        xor_inputs_sys[1] = [0, 1, 1]
-        xor_inputs_sys[2] = [1, 0, 1]
-        xor_inputs_sys[3] = [1, 1, 1]
+        xor_inputs_sys = np.zeros((4,2))
+        xor_inputs_sys[0] = [0, 0]
+        xor_inputs_sys[1] = [0, 1]
+        xor_inputs_sys[2] = [1, 0]
+        xor_inputs_sys[3] = [1, 1]
         
         xor_targets_sys = np.zeros((4,1))
         xor_targets_sys[0] = [0]
         xor_targets_sys[1] = [1]
         xor_targets_sys[2] = [1]
         xor_targets_sys[3] = [0]
-        
-        xor_inputs_sys = np.tile(xor_inputs_sys, (eps, 1))
-        xor_targets_sys = np.tile(xor_targets_sys, (eps, 1))
         
         # SET UP INPUTS FOR COMPOSITION
         
@@ -359,7 +361,8 @@ class TestRun:
         
         start = timeit.default_timer()
         results = xor_system.run(inputs={xor_in_sys:xor_inputs_sys}, 
-                                         targets={xor_out_sys:xor_targets_sys})
+                                         targets={xor_out_sys:xor_targets_sys},
+                                         num_trials=(4*eps))
         end = timeit.default_timer()
         sys_time = end - start
         
@@ -380,7 +383,7 @@ class TestRun:
         
         start = timeit.default_timer()
         result = xor_comp.run(inputs={xor_in_comp:xor_inputs_comp}, 
-                              targets={xor_out_comp:xor_targets_comp}, epochs=eps, optimizer='adam') 
+                              targets={xor_out_comp:xor_targets_comp}, epochs=eps, optimizer='sgd') 
         end = timeit.default_timer()
         comp_time = end - start
         
@@ -398,8 +401,419 @@ class TestRun:
 
 
 
+class TestParametersFromPNL:
+    
+    @pytest.mark.samwisegamgee
+    def test_get_params_from_PNL(self):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        hid_map = MappingProjection(matrix=np.random.rand(2,10))
+        out_map = MappingProjection(matrix=np.random.rand(10,1))
+        
+        xor = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        xor.add_c_node(xor_in)
+        xor.add_c_node(xor_hid)
+        xor.add_c_node(xor_out)
+        
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        
+        xor_inputs = np.zeros((4,2))
+        xor_inputs[0] = [0, 0]
+        xor_inputs[1] = [0, 1]
+        xor_inputs[2] = [1, 0]
+        xor_inputs[3] = [1, 1]
+        
+        xor_targets = np.zeros((4,1))
+        xor_targets[0] = [0]
+        xor_targets[1] = [1]
+        xor_targets[2] = [1]
+        xor_targets[3] = [0]
+        
+        results = xor.run(inputs={xor_in:xor_inputs})
+        
+        weights, biases = xor.get_parameters()
+        
+        assert len(biases) == 0
+        assert np.allclose(hid_map.matrix, weights[hid_map])
+        assert np.allclose(out_map.matrix, weights[out_map])
+    
+    @pytest.mark.frodobaggins
+    def test_xor_training_correctness_from_pnl(self):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        hid_map = MappingProjection(matrix=np.random.rand(2,10))
+        out_map = MappingProjection(matrix=np.random.rand(10,1))
+        
+        xor = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        xor.add_c_node(xor_in)
+        xor.add_c_node(xor_hid)
+        xor.add_c_node(xor_out)
+        
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        
+        xor_inputs = np.zeros((4,2))
+        xor_inputs[0] = [0, 0]
+        xor_inputs[1] = [0, 1]
+        xor_inputs[2] = [1, 0]
+        xor_inputs[3] = [1, 1]
+        
+        xor_targets = np.zeros((4,1))
+        xor_targets[0] = [0]
+        xor_targets[1] = [1]
+        xor_targets[2] = [1]
+        xor_targets[3] = [0]
+        
+        results = xor.run(inputs={xor_in:xor_inputs}, targets={xor_out:xor_targets}, epochs=10000, optimizer='adam')
+        
+        for i in range(len(results[0])):
+            assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
+    
+    @pytest.mark.legolasandgimli
+    @pytest.mark.parametrize(
+        'h_size', [
+            1,
+            3
+        ]
+    )
+    def test_replicating_system_training_for_xor(self, h_size):
+        
+        # SET UP MECHANISMS AND PROJECTIONS
+        
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(h_size),
+                                    function=Logistic())
+        
+        hid_map = MappingProjection(matrix=np.ones((2,10)))
+        out_map = MappingProjection(matrix=np.ones((10,h_size)))
+        
+        # SET UP SYSTEM
+        
+        xor_process = Process(pathway=[xor_in,
+                                       hid_map,
+                                       xor_hid,
+                                       out_map,
+                                       xor_out],
+                              learning=pnl.LEARNING)
+        
+        xor_system = System(processes=[xor_process],
+                            learning_rate=1)
+        
+        # SET UP COMPOSITION
+        
+        xor_comp = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        xor_comp.add_c_node(xor_in)
+        xor_comp.add_c_node(xor_hid)
+        xor_comp.add_c_node(xor_out)
+        
+        xor_comp.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_comp.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        
+        # SET UP INPUTS AND OUTPUTS
+        
+        xor_inputs = np.zeros((4,2))
+        xor_inputs[0] = [0, 0]
+        xor_inputs[1] = [0, 1]
+        xor_inputs[2] = [1, 0]
+        xor_inputs[3] = [1, 1]
+        
+        xor_targets = np.zeros((4,h_size))
+        if h_size == 1:
+            xor_targets[0] = [0]
+            xor_targets[1] = [1]
+            xor_targets[2] = [1]
+            xor_targets[3] = [0]
+        elif h_size == 3:
+            xor_targets[0] = [0, 1, 0]
+            xor_targets[1] = [1, 0, 0]
+            xor_targets[2] = [1, 0, 0]
+            xor_targets[3] = [0, 1, 0]
+        else:
+            xor_targets[0] = [0, 1]
+            xor_targets[1] = [1, 0]
+            xor_targets[2] = [1, 0]
+            xor_targets[3] = [0, 1]
+        
+        print("\n")
+        
+        # TRAIN THE SYSTEM AND COMPOSITION, CHECK PARAMETERS
+        
+        results_comp = xor_comp.run(inputs={xor_in:xor_inputs})
+        
+        weights, biases = xor_comp.get_parameters()
+        print("weights of system before training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition before training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        assert len(biases) == 0
+        assert np.allclose(hid_map.matrix, weights[hid_map])
+        assert np.allclose(out_map.matrix, weights[out_map])
+        
+        results_comp = xor_comp.run(inputs={xor_in:xor_inputs},
+                                    targets={xor_out:xor_targets}, epochs=300, learning_rate=1, optimizer='sgd')
+        
+        weights, biases = xor_comp.get_parameters()
+        print("weights of system after composition training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition after composition training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        
+        results_sys = xor_system.run(inputs={xor_in:xor_inputs}, 
+                                     targets={xor_out:xor_targets},
+                                     num_trials=1201)
+        
+        weights, biases = xor_comp.get_parameters()
+        print("weights of system after both training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition after both training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        assert len(biases) == 0
+        assert np.allclose(hid_map.matrix, weights[hid_map])
+        assert np.allclose(out_map.matrix, weights[out_map])
+        print(type(hid_map.matrix[0][0]))
+        print(type(weights[hid_map][0][0]))
+    
+    @pytest.mark.meriadocbrandybuck
+    def test_system_pytorch_autodiff_comp_comparison(self):
+        
+        # SET UP PYTORCH XOR CLASS, MODEL OBJECT OF THIS CLASS
+        
+        class PT_xor(torch.nn.Module):
+            
+            def __init__(self):
+                super(PT_xor, self).__init__()
+                self.w1 = nn.Parameter(torch.ones(2,10).float())
+                self.w2 = nn.Parameter(torch.ones(10,1).float())
+            
+            def forward(self, x):
+                q = nn.Sigmoid()
+                # print(x)
+                # print("\n")
+                x = torch.matmul(x, self.w1)
+                x = q(x)
+                # print(x)
+                # print("\n")
+                x = torch.matmul(x, self.w2)
+                x = q(x)
+                # print(x)
+                # print("\n")
+                return x
+            
+            def return_params(self):
+                param_list = []
+                param_list.append(self.w1.detach().numpy().copy())
+                param_list.append(self.w2.detach().numpy().copy())
+                return param_list
+        
+        xor_basicpt = PT_xor()
+        
+        # SET UP MECHANISMS AND PROJECTIONS FOR XOR SYSTEM & COMPOSITION
+        
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        hid_map = MappingProjection(matrix=np.ones((2,10)))
+        out_map = MappingProjection(matrix=np.ones((10,1)))
+        
+        # SET UP SYSTEM
+        
+        xor_process = Process(pathway=[xor_in,
+                                       hid_map,
+                                       xor_hid,
+                                       out_map,
+                                       xor_out],
+                              learning=pnl.LEARNING)
+        
+        xor_system = System(processes=[xor_process],
+                            learning_rate=10)
+        
+        # SET UP COMPOSITION
+        
+        xor_comp = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        xor_comp.add_c_node(xor_in)
+        xor_comp.add_c_node(xor_hid)
+        xor_comp.add_c_node(xor_out)
+        
+        xor_comp.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_comp.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        
+        # SET UP INPUTS AND OUTPUTS
+        
+        xor_inputs = np.zeros((4,2))
+        xor_inputs[0] = [0, 0]
+        xor_inputs[1] = [0, 1]
+        xor_inputs[2] = [1, 0]
+        xor_inputs[3] = [1, 1]
+        
+        xor_targets = np.zeros((4,1))
+        xor_targets[0] = [0]
+        xor_targets[1] = [1]
+        xor_targets[2] = [1]
+        xor_targets[3] = [0]
+        
+        print("\n")
+        
+        # TRAIN THE SYSTEM AND COMPOSITION, CHECK PARAMETERS
+        
+        results_comp = xor_comp.run(inputs={xor_in:xor_inputs[0]})
+        
+        print("composition opt params after run on only inputs: ")
+        print("\n")
+        print(xor_comp.optimizer.param_groups)
+        print("\n")
+        
+        weights, biases = xor_comp.get_parameters()
+        
+        print("composition opt params after get params: ")
+        print("\n")
+        print(xor_comp.optimizer.param_groups)
+        print("\n")
+        
+        print("weights of system before training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition before training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        print("weights of basic pytorch before training: ")
+        print(xor_basicpt.w1)
+        print(xor_basicpt.w2)
+        print("\n")
+        assert len(biases) == 0
+        assert np.allclose(hid_map.matrix, weights[hid_map])
+        assert np.allclose(out_map.matrix, weights[out_map])
+        
+        print("starting composition training: ")
+        print("\n")
+        
+        results_comp = xor_comp.run(inputs={xor_in:xor_inputs[0]},
+                                    targets={xor_out:xor_targets[0]}, epochs=1, learning_rate=10 , optimizer='sgd')
+        
+        print("starting basic pytorch training: ")
+        print("\n")
+        
+        loss = nn.MSELoss(size_average=True)
+        optimizer = torch.optim.SGD(xor_basicpt.parameters(), lr=10)
+        '''
+        for i in range(len(xor_inputs[i])):
+            inp = torch.from_numpy(xor_inputs[i].copy()).float()
+            targ = torch.from_numpy(xor_targets[i].copy()).float()
+            output = xor_basicpt.forward(inp)
+            l = loss(output, targ)
+            optimizer.zero_grad()
+            l.backward()
+            optimizer.step()
+        '''
+        for i in range(1):
+            inp = torch.from_numpy(xor_inputs[0].copy()).float()
+            targ = torch.from_numpy(xor_targets[0].copy()).float()
+            output = xor_basicpt.forward(inp)
+            l = loss(output, targ)
+            optimizer.zero_grad()
+            print(l)
+            print("\n")
+            l.backward()
+            print("gradients for basic pytorch: ")
+            print("\n")
+            print(xor_basicpt.w1.grad)
+            print("\n")
+            print(xor_basicpt.w2.grad)
+            print("\n")
+            optimizer.step()
+        
+        weights, biases = xor_comp.get_parameters()
+        print("weights of system after composition, basic pytorch training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition after composition, basic pytorch training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        print("weights of basic pytorch after composition, basic pytorch training: ")
+        print(xor_basicpt.w1)
+        print(xor_basicpt.w2)
+        print("\n")
+        # print("PIGFARTS")
+        # print(xor_inputs[0:2])
+        for i in range(1):
+            results_sys = xor_system.run(inputs={xor_in:xor_inputs[0:2]}, 
+                                         targets={xor_out:xor_targets[0:2]})
+        
+        weights, biases = xor_comp.get_parameters()
+        print("weights of system after both training: ")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("weights of composition after both training: ")
+        print(weights[hid_map])
+        print(weights[out_map])
+        print("\n")
+        print("weights of basic pytorch after composition, basic pytorch training: ")
+        print(xor_basicpt.w1)
+        print(xor_basicpt.w2)
+        print("\n")
+        assert len(biases) == 0
+        assert np.allclose(hid_map.matrix, weights[hid_map])
+        assert np.allclose(out_map.matrix, weights[out_map])
+
+
+
 class TestSemanticNetTraining:
     
+    @pytest.mark.ladyoflorien
     @pytest.mark.sarumanthewhite
     def test_sem_net_training_correctness(self):
         
@@ -687,6 +1101,264 @@ class TestSemanticNetTraining:
         msg = 'completed training semantic net as ParsingAutodiffComposition() for {0} epochs in {1} seconds'.format(eps, time)
         print(msg)
         logger.info(msg)
+    
+    @pytest.mark.ridersofrohan
+    @pytest.mark.parametrize(
+        'eps', [
+            1 # ,
+            # 10,
+            # 40
+            # 100 # ,
+            # 1000 # ,
+            # 10000
+        ]
+    )
+    def test_sem_net_as_composition_vs_as_system(self, eps):
+        
+        # MECHANISMS AND PROJECTIONS FOR SEMANTIC NET:
+        
+        nouns_in = TransferMechanism(name="nouns_input", 
+                                     default_variable=np.zeros(8))
+        
+        rels_in = TransferMechanism(name="rels_input", 
+                                    default_variable=np.zeros(3))
+        
+        h1 = TransferMechanism(name="hidden_nouns",
+                               default_variable=np.zeros(8),
+                               function=Logistic())
+        
+        h2 = TransferMechanism(name="hidden_mixed",
+                               default_variable=np.zeros(15),
+                               function=Logistic())
+        
+        out_sig_I = TransferMechanism(name="sig_outs_I",
+                                      default_variable=np.zeros(8),
+                                      function=Logistic())
+        
+        out_sig_is = TransferMechanism(name="sig_outs_is",
+                                       default_variable=np.zeros(12),
+                                       function=Logistic())
+        
+        out_sig_has = TransferMechanism(name="sig_outs_has",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+        
+        out_sig_can = TransferMechanism(name="sig_outs_can",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+        
+        map_nouns_h1 = pnl.MappingProjection(matrix=np.random.rand(8,8),
+                                     name="map_nouns_h1",
+                                     sender=nouns_in,
+                                     receiver=h1)
+        
+        map_rels_h2 = pnl.MappingProjection(matrix=np.random.rand(3,15),
+                                        name="map_relh2",
+                                        sender=rels_in,
+                                        receiver=h2)
+        
+        map_h1_h2 = pnl.MappingProjection(matrix=np.random.rand(8,15),
+                                        name="map_h1_h2",
+                                        sender=h1,
+                                        receiver=h2)
+        
+        map_h2_I = pnl.MappingProjection(matrix=np.random.rand(15,8),
+                                        name="map_h2_I",
+                                        sender=h2,
+                                        receiver=out_sig_I)
+        
+        map_h2_is = pnl.MappingProjection(matrix=np.random.rand(15,12),
+                                        name="map_h2_is",
+                                        sender=h2,
+                                        receiver=out_sig_is)
+        
+        map_h2_has = pnl.MappingProjection(matrix=np.random.rand(15,9),
+                                        name="map_h2_has",
+                                        sender=h2,
+                                        receiver=out_sig_has)
+        
+        map_h2_can = pnl.MappingProjection(matrix=np.random.rand(15,9),
+                                        name="map_h2_can",
+                                        sender=h2,
+                                        receiver=out_sig_can)
+        
+        # COMPOSITION FOR SEMANTIC NET
+        
+        sem_net = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        sem_net.add_c_node(nouns_in)
+        sem_net.add_c_node(rels_in)
+        sem_net.add_c_node(h1)
+        sem_net.add_c_node(h2)
+        sem_net.add_c_node(out_sig_I)
+        sem_net.add_c_node(out_sig_is)
+        sem_net.add_c_node(out_sig_has)
+        sem_net.add_c_node(out_sig_can)
+        
+        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
+        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
+        sem_net.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
+        sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
+        sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
+        sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
+        
+        # INPUTS & OUTPUTS FOR SEMANTIC NET:
+        
+        nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
+        relations = ['is', 'has', 'can']
+        is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
+                   'yellow']
+        has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
+        can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
+        
+        nouns_input = np.identity(len(nouns))
+        
+        rels_input = np.identity(len(relations))
+        
+        truth_nouns = np.identity(len(nouns))
+        
+        truth_is = np.zeros((len(nouns), len(is_list)))
+        
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
+        truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
+        
+        truth_has = np.zeros((len(nouns), len(has_list)))
+        
+        truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        
+        truth_can = np.zeros((len(nouns), len(can_list)))
+        
+        truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        
+        # SETTING UP DICTIONARY OF INPUTS/OUTPUTS FOR SEMANTIC NET
+        
+        inputs_dict = {}
+        inputs_dict[nouns_in] = []
+        inputs_dict[rels_in] = []
+        
+        targets_dict = {}
+        targets_dict[out_sig_I] = []
+        targets_dict[out_sig_is] = []
+        targets_dict[out_sig_has] = []
+        targets_dict[out_sig_can] = []
+        
+        for i in range(len(nouns)):
+            for j in range(len(relations)):
+                inputs_dict[nouns_in].append(nouns_input[i])
+                inputs_dict[rels_in].append(rels_input[j])
+                targets_dict[out_sig_I].append(truth_nouns[i])
+                targets_dict[out_sig_is].append(truth_is[i])
+                targets_dict[out_sig_has].append(truth_has[i])
+                targets_dict[out_sig_can].append(truth_can[i])
+        
+        # TRAIN THE AUTODIFF COMPOSITION, TIME IT
+        
+        start = timeit.default_timer()
+        result = sem_net.run(inputs=inputs_dict,
+                             targets=targets_dict,
+                             epochs=eps,
+                             learning_rate=0.1,
+                             optimizer='sgd')
+        end = timeit.default_timer()
+        comp_time = end - start
+        
+        msg = 'completed training semantic net as ParsingAutodiffComposition for {0} epochs in {1} seconds'.format(eps, comp_time)
+        print(msg)
+        logger.info(msg)
+        
+        print("\n")
+        print(sem_net.model.params[6])
+        print("\n")
+        
+        # FINISH CREATING THE SYSTEM (PROJECTIONS AND SYSTEM INIT)
+        
+        p11 = pnl.Process(pathway=[nouns_in,
+                                   map_nouns_h1,
+                                   h1,
+                                   map_h1_h2,
+                                   h2],
+                          learning=pnl.LEARNING)
+
+        p12 = pnl.Process(pathway=[rels_in,
+                                    map_rels_h2,
+                                    h2],
+                          learning=pnl.LEARNING)
+        
+        p21 = pnl.Process(pathway=[h2, 
+                                   map_h2_I,
+                                   out_sig_I],
+                          learning=pnl.LEARNING)
+        
+        p22 = pnl.Process(pathway=[h2, 
+                                   map_h2_is,
+                                   out_sig_is],
+                          learning=pnl.LEARNING)
+        
+        p23 = pnl.Process(pathway=[h2,
+                                   map_h2_has,
+                                   out_sig_has],
+                          learning=pnl.LEARNING)
+        
+        p24 = pnl.Process(pathway=[h2, 
+                                   map_h2_can,
+                                   out_sig_can],
+                          learning=pnl.LEARNING)
+        
+        sem_net_sys = pnl.System(processes=[p11,
+                                            p12,
+                                            p21,
+                                            p22,
+                                            p23,
+                                            p24,
+                                            ],
+                                 learning_rate=0.1)
+        
+        # TRAIN THE SYSTEM, TIME IT
+        
+        start = timeit.default_timer()
+        results = sem_net_sys.run(inputs=inputs_dict, 
+                                  targets=targets_dict,
+                                  num_trials=(len(inputs_dict[nouns_in])*eps + 1))
+        end = timeit.default_timer()
+        sys_time = end - start
+        
+        msg = 'completed training semantic net as System for {0} epochs in {1} seconds'.format(eps, sys_time)
+        print(msg)
+        logger.info(msg)
+        
+        # REPORT SPEEDUP
+        
+        speedup = np.round((sys_time/comp_time), decimals=2)
+        msg = ('training semantic net as ParsingAutodiffComposition for {0} epochs was {1} times faster than '
+               'training it as System for {0} epochs.'.format(eps, speedup))
+        print(msg)
+        logger.info(msg)
+        
+        print("\n")
+        print(map_h2_can.matrix)
+
+
 
 
 

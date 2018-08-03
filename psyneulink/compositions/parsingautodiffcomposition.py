@@ -112,8 +112,6 @@ class ParsingAutodiffComposition(Composition):
                                                          name="INPUT_CIM_" + node.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
-                    # print("hello somebody")
-                    # print("\n")
         
         
         sends_to_input_states = set(self.input_CIM_states.keys())
@@ -157,9 +155,7 @@ class ParsingAutodiffComposition(Composition):
                             name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
                     
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
-                    # print("Hello nobody")
-                    # print("\n")
-                    
+            
             for input_state in node.input_states:
                 current_terminal_input_states.add(input_state)
                 
@@ -452,16 +448,16 @@ class ParsingAutodiffComposition(Composition):
         
         if loss is None:
             if self.loss is None:
-                self.loss = nn.MSELoss()
+                self.loss = nn.MSELoss(size_average=False)
         else:
             if loss not in ['mse', 'crossentropy']:
                 raise ParsingAutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
                                                       "Currently, Mean Squared Error and Cross Entropy are the only "
                                                       "available loss functions (specified as 'mse' or 'crossentropy').")
             if loss == 'mse':
-                self.loss = nn.MSELoss()
+                self.loss = nn.MSELoss(size_average=False)
             else:
-                self.loss = nn.CrossEntropyLoss()
+                self.loss = nn.CrossEntropyLoss(size_average=False)
         
         if refresh_losses == True:
             self.losses = []
@@ -673,6 +669,7 @@ class ParsingAutodiffComposition(Composition):
                 
                 # compute gradients and perform parameter update
                 self.optimizer.zero_grad()
+                curr_loss = curr_loss/2
                 curr_loss.backward()
                 self.optimizer.step()
                 
