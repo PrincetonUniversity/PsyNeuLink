@@ -458,8 +458,9 @@ from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmech
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, CONDITION, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
-    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
-    SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
+    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, NUM_TRIALS, ORIGIN, PROJECTIONS, ROLES, \
+    SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, \
+    kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -523,6 +524,7 @@ EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
 MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
+SHOW_CONTROL = 'show_control'
 SHOW_LEARNING = 'show_learning'
 
 class SystemWarning(Warning):
@@ -2767,6 +2769,11 @@ class System(System_Base):
                     runtime_params=None,
                     context=context
                 )
+
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
+                    self.show_graph(active_item=self.controller, **self._animate, output_fmt='gif')
+                self._component_execution_count += 1
+
                 if self._report_system_output:
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
@@ -2826,8 +2833,8 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
-                if not self.animate is False:
-                    self.show_graph(active_item=mechanism, **self.animate)
+                if not self._animate is False and self.context.execution_phase != ContextFlags.SIMULATION:
+                    self.show_graph(active_item=mechanism, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
@@ -2936,8 +2943,8 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
-                    self.show_graph(active_item=component, **self.animate)
+                if not self._animate is False and SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]:
+                    self.show_graph(active_item=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # # TEST PRINT LEARNING:
@@ -2972,8 +2979,8 @@ class System(System_Base):
                                                                              component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                if SHOW_LEARNING in self.animate and self.animate[SHOW_LEARNING]:
-                    self.show_graph(active_item=component, **self.animate)
+                if not self._animate is False and SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]:
+                    self.show_graph(active_item=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
@@ -3084,8 +3091,11 @@ class System(System_Base):
             for the execution of each `Component` in the System showing that Component in the color specified by
             the **active_color** argument of `show_graph <System.show_graph>`.  If *True*, `show_graph
             <System.show_graph>` is called for each execution without any options;  if a dict is specified, it must
-            contain entires the key of which is an argument of the `show_graph <System.show_graph>` method,
-            and the value of which is the specification for that argument.
+            contain entries, the keys of which are arguments of the `show_graph <System.show_graph>` method,
+            and the values of which are the specification for those arguments.  One additional key can be used,
+            *NUM_TRIALS*, which specifies the number of trials to animate;  by default, this is 1.  If a number of
+            trials is specified less than the total number run, only the number specified are animated;  if *NUM_TRIALS*
+            is greater than the number run, only the number run are animated.
 
         Returns
         -------
@@ -3108,11 +3118,15 @@ class System(System_Base):
         self._component_execution_count=0
         if animate is True:
             animate = {}
-        self.animate = animate or {}
-        if not isinstance(self.animate, dict):
+        try:
+            self._animate = self._animate or animate
+        except:
+            self._animate = animate
+        if not animate is False and not isinstance(self._animate, dict):
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
                               "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self.animate, repr('show_graph')))
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+        self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
 
         logger.debug(inputs)
 
@@ -3824,6 +3838,9 @@ class System(System_Base):
 
         """
 
+        if active_item and self.scheduler_processing.clock.item.trial < self._animate_num_trials:
+            return
+
         # IMPLEMENTATION NOTE:
         #    The helper methods below (_assign_XXX__components) all take the main graph *and* subgraph as arguments:
         #        - the main graph (G) is used to assign edges
@@ -3845,6 +3862,7 @@ class System(System_Base):
             if rcvr is active_item:
                 rcvr_color = active_color
                 rcvr_penwidth = active_width
+                self.active_item_rendered = True
             elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
                 rcvr_color = origin_and_terminal_color
                 rcvr_penwidth = bold_width
@@ -3909,6 +3927,7 @@ class System(System_Base):
                         if proj is active_item:
                             proj_color = active_color
                             proj_width = active_width
+                            self.active_item_rendered = True
                         else:
                             proj_color = default_node_color
                             proj_width = default_width
@@ -3926,6 +3945,7 @@ class System(System_Base):
                         if proj.sender is active_item:
                             proj_color = active_color
                             proj_width = active_width
+                            self.active_item_rendered = True
                         else:
                             proj_color = default_node_color
                             proj_width = default_width
@@ -3976,6 +3996,7 @@ class System(System_Base):
                     if active_item in {selected_proj, selected_proj.receiver.owner}:
                         proj_color = active_color
                         proj_width = active_width
+                        self.active_item_rendered = True
 
                     # Projection to or from a LearningMechanism
                     elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
@@ -4061,6 +4082,7 @@ class System(System_Base):
             if rcvr is active_item:
                 rcvr_color = active_color
                 rcvr_width = active_width
+                self.active_item_rendered = True
             else:
                 rcvr_color = learning_color
                 rcvr_width = default_width
@@ -4101,6 +4123,7 @@ class System(System_Base):
 
                                 if smpl_or_trgt_src is active_item:
                                     smpl_or_trgt_src_color = active_color
+                                    self.active_item_rendered = True
                                 else:
                                     smpl_or_trgt_src_color = system_color
 
@@ -4112,6 +4135,7 @@ class System(System_Base):
                             if proj.receiver.owner is active_item:
                                 learning_proj_color = active_color
                                 learning_proj_width = active_width
+                                self.active_item_rendered = True
                             else:
                                 learning_proj_color = learning_color
                                 learning_proj_width = default_width
@@ -4139,6 +4163,7 @@ class System(System_Base):
                     if proj.receiver.owner is active_item:
                         learning_proj_color = active_color
                         learning_proj_width = active_width
+                        self.active_item_rendered = True
                     else:
                         learning_proj_color = learning_color
                         learning_proj_width = default_width
@@ -4224,6 +4249,7 @@ class System(System_Base):
             if proj is active_item or (proj_learning_in_execution_phase and proj_receiver is active_item):
                 learning_proj_color = active_color
                 learning_proj_width = active_width
+                self.active_item_rendered = True
             else:
                 learning_proj_color = learning_color
                 learning_proj_width = default_width
@@ -4251,8 +4277,11 @@ class System(System_Base):
             controller = self.controller
             if controller is active_item:
                 ctlr_color = active_color
+                ctlr_width = active_width
+                self.active_item_rendered = True
             else:
                 ctlr_color = control_color
+                ctlr_width = default_width
 
             if controller is None:
                 print ("\nWARNING: {} has not been assigned a \'controller\', so \'show_control\' option "
@@ -4261,34 +4290,46 @@ class System(System_Base):
 
             # get projection from ObjectiveMechanism to ControlMechanism
             objmech_ctlr_proj = controller.input_state.path_afferents[0]
-            if objmech_ctlr_proj is active_item:
+            if controller is active_item:
                 objmech_ctlr_proj_color = active_color
+                objmech_ctlr_proj_width = active_width
+                self.active_item_rendered = True
             else:
                 objmech_ctlr_proj_color = control_color
+                objmech_ctlr_proj_width = default_width
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech is active_item:
                 objmech_color = active_color
+                objmech_width = active_width
+                self.active_item_rendered = True
             else:
                 objmech_color = control_color
+                objmech_width = default_width
 
             ctlr_label = self._get_label(controller, show_dimensions, show_roles)
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                       controller.show_structure(**mech_struct_args),
-                       color=ctlr_color,
-                       rank = control_rank
+                        controller.show_structure(**mech_struct_args),
+                        color=ctlr_color,
+                        penwidth=ctlr_width,
+                        rank = control_rank
                        )
                 sg.node(objmech_label,
-                       objmech.show_structure(**mech_struct_args),
-                       color=objmech_color,
-                       rank = control_rank
-                       )
+                        objmech.show_structure(**mech_struct_args),
+                        color=objmech_color,
+                        penwidth=ctlr_width,
+                        rank = control_rank
+                        )
             else:
-                sg.node(ctlr_label, color=ctlr_color, shape=mechanism_shape, rank=control_rank)
-                sg.node(objmech_label, color=objmech_color, shape=mechanism_shape, rank=control_rank)
+                sg.node(ctlr_label,
+                        color=ctlr_color, penwidth=ctlr_width, shape=mechanism_shape,
+                        rank=control_rank)
+                sg.node(objmech_label,
+                        color=objmech_color, penwidth=objmech_width, shape=mechanism_shape,
+                        rank=control_rank)
 
             # objmech to controller edge
             if show_projection_labels:
@@ -4301,7 +4342,8 @@ class System(System_Base):
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
-            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
+            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
+                   color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
             # IMPLEMENTATION NOTE:
             #   When two (or more?) Processes (e.g., A and B) have homologous constructions, and a ControlProjection is
@@ -4319,10 +4361,13 @@ class System(System_Base):
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
-                    if ctl_proj is active_item:
+                    if controller is active_item:
                         ctl_proj_color = active_color
+                        ctl_proj_width = active_width
+                        self.active_item_rendered = True
                     else:
                         ctl_proj_color = control_color
+                        ctl_proj_width = default_width
                     if show_projection_labels:
                         edge_label = ctl_proj.name
                     else:
@@ -4337,15 +4382,20 @@ class System(System_Base):
                     G.edge(ctl_sndr_label,
                            proc_mech_rcvr_label,
                            label=edge_label,
-                           color=ctl_proj_color)
+                           color=ctl_proj_color,
+                           penwidth=ctl_proj_width
+                           )
 
             # incoming edges (from monitored mechs to objective mechanism)
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
-                    if projection is active_item:
+                    if objmech is active_item:
                         proj_color = active_color
+                        proj_width = active_width
+                        self.active_item_rendered = True
                     else:
                         proj_color = control_color
+                        proj_width = default_width
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
@@ -4357,14 +4407,18 @@ class System(System_Base):
                         edge_label = projection.name
                     else:
                         edge_label = ''
-                    G.edge(sndr_proj_label, objmech_proj_label ,color=proj_color, label=edge_label)
+                    G.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                           color=proj_color, penwidth=proj_width)
 
             # prediction mechanisms
             for mech in self.execution_list:
                 if mech is active_item:
                     pred_mech_color = active_color
+                    pred_mech_width = active_width
+                    self.active_item_rendered = True
                 else:
                     pred_mech_color = prediction_mechanism_color
+                    pred_mech_width = default_width
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
@@ -4374,19 +4428,23 @@ class System(System_Base):
                         proj = mech.output_state.efferents[0]
                         if proj is active_item:
                             pred_proj_color = active_color
+                            pred_proj_width = active_width
+                            self.active_item_rendered = True
                         else:
                             pred_proj_color = prediction_mechanism_color
+                            pred_proj_width = default_width
                         sg.node(mech.name,
-                               shape=mech.show_structure(**mech_struct_args),
-                               color=pred_mech_color)
+                                shape=mech.show_structure(**mech_struct_args),
+                                color=pred_mech_color,
+                                penwidth=pred_mech_width)
 
                         G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
                                recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                label=' prediction assignment',
-                               color=pred_proj_color)
+                               color=pred_proj_color, penwidth=pred_proj_width)
                     else:
                         sg.node(self._get_label(mech, show_dimensions, show_roles),
-                                color=pred_mech_color, shape=mechanism_shape)
+                                color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
                         G.edge(self._get_label(mech, show_dimensions, show_roles),
                                recvr_label,
                                label=' prediction assignment',
@@ -4402,6 +4460,7 @@ class System(System_Base):
             show_dimensions = ALL
         if show_processes:
             show_headers = False
+        self.active_item_rendered = False
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
@@ -4571,18 +4630,25 @@ class System(System_Base):
 
         # GENERATE OUTPUT
 
+        # Show as pdf
         if output_fmt == 'pdf':
             # G.format = 'svg'
-            if active_item:
+            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+
+        # Generate gif files for animation
+        elif output_fmt == 'gif':
+            if self.active_item_rendered:
                 G.format = 'gif'
                 prefix = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
                          repr(self._component_execution_count) + '-'
+                # FIX: CLEAR EXISTING DIRECTORY HERE
                 G.render(filename = prefix + active_item.name,
                          directory='show_graph OUTPUT/'+self.name+" GIFS",
                          cleanup=True,
-                         view=True)
-            # G.format = 'pdf'
-            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+                         # view=True
+                         )
+
+        # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
 

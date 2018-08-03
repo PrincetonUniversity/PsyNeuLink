@@ -1035,10 +1035,10 @@ class EVCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy = super(ControlMechanism, self)._execute(
-            controller=self,
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
+                controller=self,
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
         )
 
         # IMPLEMENTATION NOTE:

@@ -613,6 +613,8 @@ ROLES = 'roles'
 VALUES = 'values'
 FUNCTIONS = 'functions'
 
+NUM_TRIALS = 'num_trials'
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
