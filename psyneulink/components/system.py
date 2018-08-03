@@ -3838,7 +3838,7 @@ class System(System_Base):
 
         """
 
-        if active_item and self.scheduler_processing.clock.item.trial < self._animate_num_trials:
+        if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
             return
 
         # IMPLEMENTATION NOTE:
