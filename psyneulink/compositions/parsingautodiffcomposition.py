@@ -273,7 +273,13 @@ class ParsingAutodiffComposition(Composition):
             # the value of the output state to pytorch list at position i 
             node = order[i]
             value = states[node.component.input_states[0]][1].value
-            pytorch_list.append(torch.from_numpy(np.asarray(value).copy()).float())
+            pytorch_list.append(torch.from_numpy(np.asarray(value).copy()).double())
+        
+        '''
+        print("\n")
+        print(pytorch_list)
+        print("\n")
+        '''
         
         return pytorch_list
     
@@ -659,17 +665,26 @@ class ParsingAutodiffComposition(Composition):
                 # run the model on inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
                 
+                if epoch == 0 and t == 10:
+                    print("\n")
+                    print(curr_tensor_outputs)
+                    print("\n")
+                
                 # compute loss
-                curr_loss = torch.zeros(1).float()
+                curr_loss = torch.zeros(1).double()
                 for i in range(len(curr_tensor_outputs)):
-                    curr_loss += self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
+                    nowloss = self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
+                    # print(nowloss)
+                    # print("\n")
+                    curr_loss += nowloss
+                
+                curr_loss = curr_loss/2 # *len(curr_tensor_outputs))
                 
                 # save loss on current trial
                 curr_losses[t] = curr_loss[0].item()
                 
                 # compute gradients and perform parameter update
                 self.optimizer.zero_grad()
-                curr_loss = curr_loss/2
                 curr_loss.backward()
                 self.optimizer.step()
                 
@@ -700,6 +715,11 @@ class ParsingAutodiffComposition(Composition):
         
         if self.model is None:
             self.model = PytorchCreator(self.graph_processing)
+            print("\n")
+            print("\n")
+            print("HI SHIT IS HAPPENING!")
+            print("\n")
+            print("\n")
         
         weights = self.model.get_weights_for_projections()
         biases = self.model.get_biases_for_mechanisms()

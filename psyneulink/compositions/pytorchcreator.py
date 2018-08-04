@@ -92,8 +92,8 @@ class PytorchCreator(torch.nn.Module):
             gain = node.component.function_object.params['gain']
             bias = node.component.function_object.params['bias']
             leak = node.component.function_object.params['leak']
-            return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).float()) * gain + 
-                              torch.min(input=(x-bias), other=torch.tensor([0]).float()) * leak)
+            return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).double()) * gain + 
+                              torch.min(input=(x-bias), other=torch.tensor([0]).double()) * leak)
     
     # returns dict mapping psyneulink projections to corresponding pytorch weights (provided in separate numpy arrays)
     def get_weights_for_projections(self):
@@ -148,7 +148,7 @@ class PytorchCreator(torch.nn.Module):
                     # if not copying params from psyneulink, set up biases for node/mechanism,
                     # add biases to params list, mechanisms_to_torch_biases dict
                     if param_init_from_pnl == False:
-                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).float())
+                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).double())
                         self.params.append(biases)
                         self.mechanisms_to_torch_biases[node.component] = biases
                     
@@ -163,9 +163,9 @@ class PytorchCreator(torch.nn.Module):
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl == True:
-                            weights = nn.Parameter(torch.tensor(mapping_proj.matrix.copy()).float())
+                            weights = nn.Parameter(torch.tensor(mapping_proj.matrix.copy()).double())
                         else:
-                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).float())
+                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).double())
                         
                         # add node-weights mapping to afferent inputs info, add weights to params list,
                         # add weights to projections_to_torch_weights dict
@@ -188,6 +188,14 @@ class PytorchCreator(torch.nn.Module):
         # set up output list
         outputs = []
         
+        '''
+        print("\n")
+        print("inputs in forward method: ")
+        print("\n")
+        print(inputs)
+        print("\n")
+        '''
+        
         # iterate over nodes in execution sets
         for i in range(len(self.ordered_execution_sets)):
             for j in range(len(self.ordered_execution_sets[i])):
@@ -204,8 +212,10 @@ class PytorchCreator(torch.nn.Module):
                 
                 # feedforward step if we do not have origin node
                 else:
-                    layer = torch.zeros(len(node.component.input_states[0].value))
+                    layer = torch.zeros(len(node.component.input_states[0].value)).double()
                     for input_node, weights in afferents.items():
+                        # print("\n")
+                        # print(self.node_to_feedforward_info[])
                         layer += torch.matmul(self.node_to_feedforward_info[input_node][0], weights)
                     if biases is not None:
                         layer = layer + biases

@@ -512,20 +512,12 @@ class TestParametersFromPNL:
                                     default_variable=np.zeros(h_size),
                                     function=Logistic())
         
-        hid_map = MappingProjection(matrix=np.ones((2,10)))
-        out_map = MappingProjection(matrix=np.ones((10,h_size)))
+        hid_map = MappingProjection(matrix=np.ones((2,10))*0.01)
+        out_map = MappingProjection(matrix=np.ones((10,h_size))*0.01)
         
         # SET UP SYSTEM
         
-        xor_process = Process(pathway=[xor_in,
-                                       hid_map,
-                                       xor_hid,
-                                       out_map,
-                                       xor_out],
-                              learning=pnl.LEARNING)
         
-        xor_system = System(processes=[xor_process],
-                            learning_rate=1)
         
         # SET UP COMPOSITION
         
@@ -569,50 +561,66 @@ class TestParametersFromPNL:
         
         results_comp = xor_comp.run(inputs={xor_in:xor_inputs})
         
-        weights, biases = xor_comp.get_parameters()
+        # weights, biases = xor_comp.get_parameters()
         print("weights of system before training: ")
         print(hid_map.matrix)
         print(out_map.matrix)
         print("\n")
         print("weights of composition before training: ")
-        print(weights[hid_map])
-        print(weights[out_map])
+        print(xor_comp.model.params[0])
+        print(xor_comp.model.params[1])
+        # print(weights[hid_map])
+        # print(weights[out_map])
         print("\n")
-        assert len(biases) == 0
-        assert np.allclose(hid_map.matrix, weights[hid_map])
-        assert np.allclose(out_map.matrix, weights[out_map])
+        # assert len(biases) == 0
+        # assert np.allclose(hid_map.matrix, weights[hid_map])
+        # assert np.allclose(out_map.matrix, weights[out_map])
         
         results_comp = xor_comp.run(inputs={xor_in:xor_inputs},
-                                    targets={xor_out:xor_targets}, epochs=300, learning_rate=1, optimizer='sgd')
+                                    targets={xor_out:xor_targets}, epochs=1, learning_rate=10, optimizer='sgd')
         
-        weights, biases = xor_comp.get_parameters()
+        # weights, biases = xor_comp.get_parameters()
         print("weights of system after composition training: ")
         print(hid_map.matrix)
         print(out_map.matrix)
         print("\n")
         print("weights of composition after composition training: ")
-        print(weights[hid_map])
-        print(weights[out_map])
+        print(xor_comp.model.params[0])
+        print(xor_comp.model.params[1])
+        # print(weights[hid_map])
+        # print(weights[out_map])
         print("\n")
+        
+        xor_process = Process(pathway=[xor_in,
+                                       hid_map,
+                                       xor_hid,
+                                       out_map,
+                                       xor_out],
+                              learning=pnl.LEARNING)
+        
+        xor_system = System(processes=[xor_process],
+                            learning_rate=10)
         
         results_sys = xor_system.run(inputs={xor_in:xor_inputs}, 
                                      targets={xor_out:xor_targets},
-                                     num_trials=1201)
+                                     num_trials=5)
         
-        weights, biases = xor_comp.get_parameters()
+        # weights, biases = xor_comp.get_parameters()
         print("weights of system after both training: ")
         print(hid_map.matrix)
         print(out_map.matrix)
         print("\n")
         print("weights of composition after both training: ")
-        print(weights[hid_map])
-        print(weights[out_map])
+        print(xor_comp.model.params[0])
+        print(xor_comp.model.params[1])
+        # print(weights[hid_map])
+        # print(weights[out_map])
         print("\n")
-        assert len(biases) == 0
-        assert np.allclose(hid_map.matrix, weights[hid_map])
-        assert np.allclose(out_map.matrix, weights[out_map])
-        print(type(hid_map.matrix[0][0]))
-        print(type(weights[hid_map][0][0]))
+        # assert len(biases) == 0
+        # assert np.allclose(hid_map.matrix, weights[hid_map])
+        # assert np.allclose(out_map.matrix, weights[out_map])
+        # print(type(hid_map.matrix[0][0]))
+        # print(type(weights[hid_map][0][0]))
     
     @pytest.mark.meriadocbrandybuck
     def test_system_pytorch_autodiff_comp_comparison(self):
@@ -1106,7 +1114,7 @@ class TestSemanticNetTraining:
     @pytest.mark.parametrize(
         'eps', [
             1 # ,
-            # 10,
+            # 10 # ,
             # 40
             # 100 # ,
             # 1000 # ,
@@ -1278,7 +1286,7 @@ class TestSemanticNetTraining:
         result = sem_net.run(inputs=inputs_dict,
                              targets=targets_dict,
                              epochs=eps,
-                             learning_rate=0.1,
+                             learning_rate=10,
                              optimizer='sgd')
         end = timeit.default_timer()
         comp_time = end - start
@@ -1332,7 +1340,7 @@ class TestSemanticNetTraining:
                                             p23,
                                             p24,
                                             ],
-                                 learning_rate=0.1)
+                                 learning_rate=10)
         
         # TRAIN THE SYSTEM, TIME IT
         
@@ -1340,6 +1348,8 @@ class TestSemanticNetTraining:
         results = sem_net_sys.run(inputs=inputs_dict, 
                                   targets=targets_dict,
                                   num_trials=(len(inputs_dict[nouns_in])*eps + 1))
+        # print("\n")
+        # sem_net_sys._report_system_completion()
         end = timeit.default_timer()
         sys_time = end - start
         
@@ -1357,6 +1367,251 @@ class TestSemanticNetTraining:
         
         print("\n")
         print(map_h2_can.matrix)
+    
+    
+    '''
+    @pytest.mark.parametrize(
+        'eps', [
+            1 # ,
+            # 10,
+            # 40 # ,
+            # 100 # ,
+            # 1000 # ,
+            # 10000
+        ]
+    )
+    '''
+    @pytest.mark.knightsofgondor
+    def test_sem_net_as_composition_vs_as_system_one_output(self): # , eps):
+        
+        # MECHANISMS AND PROJECTIONS FOR SEMANTIC NET:
+        
+        nouns_in = TransferMechanism(name="nouns_input", 
+                                     default_variable=np.zeros(8))
+        
+        rels_in = TransferMechanism(name="rels_input", 
+                                    default_variable=np.zeros(3))
+        
+        h1 = TransferMechanism(name="hidden_nouns",
+                               default_variable=np.zeros(8),
+                               function=Logistic())
+        
+        h2 = TransferMechanism(name="hidden_mixed",
+                               default_variable=np.zeros(15),
+                               function=Logistic())
+        
+        out = TransferMechanism(name="out",
+                                default_variable=np.zeros(38),
+                                function=Logistic())
+        
+        '''
+        map_nouns_h1 = pnl.MappingProjection(matrix=np.random.rand(8,8)*0.05,
+                                     name="map_nouns_h1",
+                                     sender=nouns_in,
+                                     receiver=h1)
+        
+        map_rels_h2 = pnl.MappingProjection(matrix=np.random.rand(3,15)*0.05,
+                                        name="map_relh2",
+                                        sender=rels_in,
+                                        receiver=h2)
+        
+        map_h1_h2 = pnl.MappingProjection(matrix=np.random.rand(8,15)*0.05,
+                                        name="map_h1_h2",
+                                        sender=h1,
+                                        receiver=h2)
+        
+        map_h2_out = pnl.MappingProjection(matrix=np.random.rand(15,38)*0.05,
+                                           name="map_h2_I",
+                                           sender=h2,
+                                           receiver=out)
+        '''
+        
+        map_nouns_h1 = pnl.MappingProjection(matrix=np.ones((8,8))*0.01,
+                                     name="map_nouns_h1",
+                                     sender=nouns_in,
+                                     receiver=h1)
+        
+        map_rels_h2 = pnl.MappingProjection(matrix=np.ones((3,15))*0.01,
+                                        name="map_relh2",
+                                        sender=rels_in,
+                                        receiver=h2)
+        
+        map_h1_h2 = pnl.MappingProjection(matrix=np.ones((8,15))*0.01,
+                                        name="map_h1_h2",
+                                        sender=h1,
+                                        receiver=h2)
+        
+        map_h2_out = pnl.MappingProjection(matrix=np.ones((15,38))*0.01,
+                                           name="map_h2_I",
+                                           sender=h2,
+                                           receiver=out)
+        
+        # COMPOSITION FOR SEMANTIC NET
+        
+        sem_net = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        sem_net.add_c_node(nouns_in)
+        sem_net.add_c_node(rels_in)
+        sem_net.add_c_node(h1)
+        sem_net.add_c_node(h2)
+        sem_net.add_c_node(out)
+        
+        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
+        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
+        sem_net.add_projection(sender=h2, projection=map_h2_out, receiver=out)
+        
+        # INPUTS & OUTPUTS FOR SEMANTIC NET:
+        
+        nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
+        relations = ['is', 'has', 'can']
+        is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
+                   'yellow']
+        has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
+        can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
+        
+        nouns_input = np.identity(len(nouns))
+        
+        rels_input = np.identity(len(relations))
+        
+        truth_nouns = np.identity(len(nouns))
+        
+        truth_is = np.zeros((len(nouns), len(is_list)))
+        
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
+        truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
+        
+        truth_has = np.zeros((len(nouns), len(has_list)))
+        
+        truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        
+        truth_can = np.zeros((len(nouns), len(can_list)))
+        
+        truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        
+        # SETTING UP DICTIONARY OF INPUTS/OUTPUTS FOR SEMANTIC NET
+        
+        inputs_dict = {}
+        inputs_dict[nouns_in] = []
+        inputs_dict[rels_in] = []
+        
+        targets_dict = {}
+        targets_dict[out] = []
+        
+        for i in range(len(nouns)):
+            for j in range(len(relations)):
+                inputs_dict[nouns_in].append(nouns_input[i])
+                inputs_dict[rels_in].append(rels_input[j])
+                targ = np.concatenate([truth_nouns[i], truth_is[i], truth_has[i], truth_can[i]])
+                targets_dict[out].append(targ)
+        
+        # TRAIN THE AUTODIFF COMPOSITION, TIME IT
+        
+        start = timeit.default_timer()
+        result = sem_net.run(inputs=inputs_dict,
+                             targets=targets_dict,
+                             epochs=1,
+                             learning_rate=10,
+                             optimizer='sgd')
+        end = timeit.default_timer()
+        comp_time = end - start
+        
+        print("\n")
+        msg = 'completed training semantic net as ParsingAutodiffComposition for {0} epochs in {1} seconds'.format(1, comp_time)
+        print(msg)
+        logger.info(msg)
+        
+        print("\n")
+        print(sem_net.model.params[3])
+        print("\n")
+        
+        # FINISH CREATING THE SYSTEM (PROJECTIONS AND SYSTEM INIT)
+        
+        p11 = pnl.Process(pathway=[nouns_in,
+                                   map_nouns_h1,
+                                   h1,
+                                   map_h1_h2,
+                                   h2],
+                          learning=pnl.LEARNING)
+
+        p12 = pnl.Process(pathway=[rels_in,
+                                    map_rels_h2,
+                                    h2],
+                          learning=pnl.LEARNING)
+        
+        p21 = pnl.Process(pathway=[h2, 
+                                   map_h2_out,
+                                   out],
+                          learning=pnl.LEARNING)
+        
+        sem_net_sys = pnl.System(processes=[p11,
+                                            p12,
+                                            p21,
+                                            ],
+                                 learning_rate=10)
+        
+        print("\n")
+        print("The weights in the system projection after composition training: ")
+        print("\n")
+        print(map_h2_out.matrix)
+        print("\n")
+        
+        # TRAIN THE SYSTEM, TIME IT
+        
+        start = timeit.default_timer()
+        results = sem_net_sys.run(inputs=inputs_dict, 
+                                  targets=targets_dict,
+                                  num_trials=25)
+                                  # num_trials=(len(inputs_dict[nouns_in])*1 + 1))
+        # print("\n")
+        # sem_net_sys._report_system_completion()
+        end = timeit.default_timer()
+        sys_time = end - start
+        
+        msg = 'completed training semantic net as System for {0} epochs in {1} seconds'.format(1, sys_time)
+        print(msg)
+        logger.info(msg)
+        
+        # REPORT SPEEDUP
+        
+        speedup = np.round((sys_time/comp_time), decimals=2)
+        msg = ('training semantic net as ParsingAutodiffComposition for {0} epochs was {1} times faster than '
+               'training it as System for {0} epochs.'.format(1, speedup))
+        print(msg)
+        logger.info(msg)
+        
+        print("\n")
+        print(map_h2_out.matrix)
+        
+        print("\n")
+        pt_weight = sem_net.model.params[3].detach().numpy()
+        print(pt_weight - map_h2_out.matrix)
+        print("\n")
+        print(type(pt_weight[0][0]))
+        print(type(map_h2_out.matrix[0][0]))
+        print("\n")
+        print("\n")
+        assert(np.allclose(pt_weight, map_h2_out.matrix))
 
 
 

@@ -54,13 +54,6 @@ and_map = MappingProjection(matrix=np.ones((2,1)))
 
 # SET UP SYSTEM
 
-and_process = Process(pathway=[and_in,
-                               and_map,
-                               and_out],
-                      learning=pnl.LEARNING)
-
-and_system = System(processes=[and_process],
-                    learning_rate=10)
 
 
 
@@ -77,29 +70,29 @@ and_comp.add_projection(sender=and_in, projection=and_map, receiver=and_out)
 
 # SET UP INPUTS AND OUTPUTS
 
-and_inputs = np.zeros((6,2))
+and_inputs = np.zeros((4,2))
 and_inputs[0] = [0, 0]
 and_inputs[1] = [0, 1]
 and_inputs[2] = [1, 0]
 and_inputs[3] = [1, 1]
-and_inputs[4] = [0, 0]
-and_inputs[5] = [0, 1]
+# and_inputs[4] = [0, 0]
+# and_inputs[5] = [0, 1]
 
-and_targets = np.zeros((6,1))
+and_targets = np.zeros((4,1))
 and_targets[0] = [0]
 and_targets[1] = [0]
 and_targets[2] = [0]
 and_targets[3] = [1]
-and_targets[4] = [0]
-and_targets[5] = [0]
+# and_targets[4] = [0]
+# and_targets[5] = [0]
 
 print("\n")
 
 
 
 # SET UP COMPOSITION (PYTORCH BACKEND), CHECK PARAMS OF ALL
-
-results_comp = and_comp.run(inputs={and_in:and_inputs[3]})
+'''
+results_comp = and_comp.run(inputs={and_in:and_inputs[1]})
 
 weights, biases = and_comp.get_parameters()
 
@@ -112,7 +105,7 @@ print("\n")
 print("weights of pytorch before training: ")
 print(and_pt.w)
 print("\n")
-
+'''
 
 
 # TRAIN COMPOSITION AND PYTORCH, CHECK PARAMS OF ALL
@@ -120,13 +113,13 @@ print("\n")
 print("starting composition training: ")
 print("\n")
 
-results_comp = and_comp.run(inputs={and_in:and_inputs[0:2]},
-                            targets={and_out:and_targets[0:2]}, epochs=1, learning_rate=10, optimizer='sgd')
+results_comp = and_comp.run(inputs={and_in:and_inputs},
+                            targets={and_out:and_targets}, epochs=100, learning_rate=10, optimizer='sgd')
 
 print("starting basic pytorch training: ")
 print("\n")
 
-loss = nn.MSELoss(size_average=True)
+loss = nn.MSELoss(size_average=False)
 optimizer = torch.optim.SGD(and_pt.parameters(), lr=10)
 '''
 for i in range(len(and_inputs[i])):
@@ -138,7 +131,19 @@ for i in range(len(and_inputs[i])):
     l.backward()
     optimizer.step()
 '''
-for i in range(1):
+for i in range(100):
+    for j in range(4):
+        inp = torch.from_numpy(and_inputs[j].copy()).float()
+        targ = torch.from_numpy(and_targets[j].copy()).float()
+        output = and_pt.forward(inp)
+        l = loss(output, targ)
+        l = l/2
+        optimizer.zero_grad()
+        # print(l)
+        l.backward()
+        optimizer.step()
+    
+    '''
     inp = torch.from_numpy(and_inputs[0].copy()).float()
     targ = torch.from_numpy(and_targets[0].copy()).float()
     output = and_pt.forward(inp)
@@ -157,7 +162,25 @@ for i in range(1):
     print(l)
     l.backward()
     optimizer.step()
-    
+    inp = torch.from_numpy(and_inputs[2].copy()).float()
+    targ = torch.from_numpy(and_targets[2].copy()).float()
+    output = and_pt.forward(inp)
+    l = loss(output, targ)
+    l = l/2
+    optimizer.zero_grad()
+    print(l)
+    l.backward()
+    optimizer.step()
+    inp = torch.from_numpy(and_inputs[3].copy()).float()
+    targ = torch.from_numpy(and_targets[3].copy()).float()
+    output = and_pt.forward(inp)
+    l = loss(output, targ)
+    l = l/2
+    optimizer.zero_grad()
+    print(l)
+    l.backward()
+    optimizer.step()
+    '''
 
 weights, biases = and_comp.get_parameters()
 print("weights of system after composition, basic pytorch training: ")
@@ -170,9 +193,17 @@ print("weights of basic pytorch after composition, basic pytorch training: ")
 print(and_pt.w)
 print("\n")
 
-for i in range(1):
-    results_sys = and_system.run(inputs={and_in:and_inputs[0:3]}, 
-                                 targets={and_out:and_targets[0:3]})
+and_process = Process(pathway=[and_in,
+                               and_map,
+                               and_out],
+                      learning=pnl.LEARNING)
+
+and_system = System(processes=[and_process],
+                    learning_rate=10)
+
+results_sys = and_system.run(inputs={and_in:and_inputs}, 
+                             targets={and_out:and_targets},
+                             num_trials=401)
 
 weights, biases = and_comp.get_parameters()
 print("weights of system after both training: ")
