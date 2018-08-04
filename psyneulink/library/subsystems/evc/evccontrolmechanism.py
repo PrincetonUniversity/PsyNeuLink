@@ -1112,12 +1112,12 @@ class EVCControlMechanism(ControlMechanism):
         # Buffer System attributes
         execution_id_buffer = self.system._execution_id
         animate_buffer = self.system._animate
-        self._animate = False
 
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
+                        animate=False,
                         context=context)
         self.system.context.execution_phase = ContextFlags.IDLE
 

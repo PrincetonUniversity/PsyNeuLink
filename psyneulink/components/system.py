@@ -2813,9 +2813,8 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
-            if not self._animate is False:
-                if self.context.execution_phase != ContextFlags.SIMULATION and self._animate_unit is EXECUTION_SET:
-                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+            if not self._animate is False and self._animate_unit is EXECUTION_SET:
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
 
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
@@ -2846,9 +2845,8 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
-                if not self._animate is False:
-                    if self.context.execution_phase != ContextFlags.SIMULATION and self._animate_unit is COMPONENT:
-                        self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
+                if not self._animate is False and self._animate_unit is COMPONENT:
+                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
@@ -3158,16 +3156,21 @@ class System(System_Base):
         # Set animation attributes
         if animate is True:
             animate = {}
-        try:
-            # Preserve previous attribute assignment if it exists
-            self._animate = self._animate or animate
-        except:
-            # Assign argument value if attribute doesn't already exist
-            self._animate = animate
+
+        # # MODIFIED 8/4/18 OLD:
+        # try:
+        #     # Preserve previous attribute assignment if it exists
+        #     self._animate = self._animate or animate
+        # except:
+        #     # Assign argument value if attribute doesn't already exist
+        #     self._animate = animate
+        # # MODIFIED 8/4/18 NEW:
+        self._animate = animate
+        # MODIFIED 8/4/18 END
         if isinstance(self._animate, dict):
             # FIX: MOVE THIS TEST TO OUTTER IF
             if self.context.execution_phase != ContextFlags.SIMULATION:
-                # If this is a real (i.e., not simulation) run,
+                # If this is a real (i.e., not a simulation) run,
                 #    assign directory for animation files (and clear if previously occupied)
                 here = path.abspath(path.dirname(__file__))
                 self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
