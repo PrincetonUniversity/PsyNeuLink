@@ -4721,12 +4721,12 @@ class System(System_Base):
                          repr(self._component_execution_count) + '-'
                 # FIX: CLEAR EXISTING DIRECTORY HERE
                 # G.render(filename = prefix + active_item.name,
-                here = path.abspath(path.dirname(__file__))
-                directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
+                # here = path.abspath(path.dirname(__file__))
+                # directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
                 G.render(filename = prefix,
                          # directory='show_graph OUTPUT/'+self.name+" GIFS",
-                         # directory=self._animate_directory,
-                         directory=directory,
+                         directory=self._animate_directory,
+                         # directory=directory,
                          cleanup=True,
                          # view=True
                          )
