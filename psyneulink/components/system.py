@@ -2927,10 +2927,10 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
 
-            if not self._animate is False:
-                if (self._animate_unit is EXECUTION_SET and
-                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+            if (not self._animate is False and
+                    self._animate_unit is EXECUTION_SET and
+                    SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
@@ -2977,10 +2977,10 @@ class System(System_Base):
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
-            if not self._animate is False:
-                if (self._animate_unit is EXECUTION_SET and
-                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+            if (not self._animate is False and
+                    self._animate_unit is EXECUTION_SET and
+                    SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
@@ -3153,15 +3153,9 @@ class System(System_Base):
 
         self.initial_values = initial_values
 
-        # Set animation attributes
-        # FIX: IF CONTEXT = SIMULATION, BUFFER ANIMATE ATTRIBUTE VALUES AND ASSIGN self._animate = FALSE
-        #      THEN GET RID OF TESTS FOR SIMULATION HERE AND IN show_graph
-
-        # if self.context.execution_phase == ContextFlags.SIMULATION:
-        #     self._animate = False
-        #
-        # else:
         self._component_execution_count=0
+
+        # Set animation attributes
         if animate is True:
             animate = {}
         try:
@@ -3171,7 +3165,10 @@ class System(System_Base):
             # Assign argument value if attribute doesn't already exist
             self._animate = animate
         if isinstance(self._animate, dict):
+            # FIX: MOVE THIS TEST TO OUTTER IF
             if self.context.execution_phase != ContextFlags.SIMULATION:
+                # If this is a real (i.e., not simulation) run,
+                #    assign directory for animation files (and clear if previously occupied)
                 here = path.abspath(path.dirname(__file__))
                 self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
                 try:
@@ -4719,14 +4716,8 @@ class System(System_Base):
                 G.format = 'gif'
                 prefix = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
                          repr(self._component_execution_count) + '-'
-                # FIX: CLEAR EXISTING DIRECTORY HERE
-                # G.render(filename = prefix + active_item.name,
-                # here = path.abspath(path.dirname(__file__))
-                # directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
                 G.render(filename = prefix,
-                         # directory='show_graph OUTPUT/'+self.name+" GIFS",
                          directory=self._animate_directory,
-                         # directory=directory,
                          cleanup=True,
                          # view=True
                          )
