@@ -3156,28 +3156,16 @@ class System(System_Base):
         # Set animation attributes
         if animate is True:
             animate = {}
-
-        # # MODIFIED 8/4/18 OLD:
-        # try:
-        #     # Preserve previous attribute assignment if it exists
-        #     self._animate = self._animate or animate
-        # except:
-        #     # Assign argument value if attribute doesn't already exist
-        #     self._animate = animate
-        # # MODIFIED 8/4/18 NEW:
         self._animate = animate
-        # MODIFIED 8/4/18 END
         if isinstance(self._animate, dict):
-            # FIX: MOVE THIS TEST TO OUTTER IF
-            if self.context.execution_phase != ContextFlags.SIMULATION:
-                # If this is a real (i.e., not a simulation) run,
-                #    assign directory for animation files (and clear if previously occupied)
-                here = path.abspath(path.dirname(__file__))
-                self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
-                try:
-                    rmtree(self._animate_directory)
-                except:
-                    pass
+            # If this is a real (i.e., not a simulation) run,
+            #    assign directory for animation files (and clear if previously occupied)
+            here = path.abspath(path.dirname(__file__))
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
+            try:
+                rmtree(self._animate_directory)
+            except:
+                pass
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             if not isinstance(self._animate_num_trials, int):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
@@ -3189,6 +3177,7 @@ class System(System_Base):
                                   format(repr(UNIT), repr('animate'), repr('run'),
                                          self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
         elif self._animate:
+            # self._animate should now be False or a dict
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
                               "a dictionary of argument specifications for its {} method".
                               format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
