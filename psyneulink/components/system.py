@@ -3158,8 +3158,7 @@ class System(System_Base):
             animate = {}
         self._animate = animate
         if isinstance(self._animate, dict):
-            # If this is a real (i.e., not a simulation) run,
-            #    assign directory for animation files (and clear if previously occupied)
+            # Assign directory for animation files, clearing it if it was previously occupied
             here = path.abspath(path.dirname(__file__))
             self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
             try:
