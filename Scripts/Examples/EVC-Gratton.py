@@ -201,8 +201,9 @@ Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextFlags.CONTROL))
 mySystem.run(
         num_trials=nTrials,
         inputs=stim_list_dict,
-        animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
-        # animate=True
+        # animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET, pnl.MOVIE_NAME:'My Movie',
+        #          pnl.SAVE_IMAGES:False}
+        animate=True
 )
 
 

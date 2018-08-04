@@ -432,7 +432,7 @@ import re
 import warnings
 
 from collections import OrderedDict, namedtuple, Iterable
-from os import path
+from os import path, listdir, remove
 from shutil import rmtree
 
 import numpy as np
@@ -475,10 +475,10 @@ from psyneulink.scheduling.condition import AtTimeStep, Never
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'EXECUTION_SET', 'INPUT_ARRAY',
     'kwSystemInputState',
-    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple',
+    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
     'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
-    'SCHEDULER',
+    'SAVE_IMAGES', 'SCHEDULER',
     'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS', 'UNIT'
 ]
@@ -534,6 +534,9 @@ SHOW_LEARNING = 'show_learning'
 
 NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
+MOVIE_NAME = 'movie_name'
+SAVE_IMAGES = 'save_images'
+
 EXECUTION_SET = 'EXECUTION_SET'
 
 class SystemWarning(Warning):
@@ -3123,15 +3126,23 @@ class System(System_Base):
             called for all of the Components in each `execution_set <System.execution_set>` when it is executed,
             using the `show_graph <System.show_graph>` method without any options.  A dict can be specified containing
             options to pass to the `show_graph <System.show_graph>` method;  each key must be an argument of the
-            `show_graph <System.show_graph>` method, and its value a specification for that argument.  Two special
-            keys can be used to specify parameters for the animation:
-                *UNIT* -- specifies which Components to designate as active in each call to `show_graph
-                   <System.show_graph>`:  assigning the keyword *COMPONENT* causes a gif to be generated
-                   for the execution of each Component;  *EXECUTION_SET* (the default) causes a gif to be generated
-                   for each `execution_set <System.execution_set>`, showing all of the Components in that set as active.
-                *NUM_TRIALS* -- specifies the number of trials to animate;  by default, this is 1.  If the number of
-                  trials specified is less than the total number being run, only the number specified are animated;  if
-                  *NUM_TRIALS* is greater than the number being run, only the number being run are animated.
+            `show_graph <System.show_graph>` method, and its value a specification for that argument.  The following 
+            entries can also be included,  keys can be used to specify parameters for the animation:
+            
+            * *UNIT*: <*EXECUTION_SET* or *COMPONENT*> -- specifies which Components to designate as active in 
+                each call to `show_graph <System.show_graph>`. *COMPONENT* causes a gif to be generated
+                for the execution of each Component.  *EXECUTION_SET* (the default) causes a gif to be generated
+                for each `execution_set <System.execution_set>`, showing all of the Components in that set as active.
+               
+            * *NUM_TRIALS*: <int> -- specifies the number of trials to animate;  by default, this is 1.  If the 
+                number of trials specified is less than the total number being run, only the number specified are 
+                animated; if *NUM_TRIALS* is greater than the number being run, only the number being run are animated.
+
+            * *MOVIE_NAME*: <str> -- specifies the name to be used for the movie file; it is automatically appended  
+                with '.gif';  if this is not specified, the name of the System is used.
+            
+            * *SAVE_IMAGES*: <bool> -- specifies whether to save each of the images used to construct the animation
+                in separate gif files, in addition to the movie file containing the animation. 
 
         Returns
         -------
@@ -3158,13 +3169,15 @@ class System(System_Base):
             animate = {}
         self._animate = animate
         if isinstance(self._animate, dict):
-            # Assign directory for animation files, clearing it if it was previously occupied
+            # Assign directory for animation files
             here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
-            try:
-                rmtree(self._animate_directory)
-            except:
-                pass
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             if not isinstance(self._animate_num_trials, int):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
@@ -3184,7 +3197,7 @@ class System(System_Base):
         logger.debug(inputs)
 
         from psyneulink.globals.environment import run
-        return run(self,
+        result = run(self,
                    inputs=inputs,
                    num_trials=num_trials,
                    initialize=initialize,
@@ -3199,6 +3212,14 @@ class System(System_Base):
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
                    context=ContextFlags.COMPOSITION)
+
+        if self._animate is not False:
+            # Save list of gifs in self._animation as movie file
+            import imageio
+            movie_path = self._animate_directory + '/' + self._movie_filename
+            imageio.mimsave(movie_path, self._animation, duration=0.5)
+
+        return result
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
@@ -4701,17 +4722,27 @@ class System(System_Base):
             # G.format = 'svg'
             G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
 
-        # Generate gif files for animation
+        # Generate images for animation
         elif output_fmt == 'gif':
             if self.active_item_rendered:
                 G.format = 'gif'
-                prefix = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
+                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
                          repr(self._component_execution_count) + '-'
-                G.render(filename = prefix,
+                G.render(filename = image_filename,
                          directory=self._animate_directory,
                          cleanup=True,
                          # view=True
                          )
+               # Append gif to self._animation
+                import imageio
+                image_path = self._animate_directory + '/' + image_filename + '.gif'
+                image = imageio.imread(image_path)
+                if not self._save_images:
+                    remove(image_path)
+                if not hasattr(self, 'animation'):
+                    self._animation = [image]
+                else:
+                    self._animation.append(image)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
