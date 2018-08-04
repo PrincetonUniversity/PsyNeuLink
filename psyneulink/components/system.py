@@ -431,7 +431,9 @@ import numbers
 import re
 import warnings
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, Iterable
+from os import path
+from shutil import rmtree
 
 import numpy as np
 import typecheck as tc
@@ -456,26 +458,29 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, CONDITION, CONTROL, CONTROLLER, CYCLE, \
+from psyneulink.globals.keywords import ALL, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
-    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, NUM_TRIALS, ORIGIN, PROJECTIONS, ROLES, \
+    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, \
     SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, \
     kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
+from psyneulink.globals.utilities import \
+    AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
 from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
-    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
+    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'EXECUTION_SET', 'INPUT_ARRAY',
+    'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple',
-    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
-    'SCHEDULER', 'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
-    'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
+    'SCHEDULER',
+    'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS', 'UNIT'
 ]
 
 logger = logging.getLogger(__name__)
@@ -526,6 +531,10 @@ MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_stat
 
 SHOW_CONTROL = 'show_control'
 SHOW_LEARNING = 'show_learning'
+
+NUM_TRIALS = 'num_trials'
+UNIT = 'unit'
+EXECUTION_SET = 'EXECUTION_SET'
 
 class SystemWarning(Warning):
      def __init__(self, error_value):
@@ -2586,14 +2595,13 @@ class System(System_Base):
                 termination_learning=None,
                 runtime_params=None,
                 context=None):
-        """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
-        specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
+        """Execute mechanisms in System in order specified by the `execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
 
         Execute any learning components specified at the appropriate phase.
 
-        Execute controller after all mechanisms have been executed (after each numPhases)
+        Execute controller after all other Mechanisms have been executed.
 
         .. Execution:
             - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and
@@ -2646,6 +2654,7 @@ class System(System_Base):
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
+        assert True
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learning_execution_list
         for mech in self.execution_graph:
@@ -2691,12 +2700,12 @@ class System(System_Base):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
+            # Get SystemInputState that projects to each ORIGIN Mechanism and assign input to it
             for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
 
                 for j in range(len(origin_mech.external_input_states)):
-                   # Get the input from each projection to that inputState (from the corresponding SystemInputState)
+                   # Get the input from each Projection to that InputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
@@ -2804,6 +2813,10 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
+            if not self._animate is False:
+                if self.context.execution_phase != ContextFlags.SIMULATION and self._animate_unit is EXECUTION_SET:
+                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
 
@@ -2833,8 +2846,9 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
-                if not self._animate is False and self.context.execution_phase != ContextFlags.SIMULATION:
-                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
+                if not self._animate is False:
+                    if self.context.execution_phase != ContextFlags.SIMULATION and self._animate_unit is COMPONENT:
+                        self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
@@ -2911,6 +2925,13 @@ class System(System_Base):
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+
+
+            if not self._animate is False:
+                if (self._animate_unit is EXECUTION_SET and
+                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
@@ -2943,8 +2964,10 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                if not self._animate is False and SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]:
-                    self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+            if not self._animate is False:
+                if (self._animate_unit is COMPONENT and
+                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                        self.show_graph(active_items=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # # TEST PRINT LEARNING:
@@ -2953,6 +2976,12 @@ class System(System_Base):
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+
+            if not self._animate is False:
+                if (self._animate_unit is EXECUTION_SET and
+                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                    self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
@@ -2979,8 +3008,12 @@ class System(System_Base):
                                                                              component.name, self.name)
 
                 component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-                if not self._animate is False and SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]:
-                    self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+
+
+                if not self._animate is False:
+                    if (self._animate_unit is COMPONENT and
+                            SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                        self.show_graph(active_items=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
@@ -3087,15 +3120,20 @@ class System(System_Base):
             <Component.reinitialize_when>` Condition is satisfied.
 
         animate : bool or dict : False
-            specifies whether to use the `show_graph <System.show_graph> method to generate a series of gif files, one
-            for the execution of each `Component` in the System showing that Component in the color specified by
-            the **active_color** argument of `show_graph <System.show_graph>`.  If *True*, `show_graph
-            <System.show_graph>` is called for each execution without any options;  if a dict is specified, it must
-            contain entries, the keys of which are arguments of the `show_graph <System.show_graph>` method,
-            and the values of which are the specification for those arguments.  One additional key can be used,
-            *NUM_TRIALS*, which specifies the number of trials to animate;  by default, this is 1.  If a number of
-            trials is specified less than the total number run, only the number specified are animated;  if *NUM_TRIALS*
-            is greater than the number run, only the number run are animated.
+            specifies use of the `show_graph <System.show_graph>` method to generate a series of gif files
+            showing the sequence of Components executed in a trial.  If *True*, `show_graph <System.show_graph>` is
+            called for all of the Components in each `execution_set <System.execution_set>` when it is executed,
+            using the `show_graph <System.show_graph>` method without any options.  A dict can be specified containing
+            options to pass to the `show_graph <System.show_graph>` method;  each key must be an argument of the
+            `show_graph <System.show_graph>` method, and its value a specification for that argument.  Two special
+            keys can be used to specify parameters for the animation:
+                *UNIT* -- specifies which Components to designate as active in each call to `show_graph
+                   <System.show_graph>`:  assigning the keyword *COMPONENT* causes a gif to be generated
+                   for the execution of each Component;  *EXECUTION_SET* (the default) causes a gif to be generated
+                   for each `execution_set <System.execution_set>`, showing all of the Components in that set as active.
+                *NUM_TRIALS* -- specifies the number of trials to animate;  by default, this is 1.  If the number of
+                  trials specified is less than the total number being run, only the number specified are animated;  if
+                  *NUM_TRIALS* is greater than the number being run, only the number being run are animated.
 
         Returns
         -------
@@ -3115,15 +3153,41 @@ class System(System_Base):
 
         self.initial_values = initial_values
 
+        # Set animation attributes
+        # FIX: IF CONTEXT = SIMULATION, BUFFER ANIMATE ATTRIBUTE VALUES AND ASSIGN self._animate = FALSE
+        #      THEN GET RID OF TESTS FOR SIMULATION HERE AND IN show_graph
+
+        # if self.context.execution_phase == ContextFlags.SIMULATION:
+        #     self._animate = False
+        #
+        # else:
         self._component_execution_count=0
         if animate is True:
             animate = {}
         try:
+            # Preserve previous attribute assignment if it exists
             self._animate = self._animate or animate
         except:
+            # Assign argument value if attribute doesn't already exist
             self._animate = animate
         if isinstance(self._animate, dict):
+            if self.context.execution_phase != ContextFlags.SIMULATION:
+                here = path.abspath(path.dirname(__file__))
+                self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
+                try:
+                    rmtree(self._animate_directory)
+                except:
+                    pass
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
+                                  format(repr(NUM_TRIALS), repr('animate'), repr('run'),
+                                         self.name, self._animate_num_trials, repr('show_graph')))
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must {} or {}".
+                                  format(repr(UNIT), repr('animate'), repr('run'),
+                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
         elif self._animate:
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
                               "a dictionary of argument specifications for its {} method".
@@ -4463,8 +4527,12 @@ class System(System_Base):
         if show_processes:
             show_headers = False
 
-        if not isinstance(active_items, list):
+        if not active_items:
+            active_items = []
+        elif not isinstance(active_items, Iterable):
             active_items = [active_items]
+        elif not isinstance(active_items, list):
+            active_items = list(active_items)
         for item in active_items:
             if not isinstance(item, Component):
                 raise SystemError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
@@ -4653,8 +4721,12 @@ class System(System_Base):
                          repr(self._component_execution_count) + '-'
                 # FIX: CLEAR EXISTING DIRECTORY HERE
                 # G.render(filename = prefix + active_item.name,
+                here = path.abspath(path.dirname(__file__))
+                directory = path.join(here, '../../show_graph output/' + self.name + " GIFS")
                 G.render(filename = prefix,
-                         directory='show_graph OUTPUT/'+self.name+" GIFS",
+                         # directory='show_graph OUTPUT/'+self.name+" GIFS",
+                         # directory=self._animate_directory,
+                         directory=directory,
                          cleanup=True,
                          # view=True
                          )

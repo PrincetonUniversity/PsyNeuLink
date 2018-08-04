@@ -201,7 +201,7 @@ Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextFlags.CONTROL))
 mySystem.run(
         num_trials=nTrials,
         inputs=stim_list_dict,
-        animate={'show_control':pnl.ALL}
+        animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
         # animate=True
 )
 

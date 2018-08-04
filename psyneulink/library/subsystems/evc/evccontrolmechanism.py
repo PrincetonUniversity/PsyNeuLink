@@ -1107,12 +1107,23 @@ class EVCControlMechanism(ControlMechanism):
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
+        # RUN SIMULATION
+
+        # Buffer System attributes
+        execution_id_buffer = self.system._execution_id
+        animate_buffer = self.system._animate
+        self._animate = False
+
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
                         context=context)
         self.system.context.execution_phase = ContextFlags.IDLE
+
+        # Restore System attributes
+        self.system._animate = animate_buffer
+        self.system._execution_id = execution_id_buffer
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
