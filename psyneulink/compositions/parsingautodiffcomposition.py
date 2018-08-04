@@ -661,6 +661,11 @@ class ParsingAutodiffComposition(Composition):
                 else:
                     curr_tensor_inputs = inputs[t]
                     curr_tensor_targets = targets[t]
+                    
+                # get total number of output neurons
+                out_size = 0
+                for i in range(len(curr_tensor_targets)):
+                    out_size += len(curr_tensor_targets[i])
                 
                 # run the model on inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
@@ -678,13 +683,12 @@ class ParsingAutodiffComposition(Composition):
                     # print("\n")
                     curr_loss += nowloss
                 
-                curr_loss = curr_loss/2 # *len(curr_tensor_outputs))
-                
                 # save loss on current trial
-                curr_losses[t] = curr_loss[0].item()
+                curr_losses[t] = (curr_loss[0].item())/out_size
                 
                 # compute gradients and perform parameter update
                 self.optimizer.zero_grad()
+                curr_loss = curr_loss/2 # *len(curr_tensor_outputs))
                 curr_loss.backward()
                 self.optimizer.step()
                 
