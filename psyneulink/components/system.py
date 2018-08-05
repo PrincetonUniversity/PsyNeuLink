@@ -4375,8 +4375,13 @@ class System(System_Base):
 
             # FIX: ??
             if proj_receiver in active_items:
-                edge_color = proj_color
-                edge_width = str(proj_width)
+                # edge_color = proj_color
+                # edge_width = str(proj_width)
+                if active_color is BOLD:
+                    edge_color = proj_color
+                else:
+                    edge_color = active_color
+                edge_width = str(default_width + active_thicker_by)
             else:
                 edge_color = default_node_color
                 edge_width = str(default_width)
@@ -4445,11 +4450,11 @@ class System(System_Base):
                     objmech_ctlr_proj_color = control_color
                 else:
                     objmech_ctlr_proj_color = active_color
-                objmech_ctlr_proj_width = default_width + active_thicker_by
+                objmech_ctlr_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
                 objmech_ctlr_proj_color = control_color
-                objmech_ctlr_proj_width = default_width
+                objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
@@ -4670,7 +4675,6 @@ class System(System_Base):
 
         bold_width = 3
         default_width = 1
-        # active_width = '5'
         active_thicker_by = 2
 
         pos = None
