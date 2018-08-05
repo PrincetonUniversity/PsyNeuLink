@@ -2973,7 +2973,6 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # MODIFIED 8/4/18 (INDENTED)
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
