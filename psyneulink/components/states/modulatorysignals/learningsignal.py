@@ -36,15 +36,15 @@ LearningSignal has dedicated Components and requirements for configuration that 
 
 .. _LearningSignal_Specification:
 
-Specifying LearningSignals
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying LearningSignals*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningSignal is specified in the **learning_signals** argument of the constructor for a `LearningMechanism`,
-the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learning must be
+the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learned must be
 specified.  This can take any of the following forms:
 
   * an existing LearningSignal, or a reference to the class (in which case a default LearningSignal is created);
-
+  ..
   * a **ParameterState**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjection` to be learned;
   ..
@@ -81,8 +81,8 @@ attributes of the LearningSignal, as described below.
 
 .. _LearningSignal_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
@@ -99,8 +99,8 @@ concerning the specification of Projections when creating a State.
 
 .. _LearningSignal_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 A LearningSignal has a `modulation <LearningSignal.modulation>` attribute that determines how the LearningSignal's
 `value <LearningSignal.value>` (i.e., its `learning_signal <LearningSignal.learning_signal>`) is used by the
@@ -119,8 +119,8 @@ used by all of the `LearningProjections <LearningProjection>` that project from 
 
 .. _LearningSignal_Learning_Rate:
 
-Learning Rate and Function
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Rate and Function*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A LearningSignal has a `learning_rate <LearningSignal.learning_rate>` attribute that can be used to specify the
 `learning_rate <LearningProjection.learning_rate>` parameter for its `LearningProjection(s) <LearningProjection>`

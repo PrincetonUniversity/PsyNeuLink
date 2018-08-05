@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+from psyneulink.library.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 from psyneulink.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.components.mechanisms.processing import TransferMechanism
 from psyneulink.components.functions.function import Linear, Logistic, UserDefinedFunction

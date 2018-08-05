@@ -111,7 +111,8 @@ Middle_Weights.set_log_conditions('matrix')
 mySystem.reportOutputPref = True
 # Shows graph will full information:
 # mySystem.show_graph(show_dimensions=pnl.ALL)
-mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
+# mySystem.show_graph(show_learning=pnl.ALL)
+# mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
 # mySystem.show_graph()
@@ -121,12 +122,13 @@ stim_list = {Input_Layer: ['red']}
 target_list = {Output_Layer: [[0, 0, 1]]}
 
 mySystem.run(
-    num_trials=10,
-    inputs=stim_list,
-    targets=target_list,
-    call_before_trial=functools.partial(print_header, mySystem),
-    call_after_trial=functools.partial(show_target, mySystem),
-    termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)}
+        num_trials=1,
+        inputs=stim_list,
+        targets=target_list,
+        call_before_trial=functools.partial(print_header, mySystem),
+        call_after_trial=functools.partial(show_target, mySystem),
+        termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
+        animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET, pnl.SAVE_IMAGES:False, pnl.DURATION:1}
 )
 
 # Print out logged weights for Middle_Weights

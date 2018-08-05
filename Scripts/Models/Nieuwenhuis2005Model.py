@@ -57,7 +57,7 @@ input_layer = pnl.TransferMechanism(
 )                 # but will help you to overview your model later on
 
 # Create Decision Layer  --- [ Target 1, Target 2, Distractor ]
-decision_layer = pnl.LCA(
+decision_layer = pnl.LCAMechanism(
     size=3,                            # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],    # Initial input values
     time_step_size=dt,                 # Integration step size
@@ -77,7 +77,7 @@ for output_state in decision_layer.output_states:
     output_state.value *= 0.0                                       # Set initial output values for decision layer to 0
 
 # Create Response Layer  --- [ Target1, Target2 ]
-response_layer = pnl.LCA(
+response_layer = pnl.LCAMechanism(
     size=2,                                        # Number of units in input layer
     initial_value=[[0.0, 0.0]],                    # Initial input values
     time_step_size=dt,                             # Integration step size
