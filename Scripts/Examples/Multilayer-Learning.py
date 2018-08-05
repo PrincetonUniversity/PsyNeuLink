@@ -99,9 +99,10 @@ def show_target(system):
 
 
 mySystem = pnl.System(
-    processes=[z],
-    targets=[0, 0, 1],
-    learning_rate=2.0
+        name='Multilayer-Learning',
+        processes=[z],
+        targets=[0, 0, 1],
+        learning_rate=2.0
 )
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
@@ -128,7 +129,7 @@ mySystem.run(
         call_before_trial=functools.partial(print_header, mySystem),
         call_after_trial=functools.partial(show_target, mySystem),
         termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
-        animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET, pnl.SAVE_IMAGES:False, pnl.DURATION:1}
+        animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET}
 )
 
 # Print out logged weights for Middle_Weights

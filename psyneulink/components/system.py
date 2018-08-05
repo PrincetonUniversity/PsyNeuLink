@@ -3073,7 +3073,8 @@ class System(System_Base):
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
-        formatting input specifications.
+        formatting input specifications. The **animate** argument can be used to generate a movie of the execution of
+        the System.
 
         Arguments
         ---------
@@ -3142,7 +3143,7 @@ class System(System_Base):
               execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <System.execution_sets>`, showing all of the Components in that set as active.
 
-            * *DURATION*: float (default=1.0) -- specifies the duration (in seconds) of each image in the movie.
+            * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
 
             * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
               If the number specified is less than the total number of trials being run, only the number specified are
@@ -3153,6 +3154,28 @@ class System(System_Base):
 
             * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to 
               construct the animation in separate gif files, in addition to the file containing the animation.
+
+        Examples
+        --------
+
+        This figure shows an animation of the System in the Multilayer-Learning example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
+
+        .. _System_Multilayer_Learning_movie:
+
+        .. figure:: _static/Multilayer_Learning_movie.gif
+           :alt: Animation of System in Multilayer-Learning example script
+           :scale: 50 %
+
+        This figure shows an animation of the System in the EVC Gratton example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _System_EVC_Gratton_movie:
+
+        .. figure:: _static/EVC_Gratton_movie.gif
+           :alt: Animation of System in EVC Gratton example script
+           :scale: 150 %
+
 
         Returns
         -------
@@ -3187,7 +3210,7 @@ class System(System_Base):
             # except:
             #     pass
             self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 1.0)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
@@ -3242,6 +3265,7 @@ class System(System_Base):
             import imageio
             movie_path = self._animate_directory + '/' + self._movie_filename
             imageio.mimsave(movie_path, self._animation, duration=self._image_duration)
+            print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
 
         return result
 
