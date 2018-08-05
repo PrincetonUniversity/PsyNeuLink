@@ -3125,31 +3125,30 @@ class System(System_Base):
             that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
             <Component.reinitialize_when>` Condition is satisfied.
 
-        animate : bool or dict : False
-            specifies use of the `show_graph <System.show_graph>` method to generate a series of gif files
-            showing the sequence of Components executed in a trial.  If *True*, `show_graph <System.show_graph>` is
-            called for all of the Components in each `execution_set <System.execution_set>` when it is executed,
-            using the `show_graph <System.show_graph>` method without any options.  A dict can be specified containing
-            options to pass to the `show_graph <System.show_graph>` method;  each key must be an argument of the
-            `show_graph <System.show_graph>` method, and its value a specification for that argument.  The following 
-            entries can also be included,  keys can be used to specify parameters for the animation:
+        animate : dict or bool : False
+            specifies use of the `show_graph <System.show_graph>` method to generate a gif movie showing the sequence
+            of Components executed in a trial.  A dict can be specified containing options to pass to the `show_graph
+            <System.show_graph>` method;  each key must be an argument of the `show_graph <System.show_graph>`
+            method, and its value a specification for that argument.  The entries listed below can also be included
+            in the dict to specify parameters of the animation.  If the **animate** argument is specified simply as
+            `True`, defaults are used for all arguments of `show_graph <System.show_graph>` and the options below:
             
-            * *UNIT*: <*EXECUTION_SET* or *COMPONENT*> -- specifies which Components to designate as active in 
-                each call to `show_graph <System.show_graph>`. *COMPONENT* causes a gif to be generated
-                for the execution of each Component.  *EXECUTION_SET* (the default) causes a gif to be generated
-                for each `execution_set <System.execution_set>`, showing all of the Components in that set as active.
+            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\ *EXECUTION_SET*\ ) -- specifies which Components to
+              treat as active in each call to `show_graph <System.show_graph>`. *COMPONENT* generates an image for the
+              execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
+              <System.execution_sets>`, showing all of the Components in that set as active.
 
-            * *DURATION*: <float> -- specifies the duration (in seconds) of each image in the movie.
-               
-            * *NUM_TRIALS*: <int> -- specifies the number of trials to animate;  by default, this is 1.  If the 
-                number of trials specified is less than the total number being run, only the number specified are 
-                animated; if *NUM_TRIALS* is greater than the number being run, only the number being run are animated.
+            * *DURATION*: float (default=1.0) -- specifies the duration (in seconds) of each image in the movie.
 
-            * *MOVIE_NAME*: <str> -- specifies the name to be used for the movie file; it is automatically appended  
-                with '.gif';  if this is not specified, the name of the System is used.
-            
-            * *SAVE_IMAGES*: <bool> -- specifies whether to save each of the images used to construct the animation
-                in separate gif files, in addition to the movie file containing the animation. 
+            * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
+              If the number specified is less than the total number of trials being run, only the number specified are
+              animated; if it is greater than the number of trials being run, only the number being run are animated.
+
+            * *MOVIE_NAME*: str (default=\ `name <System.name>` + 'movie') -- specifies the name to be used for the
+              movie file; it is automatically appended with '.gif'.
+
+            * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to 
+              construct the animation in separate gif files, in addition to the file containing the animation.
 
         Returns
         -------
@@ -3184,7 +3183,7 @@ class System(System_Base):
             # except:
             #     pass
             self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.5)
+            self._image_duration = self._animate.pop(DURATION, 1.0)
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
