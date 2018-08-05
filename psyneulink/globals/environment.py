@@ -812,9 +812,12 @@ def run(obj,
     # EXECUTE
     execution_inputs = {}
     execution_targets = {}
+
+    execution_id = _get_unique_id()
+
     for execution in range(num_trials):
 
-        execution_id = _get_unique_id()
+        # execution_id = _get_unique_id()
 
         if call_before_trial:
             call_before_trial()

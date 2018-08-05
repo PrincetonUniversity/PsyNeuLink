@@ -2035,6 +2035,10 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
+    def _projection_added(self, projection, context=None):
+        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
+        pass
+
     def reinitialize(self, *args):
         """
             If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
