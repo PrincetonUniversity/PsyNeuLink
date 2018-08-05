@@ -39,8 +39,8 @@ its initialization is `deferred <ControlProjection_Deferred_Initialization>`.
 
 .. _ControlProjection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
 <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows

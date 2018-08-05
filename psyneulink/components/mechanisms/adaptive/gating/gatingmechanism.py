@@ -42,8 +42,8 @@ that projects from the GatingMechanism to the specified target
 
 .. _GatingMechanism_Specifying_Gating:
 
-Specifying gating
-~~~~~~~~~~~~~~~~~
+*Specifying gating*
+~~~~~~~~~~~~~~~~~~~
 
 GatingMechanism are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
@@ -87,16 +87,16 @@ Structure
 
 .. _GatingMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 By default, a GatingMechanism has a single `InputState`, the `value <InputState.value>` of which is used
 as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 
 .. _GatingMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its `primary
 InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`.  The default
@@ -108,8 +108,8 @@ is assigned more than one `GatingSignal`.
 
 .. _GatingMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
 <GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
