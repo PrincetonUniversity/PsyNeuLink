@@ -473,7 +473,8 @@ from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
 from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
-    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'EXECUTION_SET', 'INPUT_ARRAY',
+    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
+    'EXECUTION_SET', 'INPUT_ARRAY',
     'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
     'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
@@ -534,6 +535,7 @@ SHOW_LEARNING = 'show_learning'
 
 NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
+DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 
@@ -2931,7 +2933,8 @@ class System(System_Base):
             if (not self._animate is False and
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+                mechs = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
+                self.show_graph(active_items=mechs, **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
@@ -2965,10 +2968,11 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-            if not self._animate is False:
-                if (self._animate_unit is COMPONENT and
-                        SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                        self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+                # MODIFIED 8/4/18 (INDENTED)
+                if not self._animate is False:
+                    if (self._animate_unit is COMPONENT and
+                            SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                            self.show_graph(active_items=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 # # TEST PRINT LEARNING:
@@ -2981,7 +2985,8 @@ class System(System_Base):
             if (not self._animate is False and
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+                mapping_projs = [proj for proj in next_execution_set if isinstance(proj, MappingProjection)]
+                self.show_graph(active_items=mapping_projs, **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
@@ -3133,6 +3138,8 @@ class System(System_Base):
                 each call to `show_graph <System.show_graph>`. *COMPONENT* causes a gif to be generated
                 for the execution of each Component.  *EXECUTION_SET* (the default) causes a gif to be generated
                 for each `execution_set <System.execution_set>`, showing all of the Components in that set as active.
+
+            * *DURATION*: <float> -- specifies the duration (in seconds) of each image in the movie.
                
             * *NUM_TRIALS*: <int> -- specifies the number of trials to animate;  by default, this is 1.  If the 
                 number of trials specified is less than the total number being run, only the number specified are 
@@ -3176,18 +3183,32 @@ class System(System_Base):
             #     rmtree(self._animate_directory)
             # except:
             #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.5)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(UNIT), repr('animate'), repr('run'),
+                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
+                                  format(repr(DURATION), repr('animate'), repr('run'),
+                                         self.name, self._image_duration))
             if not isinstance(self._animate_num_trials, int):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
                                   format(repr(NUM_TRIALS), repr('animate'), repr('run'),
                                          self.name, self._animate_num_trials, repr('show_graph')))
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must {} or {}".
-                                  format(repr(UNIT), repr('animate'), repr('run'),
-                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
+            if not isinstance(self._movie_filename, str):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._movie_filename))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._save_images, repr(True), repr(False)))
+
         elif self._animate:
             # self._animate should now be False or a dict
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
@@ -3217,7 +3238,7 @@ class System(System_Base):
             # Save list of gifs in self._animation as movie file
             import imageio
             movie_path = self._animate_directory + '/' + self._movie_filename
-            imageio.mimsave(movie_path, self._animation, duration=0.5)
+            imageio.mimsave(movie_path, self._animation, duration=self._image_duration)
 
         return result
 
@@ -4739,7 +4760,7 @@ class System(System_Base):
                 image = imageio.imread(image_path)
                 if not self._save_images:
                     remove(image_path)
-                if not hasattr(self, 'animation'):
+                if not hasattr(self, '_animation'):
                     self._animation = [image]
                 else:
                     self._animation.append(image)
