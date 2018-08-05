@@ -9692,10 +9692,13 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
+        default_variable = [self.instance_defaults.variable,
+                            self.instance_defaults.variable]
+
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
+            self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
-            self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
+            self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
 
     def function(self,
