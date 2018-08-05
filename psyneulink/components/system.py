@@ -2651,6 +2651,11 @@ class System(System_Base):
 
         runtime_params = self._parse_runtime_params(runtime_params)
 
+        if not hasattr(self, '_animate'):
+            # These are meant to be assigned in run method;  needed here for direct call to execute method
+            self._animate = False
+            self._component_execution_count = 0
+
         if not context:
             context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
@@ -2659,7 +2664,7 @@ class System(System_Base):
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
-        assert True
+
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learning_execution_list
         for mech in self.execution_graph:
