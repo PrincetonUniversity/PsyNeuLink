@@ -458,7 +458,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, \
+from psyneulink.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, \
     SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, \
@@ -3691,7 +3691,7 @@ class System(System_Base):
                    show_projection_labels=False,
                    direction = 'BT',
                    active_items = None,
-                   active_color = 'yellow',
+                   active_color = BOLD,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3890,7 +3890,8 @@ class System(System_Base):
             specifies one or more items in the graph to display in the color specified by *active_color**.
 
         active_color : keyword : default 'yellow'
-            specifies the color in which to display the item(s) specified in *active_items**.
+            specifies how to highlight the item(s) specified in *active_items**:  either a color recognized
+            by GraphViz, or the keyword *BOLD*.
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
@@ -3954,27 +3955,48 @@ class System(System_Base):
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
-            if rcvr in active_items:
-                rcvr_color = active_color
-                rcvr_penwidth = active_width
-                self.active_item_rendered = True
-            elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
-                rcvr_color = origin_and_terminal_color
-                rcvr_penwidth = bold_width
+            if ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = origin_and_terminal_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                else:
+                    rcvr_color = origin_and_terminal_color
+                    rcvr_penwidth = str(bold_width)
             elif ORIGIN in rcvr.systems[self]:
-                rcvr_color = origin_color
-                rcvr_penwidth = bold_width
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = origin_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                else:
+                    rcvr_color = origin_color
+                    rcvr_penwidth = str(bold_width)
                 rcvr_rank = origin_rank
             elif TERMINAL in rcvr.systems[self]:
-                rcvr_color = terminal_color
-                rcvr_penwidth = bold_width
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = terminal_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                else:
+                    rcvr_color = terminal_color
+                    rcvr_penwidth = str(bold_width)
                 rcvr_rank = terminal_rank
+            elif rcvr in active_items:
+                rcvr_color = active_color
+                rcvr_penwidth = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             elif LEARNING in rcvr.systems[self]:
                 rcvr_color = learning_color
-                rcvr_penwidth = default_width
+                rcvr_penwidth = str(default_width)
             else:
                 rcvr_color = default_node_color
-                rcvr_penwidth = default_width
+                rcvr_penwidth = str(default_width)
 
             if isinstance(rcvr, LearningMechanism):
                 if rcvr.learning_timing is LearningTiming.EXECUTION_PHASE and not show_learning:
@@ -4020,12 +4042,15 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # show projection as node
                         if proj in active_items:
-                            proj_color = active_color
-                            proj_width = active_width
+                            if active_color is BOLD:
+                                proj_color = default_node_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
                             self.active_item_rendered = True
                         else:
                             proj_color = default_node_color
-                            proj_width = default_width
+                            proj_width = str(default_width)
                         proj_label = self._get_label(proj, show_dimensions, show_roles)
                         sg.node(proj_label, shape=projection_shape, color=proj_color, penwidth=proj_width)
                         G.edge(sndr_proj_label, proj_label, arrowhead='none')
@@ -4038,12 +4063,15 @@ class System(System_Base):
                     else:
                         # show projection as edge
                         if proj.sender in active_items:
-                            proj_color = active_color
-                            proj_width = active_width
+                            if active_color is BOLD:
+                                proj_color = default_node_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
                             self.active_item_rendered = True
                         else:
                             proj_color = default_node_color
-                            proj_width = default_width
+                            proj_width = str(default_width)
                         G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
@@ -4089,18 +4117,24 @@ class System(System_Base):
 
                     # Render projections
                     if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                        proj_color = active_color
-                        proj_width = active_width
+                        if active_color is BOLD:
+                            if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                                proj_color = learning_color
+                            else:
+                                proj_color = default_node_color
+                        else:
+                            proj_color = active_color
+                        proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
 
                     # Projection to or from a LearningMechanism
                     elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                         proj_color = learning_color
-                        proj_width = default_width
+                        proj_width = str(default_width)
 
                     else:
                         proj_color = default_node_color
-                        proj_width = default_width
+                        proj_width = str(default_width)
                     proc_mech_label = edge_label
 
                     if show_learning and has_learning:
@@ -4175,12 +4209,15 @@ class System(System_Base):
             # Get rcvr info
             rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
             if rcvr in active_items:
-                rcvr_color = active_color
-                rcvr_width = active_width
+                if active_color is BOLD:
+                    rcvr_color = learning_color
+                else:
+                    rcvr_color = active_color
+                rcvr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
                 rcvr_color = learning_color
-                rcvr_width = default_width
+                rcvr_width = str(default_width)
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             if self not in rcvr.systems and processes and not any(p in rcvr.processes for p in processes):
@@ -4217,23 +4254,31 @@ class System(System_Base):
                             elif isinstance(smpl_or_trgt_src, System):
 
                                 if smpl_or_trgt_src in active_items:
-                                    smpl_or_trgt_src_color = active_color
+                                    if active_color is BOLD:
+                                        smpl_or_trgt_src_color = system_color
+                                    else:
+                                        smpl_or_trgt_src_color = active_color
+                                    smpl_or_trgt_src_width = str(bold_width + active_thicker_by)
                                     self.active_item_rendered = True
                                 else:
                                     smpl_or_trgt_src_color = system_color
+                                    smpl_or_trgt_src_width = str(bold_width)
 
                                 sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
                                         color=smpl_or_trgt_src_color,
                                         rank='min',
-                                        penwidth='3')
+                                        penwidth=smpl_or_trgt_src_width)
 
                             if proj.receiver.owner in active_items:
-                                learning_proj_color = active_color
-                                learning_proj_width = active_width
+                                if active_color is BOLD:
+                                    learning_proj_color = learning_color
+                                else:
+                                    learning_proj_color = active_color
+                                learning_proj_width = str(default_width + active_thicker_by)
                                 self.active_item_rendered = True
                             else:
                                 learning_proj_color = learning_color
-                                learning_proj_width = default_width
+                                learning_proj_width = str(default_width)
                             if show_projection_labels:
                                 edge_label = proj.name
                             else:
@@ -4256,12 +4301,15 @@ class System(System_Base):
                 for proj in input_state.path_afferents:
 
                     if proj.receiver.owner in active_items:
-                        learning_proj_color = active_color
-                        learning_proj_width = active_width
+                        if active_color is BOLD:
+                            learning_proj_color = learning_color
+                        else:
+                            learning_proj_color = active_color
+                        learning_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
                         learning_proj_color = learning_color
-                        learning_proj_width = default_width
+                        learning_proj_width = str(default_width)
 
                     # Get sndr info
                     sndr = proj.sender.owner
@@ -4325,12 +4373,13 @@ class System(System_Base):
             # Node for Projection
             sg.node(label, shape=projection_shape, color=proj_color, penwidth=proj_width)
 
+            # FIX: ??
             if proj_receiver in active_items:
                 edge_color = proj_color
-                edge_width = proj_width
+                edge_width = str(proj_width)
             else:
                 edge_color = default_node_color
-                edge_width = default_width
+                edge_width = str(default_width)
 
             # Edges to and from Projection node
             if sndr_label:
@@ -4342,12 +4391,15 @@ class System(System_Base):
 
             # LearningProjection(s) to node
             if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
-                learning_proj_color = active_color
-                learning_proj_width = active_width
+                if active_color is BOLD:
+                    learning_proj_color = learning_color
+                else:
+                    learning_proj_color = active_color
+                learning_proj_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
                 learning_proj_color = learning_color
-                learning_proj_width = default_width
+                learning_proj_width = str(default_width)
             sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
                 sndr_label = self._get_label(sndr.sender.owner, show_dimensions, show_roles)
@@ -4371,12 +4423,15 @@ class System(System_Base):
 
             controller = self.controller
             if controller in active_items:
-                ctlr_color = active_color
-                ctlr_width = active_width
+                if active_color is BOLD:
+                    ctlr_color = control_color
+                else:
+                    ctlr_color = active_color
+                ctlr_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
                 ctlr_color = control_color
-                ctlr_width = default_width
+                ctlr_width = str(default_width)
 
             if controller is None:
                 print ("\nWARNING: {} has not been assigned a \'controller\', so \'show_control\' option "
@@ -4386,8 +4441,11 @@ class System(System_Base):
             # get projection from ObjectiveMechanism to ControlMechanism
             objmech_ctlr_proj = controller.input_state.path_afferents[0]
             if controller in active_items:
-                objmech_ctlr_proj_color = active_color
-                objmech_ctlr_proj_width = active_width
+                if active_color is BOLD:
+                    objmech_ctlr_proj_color = control_color
+                else:
+                    objmech_ctlr_proj_color = active_color
+                objmech_ctlr_proj_width = default_width + active_thicker_by
                 self.active_item_rendered = True
             else:
                 objmech_ctlr_proj_color = control_color
@@ -4396,12 +4454,15 @@ class System(System_Base):
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
-                objmech_color = active_color
-                objmech_width = active_width
+                if active_color is BOLD:
+                    objmech_color = control_color
+                else:
+                    objmech_color = active_color
+                objmech_width = str(default_width + active_thicker_by)
                 self.active_item_rendered = True
             else:
                 objmech_color = control_color
-                objmech_width = default_width
+                objmech_width = str(default_width)
 
             ctlr_label = self._get_label(controller, show_dimensions, show_roles)
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
@@ -4457,12 +4518,15 @@ class System(System_Base):
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
                     if controller in active_items:
-                        ctl_proj_color = active_color
-                        ctl_proj_width = active_width
+                        if active_color is BOLD:
+                            ctl_proj_color = control_color
+                        else:
+                            ctl_proj_color = active_color
+                        ctl_proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
                         ctl_proj_color = control_color
-                        ctl_proj_width = default_width
+                        ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
                     else:
@@ -4485,12 +4549,15 @@ class System(System_Base):
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
                     if objmech in active_items:
-                        proj_color = active_color
-                        proj_width = active_width
+                        if active_color is BOLD:
+                            proj_color = control_color
+                        else:
+                            proj_color = active_color
+                        proj_width = str(default_width + active_thicker_by)
                         self.active_item_rendered = True
                     else:
                         proj_color = control_color
-                        proj_width = default_width
+                        proj_width = str(default_width)
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
@@ -4508,12 +4575,15 @@ class System(System_Base):
             # prediction mechanisms
             for mech in self.execution_list:
                 if mech in active_items:
-                    pred_mech_color = active_color
-                    pred_mech_width = active_width
+                    if active_color is BOLD:
+                        pred_mech_color = prediction_mechanism_color
+                    else:
+                        pred_mech_color = active_color
+                    pred_mech_width = str(default_width + active_thicker_by)
                     self.active_item_rendered = True
                 else:
                     pred_mech_color = prediction_mechanism_color
-                    pred_mech_width = default_width
+                    pred_mech_width = str(default_width)
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
@@ -4522,12 +4592,15 @@ class System(System_Base):
                     if show_mechanism_structure and False:
                         proj = mech.output_state.efferents[0]
                         if proj in active_items:
-                            pred_proj_color = active_color
-                            pred_proj_width = active_width
+                            if active_color is BOLD:
+                                pred_proj_color = prediction_mechanism_color
+                            else:
+                                pred_proj_color = active_color
+                            pred_proj_width = str(default_width + active_thicker_by)
                             self.active_item_rendered = True
                         else:
                             pred_proj_color = prediction_mechanism_color
-                            pred_proj_width = default_width
+                            pred_proj_width = str(default_width)
                         sg.node(mech.name,
                                 shape=mech.show_structure(**mech_struct_args),
                                 color=pred_mech_color,
@@ -4595,9 +4668,10 @@ class System(System_Base):
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
-        bold_width = '3'
-        default_width = '1'
-        active_width = '5'
+        bold_width = 3
+        default_width = 1
+        # active_width = '5'
+        active_thicker_by = 2
 
         pos = None
 
@@ -4620,7 +4694,7 @@ class System(System_Base):
                     # 'shape':mechanism_shape,
                     'shape':'record',
                     'color':default_node_color,
-                    'penwidth':default_width
+                    'penwidth':str(default_width)
                 },
                 edge_attr  = {
                     # 'arrowhead':'halfopen',
