@@ -3962,6 +3962,7 @@ class System(System_Base):
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
                 else:
                     rcvr_color = origin_and_terminal_color
                     rcvr_penwidth = str(bold_width)
@@ -3972,6 +3973,7 @@ class System(System_Base):
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
                 else:
                     rcvr_color = origin_color
                     rcvr_penwidth = str(bold_width)
@@ -3983,13 +3985,17 @@ class System(System_Base):
                     else:
                         rcvr_color = active_color
                     rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
                 else:
                     rcvr_color = terminal_color
                     rcvr_penwidth = str(bold_width)
                 rcvr_rank = terminal_rank
             elif rcvr in active_items:
                 if active_color is BOLD:
-                    rcvr_color = default_node_color
+                    if LEARNING in rcvr.systems[self]:
+                        rcvr_color = learning_color
+                    else:
+                        rcvr_color = default_node_color
                 else:
                     rcvr_color = active_color
                 rcvr_penwidth = str(default_width + active_thicker_by)
