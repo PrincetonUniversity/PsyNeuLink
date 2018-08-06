@@ -159,6 +159,7 @@ click on "PsyNeuLink Tutorial.ipynb".
 Contributors
 ------------
 
+* **Kara Arora**, Department of Computer Science, Princeton University
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
@@ -166,6 +167,7 @@ Contributors
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
+* **David Turner**, Princeton Neuroscience Institute, Princeton University
 * **Jan Vesely**, Department of Computer Science, Rutgers University
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University

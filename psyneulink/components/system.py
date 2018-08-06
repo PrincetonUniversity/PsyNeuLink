@@ -540,6 +540,7 @@ UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
+SHOW = 'show'
 
 EXECUTION_SET = 'EXECUTION_SET'
 
@@ -3161,6 +3162,9 @@ class System(System_Base):
             * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to 
               construct the animation in separate gif files, in addition to the file containing the animation.
 
+            * *SHOW*: bool (default=\ `False`\ ) -- specifies whether to show the animation after it is constructed,
+              using the OS's default viewer.
+
         Examples
         --------
 
@@ -3220,6 +3224,7 @@ class System(System_Base):
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
                                   format(repr(UNIT), repr('animate'), repr('run'),
@@ -3240,6 +3245,10 @@ class System(System_Base):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
                                   format(repr(MOVIE_NAME), repr('animate'), repr('run'),
                                          self.name, self._save_images, repr(True), repr(False)))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(SHOW), repr('animate'), repr('run'),
+                                         self.name, self._show_animation, repr(True), repr(False)))
 
         elif self._animate:
             # self._animate should now be False or a dict
@@ -3276,6 +3285,9 @@ class System(System_Base):
                                     duration=self._image_duration*1000,
                                     loop=0)
             print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
+            if self._show_animation:
+                movie = Image.open(movie_path)
+                movie.show()
 
         return result
 
