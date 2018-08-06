@@ -175,14 +175,13 @@ def test_botvinick_model(benchmark, mode):
     # should be 500 and 1000
     ntrials0 = 50
     ntrials = 100
-    condition = 3
     comp._analyze_graph()
 
     def run(bin_execute):
-        for cond in range(condition):
+        for stim in Stimulus:
         # RUN the SYSTEM to initialize ----------------------------------------------------------------------------------------
-            comp.run(inputs=Stimulus[cond][0], num_trials=ntrials0, bin_execute=bin_execute)
-            comp.run(inputs=Stimulus[cond][1], num_trials=ntrials, bin_execute=bin_execute)
+            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
+            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
             # reinitialize after condition was run
             colors_hidden_layer.reinitialize([[0,0,0]])
             words_hidden_layer.reinitialize([[0,0,0]])
