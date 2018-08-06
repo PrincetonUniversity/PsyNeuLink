@@ -9,7 +9,7 @@ from psyneulink.components.system import System
 from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism, RECURRENT_OUTPUT
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.condition import Never
 
@@ -118,6 +118,30 @@ class TestRecurrentTransferMechanismInputs:
         val = R.execute([10.0, 10.0, 10.0, 10.0], bin_execute=(mode=='LLVM'))
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
         benchmark(R.execute, [1, 2, 3, 0], bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_recurrent_mech_integrator(self, benchmark, mode):
+        R = RecurrentTransferMechanism(size=2,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integration_rate=0.01,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.50249998, 0.50499983]])
+        val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.50497484, 0.50994869]])
+
+        # execute 10 times
+        for i in range(10):
+            val = R.execute([[1.0, 2.0]], bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.52837327, 0.55656439]])
+
+        benchmark(R.execute, [[1.0, 2.0]], bin_execute=(mode=='LLVM'))
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
