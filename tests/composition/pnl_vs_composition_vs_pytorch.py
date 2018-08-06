@@ -17,7 +17,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
 from psyneulink.compositions.parsingautodiffcomposition import ParsingAutodiffComposition, ParsingAutodiffCompositionError
 
-
+from torchviz import make_dot
 
 
 
@@ -33,6 +33,9 @@ class PT_and(torch.nn.Module):
         q = nn.Sigmoid()
         x = torch.matmul(x, self.w)
         x = q(x)
+        # dot = make_dot(x)
+        # dot.format = 'svg'
+        # dot.render()
         return x
     
 and_pt = PT_and()
@@ -137,6 +140,9 @@ for i in range(100):
         targ = torch.from_numpy(and_targets[j].copy()).float()
         output = and_pt.forward(inp)
         l = loss(output, targ)
+        dot = make_dot(l)
+        dot.format = 'svg'
+        dot.render()
         l = l/2
         optimizer.zero_grad()
         # print(l)
@@ -200,6 +206,8 @@ and_process = Process(pathway=[and_in,
 
 and_system = System(processes=[and_process],
                     learning_rate=10)
+
+and_system.show_graph(show_mechanism_structure=pnl.VALUES)
 
 results_sys = and_system.run(inputs={and_in:and_inputs}, 
                              targets={and_out:and_targets},

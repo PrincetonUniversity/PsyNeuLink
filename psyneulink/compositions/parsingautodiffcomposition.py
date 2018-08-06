@@ -22,7 +22,7 @@ import timeit as timeit
 import torch
 from torch import nn
 import torch.optim as optim
-# from torchviz import make_dot
+from torchviz import make_dot
 
 import logging
 logger = logging.getLogger(__name__)
@@ -670,10 +670,12 @@ class ParsingAutodiffComposition(Composition):
                 # run the model on inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
                 
+                '''
                 if epoch == 0 and t == 10:
                     print("\n")
                     print(curr_tensor_outputs)
                     print("\n")
+                '''
                 
                 # compute loss
                 curr_loss = torch.zeros(1).double()
@@ -685,6 +687,14 @@ class ParsingAutodiffComposition(Composition):
                 
                 # save loss on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
+                
+                
+                # print model computational graph
+                if epoch == 0 and t == 0:
+                    dot = make_dot(curr_loss)
+                    dot.format = 'svg'
+                    dot.render()
+                
                 
                 # compute gradients and perform parameter update
                 self.optimizer.zero_grad()

@@ -41,12 +41,14 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of ParsingAutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
-# STUFF TO TEST:
+# TEST CLASSES:
+
 # Constructor
-# CIM state setup
-# Pytorch Creator
-# Run/Execute
-# 
+# Training accuracy
+# Training runtime
+# Training identicality (to PsyNeuLink System)
+# Training runtime (comparison to PsyNeuLink System)
+# Training then processing, 
 
 
 
@@ -1305,30 +1307,24 @@ class TestSemanticNetTraining:
                                    map_nouns_h1,
                                    h1,
                                    map_h1_h2,
-                                   h2],
-                          learning=pnl.LEARNING)
-
-        p12 = pnl.Process(pathway=[rels_in,
-                                    map_rels_h2,
-                                    h2],
-                          learning=pnl.LEARNING)
-        
-        p21 = pnl.Process(pathway=[h2, 
+                                   h2,
                                    map_h2_I,
                                    out_sig_I],
                           learning=pnl.LEARNING)
-        
-        p22 = pnl.Process(pathway=[h2, 
+
+        p12 = pnl.Process(pathway=[rels_in,
+                                   map_rels_h2,
+                                   h2,
                                    map_h2_is,
                                    out_sig_is],
                           learning=pnl.LEARNING)
         
-        p23 = pnl.Process(pathway=[h2,
+        p21 = pnl.Process(pathway=[h2,
                                    map_h2_has,
                                    out_sig_has],
                           learning=pnl.LEARNING)
         
-        p24 = pnl.Process(pathway=[h2, 
+        p22 = pnl.Process(pathway=[h2, 
                                    map_h2_can,
                                    out_sig_can],
                           learning=pnl.LEARNING)
@@ -1337,10 +1333,10 @@ class TestSemanticNetTraining:
                                             p12,
                                             p21,
                                             p22,
-                                            p23,
-                                            p24,
                                             ],
                                  learning_rate=10)
+        
+        sem_net_sys.show_graph()
         
         # TRAIN THE SYSTEM, TIME IT
         
@@ -1381,7 +1377,7 @@ class TestSemanticNetTraining:
         ]
     )
     '''
-    @pytest.mark.knightsofgondor
+    @pytest.mark.hellobuddy
     def test_sem_net_as_composition_vs_as_system_one_output(self): # , eps):
         
         # MECHANISMS AND PROJECTIONS FOR SEMANTIC NET:
@@ -1518,8 +1514,8 @@ class TestSemanticNetTraining:
         targets_dict = {}
         targets_dict[out] = []
         
-        for i in range(len(nouns)):
-            for j in range(len(relations)):
+        for i in range(8):
+            for j in range(3):
                 inputs_dict[nouns_in].append(nouns_input[i])
                 inputs_dict[rels_in].append(rels_input[j])
                 targ = np.concatenate([truth_nouns[i], truth_is[i], truth_has[i], truth_can[i]])
@@ -1542,11 +1538,14 @@ class TestSemanticNetTraining:
         logger.info(msg)
         
         print("\n")
+        print("The weights in the composition after composition training: ")
+        print("\n")
         print(sem_net.model.params[3])
         print("\n")
         
         # FINISH CREATING THE SYSTEM (PROJECTIONS AND SYSTEM INIT)
         
+        '''
         p11 = pnl.Process(pathway=[nouns_in,
                                    map_nouns_h1,
                                    h1,
@@ -1569,9 +1568,32 @@ class TestSemanticNetTraining:
                                             p21,
                                             ],
                                  learning_rate=10)
+        '''
+        p11 = pnl.Process(pathway=[nouns_in,
+                                   map_nouns_h1,
+                                   h1,
+                                   map_h1_h2,
+                                   h2,
+                                   map_h2_out,
+                                   out],
+                          learning=pnl.LEARNING)
+
+        p12 = pnl.Process(pathway=[rels_in,
+                                    map_rels_h2,
+                                    h2,
+                                    map_h2_out,
+                                    out],
+                          learning=pnl.LEARNING)
+        
+        sem_net_sys = pnl.System(processes=[p11,
+                                            p12,
+                                            ],
+                                 learning_rate=10)
+        
+        sem_net_sys.show_graph()
         
         print("\n")
-        print("The weights in the system projection after composition training: ")
+        print("The weights in the system after composition training: ")
         print("\n")
         print(map_h2_out.matrix)
         print("\n")
@@ -1600,6 +1622,7 @@ class TestSemanticNetTraining:
         print(msg)
         logger.info(msg)
         
+        print("the weights in the system after system training: ")
         print("\n")
         print(map_h2_out.matrix)
         
