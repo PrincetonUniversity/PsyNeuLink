@@ -432,8 +432,10 @@ import re
 import warnings
 
 from collections import OrderedDict, namedtuple, Iterable
-from os import path, listdir, remove
+from os import path, remove
 from shutil import rmtree
+from PIL import Image
+
 
 import numpy as np
 import typecheck as tc
@@ -3076,6 +3078,10 @@ class System(System_Base):
         formatting input specifications. The **animate** argument can be used to generate a movie of the execution of
         the System.
 
+        .. note::
+           Use of the animation argument relies on `imageio <http://imageio.github.io>`_, which must be
+           installed and imported (standard with PsyNeuLink pip install)
+
         Arguments
         ---------
 
@@ -3262,9 +3268,13 @@ class System(System_Base):
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
-            import imageio
             movie_path = self._animate_directory + '/' + self._movie_filename
-            imageio.mimsave(movie_path, self._animation, duration=self._image_duration)
+            self._animation[0].save(fp=movie_path,
+                                    format='GIF',
+                                    save_all=True,
+                                    append_images=self._animation[1:],
+                                    duration=self._image_duration*1000,
+                                    loop=0)
             print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
 
         return result
@@ -4863,15 +4873,14 @@ class System(System_Base):
                 G.format = 'gif'
                 image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
                          repr(self._component_execution_count) + '-'
+                image_path = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
                          cleanup=True,
                          # view=True
                          )
-               # Append gif to self._animation
-                import imageio
-                image_path = self._animate_directory + '/' + image_filename + '.gif'
-                image = imageio.imread(image_path)
+                # Append gif to self._animation
+                image = Image.open(image_path)
                 if not self._save_images:
                     remove(image_path)
                 if not hasattr(self, '_animation'):
