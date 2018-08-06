@@ -1,0 +1,51 @@
+Functions
+=========
+
+.. toctree::
+   :maxdepth: 3
+
+.. automodule:: psyneulink.components.functions.function
+   :members: Function_Base,
+             ModulationParam,
+             ArgumentTherapy,
+             UserDefinedFunction,
+             Reduce,
+             LinearCombination,
+             CombineMeans,
+             PredictionErrorDeltaFunction,
+             TransferFunction,
+             Linear,
+             Exponential,
+             Logistic,
+             ReLU,
+             OneHot,
+             SoftMax,
+             LinearMatrix,
+             Integrator,
+             Buffer,
+             SimpleIntegrator,
+             ConstantIntegrator,
+             AdaptiveIntegrator,
+             DriftDiffusionIntegrator,
+             OrnsteinUhlenbeckIntegrator,
+             FHNIntegrator,
+             AGTUtilityIntegrator,
+             AccumulatorIntegrator,
+             LCAIntegrator,
+             BogaczEtAl,
+             NavarroAndFuss,
+             NormalDist,
+             UniformToNormalDist,
+             ExponentialDist,
+             UniformDist,
+             GammaDist,
+             WaldDist,
+             Stability,
+             Distance,
+             LearningFunction,
+             Hebbian,
+             ContrastiveHebbian,
+             Reinforcement,
+             BackPropagation,
+             TDLearning
+   :exclude-members: MappingProjection, ParameterState
