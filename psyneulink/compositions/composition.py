@@ -1095,7 +1095,6 @@ class Composition(object):
                         bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
                                       ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
                                       ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(d)))
-                        num = mechanism
 
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
@@ -1129,12 +1128,7 @@ class Composition(object):
 
         # extract result here
         if bin_execute:
-            bin_mech_extract = self.__get_bin_mech_output_extract(num)
-            data, out = bin_mech_extract.byref_arg_types
-            res = np.zeros_like(num.instance_defaults.variable, dtype=np.float64)
-            ct_res = res.ctypes.data_as(ctypes.POINTER(out))
-            bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
-            num=[res]
+            num = self.__extract_mech_output(mechanism)
 
         return num
 
@@ -1417,6 +1411,13 @@ class Composition(object):
 
         return self.__compiled_results_extract[mechanism]
 
+    def __extract_mech_output(self, mechanism):
+        bin_mech_extract = self.__get_bin_mech_output_extract(mechanism)
+        data, out = bin_mech_extract.byref_arg_types
+        res = np.zeros_like(mechanism.instance_defaults.variable, dtype=np.float64)
+        ct_res = res.ctypes.data_as(ctypes.POINTER(out))
+        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
+        return res
 
     def __bin_initialize(self, inputs, reinit=False):
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
