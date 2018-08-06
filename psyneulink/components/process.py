@@ -1481,7 +1481,7 @@ class Process(Process_Base):
                                            format(item.name, i, self.name, sender_mech.name))
                     projection = item
 
-                    if projection.has_learning_projection is True:
+                    if projection.has_learning_projection:
                         self.learning = True
 
                     # TEST

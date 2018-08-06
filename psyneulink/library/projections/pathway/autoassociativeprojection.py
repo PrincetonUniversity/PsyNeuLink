@@ -196,9 +196,9 @@ class AutoAssociativeProjection(MappingProjection):
         off-diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if
         hetero is a single number, it means the off-diagonal terms are all the same.
 
-    has_learning_projection : bool : False
-        identifies whether the AutoAssociativeProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned
-        a `LearningProjection`.
+    has_learning_projection : bool : None
+        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterState
+        <ParameterState>`.
 
     value : np.ndarray
         Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
