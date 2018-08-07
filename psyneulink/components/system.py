@@ -2748,6 +2748,10 @@ class System(System_Base):
             self._report_system_initiation()
 
 
+        if self._animate is not False:
+            self.show_graph(active_items=None, **self._animate, output_fmt='gif')
+
+
         # EXECUTE MECHANISMS
 
         # TEST PRINT:
@@ -4881,24 +4885,24 @@ class System(System_Base):
 
         # Generate images for animation
         elif output_fmt == 'gif':
-            if self.active_item_rendered:
-                G.format = 'gif'
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
-                         repr(self._component_execution_count) + '-'
-                image_path = self._animate_directory + '/' + image_filename + '.gif'
-                G.render(filename = image_filename,
-                         directory=self._animate_directory,
-                         cleanup=True,
-                         # view=True
-                         )
-                # Append gif to self._animation
-                image = Image.open(image_path)
-                if not self._save_images:
-                    remove(image_path)
-                if not hasattr(self, '_animation'):
-                    self._animation = [image]
-                else:
-                    self._animation.append(image)
+            # if self.active_item_rendered:
+            G.format = 'gif'
+            image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
+                     repr(self._component_execution_count) + '-'
+            image_path = self._animate_directory + '/' + image_filename + '.gif'
+            G.render(filename = image_filename,
+                     directory=self._animate_directory,
+                     cleanup=True,
+                     # view=True
+                     )
+            # Append gif to self._animation
+            image = Image.open(image_path)
+            if not self._save_images:
+                remove(image_path)
+            if not hasattr(self, '_animation'):
+                self._animation = [image]
+            else:
+                self._animation.append(image)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
