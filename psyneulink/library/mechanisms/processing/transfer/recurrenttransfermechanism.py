@@ -1366,8 +1366,11 @@ class RecurrentTransferMechanism(TransferMechanism):
     def get_context_initializer(self):
         transfer_init = super().get_context_initializer()
         projection_init = self.recurrent_projection.get_context_initializer()
-        # FIXME: Hope that the rest gets initialized to 0.
-        return tuple([transfer_init, projection_init])
+
+        # Initialize to output state defaults. That is what the recurrent
+        # projection finds.
+        retval_init = [tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states]
+        return tuple([transfer_init, projection_init, tuple(retval_init)])
     
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         real_input_type = super().get_input_struct_type()
