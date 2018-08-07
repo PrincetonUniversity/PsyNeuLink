@@ -6,11 +6,11 @@ from itertools import product
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, SimpleIntegrator, ModulationParam
+from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism, RECURRENT_OUTPUT
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -1528,6 +1528,58 @@ class TestRun:
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2)
         benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=1,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_mechanism(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.95257413]])
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.98201379]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.99330715]])
+
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=1,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integration_rate=0.01,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_mechanism(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.50749944]])
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.51741795]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.6320741]])
+
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
 
 class TestCallBeforeAfterTimescale:
 
