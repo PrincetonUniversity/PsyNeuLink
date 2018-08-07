@@ -1414,7 +1414,7 @@ class Composition(object):
     def __extract_mech_output(self, mechanism):
         bin_mech_extract = self.__get_bin_mech_output_extract(mechanism)
         data, out = bin_mech_extract.byref_arg_types
-        res = np.zeros_like(mechanism.instance_defaults.variable, dtype=np.float64)
+        res = np.zeros_like(mechanism.instance_defaults.value, dtype=np.float64)
         ct_res = res.ctypes.data_as(ctypes.POINTER(out))
         bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
         return res
