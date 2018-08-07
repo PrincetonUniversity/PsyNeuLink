@@ -112,8 +112,8 @@ COMMENT
 
 .. _State_Specification:
 
-Specifying a State
-~~~~~~~~~~~~~~~~~~
+*Specifying a State*
+~~~~~~~~~~~~~~~~~~~~
 
 A State can be specified using any of the following:
 
@@ -210,8 +210,8 @@ A State can be specified using any of the following:
 
 .. _State_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a State is created, it can be assigned one or more `Projections <Projection>`, in either the **projections**
 argument of its constructor, or a *PROJECTIONS* entry of a `State specification dictionary
@@ -256,8 +256,8 @@ assigned to it.
 
 .. _State_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <State_Deferred_Initialization>`.
@@ -274,8 +274,8 @@ Structure
 
 .. _State_Owner:
 
-Owner
-~~~~~
+*Owner*
+~~~~~~~
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
 owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
@@ -288,8 +288,8 @@ assigned to the specified Mechanism).  If the **owner** argument is not specifie
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
 <Mechanism_Base.add_states>` method.
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the `table <State_Projections_Table>`):
@@ -309,8 +309,8 @@ In addition to these attributes, all of the Projections sent and received by a S
 <State_Base.projections>` attribute.
 
 
-Variable, Function and Value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Variable, Function and Value*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
@@ -338,8 +338,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 
 .. _State_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
 <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal <ModulatorySignal>`
@@ -1498,7 +1498,8 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            if any(proj.sender == projection.sender for proj in self.path_afferents):
+            # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
                 warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
                               format(Projection.__name__, repr(projection.sender.name),
                                      projection.sender.owner.name,
@@ -1542,6 +1543,8 @@ class State_Base(State):
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
+
+            self.owner._projection_added(projection, context)
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
@@ -2686,6 +2689,7 @@ def _parse_state_spec(state_type=None,
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
             if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
+            # if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value
             else:

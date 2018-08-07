@@ -24,9 +24,16 @@ Transfer Functions:
   * `Exponential`
   * `Logistic`
   * `ReLU`
-  * `OneHot`
   * `SoftMax`
   * `LinearMatrix`
+
+Selection Functions:
+  * `OneHot`
+  COMMENT:
+  * TBI Threshold
+  * TBI MaxVal
+  COMMENT
+  * `KWTA`
 
 Integrator Functions:
   * `Integrator`
@@ -110,8 +117,8 @@ Structure
 
 .. _Function_Core_Attributes:
 
-Core Attributes
-~~~~~~~~~~~~~~~
+*Core Attributes*
+~~~~~~~~~~~~~~~~~
 
 Every Function has the following core attributes:
 
@@ -126,8 +133,8 @@ Every Function has the following core attributes:
 
 A Function also has an attribute for each of the parameters of its `function <Function_Base.function>`.
 
-Owner
-~~~~~
+*Owner*
+~~~~~~~
 
 If a Function has been assigned to another `Component`, then it also has an `owner <Function_Base.owner>` attribute
 that refers to that Component.  The Function itself is assigned as the Component's
@@ -154,8 +161,8 @@ COMMENT
 
 .. _Function_Modulatory_Params:
 
-Modulatory Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Modulatory Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Some classes of Functions also implement a pair of modulatory parameters: `multiplicative_param` and `additive_param`.
 Each of these is assigned the name of one of the function's parameters. These are used by `ModulatorySignals
@@ -205,30 +212,32 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
     DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
+    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, \
+    GAIN, GAUSSIAN, GAMMA_DIST_FUNCTION, \
     HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
-    LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
+    KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
-    NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
+    NOISE, SELECTION_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
-    OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, \
-    WALD_DIST_FUNCTION, WEIGHTS, \
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, \
     kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import \
+    call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, \
+    np_array_less_than_2d, parameter_spec, scalar_distance
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -3597,254 +3606,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
 MODE = 'mode'
 
-class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
-    """
-    OneHot(                \
-         default_variable, \
-         mode=MAX_VAL,     \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
 
-    .. _OneHot:
-
-    Return an array with one non-zero value.
-
-    The `mode <OneHot.mode>` parameter determines the nature of the non-zero value:
-
-    Arguments
-    ---------
-
-    variable : 2d np.array : default ClassDefaults.variable
-        First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
-        *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
-
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
-        specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
-        (see `mode <OneHot.mode>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    bounds : None
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        1st item contains value to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item is a probability
-        distribution, each element of which specifies the probability for selecting the corresponding element of the
-        1st item.
-
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
-        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
-            * *MAX_VAL*: element with the maximum signed value in the original array;
-            * *MAX_ABS_VAL*: element with the maximum absolute value;
-            * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
-            * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
-            * *PROB*: probabilistically chosen element based on probabilities passed in second item of
-            * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = ONE_HOT_FUNCTION
-
-    bounds = None
-    multiplicative_param = None
-    additive_param = None
-
-    classPreferences = {
-        kwPreferenceSetName: 'OneHotClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-        PARAMETER_STATE_PARAMS: None
-    })
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(mode=mode,
-                                                  params=params)
-
-        if mode in {PROB, PROB_INDICATOR} and default_variable is None:
-            default_variable = [[0],[0]]
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-        # self.functionOutputType = None
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        if request_set[MODE] in {PROB, PROB_INDICATOR}:
-            if not self.variable.ndim == 2:
-                raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
-                                    format(MODE, self.__class__.__name__, Function.__name__, PROB))
-            values = self.variable[0]
-            prob_dist = self.variable[1]
-            if len(values)!=len(prob_dist):
-                raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
-                                    "length (len item 1 = {}; len item 2 = {}".
-                                    format(MODE, self.__class__.__name__, Function.__name__, PROB,
-                                           len(values), len(prob_dist)))
-            if not all((elem>=0 and elem<=1) for elem in prob_dist)==1:
-                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
-                                    "array of elements each of which is in the (0,1) interval".
-                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
-                return
-            if not np.sum(prob_dist)==1:
-                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
-                                    "array of probabilities that sum to 1".
-                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
-        """
-        Return array of len(`variable <Linear.variable>`) with single non-zero value specified by `mode <OneHot.mode>`.
-
-        Arguments
-        ---------
-
-        variable : 2d np.array : default ClassDefaults.variable
-           1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
-           probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-
-        Returns
-        -------
-
-        array with single non-zero value : np.array
-
-        """
-
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        if self.mode is MAX_VAL:
-            max_value = np.max(variable)
-            return np.where(variable == max_value, max_value, 0)
-
-        if self.mode is MAX_ABS_VAL:
-            max_value = np.max(np.absolute(variable))
-            return np.where(variable == max_value, max_value, 0)
-
-        elif self.mode is MAX_INDICATOR:
-            max_value = np.max(variable)
-            return np.where(variable == max_value, 1, 0)
-
-        elif self.mode is MAX_ABS_INDICATOR:
-            max_value = np.max(np.absolute(variable))
-            return np.where(variable == max_value, 1, 0)
-
-        elif self.mode in {PROB, PROB_INDICATOR}:
-            # 1st item of variable should be data, and 2nd a probability distribution for choosing
-            v = variable[0]
-            prob_dist = variable[1]
-            # if not prob_dist.any() and INITIALIZING in context:
-            if not prob_dist.any():
-                return v
-            cum_sum = np.cumsum(prob_dist)
-            random_value = np.random.uniform()
-            chosen_item = next(element for element in cum_sum if element > random_value)
-            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            if self.mode is PROB:
-                result = v * chosen_in_cum_sum
-            else:
-                result = np.ones_like(v) * chosen_in_cum_sum
-            return result
-            # chosen_item = np.random.choice(v, 1, p=prob_dist)
-            # one_hot_indicator = np.where(v == chosen_item, 1, 0)
-            # return v * one_hot_indicator
-
-
-class NormalizingFunction(Function_Base):
-    """Function that adjusts a set of values
-    """
-    componentType = NORMALIZING_FUNCTION_TYPE
-
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
-
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
-
-
-class SoftMax(NormalizingFunction):
+class SoftMax(TransferFunction):
     """
     SoftMax(               \
          default_variable, \
@@ -3873,6 +3636,10 @@ class SoftMax(NormalizingFunction):
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
+
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3904,9 +3671,13 @@ class SoftMax(NormalizingFunction):
             * **ALL**: array of all SoftMax-transformed values (the default);
             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing the
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after selection the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
+
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
@@ -3929,7 +3700,7 @@ class SoftMax(NormalizingFunction):
     multiplicative_param = GAIN
     additive_param = None
 
-    class ClassDefaults(NormalizingFunction.ClassDefaults):
+    class ClassDefaults(TransferFunction.ClassDefaults):
         variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -3939,12 +3710,14 @@ class SoftMax(NormalizingFunction):
                  default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 per_item=True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
+                                                  per_item=per_item,
                                                   output=output,
                                                   params=params)
 
@@ -3973,6 +3746,25 @@ class SoftMax(NormalizingFunction):
             self.one_hot_function = OneHot(mode=output_type).function
 
         super()._instantiate_function(function, function_params=function_params, context=context)
+
+    def apply_softmax(self, input_value, gain, output_type):
+        # Modulate input_value by gain
+        v = gain * input_value
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # Generate one-hot encoding based on selected output_type
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            return self.one_hot_function(sm)
+        elif output_type in {PROB, PROB_INDICATOR}:
+            return self.one_hot_function([input_value, sm])
+        else:
+            return sm
 
     def function(self,
                  variable=None,
@@ -4006,26 +3798,17 @@ class SoftMax(NormalizingFunction):
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         gain = self.get_current_function_param(GAIN)
-
+        per_item = self.get_current_function_param(PER_ITEM)
         # Compute softmax and assign to sm
 
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # Generate one-hot encoding based on selected output_type
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
-            return self.one_hot_function(sm)
-        elif output_type in {PROB, PROB_INDICATOR}:
-            return self.one_hot_function([variable, sm])
+        if per_item and len(np.shape(variable)) > 1:
+            output = []
+            for item in variable:
+                output.append(self.apply_softmax(item, gain, output_type))
         else:
-            return sm
+            output = self.apply_softmax(variable, gain, output_type)
+
+        return output
 
     def derivative(self, output, input=None):
         """
@@ -4662,6 +4445,255 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
+
+# *******************************************  SELECTION FUNCTIONS *****************************************************
+
+
+class SelectionFunction(Function_Base):
+    """Function that adjusts a set of values
+    """
+    componentType = SELECTION_FUNCTION_TYPE
+
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
+
+
+class OneHot(SelectionFunction):
+    """
+    OneHot(                \
+         default_variable, \
+         mode=MAX_VAL,     \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _OneHot:
+
+    Return an array with one non-zero value.
+
+    The `mode <OneHot.mode>` parameter determines the nature of the non-zero value:
+
+    Arguments
+    ---------
+
+    variable : 2d np.array : default ClassDefaults.variable
+        First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
+        *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
+
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+        specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+        (see `mode <OneHot.mode>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    bounds : None
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        1st item contains value to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item is a probability
+        distribution, each element of which specifies the probability for selecting the corresponding element of the
+        1st item.
+
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
+            * *MAX_VAL*: element with the maximum signed value in the original array;
+            * *MAX_ABS_VAL*: element with the maximum absolute value;
+            * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+            * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+            * *PROB*: probabilistically chosen element based on probabilities passed in second item of
+            * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = ONE_HOT_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
+
+    classPreferences = {
+        kwPreferenceSetName: 'OneHotClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
+        PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mode=mode,
+                                                  params=params)
+
+        if mode in {PROB, PROB_INDICATOR} and default_variable is None:
+            default_variable = [[0],[0]]
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        # self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        if request_set[MODE] in {PROB, PROB_INDICATOR}:
+            if not self.variable.ndim == 2:
+                raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB))
+            values = self.variable[0]
+            prob_dist = self.variable[1]
+            if len(values)!=len(prob_dist):
+                raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
+                                    "length (len item 1 = {}; len item 2 = {}".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB,
+                                           len(values), len(prob_dist)))
+            if not all((elem>=0 and elem<=1) for elem in prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of elements each of which is in the (0,1) interval".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+            if self.context.initialization_status == ContextFlags.INITIALIZING:
+                return
+            if not np.sum(prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of probabilities that sum to 1".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return array of len(`variable <Linear.variable>`) with single non-zero value specified by `mode <OneHot.mode>`.
+
+        Arguments
+        ---------
+
+        variable : 2d np.array : default ClassDefaults.variable
+           1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
+           probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        array with single non-zero value : np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        if self.mode is MAX_VAL:
+            max_value = np.max(variable)
+            return np.where(variable == max_value, max_value, 0)
+
+        if self.mode is MAX_ABS_VAL:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, max_value, 0)
+
+        elif self.mode is MAX_INDICATOR:
+            max_value = np.max(variable)
+            return np.where(variable == max_value, 1, 0)
+
+        elif self.mode is MAX_ABS_INDICATOR:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, 1, 0)
+
+        elif self.mode in {PROB, PROB_INDICATOR}:
+            # 1st item of variable should be data, and 2nd a probability distribution for choosing
+            v = variable[0]
+            prob_dist = variable[1]
+            # if not prob_dist.any() and INITIALIZING in context:
+            if not prob_dist.any():
+                return v
+            cum_sum = np.cumsum(prob_dist)
+            random_value = np.random.uniform()
+            chosen_item = next(element for element in cum_sum if element > random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            if self.mode is PROB:
+                result = v * chosen_in_cum_sum
+            else:
+                result = np.ones_like(v) * chosen_in_cum_sum
+            return result
+            # chosen_item = np.random.choice(v, 1, p=prob_dist)
+            # one_hot_indicator = np.where(v == chosen_item, 1, 0)
+            # return v * one_hot_indicator
 
 
 # region ***********************************  INTEGRATOR FUNCTIONS *****************************************************
@@ -7744,7 +7776,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = LCA_INTEGRATOR_FUNCTION
+    componentName = LCAMechanism_INTEGRATOR_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -9660,10 +9692,13 @@ COMMENT
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
+        default_variable = [self.instance_defaults.variable,
+                            self.instance_defaults.variable]
+
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
+            self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
-            self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
+            self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
 
     def function(self,
@@ -10027,6 +10062,260 @@ class LearningFunction(Function_Base):
                 raise FunctionError("{} arg for {} ({}) must be a single value".
                                     format(LEARNING_RATE, self.name, learning_rate))
 
+class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
+    """
+    Kohonen(                       \
+        default_variable=None,     \
+        learning_rate=None,        \
+        distance_measure=GAUSSIAN, \
+        params=None,               \
+        name=None,                 \
+        prefs=None)
+
+    Implements a function that calculates a matrix of weight changes using the Kohenen (SOM) learning rule.
+    This modifies the weights to each element in proportion to their difference from the current input pattern
+    and the distance of that element from the one with the weights most similar to the current input pattern.
+
+    Arguments
+    ---------
+
+    variable: List[array(float64), array(float64), 2d np.array[[float64]]] : default ClassDefaults.variable
+        input pattern, array of activation values, and matrix used to calculate the weights changes.
+
+    learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
+        specifies the learning rate used by the `function <Kohonen.function>`; supersedes any specification  for the
+        `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
+        <Kohonen.learning_rate>` for details).
+
+    distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, SINUSOID or function
+        specifies the method used to calculate the distance of each element in `variable <Kohonen.variable>`\[2]
+        from the one with the greatest value.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+        of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable: List[array(float64), array(float64), 2d np.array[[float64]]]
+        input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
+        returned by `function <Kohonen.function>`.
+
+    learning_rate : float, 1d or 2d np.array
+        used by the `function <Kohonen.function>` to scale the weight change matrix returned by the `function
+        <Kohonen.function>`.  If specified, it supersedes any learning_rate specified for the `Process
+        <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's `owner <Kohonen.owner>`
+        belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d np.array, it is
+        multiplied Hadamard (elementwise) by the `variable` <Kohonen.variable>` before calculating the weight change
+        matrix;  if it is a 2d np.array, it is multiplied Hadamard (elementwise) by the weight change matrix; if it is
+        `None`, then the `learning_rate <Process.learning_rate>` specified for the Process to which the `owner
+        <Kohonen.owner>` belongs is used;  and, if that is `None`, then the `learning_rate <System.learning_rate>`
+        for the System to which it belongs is used. If all are `None`, then the `default_learning_rate
+        <Kohonen.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <Kohonen.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         calculates a matrix of weight changes from: i) the difference between an input pattern (variable
+         <Kohonen.variable>`\[0]) and the weights in a weigh matrix (`variable <Kohonen.variable>`\[2]) to each
+         element of an activity array (`variable <Kohonen.variable>`\[1]); and ii) the distance of each element of
+         the activity array (variable <Kohonen.variable>`\[1])) from the one with the weights most similar to the
+         input array (variable <Kohonen.variable>`\[0])) using `distance_measure <Kohonen.distance_measure>`.
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+
+    componentName = KOHONEN_FUNCTION
+
+    class ClassDefaults(LearningFunction.ClassDefaults):
+        variable = [[0, 0], [0, 0], [[0,0],[0,0]] ]
+
+    default_learning_rate = 0.05
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 default_variable=None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
+                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(distance_function=distance_function,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super()._validate_variable(variable, context))
+
+        # variable = np.squeeze(np.array(variable))
+
+        name = self.name
+        if self.owner and self.owner.name:
+            name = name + " for {}".format(self.owner.name)
+
+        if not is_numeric(variable):
+            raise ComponentError("Variable for {} ({}) contains non-numeric entries".
+                                 format(name, variable))
+
+        if len(variable)!=3:
+            raise FunctionError("variable for {} has {} items ({}) but must have three:  "
+                                "input pattern (1d array), activity array (1d array) and matrix (2d array)"
+                                "".format(name, len(variable), variable))
+
+        input = np.array(variable[0])
+        activity = np.array(variable[1])
+        matrix = np.array(variable[2])
+
+        if input.ndim != 1:
+            raise FunctionError("First item of variable ({}) for {} must be a 1d array".
+                                format(input, name))
+
+        if activity.ndim != 1:
+            raise FunctionError("Second item of variable ({}) for {} must be a 1d array".
+                                format(activity, name))
+
+        if matrix.ndim != 2:
+            raise FunctionError("Third item of variable ({}) for {} must be a 2d array or matrix".
+                                format(activity, name))
+
+        if len(input) != len(activity):
+            raise FunctionError("Length of first ({}) and second ({}) items of variable for {} must be the same".
+                                format(len(input), len(activity), name))
+
+        #     VALIDATE THAT len(variable[0])==len(variable[1])==len(variable[2].shape)
+        if (len(input) != matrix.shape[0]) or (matrix.shape[0] != matrix.shape[1]):
+            raise FunctionError("Third item of variable for {} ({}) must be a square matrix the dimension of which "
+                                "must be the same as the length ({}) of the first and second items of the variable".
+                                format(name, matrix, len(input)))
+
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        super()._instantiate_attributes_before_function(function, context)
+
+        if isinstance(self.distance_function, str):
+            self.measure=self.distance_function
+            self.distance_function = scalar_distance
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """Calculate a matrix of weight changes from an array of activity values and a weight matrix that generated
+        them using the Kohonen learning rule.
+
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`distance_j' * *variable[0]*-:math:`w_j`
+
+        where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>`\[1] from the
+        element with the weights most similar to activity array in `variable <Kohonen.variable>`\[1],
+        and :math:`w_j` is the column of the matrix in `variable <Kohonen.variable>`\[2] that corresponds to
+        the jth element of the activity array `variable <Kohonen.variable>`\[1].
+
+        .. _note::
+           the array of activities in `variable <Kohonen.variable>`\[1] is assumed to have been generated by the
+           dot product of the input pattern in `variable <Kohonen.variable>`\[0] and the matrix in `variable
+           <Kohonen.variable>`\[2], and thus the element with the greatest value in `variable <Kohonen.variable>`\[1]
+           can be assumed to be the one with weights most similar to the input pattern.
+
+        Arguments
+        ---------
+
+        variable : np.array or List[1d array, 1d array, 2d array] : default ClassDefaults.variable
+           input pattern, array of activation values, and matrix used to calculate the weights changes.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            matrix of weight changes scaled by difference of the current weights from the input pattern and the
+            distance of each element from the one with the weights most similar to the input pattern.
+
+        """
+
+        variable = self._update_variable(self._check_args(variable, params, context))
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+
+        # FIX: SHOULD PUT THIS ON SUPER (THERE, BUT NEEDS TO BE DEBUGGED)
+        self.learning_rate_dim = None
+        if learning_rate is not None:
+            self.learning_rate_dim = np.array(learning_rate).ndim
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if self.learning_rate_dim == 1:
+            variable = variable * learning_rate
+
+        input_pattern = np.array(np.matrix(variable[0]).T)
+        activities = np.array(np.matrix(variable[1]).T)
+        matrix = variable[2]
+        measure = self.distance_function
+
+        # Calculate I-w[j]
+        input_cols = np.repeat(input_pattern,len(input_pattern),1)
+        differences = matrix - input_cols
+
+        # Calculate distances
+        index_of_max = list(activities).index(max(activities))
+        distances = np.zeros_like(activities)
+        for i, item in enumerate(activities):
+            distances[i]=self.distance_function(self.measure, abs(i-index_of_max))
+        distances = 1-np.array(np.matrix(distances).T)
+
+        # Multiply distances by differences and learning_rate
+        weight_change_matrix = distances * differences * learning_rate
+
+        return weight_change_matrix
+
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Hebbian(                    \
@@ -10168,7 +10457,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  params=None,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
-
         The weight change matrix is calculated as:
 
            *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
@@ -10191,7 +10479,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         weight change matrix : 2d np.array
             matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
-            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
+            <HebbianMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 

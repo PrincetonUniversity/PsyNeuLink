@@ -33,8 +33,8 @@ as described below.
 
 .. _ObjectiveMechanism_Monitored_Output_States:
 
-Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~
+*Monitored OutputStates*
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
 FOR DEVELOPERS:
@@ -103,8 +103,8 @@ Structure
 
 .. _ObjectiveMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
 **monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
@@ -131,8 +131,8 @@ combined with that of the other InputStates to generate the ObjectiveMechanism's
 
 .. _ObjectiveMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 The ObjectiveMechanism's `function <ObjectiveMechanism.function>` uses the values of its `input_states
 <ObjectiveMechanism.input_states>` to compute an `objective (or "loss") function
@@ -151,8 +151,8 @@ If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those 
 
 .. _ObjectiveMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 The `primary OutputState <OutputState_Primary>` of an Objective mechanism is a 1d array, named *OUTCOME*, that is the
 result of its `function <ObjectiveMechanism.function>` (as described above).
@@ -633,7 +633,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Use self.input_states (containing specs from **input_states** arg of constructor) or
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
-            # return super()._instantiate_input_states(input_states=input_states, context=context)
             input_states = super()._instantiate_input_states(input_states=input_states, context=context)
 
         else:

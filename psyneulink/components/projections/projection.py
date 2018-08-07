@@ -82,8 +82,8 @@ automatically <Projection_Automatic_Creation>`, as described below.
 
 .. _Projection_Specification:
 
-Specifying a Projection
-~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying a Projection*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a `pathway <Process.pathway>` for a `Process`, where the value of a parameter is specified
@@ -214,8 +214,8 @@ Projection in context:
 
 .. _Projection_Automatic_Creation:
 
-Automatic creation
-~~~~~~~~~~~~~~~~~~
+*Automatic creation*
+~~~~~~~~~~~~~~~~~~~~
 
 Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
 `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
@@ -225,8 +225,8 @@ when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>
 
 .. _Projection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
 <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified.  This allows a
@@ -276,8 +276,8 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
 
 .. _Projection_Sender:
 
-Sender
-~~~~~~
+*Sender*
+~~~~~~~~
 
 This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
@@ -301,8 +301,8 @@ Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
 
-Receiver
-~~~~~~~~
+*Receiver*
+~~~~~~~~~~
 
 The `receiver <Projection_Base.receiver>` required by a Projection depends on its type, as listed below:
 
@@ -326,8 +326,8 @@ A `receiver <Projection_Base.receiver>` can be specified as:
 
 .. _Projection_Weight_Exponent:
 
-Weight and Exponent
-~~~~~~~~~~~~~~~~~~~
+*Weight and Exponent*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every Projection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attribute. These
 are applied to its `value <Projection_Base.value>` before combining it with other Projections that project to the same
@@ -342,8 +342,8 @@ with others to determine the `variable <State_Base.variable>` of the State to wh
    they project.
 
 
-ParameterStates and Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ParameterStates and Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
 <Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
@@ -911,6 +911,10 @@ class Projection_Base(Projection):
 
         return {SENDER:sender,
                 RECEIVER:receiver}
+
+    def _projection_added(self, projection, context=None):
+        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Projection'''
+        pass
 
     def _assign_default_name(self, **kwargs):
         self._assign_default_projection_name(**kwargs)

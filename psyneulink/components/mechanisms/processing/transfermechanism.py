@@ -100,8 +100,8 @@ Structure
 
 .. _TransferMechanism_InputStates:
 
-InputStates
-~~~~~~~~~~~
+*InputStates*
+~~~~~~~~~~~~~
 
 By default, a TransferMechanism has a single `InputState`;  however, more than one can be specified
 using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
@@ -113,8 +113,8 @@ modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to tran
 
 .. _TransferMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 *Function*.  The default function for a TransferMechanism is `Linear`.  A custom function can be specified in the
 **function** argument of the constructor.  This can be any PsyNeuLink `Function <Function>` that is a subtype of
@@ -129,8 +129,8 @@ is:
 
 .. _TransferMechanism_OutputStates:
 
-OutputStates
-~~~~~~~~~~~~
+*OutputStates*
+~~~~~~~~~~~~~~
 
 By default, a TransferMechanism generates one `OutputState` for each of its `InputStates`.  The first (and `primary
 <OutputState_Primary>`) OutputState is named *RESULT*; subsequent ones use that as the base name, suffixed with an
@@ -197,8 +197,8 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 
 .. _Transfer_Reinitialization:
 
-Reinitialization
-~~~~~~~~~~~~~~~~
+*Reinitialization*
+~~~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
 starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
@@ -305,7 +305,7 @@ import typecheck as tc
 
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
-    AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, NormalizingFunction, TransferFunction, \
+    AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, SelectionFunction, TransferFunction, \
     UserDefinedFunction, is_function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
@@ -315,7 +315,7 @@ from psyneulink.components.states.outputstate import OutputState, PRIMARY, Stand
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     DIFFERENCE, FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
-    NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
+    NAME, NOISE, SELECTION_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
     STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -804,10 +804,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
 
             if issubclass(transfer_function_class, Function):
-                if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction, UserDefinedFunction)):
+                if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
                     raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
                                         format(repr(FUNCTION), self.name, transfer_function_class.__name__,
-                                               TRANSFER_FUNCTION_TYPE + ' or ' + NORMALIZING_FUNCTION_TYPE))
+                                               TRANSFER_FUNCTION_TYPE + ' or ' + SELECTION_FUNCTION_TYPE))
             elif not isinstance(transfer_function, (function_type, method_type)):
                 raise TransferError("Unrecognized specification for {} param of {} ({})".
                                     format(repr(FUNCTION), self.name, transfer_function))
@@ -963,13 +963,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_output_states(context=context)
 
     def _get_instantaneous_function_input(self, function_variable, noise):
-        if isinstance(self.function_object, NormalizingFunction):
-            if self._current_variable_index == 0:
-                self._current_noise = self._try_execute_param(noise, function_variable)
-            noise = self._current_noise[self._current_variable_index]
-            function_variable = function_variable[self._current_variable_index]
-        else:
-            noise = self._try_execute_param(noise, function_variable)
+        noise = self._try_execute_param(noise, function_variable)
         if (np.array(noise) != 0).any():
             current_input = function_variable + noise
         else:
@@ -1061,25 +1055,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
-        if isinstance(self.function_object, NormalizingFunction):
-            # Apply TransferMechanism's function to each input state separately
-            value = []
-            for i in range(len(variable)):
-                self._current_variable_index = i
-                value_item = super(Mechanism, self)._execute(variable=variable,
-                                                             runtime_params=runtime_params,
-                                                             context=context)
-                value_item = self._clip_result(clip, value_item)
-                # execute returns 2d even though we passed in 1d
-                # (we passed in one item of a 2d variable)
-                value.append(np.squeeze(value_item))
-
-        else:
-            value = super(Mechanism, self)._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context
-                                                    )
-            value = self._clip_result(clip, value)
+        value = super(Mechanism, self)._execute(variable=variable,
+                                                runtime_params=runtime_params,
+                                                context=context
+                                                )
+        value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
         self._current_value = np.atleast_2d(value)
@@ -1110,22 +1090,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
-            if isinstance(self.function_object, NormalizingFunction):
-                # only execute integrator function once, even though component.execute is called for each item in var
-                if self._current_variable_index == 0:
-                    self.integrator_function_value = self._get_integrated_function_input(variable,
-                                                                                         initial_value,
-                                                                                         noise,
-                                                                                         context)
-                # grab the item of integrator function value that corresponds to current iteration through variable
-                return self.integrator_function_value[self._current_variable_index]
 
-            else:
-                self.integrator_function_value = self._get_integrated_function_input(variable,
-                                                                                     initial_value,
-                                                                                     noise,
-                                                                                     context)
-                return self.integrator_function_value
+            self.integrator_function_value = self._get_integrated_function_input(variable,
+                                                                                 initial_value,
+                                                                                 noise,
+                                                                                 context)
+            return self.integrator_function_value
 
         else:
             return self._get_instantaneous_function_input(variable, noise)

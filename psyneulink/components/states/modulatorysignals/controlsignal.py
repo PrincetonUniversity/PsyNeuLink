@@ -36,8 +36,8 @@ components and requirements for configuration that must be met for it to functio
 
 .. _ControlSignal_Specification:
 
-Specifying ControlSignals
-~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying ControlSignals*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
@@ -79,8 +79,8 @@ that are described below.
 
 .. _ControlSignal_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
@@ -97,8 +97,8 @@ creating a State.
 
 .. _ControlSignal_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
 `value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \\s
@@ -113,8 +113,8 @@ all of the `ControlProjections <ControlProjection>` that project from that Contr
 
 .. _ControlSignal_Allocation_and_Intensity
 
-Allocation, Function and Intensity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Allocation, Function and Intensity*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
 which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
@@ -141,8 +141,8 @@ its value from the previous `TRIAL` is assigned to the `last_intensity` attribut
 
 .. _ControlSignal_Costs:
 
-Costs and Cost Functions
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Costs and Cost Functions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
 belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
@@ -210,7 +210,7 @@ evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust
 .. _ControlSignal_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
