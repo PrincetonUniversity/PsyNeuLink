@@ -14,7 +14,7 @@
 Overview
 --------
 
-An AutoAssociativeLearningMechanism is a subclass `LearningMechanism <LearningMechanism>`, streamlined for use with a
+An AutoAssociativeLearningMechanism is a subclass of `LearningMechanism`, modified for use with a
 `RecurrentTransferMechanism` to train its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
 .. _AutoAssociativeLearningMechanism_Creation:
@@ -23,7 +23,7 @@ Creating an AutoAssociativeLearningMechanism
 --------------------------------------------
 
 An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
-created automatically when a RecurrentTransferMechanism is `configure for learning <Recurrent_Transfer_Learning>`,
+created automatically when a RecurrentTransferMechanism is `configured for learning <Recurrent_Transfer_Learning>`,
 (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 
 .. _AutoAssociativeLearningMechanism_Structure:
@@ -31,21 +31,21 @@ created automatically when a RecurrentTransferMechanism is `configure for learni
 Structure
 ---------
 
-An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all respects except the following:
+An AutoAssociativeLearningMechanism is identical to a `LearningMechanism` in all respects except the following:
 
   * it has only a single *ACTIVATION_INPUT* `InputState`, that receives a `MappingProjection` from an `OutputState` of
-    another `Mechanism` (identified by the `activity_source <AutoAssociativeLearningMechanism.activity_source>`,
-    typically, the `primary OutputState <OutputState_Primary>` of a RecurrentTransferMechanism);
+    the `RecurrentTransferMechanism` with which it is associated (identified by the `activity_source
+    <AutoAssociativeLearningMechanism.activity_source>`);
 
   * it has a single *LEARNING_SIGNAL* `OutputState` that sends a `LearningProjection` to the `matrix
-    <AutoAssociativeProjection>` parameter of an 'AutoAssociativeProjection` (typically, the `recurrent_projection
-    <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism), but not an
-    *ERROR_SIGNAL* OutputState.
+    <AutoAssociativeProjection.matrix>` parameter of an 'AutoAssociativeProjection` (typically, the
+    `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` of a RecurrentTransferMechanism),
+    but not an *ERROR_SIGNAL* OutputState.
 
   * it has no `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
-    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source`
-    attribute that identifies the source of the activity vector used by the Mechanism's `function
-    <AutoAssociativeLearningProjection.function>`.
+    or `error_source <LearningMechanism.error_source>` attributes;  instead, it has a single `activity_source
+    <AutoAssociativeLearningMechanism.activity_source>` attribute that identifies the source of the activity vector
+    used by the Mechanism's `function <AutoAssociativeLearningProjection.function>`.
 
   * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
     a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
@@ -67,9 +67,9 @@ Execution
 An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
 * 1) its execution can be enabled or disabled by setting the the `learning_enabled
   <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
-  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.attribute>`).
+  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
-  distinct from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
+  different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
   that are executed during the `learning phase <System_Execution>` of a System's execution
 
 
@@ -85,7 +85,8 @@ import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, LearningType, LearningTiming, ACTIVATION_INPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
@@ -141,9 +142,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     variable : List or 2d np.array : default None
         it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
-        `function <AutoAssociativeLearningMechanism..function>`;  it must each be compatible (in number and type)
+        `function <AutoAssociativeLearningMechanism.function>`;  it must each be compatible (in number and type)
         with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
-        `variable <AutoAssociativeLearningMechanism..variable>` for additional details).
+        `variable <AutoAssociativeLearningMechanism.variable>` for additional details).
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
     : default None
@@ -287,6 +288,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    learning_type = LearningType.UNSUPERVISED
+    learning_timing = LearningTiming.EXECUTION_PHASE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -331,7 +335,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _parse_function_variable(self, variable, context=None):
         return variable
@@ -375,18 +380,18 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # TEST PRINT
-        if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            if self.context.composition:
-                time = self.context.composition.scheduler_processing.clock.simple_time
-            else:
-                time = self.current_execution_time
-            print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-                format(self.context.flags_string,
-                       time.trial,
-                       # self.pass_,
-                       time.time_step))
-            print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        # # TEST PRINT
+        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
+        #     if self.context.composition:
+        #         time = self.context.composition.scheduler_processing.clock.simple_time
+        #     else:
+        #         time = self.current_execution_time
+        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
+        #         format(self.context.flags_string,
+        #                time.trial,
+        #                # self.pass_,
+        #                time.time_step))
+        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]
         return self.value
@@ -400,11 +405,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         super()._update_output_states(runtime_params, context)
 
-        if self.context.composition:
+        from psyneulink import Process
+        if self.learning_enabled and self.context.composition and not isinstance(self.context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
             learned_projection.execute(context=ContextFlags.LEARNING)
             learned_projection.context.execution_phase = ContextFlags.IDLE
-
 
     @property
     def activity_source(self):

@@ -43,8 +43,8 @@ If its **owner* is not specified, `initialization is deferred.
 
 .. _OutputState_Deferred_Initialization:
 
-Owner Assignment and Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Owner Assignment and Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
 `Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
@@ -58,8 +58,8 @@ the OutputState is assigned to a Mechanism using the Mechanism's `add_states <Me
 
 .. _OutputState_Primary:
 
-Primary OutputState
-~~~~~~~~~~~~~~~~~~~
+*Primary OutputState*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has at least one OutputState, referred to as its *primary OutputState*.  If OutputStates are not
 `explicitly specified <OutputState_Specification>` for a Mechanism, a primary OutputState is automatically created
@@ -71,8 +71,8 @@ and also to the first entry of the Mechanism's `output_states <Mechanism_Base.ou
 
 .. _OutputState_Specification:
 
-OutputState Specification
-~~~~~~~~~~~~~~~~~~~~~~~~~
+*OutputState Specification*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specifying OutputStates when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -224,8 +224,8 @@ which it should project. Each of these is described below:
 
     .. _OutputState_Projections:
 
-    Projections
-    ~~~~~~~~~~~
+    *Projections*
+    ~~~~~~~~~~~~~
 
     When an OutputState is created, it can be assigned one or more `Projections <Projection>`, using either the
     **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
@@ -378,8 +378,8 @@ result.
 
 .. _OutputState_Customization:
 
-OutputState Customization
-~~~~~~~~~~~~~~~~~~~~~~~~~
+*OutputState Customization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
 and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's

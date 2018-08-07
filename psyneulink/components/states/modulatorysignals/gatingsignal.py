@@ -36,8 +36,8 @@ properly.
 
 .. _GatingSignal_Specification:
 
-Specifying GatingSignals
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying GatingSignals*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
 InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
@@ -85,8 +85,8 @@ each of which projects to the InputState or OutputState that it gates.
 
 .. _GatingSignal_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a GatingSignal is created, it can be assigned one or more `GatingProjections <GatingProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
@@ -102,8 +102,8 @@ creating a State.
 
 .. _GatingSignal_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingSignal's
 `value <GatingSignal.value>` (i.e., its `gating_signal <GatingSignal.gating_signal>`) is used by the States to which it
@@ -140,7 +140,7 @@ modulation operates).
 .. _GatingSignal_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 **Gate an InputState and OutputState**.  In the following example, `GatingMechanism` is configured to gate the
 `primary InputState <InputState_Primary>` of one Mechanism, and the `primary OutputState <OutputState_Primary>`

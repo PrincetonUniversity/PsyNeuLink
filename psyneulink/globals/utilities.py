@@ -20,8 +20,8 @@
 CONTENTS
 --------
 
-TYPE CHECKING VALUE COMPARISON
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*TYPE CHECKING VALUE COMPARISON*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
@@ -38,24 +38,32 @@ TYPE CHECKING VALUE COMPARISON
 * `is_same_function_spec`
 * `is_component`
 
-ENUM
-~~~~
+*ENUM*
+~~~~~~
 
 * `Autonumber`
 * `Modulation`
 * `get_modulationOperation_name`
 
-KVO
-~~~
+*KVO*
+~~~~~
 
 .. note::
    This is for potential future use;  not currently used by PsyNeuLink objects
 
 * observe_value_at_keypath
 
+*MATHEMATICAL*
+~~~~~~~~~~~~~~
 
-OTHER
-~~~~~
+* norm
+* sinusoid
+* scalar_distance
+
+
+*OTHER*
+~~~~~~~
+
 * `get_args`
 * `recursive_update`
 * `merge_param_dicts`
@@ -86,7 +94,8 @@ from enum import Enum, EnumMeta, IntEnum
 import collections
 import numpy as np
 
-from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
+from psyneulink.globals.keywords import \
+    DISTANCE_METRICS, EXPONENTIAL,GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
@@ -97,7 +106,9 @@ __all__ = [
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
     'object_has_single_value', 'optional_parameter_spec',
-    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match',
+    'normpdf',
+    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError',
 ]
 
@@ -506,6 +517,30 @@ def iscompatible(candidate, reference=None, **kargs):
             return True
     else:
         return False
+
+
+# MATHEMATICAL  ********************************************************************************************************
+
+def normpdf(x, mu=0, sigma=1):
+    u = float((x-mu) / abs(sigma))
+    y = np.exp(-u*u/2) / (np.sqrt(2*np.pi) * abs(sigma))
+    return y
+
+def sinusoid(x, amplitude=1, frequency=1, phase=0):
+    return amplitude * np.sin(2 * np.pi * frequency * x + phase)
+
+def scalar_distance(measure, value, scale=1, offset=0):
+    if measure is GAUSSIAN:
+        return normpdf(value, offset, scale)
+    if measure is LINEAR:
+        return scale*value+offset
+    if measure is EXPONENTIAL:
+        return np.exp(scale*value+offset)
+    if measure is SINUSOID:
+        return sinusoid(value, frequency=scale, phase=offset)
+
+
+# OTHER ****************************************************************************************************************
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
