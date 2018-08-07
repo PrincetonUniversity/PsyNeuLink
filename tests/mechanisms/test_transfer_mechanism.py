@@ -1074,7 +1074,7 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_transfer_mech_2d_variable(self):
+    def test_transfer_mech_2d_variable_mean(self):
         from psyneulink.globals.keywords import MEAN
         T = TransferMechanism(
             name='T',
@@ -1083,6 +1083,19 @@ class TestTransferMechanismMultipleInputStates:
             output_states=[MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_transfer_mech_2d_variable(self, mode):
+        T = TransferMechanism(
+            name='T',
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[0.0, 0.0], [0.0, 0.0]],
+        )
+        val = T.execute([[1.0, 2.0], [3.0, 4.0]], bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[3., 5.], [7., 9.]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
