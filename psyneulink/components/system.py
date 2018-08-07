@@ -432,8 +432,10 @@ import re
 import warnings
 
 from collections import OrderedDict, namedtuple, Iterable
-from os import path, listdir, remove
+from os import path, remove
 from shutil import rmtree
+from PIL import Image
+
 
 import numpy as np
 import typecheck as tc
@@ -538,6 +540,7 @@ UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
+SHOW = 'show'
 
 EXECUTION_SET = 'EXECUTION_SET'
 
@@ -3076,6 +3079,10 @@ class System(System_Base):
         formatting input specifications. The **animate** argument can be used to generate a movie of the execution of
         the System.
 
+        .. note::
+           Use of the animation argument relies on `imageio <http://imageio.github.io>`_, which must be
+           installed and imported (standard with PsyNeuLink pip install)
+
         Arguments
         ---------
 
@@ -3155,6 +3162,9 @@ class System(System_Base):
             * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to 
               construct the animation in separate gif files, in addition to the file containing the animation.
 
+            * *SHOW*: bool (default=\ `False`\ ) -- specifies whether to show the animation after it is constructed,
+              using the OS's default viewer.
+
         Examples
         --------
 
@@ -3214,6 +3224,7 @@ class System(System_Base):
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
                                   format(repr(UNIT), repr('animate'), repr('run'),
@@ -3234,6 +3245,10 @@ class System(System_Base):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
                                   format(repr(MOVIE_NAME), repr('animate'), repr('run'),
                                          self.name, self._save_images, repr(True), repr(False)))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(SHOW), repr('animate'), repr('run'),
+                                         self.name, self._show_animation, repr(True), repr(False)))
 
         elif self._animate:
             # self._animate should now be False or a dict
@@ -3262,10 +3277,17 @@ class System(System_Base):
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
-            import imageio
             movie_path = self._animate_directory + '/' + self._movie_filename
-            imageio.mimsave(movie_path, self._animation, duration=self._image_duration)
+            self._animation[0].save(fp=movie_path,
+                                    format='GIF',
+                                    save_all=True,
+                                    append_images=self._animation[1:],
+                                    duration=self._image_duration*1000,
+                                    loop=0)
             print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
+            if self._show_animation:
+                movie = Image.open(movie_path)
+                movie.show()
 
         return result
 
@@ -4863,15 +4885,14 @@ class System(System_Base):
                 G.format = 'gif'
                 image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
                          repr(self._component_execution_count) + '-'
+                image_path = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
                          cleanup=True,
                          # view=True
                          )
-               # Append gif to self._animation
-                import imageio
-                image_path = self._animate_directory + '/' + image_filename + '.gif'
-                image = imageio.imread(image_path)
+                # Append gif to self._animation
+                image = Image.open(image_path)
                 if not self._save_images:
                     remove(image_path)
                 if not hasattr(self, '_animation'):
