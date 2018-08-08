@@ -1503,23 +1503,28 @@ class Composition(object):
                                              ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
+                assert state.owner is mech
                 if state in state.owner.input_states:
-                    target_input_state = state.owner.input_states.index(state)
+                    state_idx = state.owner.input_states.index(state)
 
                     assert par_proj in state.pathway_projections
-                    input_projection_idx = state.pathway_projections.index(par_proj)
-                    proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_input_state), ctx.int32_ty(input_projection_idx)])
+                    projection_idx = state.pathway_projections.index(par_proj)
                 elif state in state.owner.parameter_states:
-                    target_param_state = state.owner.parameter_states.index(state)
+                    state_idx = state.owner.parameter_states.index(state) + len(state.owner.input_states)
 
                     assert par_proj in state.mod_afferents
-                    control_projection_idx = state.mod_afferents.index(par_proj)
-                    proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_param_state + len(state.owner.input_states)), ctx.int32_ty(control_projection_idx)])
+                    projection_idx = state.mod_afferents.index(par_proj)
                 else:
-                    assert False # Unknown state
+                    # Unknown state
+                    assert False
 
+                assert state_idx < len(m_in.type.pointee)
+                # assert projection_idx < len(m_in.type.pointee.elements[state_idx])
+                proj_out = builder.gep(m_in, [ctx.int32_ty(0),
+                                              ctx.int32_ty(state_idx),
+                                              ctx.int32_ty(projection_idx)])
 
-                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_vo])
+                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
             idx = self.mechanisms.index(mech)
