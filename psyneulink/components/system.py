@@ -1973,7 +1973,9 @@ class System(System_Base):
         condition_set = {}
         for item in self.learning_execution_list:
             if isinstance(item, MappingProjection):
-                condition_set[item] = AllHaveRun(*self.learning_mechanisms)
+                condition_set[item] = AtPass(1)
+            else:
+                condition_set[item] = AtPass(0)
         self.scheduler_learning.add_condition_set(condition_set)
 
 
