@@ -476,7 +476,7 @@ from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
-    'EXECUTION_SET', 'INPUT_ARRAY',
+    'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
     'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
     'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
@@ -532,15 +532,18 @@ EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
 MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
+# show_graph options
 SHOW_CONTROL = 'show_control'
 SHOW_LEARNING = 'show_learning'
 
+# Animation Keywords
 NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 SHOW = 'show'
+INITIAL_FRAME = 'INITIAL_FRAME'
 
 EXECUTION_SET = 'EXECUTION_SET'
 
@@ -2748,9 +2751,9 @@ class System(System_Base):
             self._report_system_initiation()
 
 
+        # Generate first frame of animation without any active_items
         if self._animate is not False:
-            self.show_graph(active_items=None, **self._animate, output_fmt='gif')
-
+            self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif')
 
         # EXECUTE MECHANISMS
 
@@ -2789,6 +2792,7 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.context.execution_phase = ContextFlags.CONTROL
             self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
@@ -2808,6 +2812,7 @@ class System(System_Base):
                     raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
                                       "attribute (\'{}\') encountered for it or one of the methods it calls."
                                       .format(self.controller.name, self.name, error_msg.args[0]))
+            self.context.execution_phase = ContextFlags.IDLE
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -4699,12 +4704,14 @@ class System(System_Base):
 
         if not active_items:
             active_items = []
+        elif active_items is INITIAL_FRAME:
+            active_items = [INITIAL_FRAME]
         elif not isinstance(active_items, Iterable):
             active_items = [active_items]
         elif not isinstance(active_items, list):
             active_items = list(active_items)
         for item in active_items:
-            if not isinstance(item, Component):
+            if not isinstance(item, Component) and item is not INITIAL_FRAME:
                 raise SystemError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
                                   format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
@@ -4885,24 +4892,38 @@ class System(System_Base):
 
         # Generate images for animation
         elif output_fmt == 'gif':
-            # if self.active_item_rendered:
-            G.format = 'gif'
-            image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
-                     repr(self._component_execution_count) + '-'
-            image_path = self._animate_directory + '/' + image_filename + '.gif'
-            G.render(filename = image_filename,
-                     directory=self._animate_directory,
-                     cleanup=True,
-                     # view=True
-                     )
-            # Append gif to self._animation
-            image = Image.open(image_path)
-            if not self._save_images:
-                remove(image_path)
-            if not hasattr(self, '_animation'):
-                self._animation = [image]
-            else:
-                self._animation.append(image)
+            if self.active_item_rendered or INITIAL_FRAME in active_items:
+                G.format = 'gif'
+                if self.context.execution_phase == ContextFlags.PROCESSING:
+                    time_string = self.scheduler_processing.clock.time_string
+                    phase_string = 'Processing phase: '
+                elif self.context.execution_phase == ContextFlags.LEARNING:
+                    time_string = self.scheduler_learning.clock.time_string
+                    phase_string = 'Learning phase: '
+                elif self.context.execution_phase == ContextFlags.CONTROL:
+                    time_string = ''
+                    phase_string = 'Control phase'
+                else:
+                    raise SystemError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
+                G.attr(label=label)
+                G.attr(labelloc='b')
+                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
+                         repr(self._component_execution_count) + '-'
+                image_file = self._animate_directory + '/' + image_filename + '.gif'
+                G.render(filename = image_filename,
+                         directory=self._animate_directory,
+                         cleanup=True,
+                         # view=True
+                         )
+                # Append gif to self._animation
+                image = Image.open(image_file)
+                if not self._save_images:
+                    remove(image_file)
+                if not hasattr(self, '_animation'):
+                    self._animation = [image]
+                else:
+                    self._animation.append(image)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':

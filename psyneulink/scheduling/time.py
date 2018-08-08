@@ -185,6 +185,10 @@ class Clock:
         self._simple_time.time_step = self.time.time_step
         return self._simple_time
 
+    @property
+    def time_string(self):
+        return 'run: {}, trial: {}, time_step: {}'.format(self.time.run, self.time.trial, self.time.time_step)
+
 
 class Time(types.SimpleNamespace):
     '''
