@@ -4894,7 +4894,10 @@ class System(System_Base):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
-                if self.context.execution_phase == ContextFlags.PROCESSING:
+                if INITIAL_FRAME in active_items:
+                    time_string = ''
+                    phase_string = ''
+                elif self.context.execution_phase == ContextFlags.PROCESSING:
                     time_string = self.scheduler_processing.clock.time_string
                     phase_string = 'Processing phase: '
                 elif self.context.execution_phase == ContextFlags.LEARNING:
@@ -4908,8 +4911,13 @@ class System(System_Base):
                 label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
                 G.attr(label=label)
                 G.attr(labelloc='b')
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
-                         repr(self._component_execution_count) + '-'
+                G.attr(fontname='Helvetica')
+                G.attr(fontsize='14')
+                if INITIAL_FRAME in active_items:
+                    index = '-'
+                else:
+                    index = repr(self._component_execution_count)
+                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
