@@ -89,7 +89,7 @@ import typecheck as tc
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT
+    LearningMechanism, LearningType, LearningTiming, ACTIVATION_INPUT, ACTIVATION_OUTPUT
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
@@ -202,7 +202,8 @@ class KohonenLearningMechanism(LearningMechanism):
 
     learned_projection : MappingProjection
         the `learning_projection <KohonenMechanism.learning_projection>` of the `KohoneMechanism` with which the
-        KohonenLearningMechanism is associated.
+        KohonenLearningMechanism is associated (same as its `primary_learned_projection
+        <LearningMechanism.primary_learned_projection>`.
 
     function : LearningFunction or function : default Kohonen
         the function used to calculate the `learning_signal <KohonenLearningMechanism.learning_signal>`
@@ -282,6 +283,9 @@ class KohonenLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    learning_type = LearningType.UNSUPERVISED
+    learning_timing = LearningTiming.EXECUTION_PHASE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -328,10 +332,8 @@ class KohonenLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs)
-
-    def _parse_function_variable(self, variable, context=None):
-        return variable
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
@@ -340,14 +342,15 @@ class KohonenLearningMechanism(LearningMechanism):
         # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
         variable = self._update_variable(super(LearningMechanism, self)._validate_variable(variable, context))
 
-        # # MODIFIED 9/22/17 NEW: [HACK] JDC: 6/29/18 -> CAUSES DEFAULT variable [[0]] OR ANYTHING OF size=1 TO FAIL
-        # if np.array(np.squeeze(variable)).ndim != 1 or not is_numeric(variable):
-        # MODIFIED 6/29/18 NEWER JDC: ALLOW size=1, AND DEFER FAILURE TO LearningFunction IF enbale_learning=True
-        if np.array(variable)[0].ndim != 2 or not is_numeric(variable):
-        # MODIFIED 9/22/17 END
+        if np.array(variable).ndim != 2 or not is_numeric(variable):
             raise KohonenLearningMechanismError("Variable for {} ({}) must be a list with two items "
-                                                "or a 2d np.array and contain only numbers".
+                                                "or a 2d np.array, all of which may contain only numbers".
                                                         format(self.name, variable))
+        return variable
+
+    def _parse_function_variable(self, variable, context=None):
+        variable = variable.tolist()
+        variable.append(self.matrix.value.tolist())
         return variable
 
     def _execute(self,
@@ -364,8 +367,7 @@ class KohonenLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
-        matrix = self.matrix.value
-        variable = list(self.variable).append(matrix)
+
         self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
                                                                        runtime_params=runtime_params,
                                                                        context=context)
@@ -399,11 +401,14 @@ class KohonenLearningMechanism(LearningMechanism):
         super()._update_output_states(runtime_params, context)
 
         if self.context.composition:
-            learned_projection = self.activity_source.recurrent_projection
-            learned_projection.execute(context=ContextFlags.LEARNING)
-            learned_projection.context.execution_phase = ContextFlags.IDLE
+            self.learned_projection.execute(context=ContextFlags.LEARNING)
+            self.learned_projection.context.execution_phase = ContextFlags.IDLE
 
+    @property
+    def learned_projection(self):
+        return self.primary_learned_projection
 
     @property
     def activity_source(self):
-        return self.input_state.path_afferents[0].sender.owner
+        # return self.input_state.path_afferents[0].sender.owner
+        return self.primary_learned_projection.sender.owner

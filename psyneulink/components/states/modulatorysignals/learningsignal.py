@@ -40,11 +40,11 @@ LearningSignal has dedicated Components and requirements for configuration that 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningSignal is specified in the **learning_signals** argument of the constructor for a `LearningMechanism`,
-the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learning must be
+the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learned must be
 specified.  This can take any of the following forms:
 
   * an existing LearningSignal, or a reference to the class (in which case a default LearningSignal is created);
-
+  ..
   * a **ParameterState**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjection` to be learned;
   ..

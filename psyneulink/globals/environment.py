@@ -811,9 +811,12 @@ def run(obj,
     # EXECUTE
     execution_inputs = {}
     execution_targets = {}
+
+    execution_id = _get_unique_id()
+
     for execution in range(num_trials):
 
-        execution_id = _get_unique_id()
+        # execution_id = _get_unique_id()
 
         if call_before_trial:
             call_before_trial()
@@ -827,7 +830,7 @@ def run(obj,
 
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when"):
+                if hasattr(mechanism, "reinitialize_when") and mechanism.has_initializers:
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
                         mechanism.reinitialize(None)
 

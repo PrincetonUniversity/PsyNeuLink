@@ -388,9 +388,9 @@ class MappingProjection(PathwayProjection_Base):
         the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
         `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
 
-    has_learning_projection : bool : False
-        identifies whether the MappingProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned a
-        `LearningProjection`.
+    has_learning_projection : bool : None
+        identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterState
+        <ParameterState>`.
 
     learning_mechanism : LearningMechanism
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
@@ -483,7 +483,7 @@ class MappingProjection(PathwayProjection_Base):
                                                   params=params)
 
         self.learning_mechanism = None
-        self.has_learning_projection = False
+        self.has_learning_projection = None
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:

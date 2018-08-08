@@ -85,7 +85,8 @@ import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, LearningType, LearningTiming, ACTIVATION_INPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.globals.context import ContextFlags
@@ -287,6 +288,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    learning_type = LearningType.UNSUPERVISED
+    learning_timing = LearningTiming.EXECUTION_PHASE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -331,7 +335,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _parse_function_variable(self, variable, context=None):
         return variable
@@ -375,18 +380,18 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # TEST PRINT
-        if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            if self.context.composition:
-                time = self.context.composition.scheduler_processing.clock.simple_time
-            else:
-                time = self.current_execution_time
-            print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-                format(self.context.flags_string,
-                       time.trial,
-                       # self.pass_,
-                       time.time_step))
-            print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        # # TEST PRINT
+        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
+        #     if self.context.composition:
+        #         time = self.context.composition.scheduler_processing.clock.simple_time
+        #     else:
+        #         time = self.current_execution_time
+        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
+        #         format(self.context.flags_string,
+        #                time.trial,
+        #                # self.pass_,
+        #                time.time_step))
+        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]
         return self.value
@@ -400,11 +405,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         super()._update_output_states(runtime_params, context)
 
-        if self.context.composition:
+        from psyneulink import Process
+        if self.learning_enabled and self.context.composition and not isinstance(self.context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
             learned_projection.execute(context=ContextFlags.LEARNING)
             learned_projection.context.execution_phase = ContextFlags.IDLE
-
 
     @property
     def activity_source(self):

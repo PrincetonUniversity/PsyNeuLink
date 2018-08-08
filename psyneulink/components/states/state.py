@@ -1542,6 +1542,8 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
 
+            self.owner._projection_added(projection, context)
+
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
@@ -2684,6 +2686,7 @@ def _parse_state_spec(state_type=None,
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
             if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
+            # if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value
             else:
