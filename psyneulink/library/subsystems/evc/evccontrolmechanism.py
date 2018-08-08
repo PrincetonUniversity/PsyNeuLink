@@ -1035,10 +1035,10 @@ class EVCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy = super(ControlMechanism, self)._execute(
-            controller=self,
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
+                controller=self,
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
         )
 
         # IMPLEMENTATION NOTE:
@@ -1173,12 +1173,23 @@ class EVCControlMechanism(ControlMechanism):
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
+        # RUN SIMULATION
+
+        # Buffer System attributes
+        execution_id_buffer = self.system._execution_id
+        animate_buffer = self.system._animate
+
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
+                        animate=False,
                         context=context)
-        self.system.context.execution_phase = ContextFlags.IDLE
+        self.system.context.execution_phase = ContextFlags.CONTROL
+
+        # Restore System attributes
+        self.system._animate = animate_buffer
+        self.system._execution_id = execution_id_buffer
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
