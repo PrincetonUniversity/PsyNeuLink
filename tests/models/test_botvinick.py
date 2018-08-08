@@ -190,10 +190,17 @@ def test_botvinick_model(benchmark, mode):
             words_hidden_layer.reinitialize([[0,0,0]])
             response_layer.reinitialize([[0,0]])
             task_layer.reinitialize([[0,0]])
+            comp.reinitialize()
 
         return results
 
     res = benchmark(run, mode=='LLVM')
+    assert np.allclose(res[0], [0.05330691, 0.05330691, 0.03453411])
+    assert np.allclose(res[1], [0.20351701, 0.11078586, 0.04995664])
+    assert np.allclose(res[2], [0.05330691, 0.05330691, 0.03453411])
+    assert np.allclose(res[3], [0.11168014, 0.20204928, 0.04996308])
+    assert np.allclose(res[4], [0.05330691, 0.05330691, 0.03453411])
+    assert np.allclose(res[5], [0.11327619, 0.11238362, 0.09399782])
 
     if mode == 'LLVM':
         return
