@@ -4898,11 +4898,11 @@ class System(System_Base):
                     time_string = ''
                     phase_string = ''
                 elif self.context.execution_phase == ContextFlags.PROCESSING:
-                    time_string = self.scheduler_processing.clock.time_string
-                    phase_string = 'Processing phase: '
+                    time_string = repr(self.scheduler_processing.clock.simple_time)
+                    phase_string = 'Processing Phase - '
                 elif self.context.execution_phase == ContextFlags.LEARNING:
-                    time_string = self.scheduler_learning.clock.time_string
-                    phase_string = 'Learning phase: '
+                    time_string = repr(self.scheduler_learning.clock.simple_time)
+                    phase_string = 'Learning Phase - '
                 elif self.context.execution_phase == ContextFlags.CONTROL:
                     time_string = ''
                     phase_string = 'Control phase'
