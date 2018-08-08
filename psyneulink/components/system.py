@@ -472,7 +472,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import \
     AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
-from psyneulink.scheduling.condition import AtTimeStep, Never
+from psyneulink.scheduling.condition import AtTimeStep, Never, AllHaveRun
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
@@ -955,11 +955,9 @@ class System(System_Base):
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
+        # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
-
-        if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1966,6 +1964,19 @@ class System(System_Base):
         # Instantiate TargetInputStates
         self._instantiate_target_inputs(context=context)
 
+        # Assign scheduler for _execute_learning:
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        # Assign conditions to scheduler_learning:
+        #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
+        condition_set = {}
+        for item in self.learning_execution_list:
+            if isinstance(item, MappingProjection):
+                condition_set[item] = AllHaveRun(*self.learning_mechanisms)
+        self.scheduler_learning.add_condition_set(condition_set)
+
+
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
@@ -2943,6 +2954,7 @@ class System(System_Base):
             raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
+
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
