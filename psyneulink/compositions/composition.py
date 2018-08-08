@@ -1451,6 +1451,7 @@ class Composition(object):
     def __gen_mech_wrapper(self, mech):
 
         func_name = None
+        assert mech in self.mechanisms
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
@@ -1516,6 +1517,8 @@ class Composition(object):
                     assert output_s in output_s.owner.output_states
                     consume_output_state = output_s.owner.output_states.index(output_s)
                     proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
+                else:
+                    assert False # Unknown state
 
 
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
