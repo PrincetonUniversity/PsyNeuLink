@@ -9,3 +9,4 @@ sphinx_rtd_theme
 matplotlib
 ipykernel>=4.6.1
 graphviz
+pillow

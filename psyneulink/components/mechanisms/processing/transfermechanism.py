@@ -320,6 +320,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
+from psyneulink.scheduling.condition import Never
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
@@ -1297,11 +1298,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self._integrator_mode = True
             if not hasattr(self, PREVIOUS_VALUE):
                 self.previous_value = None
+            self.has_initializers = True
         elif val is False:
             if self.integrator_function is not None:
                 self.original_integrator_function = self.integrator_function
             self.integrator_function = None
             self._integrator_mode = False
+            self.has_initializers = False
+            if not hasattr(self, "reinitialize_when"):
+                self.reinitialize_when = Never()
         else:
             raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
 
