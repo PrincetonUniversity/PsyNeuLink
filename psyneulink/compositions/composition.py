@@ -59,6 +59,7 @@ from llvmlite import ir
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
@@ -1509,6 +1510,11 @@ class Composition(object):
 
                     assert par_proj in state.pathway_projections
                     projection_idx = state.pathway_projections.index(par_proj)
+
+                    # Adjust for AutoAssociative projections
+                    for i in range(projection_idx):
+                        if isinstance(state.pathway_projections[i], AutoAssociativeProjection):
+                            projection_idx -= 1
                 elif state in state.owner.parameter_states:
                     state_idx = state.owner.parameter_states.index(state) + len(state.owner.input_states)
 
@@ -1519,7 +1525,7 @@ class Composition(object):
                     assert False
 
                 assert state_idx < len(m_in.type.pointee)
-                # assert projection_idx < len(m_in.type.pointee.elements[state_idx])
+                assert projection_idx < len(m_in.type.pointee.elements[state_idx])
                 proj_out = builder.gep(m_in, [ctx.int32_ty(0),
                                               ctx.int32_ty(state_idx),
                                               ctx.int32_ty(projection_idx)])
