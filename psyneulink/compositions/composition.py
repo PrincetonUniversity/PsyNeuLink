@@ -1422,7 +1422,12 @@ class Composition(object):
         bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
         return res
 
-    def __bin_initialize(self, inputs, reinit=False):
+    def reinitialize(self):
+        self.__data_struct = None
+        self.__params_struct = None
+        self.__context_struct = None
+
+    def __bin_initialize(self, inputs):
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         # Read provided or default input
         input_data = [inputs[m] if m in inputs else m.instance_defaults.variable for m in origin_mechanisms]
@@ -1438,21 +1443,19 @@ class Composition(object):
 
         self.__input_struct = c_input(*tupleize(input_data))
 
-        if reinit or self.__data_struct is None:
+        if self.__data_struct is None:
             output = [[os.value for os in m.output_states] for m in self.mechanisms]
             c_output = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
             self.__data_struct = c_output(*tupleize(output))
 
-        if reinit or self.__params_struct is None:
+        if self.__params_struct is None:
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
             params = self.get_param_initializer()
-            # FIXME: I have no idea why this needs *
             self.__params_struct = c_params(*params)
 
-        if reinit or self.__context_struct is None:
+        if self.__context_struct is None:
             c_contexts = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())
             contexts = self.get_context_initializer()
-            # FIXME: I have no idea why this needs *
             self.__context_struct = c_contexts(*contexts)
 
     def __gen_mech_wrapper(self, mech):
