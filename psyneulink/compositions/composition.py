@@ -379,6 +379,7 @@ class Composition(object):
         self.__params_struct = None
         self.__context_struct = None
         self.__data_struct = None
+        self.__input_struct = None
 
         self.__compiled_mech = {}
         self.__compiled_results_extract = {}
@@ -1090,13 +1091,13 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[mechanism][param][0]
                     if bin_execute:
                         bin_mechanism = self.__get_bin_mechanism(mechanism);
-                        c, p, d = bin_mechanism.byref_arg_types
+                        c, p, i, d = bin_mechanism.byref_arg_types
                         # Cast the arguments. Structures are the same but ctypes
                         # creates new class every time.
                         bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
                                       ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                                      ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
                                       ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(d)))
-
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
                         num = mechanism.execute(runtime_params=execution_runtime_params,
@@ -1372,13 +1373,14 @@ class Composition(object):
             ir.LiteralStructType(mech_ctx_type_list),
             ir.LiteralStructType(proj_ctx_type_list)])
 
-    def get_data_struct_type(self):
+    def get_input_struct_type(self):
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         input_type_list  = [m.get_input_struct_type() for m in origin_mechanisms]
+        return ir.LiteralStructType(input_type_list)
+
+    def get_data_struct_type(self):
         output_type_list = [m.get_output_struct_type() for m in self.mechanisms]
-        return ir.LiteralStructType([
-            ir.LiteralStructType(input_type_list),
-            ir.LiteralStructType(output_type_list)])
+        return ir.LiteralStructType(output_type_list)
 
 
     def get_context_initializer(self):
@@ -1427,15 +1429,19 @@ class Composition(object):
         # Every input state takes 2d input. Mechanism thus takes vector of
         # 2d inputs, and data is a vector of mechanism inputs
         input_data = [[np.atleast_2d(i) for i in elem] for elem in input_data]
-        default_output = [[os.value for os in m.output_states] for m in self.mechanisms]
-        data = [input_data, default_output]
 
-        c_data = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
+        c_input = pnlvm._convert_llvm_ir_to_ctype(self.get_input_struct_type())
         def tupleize(x):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
             return x
-        self.__data_struct = c_data(*tupleize(data))
+
+        self.__input_struct = c_input(*tupleize(input_data))
+
+        if reinit or self.__data_struct is None:
+            output = [[os.value for os in m.output_states] for m in self.mechanisms]
+            c_output = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
+            self.__data_struct = c_output(*tupleize(output))
 
         if reinit or self.__params_struct is None:
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
@@ -1458,10 +1464,11 @@ class Composition(object):
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
                 self.get_data_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, data = llvm_func.args
+            context, params, comp_in, data = llvm_func.args
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -1474,7 +1481,7 @@ class Composition(object):
             origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
             if mech in origin_mechanisms:
                 mech_in_idx = origin_mechanisms.index(mech)
-                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(mech_in_idx)])
+                m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(mech_in_idx)])
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
 
@@ -1499,7 +1506,7 @@ class Composition(object):
                 assert output_s in par_mech.output_states
                 mech_idx = self.mechanisms.index(par_mech)
                 output_state_idx = par_mech.output_states.index(output_s)
-                proj_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1),
+                proj_in = builder.gep(data, [ctx.int32_ty(0),
                                              ctx.int32_ty(mech_idx),
                                              ctx.int32_ty(output_state_idx)])
 
@@ -1536,7 +1543,7 @@ class Composition(object):
             idx = self.mechanisms.index(mech)
             m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
@@ -1563,7 +1570,7 @@ class Composition(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             data = builder.load(res)
             builder.store(data, vo)
 
