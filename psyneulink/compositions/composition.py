@@ -1472,8 +1472,8 @@ class Composition(object):
             m_function = ctx.get_llvm_function(mech.llvmSymbolName)
             origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
             if mech in origin_mechanisms:
-                vi_idx = origin_mechanisms.index(mech)
-                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+                mech_in_idx = origin_mechanisms.index(mech)
+                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(mech_in_idx)])
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
 
@@ -1488,11 +1488,19 @@ class Composition(object):
                 par = self.graph.get_parents_from_component(par_proj)
                 assert len(par) == 1
                 par_mech = par[0].component
-                vi_idx = self.mechanisms.index(par_mech)
 
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
+
+                output_s = par_proj.sender
+                assert output_s.owner is par_mech
+                assert output_s in par_mech.output_states
+                mech_idx = self.mechanisms.index(par_mech)
+                output_state_idx = par_mech.output_states.index(output_s)
+                proj_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1),
+                                             ctx.int32_ty(mech_idx),
+                                             ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
                 if state in state.owner.input_states:
@@ -1501,27 +1509,17 @@ class Composition(object):
                     assert par_proj in state.pathway_projections
                     input_projection_idx = state.pathway_projections.index(par_proj)
                     proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_input_state), ctx.int32_ty(input_projection_idx)])
-
-                    output_s = par_proj.sender
-                    assert output_s in output_s.owner.output_states
-                    consume_output_state = output_s.owner.output_states.index(output_s)
-                    proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
                 elif state in state.owner.parameter_states:
                     target_param_state = state.owner.parameter_states.index(state)
 
                     assert par_proj in state.mod_afferents
                     control_projection_idx = state.mod_afferents.index(par_proj)
                     proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_param_state + len(state.owner.input_states)), ctx.int32_ty(control_projection_idx)])
-
-                    output_s = par_proj.sender
-                    assert output_s in output_s.owner.output_states
-                    consume_output_state = output_s.owner.output_states.index(output_s)
-                    proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
                 else:
                     assert False # Unknown state
 
 
-                builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
+                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_vo])
 
 
             idx = self.mechanisms.index(mech)
