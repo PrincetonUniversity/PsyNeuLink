@@ -178,17 +178,22 @@ def test_botvinick_model(benchmark, mode):
     comp._analyze_graph()
 
     def run(bin_execute):
+        results = []
         for stim in Stimulus:
         # RUN the SYSTEM to initialize ----------------------------------------------------------------------------------------
-            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
-            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
+            res = comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
+            results.append(res)
+            res = comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
+            results.append(res)
             # reinitialize after condition was run
             colors_hidden_layer.reinitialize([[0,0,0]])
             words_hidden_layer.reinitialize([[0,0,0]])
             response_layer.reinitialize([[0,0]])
             task_layer.reinitialize([[0,0]])
 
-    benchmark(run, mode=='LLVM')
+        return results
+
+    res = benchmark(run, mode=='LLVM')
 
     if mode == 'LLVM':
         return
