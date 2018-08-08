@@ -1057,8 +1057,11 @@ class Composition(object):
 
             if call_before_time_step:
                 call_before_time_step()
+
+            import operator
+            mechs = sorted(list(next_execution_set), key=operator.attrgetter('name'))
             # execute each mechanism with EXECUTING in context
-            for mechanism in next_execution_set:
+            for mechanism in mechs:
 
                 if mechanism in origin_mechanisms:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
@@ -1098,6 +1101,7 @@ class Composition(object):
                                       ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
                                       ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
                                       ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(d)))
+
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
                         num = mechanism.execute(runtime_params=execution_runtime_params,
