@@ -2968,32 +2968,36 @@ class System(System_Base):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-                if isinstance(component, MappingProjection):
-                    continue
-
-                params = None
-
-                component_type = component.componentType
-
-                processes = list(component.processes.keys())
-
-                # Sort for consistency of reporting:
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                process_names = list(p.name for p in process_keys_sorted)
-
-                context_str = str("{} | {}: {} [in processes: {}]".
-                                  format(context,
-                                         component_type,
-                                         component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
-
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = context_str
 
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(runtime_params=params, context=context)
+                if isinstance(component, Mechanism):
+                    params = None
+
+                    component_type = component.componentType
+
+                    processes = list(component.processes.keys())
+
+                    # Sort for consistency of reporting:
+                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    process_names = list(p.name for p in process_keys_sorted)
+
+                    context_str = str("{} | {}: {} [in processes: {}]".
+                                      format(context,
+                                             component_type,
+                                             component.name,
+                                             re.sub(r'[\[,\],\n]','',str(process_names))))
+                    component.context.string = context_str
+
+                    # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                    component.execute(runtime_params=params, context=context)
+
+                elif isinstance(component, MappingProjection):
+                    processes = list(component.sender.owner.processes.keys())
+                    component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+                                                                                 component.name, self.name)
+                    component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -3001,61 +3005,65 @@ class System(System_Base):
                     if (self._animate_unit is COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                             self.show_graph(active_items=component, **self._animate, output_fmt='gif')
-                self._component_execution_count += 1
 
-                # # TEST PRINT LEARNING:
-                # print ("EXECUTING LEARNING UPDATES: ", component.name)
-
-        # THEN update all MappingProjections
-        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
-            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
-
-            if (not self._animate is False and
-                    self._animate_unit is EXECUTION_SET and
-                    SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                mapping_projs = [proj for proj in next_execution_set if isinstance(proj, MappingProjection)]
-                self.show_graph(active_items=mapping_projs, **self._animate, output_fmt='gif')
-
-            for component in next_execution_set:
-                logger.debug('\tRunning component {0}'.format(component))
-
-                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                    continue
-                if not isinstance(component, MappingProjection):
-                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
-
-                component_type = "mappingProjection"
-                processes = list(component.sender.owner.processes.keys())
-
-
-                # Sort for consistency of reporting:
-                # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                # process_names = list(p.name for p in process_keys_sorted)
-                #
-                # component.context.string = str("{} | {}: {} [in processes: {}]".
-                #                   format(context,
-                #                          component_type,
-                #                          component.name,
-                #                          re.sub(r'[\[,\],\n]','',str(process_names))))
-                component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                             component.name, self.name)
-
-                component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-
-
-                if not self._animate is False:
-                    if (self._animate_unit is COMPONENT and
-                            SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                        self.show_graph(active_items=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
-                # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
-                #        format(component.name, component.context.flags_string))
-                # print(component._parameter_states[MATRIX].value)
+                # print ("EXECUTING LEARNING UPDATES: ", component.name)
+
+        # # THEN update all MappingProjections
+        # for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
+        #     logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+        #
+        #     if (not self._animate is False and
+        #             self._animate_unit is EXECUTION_SET and
+        #             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+        #         mapping_projs = [proj for proj in next_execution_set if isinstance(proj, MappingProjection)]
+        #         self.show_graph(active_items=mapping_projs, **self._animate, output_fmt='gif')
+        #
+        #     for component in next_execution_set:
+        #         logger.debug('\tRunning component {0}'.format(component))
+        #
+        #         if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
+        #             continue
+        #         if not isinstance(component, MappingProjection):
+        #             raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+        #
+        #         component_type = "mappingProjection"
+        #         processes = list(component.sender.owner.processes.keys())
+        #
+        #
+        #         # Sort for consistency of reporting:
+        #         # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+        #         # process_names = list(p.name for p in process_keys_sorted)
+        #         #
+        #         # component.context.string = str("{} | {}: {} [in processes: {}]".
+        #         #                   format(context,
+        #         #                          component_type,
+        #         #                          component.name,
+        #         #                          re.sub(r'[\[,\],\n]','',str(process_names))))
+        #         component.context.execution_phase = ContextFlags.LEARNING
+        #         component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+        #                                                                      component.name, self.name)
+        #
+        #         # FIX MAIN LINE
+        #         component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+        #
+        #
+        #         if not self._animate is False:
+        #             if (self._animate_unit is COMPONENT and
+        #                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+        #                 self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+        #         self._component_execution_count += 1
+        #
+        #         component.context.execution_phase = ContextFlags.IDLE
+        #
+        #         # # TEST PRINT LEARNING:
+        #         # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
+        #         #        format(component.name, component.context.flags_string))
+        #         # print(component._parameter_states[MATRIX].value)
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
