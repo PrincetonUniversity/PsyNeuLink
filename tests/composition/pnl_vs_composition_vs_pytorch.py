@@ -51,7 +51,8 @@ and_out = TransferMechanism(name='and_out',
                             default_variable=np.zeros(1),
                             function=Logistic())
 
-and_map = MappingProjection(matrix=np.ones((2,1)))
+and_map = MappingProjection(name='and_map',
+                            matrix=np.ones((2,1)))
 
 
 
@@ -116,8 +117,10 @@ print("\n")
 print("starting composition training: ")
 print("\n")
 
+'''
 results_comp = and_comp.run(inputs={and_in:and_inputs},
                             targets={and_out:and_targets}, epochs=100, learning_rate=10, optimizer='sgd')
+'''
 
 print("starting basic pytorch training: ")
 print("\n")
@@ -134,6 +137,7 @@ for i in range(len(and_inputs[i])):
     l.backward()
     optimizer.step()
 '''
+'''
 for i in range(100):
     for j in range(4):
         inp = torch.from_numpy(and_inputs[j].copy()).float()
@@ -148,8 +152,9 @@ for i in range(100):
         # print(l)
         l.backward()
         optimizer.step()
+'''
     
-    '''
+'''
     inp = torch.from_numpy(and_inputs[0].copy()).float()
     targ = torch.from_numpy(and_targets[0].copy()).float()
     output = and_pt.forward(inp)
@@ -187,7 +192,7 @@ for i in range(100):
     l.backward()
     optimizer.step()
     '''
-
+'''
 weights, biases = and_comp.get_parameters()
 print("weights of system after composition, basic pytorch training: ")
 print(and_map.matrix)
@@ -198,6 +203,7 @@ print("\n")
 print("weights of basic pytorch after composition, basic pytorch training: ")
 print(and_pt.w)
 print("\n")
+'''
 
 and_process = Process(pathway=[and_in,
                                and_map,
@@ -207,8 +213,9 @@ and_process = Process(pathway=[and_in,
 and_system = System(processes=[and_process],
                     learning_rate=10)
 
-and_system.show_graph(show_mechanism_structure=pnl.VALUES)
-
+and_system.show_graph(show_dimensions=True, show_learning=True)
+# and_system.show_graph(show_mechanism_structure=pnl.VALUES)
+'''
 results_sys = and_system.run(inputs={and_in:and_inputs}, 
                              targets={and_out:and_targets},
                              num_trials=401)
@@ -223,7 +230,7 @@ print("\n")
 print("weights of basic pytorch after composition, basic pytorch training: ")
 print(and_pt.w)
 print("\n")
-
+'''
 
 
 

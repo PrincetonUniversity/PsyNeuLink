@@ -55,6 +55,7 @@ logger = logging.getLogger(__name__)
 # XOR with bigger/variable hidden layer
 # Semantic net
 
+# NOTE: make sure mechanisms & projections for composition vs for system are always different
 
 
 @pytest.mark.theshire
@@ -568,6 +569,7 @@ class TestTrainingCorrectness:
 @pytest.mark.minesofmoria
 class TestTrainingTime:
     
+    @pytest.mark.foolofatook
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -575,7 +577,103 @@ class TestTrainingTime:
             (100, 'sgd')
         ]
     )
-    def test_xor_training_runtime(self, eps, opt):
+    def test_and_training_time(self, eps, opt):
+        
+        # SET UP MECHANISMS
+        
+        and_in = TransferMechanism(name='and_in',
+                                   default_variable=np.zeros(2))
+        
+        and_out = TransferMechanism(name='and_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        # SET UP PROJECTIONS
+        
+        and_map = MappingProjection(name='and_map',
+                                    matrix=np.random.rand(2, 1),
+                                    sender=and_in,
+                                    receiver=and_out)
+        
+        # SET UP COMPOSITION
+        
+        and_net = ParsingAutodiffComposition(param_init_from_pnl=True)
+        
+        and_net.add_c_node(and_in)
+        and_net.add_c_node(and_out)
+        
+        and_net.add_projection(sender=and_in, projection=and_map, receiver=and_out)
+        
+        # SET UP INPUTS AND TARGETS
+        
+        and_inputs = np.zeros((4,2))
+        and_inputs[0] = [0, 0]
+        and_inputs[1] = [0, 1]
+        and_inputs[2] = [1, 0]
+        and_inputs[3] = [1, 1]
+        
+        and_targets = np.zeros((4,1))
+        and_targets[0] = [0]
+        and_targets[1] = [1]
+        and_targets[2] = [1]
+        and_targets[3] = [0]
+        
+        # TIME TRAINING FOR COMPOSITION
+        
+        start = timeit.default_timer()
+        result = and_net.run(inputs={and_in:and_inputs},
+                             targets={and_out:and_targets},
+                             epochs=eps,
+                             learning_rate=0.1,
+                             optimizer=opt) 
+        end = timeit.default_timer()
+        comp_time = end - start
+        
+        # SET UP SYSTEM
+        
+        and_process = Process(pathway=[and_in,
+                                       and_map,
+                                       and_out],
+                              learning=pnl.LEARNING)
+        
+        xor_sys = System(processes=[and_process],
+                         learning_rate=0.1)
+        
+        # TIME TRAINING FOR SYSTEM
+        
+        start = timeit.default_timer()
+        results_sys = xor_sys.run(inputs={and_in:and_inputs}, 
+                                  targets={and_out:and_targets},
+                                  num_trials=(eps*and_inputs.shape[0]+1))
+        end = timeit.default_timer()
+        sys_time = end - start
+        
+        # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
+        
+        msg = 'Training XOR model as ParsingAutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
+        print(msg)
+        print("\n")
+        logger.info(msg)
+        
+        msg = 'Training XOR model as System for {0} epochs took {1} seconds'.format(eps, sys_time)
+        print(msg)
+        print("\n")
+        logger.info(msg)
+        
+        speedup = np.round((sys_time/comp_time), decimals=2)
+        msg = ('Training XOR model as ParsingAutodiffComposition for {0} epochs was {1} times faster than '
+               'training it as System for {0} epochs.'.format(eps, speedup))
+        print(msg)
+        logger.info(msg)
+    
+    @pytest.mark.parametrize(
+        'eps, opt', [
+            (1, 'sgd'),
+            (10, 'sgd'),
+            (100, 'sgd')
+        ]
+    )
+    def test_xor_training_time(self, eps, opt):
         
         # SET UP MECHANISMS
         
@@ -677,11 +775,12 @@ class TestTrainingTime:
         print(msg)
         logger.info(msg)
     
+    @pytest.mark.gimli
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd'),
-            (10, 'sgd'),
-            (100, 'sgd')
+            (1, 'sgd') # ,
+            # (10, 'sgd') # ,
+            # (100, 'sgd')
         ]
     )
     def test_semantic_net_training_time(self, eps, opt):
@@ -923,10 +1022,11 @@ class TestTrainingTime:
 @pytest.mark.lothlorien
 class TestTrainingIdenticalness():
     
+    @pytest.mark.xor_ident
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd'),
-            (10, 'sgd'),
+            (1, 'sgd') # ,
+            # (10, 'sgd'),
         ]
     )
     def test_xor_training_identicalness(self, eps, opt):
@@ -956,6 +1056,31 @@ class TestTrainingIdenticalness():
                                     sender=xor_hid,
                                     receiver=xor_out)
         
+        # SET UP MECHANISMS FOR SYS
+        
+        xor_in_sys = TransferMechanism(name='xor_in_sys',
+                                   default_variable=np.zeros(2))
+        
+        xor_hid_sys = TransferMechanism(name='xor_hid_sys',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+        
+        xor_out_sys = TransferMechanism(name='xor_out_sys',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+        
+        # SET UP PROJECTIONS FOR SYS
+        
+        hid_map_sys = MappingProjection(name='hid_map_sys',
+                                    matrix=hid_map.matrix.copy(),
+                                    sender=xor_in_sys,
+                                    receiver=xor_hid_sys)
+        
+        out_map_sys = MappingProjection(name='out_map_sys',
+                                    matrix=out_map.matrix.copy(),
+                                    sender=xor_hid_sys,
+                                    receiver=xor_out_sys)
+        
         # SET UP COMPOSITION
         
         xor = ParsingAutodiffComposition(param_init_from_pnl=True)
@@ -981,6 +1106,16 @@ class TestTrainingIdenticalness():
         xor_targets[2] = [1]
         xor_targets[3] = [0]
         
+        print("composition weights before running: ")
+        print("\n")
+        print(hid_map.matrix)
+        print(out_map.matrix)
+        print("\n")
+        print("system weights before running: ")
+        print("\n")
+        print(hid_map_sys.matrix)
+        print(out_map_sys.matrix)
+        
         # TRAIN COMPOSITION
         
         result = xor.run(inputs={xor_in:xor_inputs},
@@ -991,13 +1126,23 @@ class TestTrainingIdenticalness():
         
         comp_weights = xor.get_parameters()[0]
         
+        print("composition weights after running composition: ")
+        print("\n")
+        print(xor.model.params[0])
+        print(xor.model.params[1])
+        print("\n")
+        print("system weights after running composition: ")
+        print("\n")
+        print(hid_map_sys.matrix)
+        print(out_map_sys.matrix)
+        
         # SET UP SYSTEM
         
-        xor_process = Process(pathway=[xor_in,
-                                       hid_map,
-                                       xor_hid,
-                                       out_map,
-                                       xor_out],
+        xor_process = Process(pathway=[xor_in_sys,
+                                       hid_map_sys,
+                                       xor_hid_sys,
+                                       out_map_sys,
+                                       xor_out_sys],
                               learning=pnl.LEARNING)
         
         xor_sys = System(processes=[xor_process],
@@ -1005,19 +1150,30 @@ class TestTrainingIdenticalness():
         
         # TRAIN SYSTEM
         
-        results_sys = xor_sys.run(inputs={xor_in:xor_inputs}, 
-                                  targets={xor_out:xor_targets},
+        results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs}, 
+                                  targets={xor_out_sys:xor_targets},
                                   num_trials=(eps*xor_inputs.shape[0]+1))
         
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
         
-        assert np.allclose(comp_weights[hid_map], hid_map.matrix)
-        assert np.allclose(comp_weights[out_map], out_map.matrix)
+        print("composition weights after running composition and system: ")
+        print("\n")
+        print(xor.model.params[0])
+        print(xor.model.params[1])
+        print("\n")
+        print("system weights after running composition and system: ")
+        print("\n")
+        print(hid_map_sys.matrix)
+        print(out_map_sys.matrix)
+        
+        assert np.allclose(comp_weights[hid_map], hid_map_sys.matrix)
+        assert np.allclose(comp_weights[out_map], out_map_sys.matrix)
     
+    @pytest.mark.sem_net_ident
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd'),
-            (10, 'sgd'),
+            (1, 'sgd') # ,
+            # (10, 'sgd'),
         ]
     )
     def test_semantic_net_training_identicalness(self, eps, opt):
@@ -1090,7 +1246,7 @@ class TestTrainingIdenticalness():
                                         name="map_h2_can",
                                         sender=h2,
                                         receiver=out_sig_can)
-        
+        '''
         # COMPOSITION FOR SEMANTIC NET
         
         sem_net = ParsingAutodiffComposition(param_init_from_pnl=True)
@@ -1111,7 +1267,7 @@ class TestTrainingIdenticalness():
         sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
-        
+        '''
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
         
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -1182,7 +1338,7 @@ class TestTrainingIdenticalness():
                 targets_dict[out_sig_can].append(truth_can[i])
         
         # TRAIN COMPOSITION
-        
+        '''
         result = sem_net.run(inputs=inputs_dict,
                              targets=targets_dict,
                              epochs=eps,
@@ -1190,7 +1346,7 @@ class TestTrainingIdenticalness():
                              optimizer=opt) 
         
         comp_weights = sem_net.get_parameters()[0]
-        
+        '''
         # SET UP SYSTEM
         
         p11 = pnl.Process(pathway=[nouns_in,
@@ -1226,6 +1382,8 @@ class TestTrainingIdenticalness():
                                             ],
                                  learning_rate=0.1)
         
+        sem_net_sys.show_graph(show_dimensions=True, show_projection_labels=True)
+        
         # TRAIN SYSTEM
         
         results = sem_net_sys.run(inputs=inputs_dict, 
@@ -1233,7 +1391,7 @@ class TestTrainingIdenticalness():
                                   num_trials=(len(inputs_dict[nouns_in])*eps + 1))
         
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
-        
+        '''
         assert np.allclose(comp_weights[map_nouns_h1], map_nouns_h1.matrix)
         assert np.allclose(comp_weights[map_rels_h2], map_rels_h2.matrix)
         assert np.allclose(comp_weights[map_h1_h2], map_h1_h2.matrix)
@@ -1241,7 +1399,7 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_is], map_h2_is.matrix)
         assert np.allclose(comp_weights[map_h2_has], map_h2_has.matrix)
         assert np.allclose(comp_weights[map_h2_can], map_h2_can.matrix)
-
+        '''
 
 
 
