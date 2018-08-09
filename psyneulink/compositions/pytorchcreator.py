@@ -16,61 +16,6 @@ class PytorchCreator(torch.nn.Module):
     
     # HELPER METHODS ----------------------------------------------------------------------------------------
     
-    # creates ordered execution sets from processing graph
-    def get_ordered_exec_sets(self, processing_graph):
-        
-        # set up lists of ordered execution sets, terminal nodes
-        ordered_exec_sets = []
-        terminal_nodes = []
-        
-        # create list of terminal nodes in processing graph
-        for i in range(len(processing_graph.vertices)):
-            node = processing_graph.vertices[i]
-            if len(node.children) == 0:
-                terminal_nodes.append(node)
-        
-        # iterate over terminal nodes, call recursive function to create ordered execution sets
-        for i in range(len(terminal_nodes)):
-            node = terminal_nodes[i]
-            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
-        
-        return ordered_exec_sets
-    
-    # recursive helper method for get_ordered_exec_sets
-    def get_node_pos(self, node, ordered_exec_sets):
-        
-        # if node has already been put in execution sets
-        for i in range(len(ordered_exec_sets)):
-            if (node in ordered_exec_sets[i]):
-                return ordered_exec_sets, i
-            
-        # if node has no parents
-        if len(node.parents) == 0:
-            if len(ordered_exec_sets) < 1:
-                ordered_exec_sets.append([node])
-            else:
-                ordered_exec_sets[0].append(node)
-            return ordered_exec_sets, 0
-            
-        # if node has parents
-        else:
-            
-            # call function on parents, find parent path with max length
-            max_dist = -1
-            for i in range(len(node.parents)):
-                parent = node.parents[i]
-                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
-                dist += 1
-                if dist > max_dist: 
-                    max_dist = dist
-            
-            # set node at position = max_dist in the ordered execution sets list
-            if len(ordered_exec_sets) < (max_dist+1):
-                ordered_exec_sets.append([node])
-            else:
-                ordered_exec_sets[max_dist].append(node)
-            return ordered_exec_sets, max_dist
-    
     # returns activation function for node
     def activation_function_creator(self, node):
         
@@ -109,19 +54,16 @@ class PytorchCreator(torch.nn.Module):
             copied_to_numpy[mechanism] = biases.detach().numpy().copy()
         return copied_to_numpy
     
-    # returns ordered execution sets
-    def get_ordered_execution_sets(self):
-        return self.ordered_execution_sets
-    
     # INIT AND FEEDFORWARD ----------------------------------------------------------------------------------
     
     # sets up parameters of model, information for performing feedfoward step
-    def __init__(self, processing_graph, param_init_from_pnl):
+    def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets):
         
         super(PytorchCreator, self).__init__()
         
         # instance variables
-        self.ordered_execution_sets = self.get_ordered_exec_sets(processing_graph) # execution sets
+        # self.ordered_execution_sets = self.get_ordered_exec_sets(processing_graph) # execution sets
+        self.ordered_execution_sets = ordered_execution_sets
         self.processing_graph = processing_graph # processing graph
         self.node_to_feedforward_info = {} # dict mapping PNL nodes to feedforward info
         self.projections_to_torch_weights = {} # dict mapping PNL projections to pytorch parameters
@@ -187,14 +129,6 @@ class PytorchCreator(torch.nn.Module):
         
         # set up output list
         outputs = []
-        
-        '''
-        print("\n")
-        print("inputs in forward method: ")
-        print("\n")
-        print(inputs)
-        print("\n")
-        '''
         
         # iterate over nodes in execution sets
         for i in range(len(self.ordered_execution_sets)):

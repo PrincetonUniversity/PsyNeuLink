@@ -81,6 +81,9 @@ class ParsingAutodiffComposition(Composition):
         
         # keeps track of average loss per epoch
         self.losses = []
+        
+        # ordered execution sets for the model
+        self.ordered_execution_sets = None
     
     
     
@@ -227,7 +230,8 @@ class ParsingAutodiffComposition(Composition):
     def _throw_through_input_CIM(self, stimuli, inputs_or_targets):
         
         # get execution sets
-        exec_sets = self.model.get_ordered_execution_sets()
+        # exec_sets = self.model.get_ordered_execution_sets()
+        exec_sets = self.ordered_execution_sets
         
         # set some variables based on whether we have inputs or targets
         if inputs_or_targets == 'inputs':
@@ -275,12 +279,6 @@ class ParsingAutodiffComposition(Composition):
             value = states[node.component.input_states[0]][1].value
             pytorch_list.append(torch.from_numpy(np.asarray(value).copy()).double())
         
-        '''
-        print("\n")
-        print(pytorch_list)
-        print("\n")
-        '''
-        
         return pytorch_list
     
     
@@ -290,7 +288,8 @@ class ParsingAutodiffComposition(Composition):
     def _throw_through_output_CIM(self, outputs):
         
         # get order
-        exec_sets = self.model.get_ordered_execution_sets()
+        # exec_sets = self.model.get_ordered_execution_sets()
+        exec_sets = self.ordered_execution_sets
         order = exec_sets[len(exec_sets)-1]
         
         # set up arry that will hold inputs for output CIM
@@ -427,61 +426,8 @@ class ParsingAutodiffComposition(Composition):
         execution_id=None,
     ):
         
-        # set up model/training parameters, check that arguments provided are consistent
-        if self.model is None:
-            self.model = PytorchCreator(self.graph_processing, self.param_init_from_pnl)
-        
-        if learning_rate is None:
-            if self.learning_rate is None:
-                self.learning_rate = 0.001
-        else:
-            if not isinstance(learning_rate, (int, float)):
-                raise ParsingAutodiffCompositionError("Learning rate must be an integer or float value.")
-            self.learning_rate = learning_rate
-        
-        if optimizer is None:
-            if self.optimizer is None:
-                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
-        else:
-            if optimizer not in ['sgd', 'adam']:
-                raise ParsingAutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
-                                                      "Currently, Stochastic Gradient Descent and Adam are the only available "
-                                                      "optimizers (specified as 'sgd' or 'adam').")
-            if optimizer == 'sgd':
-                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
-            else:
-                self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
-        if loss is None:
-            if self.loss is None:
-                self.loss = nn.MSELoss(size_average=False)
-        else:
-            if loss not in ['mse', 'crossentropy']:
-                raise ParsingAutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
-                                                      "Currently, Mean Squared Error and Cross Entropy are the only "
-                                                      "available loss functions (specified as 'mse' or 'crossentropy').")
-            if loss == 'mse':
-                self.loss = nn.MSELoss(size_average=False)
-            else:
-                self.loss = nn.CrossEntropyLoss(size_average=False)
-        
-        if refresh_losses == True:
-            self.losses = []
-        
-        if targets is None:
-            if epochs is not None:
-                raise ParsingAutodiffCompositionError("Number of training epochs specified for {0} but no targets given."
-                                                      .format(self.name))
-        else:
-            if epochs is None:
-                raise ParsingAutodiffCompositionError("Targets specified for {0}, but no number of training epochs given."
-                                                      .format(self.name))
-            
-            if len(self.model.get_weights_for_projections()) == 0:
-                raise ParsingAutodiffCompositionError("Targets specified for training {0}, but {0} has no trainable "
-                                                      "parameters."
-                                                      .format(self.name))
-        
+        # validate run arguments, set composition instance variables using run arguments
+        self.validate_run_args(learning_rate, optimizer, loss, refresh_losses, targets, epochs)
         
         # set up processing scheduler
         if scheduler_processing is None:
@@ -669,13 +615,6 @@ class ParsingAutodiffComposition(Composition):
                 # run the model on inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
                 
-                '''
-                if epoch == 0 and t == 10:
-                    print("\n")
-                    print(curr_tensor_outputs)
-                    print("\n")
-                '''
-                
                 # compute loss
                 curr_loss = torch.zeros(1).double()
                 for i in range(len(curr_tensor_outputs)):
@@ -727,12 +666,9 @@ class ParsingAutodiffComposition(Composition):
     def get_parameters(self):
         
         if self.model is None:
-            self.model = PytorchCreator(self.graph_processing)
-            print("\n")
-            print("\n")
-            print("HI SHIT IS HAPPENING!")
-            print("\n")
-            print("\n")
+            raise ParsingAutodiffCompositionError("{0} has not been run yet - parameters have not been created "
+                                                  "in Pytorch yet."
+                                                  .format(self.name))
         
         weights = self.model.get_weights_for_projections()
         biases = self.model.get_biases_for_mechanisms()
@@ -894,6 +830,124 @@ class ParsingAutodiffComposition(Composition):
                 raise ParsingAutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
                                                       .format(self.name))
     
+    
+    
+    # creates ordered execution sets from processing graph
+    def get_ordered_exec_sets(self, processing_graph):
+        
+        # set up lists of ordered execution sets, terminal nodes
+        ordered_exec_sets = []
+        terminal_nodes = []
+        
+        # create list of terminal nodes in processing graph
+        for i in range(len(processing_graph.vertices)):
+            node = processing_graph.vertices[i]
+            if len(node.children) == 0:
+                terminal_nodes.append(node)
+        
+        # iterate over terminal nodes, call recursive function to create ordered execution sets
+        for i in range(len(terminal_nodes)):
+            node = terminal_nodes[i]
+            ordered_exec_sets, node_pos = self.get_node_pos(node, ordered_exec_sets)
+        
+        return ordered_exec_sets
+    
+    # recursive helper method for get_ordered_exec_sets
+    def get_node_pos(self, node, ordered_exec_sets):
+        
+        # if node has already been put in execution sets
+        for i in range(len(ordered_exec_sets)):
+            if (node in ordered_exec_sets[i]):
+                return ordered_exec_sets, i
+            
+        # if node has no parents
+        if len(node.parents) == 0:
+            if len(ordered_exec_sets) < 1:
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[0].append(node)
+            return ordered_exec_sets, 0
+            
+        # if node has parents
+        else:
+            
+            # call function on parents, find parent path with max length
+            max_dist = -1
+            for i in range(len(node.parents)):
+                parent = node.parents[i]
+                ordered_exec_sets, dist = self.get_node_pos(parent, ordered_exec_sets)
+                dist += 1
+                if dist > max_dist: 
+                    max_dist = dist
+            
+            # set node at position = max_dist in the ordered execution sets list
+            if len(ordered_exec_sets) < (max_dist+1):
+                ordered_exec_sets.append([node])
+            else:
+                ordered_exec_sets[max_dist].append(node)
+            return ordered_exec_sets, max_dist
+    
+    
+    
+    def validate_run_args(self, learning_rate, optimizer, loss, refresh_losses, targets, epochs):
+        
+        if self.ordered_execution_sets is None:
+            self.ordered_execution_sets = self.get_ordered_exec_sets(self.graph_processing)
+        
+        # set up model/training parameters, check that arguments provided are consistent
+        if self.model is None:
+            self.model = PytorchCreator(self.graph_processing, self.param_init_from_pnl, self.ordered_execution_sets)
+        
+        if learning_rate is None:
+            if self.learning_rate is None:
+                self.learning_rate = 0.001
+        else:
+            if not isinstance(learning_rate, (int, float)):
+                raise ParsingAutodiffCompositionError("Learning rate must be an integer or float value.")
+            self.learning_rate = learning_rate
+        
+        if optimizer is None:
+            if self.optimizer is None:
+                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
+        else:
+            if optimizer not in ['sgd', 'adam']:
+                raise ParsingAutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                                      "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                                      "optimizers (specified as 'sgd' or 'adam').")
+            if optimizer == 'sgd':
+                self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
+            else:
+                self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        
+        if loss is None:
+            if self.loss is None:
+                self.loss = nn.MSELoss(size_average=False)
+        else:
+            if loss not in ['mse', 'crossentropy']:
+                raise ParsingAutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                                      "Currently, Mean Squared Error and Cross Entropy are the only "
+                                                      "available loss functions (specified as 'mse' or 'crossentropy').")
+            if loss == 'mse':
+                self.loss = nn.MSELoss(size_average=False)
+            else:
+                self.loss = nn.CrossEntropyLoss(size_average=False)
+        
+        if refresh_losses == True:
+            self.losses = []
+        
+        if targets is None:
+            if epochs is not None:
+                raise ParsingAutodiffCompositionError("Number of training epochs specified for {0} but no targets given."
+                                                      .format(self.name))
+        else:
+            if epochs is None:
+                raise ParsingAutodiffCompositionError("Targets specified for {0}, but no number of training epochs given."
+                                                      .format(self.name))
+            
+            if len(self.model.get_weights_for_projections()) == 0:
+                raise ParsingAutodiffCompositionError("Targets specified for training {0}, but {0} has no trainable "
+                                                      "parameters."
+                                                      .format(self.name))
 
 
 

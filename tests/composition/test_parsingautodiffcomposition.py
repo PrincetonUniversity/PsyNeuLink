@@ -1154,8 +1154,9 @@ class TestTrainingIdenticalness():
     @pytest.mark.xor_ident
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd') # ,
-            # (10, 'sgd'),
+            (1, 'sgd'),
+            (10, 'sgd'),
+            (100, 'sgd')
         ]
     )
     def test_xor_training_identicalness(self, eps, opt):
@@ -1265,24 +1266,15 @@ class TestTrainingIdenticalness():
         
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
         
-        print("composition weights after running composition and system: ")
-        print("\n")
-        print(xor.model.params[0])
-        print(xor.model.params[1])
-        print("\n")
-        print("system weights after running composition and system: ")
-        print("\n")
-        print(hid_map_sys.matrix)
-        print(out_map_sys.matrix)
-        
         assert np.allclose(comp_weights[hid_map], hid_map_sys.matrix)
         assert np.allclose(comp_weights[out_map], out_map_sys.matrix)
     
-    @pytest.mark.sem_net_ident
+    @pytest.mark.galadriel
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd') # ,
-            # (10, 'sgd'),
+            (1, 'sgd'),
+            (10, 'sgd'),
+            (40, 'sgd')
         ]
     )
     def test_semantic_net_training_identicalness(self, eps, opt):
@@ -1525,12 +1517,29 @@ class TestTrainingIdenticalness():
         targets_dict_sys[out_sig_has_sys] = targets_dict[out_sig_has]
         targets_dict_sys[out_sig_can_sys] = targets_dict[out_sig_can]        
         
+        result = sem_net.run(inputs=inputs_dict)
+        
+        comp_weights = sem_net.get_parameters()[0]
+        
+        '''
+        print("Weights before training: ")
+        print("\n")
+        print(sem_net.model.params[0])
+        print("\n")
+        print(comp_weights[map_nouns_h1])
+        print("\n")
+        print(map_nouns_h1_sys.matrix)
+        print("\n")
+        print(comp_weights[map_nouns_h1] - map_nouns_h1_sys.matrix)
+        print("\n")
+        '''
+        
         # TRAIN COMPOSITION
         
         result = sem_net.run(inputs=inputs_dict,
                              targets=targets_dict,
                              epochs=eps,
-                             learning_rate=10,
+                             learning_rate=0.5,
                              optimizer=opt) 
         
         comp_weights = sem_net.get_parameters()[0]
@@ -1568,7 +1577,7 @@ class TestTrainingIdenticalness():
                                         p21,
                                         p22,
                                         ],
-                             learning_rate=10)
+                             learning_rate=0.5)
         
         # TRAIN SYSTEM
         
@@ -1577,6 +1586,18 @@ class TestTrainingIdenticalness():
                                   num_trials=(len(inputs_dict_sys[nouns_in_sys])*eps + 1))
         
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
+        
+        '''
+        print("Weights after training: ")
+        print("\n")
+        print(sem_net.model.params[0])
+        print("\n")
+        print(comp_weights[map_nouns_h1])
+        print("\n")
+        print(map_nouns_h1_sys.matrix)
+        print("\n")
+        print(comp_weights[map_nouns_h1] - map_nouns_h1_sys.matrix)
+        '''
         
         assert np.allclose(comp_weights[map_nouns_h1], map_nouns_h1_sys.matrix)
         assert np.allclose(comp_weights[map_rels_h2], map_rels_h2_sys.matrix)
