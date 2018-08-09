@@ -2958,8 +2958,8 @@ class System(System_Base):
             if (not self._animate is False and
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                mechs = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
-                self.show_graph(active_items=mechs, **self._animate, output_fmt='gif')
+                # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
+                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
