@@ -638,7 +638,6 @@ class ParsingAutodiffComposition(Composition):
             
             # if training in random order, set random number seed, generate random order
             if randomize == True:
-                torch.manual_seed(epoch)
                 rand_train_order = np.random.permutation(len(inputs))
             
             # set up array to keep track of losses on epoch

@@ -52,9 +52,10 @@ and_out = TransferMechanism(name='and_out',
                             function=Logistic())
 
 and_map = MappingProjection(name='and_map',
-                            matrix=np.ones((2,1)))
+                            matrix=np.random.rand(2,1), sender=and_in, receiver=and_out)
 
-
+print(and_map.matrix)
+print("\n")
 
 # SET UP SYSTEM
 
@@ -95,11 +96,11 @@ print("\n")
 
 
 # SET UP COMPOSITION (PYTORCH BACKEND), CHECK PARAMS OF ALL
-'''
+
 results_comp = and_comp.run(inputs={and_in:and_inputs[1]})
 
 weights, biases = and_comp.get_parameters()
-
+'''
 print("weights of system before training: ")
 print(and_map.matrix)
 print("\n")
@@ -113,14 +114,16 @@ print("\n")
 
 
 # TRAIN COMPOSITION AND PYTORCH, CHECK PARAMS OF ALL
-
+'''
 print("starting composition training: ")
 print("\n")
+'''
 
-'''
 results_comp = and_comp.run(inputs={and_in:and_inputs},
-                            targets={and_out:and_targets}, epochs=100, learning_rate=10, optimizer='sgd')
-'''
+                            targets={and_out:and_targets}, epochs=100, learning_rate=.2, optimizer='sgd')
+
+print(and_comp.model.params[0])
+print("\n")
 
 print("starting basic pytorch training: ")
 print("\n")
@@ -213,7 +216,7 @@ and_process = Process(pathway=[and_in,
 and_system = System(processes=[and_process],
                     learning_rate=10)
 
-and_system.show_graph(show_dimensions=True, show_learning=True)
+# and_system.show_graph(show_dimensions=True, show_learning=True)
 # and_system.show_graph(show_mechanism_structure=pnl.VALUES)
 '''
 results_sys = and_system.run(inputs={and_in:and_inputs}, 
