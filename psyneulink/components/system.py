@@ -472,7 +472,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import \
     AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
-from psyneulink.scheduling.condition import AtTimeStep, Never, AllHaveRun
+from psyneulink.scheduling.condition import AtPass, AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
