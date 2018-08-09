@@ -2649,14 +2649,21 @@ class Component(object):
             kwargs_to_instantiate = function.ClassDefaults.values().copy()
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
-                # matrix is unexpected at this point
                 # default_variable should not be in any function_params but sometimes it is
-                kwargs_to_remove = [MATRIX, 'default_variable']
+                kwargs_to_remove = ['default_variable']
 
                 for arg in kwargs_to_remove:
                     try:
                         del kwargs_to_instantiate[arg]
                     except KeyError:
+                        pass
+
+                # matrix is determined from parameter state based on string value in function_params
+                # update it here if needed
+                if MATRIX in kwargs_to_instantiate:
+                    try:
+                        kwargs_to_instantiate[MATRIX] = self.parameter_states[MATRIX].instance_defaults.value
+                    except (AttributeError, KeyError, TypeError):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
