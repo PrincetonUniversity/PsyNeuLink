@@ -3163,7 +3163,6 @@ class System(System_Base):
            :alt: Animation of System in EVC Gratton example script
            :scale: 150 %
 
-
         Returns
         -------
 
