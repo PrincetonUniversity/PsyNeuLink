@@ -754,7 +754,18 @@ class Function_Base(Function):
         # region Type conversion (specified by output_type):
         # Convert to 2D array, irrespective of value type:
         if output_type is FunctionOutputType.NP_2D_ARRAY:
-            value = np.atleast_2d(value)
+            # KDM 8/10/18: mimicking the conversion that Mechanism does to its values, because
+            # this is what we actually wanted this method for. Can be changed to pure 2D np array in
+            # future if necessary
+
+            converted_to_2d = np.atleast_2d(value)
+            # If return_value is a list of heterogenous elements, return as is
+            #     (satisfies requirement that return_value be an array of possibly multidimensional values)
+            if converted_to_2d.dtype == object:
+                pass
+            # Otherwise, return value converted to 2d np.array
+            else:
+                value = converted_to_2d
 
         # Convert to 1D array, irrespective of value type:
         # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
@@ -10867,6 +10878,15 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -10966,7 +10986,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        return self.convert_output_type([error_array, error_array])
+        return [error_array, error_array]
 
 
 # Argument names:
@@ -11163,6 +11183,15 @@ class BackPropagation(LearningFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -11365,7 +11394,7 @@ class BackPropagation(LearningFunction):
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
-        return self.convert_output_type([weight_change_matrix, dE_dW])
+        return [weight_change_matrix, dE_dW]
 
 
 class TDLearning(Reinforcement):
