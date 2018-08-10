@@ -11455,9 +11455,6 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, context=None, **kwargs):
-        return super().function(variable=variable, params=params, context=context)
-
 
 # FIX: IMPLEMENT AS Functions
 def max_vs_next(x):
