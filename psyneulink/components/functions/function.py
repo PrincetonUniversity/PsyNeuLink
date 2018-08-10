@@ -149,7 +149,7 @@ COMMENT:
 
 If the `function <Function_Base.function>` returns a single numeric value, and the Function's class implements
 FunctionOutputTypeConversion, then the type of value returned by its `function <Function>` can be specified using the
-`functionOutputType` attribute, by assigning it one of the following `FunctionOutputType` values:
+`output_type` attribute, by assigning it one of the following `FunctionOutputType` values:
     * FunctionOutputType.RAW_NUMBER: return "exposed" number;
     * FunctionOutputType.NP_1D_ARRAY: return 1d np.array
     * FunctionOutputType.NP_2D_ARRAY: return 2d np.array.
@@ -195,7 +195,7 @@ Class Reference
 import numbers
 import warnings
 
-from collections import namedtuple, deque
+from collections import deque, namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
@@ -203,41 +203,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
-from psyneulink.components.shellclasses import Function
+from psyneulink.components.shellclasses import Function, Mechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
-    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, HAS_INITIALIZERS, \
-    BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
-    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
-    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
-    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
-    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAUSSIAN, GAMMA_DIST_FUNCTION, \
-    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
-    IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
-    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
-    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
-    NOISE, SELECTION_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
-    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
-    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
-    TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
-    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, \
-    kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import \
-    call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, \
-    np_array_less_than_2d, parameter_spec, scalar_distance
+from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, scalar_distance
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -535,6 +507,16 @@ def get_param_value_for_function(owner, function):
         return None
 
 
+# KDM 8/9/18: below is added for future use when function methods are completely functional
+# used as a decorator for Function methods
+# def enable_output_conversion(func):
+#     @functools.wraps(func)
+#     def wrapper(*args, **kwargs):
+#         result = func(*args, **kwargs)
+#         return convert_output_type(result)
+#     return wrapper
+
+
 class Function_Base(Function):
     """
     Function_Base(           \
@@ -573,9 +555,9 @@ class Function_Base(Function):
               - the value for each entry is the value of the parameter
 
         Return values:
-            The functionOutputType can be used to specify type conversion for single-item return values:
+            The output_type can be used to specify type conversion for single-item return values:
             - it can only be used for numbers or a single-number list; other values will generate an exception
-            - if self.functionOutputType is set to:
+            - if self.output_type is set to:
                 FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
                 FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
                 FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
@@ -652,10 +634,10 @@ class Function_Base(Function):
         called by the Function's `owner <Function_Base.owner>` when it is executed.
 
     COMMENT:
-    functionOutputTypeConversion : Bool : False
+    enable_output_type_conversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
-    functionOutputType : FunctionOutputType : None
+    output_type : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
@@ -722,8 +704,8 @@ class Function_Base(Function):
         if context != ContextFlags.CONSTRUCTOR:
             raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
 
-        self._functionOutputType = None
-        # self.name = self.componentName
+        self._output_type = None
+        self.enable_output_type_conversion = False
 
         register_category(entry=self,
                           base_class=Function_Base,
@@ -766,39 +748,85 @@ class Function_Base(Function):
 
                 return getattr(self, param_name)
 
+    def convert_output_type(self, value, output_type=None):
+        if output_type is None:
+            if not self.enable_output_type_conversion or self.output_type is None:
+                return value
+            else:
+                output_type = self.output_type
+
+        value = np.asarray(value)
+
+        # region Type conversion (specified by output_type):
+        # Convert to 2D array, irrespective of value type:
+        if output_type is FunctionOutputType.NP_2D_ARRAY:
+            value = np.atleast_2d(value)
+
+        # Convert to 1D array, irrespective of value type:
+        # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
+        elif output_type is FunctionOutputType.NP_1D_ARRAY:
+            # If variable is 2D
+            if value.ndim >= 2:
+                # If there is only one item:
+                if len(value) == 1:
+                    value = value[0]
+                else:
+                    raise FunctionError("Can't convert value ({0}: 2D np.ndarray object with more than one array)"
+                                        " to 1D array".format(value))
+            elif value.ndim == 1:
+                value = value
+            elif value.ndim == 0:
+                value = np.atleast_1d(value)
+            else:
+                raise FunctionError("Can't convert value ({0} to 1D array".format(value))
+
+        # Convert to raw number, irrespective of value type:
+        # Note: if 2D or 1D array has more than two items, generate exception
+        elif output_type is FunctionOutputType.RAW_NUMBER:
+            if object_has_single_value(value):
+                value = float(value)
+            else:
+                raise FunctionError("Can't convert value ({0}) with more than a single number to a raw number".format(value))
+
+        return value
+
     @property
-    def functionOutputType(self):
-        if hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION):
-            return self._functionOutputType
-        return None
+    def output_type(self):
+        return self._output_type
 
-    @functionOutputType.setter
-    def functionOutputType(self, value):
-
-        # Initialize backing field if it has not yet been set
-        #    ??or if FunctionOutputTypeConversion is False?? <- FIX: WHY?? [IS THAT A SIDE EFFECT OR PREVIOUSLY USING
-        #                                                       FIX: self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]
-        #                                                       FIX: TO DECIDE IF ATTRIBUTE EXISTS?
-        if value is None and (not hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION)
-                              or not self.FunctionOutputTypeConversion):
-            self._functionOutputType = value
-            return
-
-        # Attempt to set outputType but conversion not enabled
-        if value and not self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
-            raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
-
+    @output_type.setter
+    def output_type(self, value):
         # Bad outputType specification
-        if value and not isinstance(value, FunctionOutputType):
-            raise FunctionError("value ({0}) of functionOutputType attribute must be FunctionOutputType for {1}".
-                                format(self.functionOutputType, self.__class__.__name__))
+        if value is not None and not isinstance(value, FunctionOutputType):
+            raise FunctionError("value ({0}) of output_type attribute must be FunctionOutputType for {1}".
+                                format(self.output_type, self.__class__.__name__))
 
         # Can't convert from arrays of length > 1 to number
-        if (len(self.instance_defaults.variable) > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
+        if (
+            self.instance_defaults.variable is not None
+            and len(self.instance_defaults.variable) > 1
+            and self.output_type is FunctionOutputType.RAW_NUMBER
+        ):
             raise FunctionError(
                 "{0} can't be set to return a single number since its variable has more than one number".
                 format(self.__class__.__name__))
-        self._functionOutputType = value
+
+        # warn if user overrides the 2D setting for mechanism functions
+        # may be removed when https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved properly
+        # (meaning Mechanism values may be something other than 2D np array)
+        try:
+            # import here because if this package is not installed, we can assume the user is probably not dealing with compilation
+            # so no need to warn unecessarily
+            import llvmlite
+            if (isinstance(self.owner, Mechanism) and (value == FunctionOutputType.RAW_NUMBER or value == FunctionOutputType.NP_1D_ARRAY)):
+                warnings.warn(
+                    'Functions that are owned by a Mechanism but do not return a 2D numpy array may cause unexpected behavior if '
+                    'llvm compilation is enabled.'
+                )
+        except (AttributeError, ImportError):
+            pass
+
+        self._output_type = value
 
     def show_params(self):
         print("\nParams for {} ({}):".format(self.name, self.componentName))
@@ -990,7 +1018,7 @@ class ArgumentTherapy(Function_Base):
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION_OUTPUT_TYPE_CONVERSION: True,
+    paramClassDefaults.update({
                                PARAMETER_STATE_PARAMS: None
                                # PROPENSITY: Manner.CONTRARIAN,
                                # PERTINACITY:  10
@@ -1020,8 +1048,6 @@ class ArgumentTherapy(Function_Base):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and returns validated value
@@ -1057,10 +1083,6 @@ class ArgumentTherapy(Function_Base):
 
         # Check params
         for param_name, param_value in request_set.items():
-
-            # Check that specified parameter is legal
-            if param_name not in request_set.keys():
-                message += "{0} is not a valid parameter for {1}".format(param_name, self.name)
 
             if param_name == PROPENSITY:
                 if isinstance(param_value, ArgumentTherapy.Manner):
@@ -1118,13 +1140,15 @@ class ArgumentTherapy(Function_Base):
         whim = randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:
-            return whim < pertinacity
+            value = whim < pertinacity
 
         elif propensity == self.Manner.CONTRARIAN:
-            return whim > pertinacity
+            value = whim > pertinacity
 
         else:
             raise FunctionError("This should not happen if parameter_validation == True;  check its value")
+
+        return self.convert_output_type(value)
 
 
 # region ****************************************   FUNCTIONS   ********************************************************
@@ -1442,10 +1466,10 @@ class UserDefinedFunction(Function_Base):
         (see `above <UDF_Modulatory_Params>` for details).
 
     COMMENT:
-    functionOutputTypeConversion : Bool : False
+    enable_output_type_conversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
-    functionOutputType : FunctionOutputType : None
+    output_type : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
@@ -1469,7 +1493,6 @@ class UserDefinedFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None,
         CUSTOM_FUNCTION: None,
         MULTIPLICATIVE_PARAM:None,
@@ -1568,7 +1591,6 @@ class UserDefinedFunction(Function_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self, **kwargs):
 
@@ -1584,10 +1606,12 @@ class UserDefinedFunction(Function_Base):
 
         try:
             # Try calling with full list of args (including context and params)
-            return call_with_pruned_args(self.custom_function, **kwargs)
+            value = call_with_pruned_args(self.custom_function, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
-            return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
+            value = self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
+
+        return self.convert_output_type(value)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
@@ -1911,7 +1935,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.get_current_function_param(OPERATION)))
-        return result
+
+        return self.convert_output_type(result)
 
 
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
@@ -2064,10 +2089,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         `operation <LinearCombination.operation>`), and finally applies `scale <LinearCombination.scale>` and/or
         `offset <LinearCombination.offset>`.
 
-    functionOutputTypeConversion : Bool : False
+    enable_output_type_conversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
-    functionOutputType : FunctionOutputType : None
+    output_type : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
@@ -2301,7 +2326,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(variable):
-            return (variable * scale) + offset
+            return self.convert_output_type((variable * scale) + offset)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -2354,7 +2379,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Hadamard offset
             result = np.sum([product, offset], axis=0)
 
-        return result
+        return self.convert_output_type(result)
 
     def get_input_struct_type(self):
         # FIXME: Workaround a special case of simple array.
@@ -2623,10 +2648,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         `operation <CombineMeans.operation>`), and finally applies `scale <CombineMeans.scale>` and/or
         `offset <CombineMeans.offset>`.
 
-    functionOutputTypeConversion : Bool : False
+    enable_output_type_conversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
-    functionOutputType : FunctionOutputType : None
+    output_type : FunctionOutputType : None
         used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
@@ -2860,7 +2885,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
                                 format(self.get_current_function_param(OPERATION)))
-        return result
+
+        return self.convert_output_type(result)
 
     @property
     def offset(self):
@@ -3038,7 +3064,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         for t in range(1, len(sample)):
             delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
-        return delta
+
+        return self.convert_output_type(delta)
 
 
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
@@ -3210,7 +3237,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: True,
         PARAMETER_STATE_PARAMS: None
     })
 
@@ -3233,8 +3259,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-        # self.functionOutputType = None
 
     def get_param_ids(self):
         return SLOPE, INTERCEPT
@@ -3283,7 +3307,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         slope = self.get_current_function_param(SLOPE)
         intercept = self.get_current_function_param(INTERCEPT)
-        outputType = self.functionOutputType
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -3308,54 +3331,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
-        # MODIFIED 11/9/17 END
-
-
-        # region Type conversion (specified by outputType):
-        # Convert to 2D array, irrespective of variable type:
-        if outputType is FunctionOutputType.NP_2D_ARRAY:
-            result = np.atleast_2d(result)
-
-        # Convert to 1D array, irrespective of variable type:
-        # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
-        elif outputType is FunctionOutputType.NP_1D_ARRAY:
-            # If variable is 2D
-            if variable.ndim == 2:
-                # If there is only one item:
-                if len(variable) == 1:
-                    result = result[0]
-                else:
-                    raise FunctionError("Can't convert result ({0}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array".format(result))
-            elif len(variable) == 1:
-                result = result
-            elif len(variable) == 0:
-                result = np.atleast_1d(result)
-            else:
-                raise FunctionError("Can't convert result ({0} to 1D array".format(result))
-
-        # Convert to raw number, irrespective of variable type:
-        # Note: if 2D or 1D array has more than two items, generate exception
-        elif outputType is FunctionOutputType.RAW_NUMBER:
-            # If variable is 2D
-            if variable.ndim == 2:
-                # If there is only one item:
-                if len(variable) == 1 and len(variable[0]) == 1:
-                    result = result[0][0]
-                else:
-                    raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
-                                        format(result))
-            elif len(variable) == 1:
-                if len(variable) == 1:
-                    result = result[0]
-                else:
-                    raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
-                                        format(result))
-            else:
-                return result
-        # endregion
-
-        return result
+        return self.convert_output_type(result)
 
     def derivative(self, input=None, output=None):
         """
@@ -3522,7 +3498,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate = self.get_current_function_param(RATE)
         scale = self.get_current_function_param(SCALE)
 
-        return scale * np.exp(rate * variable)
+        result = scale * np.exp(rate * variable)
+        return self.convert_output_type(result)
 
     def derivative(self, input, output=None):
         """
@@ -3708,7 +3685,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bias = self.get_current_function_param(BIAS)
         offset = self.get_current_function_param(OFFSET)
 
-        return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
+        result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+
+        return self.convert_output_type(result)
 
     def derivative(self, output, input=None):
         """
@@ -3852,7 +3831,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
 
-        return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
+        result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
+        return self.convert_output_type(result)
 
     def derivative(self, output):
         """
@@ -4164,7 +4144,7 @@ class SoftMax(TransferFunction):
         else:
             output = self.apply_softmax(variable, gain, output_type)
 
-        return output
+        return self.convert_output_type(output)
 
     def derivative(self, output, input=None):
         """
@@ -4708,7 +4688,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         matrix = self.get_current_function_param(MATRIX)
-        return np.dot(variable, matrix)
+        result = np.dot(variable, matrix)
+        return self.convert_output_type(result)
 
     @staticmethod
     def keyword(obj, keyword):
@@ -4955,7 +4936,6 @@ class OneHot(SelectionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None
     })
 
@@ -4979,8 +4959,6 @@ class OneHot(SelectionFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-        # self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -5025,7 +5003,6 @@ class OneHot(SelectionFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
@@ -5037,19 +5014,19 @@ class OneHot(SelectionFunction):
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)
-            return np.where(variable == max_value, max_value, 0)
+            result = np.where(variable == max_value, max_value, 0)
 
-        if self.mode is MAX_ABS_VAL:
+        elif self.mode is MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
-            return np.where(variable == max_value, max_value, 0)
+            result = np.where(variable == max_value, max_value, 0)
 
         elif self.mode is MAX_INDICATOR:
             max_value = np.max(variable)
-            return np.where(variable == max_value, 1, 0)
+            result = np.where(variable == max_value, 1, 0)
 
         elif self.mode is MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
-            return np.where(variable == max_value, 1, 0)
+            result = np.where(variable == max_value, 1, 0)
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing
@@ -5057,7 +5034,7 @@ class OneHot(SelectionFunction):
             prob_dist = variable[1]
             # if not prob_dist.any() and INITIALIZING in context:
             if not prob_dist.any():
-                return v
+                return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
@@ -5066,10 +5043,11 @@ class OneHot(SelectionFunction):
                 result = v * chosen_in_cum_sum
             else:
                 result = np.ones_like(v) * chosen_in_cum_sum
-            return result
             # chosen_item = np.random.choice(v, 1, p=prob_dist)
             # one_hot_indicator = np.where(v == chosen_item, 1, 0)
             # return v * one_hot_indicator
+
+        return self.convert_output_type(result)
 
 
 # region ***********************************  INTEGRATOR FUNCTIONS *****************************************************
@@ -5486,7 +5464,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
-
     def reinitialize(self, *args):
         """
             Effectively begins accumulation over again at the specified value(s).
@@ -5766,7 +5743,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
-        return adjusted_value
+        return self.convert_output_type(adjusted_value)
 
 
 class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
@@ -5993,7 +5970,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
-        return adjusted_value
+        return self.convert_output_type(adjusted_value)
 
 
 class Buffer(Integrator):  # ------------------------------------------------------------------------------
@@ -6244,7 +6221,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         self.previous_value = deque(self.previous_value, maxlen=self.history)
 
-        return self.previous_value
+        return self.convert_output_type(self.previous_value)
 
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
@@ -6613,7 +6590,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-        return adjusted_value
+
+        return self.convert_output_type(adjusted_value)
 
 
 class DriftDiffusionIntegrator(Integrator):  # -------------------------------------------------------------------------
@@ -6874,7 +6852,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.previous_value, self.previous_time
+        return self.convert_output_type(self.previous_value), self.previous_time
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
@@ -7108,7 +7086,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
 
-        return self.previous_value, self.previous_time
+        return self.convert_output_type(self.previous_value), self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -7866,7 +7844,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.previous_v, self.previous_w, self.previous_time
+        return self.convert_output_type(self.previous_v), self.convert_output_type(self.previous_w), self.previous_time
 
     def bin_function(self,
                      variable=None,
@@ -8384,7 +8362,8 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = value
-        return value
+
+        return self.convert_output_type(value)
 
 
 class LCAIntegrator(Integrator):  # ------------------------------------------------------------------------------------
@@ -8595,7 +8574,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
-        return adjusted_value
+        return self.convert_output_type(adjusted_value)
 
 
 class AGTUtilityIntegrator(Integrator):  # -----------------------------------------------------------------------------
@@ -8942,7 +8921,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             self.previous_short_term_utility = short_term_utility
             self.previous_long_term_utility = long_term_utility
 
-        return value
+        return self.convert_output_type(value)
 
     def combine_utilities(self, short_term_utility, long_term_utility):
         short_term_gain = self.get_current_function_param("short_term_gain")
@@ -9248,7 +9227,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
-        return rt, er
+        return self.convert_output_type(rt), self.convert_output_type(er)
 
     def derivative(self, output=None, input=None):
         """
@@ -9517,7 +9496,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
         results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
-        return results
+        return self.convert_output_type(results)
 
 
 # region ************************************   DISTRIBUTION FUNCTIONS   ***********************************************
@@ -9611,7 +9590,6 @@ class NormalDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -9634,7 +9612,7 @@ class NormalDist(DistributionFunction):
 
         result = np.random.normal(mean, standard_deviation)
 
-        return result
+        return self.convert_output_type(result)
 
 
 class UniformToNormalDist(DistributionFunction):
@@ -9738,7 +9716,6 @@ class UniformToNormalDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -9757,7 +9734,9 @@ class UniformToNormalDist(DistributionFunction):
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
 
         sample = np.random.rand(1)[0]
-        return ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
+        result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
+
+        return self.convert_output_type(result)
 
 class ExponentialDist(DistributionFunction):
     """
@@ -9834,7 +9813,6 @@ class ExponentialDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -9846,7 +9824,7 @@ class ExponentialDist(DistributionFunction):
         beta = self.get_current_function_param(BETA)
         result = np.random.exponential(beta)
 
-        return result
+        return self.convert_output_type(result)
 
 
 class UniformDist(DistributionFunction):
@@ -9933,7 +9911,6 @@ class UniformDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -9946,7 +9923,7 @@ class UniformDist(DistributionFunction):
         high = self.get_current_function_param(HIGH)
         result = np.random.uniform(low, high)
 
-        return result
+        return self.convert_output_type(result)
 
 
 class GammaDist(DistributionFunction):
@@ -10034,7 +10011,6 @@ class GammaDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -10048,7 +10024,7 @@ class GammaDist(DistributionFunction):
 
         result = np.random.gamma(dist_shape, scale)
 
-        return result
+        return self.convert_output_type(result)
 
 
 class WaldDist(DistributionFunction):
@@ -10134,7 +10110,6 @@ class WaldDist(DistributionFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -10148,7 +10123,7 @@ class WaldDist(DistributionFunction):
 
         result = np.random.wald(mean, scale)
 
-        return result
+        return self.convert_output_type(result)
 
 
 # endregion
@@ -10307,7 +10282,6 @@ COMMENT
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         """Validates that variable is 1d array
@@ -10521,7 +10495,7 @@ COMMENT
         result = self._metric_fct.function(variable=[current,transformed], context=context)
         # MODIFIED 11/12/15 END
 
-        return result
+        return self.convert_output_type(result)
 
 # endregion
 
@@ -10620,7 +10594,6 @@ class Distance(ObjectiveFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
@@ -10940,7 +10913,8 @@ class Distance(ObjectiveFunction):
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
             # result = np.correlate(v1, v2)
-            return 1-np.abs(Distance.correlation(v1, v2))
+            result = 1 - np.abs(Distance.correlation(v1, v2))
+            return self.convert_output_type(result)
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -10963,7 +10937,7 @@ class Distance(ObjectiveFunction):
             else:
                 result /= len(v1)
 
-        return result
+        return self.convert_output_type(result)
 
 # endregion
 
@@ -11179,7 +11153,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -11324,7 +11297,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         # Multiply distances by differences and learning_rate
         weight_change_matrix = distances * differences * learning_rate
 
-        return weight_change_matrix
+        return self.convert_output_type(weight_change_matrix)
 
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
@@ -11436,7 +11409,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -11536,7 +11508,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 
-        return weight_change_matrix
+        return self.convert_output_type(weight_change_matrix)
 
 
 class ContrastiveHebbian(LearningFunction):  # -------------------------------------------------------------------------
@@ -11650,7 +11622,6 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -11758,7 +11729,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 
-        return weight_change_matrix
+        return self.convert_output_type(weight_change_matrix)
 
 
 class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
@@ -11906,7 +11877,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -12006,7 +11976,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        return [error_array, error_array]
+        return self.convert_output_type([error_array, error_array])
 
 
 # Argument names:
@@ -12203,7 +12173,6 @@ class BackPropagation(LearningFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super()._validate_variable(variable, context))
@@ -12406,7 +12375,7 @@ class BackPropagation(LearningFunction):
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
-        return [weight_change_matrix, dE_dW]
+        return self.convert_output_type([weight_change_matrix, dE_dW])
 
 
 class TDLearning(Reinforcement):
@@ -12464,9 +12433,6 @@ class TDLearning(Reinforcement):
                                  "sample sequence")
 
         return variable
-
-    def function(self, variable=None, params=None, context=None, **kwargs):
-        return super().function(variable=variable, params=params, context=context)
 
 
 # FIX: IMPLEMENT AS Functions
