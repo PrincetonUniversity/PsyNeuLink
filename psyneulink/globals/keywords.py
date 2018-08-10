@@ -462,7 +462,7 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
-FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
+FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type
 
 #endregion
 
@@ -825,7 +825,7 @@ HETERO = 'hetero'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
-FUNCTION_OUTPUT_TYPE = 'functionOutputType'
+FUNCTION_OUTPUT_TYPE = 'output_type'
 
 COMBINE = 'combine'
 SUM = 'sum'
