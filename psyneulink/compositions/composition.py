@@ -1094,13 +1094,14 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[mechanism][param][0]
                     if bin_execute:
                         bin_mechanism = self.__get_bin_mechanism(mechanism);
-                        c, p, i, d = bin_mechanism.byref_arg_types
+                        c, p, i, di, do = bin_mechanism.byref_arg_types
                         # Cast the arguments. Structures are the same but ctypes
                         # creates new class every time.
                         bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
                                       ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
                                       ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
-                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(d)))
+                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
 
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
@@ -1468,14 +1469,15 @@ class Composition(object):
         assert mech in self.mechanisms
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
+            data_struct_ptr = self.get_data_struct_type().as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
                 self.get_input_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer()))
+                data_struct_ptr, data_struct_ptr))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data = llvm_func.args
+            context, params, comp_in, data_in, data_out = llvm_func.args
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -1513,9 +1515,9 @@ class Composition(object):
                 assert output_s in par_mech.output_states
                 mech_idx = self.mechanisms.index(par_mech)
                 output_state_idx = par_mech.output_states.index(output_s)
-                proj_in = builder.gep(data, [ctx.int32_ty(0),
-                                             ctx.int32_ty(mech_idx),
-                                             ctx.int32_ty(output_state_idx)])
+                proj_in = builder.gep(data_in, [ctx.int32_ty(0),
+                                                ctx.int32_ty(mech_idx),
+                                                ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
                 assert state.owner is mech
@@ -1550,7 +1552,7 @@ class Composition(object):
             idx = self.mechanisms.index(mech)
             m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            m_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
