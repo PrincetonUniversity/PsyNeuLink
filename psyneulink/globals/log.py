@@ -873,7 +873,7 @@ class Log:
             if confirm:
                 delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
                                format(entries,self.owner.name))
-                while delete != 'y' and delete != 'y':
+                while delete != 'y' and delete != 'n':
                     input("\nDelete all data from entries? (y/n)")
                 if delete == 'n':
                     return
