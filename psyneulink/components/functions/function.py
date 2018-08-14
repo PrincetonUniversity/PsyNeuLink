@@ -6338,6 +6338,16 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
         self.has_initializers = True
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
+
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
             raise FunctionError(
@@ -6402,7 +6412,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.convert_output_type(self.previous_value), self.previous_time
+        return self.previous_value, self.previous_time
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
@@ -6580,6 +6590,16 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
+
     def function(self,
                  variable=None,
                  params=None,
@@ -6635,8 +6655,8 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
+        return self.previous_value, self.previous_time
 
-        return self.convert_output_type(self.previous_value), self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -7097,6 +7117,16 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
+
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -7394,7 +7424,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.convert_output_type(self.previous_v), self.convert_output_type(self.previous_w), self.previous_time
+        return self.previous_v, self.previous_w, self.previous_time
 
 class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
     """
@@ -8424,6 +8454,16 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @output_type.setter
+    def output_type(self, value):
+        # disabled because it happens during normal execution, may be confusing
+        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
+        self._output_type = None
+
     def function(self,
                  variable=None,
                  params=None,
@@ -8516,7 +8556,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
-        return self.convert_output_type(rt), self.convert_output_type(er)
+        return rt, er
 
     def derivative(self, output=None, input=None):
         """
