@@ -2400,15 +2400,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        # FIXME: ObjectiveMechanism does not initialize default value correctly
-        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        if self.owner and isinstance(self.owner, ObjectiveMechanism):
-            default_val = self.owner.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
-
     def get_param_ids(self):
         return SCALE, OFFSET, EXPONENTS
 
