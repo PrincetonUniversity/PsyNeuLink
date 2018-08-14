@@ -930,6 +930,7 @@ Class Reference
 
 import inspect
 import logging
+import warnings
 
 from collections import OrderedDict
 from inspect import isclass
@@ -938,7 +939,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -1989,6 +1990,14 @@ class Mechanism_Base(Mechanism):
             exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object._exponents = exponents
+
+        # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
+        # ignore warnings of certain Functions that disable conversion
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=UserWarning)
+            self.function_object.output_type = FunctionOutputType.NP_2D_ARRAY
+            self.function_object.enable_output_type_conversion = True
+        self.function_object._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -3080,7 +3089,7 @@ class Mechanism_Base(Mechanism):
             else:
                 x_range = [-10.0, 10.0]
         x_space = np.linspace(x_range[0],x_range[1])
-        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
+        plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
 
     @tc.typecheck
