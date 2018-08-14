@@ -4072,7 +4072,6 @@ class SoftMax(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         if self.get_current_function_param(PER_ITEM):
-            print(self.get_current_function_param(PER_ITEM))
             assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
