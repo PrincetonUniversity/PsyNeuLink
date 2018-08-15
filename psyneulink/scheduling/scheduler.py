@@ -249,7 +249,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(my_scheduler.run())
 
     COMMENT:
         TODO: Add output for execution sequence
@@ -289,7 +289,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(my_scheduler.run())
 
     execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
 
@@ -444,22 +444,97 @@ class Scheduler(object):
         self.consideration_queue = dependencies
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
 
+    def _dfs_for_cycles(self, dependencies, node, loop_start_set, visited, loop):
+
+        if node in loop_start_set:
+            loop.append(node)
+            return loop
+
+        if visited is None:
+            visited = set()
+        visited.add(node)
+        loop.append(node)
+
+        if len(loop) == 2:
+            for next_node in dependencies[node]:
+                if next_node in loop_start_set:
+                    loop.append(next_node)
+                    return loop
+
+        for next_node in dependencies[node] - visited:
+            return self._dfs_for_cycles(dependencies, next_node, loop_start_set, visited, loop)
+
     def _call_toposort(self, graph):
 
         dependencies = {}
         removed_dependencies = {}
+        current_consideration_queue = []
+        flattened_cycles = {}
         for vert in graph.vertices:
-            dependencies[vert.component] = set()
-            removed_dependencies[vert.component] = set()
-            for parent in graph.get_parents_from_component(vert.component):
-                dependencies[vert.component].add(parent.component)
-                try:
-                    list(toposort(dependencies))
-                except ValueError:
-                    dependencies[vert.component].remove(parent.component)
-                    removed_dependencies[vert.component].add(parent.component)
+            if vert.component not in dependencies:
+                dependencies[vert.component] = set()
+
+            for child in graph.get_forward_children_from_component(vert.component):
+                if child.component not in dependencies:
+                    dependencies[child.component] = set()
+                dependencies[child.component].add(vert.component)
+
+                loop_start_set = {child.component}
+                for execution_set in current_consideration_queue:
+                    if child.component in execution_set:
+                        loop_start_set = execution_set
+                # visited_starting_nodes = set()
+                # self._build_loop_start_set(child.component, flattened_cycles, loop_start_set, visited_starting_nodes)
+                cycle = self._dfs_for_cycles(dependencies, vert.component, loop_start_set, None, [child.component])
+
+                if cycle:
+
+                    for i in range(len(cycle) - 1):
+                        node_a = cycle[i]
+                        node_b = cycle[i + 1]
+                        if node_a not in flattened_cycles:
+                            flattened_cycles[node_a] = []
+                        flattened_cycles[node_a].append(cycle)
+                        dependencies[node_a].remove(node_b)
+                        if node_a not in removed_dependencies:
+                            removed_dependencies[node_a] = set()
+                        removed_dependencies[node_a].add(node_b)
+
+                        if i != 0:
+                            for dependency in dependencies[cycle[0]]:
+                                dependencies[cycle[i]].add(dependency)
+                else:
+                    # necessary for the case where you want to add a projection that terminates at a node in a loop
+                    # AFTER the loop has already been created.
+                    # e.g. ORIGINAL:    A <--> B <--> C -- > D
+                    # NEW: new_node --> A <--> B <--> C -- > D
+                    visited_keys = set()
+                    self._connect_cycles(child.component, visited_keys, flattened_cycles, vert.component, dependencies)
+
+                current_consideration_queue = list(toposort(dependencies))
+
         return list(toposort(dependencies)), removed_dependencies
 
+    def _connect_cycles(self, original_key, visited_keys, flattened_cycles, new_source, dependencies):
+        if original_key in flattened_cycles:
+            if original_key in visited_keys:
+                return
+            cycles = flattened_cycles[original_key]
+            visited_keys.add(original_key)
+            for cycle in cycles:
+                for cycle_node in cycle:
+                    dependencies[cycle_node].add(new_source)
+                    self._connect_cycles(cycle_node, visited_keys, flattened_cycles, new_source, dependencies)
+
+    def _build_loop_start_set(self, starting_node, flattened_cycles, loop_start_set, visited_starting_nodes):
+        if starting_node in visited_starting_nodes:
+            return
+        visited_starting_nodes.add(starting_node)
+        if starting_node in flattened_cycles:
+            for cycle in flattened_cycles[starting_node]:
+                for node in cycle:
+                    loop_start_set.add(node)
+                    self._build_loop_start_set(node, flattened_cycles, loop_start_set, visited_starting_nodes)
     def _init_consideration_queue_from_graph(self, graph):
         self.consideration_queue, self.removed_dependencies = self._call_toposort(graph)
 

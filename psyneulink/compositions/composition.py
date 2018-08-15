@@ -196,7 +196,7 @@ class Vertex(object):
             the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
     '''
 
-    def __init__(self, component, parents=None, children=None):
+    def __init__(self, component, parents=None, children=None, feedback=None):
         self.component = component
         if parents is not None:
             self.parents = parents
@@ -206,6 +206,9 @@ class Vertex(object):
             self.children = children
         else:
             self.children = []
+
+        self.feedback = feedback
+        self.backward_sources = set()
 
     def __repr__(self):
         return '(Vertex {0} {1})'.format(id(self), self.component)
@@ -240,7 +243,7 @@ class Graph(object):
         g = Graph()
 
         for vertex in self.vertices:
-            g.add_vertex(Vertex(vertex.component))
+            g.add_vertex(Vertex(vertex.component, feedback=vertex.feedback))
 
         for i in range(len(self.vertices)):
             g.vertices[i].parents = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in self.vertices[i].parents]
@@ -248,13 +251,14 @@ class Graph(object):
 
         return g
 
-    def add_component(self, component):
+    def add_component(self, component, feedback=False):
         if component in [vertex.component for vertex in self.vertices]:
             logger.info('Component {1} is already in graph {0}'.format(component, self))
         else:
-            vertex = Vertex(component)
+            vertex = Vertex(component, feedback=feedback)
             self.comp_to_vertex[component] = vertex
             self.add_vertex(vertex)
+
 
     def add_vertex(self, vertex):
         if vertex in self.vertices:
@@ -316,6 +320,79 @@ class Graph(object):
             A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         '''
         return self.comp_to_vertex[component].children
+
+    def get_forward_children_from_component(self, component):
+        '''
+            Arguments
+            ---------
+
+            component : Component
+                the Component whose children will be returned
+
+            Returns
+            -------
+
+            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+        '''
+        forward_children = []
+        for child in self.comp_to_vertex[component].children:
+            if component not in self.comp_to_vertex[child.component].backward_sources:
+                forward_children.append(child)
+        return forward_children
+
+    def get_forward_parents_from_component(self, component):
+        '''
+            Arguments
+            ---------
+
+            component : Component
+                the Component whose children will be returned
+
+            Returns
+            -------
+
+            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+        '''
+        forward_parents = []
+        for parent in self.comp_to_vertex[component].parents:
+            if parent.component not in self.comp_to_vertex[component].backward_sources:
+                forward_parents.append(parent)
+        return forward_parents
+
+    def get_backward_children_from_component(self, component):
+        '''
+            Arguments
+            ---------
+
+            component : Component
+                the Component whose children will be returned
+
+            Returns
+            -------
+
+            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+        '''
+        backward_children = []
+        for child in self.comp_to_vertex[component].children:
+            if component in self.comp_to_vertex[child.component].backward_sources:
+                backward_children.append(child)
+        return backward_children
+
+    def get_backward_parents_from_component(self, component):
+        '''
+            Arguments
+            ---------
+
+            component : Component
+                the Component whose children will be returned
+
+            Returns
+            -------
+
+            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
+        '''
+
+        return list(self.comp_to_vertex[component].backward_sources)
 
 class Composition(object):
     '''
@@ -499,7 +576,7 @@ class Composition(object):
         self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
         self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
 
-    def add_projection(self, projection=None, sender=None, receiver=None):
+    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False):
         '''
 
             Adds a projection to the Composition, if it is not already added.
@@ -527,6 +604,9 @@ class Composition(object):
 
             receiver : Mechanism, Composition, or OutputState
                 the receiver of **projection**
+
+            feedback : Boolean
+                if False, any cycles containing this projection will be
         '''
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
@@ -584,7 +664,7 @@ class Composition(object):
 
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
-            self.graph.add_component(projection)
+            self.graph.add_component(projection, feedback=feedback)
 
             self.graph.connect_components(graph_sender, projection)
             self.graph.connect_components(projection, graph_receiver)
@@ -631,7 +711,7 @@ class Composition(object):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway):
+    def add_linear_processing_pathway(self, pathway, feedback=False):
         # First, verify that the pathway begins with a node
         if isinstance(pathway[0], (Mechanism, Composition)):
             self.add_c_node(pathway[0])
@@ -652,10 +732,11 @@ class Composition(object):
             if isinstance(pathway[c], (Mechanism, Composition)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(MappingProjection(
-                        sender=pathway[c - 1],
-                        receiver=pathway[c]
-                    ), pathway[c - 1], pathway[c])
+                    self.add_projection(MappingProjection(sender=pathway[c - 1],
+                                                          receiver=pathway[c]),
+                                        pathway[c - 1],
+                                        pathway[c],
+                                        feedback=feedback)
             # if the current item is a Projection
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -669,7 +750,7 @@ class Composition(object):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
-                    self.add_projection(proj, pathway[c - 1], pathway[c + 1])
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1], feedback=feedback)
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
@@ -732,6 +813,12 @@ class Composition(object):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
+        if len(self.scheduler_processing.consideration_queue) > 0:
+            for node in self.scheduler_processing.consideration_queue[0]:
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
+        if len(self.scheduler_processing.consideration_queue) > 0:
+            for node in self.scheduler_processing.consideration_queue[-1]:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             if graph.get_parents_from_component(node) == []:
@@ -789,7 +876,9 @@ class Composition(object):
         from the composition's full graph
         '''
         logger.debug('Updating processing graph')
+
         self._graph_processing = self.graph.copy()
+
         visited_vertices = set()
         next_vertices = []  # a queue
 
@@ -814,11 +903,14 @@ class Composition(object):
                         parent.children.remove(cur_vertex)
                         for child in cur_vertex.children:
                             child.parents.remove(cur_vertex)
+                            if cur_vertex.feedback:
+                                child.backward_sources.add(parent.component)
                             self._graph_processing.connect_vertices(parent, child)
 
                     for node in cur_vertex.parents + cur_vertex.children:
                         logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents, node.children))
                     logger.debug('Removing vertex {0}'.format(cur_vertex))
+
                     self._graph_processing.remove_vertex(cur_vertex)
 
                 visited_vertices.add(cur_vertex)
@@ -1281,9 +1373,12 @@ class Composition(object):
 
             if call_before_time_step:
                 call_before_time_step()
+
+            frozen_values = {}
+            new_values = {}
             # execute each node with EXECUTING in context
             for node in next_execution_set:
-
+                frozen_values[node] = node.output_values
                 if node in origin_nodes:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
                     # a recurrent projection on the first time step (meaning, before its node has executed)
@@ -1320,6 +1415,7 @@ class Composition(object):
                         node.execute(runtime_params=execution_runtime_params,
                                      context=ContextFlags.COMPOSITION)
 
+
                     for key in node._runtime_params_reset:
                         node._set_parameter_value(key, node._runtime_params_reset[key])
                     node._runtime_params_reset = {}
@@ -1338,7 +1434,15 @@ class Composition(object):
                             for input_state in node.input_states:
                             # clamp = None --> "turn off" input node
                                 self.input_CIM_states[input_state][1].value = 0
+                new_values[node] = node.output_values
 
+                for i in range(len(node.output_states)):
+                    node.output_states[i].set_value_without_logging(frozen_values[node][i])
+
+            for node in next_execution_set:
+
+                for i in range(len(node.output_states)):
+                    node.output_states[i].set_value_without_logging(new_values[node][i])
 
             if call_after_time_step:
                 call_after_time_step()
@@ -1380,6 +1484,7 @@ class Composition(object):
         call_after_trial=None,
         clamp_input=SOFT_CLAMP,
         targets=None,
+        initial_values=None,
         runtime_params=None
     ):
         '''
@@ -1428,6 +1533,10 @@ class Composition(object):
             call_after_trial : callable
                 will be called after each `TRIAL` is executed.
 
+            initial_values : Dict[Node: Node Value]
+                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
+                used before that node executes for the first time (usually due to recurrence or control).
+
             runtime_params : Dict[Node: Dict[Param: Tuple(Value, Condition)]]
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
@@ -1459,6 +1568,13 @@ class Composition(object):
 
         if termination_processing is None:
             termination_processing = self.termination_processing
+
+        if initial_values is not None:
+            for node in initial_values:
+                if node not in self.c_nodes:
+                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
+                                      format(node.name, self.name))
+
 
         self._analyze_graph()
 

@@ -4293,7 +4293,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 matrix: tc.optional(is_matrix) = None,
+                 matrix=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
