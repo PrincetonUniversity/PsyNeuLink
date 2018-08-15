@@ -17,17 +17,12 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.components.functions.function import Function_Base, Buffer, Integrator
-from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
+from psyneulink.components.functions.function import Buffer, Function_Base, Integrator
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.globals.keywords import \
-    COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, \
-    FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, NOISE, \
-    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, \
-    VALUE_FUNCTION, \
-    kwPreferenceSetName, kwProgressBarChar
+from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, NOISE, PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -71,11 +66,6 @@ class EVCAuxiliaryFunction(Function_Base):
     class ClassDefaults(Function_Base.ClassDefaults):
         variable = None
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-                               PARAMETER_STATE_PARAMS: None})
-
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -101,8 +91,6 @@ class EVCAuxiliaryFunction(Function_Base):
                          context=context,
                          function=function,
                          )
-
-        self.functionOutputType = None
 
 
 class ValueFunction(EVCAuxiliaryFunction):
