@@ -1162,7 +1162,7 @@ class EVCControlMechanism(ControlMechanism):
             description.
 
         """
-
+        print("running simulation")
         if self.value is None:
             # Initialize value if it is None
             self.value = np.empty(len(self.control_signals))

@@ -1512,7 +1512,6 @@ class Composition(object):
             predicted_input[origin_node] = prediction_mechanism.value
         return predicted_input
 
-
     def run(
         self,
         inputs=None,
@@ -1758,6 +1757,16 @@ class Composition(object):
 
         return self.results
 
+    def run_simulations(self, reinitialization_values, allocation_policies, context=None):
+        # (1) Update Predicted Inputs
+        # (2) For each allocation policy:
+        #           - Generate a new execution ID
+        #           - Set Control Signal values
+        #           - Run composition (pass in reinit values and predicted inputs)
+        #           - Add result to an outer list
+        # (3) Return list of all results
+        pass
+    
     def run_simulation(self, simulation_inputs, context=None):
 
         self.context.execution_phase = ContextFlags.SIMULATION
