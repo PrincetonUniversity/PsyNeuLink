@@ -92,10 +92,10 @@ Class Reference
 
 """
 
+import aenum
 import warnings
 
 from collections import namedtuple
-from enum import IntEnum
 from uuid import UUID
 
 import typecheck as tc
@@ -119,7 +119,7 @@ class ContextError(Exception):
         self.error_value = error_value
 
 
-class ContextFlags(IntEnum):
+class ContextFlags(aenum.IntFlag):
     """Used to identify the initialization and execution status of a `Component <Component>`.
 
     Used when a Component's `value <Component.value>` or one of its attributes is being accessed.
@@ -264,7 +264,7 @@ SOURCE_FLAGS = {ContextFlags.CONSTRUCTOR,
                 ContextFlags.COMPOSITION}
 
 # For backward compatibility
-class ContextStatus(IntEnum):
+class ContextStatus(aenum.IntFlag):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
