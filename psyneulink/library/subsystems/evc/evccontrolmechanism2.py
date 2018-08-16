@@ -151,7 +151,7 @@ Prediction Mechanisms
 ^^^^^^^^^^^^^^^^^^^^^
 
 These are used to provide input to the `system <EVCControlMechanism.system>` if the EVCControlMechanism's
-`function <EVCControlMechanism.function>` (`ControlSignalGridSearch`) `simulates its execution
+`function <EVCControlMechanism.function>` (`ControlSignalGridSearch2`) `simulates its execution
 <EVCControlMechanism_Default_Configuration>` to evaluate the EVC for a given `allocation_policy`.  When an
 EVCControlMechanism is created, a prediction Mechanism is created for each `ORIGIN` Mechanism in its `system
 <EVCControlMechanism.system>`, and are listed in the EVCControlMechanism's `prediction_mechanisms
@@ -195,7 +195,7 @@ The prediction mechanisms for an EVCControlMechanism are listed in its `predicti
 *Function*
 ~~~~~~~~~~
 
-By default, the primary `function <EVCControlMechanism.function>` is `ControlSignalGridSearch` (see
+By default, the primary `function <EVCControlMechanism.function>` is `ControlSignalGridSearch2` (see
 `EVCControlMechanism_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the
 performance of its `system <EVCControlMechanism.system>` to identify an `allocation_policy
 <EVCControlMechanism.allocation_policy>` that yields the highest `EVC <EVCControlMechanism_EVC>`.  However,
@@ -220,7 +220,7 @@ implements (for the next `TRIAL` of execution) the one that generates the maximu
 This is carried out by the EVCControlMechanism's default `function <EVCControlMechanism.function>` and three
 auxiliary functions, as described below.
 
-The default `function <EVCControlMechanism.function>` of an EVCControlMechanism is `ControlSignalGridSearch`. It
+The default `function <EVCControlMechanism.function>` of an EVCControlMechanism is `ControlSignalGridSearch2`. It
 identifies the `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting an exhaustive
 search over every possible `allocation_policy`— that is, all combinations of `allocation <ControlSignal.allocation>`
 values for its `ControlSignals <EVCControlMechanism_ControlSignals>`, where the `allocation
@@ -393,7 +393,7 @@ from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch2, ValueFunction2, PredictionMechanism
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -413,8 +413,8 @@ class EVCControlMechanism(ControlMechanism):
     system=True,                                                       \
     objective_mechanism=None,                                          \
     prediction_mechanisms=PredictionMechanism,                         \
-    function=ControlSignalGridSearch                                   \
-    value_function=ValueFunction,                                      \
+    function=ControlSignalGridSearch2                                   \
+    value_function=ValueFunction2,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
     save_all_values_and_policies=:keyword:`False`,                     \
@@ -513,7 +513,7 @@ class EVCControlMechanism(ControlMechanism):
             other forms of specification must be used.
         COMMENT
 
-    function : function or method : ControlSignalGridSearch
+    function : function or method : ControlSignalGridSearch2
         specifies the function used to determine the `allocation_policy` for the next execution of the
         EVCControlMechanism's `system <EVCControlMechanism.system>` (see `function <EVCControlMechanism.function>` for details).
 
@@ -597,9 +597,9 @@ class EVCControlMechanism(ControlMechanism):
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
-    function : function : default ControlSignalGridSearch
+    function : function : default ControlSignalGridSearch2
         determines the `allocation_policy` to use for the next round of the System's
-        execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
+        execution. The default function, `ControlSignalGridSearch2`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its ControlSignals (and contained in its
         `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
         combination, evaluating the result using `value_function`, and returning the `allocation_policy` that yielded
@@ -633,11 +633,11 @@ class EVCControlMechanism(ControlMechanism):
             controller.combine_outcome_and_cost_function - combines outcomes and costs
     COMMENT
 
-    value_function : function : default ValueFunction
+    value_function : function : default ValueFunction2
         calculates the `EVC <EVCControlMechanism_EVC>` for a given `allocation_policy`.  It takes as its arguments an
         `EVCControlMechanism`, an **outcome** value and a list or ndarray of **costs**, uses these to calculate an EVC,
         and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
-        used to calculate the EVC.  The default, `ValueFunction`,  calls the EVCControlMechanism's `cost_function
+        used to calculate the EVC.  The default, `ValueFunction2`,  calls the EVCControlMechanism's `cost_function
         <EVCControlMechanism.cost_function>` to aggregate the value of the costs, and then calls its
         `combine_outcome_and_costs <EVCControlMechanism.combine_outcome_and_costs>` to calculate the EVC from the outcome
         and aggregated cost (see `EVCControlMechanism_Default_Configuration` for additional details).  A custom
@@ -742,7 +742,7 @@ class EVCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class ClassDefaults(ControlMechanism.ClassDefaults):
-        function = ControlSignalGridSearch
+        function = ControlSignalGridSearch2
 
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
@@ -755,8 +755,8 @@ class EVCControlMechanism(ControlMechanism):
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 function=ControlSignalGridSearch,
-                 value_function=ValueFunction,
+                 function=ControlSignalGridSearch2,
+                 value_function=ValueFunction2,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
@@ -1007,15 +1007,9 @@ class EVCControlMechanism(ControlMechanism):
             * get `allocation_samples` for each ControlSignal in `control_signals`
             * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
               which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-        Call self.function -- default is ControlSignalGridSearch
+        Call self.function -- default is ControlSignalGridSearch2
         Return an allocation_policy
         """
-
-        if context != ContextFlags.PROPERTY:
-            self._update_predicted_input()
-        # self.system._cache_state()
-
-        # CONSTRUCT SEARCH SPACE
 
         control_signal_sample_lists = []
         control_signals = self.control_signals
@@ -1050,9 +1044,9 @@ class EVCControlMechanism(ControlMechanism):
     @value_function.setter
     def value_function(self, assignment):
         if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(assignment)
-        elif assignment is ValueFunction:
-            self._value_function = ValueFunction()
+            self._value_function = ValueFunction2(assignment)
+        elif assignment is ValueFunction2:
+            self._value_function = ValueFunction2()
         else:
             self._value_function = assignment
 

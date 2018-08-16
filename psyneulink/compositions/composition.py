@@ -595,6 +595,7 @@ class Composition(object):
 
     def add_controller(self, node):
         self.controller = node
+        node.system = self
         # self.add_c_node(node)
 
     def add_control_mechanism(self, control_mechanism):
@@ -1507,6 +1508,10 @@ class Composition(object):
             predicted_input[origin_node] = prediction_mechanism.value
         return predicted_input
 
+    def reinitialize(self, values):
+        for i in range(self.stateful_nodes):
+            self.stateful_nodes[i].reinitialize(values[i])
+
     def run(
         self,
         inputs=None,
@@ -1525,6 +1530,7 @@ class Composition(object):
         clamp_input=SOFT_CLAMP,
         targets=None,
         initial_values=None,
+        reinitialize_values=None,
         runtime_params=None,
         context=None
     ):
@@ -1616,6 +1622,11 @@ class Composition(object):
                     raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
                                       format(node.name, self.name))
 
+        if reinitialize_values is None:
+            reinitialize_values = {}
+
+        for node in reinitialize_values:
+            node.reinitialize(*reinitialize_values[node])
 
         self._analyze_graph()
 
@@ -1752,9 +1763,8 @@ class Composition(object):
 
         return self.results
 
-    def run_simulations(self, allocation_policies, num_trials, context=None):
-        self.update_predicted_input()
-        stored_state = {}
+    def _save_state(self):
+        saved_state = {}
         for node in self.stateful_nodes + self.prediction_mechanisms:
             # "save" the current state of each stateful mechanism by storing the values of each of its stateful
             # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
@@ -1773,30 +1783,35 @@ class Composition(object):
                         for attr in node.integrator_function.stateful_attributes:
                             reinitialization_value.append(getattr(node.integrator_function, attr))
 
-            stored_state[node] = reinitialization_value
+            saved_state[node] = reinitialization_value
 
+    def run_simulations(self, allocation_policies, runtime_params=None, context=None):
+        predicted_input = self.update_predicted_input()
+        num_trials = len(predicted_input[0])
+        reinitialize_values = self._save_state()
+
+        outcome_list = []
         for allocation_policy in allocation_policies:
             self.controller.apply_control_signal_values(allocation_policy)
+            execution_id = self._get_unique_id()
+            allocation_policy_outcomes = []
             for i in range(num_trials):
-                self.run(num)
+                print("running simulation")
+                inputs = {}
+                for node in predicted_input:
+                    inputs[node] = predicted_input[node][i]
+                outcome = self.run(inputs=inputs,
+                                   reinitialize_values=reinitialize_values,
+                                   execution_id=execution_id,
+                                   runtime_params=runtime_params,
+                                   context=context)
+                allocation_policy_outcomes.append(outcome)
+            outcome_list.append(allocation_policy_outcomes)
 
-        # (1) Update Predicted Inputs
-        # (2) For each allocation policy:
-        #           - Generate a new execution ID
-        #           - Set Control Signal values
-        #           - Run composition (pass in reinit values and predicted inputs)
-        #           - Add result to an outer list
-        # (3) Return list of all results
-        pass
+        for node in reinitialize_values:
+            node.reinitialize(*reinitialize_values[node])
 
-    def run_simulation(self, simulation_inputs, context=None):
-
-        self.context.execution_phase = ContextFlags.SIMULATION
-        new_execution_id = self._get_unique_id()
-        self._assign_execution_ids(new_execution_id)
-        print("running simulation")
-        self.run(inputs=simulation_inputs,
-                 execution_id=new_execution_id)
+        return outcome_list
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
