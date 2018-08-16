@@ -3645,4 +3645,36 @@ class TestInputSpecifications:
         assert np.allclose(C.output_values, [[0.]])
         assert np.allclose(D.output_values, [[4.]])
 
+class TestProperties:
 
+    def test_stateful_nodes(self):
+        A = TransferMechanism(name='A')
+        B1 = TransferMechanism(name='B1',
+                               integrator_mode=True)
+        B2 = IntegratorMechanism(name='B2')
+        C = TransferMechanism(name='C')
+
+
+        inner_composition1 = Composition(name="inner-composition-1")
+        inner_composition1.add_linear_processing_pathway([A, B1])
+
+        inner_composition2 = Composition(name="inner-composition2")
+        inner_composition2.add_linear_processing_pathway([A, B2])
+
+        outer_composition1 = Composition(name="outer-composition-1")
+        outer_composition1.add_c_node(inner_composition1)
+        outer_composition1.add_c_node(C)
+        outer_composition1.add_projection(sender=inner_composition1, receiver=C)
+
+        outer_composition2 = Composition(name="outer-composition-2")
+        outer_composition2.add_c_node(inner_composition2)
+        outer_composition2.add_c_node(C)
+        outer_composition2.add_projection(sender=inner_composition2, receiver=C)
+
+        expected_stateful_nodes = {inner_composition1: [B1],
+                                   inner_composition2: [B2],
+                                   outer_composition1: [inner_composition1],
+                                   outer_composition2: [inner_composition2]}
+
+        for comp in expected_stateful_nodes:
+            assert comp.stateful_nodes == expected_stateful_nodes[comp]

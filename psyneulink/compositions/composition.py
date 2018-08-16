@@ -61,7 +61,7 @@ from psyneulink.components.mechanisms.processing.integratormechanism import Inte
 from psyneulink.library.subsystems.evc.evcauxiliary import PredictionMechanism
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.functions.function import InterfaceStateMap
+from psyneulink.components.functions.function import InterfaceStateMap, Integrator
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import PREDICTION_MECHANISM, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
@@ -1496,12 +1496,7 @@ class Composition(object):
         # control phase
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
             if self.controller:
-                simulation_input_dict = self.update_predicted_input()
-                search_space = self.controller.before_simulation(context=ContextFlags.PROCESSING)
-                for allocation_vector in search_space:
-                    self.run_simulation(simulation_inputs=simulation_input_dict,
-                                        context=ContextFlags.SIMULATION)
-                # self.controller.composition_execute(context=ContextFlags.PROCESSING)
+                self.controller.execute(context=context)
 
         return output_values
 
@@ -1757,7 +1752,34 @@ class Composition(object):
 
         return self.results
 
-    def run_simulations(self, reinitialization_values, allocation_policies, context=None):
+    def run_simulations(self, allocation_policies, num_trials, context=None):
+        self.update_predicted_input()
+        stored_state = {}
+        for node in self.stateful_nodes + self.prediction_mechanisms:
+            # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+            # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+            # the reinitialize method on each stateful mechanism.
+            reinitialization_value = []
+
+            if isinstance(node, Composition):
+                # TBI: Store state for a Composition, Reinitialize Composition
+                pass
+            elif isinstance(node, Mechanism):
+                if isinstance(node.function_object, Integrator):
+                    for attr in node.function_object.stateful_attributes:
+                        reinitialization_value.append(getattr(node.function_object, attr))
+                elif hasattr(node, "integrator_function"):
+                    if isinstance(node.integrator_function, Integrator):
+                        for attr in node.integrator_function.stateful_attributes:
+                            reinitialization_value.append(getattr(node.integrator_function, attr))
+
+            stored_state[node] = reinitialization_value
+
+        for allocation_policy in allocation_policies:
+            self.controller.apply_control_signal_values(allocation_policy)
+            for i in range(num_trials):
+                self.run(num)
+
         # (1) Update Predicted Inputs
         # (2) For each allocation policy:
         #           - Generate a new execution ID
@@ -1766,7 +1788,7 @@ class Composition(object):
         #           - Add result to an outer list
         # (3) Return list of all results
         pass
-    
+
     def run_simulation(self, simulation_inputs, context=None):
 
         self.context.execution_phase = ContextFlags.SIMULATION
@@ -1987,6 +2009,29 @@ class Composition(object):
             return [input_state.instance_defaults.value for input_state in self.input_CIM.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
+
+    @property
+    def stateful_nodes(self):
+        """
+        List of all nodes in the system that are currently marked as stateful. For Mechanisms, statefulness is
+        determined by checking whether node.has_initializers is True. For Compositions, statefulness is determined
+        by checking whether the
+
+        Returns
+        -------
+        all stateful nodes in the system : List[Node]
+
+        """
+
+        stateful_nodes = []
+        for node in self.c_nodes:
+            if isinstance(node, Composition):
+                if len(node.stateful_nodes) > 0:
+                    stateful_nodes.append(node)
+            elif node.has_initializers:
+                stateful_nodes.append(node)
+
+        return stateful_nodes
 
 
     @property
