@@ -9,7 +9,8 @@ from psyneulink.components.functions.function import BogaczEtAl, Linear
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.subsystems.evc.evccontrolmechanism2 import EVCControlMechanism2
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.compositions.composition import Composition
 
 
@@ -174,7 +175,14 @@ class TestControllers:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.add_c_node(Reward)
-        comp.add_controller(EVCControlMechanism(name="controller"))
+        comp.add_controller(EVCControlMechanism2(name="controller",
+                                                 control_signals=[("drift_rate", Decision), ("threshold", Decision)],
+                                                 objective_mechanism=ObjectiveMechanism(monitored_output_states=[
+            Reward,
+            Decision.PROBABILITY_UPPER_THRESHOLD,
+            Decision.RESPONSE_TIME
+        ])),
+                                            )
         comp.enable_controller = True
         # TBI: comp.monitor for control
 

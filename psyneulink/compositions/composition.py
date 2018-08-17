@@ -476,7 +476,7 @@ class Composition(object):
 
     def _instantiate_prediction_mechanisms(self, context=None):
 
-        if self.controller and self.enable_controller:
+        if self.controller:
             if hasattr(self, "prediction_mechanisms"):
                 for mechanism in self.prediction_mechanisms:
                     del mechanism
@@ -484,7 +484,6 @@ class Composition(object):
             self.prediction_projections = {}
             self.prediction_origin_pairs = {}
             self.origin_prediction_pairs = {}
-
             for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
                 new_prediction_mechanism = IntegratorMechanism(name=node.name + " " + PREDICTION_MECHANISM,
                                                                default_variable=node.external_input_values)
@@ -503,6 +502,8 @@ class Composition(object):
     def _execute_prediction_mechanisms(self, context=None):
 
         for prediction_mechanism in self.prediction_mechanisms:
+            for proj in prediction_mechanism.path_afferents:
+                proj.context.execution_phase = ContextFlags.PROCESSING
             prediction_mechanism.execute(context=context)
 
     @property
@@ -596,7 +597,8 @@ class Composition(object):
     def add_controller(self, node):
         self.controller = node
         node.system = self
-        # self.add_c_node(node)
+        self._analyze_graph()
+
 
     def add_control_mechanism(self, control_mechanism):
 
@@ -894,10 +896,6 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
 
-        # toposorted_graph = self.scheduler_processing._call_toposort(graph)[0]
-        # if len(toposorted_graph) > 0:
-        #     for node in toposorted_graph[-1]:
-        #         self._add_c_node_role(node, CNodeRole.TERMINAL)
         for node_role_pair in self.required_c_node_roles:
             self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
@@ -1261,6 +1259,9 @@ class Composition(object):
         # self.target_CIM._execution_id = execution_id
 
         self._execution_id = execution_id
+
+        for prediction_mechanism in self.prediction_mechanisms:
+            prediction_mechanism._execution_id = execution_id
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -1495,7 +1496,9 @@ class Composition(object):
             output_values.append(self.output_CIM.output_states[i].value)
 
         # control phase
-        if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+        if self.context.execution_phase != ContextFlags.INITIALIZING \
+                and self.context.execution_phase != ContextFlags.SIMULATION \
+                and self.enable_controller:
             if self.controller:
                 self.controller.execute(context=context)
 
@@ -1628,7 +1631,8 @@ class Composition(object):
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
 
-        self._analyze_graph()
+        if self.context.execution_phase != ContextFlags.SIMULATION:
+            self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
 
@@ -1784,27 +1788,38 @@ class Composition(object):
                             reinitialization_value.append(getattr(node.integrator_function, attr))
 
             saved_state[node] = reinitialization_value
-
+        return saved_state
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
         predicted_input = self.update_predicted_input()
-        num_trials = len(predicted_input[0])
+
+        num_trials = 1
         reinitialize_values = self._save_state()
 
         outcome_list = []
         for allocation_policy in allocation_policies:
-            self.controller.apply_control_signal_values(allocation_policy)
+            self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
             execution_id = self._get_unique_id()
             allocation_policy_outcomes = []
             for i in range(num_trials):
-                print("running simulation")
                 inputs = {}
                 for node in predicted_input:
                     inputs[node] = predicted_input[node][i]
-                outcome = self.run(inputs=inputs,
-                                   reinitialize_values=reinitialize_values,
-                                   execution_id=execution_id,
-                                   runtime_params=runtime_params,
-                                   context=context)
+
+                self.context.execution_phase = ContextFlags.SIMULATION
+                # ASSIGN EXECUTION ID
+                self.run(inputs=inputs,
+                         reinitialize_values=reinitialize_values,
+                         execution_id=execution_id,
+                         runtime_params=runtime_params,
+                         context=context)
+                self.controller.objective_mechanism._execution_id = execution_id
+                self.controller.objective_mechanism.execute()
+                outcome = self.controller.objective_mechanism.value
+                print("outcome = ", outcome)
+                # for state in monitored_states:
+                #     outcome.append(state.value)
+
+                self.context.execution_phase = ContextFlags.PROCESSING
                 allocation_policy_outcomes.append(outcome)
             outcome_list.append(allocation_policy_outcomes)
 

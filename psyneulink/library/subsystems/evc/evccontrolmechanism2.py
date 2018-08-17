@@ -408,7 +408,7 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
-class EVCControlMechanism(ControlMechanism):
+class EVCControlMechanism2(ControlMechanism):
     """EVCControlMechanism(                                            \
     system=True,                                                       \
     objective_mechanism=None,                                          \
@@ -945,6 +945,8 @@ class EVCControlMechanism(ControlMechanism):
 
     def apply_control_signal_values(self, control_signal_values, runtime_params, context):
         for i in range(len(self.control_signals)):
+            if self.value is None:
+                self.value = self.instance_defaults.value
             self.value[i] = np.atleast_1d(control_signal_values[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
