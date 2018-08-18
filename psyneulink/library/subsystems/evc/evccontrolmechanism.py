@@ -1119,7 +1119,7 @@ class EVCControlMechanism(ControlMechanism):
                         reinitialize_values=reinitialize_values,
                         animate=False,
                         context=context)
-        self.system.context.execution_phase = ContextFlags.IDLE
+        self.system.context.execution_phase = ContextFlags.CONTROL
 
         # Restore System attributes
         self.system._animate = animate_buffer

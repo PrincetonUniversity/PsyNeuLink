@@ -355,7 +355,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # function_param = function.params[modulated_param]
         # function_param_value = function.params[function_param]
         # gating_projection_function = self.function.__self__
-        # gating_projection_function.functionOutputType = type(function_param_value)
+        # gating_projection_function.output_type = type(function_param_value)
         # # ASSIGN FUNCTION TYPE TO FUNCTION HERE
 
         super()._instantiate_receiver(context=context)

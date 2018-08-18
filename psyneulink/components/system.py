@@ -472,11 +472,11 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import \
     AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
-from psyneulink.scheduling.condition import AtTimeStep, Never
+from psyneulink.scheduling.condition import AtPass, AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
-    'EXECUTION_SET', 'INPUT_ARRAY',
+    'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
     'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
     'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
@@ -532,15 +532,18 @@ EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
 MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
+# show_graph options
 SHOW_CONTROL = 'show_control'
 SHOW_LEARNING = 'show_learning'
 
+# Animation Keywords
 NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 SHOW = 'show'
+INITIAL_FRAME = 'INITIAL_FRAME'
 
 EXECUTION_SET = 'EXECUTION_SET'
 
@@ -952,11 +955,9 @@ class System(System_Base):
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
+        # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
-
-        if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1963,6 +1964,21 @@ class System(System_Base):
         # Instantiate TargetInputStates
         self._instantiate_target_inputs(context=context)
 
+        # Assign scheduler for _execute_learning:
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        # Assign conditions to scheduler_learning:
+        #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
+        condition_set = {}
+        for item in self.learning_execution_list:
+            if isinstance(item, MappingProjection):
+                condition_set[item] = AtPass(1)
+            else:
+                condition_set[item] = AtPass(0)
+        self.scheduler_learning.add_condition_set(condition_set)
+
+
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
@@ -2748,6 +2764,10 @@ class System(System_Base):
             self._report_system_initiation()
 
 
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+            self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif')
+
         # EXECUTE MECHANISMS
 
         # TEST PRINT:
@@ -2785,6 +2805,7 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.context.execution_phase = ContextFlags.CONTROL
             self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
@@ -2804,6 +2825,7 @@ class System(System_Base):
                     raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
                                       "attribute (\'{}\') encountered for it or one of the methods it calls."
                                       .format(self.controller.name, self.name, error_msg.args[0]))
+            self.context.execution_phase = ContextFlags.IDLE
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2907,11 +2929,6 @@ class System(System_Base):
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-        # if isinstance(self.targets, function_type):
-        #     self.current_targets = self.targets()
-        #     for i in range(len(self.target_mechanisms)):
-        #         self.target_input_states[i].value = self.current_targets[i]
 
         if not hasattr(self, "target"):
             self.target = self.targets
@@ -2929,50 +2946,53 @@ class System(System_Base):
             for i in range(len(self.target_mechanisms)):
                 self.target_input_states[i].value = self.current_targets[i]
 
-        # NEXT, execute all components involved in learning
+        # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
             raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
+
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
-
 
             if (not self._animate is False and
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                mechs = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
-                self.show_graph(active_items=mechs, **self._animate, output_fmt='gif')
+                # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
+                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif')
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-                if isinstance(component, MappingProjection):
-                    continue
-
-                params = None
-
-                component_type = component.componentType
-
-                processes = list(component.processes.keys())
-
-                # Sort for consistency of reporting:
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                process_names = list(p.name for p in process_keys_sorted)
-
-                context_str = str("{} | {}: {} [in processes: {}]".
-                                  format(context,
-                                         component_type,
-                                         component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
-
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = context_str
 
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(runtime_params=params, context=context)
+                if isinstance(component, Mechanism):
+                    params = None
+
+                    component_type = component.componentType
+
+                    processes = list(component.processes.keys())
+
+                    # Sort for consistency of reporting:
+                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    process_names = list(p.name for p in process_keys_sorted)
+
+                    context_str = str("{} | {}: {} [in processes: {}]".
+                                      format(context,
+                                             component_type,
+                                             component.name,
+                                             re.sub(r'[\[,\],\n]','',str(process_names))))
+                    component.context.string = context_str
+
+                    # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                    component.execute(runtime_params=params, context=context)
+
+                elif isinstance(component, MappingProjection):
+                    processes = list(component.sender.owner.processes.keys())
+                    component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+                                                                                 component.name, self.name)
+                    component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -2980,56 +3000,13 @@ class System(System_Base):
                     if (self._animate_unit is COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                             self.show_graph(active_items=component, **self._animate, output_fmt='gif')
-                self._component_execution_count += 1
 
-                # # TEST PRINT LEARNING:
-                # print ("EXECUTING LEARNING UPDATES: ", component.name)
-
-        # THEN update all MappingProjections
-        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
-            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
-
-            if (not self._animate is False and
-                    self._animate_unit is EXECUTION_SET and
-                    SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                mapping_projs = [proj for proj in next_execution_set if isinstance(proj, MappingProjection)]
-                self.show_graph(active_items=mapping_projs, **self._animate, output_fmt='gif')
-
-            for component in next_execution_set:
-                logger.debug('\tRunning component {0}'.format(component))
-
-                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                    continue
-                if not isinstance(component, MappingProjection):
-                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
-
-                component_type = "mappingProjection"
-                processes = list(component.sender.owner.processes.keys())
-
-
-                # Sort for consistency of reporting:
-                # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                # process_names = list(p.name for p in process_keys_sorted)
-                #
-                # component.context.string = str("{} | {}: {} [in processes: {}]".
-                #                   format(context,
-                #                          component_type,
-                #                          component.name,
-                #                          re.sub(r'[\[,\],\n]','',str(process_names))))
-                component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                             component.name, self.name)
-
-                component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-
-
-                if not self._animate is False:
-                    if (self._animate_unit is COMPONENT and
-                            SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                        self.show_graph(active_items=component, **self._animate, output_fmt='gif')
                 self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
+
+                # # TEST PRINT LEARNING:
+                # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
                 # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
@@ -3185,7 +3162,6 @@ class System(System_Base):
         .. figure:: _static/EVC_Gratton_movie.gif
            :alt: Animation of System in EVC Gratton example script
            :scale: 150 %
-
 
         Returns
         -------
@@ -4695,12 +4671,14 @@ class System(System_Base):
 
         if not active_items:
             active_items = []
+        elif active_items is INITIAL_FRAME:
+            active_items = [INITIAL_FRAME]
         elif not isinstance(active_items, Iterable):
             active_items = [active_items]
         elif not isinstance(active_items, list):
             active_items = list(active_items)
         for item in active_items:
-            if not isinstance(item, Component):
+            if not isinstance(item, Component) and item is not INITIAL_FRAME:
                 raise SystemError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
                                   format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
@@ -4881,20 +4859,47 @@ class System(System_Base):
 
         # Generate images for animation
         elif output_fmt == 'gif':
-            if self.active_item_rendered:
+            if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + \
-                         repr(self._component_execution_count) + '-'
-                image_path = self._animate_directory + '/' + image_filename + '.gif'
+                if INITIAL_FRAME in active_items:
+                    time_string = ''
+                    phase_string = ''
+                elif self.context.execution_phase == ContextFlags.PROCESSING:
+                    # time_string = repr(self.scheduler_processing.clock.simple_time)
+                    time = self.scheduler_processing.clock.time
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                        format(time.run, time.trial, time.pass_, time.time_step)
+                    phase_string = 'Processing Phase - '
+                elif self.context.execution_phase == ContextFlags.LEARNING:
+                    time = self.scheduler_learning.clock.time
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                        format(time.run, time.trial, time.pass_, time.time_step)
+                    phase_string = 'Learning Phase - '
+                elif self.context.execution_phase == ContextFlags.CONTROL:
+                    time_string = ''
+                    phase_string = 'Control phase'
+                else:
+                    raise SystemError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
+                G.attr(label=label)
+                G.attr(labelloc='b')
+                G.attr(fontname='Helvetica')
+                G.attr(fontsize='14')
+                if INITIAL_FRAME in active_items:
+                    index = '-'
+                else:
+                    index = repr(self._component_execution_count)
+                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
+                image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
                          cleanup=True,
                          # view=True
                          )
                 # Append gif to self._animation
-                image = Image.open(image_path)
+                image = Image.open(image_file)
                 if not self._save_images:
-                    remove(image_path)
+                    remove(image_file)
                 if not hasattr(self, '_animation'):
                     self._animation = [image]
                 else:
