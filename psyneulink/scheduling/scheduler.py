@@ -466,13 +466,20 @@ class Scheduler(object):
 
     def _call_toposort(self, graph):
 
-        dependencies = {}
-        removed_dependencies = {}
-        current_consideration_queue = []
-        flattened_cycles = {}
+        dependencies = {}                   # stores  a modified version of the graph in which cycles are "flattened"
+        removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
+        flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
+        current_consideration_queue = []    # stores a toposorted list of the current dependencies dict
+
+        # Loop through the existing composition graph, considering "forward" projections only
+        # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
         for vert in graph.vertices:
             if vert.component not in dependencies:
                 dependencies[vert.component] = set()
+
+            # use "get_forward_children_from_component" to ignore any projections that were marked as "feedback"
+            # "feedback" projections, we've already determined, happen after all forward projections, but when "forward"
+            # projections cause cycles, we need to execute them all at once
 
             for child in graph.get_forward_children_from_component(vert.component):
                 if child.component not in dependencies:
@@ -483,12 +490,15 @@ class Scheduler(object):
                 for execution_set in current_consideration_queue:
                     if child.component in execution_set:
                         loop_start_set = execution_set
-                # visited_starting_nodes = set()
-                # self._build_loop_start_set(child.component, flattened_cycles, loop_start_set, visited_starting_nodes)
+
+                # if the new dependency created a cycle, return that cycle
                 cycle = self._dfs_for_cycles(dependencies, vert.component, loop_start_set, None, [child.component])
 
                 if cycle:
-
+                    # loop over all nodes in the cycle in order to:
+                    # (1) store the node: cycle pair in the flattened cycles dict
+                    # (2) remove the dependencies that created the cycle
+                    # (3) copy the dependencies of the node that "started" the cycle onto all other cycle nodes
                     for i in range(len(cycle) - 1):
                         node_a = cycle[i]
                         node_b = cycle[i + 1]
@@ -508,6 +518,7 @@ class Scheduler(object):
                     # AFTER the loop has already been created.
                     # e.g. ORIGINAL:    A <--> B <--> C -- > D
                     # NEW: new_node --> A <--> B <--> C -- > D
+                    # (otherwise, the order in which a user adds components to a composition would affect the graph)
                     visited_keys = set()
                     self._connect_cycles(child.component, visited_keys, flattened_cycles, vert.component, dependencies)
 
@@ -526,15 +537,6 @@ class Scheduler(object):
                     dependencies[cycle_node].add(new_source)
                     self._connect_cycles(cycle_node, visited_keys, flattened_cycles, new_source, dependencies)
 
-    def _build_loop_start_set(self, starting_node, flattened_cycles, loop_start_set, visited_starting_nodes):
-        if starting_node in visited_starting_nodes:
-            return
-        visited_starting_nodes.add(starting_node)
-        if starting_node in flattened_cycles:
-            for cycle in flattened_cycles[starting_node]:
-                for node in cycle:
-                    loop_start_set.add(node)
-                    self._build_loop_start_set(node, flattened_cycles, loop_start_set, visited_starting_nodes)
     def _init_consideration_queue_from_graph(self, graph):
         self.consideration_queue, self.removed_dependencies = self._call_toposort(graph)
 
