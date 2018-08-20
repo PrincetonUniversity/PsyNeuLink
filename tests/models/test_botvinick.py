@@ -134,6 +134,8 @@ def test_botvinick_model(benchmark, mode):
     comp.add_mechanism(response_layer)
 
     # Add projections
+    comp.add_projection(task_input_layer, task_input_weights, task_layer)
+
     # Color process
     comp.add_projection(colors_input_layer, color_input_weights, colors_hidden_layer)
     comp.add_projection(colors_hidden_layer, color_response_weights, response_layer)
@@ -145,12 +147,10 @@ def test_botvinick_model(benchmark, mode):
     comp.add_projection(response_layer, response_word_weights, words_hidden_layer)
 
     # Color task process
-    comp.add_projection(task_input_layer, task_input_weights, task_layer)
     comp.add_projection(task_layer, task_color_weights, colors_hidden_layer)
     comp.add_projection(colors_hidden_layer, color_task_weights, task_layer)
 
     # Word task process
-    comp.add_projection(task_input_layer, task_input_weights, task_layer)
     comp.add_projection(task_layer, task_word_weights, words_hidden_layer)
     comp.add_projection(words_hidden_layer, word_task_weights, task_layer)
 
