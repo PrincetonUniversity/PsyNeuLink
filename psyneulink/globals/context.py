@@ -180,6 +180,7 @@ class ContextFlags(IntEnum):
 
     PROCESS =   1<<15     # 32768
 
+    """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | PROPERTY | COMPOSITION | PROCESS
     NONE = ~SOURCE_MASK
 
@@ -254,7 +255,8 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
 EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
-                         ContextFlags.SIMULATION}
+                         ContextFlags.SIMULATION
+                         }
 
 SOURCE_FLAGS = {ContextFlags.CONSTRUCTOR,
                 ContextFlags.COMMAND_LINE,

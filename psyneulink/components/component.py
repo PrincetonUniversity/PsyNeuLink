@@ -2736,7 +2736,6 @@ class Component(object):
     def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
 
         # GET/SET CONTEXT
-
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2892,6 +2891,9 @@ class Component(object):
         else:
             raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
+
+    def set_value_without_logging(self, assignment):
+        self._value = assignment
 
     @property
     def params(self):

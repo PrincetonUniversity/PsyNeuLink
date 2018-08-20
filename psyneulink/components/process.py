@@ -238,7 +238,7 @@ the `function <LearningMechanism.function>` of the `LearningMechanism` for the M
 
 The following Components are created for each learning sequence specified for a Process (see figure below):
 
-    * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_mechanisms <Process.target_mechanisms>`
+    * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_nodes <Process.target_nodes>`
       attribute), that is used to `calculate an error signal <ComparatorMechanism_Function>` for the sequence, by
       comparing `a specified output <LearningMechanism_Activation_Output>` of the last Mechanism in the learning
       sequence (received in the ComparatorMechanism's *SAMPLE* `InputState <ComparatorMechanism_Structure>`) with the
@@ -332,7 +332,7 @@ and `run <Process.run>` methods: a  list or ndarray of **initial_values**, and a
 values. The **initial_values** are assigned as input to Mechanisms that close recurrent loops (designated as
 `INITIALIZE_CYCLE`) at the start of a `TRIAL` (if **initialize** is set to `True`), and/or whenever the Process`
 `initialize <Process.initialize>` method is called; **target** values are assigned as the *TARGET* input of the
-`target_mechanisms <Process.target_mechanisms>` in each `TRIAL` of execution, if `learning
+`target_nodes <Process.target_nodes>` in each `TRIAL` of execution, if `learning
 <Process_Learning_Sequence>` has been specified (see the next setion for how Learning is executed; also,
 see `Run` documentation for additional details of formatting `Run_Input` and `Run_Target` specifications of the
 `run <Process.run>` method).
@@ -418,7 +418,7 @@ Note that it uses the `Logistic` function, which is compatible with BackPropagat
 *Process with individual Projections that implement learning:* This `pathway <Process.pathway>` implements learning
 for two MappingProjections (between ``mechanism_1`` and ``mechanism_2``, and ``mechanism_3`` and ``mechanism_4``).
 Since they are not contiguous, two `learning sequences <Process_Learning_Sequence>` are created, with `TARGET`
-Mechanisms assigned to ``mechanism_2`` and ``mechanism_4`` (that will be listed in ``my_process.target_mechanisms``)::
+Mechanisms assigned to ``mechanism_2`` and ``mechanism_4`` (that will be listed in ``my_process.target_nodes``)::
 
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
@@ -730,7 +730,7 @@ class Process(Process_Base):
         .. based on _learning_mechs
 
     target_mechanisms : MechanismList
-        the `TARGET` Mechanisms for the Process, listed in ``target_mechanisms.data``;  each is a `ComparatorMechanism`
+        the `TARGET` Mechanisms for the Process, listed in ``target_nodes.data``;  each is a `ComparatorMechanism`
         associated with the last ProcessingMechanism of a `learning sequence <Process_Learning_Sequence>` in the
         Process;
 
@@ -1893,7 +1893,7 @@ class Process(Process_Base):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
-         Identify TARGET Mechanisms and assign to self.target_mechanisms,
+         Identify TARGET Mechanisms and assign to self.target_nodes,
              assign self to each TARGET Mechanism
              and report assignment if verbose
 
@@ -1936,7 +1936,7 @@ class Process(Process_Base):
 
         if target_mechs:
 
-            # self.target_mechanisms = target_mechs
+            # self.target_nodes = target_mechs
             self._target_mechs = target_mechs
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
@@ -2062,13 +2062,13 @@ class Process(Process_Base):
             `Process_Input_And_Output` for details).
 
         target : List[value] or ndarray: default None
-            specifies the target value assigned to each of the `target_mechanisms <Process.target_mechanisms>` for
+            specifies the target value assigned to each of the `target_nodes <Process.target_nodes>` for
             the `execution <Process_Execution>`.  Each item is assigned to the *TARGET* `InputState
-            <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_mechanisms
-            <Process.target_mechanisms>`; the number of items must equal the number of items in
-            `target_mechanisms <Process.target_mechanisms>`, and each item of **target** be compatible with the
+            <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_nodes
+            <Process.target_nodes>`; the number of items must equal the number of items in
+            `target_nodes <Process.target_nodes>`, and each item of **target** be compatible with the
             `variable <InputState.variable>` attribute of the *TARGET* `InputState <ComparatorMechanism_Structure>`
-            for the corresponding `ComparatorMechanism` in `target_mechanisms <Process.target_mechanisms>`.
+            for the corresponding `ComparatorMechanism` in `target_nodes <Process.target_nodes>`.
 
         params : Dict[param keyword: param value] :  default None
             a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
@@ -2191,7 +2191,7 @@ class Process(Process_Base):
             self.target = self.target()
 
         # Assign items of self.target to target_input_states
-        #   (ProcessInputStates that project to corresponding target_mechanisms for the Process)
+        #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
             target_input_state.value = self.target[i]
 
@@ -2320,15 +2320,15 @@ class Process(Process_Base):
             `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
         targets : List[input] or np.ndarray(input) : default None
-            specifies the target value assigned to each of the `target_mechanisms <Process.target_mechanisms>` in
+            specifies the target value assigned to each of the `target_nodes <Process.target_nodes>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
             corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**
             argument.  Each item is assigned to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
-            corresponding `ComparatorMechanism` in `target_mechanisms <Process.target_mechanisms>`; the number of
-            items must equal the number of items in `target_mechanisms <Process.target_mechanisms>`, and each item
+            corresponding `ComparatorMechanism` in `target_nodes <Process.target_nodes>`; the number of
+            items must equal the number of items in `target_nodes <Process.target_nodes>`, and each item
             of **target** be compatible with the `variable <InputState.variable>` attribute of the *TARGET* `InputState
-            <ComparatorMechanism_Structure>` for the corresponding `ComparatorMechanism` in `target_mechanisms
-            <Process.target_mechanisms>`.
+            <ComparatorMechanism_Structure>` for the corresponding `ComparatorMechanism` in `target_nodes
+            <Process.target_nodes>`.
 
         learning : bool :  default None
             enables or disables `learning <Process_Execution_Learning>` during execution.
@@ -2517,8 +2517,8 @@ class ProcessInputState(OutputState):
     .. _ProcessInputState:
 
     A ProcessInputState is created for each `InputState` of the `origin_mechanism`, and for the *TARGET* `InputState
-    <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed in `target_mechanisms
-    <Process.target_mechanisms>`.  A `MappingProjection` is created that projects to each of these InputStates
+    <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed in `target_nodes
+    <Process.target_nodes>`.  A `MappingProjection` is created that projects to each of these InputStates
     from the corresponding ProcessingInputState.  When the Process' `execute <Process.execute>` or
     `run <Process.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
     the `value <ProcessInputState.value>` of a ProcessInputState, which is then conveyed to the
