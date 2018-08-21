@@ -1134,28 +1134,19 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
                                                      context=context)
 
         for i in range(len(outcomes)):
-            print()
-            print(i)
-            print("outcomes = ", outcomes[i])
-            print()
             allocation_policy_outcomes = outcomes[i]
             allocation_policy = controller.control_signal_search_space[i]
-            print("ALLOCATION POLICY = ", allocation_policy, " - - - - - - -")
             allocation_policy_evc_list = []
             num_trials = len(allocation_policy_outcomes)
             for j in range(num_trials):
 
                 outcome = allocation_policy_outcomes[0][j]
-                print("outcome", j, "  = ", outcome, " - - - - - - -")
                 value = controller.paramsCurrent[VALUE_FUNCTION].function(controller=controller,
                                                                           outcome=outcome,
                                                                           costs=controller.control_signal_costs,
                                                                           context=context)
                 allocation_policy_evc_list.append(value)
             EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
-
-            print("EVC_avg = ", EVC_avg)
-
 
         #     # Calculate EVC for specified allocation policy
         #     result_tuple = _compute_EVC(args=(controller, allocation_vector,

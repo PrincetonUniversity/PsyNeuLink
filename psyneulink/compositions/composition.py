@@ -47,28 +47,30 @@ Class Reference
 """
 
 import collections
-from collections import Iterable, OrderedDict
+from collections import Iterable, OrderedDict, namedtuple
 from enum import Enum
 import logging
 import numpy as np
 import uuid
+import inspect
 
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.library.subsystems.evc.evcauxiliary import PredictionMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap, Integrator
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import PREDICTION_MECHANISM, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import HARD_CLAMP, IDENTITY_MATRIX, MATRIX_KEYWORD_VALUES, MONITOR_FOR_CONTROL, NO_CLAMP, OWNER_VALUE, PREDICTION_MECHANISM, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.context import Context
+from psyneulink.globals.utilities import AutoNumber
 
 __all__ = [
     'Composition', 'CompositionError', 'CNodeRole',
@@ -169,6 +171,23 @@ class RunError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+class MonitoredOutputStatesOption(AutoNumber):
+    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
+    (see `ObjectiveMechanism_Monitored_Output_States` for a more complete description of their meanings."""
+    ONLY_SPECIFIED_OUTPUT_STATES = ()
+    """Only monitor explicitly specified Outputstates."""
+    PRIMARY_OUTPUT_STATES = ()
+    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
+    ALL_OUTPUT_STATES = ()
+    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
+    NUM_MONITOR_STATES_OPTIONS = ()
+
+# Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
+OUTPUT_STATE_INDEX = 0
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
+MATRIX_INDEX = 3
+MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
 class Vertex(object):
     '''
@@ -506,6 +525,7 @@ class Composition(object):
                 proj.context.execution_phase = ContextFlags.PROCESSING
             prediction_mechanism.execute(context=context)
 
+
     @property
     def graph_processing(self):
         '''
@@ -594,11 +614,382 @@ class Composition(object):
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
-    def add_controller(self, node):
+    def add_controller(self, node, monitored_output_states):
         self.controller = node
         node.system = self
         self._analyze_graph()
 
+    def _get_monitored_output_states_for_system(self, controller=None, context=None):
+        """
+        Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
+            - if specification in output_state is None:
+                 do NOT monitor this state (this overrides any other specifications)
+            - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+            - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+
+        Notes:
+        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
+            - it specifies options for assigning OutputStates of TERMINAL Mechanisms in the System
+                to controller.monitored_output_states;  the options are:
+                + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
+                  TERMINAL Mechanism
+                + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
+            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+        * controller.monitored_output_states is a list, each item of which is an OutputState from which a Projection
+            will be instantiated to a corresponding InputState of the ControlMechanism
+        * controller.input_states is the usual ordered dict of states,
+            each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
+
+        Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
+
+        """
+        # PARSE SPECS
+
+        # Get OutputStates already being -- or specified to be -- monitored by controller
+        if controller is not None and not inspect.isclass(controller):
+            try:
+                # Get from monitored_output_states attribute if controller is already implemented
+                monitored_output_states = controller.monitored_output_states.copy() or []
+                # Convert them to MonitoredOutputStateTuple specifications (for treatment below)
+                monitored_output_state_specs = []
+                for monitored_output_state, input_state in zip(monitored_output_states,
+                                                               controller.objective_mechanism.input_states):
+                    projection = input_state.path_afferents[0]
+                    if not projection.sender is monitored_output_state:
+                        raise SystemError("PROGRAM ERROR: Problem identifying projection ({}) for "
+                                          "monitored_output_state ({}) specified for {} ({}) assigned to {}".
+                                          format(projection.name,
+                                                 monitored_output_state.name,
+                                                 ControlMechanism.__name__,
+                                                 controller.name,
+                                                 self.name))
+                    monitored_output_state_specs.append(MonitoredOutputStateTuple(monitored_output_state,
+                                                                                  projection.weight,
+                                                                                  projection.exponent,
+                                                                                  projection.matrix))
+
+                controller_specs = monitored_output_state_specs
+            except AttributeError:
+                # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
+                #    (i.e., the call to this method is part of its instantiation by a System)
+                #    so, get specification from the **object_mechanism** argument
+                if isinstance(controller.objective_mechanism, list):
+                    # **objective_mechanism** argument was specified as a list
+                    controller_specs = controller.objective_mechanism.copy() or []
+                elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
+                    # **objective_mechanism** argument was specified as an ObjectiveMechanism, which has presumably
+                    # already been instantiated, so use its monitored_output_states attribute
+                    controller_specs = controller.objective_mechanism.monitored_output_states
+        else:
+            controller_specs = []
+
+        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.monitor_for_control.copy()
+
+        # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if controller_specs:
+            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+                option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputStatesOption)),None)
+                if option_item is not None:
+                    del system_specs[option_item]
+            for item in controller_specs:
+                if item in system_specs:
+                    del system_specs[system_specs.index(item)]
+
+        # Combine controller and system specs
+        # If there are none, assign PRIMARY_OUTPUT_STATES as default
+        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+
+        # Convert references to Mechanisms and/or OutputStates in all_specs to MonitoredOutputStateTuples;
+        # Each spec to be converted should be one of the following:
+        #    - a MonitoredOutputStatesOption (parsed below);
+        #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
+        #          specs were initially processed by the System to parse its *monitor_for_control* argument;
+        #    - a specification for an existing Mechanism or OutputStates from the *monitor_for_control* arg of System.
+        all_specs_extracted_from_tuples=[]
+        all_specs_parsed=[]
+        for i, spec in enumerate(all_specs):
+
+            # Leave MonitoredOutputStatesOption and MonitoredOutputStatesTuple spec in place;
+            #    these are parsed later on
+            if isinstance(spec, MonitoredOutputStatesOption):
+                all_specs_extracted_from_tuples.append(spec)
+                all_specs_parsed.append(spec)
+                continue
+            if isinstance(spec, MonitoredOutputStateTuple):
+                all_specs_extracted_from_tuples.append(spec.output_state)
+                all_specs_parsed.append(spec)
+                continue
+
+            # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputStateTuple(s)
+            # Note:  assign parsed spec(s) to a list, as there may be more than one (that will be added to all_specs)
+            monitored_output_state_tuples = []
+
+            weight=DEFAULT_MONITORED_STATE_WEIGHT
+            exponent=DEFAULT_MONITORED_STATE_EXPONENT
+            matrix=DEFAULT_MONITORED_STATE_MATRIX
+
+            # spec is a tuple
+            # - put OutputState(s) in spec
+            # - assign any weight, exponent, and/or matrix specified
+            if isinstance(spec, tuple):
+                # 2-item tuple (<OutputState(s) name(s)>, <Mechanism>)
+                if len(spec) == 2:
+                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF STATES
+                    spec = spec[1].output_states[spec[0]]
+                # 3-item tuple (<OutputState(s) spec>, weight, exponent)
+                elif len(spec) == 3:
+                    spec, weight, exponent = spec
+                # 4-item tuple (<OutputState(s) spec>, weight, exponent, matrix)
+                elif len(spec) == 4:
+                    spec, weight, exponent, matrix = spec
+
+            if not isinstance(spec, list):
+                spec_list = [spec]
+
+            for spec in spec_list:
+                # spec is an OutputState or Mechanism
+                if isinstance(spec, (OutputState, Mechanism)):
+                    # spec is an OutputState, so use it
+                    if isinstance(spec, OutputState):
+                        output_states = [spec]
+                    # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
+                    elif isinstance(spec, Mechanism):
+                        if (MONITOR_FOR_CONTROL in spec.params
+                            and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
+                            output_states = spec.output_states
+                        else:
+                            output_states = [spec.output_state]
+                    for output_state in output_states:
+                        monitored_output_state_tuples.extend(
+                                [MonitoredOutputStateTuple(output_state=output_state,
+                                                           weight=weight,
+                                                           exponent=exponent,
+                                                           matrix=matrix)])
+                # spec is a string
+                elif isinstance(spec, str):
+                    # Search System for Mechanisms with OutputStates with the string as their name
+                    for mech in self.mechanisms:
+                        for output_state in mech.output_states:
+                            if output_state.name == spec:
+                                monitored_output_state_tuples.extend(
+                                        [MonitoredOutputStateTuple(output_state=output_state,
+                                                                   weight=weight,
+                                                                   exponent=exponent,
+                                                                   matrix=matrix)])
+
+                else:
+                    raise SystemError("Specification of item in \'{}\' arg in constructor for {} ({}) "
+                                      "is not a recognized specification for an {}".
+                                      format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
+
+                all_specs_parsed.extend(monitored_output_state_tuples)
+                all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
+
+        all_specs = all_specs_parsed
+
+        try:
+            all (isinstance(item, (OutputState, MonitoredOutputStatesOption))
+                 for item in all_specs_extracted_from_tuples)
+        except:
+            raise SystemError("PROGRAM ERROR: Fail to parse items of \'{}\' arg ({}) in constructor for {}".
+                              format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
+
+        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
+        option_specs = [item for item in all_specs_extracted_from_tuples
+                        if isinstance(item, MonitoredOutputStatesOption)]
+        if not option_specs:
+            ctlr_or_sys_option_spec = None
+        elif len(option_specs) == 1:
+            ctlr_or_sys_option_spec = option_specs[0]
+        else:
+            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified "
+                              "for OutputStates to be monitored in {}: {}".
+                           format(self.name, option_specs))
+
+        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
+        # Assign OutputStates to monitored_output_states
+        monitored_output_states = []
+
+        # Notes:
+        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
+        #     (for use in generating exponents and weights below)
+        # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
+        #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
+        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+
+        for mech in self.mechanisms:
+
+            # For each Mechanism:
+            # - add its specifications to all_specs (for use below in generating exponents and weights)
+            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
+            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
+            # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
+            #     to assign outputStates to monitored_output_states
+
+            local_specs = controller_and_system_specs.copy()
+            option_spec = ctlr_or_sys_option_spec
+
+            # PARSE MECHANISM'S SPECS
+
+            # Get MONITOR_FOR_CONTROL specification from Mechanism
+            try:
+                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+
+                if mech_specs is NotImplemented:
+                    raise AttributeError
+
+                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
+                if mech_specs is None:
+                    raise ValueError
+
+            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
+            except (KeyError, AttributeError):
+                pass
+
+            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputStates
+            except ValueError:
+                continue
+
+            # Parse specs in Mechanism's MONITOR_FOR_CONTROL
+            else:
+
+                # Add mech_specs to all_specs
+                all_specs.extend(mech_specs)
+
+                # Extract refs from tuples and add to local_specs
+                for item in mech_specs:
+                    if isinstance(item, tuple):
+                        local_specs.append(item[OUTPUT_STATE_INDEX])
+                        continue
+                    local_specs.append(item)
+
+                # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
+                #    if there is one, use it in place of any specified for controller or system
+                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
+                if not option_specs:
+                    option_spec = ctlr_or_sys_option_spec
+                elif option_specs and len(option_specs) == 1:
+                    option_spec = option_specs[0]
+                else:
+                    raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
+                                   format(mech.name, option_specs))
+
+            # PARSE OutputState'S SPECS
+
+            for output_state in mech.output_states:
+
+                # Get MONITOR_FOR_CONTROL specification from OutputState
+                try:
+                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
+                    if output_state_specs is NotImplemented:
+                        raise AttributeError
+
+                    # Setting MONITOR_FOR_CONTROL to None specifies OutputState should NOT be monitored
+                    if output_state_specs is None:
+                        raise ValueError
+
+                # OutputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
+                except (KeyError, AttributeError):
+                    pass
+
+                # OutputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
+                except ValueError:
+                    continue
+
+                # Parse specs in OutputState's MONITOR_FOR_CONTROL
+                else:
+
+                    # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
+                    #       as a specification for an OutputState
+
+                    # Add OutputState specs to all_specs and local_specs
+                    all_specs.extend(output_state_specs)
+
+                    # Extract refs from tuples and add to local_specs
+                    for item in output_state_specs:
+                        if isinstance(item, tuple):
+                            local_specs.append(item[OUTPUT_STATE_INDEX])
+                            continue
+                        local_specs.append(item)
+
+            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
+            for output_state in mech.output_states:
+                if (output_state in local_specs or output_state.name in local_specs):
+                    option_spec = None
+
+
+            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_states
+
+            for output_state in mech.output_states:
+
+                # If OutputState is named or referenced anywhere, include it
+                if (output_state in local_specs or output_state.name in local_specs):
+                    monitored_output_states.append(output_state)
+                    continue
+
+    # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
+    # THE LIST NOR IS IT A TERMINAL MECHANISM
+
+                # If:
+                #   Mechanism is named or referenced in any specification
+                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
+                #   or it is a terminal Mechanism
+                elif (mech.name in local_specs or mech in local_specs or
+                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
+                              mech in self.terminal_mechanisms.mechanisms):
+                    #
+                    if (not (mech.name in local_specs or mech in local_specs) and
+                            not mech in self.terminal_mechanisms.mechanisms):
+                        continue
+
+                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
+                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
+                        if output_state is mech.output_state:
+                            monitored_output_states.append(output_state)
+                            continue
+                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
+                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
+                        monitored_output_states.append(output_state)
+                    elif mech.name in local_specs or mech in local_specs:
+                        if output_state is mech.output_state:
+                            monitored_output_states.append(output_state)
+                            continue
+                    elif option_spec is None:
+                        continue
+                    else:
+                        raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
+                                       "{0} of {1}".
+                                       format(output_state.name, mech.name))
+
+
+        # ASSIGN EXPONENTS, WEIGHTS and MATRICES
+
+        # Get and assign specification of weights, exponents and matrices
+        #    for Mechanisms or OutputStates specified in tuples
+        output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
+                               for item in monitored_output_states]
+        for spec in all_specs:
+            if isinstance(spec, MonitoredOutputStateTuple):
+                object_spec = spec.output_state
+                # For each OutputState in monitored_output_states
+                for i, output_state_tuple in enumerate(output_state_tuples):
+                    output_state = output_state_tuple.output_state
+                    # If either that OutputState or its owner is the object specified in the tuple
+                    if (output_state is object_spec
+                        or output_state.name is object_spec
+                        or output_state.owner is object_spec):
+                        # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
+                        # (can't just assign spec, as its output_state entry may be an unparsed string rather than
+                        #  an actual OutputState)
+                        output_state_tuples[i] = MonitoredOutputStateTuple(output_state=output_state,
+                                                                           weight=spec.weight,
+                                                                           exponent=spec.exponent,
+                                                                           matrix=spec.matrix)
+        return output_state_tuples
 
     def add_control_mechanism(self, control_mechanism):
 
@@ -1079,7 +1470,9 @@ class Composition(object):
                                          "{!s} where the InputState takes values of length {!s}".
                                          format(i, mech.name, val_length, state_length))
 
+
     def _create_CIM_states(self, context=None):
+
         '''
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
@@ -1102,6 +1495,7 @@ class Composition(object):
               Origin/Terminal
 
         '''
+        origins_changed = False
 
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_states.remove(self.input_CIM.input_state)
@@ -1126,7 +1520,7 @@ class Composition(object):
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_states.keys()):
-
+                    origins_changed = True
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.value,
                                                        reference_value=input_state.value,
@@ -1150,6 +1544,7 @@ class Composition(object):
 
         # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:
         for input_state in sends_to_input_states.difference(current_origin_input_states):
+            origins_changed = True
             for projection in input_state.path_afferents:
                 if projection.sender == self.input_CIM_states[input_state][1]:
                     # remove the corresponding projection from the ORIGIN node's path afferents
@@ -1204,7 +1599,8 @@ class Composition(object):
             self.output_CIM.output_states.remove(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
 
-        self._instantiate_prediction_mechanisms(context=context)
+        if origins_changed:     # only update prediction mechanisms if the origin node(s) changed
+            self._instantiate_prediction_mechanisms(context=context)
 
     def _assign_values_to_input_CIM(self, inputs):
         """
@@ -1260,8 +1656,9 @@ class Composition(object):
 
         self._execution_id = execution_id
 
-        for prediction_mechanism in self.prediction_mechanisms:
-            prediction_mechanism._execution_id = execution_id
+        if hasattr(self, "prediction_mechanisms"):
+            for prediction_mechanism in self.prediction_mechanisms:
+                prediction_mechanism._execution_id = execution_id
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -1415,6 +1812,8 @@ class Composition(object):
             frozen_values = {}
             new_values = {}
             # execute each node with EXECUTING in context
+            if hasattr(self, "prediction_mechanisms"):
+                self._execute_prediction_mechanisms(context=context)
             for node in next_execution_set:
                 frozen_values[node] = node.output_values
                 if node in origin_nodes:
@@ -1488,19 +1887,20 @@ class Composition(object):
         if call_after_pass:
             call_after_pass()
 
+        # control phase
+        if self.context.execution_phase != ContextFlags.INITIALIZING \
+                and self.context.execution_phase != ContextFlags.SIMULATION \
+                and self.enable_controller:
+            if self.controller:
+                self.controller.objective_mechanism.execute(context=context)
+                self.controller.execute(context=context)
+
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
 
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].value)
-
-        # control phase
-        if self.context.execution_phase != ContextFlags.INITIALIZING \
-                and self.context.execution_phase != ContextFlags.SIMULATION \
-                and self.enable_controller:
-            if self.controller:
-                self.controller.execute(context=context)
 
         return output_values
 
@@ -1634,6 +2034,8 @@ class Composition(object):
         if self.context.execution_phase != ContextFlags.SIMULATION:
             self._analyze_graph()
 
+        self._analyze_graph()
+
         execution_id = self._assign_execution_ids(execution_id)
 
         scheduler_processing._init_counts(execution_id=execution_id)
@@ -1684,8 +2086,6 @@ class Composition(object):
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_id=execution_id):
                 break
-            if hasattr(self, "prediction_mechanisms"):
-                self._execute_prediction_mechanisms()
         # PROCESSING ------------------------------------------------------------------------
 
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
@@ -1789,6 +2189,7 @@ class Composition(object):
 
             saved_state[node] = reinitialization_value
         return saved_state
+
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
         predicted_input = self.update_predicted_input()
 
@@ -1807,26 +2208,30 @@ class Composition(object):
 
                 self.context.execution_phase = ContextFlags.SIMULATION
                 # ASSIGN EXECUTION ID
+                # TEST PRINT
+                # print("\n\n beginning simulation run - - - - - - - -")
                 self.run(inputs=inputs,
                          reinitialize_values=reinitialize_values,
                          execution_id=execution_id,
                          runtime_params=runtime_params,
                          context=context)
-                self.controller.objective_mechanism._execution_id = execution_id
-                self.controller.objective_mechanism.execute()
-                outcome = self.controller.objective_mechanism.value
-                print("outcome = ", outcome)
+                monitored_states = self.controller._update_input_states(runtime_params=runtime_params, context=context)
+
+                # print("monitored_states = ", self.controller.objective_mechanism.monitored_output_states)
                 # for state in monitored_states:
                 #     outcome.append(state.value)
 
                 self.context.execution_phase = ContextFlags.PROCESSING
-                allocation_policy_outcomes.append(outcome)
+                allocation_policy_outcomes.append(monitored_states)
             outcome_list.append(allocation_policy_outcomes)
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
 
         return outcome_list
+
+    def run_simulation(self):
+        print("simulation runs now")
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
@@ -2040,6 +2445,7 @@ class Composition(object):
         except (TypeError, AttributeError):
             return None
 
+
     @property
     def stateful_nodes(self):
         """
@@ -2062,7 +2468,6 @@ class Composition(object):
                 stateful_nodes.append(node)
 
         return stateful_nodes
-
 
     @property
     def output_state(self):

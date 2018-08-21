@@ -2201,6 +2201,7 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
+
         self.ignore_execution_id = ignore_execution_id
         context = context or ContextFlags.COMMAND_LINE
         if not self.context.source or context & ContextFlags.COMMAND_LINE:

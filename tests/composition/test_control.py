@@ -6,8 +6,6 @@ from psyneulink.globals.keywords import RESULT, MEAN, VARIANCE, ALLOCATION_SAMPL
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME, \
     PROBABILITY_UPPER_THRESHOLD
 from psyneulink.components.functions.function import BogaczEtAl, Linear
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.library.subsystems.evc.evccontrolmechanism2 import EVCControlMechanism2
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
