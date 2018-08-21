@@ -1397,6 +1397,9 @@ class Composition(object):
 
             frozen_values = {}
             new_values = {}
+            if bin_execute:
+                import copy
+                frozen_vals = copy.deepcopy(self.__data_struct)
 
             import operator
             nodes = sorted(list(next_execution_set), key=operator.attrgetter('name'))
@@ -1441,7 +1444,7 @@ class Composition(object):
                         bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
                                       ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
                                       ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
-                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                                      ctypes.cast(ctypes.byref(frozen_vals), ctypes.POINTER(di)),
                                       ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
 
                     else:
