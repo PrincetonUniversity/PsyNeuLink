@@ -77,7 +77,7 @@ class TestCondition:
         def test_WhileNot_AtPass(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 0, sched))
@@ -93,7 +93,7 @@ class TestCondition:
         def test_WhileNot_AtPass_in_middle(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 2, sched))
@@ -112,7 +112,7 @@ class TestCondition:
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             for m in [A]:
-                comp.add_mechanism(m)
+                comp.add_c_node(m)
             sched = Scheduler(composition=comp)
 
             sched.add_condition(A, EveryNPasses(1))
@@ -129,7 +129,7 @@ class TestCondition:
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             for m in [A]:
-                comp.add_mechanism(m)
+                comp.add_c_node(m)
             sched = Scheduler(composition=comp)
 
             sched.add_condition(A, EveryNPasses(1))
@@ -145,7 +145,7 @@ class TestCondition:
         def test_Not_AtPass(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Not(AtPass(0)))
@@ -161,7 +161,7 @@ class TestCondition:
         def test_Not_AtPass_in_middle(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Not(AtPass(2)))
@@ -186,8 +186,8 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
             for m in [A, B]:
-                comp.add_mechanism(m)
-            comp.add_projection(A, MappingProjection(), B)
+                comp.add_c_node(m)
+            comp.add_projection(MappingProjection(), A, B)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
@@ -207,7 +207,7 @@ class TestCondition:
         def test_BeforeTimeStep(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTimeStep(2))
@@ -224,10 +224,10 @@ class TestCondition:
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             B = TransferMechanism(name='B')
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
+            comp.add_c_node(A)
+            comp.add_c_node(B)
 
-            comp.add_projection(A, MappingProjection(), B)
+            comp.add_projection(MappingProjection(), A, B)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTimeStep(2))
@@ -243,7 +243,7 @@ class TestCondition:
         def test_AtTimeStep(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtTimeStep(0))
@@ -259,7 +259,7 @@ class TestCondition:
         def test_BeforePass(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforePass(2))
@@ -275,7 +275,7 @@ class TestCondition:
         def test_AtPass(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
@@ -294,9 +294,9 @@ class TestCondition:
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
             C = TransferMechanism(function=Linear(intercept=1.5), name='C')
             for m in [A, B, C]:
-                comp.add_mechanism(m)
-            comp.add_projection(A, MappingProjection(), B)
-            comp.add_projection(B, MappingProjection(), C)
+                comp.add_c_node(m)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
@@ -312,7 +312,7 @@ class TestCondition:
         def test_AtPass_in_middle(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(2))
@@ -328,7 +328,7 @@ class TestCondition:
         def test_AtPass_at_end(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(5))
@@ -344,7 +344,7 @@ class TestCondition:
         def test_AtPass_after_end(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(6))
@@ -360,7 +360,7 @@ class TestCondition:
         def test_AfterPass(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterPass(0))
@@ -376,7 +376,7 @@ class TestCondition:
         def test_AfterNPasses(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterNPasses(1))
@@ -392,7 +392,7 @@ class TestCondition:
         def test_BeforeTrial(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTrial(4))
@@ -413,7 +413,7 @@ class TestCondition:
         def test_AtTrial(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
@@ -434,7 +434,7 @@ class TestCondition:
         def test_AfterTrial(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
@@ -455,7 +455,7 @@ class TestCondition:
         def test_AfterNTrials(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterNPasses(1))
@@ -473,7 +473,7 @@ class TestCondition:
         def test_BeforeNCalls(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            comp.add_mechanism(A)
+            comp.add_c_node(A)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeNCalls(A, 3))
@@ -497,7 +497,7 @@ class TestCondition:
         #     B = TransferMechanism(function = Linear(intercept = 4.0), name = 'B')
         #     C = TransferMechanism(function = Linear(intercept = 1.5), name = 'C')
         #     for m in [A,B]:
-        #         comp.add_mechanism(m)
+        #         comp.add_c_node(m)
 
         #     sched = Scheduler(composition=comp)
         #     sched.add_condition(A, Always())
@@ -516,7 +516,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
             for m in [A, B]:
-                comp.add_mechanism(m)
+                comp.add_c_node(m)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(B, AfterCall(A, 3))
@@ -534,7 +534,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
             for m in [A, B]:
-                comp.add_mechanism(m)
+                comp.add_c_node(m)
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
@@ -554,9 +554,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -590,9 +590,9 @@ class TestCondition:
         B.is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -616,9 +616,9 @@ class TestCondition:
         B.is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -640,9 +640,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
@@ -675,9 +675,9 @@ class TestCondition:
         B.is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -701,9 +701,9 @@ class TestCondition:
         B.is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -725,9 +725,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, C)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
@@ -758,9 +758,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -783,9 +783,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
@@ -808,9 +808,9 @@ class TestCondition:
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
-            comp.add_mechanism(m)
-        comp.add_projection(A, MappingProjection(), B)
-        comp.add_projection(B, MappingProjection(), C)
+            comp.add_c_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+        comp.add_projection(MappingProjection(), B, C)
         sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))

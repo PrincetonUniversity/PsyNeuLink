@@ -1443,7 +1443,12 @@ class Log:
                     row.append(value)
                     break
             else:
-                value = None if datum.value is None else datum.value.tolist()
+                if datum.value is None:
+                    value = None
+                elif isinstance(datum.value, list):
+                    value = datum.value
+                else:
+                    value = datum.value.tolist()
                 row.append(value)
         return row
 
