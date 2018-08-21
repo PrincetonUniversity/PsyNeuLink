@@ -2696,6 +2696,9 @@ class Mechanism_Base(Mechanism):
                 os_input = value
             elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
                 os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+            #FIXME: For some reason this can be wrapped in a list
+            elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
+                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
             else:
                 #TODO: support more options
                 print(value.type)

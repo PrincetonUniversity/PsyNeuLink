@@ -1762,7 +1762,7 @@ class TestRun:
         output = benchmark(comp.run, inputs={A: [var]}, scheduler_processing=sched, bin_execute=(llvm=='LLVM'))
         assert np.allclose([25.0 for x in range(vector_length)], output[0])
 
-    @pytest.mark.skip
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -1784,24 +1784,17 @@ class TestRun:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               #monitored_output_states=[C], #setup later
-                               name='LC ObjectiveMechanism')
-        A = LCControlMechanism(name="A")
-    #                           modulated_mechanisms=D,
-    #                           objective_mechanism=B # setup later
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A",
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
         E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
-        comp.add_c_node(C)
-        comp.add_c_node(D)
-        comp.add_c_node(E)
-
-        comp.add_projection(ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), A, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=B), C, B)
-        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp.add_projection(MappingProjection(sender=B, receiver=A), B, A)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -1810,7 +1803,7 @@ class TestRun:
         assert np.allclose(output, 354.19328716)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
-    @pytest.mark.skip
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -1832,24 +1825,17 @@ class TestRun:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               #monitored_output_states=[C], #setup later
-                               name='LC ObjectiveMechanism')
-        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE)
-    #                           modulated_mechanisms=D,
-    #                           objective_mechanism=B # setup later
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
         E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
-        comp.add_c_node(C)
-        comp.add_c_node(D)
-        comp.add_c_node(E)
-
-        comp.add_projection(ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), A, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=B), C, B)
-        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp.add_projection(MappingProjection(sender=B, receiver=A), B, A)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -1858,7 +1844,7 @@ class TestRun:
         assert np.allclose(output, 650.83865743)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
-    @pytest.mark.skip
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -1880,24 +1866,17 @@ class TestRun:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               #monitored_output_states=[C], #setup later
-                               name='LC ObjectiveMechanism')
-        A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE)
-    #                           modulated_mechanisms=D,
-    #                           objective_mechanism=B # setup later
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
         E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
-        comp.add_c_node(C)
-        comp.add_c_node(D)
-        comp.add_c_node(E)
-
-        comp.add_projection(ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), A, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=B), C, B)
-        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp.add_projection(MappingProjection(sender=B, receiver=A), B, A)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -1906,7 +1885,7 @@ class TestRun:
         assert np.allclose(output, 150.83865743)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
-    @pytest.mark.skip
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -1928,24 +1907,17 @@ class TestRun:
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
         B = ObjectiveMechanism(function=Linear,
-                               #monitored_output_states=[C], #setup later
-                               name='LC ObjectiveMechanism')
-        A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE)
-    #                           modulated_mechanisms=D,
-    #                           objective_mechanism=B # setup later
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
         E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
-        comp.add_c_node(C)
-        comp.add_c_node(D)
-        comp.add_c_node(E)
-
-        comp.add_projection(ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), A, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=B), C, B)
-        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp.add_projection(MappingProjection(sender=B, receiver=A), B, A)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
