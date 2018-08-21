@@ -2197,7 +2197,6 @@ class TestRun:
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
 
     @pytest.mark.composition
-    @pytest.mark.this2
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
