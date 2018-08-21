@@ -969,14 +969,8 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(D, 1, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
 
-        # Original:
-        # expected_output = [
-        #     A, set([A, C]), B, A, set([A, C]), B, D
-        # ]
-
-        # MODIFIED: (due to new execution order rules)
         expected_output = [
-            A, set([A, C]), B, A, set([A, C]), set([B, D])
+            A, set([A, C]), B, A, set([A, C]), B, D
         ]
 
         assert output == pytest.helpers.setify_expected_output(expected_output)

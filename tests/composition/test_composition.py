@@ -819,6 +819,24 @@ class TestExecutionOrder:
 
         for i in range(len(comp.scheduler_processing.consideration_queue)):
             assert comp.scheduler_processing.consideration_queue[i] == expected_consideration_sets[i]
+
+    def test_multiple_projections_along_pathway(self):
+
+        comp = Composition()
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+        C = ProcessingMechanism(name="C")
+        D = ProcessingMechanism(name="D")
+        E = ProcessingMechanism(name="E")
+
+        comp.add_linear_processing_pathway([A, B, C, D, E])
+        comp.add_linear_processing_pathway([A, C])
+        comp.add_linear_processing_pathway([C, E])
+
+        expected_consideration_queue = [{A}, {B}, {C}, {D}, {E}]
+
+        assert expected_consideration_queue == comp.scheduler_processing.consideration_queue
+
 # class TestValidateFeedDict:
 #
 #     def test_empty_feed_dicts(self):
