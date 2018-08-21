@@ -1401,10 +1401,8 @@ class Composition(object):
                 import copy
                 frozen_vals = copy.deepcopy(self.__data_struct)
 
-            import operator
-            nodes = sorted(list(next_execution_set), key=operator.attrgetter('name'))
             # execute each node with EXECUTING in context
-            for node in nodes:
+            for node in next_execution_set:
                 frozen_values[node] = node.output_values
                 if node in origin_nodes:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle

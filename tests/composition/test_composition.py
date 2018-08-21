@@ -1803,6 +1803,39 @@ class TestRun:
         assert np.allclose(output, 354.19328716)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_frozen_values(self, benchmark, mode):
+        #
+        #   B
+        #  /|\
+        # A-+-D
+        #  \|/
+        #   C
+        #
+        # A: 4 x 5 = 20
+        # B: (20 + 0) x 4 = 80
+        # C: (20 + 0) x 3 = 60
+        # D: (20 + 80 + 60) x 2 = 320
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=5.0))
+        B = TransferMechanism(name="B", function=Linear(slope=4.0))
+        C = TransferMechanism(name="C", function=Linear(slope=3.0))
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))
+        comp.add_linear_processing_pathway([A, D])
+        comp.add_linear_processing_pathway([B, C])
+        comp.add_linear_processing_pathway([C, B])
+        comp.add_linear_processing_pathway([A, B, D])
+        comp.add_linear_processing_pathway([A, C, D])
+        comp._analyze_graph()
+
+        inputs_dict = {A: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose(output, 320)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
