@@ -466,7 +466,7 @@ learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source <Le
 last MappingProjection in each learning sequence.  When learning is specified for a `Composition <Composition>` (i.e.,
 a `Process <Process_Learning_Sequence>` or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s)
 <ComparatorMechanism>` that receive the `targets <Run_Targets>`  are identified and designated as `TARGET` Mechanisms,
-and are listed in the Composition's `target_mechanisms` attribute. If a `TERMINAL` Mechanism of a Composition receives a
+and are listed in the Composition's `target_nodes` attribute. If a `TERMINAL` Mechanism of a Composition receives a
 MappingProjection that is specified for learning, then it always projects to a `TARGET` Mechanism in that Composition.
 It is important to note, in this context, the status of a Mechanism in a System takes precedence over its status in any
 of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process, if
@@ -1192,7 +1192,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if context is None:
             context = ContextFlags.COMMAND_LINE
 
-        states = super().add_states(states=states, context=context)
+        states = super().add_states(states=states)
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
             self.error_sources.append(error_source)

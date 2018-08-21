@@ -79,10 +79,9 @@ __all__ = [
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
-    'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
-    'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY',
-    'NAME', 'NOISE', 'NORMAL_DIST_FUNCTION',
-    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
+    'CNodeRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
+    'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
+    'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
     'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
     'OUTPUT_LABELS_DICT', 'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'OUTPUT_STATES', 'OUTPUT_TYPE',
     'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
@@ -107,7 +106,7 @@ __all__ = [
 ]
 
 
-class MechanismRoles:
+class CNodeRoles:
     """
     Attributes
     ----------
@@ -163,7 +162,7 @@ class MechanismRoles:
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
         associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
-        System are listed in its :keyword:`target_mechanisms` attribute, and can be displayed using its
+        System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
 
@@ -523,6 +522,8 @@ LEABRA_FUNCTION_TYPE = "LEABRA FUNCTION TYPE"
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+NORMALIZING_FUNCTION_TYPE = "NORMALIZING FUNCTION TYPE"
+INTERFACE_FUNCTION_TYPE = "INTERFACE FUNCTION TYPE"
 SELECTION_FUNCTION_TYPE = "SELECTION FUNCTION TYPE"
 
 
@@ -585,7 +586,8 @@ RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
-
+IDENTITY_FUNCTION = 'Identity Function'
+STATE_MAP_FUNCTION = 'State Map Function'
 # Distribution functions
 
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"

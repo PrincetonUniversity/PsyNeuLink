@@ -1236,6 +1236,15 @@ class InputState(State_Base):
     def llvmSymbolName(self):
         return self.function_object.llvmSymbolName
 
+    @property
+    def position_in_mechanism(self):
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                return self.owner.get_input_state_position(self)
+            else:
+                return None
+        return None
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d

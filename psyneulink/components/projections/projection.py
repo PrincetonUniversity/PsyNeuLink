@@ -1264,7 +1264,6 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
-
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
@@ -1295,7 +1294,6 @@ def _parse_connection_specs(connectee_state_type,
     connect_with_states = []
 
     for connection in connections:
-
 
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in ProjectionTuple as both State spec and Projection spec (to get Projection for that State)
@@ -1334,9 +1332,8 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
-
             projection_spec = connection
-            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
@@ -1556,15 +1553,22 @@ def _parse_connection_specs(connectee_state_type,
                 states = state
             else:
                 states = [state]
+
             for state_spec in states:
                 if inspect.isclass(state_spec):
                     state_type = state_spec
                 else:
                     state_type = state_spec.__class__
 
-                # Test that state_type is in the list for state's connects_with
+                # # Test that state_type is in the list for state's connects_with
+                from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+
+                # KAM 7/26/18 modified to allow ControlMechanisms to be terminal nodes of compositions
+                # We could only include ControlSignal in the allowed types if the receiver is a CIM?
+                allowed = connects_with + modulators + [ControlSignal]
+
                 if not any(issubclass(connects_with_state, state_type)
-                           for connects_with_state in connects_with + modulators):
+                           for connects_with_state in allowed):
                     spec = projection_spec or state_type.__name__
                     raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
                                           "{} with {} of {} ; should be one of the following: {}".
