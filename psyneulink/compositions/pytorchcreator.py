@@ -7,9 +7,6 @@ import torch
 from torch import nn
 import numpy as np
 
-
-
-
 # NN MODULE SUBCLASS THAT CREATES PYTORCH MODEL OBJECTS FROM PROCESSING GRAPHS
 
 class PytorchCreator(torch.nn.Module):
@@ -163,8 +160,3 @@ class PytorchCreator(torch.nn.Module):
                     outputs.append(layer)
         
         return outputs
-
-
-
-
-
