@@ -840,6 +840,39 @@ class TestExecutionOrder:
         assert expected_consideration_queue == comp.scheduler_processing.consideration_queue
 
     @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_3_mechanisms_frozen_values(self, benchmark, mode):
+        #
+        #   B
+        #  /|\
+        # A-+-D
+        #  \|/
+        #   C
+        #
+        # A: 4 x 5 = 20
+        # B: (20 + 0) x 4 = 80
+        # C: (20 + 0) x 3 = 60
+        # D: (20 + 80 + 60) x 2 = 320
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=5.0))
+        B = TransferMechanism(name="B", function=Linear(slope=4.0))
+        C = TransferMechanism(name="C", function=Linear(slope=3.0))
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))
+        comp.add_linear_processing_pathway([A, D])
+        comp.add_linear_processing_pathway([B, C])
+        comp.add_linear_processing_pathway([C, B])
+        comp.add_linear_processing_pathway([A, B, D])
+        comp.add_linear_processing_pathway([A, C, D])
+        comp._analyze_graph()
+
+        inputs_dict = {A: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 320)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+
+    @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python'])
     def test_5_mechanisms_1_origins_1_multi_control_1_terminal(self, benchmark, mode):
