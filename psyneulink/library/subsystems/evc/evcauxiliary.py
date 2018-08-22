@@ -1132,21 +1132,21 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
                                                      # monitored_states=controller.monitored_states,
                                                      runtime_params=runtime_params,
                                                      context=context)
-
-        for i in range(len(outcomes)):
-            allocation_policy_outcomes = outcomes[i]
-            allocation_policy = controller.control_signal_search_space[i]
-            allocation_policy_evc_list = []
-            num_trials = len(allocation_policy_outcomes)
-            for j in range(num_trials):
-
-                outcome = allocation_policy_outcomes[0][j]
-                value = controller.paramsCurrent[VALUE_FUNCTION].function(controller=controller,
-                                                                          outcome=outcome,
-                                                                          costs=controller.control_signal_costs,
-                                                                          context=context)
-                allocation_policy_evc_list.append(value)
-            EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
+        print(outcomes)
+        # for i in range(len(outcomes)):
+        #     allocation_policy_outcomes = outcomes[i]
+        #     allocation_policy = controller.control_signal_search_space[i]
+        #     allocation_policy_evc_list = []
+        #     num_trials = len(allocation_policy_outcomes)
+        #     for j in range(num_trials):
+        #
+        #         outcome = allocation_policy_outcomes[0][j]
+        #         value = controller.paramsCurrent[VALUE_FUNCTION].function(controller=controller,
+        #                                                                   outcome=outcome,
+        #                                                                   costs=controller.control_signal_costs,
+        #                                                                   context=context)
+        #         allocation_policy_evc_list.append(value)
+        #     EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
 
         #     # Calculate EVC for specified allocation policy
         #     result_tuple = _compute_EVC(args=(controller, allocation_vector,

@@ -751,7 +751,7 @@ class EVCControlMechanism2(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System_Base)=None,
+                 system=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
@@ -812,7 +812,7 @@ class EVCControlMechanism2(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
+    def _instantiate_prediction_mechanisms(self, system, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
         Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
@@ -992,7 +992,7 @@ class EVCControlMechanism2(ControlMechanism):
 
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
+    def assign_as_controller(self, system, context=ContextFlags.COMMAND_LINE):
         self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
 

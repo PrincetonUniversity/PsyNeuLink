@@ -171,16 +171,24 @@ class TestControllers:
 
         task_execution_pathway = [Input, IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
-
         comp.add_c_node(Reward)
-        comp.add_controller(EVCControlMechanism2(name="controller",
-                                                 control_signals=[("drift_rate", Decision), ("threshold", Decision)],
-                                                 objective_mechanism=ObjectiveMechanism(monitored_output_states=[
-            Reward,
-            Decision.PROBABILITY_UPPER_THRESHOLD,
-            Decision.RESPONSE_TIME
-        ])),
-                                            )
+
+        # objective_mech = ObjectiveMechanism()
+        # control_mech = EVCControlMechanism2(name="controller",
+        #                                     control_signals=[("drift_rate", Decision), ("threshold", Decision)],
+        #                                     # objective_mechanism=ObjectiveMechanism(),
+        #                                     monitor_for_control=[
+        #     Reward,
+        #     Decision.PROBABILITY_UPPER_THRESHOLD,
+        #     # (Decision.RESPONSE_TIME, -1, 1)
+        # ])
+        comp.add_controller(type=EVCControlMechanism2,
+                            control_signals=[("drift_rate", Decision), ("threshold", Decision)],
+                            monitor_for_control=[Reward,
+                                                 Decision.PROBABILITY_UPPER_THRESHOLD,
+                                                 (Decision.RESPONSE_TIME, -1, 1)
+                                                 ])
+        # print(objective_mech.monitored_output_states)
         comp.enable_controller = True
         # TBI: comp.monitor for control
 
@@ -194,6 +202,11 @@ class TestControllers:
             Input: [0.5],
             Reward: [20]
         }
+        
+        # print("comp.controller = ", comp.controller)
+        # print("comp.controller.monitor_for_control = ", comp.controller.monitor_for_control)
+        # print("comp.controller.objective_mechanism = ", comp.controller.objective_mechanism)
+        # print("comp.controller.objective_mechanism.monitored_output_states = ", comp.controller.objective_mechanism.monitored_output_states)
 
         comp.run(
             inputs=input_dict,

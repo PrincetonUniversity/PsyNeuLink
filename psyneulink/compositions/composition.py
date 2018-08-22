@@ -614,12 +614,42 @@ class Composition(object):
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
-    def add_controller(self, node, monitored_output_states):
-        self.controller = node
-        node.system = self
+    def add_controller(self, type, monitor_for_control, control_signals):
+        self.monitor_for_control = monitor_for_control
+        self.controller = type(
+            # system=self,
+                               objective_mechanism=self._get_monitored_output_states_for_system(),
+                               control_signals=self._get_control_signals_for_system(control_signals))
+        self.controller.system= self
+        self.add_c_node(self.controller.objective_mechanism)
+        for proj in self.controller.objective_mechanism.path_afferents:
+            self.add_projection(proj)
         self._analyze_graph()
 
-    def _get_monitored_output_states_for_system(self, controller=None, context=None):
+    def _get_control_signals_for_system(self, control_signals=None):
+        """Generate and return a list of control_signal_specs for System
+
+        Generate list from:
+           ControlSignal specifications passed in from the **control_signals** argument.
+           ParameterStates of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
+               Note: this includes any for which a ControlSignal rather than a ControlProjection
+                     was used to specify control for a parameter (e.g., in a 2-item tuple specification for the
+                     parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
+                     are completed in the call to _instantiate_control_signal() by the ControlMechanism.
+        """
+        from psyneulink.globals.keywords import PROJECTIONS
+        control_signal_specs = control_signals or []
+        for node in self.c_nodes:
+            for parameter_state in node._parameter_states:
+                for projection in parameter_state.mod_afferents:
+                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
+                    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                        proj_control_signal_specs = projection.control_signal_params or {}
+                        proj_control_signal_specs.update({PROJECTIONS: [projection]})
+                        control_signal_specs.append(proj_control_signal_specs)
+        return control_signal_specs
+
+    def _get_monitored_output_states_for_system(self, controller=None):
         """
         Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
             - if specification in output_state is None:
@@ -772,8 +802,8 @@ class Composition(object):
                 # spec is a string
                 elif isinstance(spec, str):
                     # Search System for Mechanisms with OutputStates with the string as their name
-                    for mech in self.mechanisms:
-                        for output_state in mech.output_states:
+                    for node in self.c_nodes:
+                        for output_state in node.output_states:
                             if output_state.name == spec:
                                 monitored_output_state_tuples.extend(
                                         [MonitoredOutputStateTuple(output_state=output_state,
@@ -821,7 +851,7 @@ class Composition(object):
         #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
-        for mech in self.mechanisms:
+        for node in self.c_nodes:
 
             # For each Mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
@@ -837,13 +867,13 @@ class Composition(object):
 
             # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
-                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+                node_specs = node.paramsCurrent[MONITOR_FOR_CONTROL]
 
-                if mech_specs is NotImplemented:
+                if node_specs is NotImplemented:
                     raise AttributeError
 
                 # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
-                if mech_specs is None:
+                if node_specs is None:
                     raise ValueError
 
             # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
@@ -858,10 +888,10 @@ class Composition(object):
             else:
 
                 # Add mech_specs to all_specs
-                all_specs.extend(mech_specs)
+                all_specs.extend(node_specs)
 
                 # Extract refs from tuples and add to local_specs
-                for item in mech_specs:
+                for item in node_specs:
                     if isinstance(item, tuple):
                         local_specs.append(item[OUTPUT_STATE_INDEX])
                         continue
@@ -869,18 +899,18 @@ class Composition(object):
 
                 # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
                 #    if there is one, use it in place of any specified for controller or system
-                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
+                option_specs = [item for item in node_specs if isinstance(item, MonitoredOutputStatesOption)]
                 if not option_specs:
                     option_spec = ctlr_or_sys_option_spec
                 elif option_specs and len(option_specs) == 1:
                     option_spec = option_specs[0]
                 else:
                     raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
-                                   format(mech.name, option_specs))
+                                   format(node.name, option_specs))
 
             # PARSE OutputState'S SPECS
 
-            for output_state in mech.output_states:
+            for output_state in node.output_states:
 
                 # Get MONITOR_FOR_CONTROL specification from OutputState
                 try:
@@ -917,14 +947,14 @@ class Composition(object):
                         local_specs.append(item)
 
             # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
-            for output_state in mech.output_states:
+            for output_state in node.output_states:
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
 
 
             # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_states
 
-            for output_state in mech.output_states:
+            for output_state in node.output_states:
 
                 # If OutputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
@@ -938,24 +968,24 @@ class Composition(object):
                 #   Mechanism is named or referenced in any specification
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
                 #   or it is a terminal Mechanism
-                elif (mech.name in local_specs or mech in local_specs or
+                elif (node.name in local_specs or node in local_specs or
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              mech in self.terminal_mechanisms.mechanisms):
+                              node in self.get_c_nodes_by_role(CNodeRole.TERMINAL)):
                     #
-                    if (not (mech.name in local_specs or mech in local_specs) and
-                            not mech in self.terminal_mechanisms.mechanisms):
+                    if (not (node.name in local_specs or node in local_specs) and
+                            not node in self.get_c_nodes_by_role(CNodeRole.TERMINAL)):
                         continue
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-                        if output_state is mech.output_state:
+                        if output_state is node.output_state:
                             monitored_output_states.append(output_state)
                             continue
                     # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         monitored_output_states.append(output_state)
-                    elif mech.name in local_specs or mech in local_specs:
-                        if output_state is mech.output_state:
+                    elif node.name in local_specs or node in local_specs:
+                        if output_state is node.output_state:
                             monitored_output_states.append(output_state)
                             continue
                     elif option_spec is None:
@@ -963,7 +993,7 @@ class Composition(object):
                     else:
                         raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
-                                       format(output_state.name, mech.name))
+                                       format(output_state.name, node.name))
 
 
         # ASSIGN EXPONENTS, WEIGHTS and MATRICES
@@ -1659,6 +1689,7 @@ class Composition(object):
         if hasattr(self, "prediction_mechanisms"):
             for prediction_mechanism in self.prediction_mechanisms:
                 prediction_mechanism._execution_id = execution_id
+
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -1780,6 +1811,9 @@ class Composition(object):
         if termination_processing is None:
             termination_processing = self.termination_processing
 
+        if hasattr(self, "prediction_mechanisms"):
+            self._execute_prediction_mechanisms(context=context)
+
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -1812,8 +1846,6 @@ class Composition(object):
             frozen_values = {}
             new_values = {}
             # execute each node with EXECUTING in context
-            if hasattr(self, "prediction_mechanisms"):
-                self._execute_prediction_mechanisms(context=context)
             for node in next_execution_set:
                 frozen_values[node] = node.output_values
                 if node in origin_nodes:
@@ -2191,6 +2223,7 @@ class Composition(object):
         return saved_state
 
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
+
         predicted_input = self.update_predicted_input()
 
         num_trials = 1
@@ -2198,6 +2231,7 @@ class Composition(object):
 
         outcome_list = []
         for allocation_policy in allocation_policies:
+            print("(simulations for allocation policy = ", allocation_policy, ")")
             self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
             execution_id = self._get_unique_id()
             allocation_policy_outcomes = []
@@ -2215,8 +2249,8 @@ class Composition(object):
                          execution_id=execution_id,
                          runtime_params=runtime_params,
                          context=context)
-                monitored_states = self.controller._update_input_states(runtime_params=runtime_params, context=context)
-
+                monitored_states = self.controller.objective_mechanism.output_values
+                print("outcome = ", monitored_states)
                 # print("monitored_states = ", self.controller.objective_mechanism.monitored_output_states)
                 # for state in monitored_states:
                 #     outcome.append(state.value)
