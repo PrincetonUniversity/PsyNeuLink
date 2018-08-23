@@ -914,7 +914,7 @@ class System(System_Base):
         if isinstance(controller, ControlMechanism):
             controller.objective_mechanism.for_controller = True
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # fAssign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
                                                   # controller=controller,
@@ -2878,6 +2878,7 @@ class System(System_Base):
                 # Execute
                 # # TEST PRINT:
                 # print("\nEXECUTING System._execute_processing\n")
+
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
 
                 if not self._animate is False and self._animate_unit is COMPONENT:

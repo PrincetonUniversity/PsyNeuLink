@@ -523,7 +523,9 @@ class Composition(object):
         for prediction_mechanism in self.prediction_mechanisms:
             for proj in prediction_mechanism.path_afferents:
                 proj.context.execution_phase = ContextFlags.PROCESSING
+            prediction_mechanism.context.execution_phase = ContextFlags.PROCESSING
             prediction_mechanism.execute(context=context)
+            print("\n\n\n #### PREDICTION MECHANISM INPUT ##### ", prediction_mechanism.path_afferents[0].sender.value)
 
 
     @property
@@ -1690,6 +1692,9 @@ class Composition(object):
             for prediction_mechanism in self.prediction_mechanisms:
                 prediction_mechanism._execution_id = execution_id
 
+        if hasattr(self, "controller"):
+            if self.controller:
+                self.controller._execution_id = execution_id
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -1940,7 +1945,11 @@ class Composition(object):
         predicted_input = {}
         for prediction_mechanism in self.prediction_mechanisms:
             origin_node = self.prediction_origin_pairs[prediction_mechanism]
-            predicted_input[origin_node] = prediction_mechanism.value
+            node_output = []
+            for output_state in prediction_mechanism.output_states:
+                node_output.append(output_state.value)
+            predicted_input[origin_node] = node_output
+        print("\n\n predicted input = ", predicted_input, "\n")
         return predicted_input
 
     def reinitialize(self, values):
@@ -2241,6 +2250,10 @@ class Composition(object):
                     inputs[node] = predicted_input[node][i]
 
                 self.context.execution_phase = ContextFlags.SIMULATION
+                for output_state in self.controller.output_states:
+                    for proj in output_state.efferents:
+
+                        proj.context.execution_phase = ContextFlags.PROCESSING
                 # ASSIGN EXECUTION ID
                 # TEST PRINT
                 # print("\n\n beginning simulation run - - - - - - - -")

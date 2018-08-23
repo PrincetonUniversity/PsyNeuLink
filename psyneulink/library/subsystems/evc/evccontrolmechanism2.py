@@ -944,11 +944,15 @@ class EVCControlMechanism2(ControlMechanism):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def apply_control_signal_values(self, control_signal_values, runtime_params, context):
-        for i in range(len(self.control_signals)):
+        for i in range(len(control_signal_values)):
             if self.value is None:
                 self.value = self.instance_defaults.value
             self.value[i] = np.atleast_1d(control_signal_values[i])
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        for i in range(len(self.output_states)):
+            self.output_states[i].value = np.atleast_1d(control_signal_values[i])
+        #
+        # self._update_output_states(runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+        # print("output values = ", self.output_values)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Validate cost function'''
