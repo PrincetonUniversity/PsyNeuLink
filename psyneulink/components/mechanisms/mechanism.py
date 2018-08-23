@@ -116,8 +116,8 @@ mentioned above, or using one of the following:
 
 .. _Mechanism_State_Specification:
 
-Specifying States
-~~~~~~~~~~~~~~~~~
+*Specifying States*
+~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
@@ -179,8 +179,8 @@ See `State <State_Examples>` for additional examples of specifying the States of
 
 .. _Mechanism_Parameter_Specification:
 
-Specifying Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
 current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
@@ -198,8 +198,8 @@ Structure
 
 .. _Mechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
@@ -347,8 +347,8 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 
 .. _Mechanism_States:
 
-States
-~~~~~~
+*States*
+~~~~~~~~
 
 Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
 `ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
@@ -613,8 +613,8 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 
 .. _Mechanism_Additional_Attributes:
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+*Additional Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Mechanism_Constructor_Arguments:
 
@@ -816,8 +816,8 @@ Finally, a Mechanism has an attribute that contains a dictionary of its attribut
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
-Role in Processes and Systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Role in Processes and Systems*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mechanisms that are part of one or more `Processes <Process>` are assigned designations that indicate the
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
@@ -849,8 +849,8 @@ tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Pa
 
 .. _Mechanism_Runtime_Parameters:
 
-Runtime Parameters
-~~~~~~~~~~~~~~~~~~
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This is an advanced feature, and is generally not required for most applications.
@@ -930,6 +930,7 @@ Class Reference
 
 import inspect
 import logging
+import warnings
 
 from collections import OrderedDict
 from inspect import isclass
@@ -938,7 +939,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -1987,6 +1988,14 @@ class Mechanism_Base(Mechanism):
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object._exponents = exponents
 
+        # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
+        # ignore warnings of certain Functions that disable conversion
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=UserWarning)
+            self.function_object.output_type = FunctionOutputType.NP_2D_ARRAY
+            self.function_object.enable_output_type_conversion = True
+        self.function_object._instantiate_value(context)
+
     def _instantiate_attributes_after_function(self, context=None):
 
         self._instantiate_output_states(context=context)
@@ -2034,6 +2043,10 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
+
+    def _projection_added(self, projection, context=None):
+        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
+        pass
 
     def reinitialize(self, *args):
         """
@@ -2776,7 +2789,7 @@ class Mechanism_Base(Mechanism):
             else:
                 x_range = [-10.0, 10.0]
         x_space = np.linspace(x_range[0],x_range[1])
-        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
+        plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
 
     @tc.typecheck

@@ -27,3 +27,16 @@ class TestMechanism:
 
         assert T.input_state.function_object.instance_defaults.variable == result_variable[0]
         assert T.input_state.function_object.instance_defaults.value == result_variable[0]
+
+    @pytest.mark.mechanism
+    @pytest.mark.parametrize(
+        'mechanism_type, default_variable, mechanism_value, function_value',
+        [
+            (pnl.ObjectiveMechanism, [0, 0, 0], np.array([[0, 0, 0]]), np.array([[0, 0, 0]]))
+        ]
+    )
+    def test_value_shapes(self, mechanism_type, default_variable, mechanism_value, function_value):
+        M = mechanism_type(default_variable=default_variable)
+
+        assert M.instance_defaults.value.shape == mechanism_value.shape
+        assert M.function_object.instance_defaults.value.shape == function_value.shape

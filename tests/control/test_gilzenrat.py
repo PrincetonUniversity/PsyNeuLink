@@ -4,21 +4,21 @@ from psyneulink.components.functions.function import FHNIntegrator, Linear
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
+from psyneulink.library.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 
 class TestGilzenratMechanisms:
 
     def test_defaults(self):
-        G = LCA(integrator_mode=True,
-                leak=-1.0,
-                noise=0.0,
-                time_step_size=0.02,
-                function=Linear,
-                self_excitation=1.0,
-                competition=-1.0)
+        G = LCAMechanism(integrator_mode=True,
+                         leak=-1.0,
+                         noise=0.0,
+                         time_step_size=0.02,
+                         function=Linear,
+                         self_excitation=1.0,
+                         competition=-1.0)
 
-        # - - - - - LCA integrator functions - - - - -
+        # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 1.0*X + 0
 
@@ -39,20 +39,20 @@ class TestGilzenratMechanisms:
         # f(X) = 1.0*0.0396 <--- return 0.02, recurrent projection 0.02
 
     def test_previous_value_stored(self):
-        G = LCA(integrator_mode=True,
-                leak=-1.0,
-                noise=0.0,
-                time_step_size=0.02,
-                function=Linear(slope=2.0),
-                self_excitation=1.0,
-                competition=-1.0,
-                initial_value=np.array([[1.0]]))
+        G = LCAMechanism(integrator_mode=True,
+                         leak=-1.0,
+                         noise=0.0,
+                         time_step_size=0.02,
+                         function=Linear(slope=2.0),
+                         self_excitation=1.0,
+                         competition=-1.0,
+                         initial_value=np.array([[1.0]]))
 
         P = Process(pathway=[G])
         S = System(processes=[P])
         G.output_state.value = [0.0]
 
-        # - - - - - LCA integrator functions - - - - -
+        # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 2.0*X + 0
 

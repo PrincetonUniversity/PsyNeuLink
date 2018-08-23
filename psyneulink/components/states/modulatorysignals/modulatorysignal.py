@@ -76,8 +76,8 @@ COMMENT
 
 .. _ModulatorySignal_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
@@ -99,8 +99,8 @@ Projections when creating a State.
 
 .. _ModulatorySignal_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 A ModulatorySignal modulates the value of a `State <State>` either by modifying a parameter of the State's `function
 <State_Base.function>` (which determines the State's `value <State_Base.value>`), or by assigning a value to the State

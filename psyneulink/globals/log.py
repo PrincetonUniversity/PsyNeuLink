@@ -79,8 +79,8 @@ to access its `entries <Log.entries>`:
 
 .. _Log_Loggable_Items:
 
-Loggable Items
-~~~~~~~~~~~~~~
+*Loggable Items*
+~~~~~~~~~~~~~~~~
 
 Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
 the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
@@ -109,8 +109,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 
 .. _Log_Conditions:
 
-Logging Conditions
-~~~~~~~~~~~~~~~~~~
+*Logging Conditions*
+~~~~~~~~~~~~~~~~~~~~
 
 Configuring a Component to be logged is done using a condition, that specifies a `LogCondition` under which its
 `value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions
@@ -1443,7 +1443,12 @@ class Log:
                     row.append(value)
                     break
             else:
-                value = None if datum.value is None else datum.value.tolist()
+                if datum.value is None:
+                    value = None
+                elif isinstance(datum.value, list):
+                    value = datum.value
+                else:
+                    value = datum.value.tolist()
                 row.append(value)
         return row
 

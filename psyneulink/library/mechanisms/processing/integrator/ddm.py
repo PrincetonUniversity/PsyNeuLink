@@ -68,8 +68,8 @@ The DDM Mechanism implements a general form of the decision process.
 
 .. _DDM_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
 <DDM_Modes>` that is used.  Accordingly, the default `InputState` for a DDM takes a single scalar value as its input,
@@ -95,8 +95,8 @@ COMMENT
 
 .. _DDM_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
@@ -148,8 +148,8 @@ OutputStates <OutputState_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
-DDM Function Types
-~~~~~~~~~~~~~~~~~~
+*DDM Function Types*
+~~~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
