@@ -1,5 +1,3 @@
-# IMPORTS
-
 from psyneulink.components.functions.function import Linear, Logistic
 import logging
 logger = logging.getLogger(__name__)
@@ -7,11 +5,11 @@ import torch
 from torch import nn
 import numpy as np
 
-# NN MODULE SUBCLASS THAT CREATES PYTORCH MODEL OBJECTS FROM PROCESSING GRAPHS
+# Class that creates pytorch model objects from processing graphs
 
 class PytorchCreator(torch.nn.Module):
     
-    # HELPER METHODS ----------------------------------------------------------------------------------------
+    # helper methods ----------------------------------------------------------------------------------------
     
     # returns activation function for node
     def activation_function_creator(self, node):
@@ -37,21 +35,21 @@ class PytorchCreator(torch.nn.Module):
             return lambda x: (torch.max(input=(x-bias), other=torch.tensor([0]).double()) * gain + 
                               torch.min(input=(x-bias), other=torch.tensor([0]).double()) * leak)
     
-    # returns dict mapping psyneulink projections to corresponding pytorch weights (provided in separate numpy arrays)
+    # returns dict mapping psyneulink projections to corresponding pytorch weights (in numpy arrays, not torch tensors)
     def get_weights_for_projections(self):
         copied_to_numpy = {}
         for projection, weights in self.projections_to_torch_weights.items():
             copied_to_numpy[projection] = weights.detach().numpy().copy()
         return copied_to_numpy
     
-    # returns dict mapping psyneulink mechanisms to corresponding pytorch biases (provided in separate numpy arrays)
+    # returns dict mapping psyneulink mechanisms to corresponding pytorch biases (in numpy arrays, not torch tensors)
     def get_biases_for_mechanisms(self):
         copied_to_numpy = {}
         for mechanism, biases in self.mechanisms_to_torch_biases.items():
             copied_to_numpy[mechanism] = biases.detach().numpy().copy()
         return copied_to_numpy
     
-    # INIT AND FEEDFORWARD ----------------------------------------------------------------------------------
+    # init and forward methods ------------------------------------------------------------------------------
     
     # sets up parameters of model, information for performing feedfoward step
     def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets):
@@ -59,7 +57,6 @@ class PytorchCreator(torch.nn.Module):
         super(PytorchCreator, self).__init__()
         
         # instance variables
-        # self.ordered_execution_sets = self.get_ordered_exec_sets(processing_graph) # execution sets
         self.ordered_execution_sets = ordered_execution_sets
         self.processing_graph = processing_graph # processing graph
         self.node_to_feedforward_info = {} # dict mapping PNL nodes to feedforward info

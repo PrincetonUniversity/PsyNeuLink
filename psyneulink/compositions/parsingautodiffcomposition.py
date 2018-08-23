@@ -427,7 +427,7 @@ class ParsingAutodiffComposition(Composition):
     ):
         
         # validate run arguments, set composition instance variables using run arguments
-        self.validate_run_args(learning_rate, optimizer, loss, refresh_losses, targets, epochs)
+        self.validate_and_set_run_args(learning_rate, optimizer, loss, refresh_losses, targets, epochs)
         
         # set up processing scheduler
         if scheduler_processing is None:
@@ -575,9 +575,15 @@ class ParsingAutodiffComposition(Composition):
     # uses inputs and targets to train model for given number of epochs
     def autodiff_training(self, inputs, targets, epochs, randomize):
         
-        # training over trial sets in random order, set up array for mapping random order back to original order
+        # if training over trial sets in random order, set up array for mapping random order back to original order
         if randomize == True:
             rand_train_order_reverse = np.zeros(len(inputs))
+        
+        # get total number of output neurons from the dimensionality of targets on the first trial
+        # (for computing average loss across neurons on each trial later)
+        out_size = 0
+        for i in range(len(targets[0])):
+            out_size += len(targets[0][i])
         
         # iterate over epochs
         for epoch in range(epochs):
@@ -606,35 +612,30 @@ class ParsingAutodiffComposition(Composition):
                 else:
                     curr_tensor_inputs = inputs[t]
                     curr_tensor_targets = targets[t]
-                    
-                # get total number of output neurons
-                out_size = 0
-                for i in range(len(curr_tensor_targets)):
-                    out_size += len(curr_tensor_targets[i])
                 
-                # run the model on inputs
+                # get total number of output neurons
+                # out_size = 0
+                # for i in range(len(curr_tensor_targets)):
+                    # out_size += len(curr_tensor_targets[i])
+                
+                # compute forward pass for the model on current inputs
                 curr_tensor_outputs = self.model.forward(curr_tensor_inputs)
                 
                 # compute loss
                 curr_loss = torch.zeros(1).double()
                 for i in range(len(curr_tensor_outputs)):
-                    nowloss = self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
-                    # print(nowloss)
-                    # print("\n")
-                    curr_loss += nowloss
+                    curr_loss += self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
                 
                 # save loss on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
                 
-                '''
                 # print model computational graph
-                if epoch == 0 and t == 0:
-                    dot = make_dot(curr_loss)
-                    dot.format = 'svg'
-                    dot.render()
-                '''
+                # if epoch == 0 and t == 0:
+                    # dot = make_dot(curr_loss)
+                    # dot.format = 'svg'
+                    # dot.render()
                 
-                # compute gradients and perform parameter update
+                # backpropagate to compute gradients and perform parameter update
                 self.optimizer.zero_grad()
                 curr_loss = curr_loss/2 # *len(curr_tensor_outputs))
                 curr_loss.backward()
@@ -889,7 +890,9 @@ class ParsingAutodiffComposition(Composition):
     
     
     
-    def validate_run_args(self, learning_rate, optimizer, loss, refresh_losses, targets, epochs):
+    # method validates and sets values provided for doing training/processing with the parsing
+    # autodiff composition when run is called
+    def validate_and_set_run_args(self, learning_rate, optimizer, loss, refresh_losses, targets, epochs):
         
         if self.ordered_execution_sets is None:
             self.ordered_execution_sets = self.get_ordered_exec_sets(self.graph_processing)
