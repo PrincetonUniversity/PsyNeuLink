@@ -1014,7 +1014,6 @@ class EVCControlMechanism(ControlMechanism):
 
         control_signal_sample_lists = []
         control_signals = self.control_signals
-        print("control_signals = ", control_signals)
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(control_signals)
 
@@ -1028,7 +1027,7 @@ class EVCControlMechanism(ControlMechanism):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        print("self.control_signal_search_space = ", self.control_signal_search_space)
+
         # EXECUTE SEARCH
 
         # IMPLEMENTATION NOTE:
@@ -1106,7 +1105,6 @@ class EVCControlMechanism(ControlMechanism):
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
             self.value[i] = np.atleast_1d(allocation_vector[i])
-        print("context = ", context)
         self._update_output_states(runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION

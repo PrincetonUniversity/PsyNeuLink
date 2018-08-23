@@ -525,8 +525,6 @@ class Composition(object):
                 proj.context.execution_phase = ContextFlags.PROCESSING
             prediction_mechanism.context.execution_phase = ContextFlags.PROCESSING
             prediction_mechanism.execute(context=context)
-            print("\n\n\n #### PREDICTION MECHANISM INPUT ##### ", prediction_mechanism.path_afferents[0].sender.value)
-
 
     @property
     def graph_processing(self):
@@ -1949,7 +1947,6 @@ class Composition(object):
             for output_state in prediction_mechanism.output_states:
                 node_output.append(output_state.value)
             predicted_input[origin_node] = node_output
-        print("\n\n predicted input = ", predicted_input, "\n")
         return predicted_input
 
     def reinitialize(self, values):
@@ -2240,7 +2237,6 @@ class Composition(object):
 
         outcome_list = []
         for allocation_policy in allocation_policies:
-            print("(simulations for allocation policy = ", allocation_policy, ")")
             self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
             execution_id = self._get_unique_id()
             allocation_policy_outcomes = []
@@ -2252,21 +2248,14 @@ class Composition(object):
                 self.context.execution_phase = ContextFlags.SIMULATION
                 for output_state in self.controller.output_states:
                     for proj in output_state.efferents:
-
                         proj.context.execution_phase = ContextFlags.PROCESSING
-                # ASSIGN EXECUTION ID
-                # TEST PRINT
-                # print("\n\n beginning simulation run - - - - - - - -")
+
                 self.run(inputs=inputs,
                          reinitialize_values=reinitialize_values,
                          execution_id=execution_id,
                          runtime_params=runtime_params,
                          context=context)
                 monitored_states = self.controller.objective_mechanism.output_values
-                print("outcome = ", monitored_states)
-                # print("monitored_states = ", self.controller.objective_mechanism.monitored_output_states)
-                # for state in monitored_states:
-                #     outcome.append(state.value)
 
                 self.context.execution_phase = ContextFlags.PROCESSING
                 allocation_policy_outcomes.append(monitored_states)
@@ -2276,9 +2265,6 @@ class Composition(object):
             node.reinitialize(*reinitialize_values[node])
 
         return outcome_list
-
-    def run_simulation(self):
-        print("simulation runs now")
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
