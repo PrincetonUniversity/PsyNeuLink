@@ -28,7 +28,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
+print(torch.__version__)
 
 
 __all__ = [
@@ -924,16 +924,16 @@ class ParsingAutodiffComposition(Composition):
         
         if loss is None:
             if self.loss is None:
-                self.loss = nn.MSELoss(size_average=False)
+                self.loss = nn.MSELoss(reduction='sum')
         else:
             if loss not in ['mse', 'crossentropy']:
                 raise ParsingAutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
                                                       "Currently, Mean Squared Error and Cross Entropy are the only "
                                                       "available loss functions (specified as 'mse' or 'crossentropy').")
             if loss == 'mse':
-                self.loss = nn.MSELoss(size_average=False)
+                self.loss = nn.MSELoss(reduction='sum')
             else:
-                self.loss = nn.CrossEntropyLoss(size_average=False)
+                self.loss = nn.CrossEntropyLoss(reduction='sum')
         
         if refresh_losses == True:
             self.losses = []
