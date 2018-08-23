@@ -1103,7 +1103,7 @@ class Composition(object):
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                                                         name="INPUT_CIM_" + node.name + "_" + input_state.name)
+                                                         name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
