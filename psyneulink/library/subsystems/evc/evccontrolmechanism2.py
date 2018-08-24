@@ -948,11 +948,8 @@ class EVCControlMechanism2(ControlMechanism):
             if self.value is None:
                 self.value = self.instance_defaults.value
             self.value[i] = np.atleast_1d(control_signal_values[i])
-        for i in range(len(self.output_states)):
-            self.output_states[i].value = np.atleast_1d(control_signal_values[i])
-        #
-        # self._update_output_states(runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
-        # print("output values = ", self.output_values)
+
+        self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Validate cost function'''

@@ -2236,9 +2236,12 @@ class Composition(object):
         reinitialize_values = self._save_state()
 
         outcome_list = []
+        control_signal_list = []
+        costs = []
         for allocation_policy in allocation_policies:
             self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
             execution_id = self._get_unique_id()
+
             allocation_policy_outcomes = []
             for i in range(num_trials):
                 inputs = {}
@@ -2255,6 +2258,11 @@ class Composition(object):
                          execution_id=execution_id,
                          runtime_params=runtime_params,
                          context=context)
+                current_costs = []
+                for signal in self.controller.control_signals:
+                    current_costs.append(signal.cost)
+
+                costs.append(current_costs)
                 monitored_states = self.controller.objective_mechanism.output_values
 
                 self.context.execution_phase = ContextFlags.PROCESSING
@@ -2263,8 +2271,7 @@ class Composition(object):
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
-
-        return outcome_list
+        return outcome_list, costs
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform

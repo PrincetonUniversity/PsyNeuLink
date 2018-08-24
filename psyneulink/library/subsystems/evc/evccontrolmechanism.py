@@ -1105,7 +1105,7 @@ class EVCControlMechanism(ControlMechanism):
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
             self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        self._update_output_states(None, runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION
 

@@ -387,9 +387,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             # for i in controller.predicted_input.values():
             #     inputs.append(repr(i).replace('\n', ''))
             # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
-            print("search space = ", controller.control_signal_search_space)
+
             for allocation_vector in controller.control_signal_search_space[start:end,:]:
-                print(allocation_vector, " = allocation_vector")
+
             # for iter in range(rank, len(controller.control_signal_search_space), size):
             #     allocation_vector = controller.control_signal_search_space[iter,:]:
 
@@ -509,6 +509,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
         controller.value = allocation_policy
+        print(allocation_policy)
         return allocation_policy
         #endregion
 
@@ -578,7 +579,7 @@ def _compute_EVC(args):
                                       runtime_params=runtime_params,
                                       reinitialize_values=reinitialization_values,
                                       context=context)
-        print(outcome)
+
         EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                                   outcome=outcome,
                                                                   costs=ctlr.control_signal_costs,
@@ -594,7 +595,7 @@ def _compute_EVC(args):
         mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
-    print("EVC_avg for ", allocation_vector, " = ", EVC_avg)
+
     # TEST PRINT EVC:
     # print("EVC_avg: {}".format(EVC_avg[0]))
 
@@ -969,7 +970,7 @@ class ValueFunction2(EVCAuxiliaryFunction):
 
 
         """
-        print("variable = ", variable)
+
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
@@ -1129,10 +1130,10 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
         EVC_values = np.array([])
         EVC_policies = np.array([[]])
 
-        outcomes = controller.system.run_simulations(allocation_policies=controller.control_signal_search_space,
-                                                     # monitored_states=controller.monitored_states,
-                                                     runtime_params=runtime_params,
-                                                     context=context)
+        outcomes, costs = controller.system.run_simulations(allocation_policies=controller.control_signal_search_space,
+                                                            runtime_params=runtime_params,
+                                                            context=context)
+
         for i in range(len(outcomes)):
             allocation_policy_outcomes = outcomes[i]
             allocation_policy = controller.control_signal_search_space[i]
@@ -1142,147 +1143,57 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
                 outcome = allocation_policy_outcomes[0][j]
                 value = controller.paramsCurrent[VALUE_FUNCTION].function(controller=controller,
                                                                           outcome=outcome,
-                                                                          costs=controller.control_signal_costs,
+                                                                          costs=costs[i],
                                                                           context=context)
                 allocation_policy_evc_list.append(value)
                 EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
-                print("EVC_avg for ", allocation_policy, " = ", EVC_avg)
-            # Calculate EVC for specified allocation policy
+                EVC, outcome, cost = EVC_avg
 
-            # Add to list of EVC values and allocation policies if save option is set
-    #         if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-    #             # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
-    #             EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
-    #             # Save policy associated with EVC for each process, as order of chunks
-    #             #     might not correspond to order of policies in control_signal_search_space
-    #             if len(EVC_policies[0])==0:
-    #                 EVC_policies = np.atleast_2d(allocation_vector)
-    #             else:
-    #                 EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
-    #
-    #         # If EVC is greater than the previous value:
-    #         # - store the current set of monitored state value in EVC_max_state_values
-    #         # - store the current set of control_signals in EVC_max_policy
-    #         # if EVC_max > EVC:
-    #         # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
-    #         if EVC == EVC_max:
-    #             # Keep track of state values and allocation policy associated with EVC max
-    #             # EVC_max_state_values = controller.input_value.copy()
-    #             # EVC_max_policy = allocation_vector.copy()
-    #             EVC_max_state_values = controller.input_values
-    #             EVC_max_policy = allocation_vector
-    #             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-    #
-    #     # # TEST PRINT EVC:
-    #     # print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
-    #
-    #         #endregion
-    #
-    #         # Aggregate, reduce and assign global results
-    #
-    #         if MPI_IMPLEMENTATION:
-    #             # combine max result tuples from all processes and distribute to all processes
-    #             max_tuples = Comm.allgather(max_value_state_policy_tuple)
-    #             # get tuple with "EVC max of maxes"
-    #             max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
-    #             # get EVC_max, state values and allocation policy associated with "max of maxes"
-    #             controller.EVC_max = max_of_max_tuples[0]
-    #             controller.EVC_max_state_values = max_of_max_tuples[1]
-    #             controller.EVC_max_policy = max_of_max_tuples[2]
-    #
-    #             if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-    #                 controller.EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
-    #                 controller.EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
-    #         else:
-    #             controller.EVC_max = EVC_max
-    #             controller.EVC_max_state_values = EVC_max_state_values
-    #             controller.EVC_max_policy = EVC_max_policy
-    #             if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-    #                 controller.EVC_values = EVC_values
-    #                 controller.EVC_policies = EVC_policies
-    #
-    #     if controller.prefs.reportOutputPref:
-    #         print("\nEVC simulation completed")
-    # #endregion
-    #
-    #     # -----------------------------------------------------------------
-    #
-    #     #region ASSIGN CONTROL SIGNAL VALUES
-    #
-    #     # Assign allocations to control_signals for optimal allocation policy:
-    #     EVC_maxStateValue = iter(controller.EVC_max_state_values)
-    #
-    #     # Assign max values for optimal allocation policy to controller.input_states (for reference only)
-    #     for i in range(len(controller.input_states)):
-    #         controller.input_states[controller.input_states.names[i]].value = np.atleast_1d(next(EVC_maxStateValue))
-    #
-    #
-    #     # Report EVC max info
-    #     if controller.prefs.reportOutputPref:
-    #         print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(controller.EVC_max)))
-    #         print ("ControlProjection allocation(s) for maximum EVC:")
-    #         for i in range(len(controller.control_signals)):
-    #             print("\t{0}: {1}".format(controller.control_signals[i].name,
-    #                                     controller.EVC_max_policy[i]))
-    #         print()
-    #
-    #     #endregionj
-    #
-    #     # # TEST PRINT:
-    #     # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
-    #
-    #     #region ASSIGN AND RETURN allocation_policy
-    #     # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
-    #     #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
-    #     #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
-    #     allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
-    #     controller.value = allocation_policy
+                EVC_max = max(EVC, EVC_max)
+                if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                    EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    # Save policy associated with EVC for each process, as order of chunks
+                    #     might not correspond to order of policies in control_signal_search_space
+                    if len(EVC_policies[0])==0:
+                        EVC_policies = np.atleast_2d(allocation_policy)
+                    else:
+                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_policy), axis=0)
+                if EVC == EVC_max:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    # EVC_max_state_values = controller.input_value.copy()
+                    # EVC_max_policy = allocation_vector.copy()
+                    EVC_max_state_values = controller.input_values
+                    EVC_max_policy = allocation_policy
+                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                controller.EVC_max = EVC_max
+                controller.EVC_max_state_values = EVC_max_state_values
+                controller.EVC_max_policy = EVC_max_policy
+                if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                    controller.EVC_values = EVC_values
+                    controller.EVC_policies = EVC_policies
+
+        # Assign allocations to control_signals for optimal allocation policy:
+        EVC_maxStateValue = iter(controller.EVC_max_state_values)
+
+        # Assign max values for optimal allocation policy to controller.input_states (for reference only)
+        for i in range(len(controller.input_states)):
+            controller.input_states[controller.input_states.names[i]].value = np.atleast_1d(
+                next(EVC_maxStateValue))
+
+
+            # Calculate EVC for specified allocation policy
+        if controller.prefs.reportOutputPref:
+            print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(controller.EVC_max)))
+            print ("ControlProjection allocation(s) for maximum EVC:")
+            for i in range(len(controller.control_signals)):
+                print("\t{0}: {1}".format(controller.control_signals[i].name,
+                                        controller.EVC_max_policy[i]))
+            print()
+
+
+        allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
+        controller.value = allocation_policy
+        print(allocation_policy)
         return allocation_policy
         #endregion
-
-
-def _compute_EVC2(args):
-    """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
-
-    IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
-    IMPLEMENTATION NOTE:  this could be further parallelized if input is for multiple trials
-
-    Simulates and calculates one trial for each set of inputs in ctrl.predicted_input.
-    Returns the average EVC over all trials
-
-    Args:
-        ctlr (EVCControlMechanism)
-        allocation_vector (1D np.array): allocation policy for which to compute EVC
-        runtime_params (dict): runtime params passed to ctlr.update
-        context (value): context passed to ctlr.update
-
-    Returns (float, float, float):
-        (EVC_current, outcome, aggregated_costs)
-
-    """
-
-    ctlr, allocation_vector, runtime_params, context = args
-
-
-    # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
-
-    origin_mechs = list(ctlr.predicted_input.keys())
-    # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
-    num_trials = len(ctlr.predicted_input[origin_mechs[0]])
-
-    outcomes = ctlr.sys
-    EVC_list = []
-
-    EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                                outcome=outcome,
-                                                                costs=ctlr.control_signal_costs,
-                                                                context=context))
-    EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
-    # TEST PRINT EVC:
-    # print("EVC_avg: {}".format(EVC_avg[0]))
-
-    if PY_MULTIPROCESSING:
-        return
-
-    else:
-        return (EVC_avg)
