@@ -498,7 +498,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                                         controller.EVC_max_policy[i]))
             print()
 
-        #endregionj
+        #endregion
 
         # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
@@ -509,7 +509,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
         controller.value = allocation_policy
-        print(allocation_policy)
         return allocation_policy
         #endregion
 
@@ -1194,6 +1193,5 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
 
         allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
         controller.value = allocation_policy
-        print(allocation_policy)
         return allocation_policy
         #endregion
