@@ -1107,7 +1107,7 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(self.function_object, Integrator):
             new_values = self.function_object.reinitialize(*args)
             self.value = np.array(new_values)
-            self._update_output_states(context="REINITIALIZING")
+            self._update_output_states(None, context="REINITIALIZING")
 
     @property
     def is_finished(self):
