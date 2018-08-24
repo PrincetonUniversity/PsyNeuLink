@@ -391,14 +391,15 @@ class KohonenLearningMechanism(LearningMechanism):
         self.value = [self.learning_signal]
         return self.value
 
-    def _update_output_states(self, runtime_params=None, context=None):
+    def _update_output_states(self, owner_value, runtime_params=None, context=None):
         '''Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
+        :param owner_value:
         '''
 
-        super()._update_output_states(runtime_params, context)
+        super()._update_output_states(None, runtime_params, context)
 
         if self.context.composition:
             self.learned_projection.execute(context=ContextFlags.LEARNING)
