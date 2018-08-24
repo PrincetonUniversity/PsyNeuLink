@@ -142,8 +142,6 @@ class PytorchCreator(torch.nn.Module):
                 else:
                     layer = torch.zeros(len(node.component.input_states[0].value)).double()
                     for input_node, weights in afferents.items():
-                        # print("\n")
-                        # print(self.node_to_feedforward_info[])
                         layer += torch.matmul(self.node_to_feedforward_info[input_node][0], weights)
                     if biases is not None:
                         layer = layer + biases
