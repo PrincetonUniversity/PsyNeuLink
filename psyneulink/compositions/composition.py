@@ -569,12 +569,12 @@ class Composition(object):
         '''
         if self.needs_update_scheduler_learning or self._scheduler_learning is None:
             old_scheduler = self._scheduler_learning
-            self._scheduler_learning = Scheduler(graph=self.graph)
+            # self._scheduler_learning = Scheduler(graph=self.graph)
 
-            if old_scheduler is not None:
-                self._scheduler_learning.add_condition_set(old_scheduler.condition_set)
-
-            self.needs_update_scheduler_learning = False
+            # if old_scheduler is not None:
+            #     self._scheduler_learning.add_condition_set(old_scheduler.condition_set)
+            #
+            # self.needs_update_scheduler_learning = False
 
         return self._scheduler_learning
 
@@ -2077,10 +2077,10 @@ class Composition(object):
         execution_id = self._assign_execution_ids(execution_id)
 
         scheduler_processing._init_counts(execution_id=execution_id)
-        scheduler_learning._init_counts(execution_id=execution_id)
+        # scheduler_learning._init_counts(execution_id=execution_id)
 
         scheduler_processing.update_termination_conditions(termination_processing)
-        scheduler_learning.update_termination_conditions(termination_learning)
+        # scheduler_learning.update_termination_conditions(termination_learning)
 
         origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
