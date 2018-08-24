@@ -316,10 +316,10 @@ class TestTrainingCorrectness:
     @pytest.mark.elrond
     @pytest.mark.parametrize(
         'eps, calls, opt, from_pnl_or_no', [
-            (2000, 'single', 'adam', True),
-            (6000, 'multiple', 'adam', True),
-            (2000, 'single', 'adam', False),
-            (6000, 'multiple', 'adam', False)
+            (2000, 'single', 'adam', True) # ,
+            # (6000, 'multiple', 'adam', True),
+            # (2000, 'single', 'adam', False) # ,
+            # (6000, 'multiple', 'adam', False)
         ]
     )
     def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no):
@@ -384,8 +384,8 @@ class TestTrainingCorrectness:
     
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_no', [
-            (1000, 'adam', True),
-            (1000, 'adam', False)
+            (1000, 'adam', True) # ,
+            # (1000, 'adam', False)
         ]
     )
     def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no):
@@ -578,7 +578,7 @@ class TestTrainingCorrectness:
 @pytest.mark.minesofmoria
 class TestTrainingTime:
     
-    @pytest.mark.foolofatook
+    @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -691,6 +691,7 @@ class TestTrainingTime:
         print(msg)
         logger.info(msg)
     
+    @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -825,7 +826,7 @@ class TestTrainingTime:
         print(msg)
         logger.info(msg)
     
-    @pytest.mark.gimli
+    @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -1154,9 +1155,9 @@ class TestTrainingIdenticalness():
     @pytest.mark.xor_ident
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd'),
-            (10, 'sgd'),
-            (100, 'sgd')
+            # (1, 'sgd'),
+            (10, 'sgd') # ,
+            # (100, 'sgd')
         ]
     )
     def test_xor_training_identicalness(self, eps, opt):
@@ -1272,9 +1273,9 @@ class TestTrainingIdenticalness():
     @pytest.mark.galadriel
     @pytest.mark.parametrize(
         'eps, opt', [
-            (1, 'sgd'),
-            (10, 'sgd'),
-            (40, 'sgd')
+            # (1, 'sgd'),
+            (10, 'sgd') # ,
+            # (40, 'sgd')
         ]
     )
     def test_semantic_net_training_identicalness(self, eps, opt):
