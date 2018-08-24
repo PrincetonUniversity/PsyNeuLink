@@ -2099,7 +2099,7 @@ class Mechanism_Base(Mechanism):
         if isinstance(self.function_object, Integrator):
             new_value = self.function_object.reinitialize(*args)
             self.value = np.atleast_2d(new_value)
-            self._update_output_states(context="REINITIALIZING")
+            self._update_output_states(None, context="REINITIALIZING")
 
         # If the mechanism has an auxiliary integrator function:
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
@@ -2108,7 +2108,7 @@ class Mechanism_Base(Mechanism):
             if isinstance(self.integrator_function, Integrator):
                 new_input = self.integrator_function.reinitialize(*args)[0]
                 self.value = self.function_object.execute(variable=new_input, context="REINITIALIZING")
-                self._update_output_states(context="REINITIALIZING")
+                self._update_output_states(None, context="REINITIALIZING")
 
             elif self.integrator_function is None:
                 if hasattr(self, "integrator_mode"):
@@ -2330,7 +2330,7 @@ class Mechanism_Base(Mechanism):
         self.value = value
 
         # UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        self._update_output_states(None, runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (self.context.execution_phase &
@@ -2458,11 +2458,15 @@ class Mechanism_Base(Mechanism):
             if state.name in self.function_params:
                 self.function_params.__additem__(state.name, state.value)
 
-    def _update_output_states(self, runtime_params=None, context=None):
+    def _update_output_states(self, owner_value=None, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
+        :param owner_value:
 
         """
-        for state in self.output_states:
+        for i in range(len(self.output_states)):
+            state = self.output_states[i]
+            if owner_value is not None:
+                state.variable = owner_value[i]
             state.update(params=runtime_params, context=context)
 
     def initialize(self, value):
@@ -2481,7 +2485,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
         self.value = np.atleast_1d(value)
-        self._update_output_states(context="INITIAL_VALUE")
+        self._update_output_states(None, context="INITIAL_VALUE")
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
