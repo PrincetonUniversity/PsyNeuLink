@@ -471,6 +471,9 @@ class Composition(object):
         self.sched = Scheduler(composition=self)
 
 
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+
     @property
     def graph_processing(self):
         '''
