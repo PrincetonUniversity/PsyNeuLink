@@ -1143,16 +1143,16 @@ class Composition(object):
                 if output_state not in set(self.output_CIM_states.keys()):
 
                     interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.value,
-                                                       reference_value=output_state.value,
+                                                       variable=output_state.instance_defaults.value,
+                                                       reference_value=output_state.instance_defaults.value,
                                                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
                         function=InterfaceStateMap(corresponding_input_state=interface_input_state,
-                                                   default_variable=self.output_CIM.value),
-                        reference_value=output_state.value,
+                                                   default_variable=self.output_CIM.instance_defaults.value),
+                        reference_value=output_state.instance_defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
