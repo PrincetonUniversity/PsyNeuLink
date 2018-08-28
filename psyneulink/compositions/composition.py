@@ -1771,8 +1771,9 @@ class Composition(object):
 
     def get_data_struct_type(self):
         output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
+        output_type_list.append(self.input_CIM.get_output_struct_type())
+        output_type_list.append(self.output_CIM.get_output_struct_type())
         return ir.LiteralStructType(output_type_list)
-
 
     def get_context_initializer(self):
         mech_contexts = [tuple(m.get_context_initializer()) for m in self.c_nodes]
@@ -1781,7 +1782,6 @@ class Composition(object):
         proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-
     def get_param_initializer(self):
         mech_params = [tuple(m.get_param_initializer()) for m in self.c_nodes]
         mech_params.append(tuple(self.input_CIM.get_param_initializer()))
@@ -1789,6 +1789,16 @@ class Composition(object):
         proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
         return (tuple(mech_params), tuple(proj_params))
 
+    def get_data_initializer(self):
+        def tupleize(x):
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return x
+
+        output = [[os.value for os in m.output_states] for m in self.c_nodes]
+        output.append([os.value for os in self.input_CIM.output_states])
+        output.append([os.value for os in self.output_CIM.output_states])
+        return tupleize(output)
 
     def __get_bin_mechanism(self, mechanism):
         if mechanism not in self.__compiled_mech:
@@ -1839,9 +1849,9 @@ class Composition(object):
         self.__input_struct = c_input(*tupleize(input_data))
 
         if self.__data_struct is None:
-            output = [[os.value for os in m.output_states] for m in self.c_nodes]
             c_output = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
-            self.__data_struct = c_output(*tupleize(output))
+            output = self.get_data_initializer()
+            self.__data_struct = c_output(*output)
 
         if self.__params_struct is None:
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
