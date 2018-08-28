@@ -9,6 +9,7 @@ import pytest
 from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism, RECURRENT_OUTPUT
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
@@ -19,6 +20,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.compositions.systemcomposition import SystemComposition
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
@@ -840,6 +842,199 @@ class TestExecutionOrder:
         expected_consideration_queue = [{A}, {B}, {C}, {D}, {E}]
 
         assert expected_consideration_queue == comp.scheduler_processing.consideration_queue
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_3_mechanisms_frozen_values(self, benchmark, mode):
+        #
+        #   B
+        #  /|\
+        # A-+-D
+        #  \|/
+        #   C
+        #
+        # A: 4 x 5 = 20
+        # B: (20 + 0) x 4 = 80
+        # C: (20 + 0) x 3 = 60
+        # D: (20 + 80 + 60) x 2 = 320
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=5.0))
+        B = TransferMechanism(name="B", function=Linear(slope=4.0))
+        C = TransferMechanism(name="C", function=Linear(slope=3.0))
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))
+        comp.add_linear_processing_pathway([A, D])
+        comp.add_linear_processing_pathway([B, C])
+        comp.add_linear_processing_pathway([C, B])
+        comp.add_linear_processing_pathway([A, B, D])
+        comp.add_linear_processing_pathway([A, C, D])
+        comp._analyze_graph()
+
+        inputs_dict = {A: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 320)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Control composition scalar")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_5_mechanisms_1_origins_1_multi_control_1_terminal(self, benchmark, mode):
+        #
+        #   B--A
+        #  /    \
+        # C------D
+        #  \     |
+        #   -----+-> E
+        #
+        # C: 4 x 5 = 20
+        # B: 20 x 1 = 20
+        # A: f(20)[0] = 0.50838675
+        # D: 20 x 5 x 0.50838675 = 50.83865743
+        # E: (20 + 50.83865743) x 5 = 354.19328716
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        B = ObjectiveMechanism(function=Linear,
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A",
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
+        comp.add_c_node(B)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
+        comp._analyze_graph()
+
+        inputs_dict = {C: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 354.19328716)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Control composition scalar")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
+        #
+        #   B--A
+        #  /    \
+        # C------D
+        #  \     |
+        #   -----+-> E
+        #
+        # C: 4 x 5 = 20
+        # B: 20 x 1 = 20
+        # A: f(20)[0] = 0.50838675
+        # D: 20 x 5 + 0.50838675 = 100.50838675
+        # E: (20 + 100.50838675) x 5 = 650.83865743
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        B = ObjectiveMechanism(function=Linear,
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
+        comp.add_c_node(B)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
+        comp._analyze_graph()
+
+        inputs_dict = {C: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 650.83865743)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Control composition scalar")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
+        #
+        #   B--A
+        #  /    \
+        # C------D
+        #  \     |
+        #   -----+-> E
+        #
+        # C: 4 x 5 = 20
+        # B: 20 x 1 = 20
+        # A: f(20)[0] = 0.50838675
+        # D: 20 x 0.50838675 = 10.167735
+        # E: (20 + 10.167735) x 5 = 150.83865743
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        B = ObjectiveMechanism(function=Linear,
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
+        comp.add_c_node(B)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
+        comp._analyze_graph()
+
+        inputs_dict = {C: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 150.83865743)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Control composition scalar")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
+        #
+        #   B--A
+        #  /    \
+        # C------D
+        #  \     |
+        #   -----+-> E
+        #
+        # C: 4 x 5 = 20
+        # B: 20 x 1 = 20
+        # A: f(20)[0] = 0.50838675
+        # D: 20 x 5 = 100
+        # E: (20 + 100) x 5 = 600
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        B = ObjectiveMechanism(function=Linear,
+                               monitored_output_states=[C],
+                               name="B")
+        A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE,
+                               modulated_mechanisms=D,
+                               objective_mechanism=B)
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_linear_processing_pathway([C, D, E])
+        comp.add_linear_processing_pathway([C, E])
+        comp.add_c_node(B)
+        comp.add_c_node(A)
+        comp.add_projection(A.efferents[0])
+        comp._analyze_graph()
+
+        inputs_dict = {C: [4.0]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        assert np.allclose(output, 600)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
 
 # class TestValidateFeedDict:
 #
