@@ -1435,7 +1435,7 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     if bin_execute:
-                        bin_mechanism = self.__get_bin_mechanism(node);
+                        bin_mechanism = self.__get_bin_mechanism(node)
                         c, p, i, di, do = bin_mechanism.byref_arg_types
                         # Cast the arguments. Structures are the same but ctypes
                         # creates new class every time.
