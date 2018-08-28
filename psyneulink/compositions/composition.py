@@ -1748,6 +1748,8 @@ class Composition(object):
 
     def get_param_struct_type(self):
         mech_param_type_list = [m.get_param_struct_type() for m in self.c_nodes]
+        mech_param_type_list.append(self.input_CIM.get_param_struct_type())
+        mech_param_type_list.append(self.output_CIM.get_param_struct_type())
         proj_param_type_list = [p.get_param_struct_type() for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_param_type_list),
@@ -1755,6 +1757,8 @@ class Composition(object):
 
     def get_context_struct_type(self):
         mech_ctx_type_list = [m.get_context_struct_type() for m in self.c_nodes]
+        mech_ctx_type_list.append(self.input_CIM.get_context_struct_type())
+        mech_ctx_type_list.append(self.output_CIM.get_context_struct_type())
         proj_ctx_type_list = [p.get_context_struct_type() for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_ctx_type_list),
@@ -1772,12 +1776,16 @@ class Composition(object):
 
     def get_context_initializer(self):
         mech_contexts = [tuple(m.get_context_initializer()) for m in self.c_nodes]
+        mech_contexts.append(tuple(self.input_CIM.get_context_initializer()))
+        mech_contexts.append(tuple(self.output_CIM.get_context_initializer()))
         proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
         return (tuple(mech_contexts), tuple(proj_contexts))
 
 
     def get_param_initializer(self):
         mech_params = [tuple(m.get_param_initializer()) for m in self.c_nodes]
+        mech_params.append(tuple(self.input_CIM.get_param_initializer()))
+        mech_params.append(tuple(self.output_CIM.get_param_initializer()))
         proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
         return (tuple(mech_params), tuple(proj_params))
 
