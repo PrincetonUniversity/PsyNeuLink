@@ -4957,3 +4957,4 @@ class SystemInputState(OutputState):
         self.owner = owner
         self.value = variable
 
+        self.instance_defaults = self.InstanceDefaults(variable=variable, value=variable)
