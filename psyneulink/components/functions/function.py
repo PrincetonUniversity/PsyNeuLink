@@ -3212,6 +3212,11 @@ class Identity(
 
         return variable
 
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        val = builder.load(arg_in)
+        builder.store(val, arg_out)
+        return builder
+
 
 class InterfaceStateMap(InterfaceFunction):
     """
