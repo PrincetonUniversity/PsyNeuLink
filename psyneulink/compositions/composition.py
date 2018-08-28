@@ -1800,6 +1800,14 @@ class Composition(object):
         output.append([os.value for os in self.output_CIM.output_states])
         return tupleize(output)
 
+    def __get_mech_index(self, mechanism):
+        if mechanism is self.input_CIM:
+            return len(self.c_nodes)
+        elif mechanism is self.output_CIM:
+            return len(self.c_nodes) + 1
+        else:
+            return self.c_nodes.index(mechanism)
+
     def __get_bin_mechanism(self, mechanism):
         if mechanism not in self.__compiled_mech:
             wrapper = self.__gen_mech_wrapper(mechanism)
@@ -1866,7 +1874,6 @@ class Composition(object):
     def __gen_mech_wrapper(self, mech):
 
         func_name = None
-        assert mech in self.c_nodes
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
             data_struct_ptr = self.get_data_struct_type().as_pointer()
@@ -1913,7 +1920,7 @@ class Composition(object):
                 output_s = par_proj.sender
                 assert output_s.owner is par_mech
                 assert output_s in par_mech.output_states
-                mech_idx = self.c_nodes.index(par_mech)
+                mech_idx = self.__get_mech_index(par_mech)
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(mech_idx),
@@ -1949,7 +1956,7 @@ class Composition(object):
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = self.c_nodes.index(mech)
+            idx = self.__get_mech_index(mech)
             m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
@@ -1960,7 +1967,6 @@ class Composition(object):
 
 
     def __gen_mech_result_extract(self, mech):
-        idx = self.c_nodes.index(mech)
 
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -1979,6 +1985,7 @@ class Composition(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
+            idx = self.__get_mech_index(mech)
             res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             data = builder.load(res)
             builder.store(data, vo)
