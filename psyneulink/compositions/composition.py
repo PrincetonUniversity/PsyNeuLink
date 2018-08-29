@@ -1899,30 +1899,33 @@ class Composition(object):
 
             m_function = ctx.get_llvm_function(mech.llvmSymbolName)
             origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+
+            #TODO: This should be replaced by executing input_CIM
             if mech in origin_mechanisms:
                 mech_in_idx = origin_mechanisms.index(mech)
                 m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(mech_in_idx)])
+                incoming_projections = []
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
+                incoming_projections = mech.afferents
 
             # Run all incoming projections
-            for par in self.graph.get_parents_from_component(mech):
+            #TODO: This should filter out projections with different execution ID
+            for par_proj in incoming_projections:
                 assert not mech in origin_mechanisms
-                # Get projection
-                par_proj = par.component
+                # Skip autoassociative projections
+                if par_proj.sender.owner is par_proj.receiver.owner:
+                    continue
                 proj_idx = self.projections.index(par_proj)
 
                 # Get parent mechanism
-                par = self.graph.get_parents_from_component(par_proj)
-                assert len(par) == 1
-                par_mech = par[0].component
+                par_mech = par_proj.sender.owner
 
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
 
                 output_s = par_proj.sender
-                assert output_s.owner is par_mech
                 assert output_s in par_mech.output_states
                 mech_idx = self.__get_mech_index(par_mech)
                 output_state_idx = par_mech.output_states.index(output_s)
