@@ -1179,10 +1179,11 @@ class Composition(object):
 
                     proj_name = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
 
-                    MappingProjection(sender=output_state,
-                                      receiver=interface_input_state,
-                                      matrix=IDENTITY_MATRIX,
-                                      name=proj_name)
+                    self.projections.append(MappingProjection(
+                                                sender=output_state,
+                                                receiver=interface_input_state,
+                                                matrix=IDENTITY_MATRIX,
+                                                name=proj_name))
 
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
