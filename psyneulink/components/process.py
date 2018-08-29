@@ -2546,6 +2546,9 @@ class ProcessInputState(OutputState):
         self.efferents = []
         self.owner = owner
         self.value = variable
+
+        self.instance_defaults = self.InstanceDefaults(variable=variable, value=variable)
+
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END

@@ -3428,8 +3428,12 @@ class Mechanism_Base(Mechanism):
     def efferents(self):
         """Return list of all of the Mechanism's Projections"""
         projs = []
-        for output_state in self.output_states:
-            projs.extend(output_state.efferents)
+        try:
+            for output_state in self.output_states:
+                projs.extend(output_state.efferents)
+        except TypeError:
+            # self.output_states might be None
+            pass
         return ContentAddressableList(component_type=Projection, list=projs)
 
     @property

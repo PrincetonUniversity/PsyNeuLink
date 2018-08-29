@@ -689,7 +689,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.value
+            variable = self.sender.instance_defaults.value
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
