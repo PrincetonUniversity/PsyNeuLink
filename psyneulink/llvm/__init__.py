@@ -195,6 +195,8 @@ def _convert_ctype_to_python(x):
         return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
     if isinstance(x, ctypes.Array):
         return [num for num in x]
+    if isinstance(x, ctypes.c_double):
+        return x.value
 
     print(x)
     assert False
