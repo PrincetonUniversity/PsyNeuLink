@@ -532,6 +532,7 @@ SELECTION_FUNCTION_TYPE = "SELECTION FUNCTION TYPE"
 # ControlMechanism:
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCControlMechanism"
+LVOC_MECHANISM = 'LVOCControlMechanism'
 
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
