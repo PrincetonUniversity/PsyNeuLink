@@ -961,6 +961,7 @@ from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrdered
 
 import ctypes
 from llvmlite import ir
+import psyneulink.llvm as pnlvm
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -2775,16 +2776,12 @@ class Mechanism_Base(Mechanism):
         vi_init = tupleize(new_var)
         ct_vi = vi_ty(*vi_init)
 
-        # The output is a combination of output state values
-        os = [os.instance_defaults.value for os in self.output_states]
-        ret = np.zeros_like(os, dtype=np.float64)
-        # This is bit hacky because numpy can't cast to arrays
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+        ct_vo = vo_ty()
 
         bf(ctypes.byref(ct_param), ctypes.byref(ct_context),
-           ctypes.byref(ct_vi), ct_vo)
+           ctypes.byref(ct_vi), ctypes.byref(ct_vo))
 
-        return ret
+        return pnlvm._convert_ctype_to_python(ct_vo)
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
