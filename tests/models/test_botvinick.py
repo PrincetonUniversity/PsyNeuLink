@@ -202,7 +202,7 @@ def test_botvinick_model(benchmark, mode, reps):
         return results
 
     res = benchmark(run, mode=='LLVM')
-    #FIXME: Check the third element (not present in LLVM results)
+
     if reps == 1:
         assert np.allclose(res[0][0], [0.4888244,  0.4888244])
         assert np.allclose(res[1][0], [0.46943443, 0.46930256])
@@ -210,6 +210,12 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[3][0], [0.46935058, 0.46938641])
         assert np.allclose(res[4][0], [0.4888244,  0.4888244])
         assert np.allclose(res[5][0], [0.46935175, 0.46930373])
+        assert np.allclose(res[0][1], [0.95579718])
+        assert np.allclose(res[1][1], [0.88122712])
+        assert np.allclose(res[2][1], [0.95579718])
+        assert np.allclose(res[3][1], [0.88122713])
+        assert np.allclose(res[4][1], [0.95579718])
+        assert np.allclose(res[5][1], [0.88107411])
     if reps == 10:
         assert np.allclose(res[0][0], [0.42505118, 0.42505118])
         assert np.allclose(res[1][0], [0.43621363, 0.40023224])
@@ -217,6 +223,12 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[3][0], [0.41420086, 0.42196304])
         assert np.allclose(res[4][0], [0.42505118, 0.42505118])
         assert np.allclose(res[5][0], [0.41689666, 0.40291293])
+        assert np.allclose(res[0][1], [0.72267401])
+        assert np.allclose(res[1][1], [0.69834703])
+        assert np.allclose(res[2][1], [0.72267401])
+        assert np.allclose(res[3][1], [0.69910981])
+        assert np.allclose(res[4][1], [0.72267401])
+        assert np.allclose(res[5][1], [0.67189222])
     if reps == 100:
         assert np.allclose(res[0][0], [0.48611807, 0.48611807])
         assert np.allclose(res[1][0], [0.95970536, 0.21425063])
@@ -224,6 +236,12 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[3][0], [0.55802971, 0.83844741])
         assert np.allclose(res[4][0], [0.48611807, 0.48611807])
         assert np.allclose(res[5][0], [0.89746087, 0.25060644])
+        assert np.allclose(res[0][1], [0.94524311])
+        assert np.allclose(res[1][1], [0.82246989])
+        assert np.allclose(res[2][1], [0.94524311])
+        assert np.allclose(res[3][1], [1.87151424])
+        assert np.allclose(res[4][1], [0.94524311])
+        assert np.allclose(res[5][1], [0.89963791])
 
     if mode == 'LLVM' or reps != 10:
         return
