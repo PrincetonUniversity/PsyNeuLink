@@ -45,13 +45,19 @@ Class Reference
 """
 
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
+from psyneulink.globals.keywords import NAME, RESULT, OWNER_VALUE, COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName, RESULTS, PRIMARY, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.components.functions.function import Identity
+from psyneulink.components.states.outputstate import StandardOutputStates, standard_output_states
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.inputstate import InputState
 
 __all__ = ['CompositionInterfaceMechanism']
 
@@ -61,7 +67,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(                            \
     default_variable=None,                               \
     size=None,                                              \
-    function=Linear(slope = 1.0, intercept = 0.0), \
+    function=Identity() \
     params=None,                                            \
     name=None,                                              \
     prefs=None)
@@ -82,9 +88,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
 
-    function : IntegratorFunction : default Integrator
-        specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
-        of values, and return one of the same form.
+    function : InterfaceFunction : default Identity
+        specifies the function used to transform the variable before assigning it to the Mechanism's OutputState(s)
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -127,7 +132,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'CompositionInterfaceMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({})
@@ -137,25 +142,28 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=None,
+                 input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
+                 function=Identity(),
+                 composition=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
+        self.composition = composition
+        self.connected_to_composition = False
 
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  input_states=input_states,
                                                   params=params)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
-                                                  params=params,
-                                                  function=function,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
-
-
-
-
+                                                            size=size,
+                                                            input_states=input_states,
+                                                            function=function,
+                                                            params=params,
+                                                            name=name,
+                                                            prefs=prefs,
+                                                            context=ContextFlags.CONSTRUCTOR)

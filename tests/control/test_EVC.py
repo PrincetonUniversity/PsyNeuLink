@@ -56,18 +56,18 @@ def test_EVC():
         name='Decision',
     )
 
-    # Input.prefs.paramValidationPref = False
-    # Reward.prefs.paramValidationPref = False
-    # Decision.prefs.paramValidationPref = False
-    # Decision.input_state.prefs.paramValidationPref = False
-    # for mech in [Input, Reward, Decision]:
-    #     mech.function_object.prefs.paramValidationPref = False
-    #     for os in mech.output_states:
-    #         os.prefs.paramValidationPref = False
-    #     for instate in mech.input_states:
-    #         instate.prefs.paramValidationPref = False
-    #     for pstate in mech._parameter_states:
-    #         pstate.prefs.paramValidationPref = False
+    Input.prefs.paramValidationPref = False
+    Reward.prefs.paramValidationPref = False
+    Decision.prefs.paramValidationPref = False
+    Decision.input_state.prefs.paramValidationPref = False
+    for mech in [Input, Reward, Decision]:
+        mech.function_object.prefs.paramValidationPref = False
+        for os in mech.output_states:
+            os.prefs.paramValidationPref = False
+        for instate in mech.input_states:
+            instate.prefs.paramValidationPref = False
+        for pstate in mech._parameter_states:
+            pstate.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = Process(
@@ -97,10 +97,10 @@ def test_EVC():
         name='EVC Test System',
         # prefs={RECORD_SIMULATION_PREF:True}
     )
-
-    # TaskExecutionProcess.prefs.paramValidationPref = False
-    # RewardProcess.prefs.paramValidationPref = False
-    # mySystem.prefs.paramValidationPref = False
+    mySystem.show_graph(show_control=True)
+    TaskExecutionProcess.prefs.paramValidationPref = False
+    RewardProcess.prefs.paramValidationPref = False
+    mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
 
     # Stimuli

@@ -380,11 +380,11 @@ Class Reference
 ---------------
 
 """
+import aenum
 import inspect
 import warnings
+
 from collections import OrderedDict, namedtuple
-# from enum import IntEnum, unique, auto
-from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
@@ -401,7 +401,7 @@ __all__ = [
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 
-class LogCondition(IntEnum):
+class LogCondition(aenum.IntFlag):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
 
     .. note::
@@ -411,7 +411,7 @@ class LogCondition(IntEnum):
     OFF = ContextFlags.UNSET
     # """No recording."""
     # INITIALIZATION = ContextFlags.INITIALIZING
-    INITIALIZATION = ContextFlags.INITIALIZED
+    INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
     VALIDATION =  ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
@@ -873,7 +873,7 @@ class Log:
             if confirm:
                 delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
                                format(entries,self.owner.name))
-                while delete != 'y' and delete != 'y':
+                while delete != 'y' and delete != 'n':
                     input("\nDelete all data from entries? (y/n)")
                 if delete == 'n':
                     return
@@ -936,7 +936,7 @@ class Log:
         if not entries:
             return None
 
-        class options(IntEnum):
+        class options(aenum.IntFlag):
             NONE = 0
             TIME = 2
             CONTEXT = 4
@@ -1443,7 +1443,12 @@ class Log:
                     row.append(value)
                     break
             else:
-                value = None if datum.value is None else datum.value.tolist()
+                if datum.value is None:
+                    value = None
+                elif isinstance(datum.value, list):
+                    value = datum.value
+                else:
+                    value = datum.value.tolist()
                 row.append(value)
         return row
 

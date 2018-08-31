@@ -205,11 +205,11 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function, Mechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, scalar_distance
+from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -296,14 +296,15 @@ class MultiplicativeParam():
     attrib_name = MULTIPLICATIVE_PARAM
     name = 'MULTIPLICATIVE'
     init_val = 1
-    reduce = lambda x : np.product(np.array(x), axis=0)
+    reduce = lambda x: np.product(np.array(x), axis=0)
 
 
 class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
     name = 'ADDITIVE'
     init_val = 0
-    reduce = lambda x : np.sum(np.array(x), axis=0)
+    reduce = lambda x: np.sum(np.array(x), axis=0)
+
 
 # class OverrideParam():
 #     attrib_name = OVERRIDE_PARAM
@@ -370,6 +371,7 @@ class ModulationParam():
     DISABLE = DISABLE_PARAM
     # DISABLE = DisableParam
 
+
 MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
 ADDITIVE = ModulationParam.ADDITIVE
 OVERRIDE = ModulationParam.OVERRIDE
@@ -381,6 +383,7 @@ def _is_modulation_param(val):
         return True
     else:
         return False
+
 
 ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
@@ -406,7 +409,7 @@ def _get_modulated_param(owner, mod_proj):
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
         from psyneulink.globals.utilities import Modulation
-        function_mod_meta_param_obj = getattr(Modulation,function_mod_meta_param_obj)
+        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj)
         function_param_name = function_mod_meta_param_obj
         function_param_value = mod_proj.sender.value
     else:
@@ -670,7 +673,7 @@ class Function_Base(Function):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,  # Enable/disable output type conversion
-        FUNCTION_OUTPUT_TYPE:None                # Default is to not convert
+        FUNCTION_OUTPUT_TYPE: None  # Default is to not convert
     })
 
     def __init__(self,
@@ -809,7 +812,7 @@ class Function_Base(Function):
         # Can't convert from arrays of length > 1 to number
         if (
             self.instance_defaults.variable is not None
-            and len(self.instance_defaults.variable) > 1
+            and safe_len(self.instance_defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
             raise FunctionError(
@@ -845,6 +848,7 @@ class Function_Base(Function):
             return self.owner.name
         except AttributeError:
             return '<no owner>'
+
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -1422,8 +1426,8 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults.update({
         PARAMETER_STATE_PARAMS: None,
         CUSTOM_FUNCTION: None,
-        MULTIPLICATIVE_PARAM:None,
-        ADDITIVE_PARAM:None
+        MULTIPLICATIVE_PARAM: None,
+        ADDITIVE_PARAM: None
     })
 
     @tc.typecheck
@@ -1503,7 +1507,6 @@ class UserDefinedFunction(Function_Base):
                                 format(self.__class__.__name__, custom_function.__name__,
                                        owner.name, default_variable, custom_function.__name__, cust_fct_variable))
 
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
@@ -1527,7 +1530,7 @@ class UserDefinedFunction(Function_Base):
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
-            # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
+                # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
                 self.cust_fct_params[param] = self.get_current_function_param(param)
         kwargs.update(self.cust_fct_params)
 
@@ -1823,15 +1826,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable,
-                                                                     params=params,
-                                                                     context=context))
+                                                          params=params,
+                                                          context=context))
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
         operation = self.get_current_function_param(OPERATION)
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
-
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -1866,7 +1868,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         return self.convert_output_type(result)
 
 
-class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
+class LinearCombination(
+    CombinationFunction):  # ------------------------------------------------------------------------
     """
     LinearCombination(     \
          default_variable, \
@@ -2057,7 +2060,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT)=SUM,
+                 operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale=None,
                  offset=None,
                  params=None,
@@ -2149,17 +2152,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0], numbers.Number)
+            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
+                                                                                                      numbers.Number)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not scale_is_a_scalar:
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
-                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                              " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(scale.shape, scale.size, self.instance_defaults.variable.shape,
                                self.instance_defaults.variable.size)
                     if len(self.instance_defaults.variable.shape) == 0:
                         raise FunctionError(err_msg)
                     if (scale.shape != self.instance_defaults.variable.shape) and \
-                        (scale.shape != self.instance_defaults.variable.shape[1:]):
+                            (scale.shape != self.instance_defaults.variable.shape[1:]):
                         raise FunctionError(err_msg)
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
@@ -2171,24 +2175,25 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0], numbers.Number)
+            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
+                                                                                                         numbers.Number)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not offset_is_a_scalar:
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
-                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                              " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(offset.shape, offset.size, self.instance_defaults.variable.shape,
                                self.instance_defaults.variable.size)
                     if len(self.instance_defaults.variable.shape) == 0:
                         raise FunctionError(err_msg)
                     if (offset.shape != self.instance_defaults.variable.shape) and \
-                        (offset.shape != self.instance_defaults.variable.shape[1:]):
+                            (offset.shape != self.instance_defaults.variable.shape[1:]):
                         raise FunctionError(err_msg)
 
-            # if not operation:
-            #     raise FunctionError("Operation param missing")
-            # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
-            #     format(operation))
+                        # if not operation:
+                        #     raise FunctionError("Operation param missing")
+                        # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
+                        #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
+                        #     format(operation))
 
     def function(self,
                  variable=None,
@@ -2519,7 +2524,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT)=SUM,
+                 operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale=None,
                  offset=None,
                  params=None,
@@ -2596,11 +2601,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
-                         scale.shape != self.instance_defaults.variable.shape)):
+                                 scale.shape != self.instance_defaults.variable.shape)):
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -2614,18 +2620,18 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
-                         offset.shape != self.instance_defaults.variable.shape)):
+                                 offset.shape != self.instance_defaults.variable.shape)):
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
-            # if not operation:
-            #     raise FunctionError("Operation param missing")
-            # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
-            #     format(operation))
-
+                    # if not operation:
+                    #     raise FunctionError("Operation param missing")
+                    # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
+                    #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
+                    #     format(operation))
 
     def function(self,
                  variable=None,
@@ -2685,7 +2691,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         # if np_array_less_than_2d(variable):
         #     return (variable * scale) + offset
 
-        means = np.array([[None]]*len(variable))
+        means = np.array([[None]] * len(variable))
         for i, item in enumerate(variable):
             means[i] = np.mean(item)
 
@@ -2742,6 +2748,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
 
 GAMMA = 'gamma'
+
+
 class PredictionErrorDeltaFunction(CombinationFunction):
     """
     Function that calculates the temporal difference prediction error
@@ -2841,11 +2849,11 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                                  context=context)
 
         if GAMMA in target_set and target_set[GAMMA] is not None:
-            self._validate_parameter_spec(target_set[GAMMA] ,GAMMA, numeric_only=True)
+            self._validate_parameter_spec(target_set[GAMMA], GAMMA, numeric_only=True)
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
-            self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING):
                 if len(target_set[WEIGHTS]) != len(
                         self.instance_defaults.variable):
@@ -2898,10 +2906,290 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         return self.convert_output_type(delta)
 
 
-# region ***********************************  TRANSFER FUNCTIONS  ***********************************************
+# region ***********************************  INTERFACE FUNCTIONS ***********************************************
+
+class InterfaceFunction(Function_Base):
+    """Simple functions for CompositionInterfaceMechanisms
+    """
+    componentType = TRANSFER_FUNCTION_TYPE
+
+    def __init__(self,
+                 default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+
+class Identity(
+    InterfaceFunction):  # -------------------------------------------------------------------------------------
+    """
+    Identity(                \
+             default_variable, \
+             params=None,      \
+             owner=None,       \
+             name=None,        \
+             prefs=None        \
+            )
+
+    .. _Identity:
+
+    Returns variable
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = IDENTITY_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({
+    #     FUNCTION_OUTPUT_TYPE_CONVERSION: False,
+    #     PARAMETER_STATE_PARAMS: None
+    # })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        # self.functionOutputType = None
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return: `variable <Identity.variable>`
+
+        Arguments
+        ---------
+
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        variable : number or np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        # outputType = self.functionOutputType
+
+        return variable
+
+
+class InterfaceStateMap(InterfaceFunction):
+    """
+    Identity(                \
+             default_variable, \
+             params=None,      \
+             owner=None,       \
+             name=None,        \
+             prefs=None        \
+            )
+
+    .. _Identity:
+
+    Returns variable
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = STATE_MAP_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        FUNCTION_OUTPUT_TYPE_CONVERSION: True,
+        PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 corresponding_input_state=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(corresponding_input_state=corresponding_input_state,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        # self.functionOutputType = None
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return: The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
+        `corresponding_input_state <InterfaceStateMap.corresponding_input_state>` in `input_states
+        <InterfaceStateMap.input_states>`
+
+        Arguments
+        ---------
+
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+
+        corresponding_input_state : InputState : default None
+            the InputState on the owner CompositionInterfaceMechanism to which this OutputState corresponds
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
+        `corresponding_input_state <InterfaceStateMap.corresponding_input_state>` in `input_states
+        <InterfaceStateMap.input_states>`
+
+        """
+        variable = self._update_variable(self._check_args(variable=variable,
+                                                          params=params,
+                                                          context=context))
+
+        index = self.corresponding_input_state.position_in_mechanism
+
+        if self.corresponding_input_state.owner.value is not None:
+
+            # If CIM's variable does not match its value, then a new pair of states was added since the last execution
+            if not np.allclose(np.shape(self.corresponding_input_state.owner.input_values),
+                               np.shape(self.corresponding_input_state.owner.value)):
+                return self.corresponding_input_state.owner.instance_defaults.variable[index]
+
+            # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable
+            # np.atleast_2d fails in cases like var = [[0., 0.], [0.]] (transforms it to [[[0., 0.], [0.]]])
+            if index == 0:
+                if not isinstance(variable[0], (list, np.ndarray)):
+                    return variable
+            return variable[index]
+        # CIM value = None, use CIM's default variable instead
+        return self.corresponding_input_state.owner.instance_defaults.variable[index]
+
+
 # endregion
 
+# region ***********************************  TRANSFER FUNCTIONS  ***********************************************
+
+
 BOUNDS = 'bounds'
+
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
@@ -3102,7 +3390,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         # MODIFIED 11/9/17 NEW:
         try:
-        # By default, result should be returned as np.ndarray with same dimensionality as input
+            # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
         except TypeError:
             if hasattr(variable, "dtype"):
@@ -3288,7 +3576,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return self.get_current_function_param(RATE) * input
 
 
-class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
+class Logistic(
+    TransferFunction):  # ------------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -3368,7 +3657,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN, BIAS})
 
-    bounds = (0,1)
+    bounds = (0, 1)
     multiplicative_param = GAIN
     additive_param = BIAS
 
@@ -3434,6 +3723,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         return self.convert_output_type(result)
 
+
     def derivative(self, output, input=None):
         """
         derivative(output)
@@ -3451,6 +3741,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 
 MODE = 'mode'
+
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
     """
@@ -3517,7 +3808,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         <LINK>` for details).
     """
 
-
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
 
@@ -3579,6 +3869,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
         return self.convert_output_type(result)
 
+
     def derivative(self, output):
         """
         derivative(output)
@@ -3594,9 +3885,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         if (output > 0): return gain
         else: return leak
 
-
 MODE = 'mode'
-
 
 class SoftMax(TransferFunction):
     """
@@ -3687,7 +3976,7 @@ class SoftMax(TransferFunction):
 
     componentName = SOFTMAX_FUNCTION
 
-    bounds = (0,1)
+    bounds = (0, 1)
     multiplicative_param = GAIN
     additive_param = None
 
@@ -3833,20 +4122,20 @@ class SoftMax(TransferFunction):
             derivative = np.empty([size, size])
             for j in range(size):
                 for i, val in zip(range(size), output):
-                    if i==j:
+                    if i == j:
                         d = 1
                     else:
                         d = 0
-                    derivative[j,i] = sm[i] * (d - sm[j])
+                    derivative[j, i] = sm[i] * (d - sm[j])
 
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output==np.max(output))[0])
+            index_of_max = int(np.where(output == np.max(output))[0])
             max_val = sm[index_of_max]
             for i in range(size):
-                if i==index_of_max:
+                if i == index_of_max:
                     d = 1
                 else:
                     d = 0
@@ -4171,8 +4460,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         except (ValueError, TypeError) as error_msg:
                             raise FunctionError(
                                 "Error in list specification ({}) of matrix for the {} function of {}: {})".
-                                # format(param_value, self.__class__.__name__, error_msg))
-                                format(param_value, self.name, self.owner_name, error_msg))
+                                    # format(param_value, self.__class__.__name__, error_msg))
+                                    format(param_value, self.name, self.owner_name, error_msg))
 
                     # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                     elif isinstance(param_value, str):
@@ -4208,7 +4497,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n".\
+                    message += "Unrecognized param ({}) specified for the {} function of {}\n". \
                         format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
@@ -4222,7 +4511,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value),0)!=np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),
+                                                                         1):
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
                                             format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
@@ -4323,6 +4613,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         matrix = self.get_current_function_param(MATRIX)
+
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -4685,6 +4976,8 @@ class OneHot(SelectionFunction):
         return self.convert_output_type(result)
 
 
+# endregion ************************************************************************************************************
+
 # region ***********************************  INTEGRATOR FUNCTIONS *****************************************************
 
 #  Integrator
@@ -4693,6 +4986,7 @@ class OneHot(SelectionFunction):
 
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
+
 
 # • why does integrator return a 2d array?
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
@@ -4828,8 +5122,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
-                 noise = 0.0,
-                 initializer = None,
+                 noise=0.0,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4916,11 +5210,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                 # self.instance_defaults.variable,
                             )
                         )
-                # OLD:
-                # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-                # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                # to have a rate parameter of type ndarray/list
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -5011,9 +5305,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
                   and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
                 raise FunctionError(
-                        "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                        "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
+                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
+                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
+                        .format(noise, self.instance_defaults.variable, self.name,
+                                np.shape(np.array(self.instance_defaults.variable))))
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -5036,7 +5331,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
                     # np.atleast_2d may not be necessary here?
-                    if np.shape(np.atleast_2d(initial_value))!= np.shape(np.atleast_2d(default_variable)):
+                    if np.shape(np.atleast_2d(initial_value)) != np.shape(np.atleast_2d(default_variable)):
                         raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
                                             .format(self.name, initial_value_name, initial_value, default_variable))
             elif not isinstance(initial_value, (float, int)):
@@ -5074,28 +5369,28 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         if callable(slope):
             slope = slope(previous_time, previous_value)
 
-        return previous_value + slope*time_step_size
+        return previous_value + slope * time_step_size
 
     def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
 
         if callable(slope):
             slope_approx_1 = slope(previous_time,
-                                        previous_value)
+                                   previous_value)
 
-            slope_approx_2 = slope(previous_time + time_step_size/2,
-                                        previous_value + (0.5 * time_step_size * slope_approx_1))
+            slope_approx_2 = slope(previous_time + time_step_size / 2,
+                                   previous_value + (0.5 * time_step_size * slope_approx_1))
 
-            slope_approx_3 = slope(previous_time + time_step_size/2,
-                                        previous_value + (0.5 * time_step_size * slope_approx_2))
+            slope_approx_3 = slope(previous_time + time_step_size / 2,
+                                   previous_value + (0.5 * time_step_size * slope_approx_2))
 
             slope_approx_4 = slope(previous_time + time_step_size,
-                                        previous_value + (time_step_size * slope_approx_3))
+                                   previous_value + (time_step_size * slope_approx_3))
 
             value = previous_value \
-                    + (time_step_size/6)*(slope_approx_1 + 2*(slope_approx_2 + slope_approx_3) + slope_approx_4)
+                    + (time_step_size / 6) * (slope_approx_1 + 2 * (slope_approx_2 + slope_approx_3) + slope_approx_4)
 
         else:
-            value = previous_value + time_step_size*slope
+            value = previous_value + time_step_size * slope
 
         return value
 
@@ -5303,11 +5598,11 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec=1.0,
+                 rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
                  initializer=None,
-                 params: tc.optional(dict)=None,
+                 params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
@@ -5513,7 +5808,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                  rate=0.0,
                  noise=0.0,
                  offset=0.0,
-                 scale = 1.0,
+                 scale=1.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -5523,7 +5818,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale = scale,
+                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -5597,7 +5892,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         value = previous_value + rate + noise
 
-        adjusted_value = value*scale + offset
+        adjusted_value = value * scale + offset
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
@@ -5735,11 +6030,11 @@ class Buffer(Integrator):  # ---------------------------------------------------
                  # noise=0.0,
                  # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
                  # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
-                 rate:tc.optional(tc.any(int, float))=1.0,
-                 noise:tc.optional(tc.any(int, float, callable))=0.0,
-                 history:tc.optional(int)=None,
+                 rate: tc.optional(tc.any(int, float)) = 1.0,
+                 noise: tc.optional(tc.any(int, float, callable)) = 0.0,
+                 history: tc.optional(int) = None,
                  initializer=[],
-                 params: tc.optional(dict)=None,
+                 params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
@@ -5987,7 +6282,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 offset= 0.0,
+                 offset=0.0,
                  time_step_size=0.02,
                  initializer=None,
                  params: tc.optional(dict) = None,
@@ -6079,8 +6374,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                 noise.owner = self
                 target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
-        # if INITIALIZER in target_set:
-        #     self._validate_initializer(target_set[INITIALIZER])
+            # if INITIALIZER in target_set:
+            #     self._validate_initializer(target_set[INITIALIZER])
 
     def _validate_rate(self, rate):
         super()._validate_rate(rate)
@@ -6132,7 +6427,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         previous_value = np.atleast_2d(self.previous_value)
 
-        value = (1-rate)*previous_value + rate*variable + noise
+        value = (1 - rate) * previous_value + rate * variable + noise
         adjusted_value = value + offset
 
         # If this NOT an initialization run, update the old value
@@ -6393,7 +6688,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
         previous_value = np.atleast_2d(self.previous_value)
 
-        value = previous_value + rate * variable * time_step_size  \
+        value = previous_value + rate * variable * time_step_size \
                 + np.sqrt(time_step_size * noise) * np.random.normal()
 
         if np.all(abs(value) < threshold):
@@ -6413,6 +6708,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_value, self.previous_time
+
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
@@ -6562,7 +6858,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
-                                                  decay = decay,
+                                                  decay=decay,
                                                   initializer=initializer,
                                                   t0=t0,
                                                   noise=noise,
@@ -7046,7 +7342,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         INCREMENT: None,
     })
 
-
     multiplicative_param = SCALE
     additive_param = OFFSET
 
@@ -7059,7 +7354,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  initial_v=0.0,
                  time_step_size=0.05,
                  t_0=0.0,
-                 a_v=-1/3,
+                 a_v=-1 / 3,
                  b_v=0.0,
                  c_v=1.0,
                  d_v=0.0,
@@ -7074,7 +7369,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  mode=1.0,
                  uncorrelated_activity=0.0,
                  integration_method="RK4",
-                 params: tc.optional(dict)=None,
+                 params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
@@ -7135,7 +7430,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
-    def _euler_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size, a_v,
+    def _euler_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
+                   a_v,
                    threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
                    time_constant_w):
 
@@ -7163,12 +7459,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                  uncorrelated_activity,
                                  time_constant_w)
 
-        new_v = previous_value_v + time_step_size*slope_v_approx
-        new_w = previous_value_w + time_step_size*slope_w_approx
+        new_v = previous_value_v + time_step_size * slope_v_approx
+        new_w = previous_value_w + time_step_size * slope_w_approx
 
         return new_v, new_w
 
-    def _runge_kutta_4_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
+    def _runge_kutta_4_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w,
+                           time_step_size,
                            a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
                            uncorrelated_activity, time_constant_w):
 
@@ -7204,7 +7501,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
 
         slope_v_approx_2 = slope_v(variable,
-                                   previous_time + time_step_size/2,
+                                   previous_time + time_step_size / 2,
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
                                    a_v,
@@ -7217,7 +7514,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    time_constant_v)
 
         slope_w_approx_2 = slope_w(variable,
-                                   previous_time + time_step_size/2,
+                                   previous_time + time_step_size / 2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
                                    mode,
@@ -7232,7 +7529,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
 
         slope_v_approx_3 = slope_v(variable,
-                                   previous_time + time_step_size/2,
+                                   previous_time + time_step_size / 2,
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
                                    a_v,
@@ -7244,9 +7541,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
-
         slope_w_approx_3 = slope_w(variable,
-                                   previous_time + time_step_size/2,
+                                   previous_time + time_step_size / 2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
                                    mode,
@@ -7283,16 +7579,18 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    uncorrelated_activity,
                                    time_constant_w)
         new_v = previous_value_v \
-                + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+                + (time_step_size / 6) * (
+        slope_v_approx_1 + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_w = previous_value_w \
-                + (time_step_size/6)*(slope_w_approx_1 + 2*(slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
+                + (time_step_size / 6) * (
+        slope_w_approx_1 + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
 
         return new_v, new_w
 
     def dv_dt(self, variable, time, v, w, a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v):
 
-        val= (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v + d_v
-                + e_v*self.previous_w + f_v*variable)/time_constant_v
+        val = (a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2) + (-threshold) * c_v * v + d_v
+               + e_v * self.previous_w + f_v * variable) / time_constant_v
 
         # Standard coefficients - hardcoded for testing
         # val = v - (v**3)/3 - w + variable
@@ -7307,7 +7605,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Standard coefficients - hardcoded for testing
         # val = (v + 0.7 - 0.8*w)/12.5
-        #Gilzenrat paper - hardcoded for testing
+        # Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
         if not np.isscalar(variable):
@@ -7425,6 +7723,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_v, self.previous_w, self.previous_time
+
 
 class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
     """
@@ -7588,7 +7887,6 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-
 
         self.has_initializers = True
 
@@ -7811,12 +8109,12 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec=1.0,
+                 rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
                  initializer=None,
                  time_step_size=0.1,
-                 params: tc.optional(dict)=None,
+                 params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
@@ -7883,7 +8181,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+        value = previous_value + (rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
 
         adjusted_value = value + offset
 
@@ -8262,16 +8560,16 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         if operation == "s*l":
             # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
-            value = (1-short_term_utility_logistic)*long_term_utility_logistic
-        elif operation =="s-l":
+            value = (1 - short_term_utility_logistic) * long_term_utility_logistic
+        elif operation == "s-l":
             # Engagement in current task = [1—logistic(short term utility)] - [logistic{long - term utility}]
-            value = (1-short_term_utility_logistic) - long_term_utility_logistic
-        elif operation =="s+l":
+            value = (1 - short_term_utility_logistic) - long_term_utility_logistic
+        elif operation == "s+l":
             # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
             value = (1 - short_term_utility_logistic) + long_term_utility_logistic
-        elif operation =="l-s":
+        elif operation == "l-s":
             # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
-            value = long_term_utility_logistic - (1-short_term_utility_logistic)
+            value = long_term_utility_logistic - (1 - short_term_utility_logistic)
 
         return value + offset
 
@@ -8303,6 +8601,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         self.value = self.combine_utilities(short, long)
 
         return self.value
+
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
@@ -8431,7 +8730,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 drift_rate:parameter_spec = 1.0,
+                 drift_rate: parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
                  noise: parameter_spec = 0.5,
@@ -8537,9 +8836,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                 try:
                     rt = ztilde * np.tanh(ztilde * atilde) + \
                          ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
-                         np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                             np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
                     er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
-                         ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
+                         ((1 - np.exp(-2 * x0tilde * atilde)) / (
+                         np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
                 except FloatingPointError:
                     # Per Mike Shvartsman:
@@ -8601,15 +8901,15 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         Z = output or self.get_current_function_param(THRESHOLD)
         A = input or self.get_current_function_param(DRIFT_RATE)
         c = self.get_current_function_param(NOISE)
-        c_sq = c**2
-        E = np.exp(-2*Z*A/c_sq)
+        c_sq = c ** 2
+        E = np.exp(-2 * Z * A / c_sq)
         D_iti = 0
         D_pen = 0
         D = D_iti + D_pen
         # RR =  1/(D_iti + Z/A + (E*D))
 
-        dRR_dZ = 1/A + E/A + (2*A/c_sq)*E*D
-        dRR_dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
+        dRR_dZ = 1 / A + E / A + (2 * A / c_sq) * E * D
+        dRR_dA = -Z / A ** 2 + (Z / A ** 2) * E - (2 * Z / c_sq) * E * D
 
         return [dRR_dZ, dRR_dA]
 
@@ -8624,7 +8924,8 @@ class NF_Results(IntEnum):
     COND_SKEW_RTS = 5
 
 
-class NavarroAndFuss(IntegratorFunction): # ----------------------------------------------------------------------------
+class NavarroAndFuss(
+    IntegratorFunction):  # ----------------------------------------------------------------------------
     """
     NavarroAndFuss(                             \
         default_variable=None,                  \
@@ -8926,8 +9227,7 @@ class NormalDist(DistributionFunction):
         if STANDARD_DEVIATION in target_set:
             if target_set[STANDARD_DEVIATION] <= 0.0:
                 raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
-                                            format(target_set[STANDARD_DEVIATION], self.name))
-
+                                    format(target_set[STANDARD_DEVIATION], self.name))
 
     def function(self,
                  variable=None,
@@ -9066,6 +9366,7 @@ class UniformToNormalDist(DistributionFunction):
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
 
         return self.convert_output_type(result)
+
 
 class ExponentialDist(DistributionFunction):
     """
@@ -9592,9 +9893,9 @@ COMMENT
                  default_variable=None,
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
-                 metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
-                 transfer_fct:tc.optional(tc.any(function_type, method_type))=None,
-                 normalize:bool=False,
+                 metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
+                 transfer_fct: tc.optional(tc.any(function_type, method_type)) = None,
+                 normalize: bool = False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -9691,8 +9992,6 @@ COMMENT
                                  target_set=target_set,
                                  context=context)
 
-
-
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate matrix
 
@@ -9708,9 +10007,9 @@ COMMENT
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.states.parameterstate import ParameterState
-        if isinstance(self.matrix,MappingProjection):
+        if isinstance(self.matrix, MappingProjection):
             self._matrix = self.matrix._parameter_states[MATRIX]
-        elif isinstance(self.matrix,ParameterState):
+        elif isinstance(self.matrix, ParameterState):
             pass
         else:
             self._matrix = get_matrix(self.matrix, size, size)
@@ -9724,7 +10023,6 @@ COMMENT
             self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
-
 
     def function(self,
                  variable=None,
@@ -9770,10 +10068,11 @@ COMMENT
         #     else:
         #         result /= len(variable)
         # MODIFIED 11/12/15 NEW:
-        result = self._metric_fct.function(variable=[current,transformed], context=context)
+        result = self._metric_fct.function(variable=[current, transformed], context=context)
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)
+
 
 # endregion
 
@@ -9856,8 +10155,8 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 metric:DistanceMetrics._is_metric=DIFFERENCE,
-                 normalize:bool=False,
+                 metric: DistanceMetrics._is_metric = DIFFERENCE,
+                 normalize: bool = False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -9907,10 +10206,10 @@ class Distance(ObjectiveFunction):
                 )
 
     def correlation(v1, v2):
-        v1_norm = v1-np.mean(v1)
-        v2_norm = v2-np.mean(v2)
-        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
-        return np.sum(v1_norm*v2_norm)/denom
+        v1_norm = v1 - np.mean(v1)
+        v2_norm = v2 - np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm ** 2) * np.sum(v2_norm ** 2)) or EPSILON
+        return np.sum(v1_norm * v2_norm) / denom
 
     def function(self,
                  variable=None,
@@ -9944,7 +10243,7 @@ class Distance(ObjectiveFunction):
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
-            result = np.linalg.norm(v2-v1)
+            result = np.linalg.norm(v2 - v1)
 
         # FIX: NEED SCIPY HERE
         # # Angle (cosine) of v1 and v2
@@ -9961,24 +10260,25 @@ class Distance(ObjectiveFunction):
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
             if self.context.initialization_status != ContextFlags.INITIALIZING:
-                v1 = np.where(v1==0, EPSILON, v1)
-                v2 = np.where(v2==0, EPSILON, v2)
+                v1 = np.where(v1 == 0, EPSILON, v1)
+                v2 = np.where(v2 == 0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = -np.sum(np.where(np.logical_and(v1==0, v2==0), 0, v1*np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0, v1 * np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:
-            result = -np.sum(v1*v2)/2
+            result = -np.sum(v1 * v2) / 2
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
-                result /= len(v1)**2
+                result /= len(v1) ** 2
             else:
                 result /= len(v1)
 
         return self.convert_output_type(result)
+
 
 # endregion
 
@@ -9992,6 +10292,7 @@ LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
 AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
 
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
@@ -10069,7 +10370,8 @@ class LearningFunction(Function_Base):
 
             if learning_rate_dim == 1 and len(learning_rate) != len(self.instance_defaults.variable):
                 raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
-                                    format(LEARNING_RATE, self.name, len(learning_rate), len(self.instance_defaults.variable)))
+                                    format(LEARNING_RATE, self.name, len(learning_rate),
+                                           len(self.instance_defaults.variable)))
 
             if learning_rate_dim == 2:
                 shape = learning_rate.shape
@@ -10086,6 +10388,7 @@ class LearningFunction(Function_Base):
             if learning_rate_dim:
                 raise FunctionError("{} arg for {} ({}) must be a single value".
                                     format(LEARNING_RATE, self.name, learning_rate))
+
 
 class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
     """
@@ -10440,9 +10743,9 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                # activation_function=activation_function,
-                learning_rate=learning_rate,
-                params=params)
+            # activation_function=activation_function,
+            learning_rate=learning_rate,
+            params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -10543,7 +10846,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
         # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
-        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+        weight_change_matrix = weight_change_matrix * (1 - np.identity(len(variable)))
 
         # If learning_rate is scalar or 2d, multiply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
@@ -10653,9 +10956,9 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                # activation_function=activation_function,
-                learning_rate=learning_rate,
-                params=params)
+            # activation_function=activation_function,
+            learning_rate=learning_rate,
+            params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -10764,7 +11067,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
         # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
-        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
+        weight_change_matrix = weight_change_matrix * (1 - np.identity(len(variable)))
 
         # If learning_rate is scalar or 2d, multiply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
@@ -10773,7 +11076,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         return self.convert_output_type(weight_change_matrix)
 
 
-class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
+class Reinforcement(
+    LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                     \
         default_variable=None,         \
@@ -10908,9 +11212,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(# activation_function=activation_function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(  # activation_function=activation_function,
+            learning_rate=learning_rate,
+            params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -10948,10 +11252,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Allow initialization with zero but not during a run (i.e., when called from check_args())
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             if np.count_nonzero(self.activation_output) != 1:
-                raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
-                                     "(if output Mechanism being trained uses softmax,"
-                                     " its \'output\' arg may need to be set to to PROB)".
-                                     format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+                raise ComponentError(
+                    "Second item ({}) of variable for {} must be an array with a single non-zero value "
+                    "(if output Mechanism being trained uses softmax,"
+                    " its \'output\' arg may need to be set to to PROB)".
+                    format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
         return variable
 
@@ -11206,8 +11511,8 @@ class BackPropagation(LearningFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
-                               len(default_variable[LEARNING_ERROR_OUTPUT])))
+        error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                                 len(default_variable[LEARNING_ERROR_OUTPUT])))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
@@ -11467,7 +11772,7 @@ class TDLearning(Reinforcement):
         context
         """
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
-                                                  # params=params)
+        # params=params)
         super().__init__(default_variable=default_variable,
                          # activation_function=activation_function,
                          learning_rate=learning_rate,
@@ -11508,4 +11813,4 @@ def max_vs_avg(x):
     others = x_part[:-1]
     return max_val - np.mean(others)
 
-#endregion
+# endregion

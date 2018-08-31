@@ -968,6 +968,7 @@ class TestClip:
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 class TestRecurrentInputState:
+
     def test_ris_simple(self):
         R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                             matrix=[[1.0, 2.0, 3.0],

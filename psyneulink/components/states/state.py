@@ -1142,10 +1142,8 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context & ContextFlags.COMMAND_LINE:
-            state_list = getattr(owner, owner.stateListAttr[self.__class__])
-            if state_list and not self in state_list:
-                owner.add_states(self)
+        if context == ContextFlags.COMMAND_LINE:
+            owner.add_states([self])
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1932,7 +1930,6 @@ class State_Base(State):
         variable = []
         # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
-
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
             # Get sender's execution id

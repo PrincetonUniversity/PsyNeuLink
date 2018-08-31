@@ -95,6 +95,7 @@ class TestLCControlMechanism:
                                     modulated_mechanisms=pnl.ALL
                                     )
         S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
+
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
         assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
@@ -114,6 +115,8 @@ class TestLCControlMechanism:
         P1=pnl.Process(pathway=[Tx,Tz])
         P2=pnl.Process(pathway=[Ty, C])
         S=pnl.System(processes=[P1, P2])
+        from pprint import pprint
+        pprint(S.execution_graph)
 
         assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})

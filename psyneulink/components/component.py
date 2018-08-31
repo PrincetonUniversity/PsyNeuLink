@@ -2151,15 +2151,6 @@ class Component(object):
         if not isinstance(variable, (list, np.ndarray)):
             variable = np.atleast_1d(variable)
 
-        try:
-            # if variable has a single int/float/etc. within some number of dimensions, and the
-            # instance default variable expects a single value within another number of dimensions,
-            # convert variable to match instance default
-            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
-                variable.resize(self.instance_defaults.variable.shape)
-        except AttributeError:
-            pass
-
         return convert_all_elements_to_np_array(variable)
 
     # ---------------------------------------------------------
@@ -2595,8 +2586,12 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable,
-                                                          context=ContextFlags.INSTANTIATE)
+        function_variable = copy.deepcopy(
+            self._parse_function_variable(
+                self.instance_defaults.variable,
+                context=ContextFlags.INSTANTIATE
+            )
+        )
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable,
@@ -2736,7 +2731,6 @@ class Component(object):
     def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
 
         # GET/SET CONTEXT
-
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2892,6 +2886,9 @@ class Component(object):
         else:
             raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
+
+    def set_value_without_logging(self, assignment):
+        self._value = assignment
 
     @property
     def params(self):

@@ -2272,10 +2272,10 @@ class Mechanism_Base(Mechanism):
         # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
+
         if (input is None
             and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
-
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
@@ -2285,6 +2285,8 @@ class Mechanism_Base(Mechanism):
                 self.context.execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.instance_defaults.variable
+            #     FIX:  this input value is sent to input CIMs when compositions are nested
+            #           variable should be based on afferent projections
             variable = self._update_variable(self._get_variable_from_input(input))
 
         # UPDATE PARAMETER STATE(S)
@@ -2390,7 +2392,6 @@ class Mechanism_Base(Mechanism):
         )
 
     def _get_variable_from_input(self, input):
-
         input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
         num_input_states = len(self.input_states)
@@ -2402,7 +2403,7 @@ class Mechanism_Base(Mechanism):
                 input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
-                raise SystemError("Number of inputs ({0}) to {1} does not match "
+                raise MechanismError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):
@@ -2792,7 +2793,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=None):
+    def add_states(self, states):
         """
         add_states(states)
 
@@ -2831,8 +2832,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
 
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
+        context = ContextFlags.METHOD
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -2849,6 +2849,7 @@ class Mechanism_Base(Mechanism):
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
                 input_states.append(state)
+
             elif (isinstance(state_type, OutputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)
@@ -2857,7 +2858,10 @@ class Mechanism_Base(Mechanism):
             # FIX: 11/9/17
             added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
-                old_variable = self.instance_defaults.variable.tolist()
+                if not isinstance(self.instance_defaults.variable, list):
+                    old_variable = self.instance_defaults.variable.tolist()
+                else:
+                    old_variable = self.instance_defaults.variable
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
                 self._update_variable(self.instance_defaults.variable)
@@ -2868,6 +2872,7 @@ class Mechanism_Base(Mechanism):
             for state in instantiated_input_states:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
                         state._assign_default_state_name(context=context)
+            # self._instantiate_function(function=self.function_object)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 
@@ -2941,6 +2946,11 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
+    def get_input_state_position(self, state):
+        if state in self.input_states:
+            return self.input_states.index(state)
+        raise MechanismError("{} is not an InputState of {}.".format(state.name, self.name))
+
     # @tc.typecheck
     # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
     def _get_state_value_labels(self, state_type):
@@ -3000,10 +3010,18 @@ class Mechanism_Base(Mechanism):
             return [input_state for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
+
     @property
     def external_input_values(self):
         try:
             return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_values(self):
+        try:
+            return [input_state.instance_defaults.value for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -3106,8 +3124,12 @@ class Mechanism_Base(Mechanism):
     def efferents(self):
         """Return list of all of the Mechanism's Projections"""
         projs = []
-        for output_state in self.output_states:
-            projs.extend(output_state.efferents)
+        try:
+            for output_state in self.output_states:
+                projs.extend(output_state.efferents)
+        except TypeError:
+            # self.output_states might be None
+            pass
         return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
