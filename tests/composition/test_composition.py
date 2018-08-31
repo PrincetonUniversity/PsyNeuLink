@@ -1927,7 +1927,7 @@ class TestRun:
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler_processing=sched, bin_execute=(llvm == 'LLVM'))
-        assert 25 == output[0][0]
+        assert np.allclose(25, output)
 
 
     @pytest.mark.skip
@@ -1988,7 +1988,7 @@ class TestRun:
                        D: [5.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
-        assert 250 == output[0][0]
+        assert np.allclose(250, output)
 
 
     @pytest.mark.composition
