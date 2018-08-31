@@ -197,6 +197,8 @@ def _convert_ctype_to_python(x):
         return [num for num in x]
     if isinstance(x, ctypes.c_double):
         return x.value
+    if isinstance(x, float):
+        return x
 
     print(x)
     assert False
