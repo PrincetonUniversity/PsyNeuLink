@@ -1832,12 +1832,14 @@ class Composition(object):
         return self.__compiled_results_extract[mechanism]
 
     def __extract_mech_output(self, mechanism):
+        # FIXME: Can we extract these directly from data array?
         bin_mech_extract = self.__get_bin_mech_output_extract(mechanism)
         data, out = bin_mech_extract.byref_arg_types
-        res = np.zeros_like(mechanism.output_values, dtype=np.float64)
-        ct_res = res.ctypes.data_as(ctypes.POINTER(out))
-        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
-        return res
+
+        out_buffer = out()
+
+        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ctypes.byref(out_buffer))
+        return pnlvm._convert_ctype_to_python(out_buffer)
 
     def reinitialize(self):
         self.__data_struct = None
