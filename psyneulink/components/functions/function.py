@@ -914,23 +914,17 @@ class Function_Base(Function):
         # Covnert input to doubles
         variable = np.asfarray(variable)
 
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-        ret = np.zeros(nested_len(self.instance_defaults.value))
-
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(*self.get_param_initializer())
         ct_state = state_struct_ty(*self.get_context_initializer())
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_state, ct_vi, ct_vo)
+        ct_vo = vo_ty()
+        bf(ctypes.byref(ct_param), ctypes.byref(ct_state), ct_vi,
+           ctypes.byref(ct_vo))
 
-        return ret
+        return pnlvm._convert_ctype_to_python(ct_vo)
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
@@ -8186,7 +8180,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         ret = super().bin_function(variable, params, context)
 
-        ret = ret.reshape(3, len(ret) // 3)
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
