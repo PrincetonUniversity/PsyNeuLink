@@ -471,6 +471,9 @@ class Composition(object):
         self.sched = Scheduler(composition=self)
 
 
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+
     @property
     def graph_processing(self):
         '''
@@ -1103,7 +1106,7 @@ class Composition(object):
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                                                         name="INPUT_CIM_" + node.name + "_" + input_state.name)
+                                                         name="INPUT_CIM_" + node.name + "_" + OutputState.__name__)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
@@ -1143,16 +1146,16 @@ class Composition(object):
                 if output_state not in set(self.output_CIM_states.keys()):
 
                     interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.value,
-                                                       reference_value=output_state.value,
+                                                       variable=output_state.instance_defaults.value,
+                                                       reference_value=output_state.instance_defaults.value,
                                                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
                         function=InterfaceStateMap(corresponding_input_state=interface_input_state,
-                                                   default_variable=self.output_CIM.value),
-                        reference_value=output_state.value,
+                                                   default_variable=self.output_CIM.instance_defaults.value),
+                        reference_value=output_state.instance_defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
