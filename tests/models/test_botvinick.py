@@ -16,10 +16,17 @@ import pytest
 # conflict monitoring simulations.
 
 @pytest.mark.model
-@pytest.mark.stress
 @pytest.mark.benchmark
+@pytest.mark.parametrize("reps", [1, 10, 100])
 @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
-def test_botvinick_model(benchmark, mode):
+def test_botvinick_model(benchmark, mode, reps):
+    if reps > 1 and not pytest.config.getoption("--stress"):
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.skip("not stressed")
+
+    benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
+
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer
     # colors: ('red', 'green'), words: ('RED','GREEN')
@@ -173,8 +180,8 @@ def test_botvinick_model(benchmark, mode):
                 [CN_trial_initialize_input, CN_control_trial_input]]
 
     # should be 500 and 1000
-    ntrials0 = 50
-    ntrials = 100
+    ntrials0 = 5 * reps
+    ntrials = 10 * reps
     comp._analyze_graph()
 
     def run(bin_execute):
@@ -195,15 +202,30 @@ def test_botvinick_model(benchmark, mode):
         return results
 
     res = benchmark(run, mode=='LLVM')
-    #FIXME: Check the third element (not presetn in LLVM results)
-    assert np.allclose(res[0][0], [0.42505118, 0.42505118])
-    assert np.allclose(res[1][0], [0.43621363, 0.40023224])
-    assert np.allclose(res[2][0], [0.42505118, 0.42505118])
-    assert np.allclose(res[3][0], [0.41420086, 0.42196304])
-    assert np.allclose(res[4][0], [0.42505118, 0.42505118])
-    assert np.allclose(res[5][0], [0.41689666, 0.40291293])
+    #FIXME: Check the third element (not present in LLVM results)
+    if reps == 1:
+        assert np.allclose(res[0][0], [0.4888244,  0.4888244])
+        assert np.allclose(res[1][0], [0.46943443, 0.46930256])
+        assert np.allclose(res[2][0], [0.4888244,  0.4888244])
+        assert np.allclose(res[3][0], [0.46935058, 0.46938641])
+        assert np.allclose(res[4][0], [0.4888244,  0.4888244])
+        assert np.allclose(res[5][0], [0.46935175, 0.46930373])
+    if reps == 10:
+        assert np.allclose(res[0][0], [0.42505118, 0.42505118])
+        assert np.allclose(res[1][0], [0.43621363, 0.40023224])
+        assert np.allclose(res[2][0], [0.42505118, 0.42505118])
+        assert np.allclose(res[3][0], [0.41420086, 0.42196304])
+        assert np.allclose(res[4][0], [0.42505118, 0.42505118])
+        assert np.allclose(res[5][0], [0.41689666, 0.40291293])
+    if reps == 100:
+        assert np.allclose(res[0][0], [0.48611807, 0.48611807])
+        assert np.allclose(res[1][0], [0.95970536, 0.21425063])
+        assert np.allclose(res[2][0], [0.48611807, 0.48611807])
+        assert np.allclose(res[3][0], [0.55802971, 0.83844741])
+        assert np.allclose(res[4][0], [0.48611807, 0.48611807])
+        assert np.allclose(res[5][0], [0.89746087, 0.25060644])
 
-    if mode == 'LLVM':
+    if mode == 'LLVM' or reps != 10:
         return
     r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
     energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY
