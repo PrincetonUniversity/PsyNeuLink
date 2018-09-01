@@ -34,8 +34,8 @@ and `Informational Attributes` below).
 
 .. _Component_Deferred_Init:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
@@ -55,7 +55,7 @@ Component Structure
 
 .. _Component_Structural_Attributes:
 
-Core Structural Attributes
+*Core Structural Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
@@ -173,8 +173,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _User_Modifiable_Parameters:
 
-User-modifiable Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+*User-modifiable Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Component_User_Params:
 
@@ -246,8 +246,8 @@ User-modifiable Parameters
 
 .. _Informational_Attributes:
 
-Informational Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Informational Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `user-modifiable parameters <Component_User_Params>`, a Component has attributes that provide
 information about its contents and/or state, but do not directly affect its operation.  Every Component has the
@@ -286,8 +286,8 @@ COMMENT
 
 .. _Component_Methods:
 
-Component Methods
-~~~~~~~~~~~~~~~~~
+*Component Methods*
+~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
    FOR DEVELOPERS:
@@ -2151,15 +2151,6 @@ class Component(object):
         if not isinstance(variable, (list, np.ndarray)):
             variable = np.atleast_1d(variable)
 
-        try:
-            # if variable has a single int/float/etc. within some number of dimensions, and the
-            # instance default variable expects a single value within another number of dimensions,
-            # convert variable to match instance default
-            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
-                variable.resize(self.instance_defaults.variable.shape)
-        except AttributeError:
-            pass
-
         return convert_all_elements_to_np_array(variable)
 
     # ---------------------------------------------------------
@@ -2595,8 +2586,12 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable,
-                                                          context=ContextFlags.INSTANTIATE)
+        function_variable = copy.deepcopy(
+            self._parse_function_variable(
+                self.instance_defaults.variable,
+                context=ContextFlags.INSTANTIATE
+            )
+        )
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable,
@@ -2649,14 +2644,21 @@ class Component(object):
             kwargs_to_instantiate = function.ClassDefaults.values().copy()
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
-                # matrix is unexpected at this point
                 # default_variable should not be in any function_params but sometimes it is
-                kwargs_to_remove = [MATRIX, 'default_variable']
+                kwargs_to_remove = ['default_variable']
 
                 for arg in kwargs_to_remove:
                     try:
                         del kwargs_to_instantiate[arg]
                     except KeyError:
+                        pass
+
+                # matrix is determined from parameter state based on string value in function_params
+                # update it here if needed
+                if MATRIX in kwargs_to_instantiate:
+                    try:
+                        kwargs_to_instantiate[MATRIX] = self.parameter_states[MATRIX].instance_defaults.value
+                    except (AttributeError, KeyError, TypeError):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
@@ -2729,7 +2731,6 @@ class Component(object):
     def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
 
         # GET/SET CONTEXT
-
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2885,6 +2886,9 @@ class Component(object):
         else:
             raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
+
+    def set_value_without_logging(self, assignment):
+        self._value = assignment
 
     @property
     def params(self):

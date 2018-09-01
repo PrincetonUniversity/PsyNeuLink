@@ -35,8 +35,8 @@ specified, its initialization is `deferred <GatingProjection_Deferred_Initializa
 
 .. _GatingProjection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a GatingProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
@@ -355,7 +355,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # function_param = function.params[modulated_param]
         # function_param_value = function.params[function_param]
         # gating_projection_function = self.function.__self__
-        # gating_projection_function.functionOutputType = type(function_param_value)
+        # gating_projection_function.output_type = type(function_param_value)
         # # ASSIGN FUNCTION TYPE TO FUNCTION HERE
 
         super()._instantiate_receiver(context=context)

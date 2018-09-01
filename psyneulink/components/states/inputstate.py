@@ -55,8 +55,8 @@ If the **owner** argument is not specified, `initialization <State_Deferred_Init
 
 .. _InputState_Deferred_Initialization:
 
-Owner Assignment and Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Owner Assignment and Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
@@ -70,8 +70,8 @@ the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mec
 
 .. _InputState_Primary:
 
-Primary InputState
-~~~~~~~~~~~~~~~~~~~
+*Primary InputState*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has at least one InputState, referred to as its *primary InputState*.  If InputStates are not
 `explicitly specified <InputState_Specification>` for a Mechanism, a primary InputState is automatically created
@@ -82,8 +82,8 @@ entry of the Mechanism's `input_states <Mechanism_Base.input_states>` attribute 
 
 .. _InputState_Specification:
 
-InputState Specification
-~~~~~~~~~~~~~~~~~~~~~~~~
+*InputState Specification*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specifying InputStates when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1231,6 +1231,15 @@ class InputState(State_Base):
         if hasattr(self.owner, "input_labels_dict"):
             label_dictionary = self.owner.input_labels_dict
         return self._get_value_label(label_dictionary, self.owner.input_states)
+
+    @property
+    def position_in_mechanism(self):
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                return self.owner.get_input_state_position(self)
+            else:
+                return None
+        return None
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):

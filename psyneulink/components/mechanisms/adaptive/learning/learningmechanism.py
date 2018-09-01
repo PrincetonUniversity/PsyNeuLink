@@ -36,8 +36,8 @@ Execution <System_Execution>`).
 
 .. _LearningMechanism_Note
 
-A Note about the Implementation of Learning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*A Note about the Implementation of Learning*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The implementation of learning in PsyNeuLink was designed for flexibility and "transparency" rather than efficiency.
 Unlike its implementation in most other environments -- where the learning algorithm is tightly integrated with the
@@ -66,8 +66,8 @@ More commonly, however, LearningMechanisms are created automatically.
 
 .. LearningMechanism_Automatic_Creation:
 
-Automatic Creation
-~~~~~~~~~~~~~~~~~~
+*Automatic Creation*
+~~~~~~~~~~~~~~~~~~~~
 
 A LearningMechanism is created automatically when:
 
@@ -86,8 +86,8 @@ required to implement learning that do not already exist are also instantiated. 
 
 .. _LearningMechanism_Explicit_Creation
 
-Explicit Creation
-~~~~~~~~~~~~~~~~~
+*Explicit Creation*
+~~~~~~~~~~~~~~~~~~~
 
 If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_sources**
 arguments must be specified.  The **variable** must have at leaset three items that are compatible (in number and type)
@@ -115,8 +115,8 @@ it has several attributes that govern and provide access to its operation.  Thes
 
 .. _LearningMechanism_InputStates:
 
-InputStates
-~~~~~~~~~~~
+*InputStates*
+~~~~~~~~~~~~~
 
 These receive the information required by the LearningMechanism's `function <LearningMechanism.function>`.  They are
 listed in the LearningMechanism's `input_states <LearningMechanism.input_states>` attribute.  They have the following
@@ -170,8 +170,8 @@ and `error_sources <LearningMechanism.error_sources>` attributes, respectively (
 
 .. _LearningMechanism_Function:
 
-Learning Function
-~~~~~~~~~~~~~~~~~
+*Learning Function*
+~~~~~~~~~~~~~~~~~~~
 
 The `function <LearningMechanism.function>` of a LearningMechanism uses the values received by the Mechanism's
 InputStates (described `above <LearningMechanism_InputStates>`) to calculate the value of its `learning_signal
@@ -218,8 +218,8 @@ as described below.
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates
-~~~~~~~~~~~~
+*OutputStates*
+~~~~~~~~~~~~~~
 
 By default, a LearningMechanism has two `OutputStates <OutputState>`, the first of which is named *ERROR_SIGNAL* and
 is assigned the value of the `error_signal <LearningMechanism.error_signal>` returned by the LearningMechanism's
@@ -283,8 +283,8 @@ They are each described below:
 
 .. _LearningMechanism_Additional_Attributes:
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+*Additional Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `InputStates <LearningMechanism_InputStates>`, `function <LearningMechanism_Function>` and
 `OutputStates <LearningMechanism_OutputStates>`, a LearningMechanism has the following attributes that
@@ -353,8 +353,8 @@ COMMENT:
 @@@ THE FOLLOWING SECTIONS SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
 COMMENT
 
-Learning Configurations
-~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Configurations*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When learning is specified for a `MappingProjection <Mapping_Matrix_Specification>`, a `Process
 <Process_Learning_Sequence>`, or a `System <System_Execution_Learning>`, all of the Components required for learning are
@@ -466,7 +466,7 @@ learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source <Le
 last MappingProjection in each learning sequence.  When learning is specified for a `Composition <Composition>` (i.e.,
 a `Process <Process_Learning_Sequence>` or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s)
 <ComparatorMechanism>` that receive the `targets <Run_Targets>`  are identified and designated as `TARGET` Mechanisms,
-and are listed in the Composition's `target_mechanisms` attribute. If a `TERMINAL` Mechanism of a Composition receives a
+and are listed in the Composition's `target_nodes` attribute. If a `TERMINAL` Mechanism of a Composition receives a
 MappingProjection that is specified for learning, then it always projects to a `TARGET` Mechanism in that Composition.
 It is important to note, in this context, the status of a Mechanism in a System takes precedence over its status in any
 of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process, if
@@ -538,6 +538,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+from enum import Enum
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
@@ -563,10 +564,6 @@ __all__ = [
     'LearningMechanism', 'LearningMechanismError', 'input_state_names', 'output_state_names'
 ]
 
-# Params:
-
-parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
-
 
 def _is_learning_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid learning specification
@@ -587,26 +584,52 @@ def _is_learning_spec(spec, include_matrix_spec=True):
                                        include_matrix_spec=include_matrix_spec)
     except:
         return False
-    # # MODIFIED 11/28/17 NEW:
-    # from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-    # if isinstance(spec, tuple):
-    #     return _is_learning_spec(spec[1])
-    # elif isinstance(spec, (LearningMechanism, LearningSignal, LearningProjection)):
-    #     return True
-    # elif isinstance(spec, type) and issubclass(spec, LearningSignal):
-    #     return True
-    # elif isinstance(spec, str) and spec in {LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL}:
-    #     return True
-    # elif include_matrix_spec:
-    #     if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
-    #         return True
-    #     from psyneulink.components.functions.function import get_matrix
-    #     if get_matrix(spec) is not None:
-    #         return True
-    # else:
-    #     return False
-    # # MODIFIED 11/28/17 END:
 
+class LearningType(Enum):
+    """
+        Denotes whether LearningMechanism requires a target input.
+
+    Attributes
+    ----------
+
+    UNSUPERVISED
+        implements (and requires a Projection to) a *ERROR_SIGNAL* InputState.
+
+    SUPERVISED
+        does not implement a *ERROR_SIGNAL* InputState.
+
+    """
+    UNSUPERVISED = 0
+    SUPERVISED = 1
+
+
+class LearningTiming(Enum):
+    """
+        Denotes
+
+    Attributes
+    ----------
+
+    EXECUTION_PHASE
+        LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
+        `execution phase <System_Execution>` of the System to which they belong, usually immediately after execution of
+        the `Mechanism` that receives the `primary_learned_projection`
+
+    LEARNING_PHASE
+        LearningMechanism (and associated `LearningProjections(s) <LearningProjection>`) executed during the
+        `learning phase <System_Execution>` of the System to which they belong.
+
+    """
+    EXECUTION_PHASE = 0
+    LEARNING_PHASE = 1
+
+
+# Params:
+
+parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
+
+LEARNING_TYPE = 'learning_type'
+LEARNING_TIMING = 'learning_timing'
 
 # Used to index variable:
 ACTIVATION_INPUT_INDEX = 0
@@ -884,6 +907,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+
     class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
         function = BackPropagation
 
@@ -910,7 +934,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 context=None):
+
+        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO ABC WHEN CREATED
+        if context is ContextFlags.CONSTRUCTOR:
+            self._check_type_and_timing()
+        else:
+            self.learning_type = LearningType.SUPERVISED
+            self.learning_timing = LearningTiming.LEARNING_PHASE
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
@@ -942,6 +974,20 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _check_type_and_timing(self):
+        try:
+            self.learning_type
+        except:
+            raise LearningMechanismError("{} subclass of {} must implement {} attribute".
+                                         format(self.__class__.__name__, LearningMechanism.__name__,
+                                                repr(LEARNING_TYPE)))
+        try:
+            self.learning_timing
+        except:
+            raise LearningMechanismError("{} subclass of {} must implement {} attribute".
+                                         format(self.__class__.__name__, LearningMechanism.__name__,
+                                                repr(LEARNING_TIMING)))
 
     def _parse_function_variable(self, variable, context=None):
         function_variable = np.zeros_like(
@@ -1146,7 +1192,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if context is None:
             context = ContextFlags.COMMAND_LINE
 
-        states = super().add_states(states=states, context=context)
+        states = super().add_states(states=states)
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
             self.error_sources.append(error_source)

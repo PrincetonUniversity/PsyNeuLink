@@ -116,8 +116,8 @@ mentioned above, or using one of the following:
 
 .. _Mechanism_State_Specification:
 
-Specifying States
-~~~~~~~~~~~~~~~~~
+*Specifying States*
+~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
 <OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
@@ -179,8 +179,8 @@ See `State <State_Examples>` for additional examples of specifying the States of
 
 .. _Mechanism_Parameter_Specification:
 
-Specifying Parameters
-~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
 current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
@@ -198,8 +198,8 @@ Structure
 
 .. _Mechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
@@ -347,8 +347,8 @@ Mechanism's `value <Mechanism_Base.value>` attribute which is  also at least a 2
 
 .. _Mechanism_States:
 
-States
-~~~~~~
+*States*
+~~~~~~~~
 
 Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
 `ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
@@ -613,8 +613,8 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 
 .. _Mechanism_Additional_Attributes:
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+*Additional Attributes*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Mechanism_Constructor_Arguments:
 
@@ -816,8 +816,8 @@ Finally, a Mechanism has an attribute that contains a dictionary of its attribut
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
-Role in Processes and Systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Role in Processes and Systems*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mechanisms that are part of one or more `Processes <Process>` are assigned designations that indicate the
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
@@ -849,8 +849,8 @@ tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Pa
 
 .. _Mechanism_Runtime_Parameters:
 
-Runtime Parameters
-~~~~~~~~~~~~~~~~~~
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This is an advanced feature, and is generally not required for most applications.
@@ -930,6 +930,7 @@ Class Reference
 
 import inspect
 import logging
+import warnings
 
 from collections import OrderedDict
 from inspect import isclass
@@ -938,7 +939,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import Linear
+from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -1987,6 +1988,14 @@ class Mechanism_Base(Mechanism):
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object._exponents = exponents
 
+        # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
+        # ignore warnings of certain Functions that disable conversion
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=UserWarning)
+            self.function_object.output_type = FunctionOutputType.NP_2D_ARRAY
+            self.function_object.enable_output_type_conversion = True
+        self.function_object._instantiate_value(context)
+
     def _instantiate_attributes_after_function(self, context=None):
 
         self._instantiate_output_states(context=context)
@@ -2034,6 +2043,10 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
+
+    def _projection_added(self, projection, context=None):
+        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
+        pass
 
     def reinitialize(self, *args):
         """
@@ -2259,10 +2272,10 @@ class Mechanism_Base(Mechanism):
         # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
+
         if (input is None
             and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
-
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
@@ -2272,6 +2285,8 @@ class Mechanism_Base(Mechanism):
                 self.context.execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.instance_defaults.variable
+            #     FIX:  this input value is sent to input CIMs when compositions are nested
+            #           variable should be based on afferent projections
             variable = self._update_variable(self._get_variable_from_input(input))
 
         # UPDATE PARAMETER STATE(S)
@@ -2377,7 +2392,6 @@ class Mechanism_Base(Mechanism):
         )
 
     def _get_variable_from_input(self, input):
-
         input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
         num_input_states = len(self.input_states)
@@ -2389,7 +2403,7 @@ class Mechanism_Base(Mechanism):
                 input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
-                raise SystemError("Number of inputs ({0}) to {1} does not match "
+                raise MechanismError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):
@@ -2775,11 +2789,11 @@ class Mechanism_Base(Mechanism):
             else:
                 x_range = [-10.0, 10.0]
         x_space = np.linspace(x_range[0],x_range[1])
-        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
+        plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=None):
+    def add_states(self, states):
         """
         add_states(states)
 
@@ -2818,8 +2832,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
 
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
+        context = ContextFlags.METHOD
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -2836,6 +2849,7 @@ class Mechanism_Base(Mechanism):
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
                 input_states.append(state)
+
             elif (isinstance(state_type, OutputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)
@@ -2844,7 +2858,10 @@ class Mechanism_Base(Mechanism):
             # FIX: 11/9/17
             added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
-                old_variable = self.instance_defaults.variable.tolist()
+                if not isinstance(self.instance_defaults.variable, list):
+                    old_variable = self.instance_defaults.variable.tolist()
+                else:
+                    old_variable = self.instance_defaults.variable
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
                 self._update_variable(self.instance_defaults.variable)
@@ -2855,6 +2872,7 @@ class Mechanism_Base(Mechanism):
             for state in instantiated_input_states:
                 if state.name is state.componentName or state.componentName + '-' in state.name:
                         state._assign_default_state_name(context=context)
+            # self._instantiate_function(function=self.function_object)
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 
@@ -2928,6 +2946,11 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
+    def get_input_state_position(self, state):
+        if state in self.input_states:
+            return self.input_states.index(state)
+        raise MechanismError("{} is not an InputState of {}.".format(state.name, self.name))
+
     # @tc.typecheck
     # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
     def _get_state_value_labels(self, state_type):
@@ -2987,10 +3010,18 @@ class Mechanism_Base(Mechanism):
             return [input_state for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
+
     @property
     def external_input_values(self):
         try:
             return [input_state.value for input_state in self.input_states if not input_state.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_values(self):
+        try:
+            return [input_state.instance_defaults.value for input_state in self.input_states if not input_state.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -3093,8 +3124,12 @@ class Mechanism_Base(Mechanism):
     def efferents(self):
         """Return list of all of the Mechanism's Projections"""
         projs = []
-        for output_state in self.output_states:
-            projs.extend(output_state.efferents)
+        try:
+            for output_state in self.output_states:
+                projs.extend(output_state.efferents)
+        except TypeError:
+            # self.output_states might be None
+            pass
         return ContentAddressableList(component_type=Projection, list=projs)
 
     @property

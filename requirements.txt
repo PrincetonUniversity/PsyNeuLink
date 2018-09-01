@@ -1,4 +1,5 @@
 toposort==1.4
 numpy
+pillow
 typecheck-decorator==1.2
-
+aenum

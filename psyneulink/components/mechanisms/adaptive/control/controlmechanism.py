@@ -41,8 +41,8 @@ COMMENT
 
 .. _ControlMechanism_System_Controller:
 
-ControlMechanisms and a System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ControlMechanisms and a System*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlMechanism can be assigned to `Process` and executed within one or more Systems, just like any other Mechanism.
 It also be assigned as the `controller <System.controller>` of a `System`, that has a special relation to the System:
@@ -81,8 +81,8 @@ automatically, as described below.
 
 .. _ControlMechanism_ObjectiveMechanism:
 
-ObjectiveMechanism
-~~~~~~~~~~~~~~~~~~
+*ObjectiveMechanism*
+~~~~~~~~~~~~~~~~~~~~
 
 Whenever a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that monitors and evaluates
 the `value <OutputState.value>`\\(s) of a set of `OutputState(s) <OutputState>`; this evaluation is used to determine
@@ -150,8 +150,8 @@ OutputStates to be monitored can also be added to an existing ControlMechanism b
 
 .. _ControlMechanism_Control_Signals:
 
-Specifying Parameters to Control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters to Control*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlMechanism is used to control the parameter values of other `Components <Component>`.  A `ControlSignal` is
 assigned for each parameter controlled by a ControlMechanism, and a `ControlProjection` is assigned from each
@@ -189,8 +189,8 @@ Structure
 
 .. _ControlMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
 input to the ControlMechanism's `function <ControlMechanism.function>`, that determines the ControlMechanism's
@@ -208,8 +208,8 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 
 .. _ControlMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
 *ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism.allocation_policy>`.  By
@@ -221,8 +221,8 @@ default, each item of the `allocation_policy <ControlMechanism.allocation_policy
 
 .. _ControlMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 A ControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
@@ -263,7 +263,7 @@ subsequent `TRIAL` of execution.
 .. _ControlMechanism_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`

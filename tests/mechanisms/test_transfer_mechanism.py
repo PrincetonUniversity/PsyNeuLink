@@ -6,6 +6,7 @@ from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
@@ -1276,3 +1277,39 @@ class TestClip:
         assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+
+class TestOutputStates:
+    def test_output_states_match_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        assert len(T.input_states) == 3
+        assert len(T.output_states) == 3
+
+        T.execute(input=[[1.0], [2.0], [3.0]])
+
+        assert np.allclose(T.value, [[1.0], [2.0], [3.0]])
+        assert np.allclose(T.output_states[0].value, [1.0])
+        assert np.allclose(T.output_states[1].value, [2.0])
+        assert np.allclose(T.output_states[2].value, [3.0])
+
+    def test_add_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        I = InputState(owner=T,
+                       variable=[4.0],
+                       reference_value=[4.0],
+                       name="extra input state")
+        T.add_states([I])
+        print("Number of input states: ", len(T.input_states))
+        print(T.input_states, "\n\n")
+        print("Number of output states: ", len(T.output_states))
+        print(T.output_states)
+
+        # assert len(T.input_states) == 4
+        # assert len(T.output_states) == 4
+        #
+        # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])
+        #
+        # assert np.allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
+        # assert np.allclose(T.output_states[0].value, [1.0])
+        # assert np.allclose(T.output_states[1].value, [2.0])
+        # assert np.allclose(T.output_states[2].value, [3.0])
+        # assert np.allclose(T.output_states[3].value, [4.0])

@@ -27,6 +27,8 @@ install:
 
     %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
 
+    %PYTHON%\\python.exe -m pip install -U pytest-xdist
+
     choco upgrade graphviz.portable -y
 
     %PYTHON%\\python.exe -m pip install -e .[dev]
@@ -35,4 +37,4 @@ cache:
 - '%PYTHON%\lib\site-packages'
 build: off
 test_script:
-- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/'
+- cmd: '%PYTHON%\\python.exe -m pytest -n auto --cov=psyneulink tests/'

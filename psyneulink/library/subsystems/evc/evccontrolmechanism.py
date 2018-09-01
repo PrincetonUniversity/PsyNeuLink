@@ -37,8 +37,8 @@ An EVCControlMechanism is similar to a standard `ControlMechanism`, with the fol
 
 .. _EVCControlMechanism_EVC:
 
-Expected Value of Control (EVC)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Expected Value of Control (EVC)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its
 `system <EVCControlMechanism.system>`.  In the `default configuration <EVCControlMechanism_Default_Configuration>`,
@@ -94,8 +94,8 @@ its `ControlSignals <EVCControlMechanism_ControlSignals>`.  Each of these specia
 
 .. _EVCControlMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 .. _EVCControlMechanism_ObjectiveMechanism:
 
@@ -192,8 +192,8 @@ The prediction mechanisms for an EVCControlMechanism are listed in its `predicti
 
 .. _EVCControlMechanism_Functions:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 By default, the primary `function <EVCControlMechanism.function>` is `ControlSignalGridSearch` (see
 `EVCControlMechanism_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the
@@ -283,8 +283,8 @@ function (see note below).
 
 .. _EVCControlMechanism_ControlSignals:
 
-ControlSignals
-~~~~~~~~~~~~~~
+*ControlSignals*
+~~~~~~~~~~~~~~~~
 
 The OutputStates of an EVCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <EVCControlMechanism.control_signals>` attribute (as well as
@@ -1035,10 +1035,10 @@ class EVCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy = super(ControlMechanism, self)._execute(
-            controller=self,
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
+                controller=self,
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
         )
 
         # IMPLEMENTATION NOTE:
@@ -1107,12 +1107,23 @@ class EVCControlMechanism(ControlMechanism):
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
+        # RUN SIMULATION
+
+        # Buffer System attributes
+        execution_id_buffer = self.system._execution_id
+        animate_buffer = self.system._animate
+
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
+                        animate=False,
                         context=context)
-        self.system.context.execution_phase = ContextFlags.IDLE
+        self.system.context.execution_phase = ContextFlags.CONTROL
+
+        # Restore System attributes
+        self.system._animate = animate_buffer
+        self.system._execution_id = execution_id_buffer
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)

@@ -4,8 +4,10 @@ python:
     - 3.5
     - 3.6
 
+sudo: false
+
 install:
-  - pip install coveralls
+  - pip install coveralls pytest-xdist
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
@@ -22,6 +24,7 @@ matrix:
   include:
   - python: 3.7
     dist: xenial # Python 3.7 is only available on xenial because of deps
+    sudo: required
 
   - os: osx
     python: 3.5
@@ -29,6 +32,7 @@ matrix:
     env:
         - PYTHON=3.5.4
         - PYTHON_PKG_VERSION=macosx10.6
+        - PRIV=sudo
     # Cache installed python packages
     cache:
         directories:
@@ -46,6 +50,7 @@ matrix:
     env:
         - PYTHON=3.6.6
         - PYTHON_PKG_VERSION=macosx10.9
+        - PRIV=sudo
     # Cache installed python packages
     cache:
         directories:
@@ -63,6 +68,7 @@ matrix:
     env:
         - PYTHON=3.7.0
         - PYTHON_PKG_VERSION=macosx10.9
+        - PRIV=sudo
     # Cache installed python packages
     cache:
         directories:
@@ -83,7 +89,7 @@ before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     FILE=python-$PYTHON-$PYTHON_PKG_VERSION.pkg
     curl -O -#  https://www.python.org/ftp/python/$PYTHON/$FILE
-    sudo installer -pkg $FILE -target /
+    $PRIV installer -pkg $FILE -target /
     python3 --version
     # This sidesteps TLSv1.1 issue when using pip
     curl https://bootstrap.pypa.io/get-pip.py | python3
@@ -104,7 +110,7 @@ before_install: |
   fi
 
 script:
-  - python -m pytest -p no:logging --cov=psyneulink tests/
+  - python -m pytest -n auto -p no:logging --cov=psyneulink tests/
 
 after_script:
   - coveralls

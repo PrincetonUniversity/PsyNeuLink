@@ -82,8 +82,8 @@ automatically <Projection_Automatic_Creation>`, as described below.
 
 .. _Projection_Specification:
 
-Specifying a Projection
-~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying a Projection*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a `pathway <Process.pathway>` for a `Process`, where the value of a parameter is specified
@@ -214,8 +214,8 @@ Projection in context:
 
 .. _Projection_Automatic_Creation:
 
-Automatic creation
-~~~~~~~~~~~~~~~~~~
+*Automatic creation*
+~~~~~~~~~~~~~~~~~~~~
 
 Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
 `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
@@ -225,8 +225,8 @@ when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>
 
 .. _Projection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
 <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified.  This allows a
@@ -276,8 +276,8 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
 
 .. _Projection_Sender:
 
-Sender
-~~~~~~
+*Sender*
+~~~~~~~~
 
 This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
@@ -301,8 +301,8 @@ Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
 
-Receiver
-~~~~~~~~
+*Receiver*
+~~~~~~~~~~
 
 The `receiver <Projection_Base.receiver>` required by a Projection depends on its type, as listed below:
 
@@ -326,8 +326,8 @@ A `receiver <Projection_Base.receiver>` can be specified as:
 
 .. _Projection_Weight_Exponent:
 
-Weight and Exponent
-~~~~~~~~~~~~~~~~~~~
+*Weight and Exponent*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every Projection has a `weight <Projection_Base.weight>` and `exponent <Projection_Base.exponent>` attribute. These
 are applied to its `value <Projection_Base.value>` before combining it with other Projections that project to the same
@@ -342,8 +342,8 @@ with others to determine the `variable <State_Base.variable>` of the State to wh
    they project.
 
 
-ParameterStates and Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ParameterStates and Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
 <Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
@@ -689,7 +689,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.value
+            variable = self.sender.instance_defaults.value
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
@@ -911,6 +911,10 @@ class Projection_Base(Projection):
 
         return {SENDER:sender,
                 RECEIVER:receiver}
+
+    def _projection_added(self, projection, context=None):
+        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Projection'''
+        pass
 
     def _assign_default_name(self, **kwargs):
         self._assign_default_projection_name(**kwargs)
@@ -1234,7 +1238,6 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
-
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
                          format(owner.name, connectee_state_type))
@@ -1265,7 +1268,6 @@ def _parse_connection_specs(connectee_state_type,
     connect_with_states = []
 
     for connection in connections:
-
 
         # If a Mechanism, State, or State type is used to specify the connection on its own (i.e., w/o dict or tuple)
         #     put in ProjectionTuple as both State spec and Projection spec (to get Projection for that State)
@@ -1304,9 +1306,8 @@ def _parse_connection_specs(connectee_state_type,
         #  but also leave it is as the connection specification (it will get resolved to a State reference when the
         #    tuple is created in the recursive call to _parse_connection_specs below).
         elif _is_projection_spec(connection, include_matrix_spec=False):
-
             projection_spec = connection
-            projection_tuple =  (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
+            projection_tuple = (connection, DEFAULT_WEIGHT, DEFAULT_EXPONENT, projection_spec)
             connect_with_states.extend(_parse_connection_specs(connectee_state_type, owner, projection_tuple))
 
         # Dict of one or more Mechanism specifications, used to specify individual States of (each) Mechanism;
@@ -1526,15 +1527,22 @@ def _parse_connection_specs(connectee_state_type,
                 states = state
             else:
                 states = [state]
+
             for state_spec in states:
                 if inspect.isclass(state_spec):
                     state_type = state_spec
                 else:
                     state_type = state_spec.__class__
 
-                # Test that state_type is in the list for state's connects_with
+                # # Test that state_type is in the list for state's connects_with
+                from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+
+                # KAM 7/26/18 modified to allow ControlMechanisms to be terminal nodes of compositions
+                # We could only include ControlSignal in the allowed types if the receiver is a CIM?
+                allowed = connects_with + modulators + [ControlSignal]
+
                 if not any(issubclass(connects_with_state, state_type)
-                           for connects_with_state in connects_with + modulators):
+                           for connects_with_state in allowed):
                     spec = projection_spec or state_type.__name__
                     raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
                                           "{} with {} of {} ; should be one of the following: {}".
