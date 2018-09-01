@@ -1807,17 +1807,16 @@ class System(System_Base):
                         other_obj_mech = next((projection.receiver.owner for projection in
                                                sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
-                        if other_obj_mech is obj_mech:
-                            return
-                        sender_mech = other_obj_mech
-                        sender_mech._add_process(process, TARGET)
-                        obj_mech_replaced = TERMINAL
-                        # Move error_signal Projections from old obj_mech to new one (now sender_mech)
-                        for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
-                            # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
-                            MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
-                            _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
-                            # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
+                        if not other_obj_mech is obj_mech:
+                            sender_mech = other_obj_mech
+                            sender_mech._add_process(process, TARGET)
+                            obj_mech_replaced = TERMINAL
+                            # Move error_signal Projections from old obj_mech to new one (now sender_mech)
+                            for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
+                                # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
+                                MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
+                                _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
+                                # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
