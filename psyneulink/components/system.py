@@ -1807,6 +1807,10 @@ class System(System_Base):
                         other_obj_mech = next((projection.receiver.owner for projection in
                                                sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
+                        # MODIFIED 8/31/18 NEW:
+                        if other_obj_mech is obj_mech:
+                            return
+                        # MODIFIED 8/31/18 END
                         sender_mech = other_obj_mech
                         sender_mech._add_process(process, TARGET)
                         obj_mech_replaced = TERMINAL
