@@ -3206,6 +3206,29 @@ class Identity(
 
         return variable
 
+    def get_input_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if isinstance(self.owner, CompositionInterfaceMechanism):
+            variable = [state.instance_defaults.value for state in self.owner.input_states]
+            # Python list does not care about ndarrays of different lengths
+            # we do care, so convert to tuple to create struct
+            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
+                variable = tuple(variable)
+#        assert all(type(x) == type(t[0]) for x in t)
+            with pnlvm.LLVMBuilderContext() as ctx:
+                return pnlvm._convert_python_struct_to_llvm_ir(ctx, variable)
+        return super().get_input_struct_type()
+
+    def get_output_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if isinstance(self.owner, CompositionInterfaceMechanism):
+            return self.get_input_struct_type()
+        return super().get_output_struct_type()
+
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val = builder.load(arg_in)
         builder.store(val, arg_out)
