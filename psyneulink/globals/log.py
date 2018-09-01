@@ -411,7 +411,7 @@ class LogCondition(aenum.IntFlag):
     OFF = ContextFlags.UNSET
     # """No recording."""
     # INITIALIZATION = ContextFlags.INITIALIZING
-    INITIALIZATION = ContextFlags.INITIALIZED
+    INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
     VALIDATION =  ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
