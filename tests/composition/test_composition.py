@@ -1990,6 +1990,32 @@ class TestRun:
         output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(250, output)
 
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_1_origin_2_terminals(self, benchmark, mode):
+        #       ==> D
+        # C
+        #       ==> E
+
+        #                25 * 4 = 100
+        # 5 x 5 = 25 --
+        #                25 * 6 = 150
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=4.0))
+        E = TransferMechanism(name="E", function=Linear(slope=6.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [5.0]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose([[100], [150]], output)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
