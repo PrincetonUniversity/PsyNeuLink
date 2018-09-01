@@ -1491,7 +1491,17 @@ class Composition(object):
 
         # extract result here
         if bin_execute:
-            return self.__extract_mech_output(node)
+            bin_mechanism = self.__get_bin_mechanism(self.output_CIM)
+            c, p, i, di, do = bin_mechanism.byref_arg_types
+            # Cast the arguments. Structures are the same but ctypes
+            # creates new class every time.
+            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
+
+            return self.__extract_mech_output(self.output_CIM)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
@@ -1947,6 +1957,9 @@ class Composition(object):
                                               ctx.int32_ty(state_idx),
                                               ctx.int32_ty(projection_idx)])
 
+                if proj_in.type != proj_function.args[2].type:
+                    assert mech is self.output_CIM
+                    proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
