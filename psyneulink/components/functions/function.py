@@ -3375,6 +3375,20 @@ class InterfaceStateMap(InterfaceFunction):
         # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
+    def get_input_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
+            return self.owner.owner.function_object.get_output_struct_type()
+        return super().get_input_struct_type()
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        index = self.corresponding_input_state.position_in_mechanism
+        val = builder.load(builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(index)]))
+        builder.store(val, arg_out)
+        return builder
+
 
 # endregion
 
