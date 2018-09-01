@@ -484,7 +484,6 @@ class Composition(object):
         self.__input_struct = None
 
         self.__compiled_mech = {}
-        self.__compiled_results_extract = {}
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1821,25 +1820,11 @@ class Composition(object):
 
         return self.__compiled_mech[mechanism]
 
-
-    def __get_bin_mech_output_extract(self, mechanism):
-        if mechanism not in self.__compiled_results_extract:
-            wrapper = self.__gen_mech_result_extract(mechanism)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
-            self.__compiled_results_extract[mechanism] = bin_f
-            return bin_f
-
-        return self.__compiled_results_extract[mechanism]
-
     def __extract_mech_output(self, mechanism):
-        # FIXME: Can we extract these directly from data array?
-        bin_mech_extract = self.__get_bin_mech_output_extract(mechanism)
-        data, out = bin_mech_extract.byref_arg_types
-
-        out_buffer = out()
-
-        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ctypes.byref(out_buffer))
-        return pnlvm._convert_ctype_to_python(out_buffer)
+        mech_index = self.__get_mech_index(mechanism)
+        field = self.__data_struct._fields_[mech_index][0]
+        res_struct = getattr(self.__data_struct, field)
+        return pnlvm._convert_ctype_to_python(res_struct)
 
     def reinitialize(self):
         self.__data_struct = None
@@ -1970,35 +1955,6 @@ class Composition(object):
             m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             builder.call(m_function, [m_params, m_context, m_in, m_out])
-            builder.ret_void()
-
-        return func_name
-
-
-    def __gen_mech_result_extract(self, mech):
-
-        func_name = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("comp_result_wrap_" + mech.name)
-            func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_data_struct_type().as_pointer(),
-                mech.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            data, vo = llvm_func.args
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            idx = self.__get_mech_index(mech)
-            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            data = builder.load(res)
-            builder.store(data, vo)
-
             builder.ret_void()
 
         return func_name
