@@ -1379,6 +1379,14 @@ class Composition(object):
 
         if bin_execute:
             self.__bin_initialize(inputs)
+            bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
+            c, p, i, di, do = bin_mechanism.byref_arg_types
+            # Cast the arguments. Structures are the same but ctypes creates new class every time.
+            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
 
         if call_before_pass:
             call_before_pass()
@@ -1779,9 +1787,7 @@ class Composition(object):
             ir.LiteralStructType(proj_ctx_type_list)])
 
     def get_input_struct_type(self):
-        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        input_type_list  = [m.get_input_struct_type() for m in origin_mechanisms]
-        return ir.LiteralStructType(input_type_list)
+        return self.input_CIM.get_input_struct_type()
 
     def get_data_struct_type(self):
         output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
@@ -1844,11 +1850,8 @@ class Composition(object):
 
     def __bin_initialize(self, inputs):
         origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        # Read provided or default input
-        input_data = [inputs[m] if m in inputs else m.instance_defaults.variable for m in origin_mechanisms]
-        # Every input state takes 2d input. Mechanism thus takes vector of
-        # 2d inputs, and data is a vector of mechanism inputs
-        input_data = [[np.atleast_2d(i) for i in elem] for elem in input_data]
+        # Read provided input and split apart each input state
+        input_data = [[x] for m in origin_mechanisms for x in inputs[m]]
 
         c_input = pnlvm._convert_llvm_ir_to_ctype(self.get_input_struct_type())
         def tupleize(x):
@@ -1899,9 +1902,8 @@ class Composition(object):
             origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
             #TODO: This should be replaced by executing input_CIM
-            if mech in origin_mechanisms:
-                mech_in_idx = origin_mechanisms.index(mech)
-                m_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(mech_in_idx)])
+            if mech is self.input_CIM:
+                m_in = comp_in
                 incoming_projections = []
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
@@ -1910,7 +1912,6 @@ class Composition(object):
             # Run all incoming projections
             #TODO: This should filter out projections with different execution ID
             for par_proj in incoming_projections:
-                assert not mech in origin_mechanisms
                 # Skip autoassociative projections
                 if par_proj.sender.owner is par_proj.receiver.owner:
                     continue
