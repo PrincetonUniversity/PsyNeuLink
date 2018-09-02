@@ -1126,11 +1126,12 @@ class Composition(object):
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
-                    MappingProjection(sender=interface_output_state,
-                                      receiver=input_state,
-                                      matrix= IDENTITY_MATRIX,
-                                      name="("+interface_output_state.name + ") to ("
-                                           + input_state.owner.name + "-" + input_state.name+")")
+                    self.projections.append(MappingProjection(
+                                                sender=interface_output_state,
+                                                receiver=input_state,
+                                                matrix= IDENTITY_MATRIX,
+                                                name="(" + interface_output_state.name + ") to (" +
+                                                input_state.owner.name + "-" + input_state.name + ")"))
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
