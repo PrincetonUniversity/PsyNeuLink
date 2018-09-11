@@ -3555,6 +3555,52 @@ class TestCompositionInterface:
 
         assert len(comp.output_CIM.output_states) == 4
 
+    def test_default_variable_shape_of_output_CIM(self):
+        comp = Composition(name='composition')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+
+        comp.run(inputs={A: [1.0],
+                         B: [2.0]})
+
+        out = comp.output_CIM
+
+        assert np.allclose(np.shape(out.instance_defaults.variable), (2,1))
+        assert np.allclose(np.shape(out.variable), (2, 1))
+        assert np.allclose(out.variable, [[1.0], [2.0]])
+
+        C = ProcessingMechanism(name='C')
+        comp.add_c_node(C)
+
+        comp.run(inputs={A: [1.0],
+                         B: [2.0],
+                         C: [3.0]})
+
+        out = comp.output_CIM
+
+        assert np.allclose(np.shape(out.instance_defaults.variable), (3, 1))
+        assert np.allclose(np.shape(out.variable), (3, 1))
+        assert np.allclose(out.variable, [[1.0], [2.0], [3.0]])
+
+        T = ProcessingMechanism(name='T')
+        comp.add_linear_processing_pathway([A, T])
+        comp.add_linear_processing_pathway([B, T])
+        comp.add_linear_processing_pathway([C, T])
+
+        comp.run(inputs={A: [1.0],
+                         B: [2.0],
+                         C: [3.0]})
+
+        out = comp.output_CIM
+        print(out.input_values)
+        print(out.variable)
+        print(out.instance_defaults.variable)
+        assert np.allclose(np.shape(out.instance_defaults.variable), (1, 1))
+        assert np.allclose(np.shape(out.variable), (1, 1))
+        assert np.allclose(out.variable, [[6.0]])
 
 class TestInputStateSpecifications:
 
