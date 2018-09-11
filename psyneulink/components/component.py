@@ -1131,7 +1131,12 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
-    __deepcopy__ = get_deepcopy_with_shared_keys(deepcopy_shared_keys)
+    def __deepcopy__(self, memo):
+        fun = get_deepcopy_with_shared_keys(self.deepcopy_shared_keys)
+        newone = fun(self, memo)
+        newone.__dict__['_Component__llvm_function_name'] = None
+        newone.__dict__['_Component__llvm_bin_function'] = None
+        return newone
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
