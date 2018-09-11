@@ -1279,14 +1279,24 @@ class Composition(object):
                 self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                if self.controller:
+                    if node == self.controller.objective_mechanism:
+                        for vertex in graph.get_parents_from_component(node):
+                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                else:
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             if graph.get_parents_from_component(node) == []:
                 self._add_c_node_role(node, CNodeRole.ORIGIN)
         # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                if self.controller:
+                    if node == self.controller.objective_mechanism:
+                        for vertex in graph.get_parents_from_component(node):
+                            self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
+                else:
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
@@ -2232,7 +2242,7 @@ class Composition(object):
         return saved_state
 
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
-
+        self.simulation_results = []
         predicted_input = self.update_predicted_input()
 
         num_trials = 1
@@ -2261,6 +2271,8 @@ class Composition(object):
                          execution_id=execution_id,
                          runtime_params=runtime_params,
                          context=context)
+
+                self.simulation_results.append(self.output_CIM.output_values)
                 current_costs = []
                 for signal in self.controller.control_signals:
                     current_costs.append(signal.cost)
