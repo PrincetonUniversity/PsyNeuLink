@@ -1153,8 +1153,7 @@ class Composition(object):
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=InterfaceStateMap(corresponding_input_state=interface_input_state,
-                                                   default_variable=self.output_CIM.instance_defaults.value),
+                        function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                         reference_value=output_state.instance_defaults.value,
                         name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
@@ -1170,8 +1169,8 @@ class Composition(object):
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
             # remove the CIM input and output states associated with this Terminal Node output state
-            self.output_CIM.input_states.remove(self.output_CIM_states[output_state][0])
-            self.output_CIM.output_states.remove(self.output_CIM_states[output_state][1])
+            self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
+            self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
 
     def _assign_values_to_input_CIM(self, inputs):
