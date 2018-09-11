@@ -464,6 +464,7 @@ class Composition(object):
                                                         composition=self)
         self.output_CIM_states = {}
         self.enable_controller = enable_controller
+        self.simulation_results = []
         self.execution_ids = []
         self.controller = controller
 
@@ -2242,7 +2243,6 @@ class Composition(object):
         return saved_state
 
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
-        self.simulation_results = []
         predicted_input = self.update_predicted_input()
 
         num_trials = 1
