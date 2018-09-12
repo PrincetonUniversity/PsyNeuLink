@@ -2876,6 +2876,8 @@ class Mechanism_Base(Mechanism):
         if output_states:
             instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
 
+        self.instance_defaults.variable = self.input_values
+
         return {INPUT_STATES: instantiated_input_states,
                 OUTPUT_STATES: instantiated_output_states}
 
@@ -2937,6 +2939,8 @@ class Mechanism_Base(Mechanism):
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=OUTPUT_STATE,
                                               component=state)
+
+        self.instance_defaults.variable = self.input_values
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
