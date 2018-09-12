@@ -473,3 +473,59 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(level_1.output_values, [14.0])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.output_values, [34.0])
+
+
+class TestInputCIMOutputStateToOriginOneToMany:
+
+    def test_one_to_two(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: A}
+
+        comp.run(inputs={A: [[1.23]]})
+
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[1.23]])
+        assert np.allclose(C.value, [[1.23]])
+
+    def test_incorrect_origin_input_source_spec(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: B}
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={A: [[1.23]]})
+        assert "Origin input source" in str(error_text) and "specified for C is not valid" in str(error_text)
+
+    def test_origin_input_source_none(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[4.56]])
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: None}
+
+        comp.run(inputs={A: [[1.23]]})
+        
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[1.23]])
+        assert np.allclose(C.value, [[4.56]])
