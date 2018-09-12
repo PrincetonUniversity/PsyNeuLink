@@ -509,8 +509,8 @@ class EVCControlMechanism(ControlMechanism):
         ..note::
             Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
             the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
-            Mechanism; this will cause an if the System has more than one `ORIGIN` Mechanism;  in that case, one of the
-            other forms of specification must be used.
+            Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that case,
+            one of the other forms of specification must be used.
         COMMENT
 
     function : function or method : ControlSignalGridSearch
@@ -815,16 +815,15 @@ class EVCControlMechanism(ControlMechanism):
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
-        Mechanisms:
+        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL` Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
             - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
                 explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
 
         For each `ORIGIN` Mechanism in system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the Process to system.processes
+            - instantiate a corresponding PredictionMechanism
+            - instantiate a MappingProjection to the PredictionMechanism
+                that shadows the one from the SystemInputState to the ORIGIN Mechanism
 
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of system

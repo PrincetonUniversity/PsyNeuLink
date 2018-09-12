@@ -679,7 +679,7 @@ class Composition(object):
             self.needs_update_scheduler_learning = True
 
         else:
-            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
+            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Composition."
                                    .format(projection.name))
         return projection
 
@@ -935,7 +935,7 @@ class Composition(object):
             Returns
             -------
 
-            set of Compositon Nodes with `CNodeRole` `role` : set(`Mechanisms <Mechanism>` and
+            set of Composition Nodes with `CNodeRole` `role` : set(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         '''
         if role not in CNodeRole:

@@ -125,7 +125,7 @@ class TestAddProjection:
         comp.add_projection(proj, A, B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(proj, A, B)
-        assert "This Projection is already in the Compositon" in str(error_text)
+        assert "This Projection is already in the Composition" in str(error_text)
 
     def test_add_fully_specified_projection_object(self):
         comp = Composition()

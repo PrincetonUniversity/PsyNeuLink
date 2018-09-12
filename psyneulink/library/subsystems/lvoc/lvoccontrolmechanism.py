@@ -378,27 +378,28 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, LVOC_MECHANISM,\
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, LVOC_MECHANISM, \
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, FUNCTION
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import \
+    ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError',
 ]
-
 
 class LVOCError(Exception):
     def __init__(self, error_value):
@@ -812,47 +813,37 @@ class LVOCControlMechanism(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
+    def assign_prediction_mechanisms(self, inputs, system:System_Base):
+        self.system = system
+        self._instantiate_prediction_mechanisms(system=system, inputs=inputs, context=ContextFlags.COMMAND_LINE)
+
+    def _instantiate_prediction_mechanisms(self, system:System_Base, inputs=ORIGIN_MECHANISMS, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
-        Mechanisms:
-            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
-            - if an associated input Mechanism must be monitored by the LVOCControlMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
+        Instantiate a PredictionMechanisms for each `ORIGIN` Mechanism in system;
 
         For each `ORIGIN` Mechanism in system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the Process to system.processes
+            - instantiate a corresponding PredictionMechanism
+            - instantiate a MappingProjection to the PredictionMechanism
+                that shadows the one from the System to the ORIGIN Mechanism
+            - instantiate a MappingProjection from the PredictionMechanism to the LVOCControlMechanism
 
-        Instantiate self.predicted_input dict:
-            - key for each entry is an `ORIGIN` Mechanism of system
-            - value of each entry is a list of the values of the corresponding predictionMechanism,
-                one for each trial to be simulated; each value is a 2d array, each item of which is the value of an
-                InputState of the predictionMechanism
-
-        Args:
-            context:
         """
 
-        # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
-        # If system's controller already has prediction_mechanisms, use those
-        if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
-            self.prediction_mechanisms = system.controller.prediction_mechanisms
-            self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
-            self.predicted_input = system.controller.predicted_input
-            return
+        if self.system:
+            if not system.origin_mechanisms:
+                raise LVOCError("No inputs can be provided to {} as no ORIGIN Mechanisms were identified "
+                                "in the System ({}) to which it belongs".
+                                format(self.name, self.system.name))
+            if self in system.origin_mechanisms:
+                raise LVOCError("{} cannot be an ORIGIN Mechanism of the System ({}) to which it belongs".
+                                format(self.system.name))
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
 
         # List of prediction Mechanism tuples (used by System to execute them)
         self.prediction_mechs = []
-
-        # IF IT IS A MECHANISM, PUT IT IN A LIST
-        # IF IT IS A CLASS, PUT IT IN A TUPLE WITH NONE
-        # NOW IF IT IS TUPLE,
 
         # self.prediction_mechanisms is:
         if isinstance(self.prediction_mechanisms, Mechanism):
@@ -869,8 +860,15 @@ class LVOCControlMechanism(ControlMechanism):
             prediction_mech_specs = self.prediction_mechanisms
 
         if isinstance(prediction_mech_specs, tuple):
+            spec_tuple = prediction_mech_specs
+            # if params are not specified or FUNCTION is not specified in them, specify it as Linear
+            #     (to override default for PredictionMechanism which is AdaptiveIntegrator)
+            if not spec_tuple[1]:
+                spec_tuple = (spec_tuple[0], {FUNCTION:INPUT})
+            elif  isinstance(spec_tuple[1], dict) and not FUNCTION in spec_tuple:
+                spec_tuple[1][FUNCTION] = INPUT
             # a tuple, so create a list with same length as self.system.origin_mechanisms, and tuple as each item
-            prediction_mech_specs = [prediction_mech_specs] * len(system.origin_mechanisms)
+            prediction_mech_specs = [spec_tuple] * len(system.origin_mechanisms)
 
         # Make sure prediction_mechanisms is the same length as self.system.origin_mechanisms
         from psyneulink.components.system import ORIGIN_MECHANISMS
@@ -885,7 +883,6 @@ class LVOCControlMechanism(ControlMechanism):
             variable = []
             for state_name in origin_mech.input_states.names:
                 state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
                 variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
@@ -906,25 +903,25 @@ class LVOCControlMechanism(ControlMechanism):
                 raise LVOCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
                                format(pm_spec, repr(PREDICTION_MECHANISMS), self.name))
 
-            prediction_mechanism._role = CONTROL
+            # prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 
-            # Assign projections to prediction_mechanism that duplicate those received by origin_mech
+            # Assign Projections to prediction_mechanism that duplicate those received by origin_mech
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
+            #    and add Projections from prediction_mechanism to LVOCControlMechanism
+            i=0
             for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                            prediction_mechanism.input_states):
+                                                                prediction_mechanism.input_states):
                 for projection in orig_input_state.path_afferents:
                     MappingProjection(sender=projection.sender,
                                       receiver=prediction_input_state,
                                       matrix=projection.matrix)
 
-            # Assign list of processes for which prediction_mechanism will provide input during the simulation
-            # - used in _get_simulation_system_inputs()
-            # - assign copy,
-            #       since don't want to include the prediction process itself assigned to origin_mech.processes below
-            prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
+                self.add_states(InputState(projections=prediction_mechanism.output_states[i],
+                                           name='INPUT FROM ' + origin_mech.name + " " + PREDICTION_MECHANISM,
+                                           context=ContextFlags.METHOD))
+                i += 1
 
-            # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
             # Add to list of LVOCControlMechanism's prediction_object_items
@@ -934,14 +931,9 @@ class LVOCControlMechanism(ControlMechanism):
             # Add to system execution_graph and execution_list
             system.execution_graph[prediction_mechanism] = set()
             system.execution_list.append(prediction_mechanism)
+            # system._instantiate_graph(context=context)
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
-
-        # Assign list of destinations for predicted_inputs:
-        #    the variable of the ORIGIN Mechanism for each Process in the system
-        self.predicted_input = {}
-        for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
-            self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Validate cost function'''
@@ -983,12 +975,6 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
         return control_signal
 
-
-    @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
-        self._instantiate_prediction_mechanisms(system=system, context=context)
-        super().assign_as_controller(system=system, context=context)
-
     def _execute(
         self,
         variable=None,
@@ -1005,10 +991,6 @@ class LVOCControlMechanism(ControlMechanism):
         Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
         """
-
-        if context != ContextFlags.PROPERTY:
-            self._update_predicted_input()
-        # self.system._cache_state()
 
         # CONSTRUCT SEARCH SPACE
 
@@ -1045,108 +1027,6 @@ class LVOCControlMechanism(ControlMechanism):
         # self.system._restore_system_state()
 
         return allocation_policy
-
-    def _update_predicted_input(self):
-        """Assign values of prediction mechanisms to predicted_input
-
-        Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
-        Note: must be assigned in order of self.system.processes
-
-        """
-
-        # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
-        num_origin_mechs = len(self.system.origin_mechanisms)
-        num_prediction_mechs = len(self.origin_prediction_mechanisms)
-        if num_origin_mechs != num_prediction_mechs:
-            raise LVOCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
-                           "the number of prediction_predictions mechanisms ({}) for {}".
-                           format(num_origin_mechs, num_prediction_mechs, self.system.name))
-
-        # Assign predicted_input for each process in system.processes
-        for origin_mech in self.system.origin_mechanisms:
-            # Get origin Mechanism for each process
-            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
-
-    def run_simulation(self,
-                       inputs,
-                       allocation_vector,
-                       runtime_params=None,
-                       reinitialize_values=None,
-                       context=None):
-        """
-        Run simulation of `System` for which the LVOCControlMechanism is the `controller <System.controller>`.
-
-        Arguments
-        ----------
-
-        inputs : List[input] or ndarray(input) : default default_variable
-            the inputs provided to the ORIGIN Mechanisms of the `System` during each simulation.  This should be the
-            `value <Mechanism_Base.value> for each `prediction Mechanism <LVOCControlMechanism_Prediction_Mechanisms>`
-            in the `prediction_mechanisms` attribute.  The inputs are available in the `predicted_input` attribute.
-
-        allocation_vector : (1D np.array)
-            the allocation policy to use in running the simulation, with one allocation value for each of the
-            LVOCControlMechanism's ControlSignals (listed in `control_signals`).
-
-        runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
-            a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-            their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
-            description.
-
-        """
-
-        if self.value is None:
-            # Initialize value if it is None
-            self.value = np.empty(len(self.control_signals))
-
-        # Implement the current allocation_policy over ControlSignals (OutputStates),
-        #    by assigning allocation values to LVOCControlMechanism.value, and then calling _update_output_states
-        for i in range(len(self.control_signals)):
-            self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, context=context)
-
-        # RUN SIMULATION
-
-        # Buffer System attributes
-        execution_id_buffer = self.system._execution_id
-        animate_buffer = self.system._animate
-
-        # Run simulation
-        self.system.context.execution_phase = ContextFlags.SIMULATION
-        self.system.run(inputs=inputs,
-                        reinitialize_values=reinitialize_values,
-                        animate=False,
-                        context=context)
-        self.system.context.execution_phase = ContextFlags.CONTROL
-
-        # Restore System attributes
-        self.system._animate = animate_buffer
-        self.system._execution_id = execution_id_buffer
-
-        # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.input_states)
-        # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
-
-        for i in range(len(self.control_signals)):
-            self.control_signal_costs[i] = self.control_signals[i].cost
-
-        return monitored_states
-
-    # The following implementation of function attributes as properties insures that even if user sets the value of a
-    #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
-    # This is done to insure they can be called by value_function in the same way as the defaults
-    #    (which are all Functions), and so that they can be passed a params dict.
-
-    # def wrap_function(self, function):
-    #     if isinstance(function, function_type):
-    #         return ValueFunction(function)
-    #     elif inspect.isclass(assignment) and issubclass(assignment, Function):
-    #         self._value_function = ValueFunction()
-    #     else:
-    #         self._value_function = assignment
 
     @property
     def value_function(self):
