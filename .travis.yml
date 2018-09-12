@@ -7,7 +7,7 @@ python:
 sudo: false
 
 install:
-  - pip install coveralls pytest-xdist
+  - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
@@ -110,7 +110,7 @@ before_install: |
   fi
 
 script:
-  - python -m pytest -n auto -p no:logging --cov=psyneulink tests/
+  - python -m pytest -p no:logging --cov=psyneulink tests/
 
 after_script:
   - coveralls
