@@ -425,7 +425,8 @@ class Composition(object):
     def __init__(self, 
                  name=None,
                  controller=None,
-                 enable_controller=None):
+                 enable_controller=None,
+                 origin_input_sources=None):
         # core attributes
         if name is None:
             name = "composition"
@@ -436,10 +437,14 @@ class Composition(object):
         self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
-        self.input_CIM_states = {}
+        self.origin_input_sources = origin_input_sources
+        if origin_input_sources is None:
+            self.origin_input_sources = {}
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
+        self.input_CIM_states = {}
         self.output_CIM_states = {}
+        self.origin_input_sources = {}
         self.enable_controller = enable_controller
         self.execution_ids = []
         self.controller = controller
@@ -537,7 +542,7 @@ class Composition(object):
     def _get_unique_id(self):
         return uuid.uuid4()
 
-    def add_c_node(self, node):
+    def add_c_node(self, node, interface_source=True):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -990,6 +995,7 @@ class Composition(object):
         if node_role_pair in self.required_c_node_roles:
             self.required_c_node_roles.remove(node_role_pair)
 
+
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
     # def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
@@ -1087,8 +1093,25 @@ class Composition(object):
 
         #  INPUT CIMS
         # loop over all origin nodes
+        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        origin_node_pairs = {}
+        for node in origin_nodes:
+            if node in self.origin_input_sources:
+                if self.origin_input_sources[node] == True:
+                    pass
+                elif not self.origin_input_sources[node]:
+                    continue
+                elif self.origin_input_sources[node] in origin_nodes:
+                    origin_node_pairs[node] = self.origin_input_sources[node]
+                    continue
+                else:
+                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
+                                           "corresponding states will be generated on CIM), None ({1} will not receive"
+                                           " input), or another origin node (that origin node's corresponding states on"
+                                           " the CIM will provide input to {1} as well)"
+                                           .format(self.origin_input_sources[node], node.name))
 
-        for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
+
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
@@ -1116,6 +1139,39 @@ class Composition(object):
                                       name="("+interface_output_state.name + ") to ("
                                            + input_state.owner.name + "-" + input_state.name+")")
 
+        # TBI: allow projections from CIM to ANY node
+        # for node in self.origin_input_sources:
+        #     if node not in origin_nodes:
+        #         cim_rep = self.origin_input_sources[node]
+        #         for i in range(len(node.external_input_states)):
+        #             input_state = node.external_input_states[i]
+        #
+        #             cim_rep_input_state = cim_rep.external_input_states[i]
+        #             interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
+        #             MappingProjection(sender=interface_output_state,
+        #                               receiver=input_state,
+        #                               matrix=IDENTITY_MATRIX,
+        #                               name="(" + interface_output_state.name + ") to ("
+        #                                    + input_state.owner.name + "-" + input_state.name + ")")
+        #
+        for node in origin_node_pairs:
+            cim_rep = origin_node_pairs[node]
+            for i in range(len(node.external_input_states)):
+                input_state = node.external_input_states[i]
+                # add it to our set of current input states
+                current_origin_input_states.add(input_state)
+
+                # if there is not a corresponding CIM output state, add one
+                if input_state not in set(self.input_CIM_states.keys()):
+                    cim_rep_input_state = cim_rep.external_input_states[i]
+
+                    self.input_CIM_states[input_state] = self.input_CIM_states[cim_rep_input_state]
+                    interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
+                    MappingProjection(sender=interface_output_state,
+                                      receiver=input_state,
+                                      matrix= IDENTITY_MATRIX,
+                                      name="("+interface_output_state.name + ") to ("
+                                           + input_state.owner.name + "-" + input_state.name+")")
         sends_to_input_states = set(self.input_CIM_states.keys())
 
         # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:
