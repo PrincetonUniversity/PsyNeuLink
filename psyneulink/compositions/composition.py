@@ -1060,9 +1060,16 @@ class Composition(object):
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
-            - create a corresponding InputState and OutputState on the Input CompositionInterfaceMechanism for each
-              InputState of each origin node, and a Projection between the newly created InputCIM OutputState and the
-              origin InputState
+            - for each origin node:
+                - if the origin node's origin_input_source specification is True or not listed, create a corresponding
+                  InputState and OutputState on the Input CompositionInterfaceMechanism for each InputState of each
+                  origin node, and a Projection between the newly created InputCIM OutputState and the origin
+                  InputState, unless the InputState's
+                - if the origin node's origin_input_source specification is another origin node, create projections
+                  from that other origin node's corresponding InputCIM OutputStates to the current origin node's
+                  InputStates.
+                - if the origin node's origin_input_source specification is None, it will use its own default variable
+                  value as input. Go to the next origin node.
 
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
               OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
@@ -1094,7 +1101,7 @@ class Composition(object):
         #  INPUT CIMS
         # loop over all origin nodes
         origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        origin_node_pairs = {}
+        redirected_inputs = set()
         for node in origin_nodes:
             if node in self.origin_input_sources:
                 if self.origin_input_sources[node] == True:
@@ -1102,7 +1109,7 @@ class Composition(object):
                 elif not self.origin_input_sources[node]:
                     continue
                 elif self.origin_input_sources[node] in origin_nodes:
-                    origin_node_pairs[node] = self.origin_input_sources[node]
+                    redirected_inputs.add(node)
                     continue
                 else:
                     raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
@@ -1110,8 +1117,6 @@ class Composition(object):
                                            " input), or another origin node (that origin node's corresponding states on"
                                            " the CIM will provide input to {1} as well)"
                                            .format(self.origin_input_sources[node], node.name))
-
-
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
@@ -1139,39 +1144,21 @@ class Composition(object):
                                       name="("+interface_output_state.name + ") to ("
                                            + input_state.owner.name + "-" + input_state.name+")")
 
-        # TBI: allow projections from CIM to ANY node
-        # for node in self.origin_input_sources:
-        #     if node not in origin_nodes:
-        #         cim_rep = self.origin_input_sources[node]
-        #         for i in range(len(node.external_input_states)):
-        #             input_state = node.external_input_states[i]
-        #
-        #             cim_rep_input_state = cim_rep.external_input_states[i]
-        #             interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-        #             MappingProjection(sender=interface_output_state,
-        #                               receiver=input_state,
-        #                               matrix=IDENTITY_MATRIX,
-        #                               name="(" + interface_output_state.name + ") to ("
-        #                                    + input_state.owner.name + "-" + input_state.name + ")")
-        #
-        for node in origin_node_pairs:
-            cim_rep = origin_node_pairs[node]
-            for i in range(len(node.external_input_states)):
-                input_state = node.external_input_states[i]
-                # add it to our set of current input states
-                current_origin_input_states.add(input_state)
+        # allow projections from CIM to ANY node
+        for node in self.origin_input_sources:
+            if node not in origin_nodes or node in redirected_inputs:
+                cim_rep = self.origin_input_sources[node]
+                for i in range(len(node.external_input_states)):
+                    input_state = node.external_input_states[i]
 
-                # if there is not a corresponding CIM output state, add one
-                if input_state not in set(self.input_CIM_states.keys()):
                     cim_rep_input_state = cim_rep.external_input_states[i]
-
-                    self.input_CIM_states[input_state] = self.input_CIM_states[cim_rep_input_state]
                     interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
-                                      matrix= IDENTITY_MATRIX,
-                                      name="("+interface_output_state.name + ") to ("
-                                           + input_state.owner.name + "-" + input_state.name+")")
+                                      matrix=IDENTITY_MATRIX,
+                                      name="(" + interface_output_state.name + ") to ("
+                                           + input_state.owner.name + "-" + input_state.name + ")")
+
         sends_to_input_states = set(self.input_CIM_states.keys())
 
         # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:

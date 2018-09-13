@@ -495,6 +495,25 @@ class TestInputCIMOutputStateToOriginOneToMany:
         assert np.allclose(B.value, [[1.23]])
         assert np.allclose(C.value, [[1.23]])
 
+    def test_non_origin_receiver(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: A,
+                                     B: A}
+
+        comp.run(inputs={A: [[1.23]]})
+
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[2.46]])
+        assert np.allclose(C.value, [[1.23]])
+
     def test_incorrect_origin_input_source_spec(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
