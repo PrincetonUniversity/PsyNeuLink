@@ -524,7 +524,7 @@ class Scheduler(object):
                     # (otherwise, the order in which a user adds components to a composition would affect the graph)
                     for cycle_node in connected_cycles:
                         dependencies[cycle_node].add(vert.component)
-
+            self.dependency_sets = dependencies
         return list(toposort(dependencies)), removed_dependencies
 
     def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):
