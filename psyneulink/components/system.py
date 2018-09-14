@@ -479,7 +479,7 @@ __all__ = [
     'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
     'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
-    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
     'SAVE_IMAGES', 'SCHEDULER',
     'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
@@ -496,7 +496,6 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 SCHEDULER = 'scheduler'
 PROCESSES = 'processes'
 MECHANISMS = 'mechanisms'
-ORIGIN_MECHANISMS = 'origin_mechanisms'
 INPUT_ARRAY = 'input_array'
 RECURRENT_MECHANISMS = 'recurrent_mechanisms'
 RECURRENT_INIT_ARRAY = 'recurrent_init_array'

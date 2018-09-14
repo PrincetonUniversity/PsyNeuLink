@@ -69,8 +69,10 @@ from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'Composition', 'CompositionError', 'CNodeRole',
+    'Composition', 'CompositionError', 'CNodeRole', 'ORIGIN_MECHANISMS'
 ]
+
+ORIGIN_MECHANISMS = 'origin_mechanisms'
 
 logger = logging.getLogger(__name__)
 

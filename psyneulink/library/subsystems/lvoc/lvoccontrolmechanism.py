@@ -755,8 +755,7 @@ class LVOCControlMechanism(ControlMechanism):
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
                  # input_states:tc.optional(tc.any(list, dict))=None,
-                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
-                 prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))='SHADOW_INPUTS',
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
@@ -773,7 +772,6 @@ class LVOCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
-                                                  prediction_mechanisms=prediction_mechanisms,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
@@ -790,32 +788,32 @@ class LVOCControlMechanism(ControlMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        '''Validate prediction_mechanisms'''
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        if PREDICTION_MECHANISMS in target_set:
-            prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
-            if isinstance(prediction_mechanisms, type) and not issubclass(prediction_mechanisms, Mechanism):
-                raise LVOCError("Class used to specify {} argument of {} ({}) must be a type of {}".
-                               format(self.name,repr(PREDICTION_MECHANISMS),prediction_mechanisms,Mechanism.__name__))
-            elif isinstance(prediction_mechanisms, list):
-                for pm in prediction_mechanisms:
-                    if not (isinstance(pm,Mechanism) or
-                            (isinstance(pm,type) and issubclass(pm,Mechanism)) or
-                            (isinstance(pm,tuple) and issubclass(pm[0],Mechanism) and isinstance(pm[1],dict))):
-                        raise LVOCError("Unrecognized item ({}) in the list specified for {} arg of constructor for {}; "
-                                       "must be a Mechanism, a class of Mechanism, or a tuple with a Mechanism class "
-                                       "and parameter specification dictionary".
-                                       format(pm, repr(PREDICTION_MECHANISMS), self.name))
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #     '''Validate prediction_mechanisms'''
+    #
+    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+    #
+    #     if PREDICTION_MECHANISMS in target_set:
+    #         prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
+    #         if isinstance(prediction_mechanisms, type) and not issubclass(prediction_mechanisms, Mechanism):
+    #             raise LVOCError("Class used to specify {} argument of {} ({}) must be a type of {}".
+    #                            format(self.name,repr(PREDICTION_MECHANISMS),prediction_mechanisms,Mechanism.__name__))
+    #         elif isinstance(prediction_mechanisms, list):
+    #             for pm in prediction_mechanisms:
+    #                 if not (isinstance(pm,Mechanism) or
+    #                         (isinstance(pm,type) and issubclass(pm,Mechanism)) or
+    #                         (isinstance(pm,tuple) and issubclass(pm[0],Mechanism) and isinstance(pm[1],dict))):
+    #                     raise LVOCError("Unrecognized item ({}) in the list specified for {} arg of constructor for {}; "
+    #                                    "must be a Mechanism, a class of Mechanism, or a tuple with a Mechanism class "
+    #                                    "and parameter specification dictionary".
+    #                                    format(pm, repr(PREDICTION_MECHANISMS), self.name))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
         """
 
         # FIX:
-        #  IF INPUT_STATES IS SPECIFIED, USE THOSE BY CALLING RELEVANT super()._instantiate_input_states
+        #  IF input_states ARGUMENT IS SPECIFIED, USE THOSE BY CALLING RELEVANT super()._instantiate_input_states
         #    this should allow the output of any other Mechanism in the Composition to be used as the source of
         #    signals LVOC uses in learning to predict control
         #  IF THE KEYWORD "SHADOW" APPEARS IN THE SPECIFICATION DICT
@@ -828,15 +826,25 @@ class LVOCControlMechanism(ControlMechanism):
         #      IF System ARGUMENT IS SPECIFIED, SHADOW ALL ORIGIN MECHANISMS [DEFAULT CASE] AS ABOVE
         #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
 
-        if self.composition is not None:
-            self._instantiate_prediction_mechanisms(system=self.composition, context=context)
+        # If input_states arg is not specified or it is just SHADOW_INPUTS, assign it {SHADOW:ORIGN_MECHANISMS}
+        if not self.input_states or SHADOW_INPUTS in self.input_states:
+            self.input_states = {SHADOW_INPUTS:ORIGIN_MECHANISMS}
+
+        # IF input_states ARG HAS SHADOW
+
+        # input_states CAN BE ANY SPECIFICATION FOR input_states (REF TO DOCS)
+        #     THAT WILL ASSIGN AN input_state WITH A PROJECTION FROM THE SPECIFIED SOURCE
+        # AND/OR DICT WITH KEYWORD "SHADOW" AS THE KEY FOR AN ENTRY AND EITHER OF THE FOLLOWING AS ITS VALUE:
+        #     - KEYWORD "ORIGIN_MECHANISMS":  INPUT_STATES FOR AND POJECTIONS FROM ALL OUTPUT_STATES OF COMPOSITION
+        #     - LIST OF ORIGIN MECHANISMS AND/OR THEIR INPUT_STATES
+
         super()._instantiate_input_states(context=context)
 
-    def assign_prediction_mechanisms(self, inputs, system:System_Base):
-        self.composition = system
-        self._instantiate_prediction_mechanisms(system=system, inputs=inputs, context=ContextFlags.COMMAND_LINE)
+    def assign_inputs(self, inputs, composition:Composition_Base):
+        self.composition = composition
+        self._instantiate_inputs(composition=composition, inputs=inputs, context=ContextFlags.COMMAND_LINE)
 
-    def _instantiate_prediction_mechanisms(self, system:System_Base, inputs=ORIGIN_MECHANISMS, context=None):
+    def _instantiate_shadow_inputs(self, composition:Composition_Base, inputs=ORIGIN_MECHANISMS, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
         Instantiate a PredictionMechanisms for each `ORIGIN` Mechanism in system;
@@ -849,21 +857,23 @@ class LVOCControlMechanism(ControlMechanism):
 
         """
 
-        if self.composition:
-            from psyneulink.compositions.composition import CNodeRole
-            origin_mechs = self.composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-            if not origin_mechs:
-                raise LVOCError("No inputs can be provided to {} as no ORIGIN Mechanisms were identified "
-                                "in the System ({}) to which it belongs".
-                                format(self.name, self.composition.name))
-            if self in origin_mechs:
-                raise LVOCError("{} cannot be an ORIGIN Mechanism of the System ({}) to which it belongs".
-                                format(self.name, self.composition.name))
+        composition = composition or self.composition
+        if not composition:
+            raise LVOCError("PROGRAM ERROR: A Composition must be specified in call to _instantiate_inputs")
+
+        from psyneulink.compositions.composition import CNodeRole
+        origin_mechs = self.composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        if not origin_mechs:
+            raise LVOCError("No inputs can be provided to {} as no ORIGIN Mechanisms were identified "
+                            "in the Composition ({}) to which it belongs".
+                            format(self.name, self.composition.name))
+        if self in origin_mechs:
+            raise LVOCError("{} cannot be an ORIGIN Mechanism of the Composition ({}) to which it belongs".
+                            format(self.name, self.composition.name))
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
 
-        # List of prediction Mechanism tuples (used by System to execute them)
         self.prediction_mechs = []
 
         # self.prediction_mechanisms is:
@@ -889,17 +899,17 @@ class LVOCControlMechanism(ControlMechanism):
             elif  isinstance(spec_tuple[1], dict) and not FUNCTION in spec_tuple:
                 spec_tuple[1][FUNCTION] = INPUT
             # a tuple, so create a list with same length as self.composition.origin_mechanisms, and tuple as each item
-            prediction_mech_specs = [spec_tuple] * len(system.origin_mechanisms)
+            prediction_mech_specs = [spec_tuple] * len(origin_mechs)
 
         # Make sure prediction_mechanisms is the same length as self.composition.origin_mechanisms
         from psyneulink.components.system import ORIGIN_MECHANISMS
-        if len(prediction_mech_specs) != len(system.origin_mechanisms):
+        if len(prediction_mech_specs) != len(origin_mechs):
             raise LVOCError("Number of PredictionMechanisms specified for {} ({}) "
-                           "must equal the number of {} ({}) in the System it controls ({})".
+                           "must equal the number of {} ({}) in the Composition to which it belongs ({})".
                            format(self.name, len(prediction_mech_specs),
-                           repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.composition.name))
+                           repr(ORIGIN_MECHANISMS), len(origin_mechs), self.composition.name))
 
-        for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
+        for origin_mech, pm_spec in zip(origin_mechs, prediction_mech_specs):
             state_names = []
             variable = []
             for state_name in origin_mech.input_states.names:
