@@ -104,9 +104,8 @@ Testing
 Documentation
 -------------
 
-Documentation is done through the Sphinx library. Documentation for the `master` and `devel` branches can be found `here <https://princetonuniversity.github.io/PsyNeuLink/>
-` and `here <https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html>`, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.
+Documentation is done through the Sphinx library. Documentation for the `master` and `devel` branches can be found `here <https://princetonuniversity.github.io/PsyNeuLink/>`_ and `here <https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html>`_, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.
 
-To understand Sphinx syntax, start `here <http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`.
+To understand Sphinx syntax, start `here <http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ .
 
 However, when editing documentation, you should generate Sphinx documentation in order to preview your changes before publishing to `devel`. To generate Sphinx documentation from your local branch, run `make html` in Terminal, while in the `docs` folder. The resulting HTML should be in your `docs/build` folder. (Do not commit these built HTML files to Github. They are simply for testing/preview purposes.)
