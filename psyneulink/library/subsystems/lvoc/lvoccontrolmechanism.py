@@ -373,6 +373,7 @@ Class Reference
 ---------------
 
 """
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -387,10 +388,11 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Function, System_Base
+from psyneulink.components.shellclasses import Function, System_Base, Composition_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, LVOC_MECHANISM, \
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, FUNCTION
+from psyneulink.globals.keywords import \
+    COST_FUNCTION, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, ORIGIN_MECHANISMS, PARAMETER_STATES, \
+    PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
@@ -746,13 +748,14 @@ class LVOCControlMechanism(ControlMechanism):
         function = ControlSignalGridSearch
 
     from psyneulink.components.functions.function import LinearCombination
-    # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System_Base)=None,
+                 composition:tc.optional(Composition_Base)=None,
+                 # input_states:tc.optional(tc.any(list, dict))=None,
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
@@ -768,7 +771,8 @@ class LVOCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(system=system,
+        params = self._assign_args_to_param_dicts(composition=composition,
+                                                  input_states=input_states,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
@@ -776,7 +780,7 @@ class LVOCControlMechanism(ControlMechanism):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super().__init__(system=system,
+        super().__init__(system=composition,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
                          function=function,
@@ -809,12 +813,27 @@ class LVOCControlMechanism(ControlMechanism):
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
         """
-        if self.system is not None:
-            self._instantiate_prediction_mechanisms(system=self.system, context=context)
+
+        # FIX:
+        #  IF INPUT_STATES IS SPECIFIED, USE THOSE BY CALLING RELEVANT super()._instantiate_input_states
+        #    this should allow the output of any other Mechanism in the Composition to be used as the source of
+        #    signals LVOC uses in learning to predict control
+        #  IF THE KEYWORD "SHADOW" APPEARS IN THE SPECIFICATION DICT
+        #      IF System ARGUMENT IS SPECIFIED:
+        #           CREATE:
+        #             CIM OutputState -[MappingProjection]-> PredictionMechanism -[MappingProjection]-> LVOC InputState
+        #           FOR ALL MECHANISMS LISTED IN SHADOW ENTRY
+        #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
+        #  IF input_states ARGUMENT IS NOT SPECIFIED:
+        #      IF System ARGUMENT IS SPECIFIED, SHADOW ALL ORIGIN MECHANISMS [DEFAULT CASE] AS ABOVE
+        #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
+
+        if self.composition is not None:
+            self._instantiate_prediction_mechanisms(system=self.composition, context=context)
         super()._instantiate_input_states(context=context)
 
     def assign_prediction_mechanisms(self, inputs, system:System_Base):
-        self.system = system
+        self.composition = system
         self._instantiate_prediction_mechanisms(system=system, inputs=inputs, context=ContextFlags.COMMAND_LINE)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, inputs=ORIGIN_MECHANISMS, context=None):
@@ -830,14 +849,16 @@ class LVOCControlMechanism(ControlMechanism):
 
         """
 
-        if self.system:
-            if not system.origin_mechanisms:
+        if self.composition:
+            from psyneulink.compositions.composition import CNodeRole
+            origin_mechs = self.composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+            if not origin_mechs:
                 raise LVOCError("No inputs can be provided to {} as no ORIGIN Mechanisms were identified "
                                 "in the System ({}) to which it belongs".
-                                format(self.name, self.system.name))
-            if self in system.origin_mechanisms:
+                                format(self.name, self.composition.name))
+            if self in origin_mechs:
                 raise LVOCError("{} cannot be an ORIGIN Mechanism of the System ({}) to which it belongs".
-                                format(self.system.name))
+                                format(self.name, self.composition.name))
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
@@ -867,16 +888,16 @@ class LVOCControlMechanism(ControlMechanism):
                 spec_tuple = (spec_tuple[0], {FUNCTION:INPUT})
             elif  isinstance(spec_tuple[1], dict) and not FUNCTION in spec_tuple:
                 spec_tuple[1][FUNCTION] = INPUT
-            # a tuple, so create a list with same length as self.system.origin_mechanisms, and tuple as each item
+            # a tuple, so create a list with same length as self.composition.origin_mechanisms, and tuple as each item
             prediction_mech_specs = [spec_tuple] * len(system.origin_mechanisms)
 
-        # Make sure prediction_mechanisms is the same length as self.system.origin_mechanisms
+        # Make sure prediction_mechanisms is the same length as self.composition.origin_mechanisms
         from psyneulink.components.system import ORIGIN_MECHANISMS
         if len(prediction_mech_specs) != len(system.origin_mechanisms):
             raise LVOCError("Number of PredictionMechanisms specified for {} ({}) "
                            "must equal the number of {} ({}) in the System it controls ({})".
                            format(self.name, len(prediction_mech_specs),
-                           repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.system.name))
+                           repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.composition.name))
 
         for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
             state_names = []
@@ -940,7 +961,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if self.system is None or not self.system.enable_controller:
+        if self.composition is None or not self.composition.enable_controller:
             return
 
         cost_Function = self.cost_function
@@ -1013,7 +1034,7 @@ class LVOCControlMechanism(ControlMechanism):
         # EXECUTE SEARCH
 
         # IMPLEMENTATION NOTE:
-        # self.system._store_system_state()
+        # self.composition._store_system_state()
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy = super(ControlMechanism, self)._execute(
@@ -1024,7 +1045,7 @@ class LVOCControlMechanism(ControlMechanism):
         )
 
         # IMPLEMENTATION NOTE:
-        # self.system._restore_system_state()
+        # self.composition._restore_system_state()
 
         return allocation_policy
 

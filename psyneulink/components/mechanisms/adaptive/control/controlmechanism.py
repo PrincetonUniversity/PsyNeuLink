@@ -339,7 +339,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.components.shellclasses import System_Base
+from psyneulink.components.shellclasses import System_Base, Composition_Base
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -582,7 +582,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 system:tc.optional(System_Base)=None,
+                 system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,

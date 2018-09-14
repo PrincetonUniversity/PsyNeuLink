@@ -53,6 +53,7 @@ import logging
 import numpy as np
 import uuid
 
+from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -394,7 +395,7 @@ class Graph(object):
 
         return list(self.comp_to_vertex[component].backward_sources)
 
-class Composition(object):
+class Composition(Composition_Base):
     '''
         Composition
 
