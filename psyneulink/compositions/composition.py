@@ -1249,7 +1249,7 @@ class Composition(object):
                     if len(runtime_params[c_node][param]) == 1:
                         runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
                     elif len(runtime_params[c_node][param]) != 2:
-                        raise SystemError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                        raise CompositionError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
                                           "Must be a tuple of the form (parameter value, condition), or simply the "
                                           "parameter value. ".format(runtime_params[c_node][param],
                                                                      c_node.name,
@@ -1258,6 +1258,53 @@ class Composition(object):
                 else:
                     runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
         return runtime_params
+
+    def _get_graph_node_label(self, item, show_dimensions=None, show_role=None):
+
+        # For Mechanisms, show length of each InputState and OutputState
+        if isinstance(item, (Mechanism, Composition)):
+            if show_role:
+                try:
+                    role = item.systems[self]
+                    role = role or ""
+                except KeyError:
+                    if isinstance(item, ControlMechanism) and hasattr(item, 'system'):
+                        role = 'CONTROLLER'
+                    else:
+                        role = ""
+                name = "{}\n[{}]".format(item.name, role)
+            else:
+                name = item.name
+            # TBI Show Dimensions
+            # if show_dimensions in {ALL, MECHANISMS}:
+            #     input_str = "in ({})".format(",".join(str(input_state.socket_width)
+            #                                           for input_state in item.input_states))
+            #     output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+            #                                             for output_state in item.output_states))
+            #     return "{}\n{}\n{}".format(output_str, name, input_str)
+            # else:
+            return name
+
+        # TBI: Show projections as nodes
+        # For Projection, show dimensions of matrix
+        elif isinstance(item, Projection):
+            return item.name
+        #     if show_dimensions in {ALL, PROJECTIONS}:
+        #         # MappingProjections use matrix
+        #         if isinstance(item, MappingProjection):
+        #             value = np.array(item.matrix)
+        #             dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+        #             return "{}\n{}".format(item.name, dim_string)
+        #         # ModulatoryProjections use value
+        #         else:
+        #             value = np.array(item.value)
+        #             dim_string = "({})".format(len(value))
+        #             return "{}\n{}".format(item.name, dim_string)
+        #     else:
+        #         return item.name
+
+        else:
+            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
                    show_processes = False,
@@ -1586,8 +1633,8 @@ class Composition(object):
                 rcvr_penwidth = str(default_width)
 
             # Implement rcvr node
-            # rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
-            rcvr_label = "LABELS TBI"
+            rcvr_label=self._get_graph_node_label(rcvr, show_dimensions, show_roles)
+
             if show_mechanism_structure:
                 sg.node(rcvr_label,
                         rcvr.show_structure(**mech_struct_args),
@@ -1612,7 +1659,7 @@ class Composition(object):
                     else:
                         sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                     if show_projection_labels:
-                        edge_label = self._get_label(proj, show_dimensions, show_roles)
+                        edge_label = self._get_graph_node_label(proj, show_dimensions, show_roles)
                     else:
                         edge_label = ''
                     try:
@@ -1643,15 +1690,15 @@ class Composition(object):
             #     return
 
             # loop through senders to implement edges
-            sndrs = system_graph[rcvr]
+            sndrs = processing_graph[rcvr]
 
             for sndr in sndrs:
                 if not processes or any(p in processes for p in sndr.processes.keys()):
 
                     # Set sndr info
 
-                    # sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                    sndr_label = "LABELS TBI"
+                    sndr_label = self._get_graph_node_label(sndr, show_dimensions, show_roles)
+
                     # find edge name
                     for output_state in sndr.output_states:
                         projs = output_state.efferents
@@ -1666,14 +1713,14 @@ class Composition(object):
                             else:
                                 sndr_proj_label = sndr_label
                                 proc_mech_rcvr_label = rcvr_label
-                            # edge_name = self._get_label(proj, show_dimensions, show_roles)
+                            # edge_name = self._get_graph_node_label(proj, show_dimensions, show_roles)
                             # edge_shape = proj.matrix.shape
                             try:
                                 has_learning = proj.has_learning_projection is not None
                             except AttributeError:
                                 has_learning = None
                             selected_proj = proj
-                    edge_label = "LABELS TBI"
+                    edge_label = self._get_graph_node_label(proj, show_dimensions, show_roles)
 
                     # Render projections
                     if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
@@ -1744,8 +1791,8 @@ class Composition(object):
                 objmech_color = control_color
                 objmech_width = str(default_width)
 
-            ctlr_label = self._get_label(controller, show_dimensions, show_roles)
-            objmech_label = self._get_label(objmech, show_dimensions, show_roles)
+            ctlr_label = self._get_graph_node_label(controller, show_dimensions, show_roles)
+            objmech_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
                         controller.show_structure(**mech_struct_args),
@@ -1796,7 +1843,7 @@ class Composition(object):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
-                    proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
+                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
                     if controller in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = control_color
@@ -1839,12 +1886,12 @@ class Composition(object):
                         proj_color = control_color
                         proj_width = str(default_width)
                     if show_mechanism_structure:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles) +\
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
-                        objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
+                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions, show_roles)
+                        objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -1866,7 +1913,7 @@ class Composition(object):
                     pred_mech_width = str(default_width)
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
-                    recvr_label = self._get_label(recvr, show_dimensions, show_roles)
+                    recvr_label = self._get_graph_node_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:
                     #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                     if show_mechanism_structure and False:
@@ -1891,9 +1938,9 @@ class Composition(object):
                                label=' prediction assignment',
                                color=pred_proj_color, penwidth=pred_proj_width)
                     else:
-                        sg.node(self._get_label(mech, show_dimensions, show_roles),
+                        sg.node(self._get_graph_node_label(mech, show_dimensions, show_roles),
                                 color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
-                        G.edge(self._get_label(mech, show_dimensions, show_roles),
+                        G.edge(self._get_graph_node_label(mech, show_dimensions, show_roles),
                                recvr_label,
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
@@ -1903,8 +1950,6 @@ class Composition(object):
         import graphviz as gv
 
         self._analyze_graph()
-
-        system_graph = self.graph
 
         if show_dimensions == True:
             show_dimensions = ALL
@@ -1921,7 +1966,7 @@ class Composition(object):
             active_items = list(active_items)
         for item in active_items:
             if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise SystemError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                raise CompositionError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
                                   format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
@@ -1990,9 +2035,9 @@ class Composition(object):
         )
         # G.attr(compound = 'True')
 
-        system_graph = self.scheduler_processing.dependency_sets
+        processing_graph = self.scheduler_processing.dependency_sets
         # get System's ProcessingMechanisms
-        rcvrs = list(system_graph.keys())
+        rcvrs = list(processing_graph.keys())
 
         # if show_processes is specified, create subgraphs for each Process
         if show_processes:
@@ -2038,7 +2083,7 @@ class Composition(object):
                         if r in self.graph:
                             _assign_processing_components(G, sg, r, processes, subgraphs)
                         else:
-                            raise SystemError("PROGRAM ERROR: Component in interaction process ({}) is not in "
+                            raise CompositionError("PROGRAM ERROR: Component in interaction process ({}) is not in "
                                               "{}'s graph or learningGraph".format(r.name, self.name))
 
         else:
@@ -2086,7 +2131,7 @@ class Composition(object):
                     time_string = ''
                     phase_string = 'Control phase'
                 else:
-                    raise SystemError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                    raise CompositionError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
                 label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
                 G.attr(label=label)
                 G.attr(labelloc='b')
