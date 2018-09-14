@@ -155,7 +155,7 @@ computes a different component of the cost, and a function that combines them, a
     * `adjustment_cost` - calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
       `intensity` from its last value;
     ..
-    * `duration_cost - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
+    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
       `cost <ControlSignal.cost>`;
     ..
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
@@ -406,20 +406,20 @@ class ControlSignalError(Exception):
 
 class ControlSignal(ModulatorySignal):
     """
-    ControlSignal(                                       \
-        owner,                                           \
-        index=SEQUENTIAL,                                \
-        function=Linear(),                               \
-        costs_options=ControlSignalCosts.DEFAULTS,       \
-        intensity_cost_function=Exponential,             \
-        adjustment_cost_function=Linear,                 \
-        duration_cost_function=Integrator,               \
-        cost_combination_function=Reduce(operation=SUM), \
-        allocation_samples=self.ClassDefaults.allocation_samples,   \
-        modulation=ModulationParam.MULTIPLICATIVE        \
-        projections=None                                 \
-        params=None,                                     \
-        name=None,                                       \
+    ControlSignal(                                                \
+        owner,                                                    \
+        index=SEQUENTIAL,                                         \
+        function=Linear(),                                        \
+        costs_options=None,                                       \
+        intensity_cost_function=Exponential,                      \
+        adjustment_cost_function=Linear,                          \
+        duration_cost_function=Integrator,                        \
+        cost_combination_function=Reduce(operation=SUM),          \
+        allocation_samples=self.ClassDefaults.allocation_samples, \
+        modulation=ModulationParam.MULTIPLICATIVE                 \
+        projections=None                                          \
+        params=None,                                              \
+        name=None,                                                \
         prefs=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
@@ -463,7 +463,7 @@ class ControlSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
-    cost_options : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS
+    cost_options : ControlSignalCosts or List[ControlSignalCosts] : None
         specifies the cost components to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
@@ -551,7 +551,7 @@ class ControlSignal(ModulatorySignal):
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
-    cost_options : int
+    cost_options : ControlSignalCosts or None
         boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
         ControlSignal's constructor;  can be modified using the `assign_cost_options` method.
 
@@ -668,7 +668,7 @@ class ControlSignal(ModulatorySignal):
                  index=None,
                  assign=None,
                  function=Linear(),
-                 cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
+                 cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
@@ -948,7 +948,8 @@ class ControlSignal(ModulatorySignal):
 
     def update(self, params=None, context=None):
         super().update(params=params, context=context)
-        self._compute_costs()
+        if self.cost_options:
+            self._compute_costs()
 
     def _compute_costs(self):
         """Compute costs based on self.value."""
@@ -996,7 +997,6 @@ class ControlSignal(ModulatorySignal):
         self.last_intensity = intensity
         self.last_cost = self.cost
         self.last_duration_cost = self.duration_cost
-
 
         # Report new values to stdio
         if self.prefs.verbosePref:

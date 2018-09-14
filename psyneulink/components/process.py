@@ -1394,9 +1394,9 @@ class Process(Process_Base):
                                           "so its receiver must be a Mechanism in the pathway".
                                           format(self.name, item))
 
-                # Check if there is already a projection between the sender and receiver
-                if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
-                    continue
+                # # Check if there is already a projection between the sender and receiver
+                # if self._check_for_duplicate_projection(sender_mech, receiver_mech, item, i):
+                #     continue
 
                 # Projection spec is an instance of a MappingProjection
                 if isinstance(item, MappingProjection):
@@ -1531,6 +1531,7 @@ class Process(Process_Base):
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:
                 if proj.sender.owner is sndr_mech:
+                    # Skip recurrent projections
                     try:
                         if self.pathway[pathway_index] == proj:
                             continue
@@ -1660,6 +1661,8 @@ class Process(Process_Base):
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
@@ -1681,6 +1684,8 @@ class Process(Process_Base):
         #     instantiate multiple Process input states each with a Projection to the single mechanism.input_state
         else:
             for i in range(num_mechanism_input_states):
+                if mechanism.input_states[i].internal_only:
+                    continue
                 for j in range(num_process_inputs):
                     if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "

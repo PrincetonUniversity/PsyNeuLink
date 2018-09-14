@@ -8,7 +8,7 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
+from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -1043,9 +1043,9 @@ class TestTermination:
 
         s = System(
             processes=[p],
-            name='s'
+            name='s',
+            reinitialize_mechanisms_when=Never()
         )
-
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 

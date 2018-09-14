@@ -553,6 +553,7 @@ class ParamsDict(UserDict):
         # assign value to attrib
         if key is not FUNCTION and key is not FUNCTION_PARAMS:
             # function is not stored as an attribute!
+            # 7/14/18 - JDC BUG:  ISN'T SETTING VALUE OF AUTOASSOCIATIVEPROJECTION.MATRIX
             setattr(self.owner, key, item)
 
 parameter_keywords = set()
@@ -948,7 +949,7 @@ class Component(object):
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
 
-        self._auto_dependent = False
+        self._has_initializers = False
         self._role = None
 
         # self.componentName = self.componentType
@@ -1026,6 +1027,7 @@ class Component(object):
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
+
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
@@ -2146,7 +2148,8 @@ class Component(object):
         if variable is None:
             return variable
 
-        variable = np.atleast_1d(variable)
+        if not isinstance(variable, (list, np.ndarray)):
+            variable = np.atleast_1d(variable)
 
         try:
             # if variable has a single int/float/etc. within some number of dimensions, and the
@@ -2592,9 +2595,6 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        if isinstance(self, Function):
-            return
-
         function_variable = self._parse_function_variable(self.instance_defaults.variable,
                                                           context=ContextFlags.INSTANTIATE)
 
@@ -2666,11 +2666,11 @@ class Component(object):
 
         self.function_object.owner = self
 
-        # KAM added 6/14/18 for functions that do not pass their auto_dependent status up to their owner via property
-        # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
-        # auto_dependent status
-        if self.function_object.auto_dependent:
-            self._auto_dependent = True
+        # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
+        # FIX: need comprehensive solution for has_initializers; need to determine whether states affect mechanism's
+        # has_initializers status
+        if self.function_object.has_initializers:
+            self.has_initializers = True
 
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
@@ -3048,40 +3048,23 @@ class Component(object):
         return self.log.logged_items
 
     @property
-    def auto_dependent(self):
-        return self._auto_dependent
+    def has_initializers(self):
+        return self._has_initializers
 
-    @auto_dependent.setter
-    def auto_dependent(self, value):
+    @has_initializers.setter
+    def has_initializers(self, value):
         """
-        Assign auto_dependent status to Component and any of its owners up the hierarchy.
+        Assign has_initializers status to Component and any of its owners up the hierarchy.
 
-        Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
-        reinitialize condition to AtTimeStep(0).
+        Adding reinitialize_when attribute to Components that are now has_initializers, and setting the default
+        reinitialize condition to Never().
         """
-        if self.owner is self:
-            self._auto_dependent = value
-            if value:
-                # self.reinitialize_when = AtTimeStep(0)
-                self.reinitialize_when = Never()
-            # else:
-            #     if hasattr(self, "reinitialize_when"):
-            #         del self.reinitialize_when
-        else:
-            owner = self
-            while owner is not None:
-                try:
-                    owner._auto_dependent = value
-                    if value:
-                        # owner.reinitialize_when = AtTimeStep(0)
-                        owner.reinitialize_when = Never()
-                    # else:
-                    #     if hasattr(owner.reinitialize_when):
-                    #         del owner.reinitialize_when
-                    owner = owner.owner
+        self._has_initializers = value
+        self.reinitialize_when = Never()
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                self.owner.has_initializers = True
 
-                except AttributeError:
-                    owner = None
 
     @property
     def _default_variable_flexibility(self):

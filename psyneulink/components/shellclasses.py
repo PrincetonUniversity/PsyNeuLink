@@ -167,4 +167,6 @@ class Projection(ShellClass):
 
 
 class Function(ShellClass):
-    pass
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        return

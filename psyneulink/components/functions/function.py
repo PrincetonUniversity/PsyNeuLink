@@ -199,7 +199,7 @@ from psyneulink.components.component import ComponentError, DefaultsFlexibility,
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
-    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
+    ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, HAS_INITIALIZERS, \
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
     CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
@@ -213,11 +213,11 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, \
-    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_DIFF, MAX_INDICATOR, MAX_VAL, \
+    MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_ABS_DIFF, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
-    OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
@@ -3062,13 +3062,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
         except TypeError:
-            # If variable is an array with mixed sizes or types, try item-by-item operation
-            if variable.dtype == object:
-                result = np.zeros_like(variable)
-                for i, item in enumerate(variable):
-                    result[i] = variable[i] * slope + intercept
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = variable[i] * slope + intercept
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], np.array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(np.multiply(variable_item, slope) + intercept)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
         # MODIFIED 11/9/17 END
 
 
@@ -3468,10 +3479,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
-        result is greater than 0 and multiplying by either gain or leak based on the result. 
+        result is greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
-        from it if (variable - bias) is lesser than or equal to 0. 
+        from it if (variable - bias) is lesser than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3488,13 +3499,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is greater than 0. 
+        (variable - bias) is greater than 0.
     bias : float : default 0.0
         value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
-        greater than 0 and multiplying by either gain or leak based on the result. 
+        greater than 0 and multiplying by either gain or leak based on the result.
     leak : float : default 0.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
-        (variable - bias) is lesser than or equal to 0. 
+        (variable - bias) is lesser than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3506,15 +3517,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
-    
-    
+
+
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
-    
+
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -3544,9 +3555,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  context=None):
         """
         Return:
-            
+
             :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
-            
+
         Arguments
         ---------
         variable : number or np.array : default ClassDefaults.variable
@@ -3559,13 +3570,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         -------
         ReLU transformation of variable : number or np.array
         """
-        
+
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
-        
+
         return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
     def derivative(self, output):
@@ -3579,7 +3590,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
-        
+
         if (output > 0): return gain
         else: return leak
 
@@ -3863,6 +3874,10 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3897,6 +3912,10 @@ class SoftMax(NormalizingFunction):
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
+    per_item : boolean : default True
+        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        False), or applied to each item in the variable separately (per_item = True).
+
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
     owner : Component
@@ -3919,7 +3938,7 @@ class SoftMax(NormalizingFunction):
     additive_param = None
 
     class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
+        variable = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -3928,12 +3947,14 @@ class SoftMax(NormalizingFunction):
                  default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 per_item=True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
+                                                  per_item=per_item,
                                                   output=output,
                                                   params=params)
 
@@ -3942,6 +3963,15 @@ class SoftMax(NormalizingFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        if variable is None:
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
+
+        return np.asarray(variable)
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
@@ -3953,6 +3983,25 @@ class SoftMax(NormalizingFunction):
             self.one_hot_function = OneHot(mode=output_type).function
 
         super()._instantiate_function(function, function_params=function_params, context=context)
+
+    def apply_softmax(self, input_value, gain, output_type):
+        # Modulate input_value by gain
+        v = gain * input_value
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # Generate one-hot encoding based on selected output_type
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            return self.one_hot_function(sm)
+        elif output_type in {PROB, PROB_INDICATOR}:
+            return self.one_hot_function([input_value, sm])
+        else:
+            return sm
 
     def function(self,
                  variable=None,
@@ -3986,26 +4035,17 @@ class SoftMax(NormalizingFunction):
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         gain = self.get_current_function_param(GAIN)
-
+        per_item = self.get_current_function_param(PER_ITEM)
         # Compute softmax and assign to sm
 
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # Generate one-hot encoding based on selected output_type
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
-            return self.one_hot_function(sm)
-        elif output_type in {PROB, PROB_INDICATOR}:
-            return self.one_hot_function([variable, sm])
+        if per_item and len(np.shape(variable)) > 1:
+            output = []
+            for item in variable:
+                output.append(self.apply_softmax(item, gain, output_type))
         else:
-            return sm
+            output = self.apply_softmax(variable, gain, output_type)
+
+        return output
 
     def derivative(self, output, input=None):
         """
@@ -4306,7 +4346,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if param_name in function_keywords:
                     continue
 
-                if param_name is AUTO_DEPENDENT:
+                if param_name is HAS_INITIALIZERS:
                     continue
 
                 # Matrix specification param
@@ -4827,7 +4867,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
@@ -4955,7 +4995,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             initializer_value = getattr(self, self.initializers[i]).copy()
             setattr(self, attr_name, initializer_value)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -5087,7 +5127,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
+        if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
@@ -5286,7 +5326,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -5500,7 +5540,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         # Reassign to initializer in case default value was overridden
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_rate(self, rate):
         # unlike other Integrators, variable does not need to match rate
@@ -5718,7 +5758,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
@@ -5727,7 +5767,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def reinitialize(self, *args):
         """
@@ -5970,7 +6010,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -6295,7 +6335,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6531,7 +6571,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -7519,7 +7559,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
@@ -7764,7 +7804,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def function(self,
                  variable=None,
@@ -8034,7 +8074,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.auto_dependent = True
+        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -9728,9 +9768,6 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool : Default False
-        specifies whether to use absolute value(s) in determining the distance.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9758,9 +9795,6 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    absolute_value : bool
-        determines whether to use absolute value(s) in determining the distance (metric-specific).
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -9784,14 +9818,12 @@ class Distance(ObjectiveFunction):
                  default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
-                 absolute_value:bool=False,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
-                                                  absolute_value=absolute_value,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -9835,6 +9867,12 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
+    def correlation(v1, v2):
+        v1_norm = v1-np.mean(v1)
+        v2_norm = v2-np.mean(v2)
+        denom = np.sqrt(np.sum(v1_norm**2)*np.sum(v2_norm**2)) or EPSILON
+        return np.sum(v1_norm*v2_norm)/denom
+
     def function(self,
                  variable=None,
                  params=None,
@@ -9858,11 +9896,8 @@ class Distance(ObjectiveFunction):
         v2 = variable[1]
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
-        if self.metric is MAX_DIFF:
-            if self.absolute_value:
-                result = abs(np.max(v1 - v2))
-            else:
-                result = np.max(v1 - v2)
+        if self.metric is MAX_ABS_DIFF:
+            result = np.max(abs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric is DIFFERENCE:
@@ -9879,11 +9914,8 @@ class Distance(ObjectiveFunction):
 
         # Correlation of v1 and v2
         elif self.metric is CORRELATION:
-            result = np.correlate(v1, v2)
-
-        # Pearson Correlation of v1 and v2
-        elif self.metric is PEARSON:
-            result = np.corrcoef(v1, v2)
+            # result = np.correlate(v1, v2)
+            return 1-np.abs(Distance.correlation(v1, v2))
 
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
@@ -9900,15 +9932,11 @@ class Distance(ObjectiveFunction):
         elif self.metric is ENERGY:
             result = -np.sum(v1*v2)/2
 
-        if self.normalize:
-            # # MODIFIED 11/12/17 OLD:
-            # result /= len(variable[0])
-            # MODIFIED 11/12/17 NEW:
+        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:
                 result /= len(v1)**2
             else:
                 result /= len(v1)
-            # MODIFIED 11/12/17 END
 
         return result
 

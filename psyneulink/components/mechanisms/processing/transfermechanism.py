@@ -514,11 +514,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         `clip <TransferMechanism.clip>` that it exceeds.
 
     convergence_function : function : default Distance(metric=DIFFERENCE)
-        specifies the function that determines when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the function that calculates `delta <TransferMechanism.delta>`, and determines when `is_converged
+        <TransferMechanism.is_converged>` is `True`.
 
     convergence_criterion : float : default 0.01
-        specifies the value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`
-        at which `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
+        specifies the value of `delta <TransferMechanism.delta>` at which `is_converged
+        <TransferMechanism.is_converged>` is `True`.
 
     max_passes : int : default 1000
         specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
@@ -761,6 +762,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function = None
         self.original_integrator_function = None
+        self._current_variable_index = 0
+        self.integrator_function_value = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -940,7 +943,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # if self.integrator_mode:
-        self.previous_value = None
+        # self.previous_value = None
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -948,7 +951,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.initial_value = self.instance_defaults.variable
 
         if isinstance(self.convergence_function, Function):
-            self.convergence_function = self.convergence_function.function
+            self._convergence_function = self.convergence_function.function
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
@@ -960,7 +963,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_output_states(context=context)
 
     def _get_instantaneous_function_input(self, function_variable, noise):
-
         noise = self._try_execute_param(noise, function_variable)
         if (np.array(noise) != 0).any():
             current_input = function_variable + noise
@@ -1043,7 +1045,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        self._update_previous_value()
+        # # MODIFIED 7/14/18 OLD:
+        # self._update_previous_value()
+        # # MODIFIED 7/14/18 NEW:
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
@@ -1051,31 +1055,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Clip outputs
         clip = self.get_current_mechanism_param("clip")
 
-        if isinstance(self.function_object, NormalizingFunction):
-            # Apply TransferMechanism's function to each input state separately
-            value = []
-            for i in range(len(variable)):
-                self._current_variable_index = i
-                current_variable_element = variable[i]
-                value_item = super(Mechanism, self)._execute(variable=current_variable_element,
-                                                             runtime_params=runtime_params,
-                                                             context=context)
-                value_item = self._clip_result(clip, value_item)
-                value.append(value_item)
-
-        else:
-            value = super(Mechanism, self)._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context
-                                                    )
-            value = self._clip_result(clip, value)
-
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     # self.previous_value = self.value
-        #     self._update_previous_value()
+        value = super(Mechanism, self)._execute(variable=variable,
+                                                runtime_params=runtime_params,
+                                                context=context
+                                                )
+        value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
-        self._current_value = value
+        self._current_value = np.atleast_2d(value)
 
         return value
 
@@ -1091,7 +1078,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.previous_value = None
 
     def _parse_function_variable(self, variable, context=None):
-
         if context is ContextFlags.INSTANTIATE:
 
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
@@ -1104,20 +1090,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param("initial_value")
-            if isinstance(self.function_object, NormalizingFunction):
-                variable = self._get_integrated_function_input(variable,
-                                                               initial_value[self._current_variable_index],
-                                                               noise,
-                                                               context)[0]
-            else:
-                variable = self._get_integrated_function_input(variable,
-                                                               initial_value,
-                                                               noise,
-                                                               context)
+
+            self.integrator_function_value = self._get_integrated_function_input(variable,
+                                                                                 initial_value,
+                                                                                 noise,
+                                                                                 context)
+            return self.integrator_function_value
 
         else:
-            variable = self._get_instantaneous_function_input(variable, noise)
-        return variable
+            return self._get_instantaneous_function_input(variable, noise)
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
@@ -1142,7 +1123,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @property
     def delta(self):
-        return self.convergence_function([self._current_value, self.previous_value])
+        return self.convergence_function([self._current_value[0], self.previous_value[0]])
 
     @property
     def integrator_mode(self):

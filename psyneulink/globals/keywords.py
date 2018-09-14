@@ -27,7 +27,7 @@ __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
     'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
-    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'AUTO_DEPENDENT', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
@@ -75,7 +75,7 @@ __all__ = [
     'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
+    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
     'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
@@ -251,11 +251,11 @@ class DistanceMetrics:
     Attributes
     ----------
 
-    MAX_DIFF
-        :math:`d = \\max(a_1-a_2)`
+    MAX_ABS_DIFF
+        :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
-        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
@@ -265,7 +265,8 @@ class DistanceMetrics:
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
+        a_2}}\\right|`
 
     COMMENT:
     PEARSON
@@ -280,12 +281,12 @@ class DistanceMetrics:
 
     """
     def __init__(self):
-        self.MAX_DIFF = MAX_DIFF
+        self.MAX_ABS_DIFF = MAX_ABS_DIFF
         self.DIFFERENCE = DIFFERENCE
         self.EUCLIDEAN = EUCLIDEAN
         self.ANGLE = ANGLE
         self.CORRELATION = CORRELATION
-        self.PEARSON = PEARSON
+        # self.PEARSON = PEARSON
         self.ENTROPY = CROSS_ENTROPY
         self.CROSS_ENTROPY = CROSS_ENTROPY
         self.ENERGY = ENERGY
@@ -307,7 +308,7 @@ class DistanceMetrics:
 
 
 DIFFERENCE = 'difference'
-MAX_DIFF = 'max_diff'
+MAX_ABS_DIFF = 'max_abs_diff'
 EUCLIDEAN = 'euclidean'
 ANGLE = 'angle'
 CORRELATION = 'correlation'
@@ -836,7 +837,7 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
-AUTO_DEPENDENT='auto_dependent'
+HAS_INITIALIZERS='has_initializers'
 DRIFT_RATE = 'drift_rate'
 INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'
@@ -867,6 +868,7 @@ MAX_ABS_INDICATOR = 'MAX_ABS_INDICATOR'
 PROB = 'PROB'
 PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
+PER_ITEM = 'per_item'
 
 INITIALIZER = 'initializer'
 INITIAL_V = 'initial_v'
