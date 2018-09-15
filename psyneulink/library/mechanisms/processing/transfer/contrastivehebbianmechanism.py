@@ -277,7 +277,7 @@ of the *minus phase*), the following computations and assignments are made:
 ..
 * the difference between `plus_phase_activity <ContrastiveHebbianMechanism.plus_phase_activity>` and
   `minus_phase_activity <ContrastiveHebbianMechanism.minus_phase_activity>` is assigned as the `value
-  <OutputState.value>` of the the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
+  <OutputState.value>` of the *ACTIVITY_DIFFERENCE_OUTPUT* `OutputState <ContrastiveHebbian_Output>`.
 
 .. _ContrastiveHebbian_Learning_Execution:
 

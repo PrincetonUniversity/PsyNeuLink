@@ -27,7 +27,7 @@ Creating a MaskedMappingProjection
 A MaskedMappingProjection is created in the same way as a `MappingProjection`, with the exception that its constructor
 includes **mask** and **mask_operation** arguments that can be used to configure the mask and how it is applied to the
 Projection's `matrix <MaskedMappingProjection.matrix>`.  The **mask** attribute must be an array that has the same
-shape as the the `matrix <MaskedMappingProjection.matrix>` attribute, and the **mask_operation** argument must be the
+shape as the `matrix <MaskedMappingProjection.matrix>` attribute, and the **mask_operation** argument must be the
 keyword *ADD*, *MULTIPLY*, or *EXPONENTIATE* (see `Masked_MappingProjection_Execution` below).
 
 .. _Masked_MappingProjection_Structure:

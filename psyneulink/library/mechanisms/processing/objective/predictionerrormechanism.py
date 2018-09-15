@@ -75,7 +75,7 @@ A PredictionErrorMechanism has two `input_states
 **sample** and **target** arguments of its constructor. The InputStates are
 listed in the Mechanism's `input_states <ComparatorMechanism.input_states>`
 attribute and named, respectively, *SAMPLE* and *TARGET*. The OutputStates
-from which they receive their projections (specified in the the **sample** and
+from which they receive their projections (specified in the **sample** and
 **target** arguments) are listed in the Mechanism's `sample
 <ComparatorMechanism.sample>` and `target
 <ComparatorMechanism.target>` attributes as well as in its
@@ -122,7 +122,7 @@ sample with the true reward (the target). In the example below, the sample
 Mechanism is a `TransferMechanism` that uses the `Linear` function to output
 the sample values. Because the output is a vector, specifying it as the
 PredictionErrorMechanism's **sample** argument will generate a corresponding
-InputState with a vector as its value. This should match the the reward
+InputState with a vector as its value. This should match the reward
 signal specified in the PredictionErrorMechanism's **target** argument, the
 value of which is a vector of the same length as the output of sample.
 

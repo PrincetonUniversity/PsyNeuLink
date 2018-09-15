@@ -127,10 +127,10 @@ A State can be specified using any of the following:
     .. _State_Specification_Dictionary:
 
     * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
-      specific to the State's type (see documentation for each type):
+      specific to the State's type (see documentation for each State type):
 
       * *STATE_TYPE*:<State type>
-          specifies type of State to create (necessary if it cannot be determined from the
+          specifies type of State to create (necessary if it cannot be determined from
           the context of the other entries or in which it is being created).
       ..
       * *NAME*:<str>

@@ -388,11 +388,11 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Function, System_Base, Composition_Base
+from psyneulink.components.shellclasses import Function, Composition_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    COST_FUNCTION, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, ORIGIN_MECHANISMS, PARAMETER_STATES, \
-    PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+    COST_FUNCTION, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, PARAMETER_STATES, SUM, ALL, INPUT_STATE, \
+    STATE_TYPE, PROJECTIONS, VARIABLE, NAME
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
@@ -400,8 +400,10 @@ from psyneulink.library.subsystems.evc.evcauxiliary import \
     ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
 
 __all__ = [
-    'LVOCControlMechanism', 'LVOCError',
+    'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
 ]
+
+SHADOW_INPUTS = 'SHADOW_INPUTS'
 
 class LVOCError(Exception):
     def __init__(self, error_value):
@@ -754,8 +756,7 @@ class LVOCControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
-                 # input_states:tc.optional(tc.any(list, dict))=None,
-                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))='SHADOW_INPUTS',
+                 input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
@@ -778,7 +779,7 @@ class LVOCControlMechanism(ControlMechanism):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super().__init__(system=composition,
+        super().__init__(system=None,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
                          function=function,
@@ -826,35 +827,53 @@ class LVOCControlMechanism(ControlMechanism):
         #      IF System ARGUMENT IS SPECIFIED, SHADOW ALL ORIGIN MECHANISMS [DEFAULT CASE] AS ABOVE
         #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
 
-        # If input_states arg is not specified or it is just SHADOW_INPUTS, assign it {SHADOW:ORIGN_MECHANISMS}
-        if not self.input_states or SHADOW_INPUTS in self.input_states:
-            self.input_states = {SHADOW_INPUTS:ORIGIN_MECHANISMS}
-
-        # IF input_states ARG HAS SHADOW
-
         # input_states CAN BE ANY SPECIFICATION FOR input_states (REF TO DOCS)
         #     THAT WILL ASSIGN AN input_state WITH A PROJECTION FROM THE SPECIFIED SOURCE
-        # AND/OR DICT WITH KEYWORD "SHADOW" AS THE KEY FOR AN ENTRY AND EITHER OF THE FOLLOWING AS ITS VALUE:
+        # AND/OR DICT WITH KEYWORD "SHADOW_INPUTS" AS THE KEY FOR AN ENTRY AND EITHER OF THE FOLLOWING AS ITS VALUE:
         #     - KEYWORD "ORIGIN_MECHANISMS":  INPUT_STATES FOR AND POJECTIONS FROM ALL OUTPUT_STATES OF COMPOSITION
         #     - LIST OF ORIGIN MECHANISMS AND/OR THEIR INPUT_STATES
+        # IF IT CONTAINS A DICT WITH A "SHADOW_INPUTS" ENTRY, IT CAN ALSO INCLUDE A FUNCTION:<Function> ENTRY
+        #     THAT WILL BE USED AS THE FUNCTION OF THE input_states CREATED FOR THE LVOCControlMechanism
+
+        # Reserve first (primary) InputState for ObjectiveMechanism
+        self.input_states.insert(0, 'WEIGHTS_FROM_OBJECTIVE_MECHANISM')
+
+        # If input_states has SHADOW_INPUTS in any of its specifications, parse into input_states specifications
+        if any(SHADOW_INPUTS in spec for spec in self.input_states):
+            self.input_states = self._parse_input_specs(composition=self.composition,
+                                                        inputs=self.input_states,
+                                                        context=context)
+        self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
 
-    def assign_inputs(self, inputs, composition:Composition_Base):
-        self.composition = composition
-        self._instantiate_inputs(composition=composition, inputs=inputs, context=ContextFlags.COMMAND_LINE)
+    tc.typecheck
+    def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
+        '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict allocation_policy
 
-    def _instantiate_shadow_inputs(self, composition:Composition_Base, inputs=ORIGIN_MECHANISMS, context=None):
-        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
+        **predictors** argument can use any of the forms of specification allowed
+            for the **input_states** argument of the LVOCMechanism.
+        '''
 
-        Instantiate a PredictionMechanisms for each `ORIGIN` Mechanism in system;
+        if self.composition is None:
+            self.composition = composition
+        else:
+            if not composition is self.composition:
+                raise LVOCError("Specified composition ({}) conflicts with one to which {} is already assigned ({})".
+                                format(composition.name, self.name, self.composition.name))
+        features = self._parse_input_specs(composition=composition,
+                                                 inputs=predictors,
+                                                 context=ContextFlags.COMMAND_LINE)
+        self.add_states(InputState, features)
 
-        For each `ORIGIN` Mechanism in system:
-            - instantiate a corresponding PredictionMechanism
-            - instantiate a MappingProjection to the PredictionMechanism
-                that shadows the one from the System to the ORIGIN Mechanism
-            - instantiate a MappingProjection from the PredictionMechanism to the LVOCControlMechanism
+    def _parse_predictor_specs(self, composition:Composition_Base, predictors=SHADOW_INPUTS, context=None):
+        """Parse entries of _input_states list that specify shadowing of Mechanisms' or Composition's inputs
 
+        Generate an InputState specification dictionary for each predictor specified in predictors argument
+        If it is InputState specificaditon, use as is
+        If it is a SHADOW_INPUT entry, generate a Projection from the OutputState that projects to the specified item
+
+        Returns list of InputState specifications
         """
 
         composition = composition or self.composition
@@ -862,117 +881,75 @@ class LVOCControlMechanism(ControlMechanism):
             raise LVOCError("PROGRAM ERROR: A Composition must be specified in call to _instantiate_inputs")
 
         from psyneulink.compositions.composition import CNodeRole
-        origin_mechs = self.composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        if not origin_mechs:
-            raise LVOCError("No inputs can be provided to {} as no ORIGIN Mechanisms were identified "
-                            "in the Composition ({}) to which it belongs".
-                            format(self.name, self.composition.name))
-        if self in origin_mechs:
-            raise LVOCError("{} cannot be an ORIGIN Mechanism of the Composition ({}) to which it belongs".
-                            format(self.name, self.composition.name))
+        parsed_predictors = []
 
-        # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
-        self.origin_prediction_mechanisms = {}
-
-        self.prediction_mechs = []
-
-        # self.prediction_mechanisms is:
-        if isinstance(self.prediction_mechanisms, Mechanism):
-            # a single Mechanism, so put it in a list
-            prediction_mech_specs = [self.prediction_mechanisms]
-        elif isinstance(self.prediction_mechanisms, type):
-            # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
-            prediction_mech_specs = (self.prediction_mechanisms, None)
-        elif isinstance(self.prediction_mechanisms, dict):
-            # a dict, so put it as 2nd item in a 2-item tuple, with PredictionMechanism as 1st item
-            prediction_mech_specs = (PredictionMechanism, self.prediction_mechanisms)
-        elif isinstance(self.prediction_mechanisms, tuple):
-            # a tuple, so leave as is for now (put in list below)
-            prediction_mech_specs = self.prediction_mechanisms
-
-        if isinstance(prediction_mech_specs, tuple):
-            spec_tuple = prediction_mech_specs
-            # if params are not specified or FUNCTION is not specified in them, specify it as Linear
-            #     (to override default for PredictionMechanism which is AdaptiveIntegrator)
-            if not spec_tuple[1]:
-                spec_tuple = (spec_tuple[0], {FUNCTION:INPUT})
-            elif  isinstance(spec_tuple[1], dict) and not FUNCTION in spec_tuple:
-                spec_tuple[1][FUNCTION] = INPUT
-            # a tuple, so create a list with same length as self.composition.origin_mechanisms, and tuple as each item
-            prediction_mech_specs = [spec_tuple] * len(origin_mechs)
-
-        # Make sure prediction_mechanisms is the same length as self.composition.origin_mechanisms
-        from psyneulink.components.system import ORIGIN_MECHANISMS
-        if len(prediction_mech_specs) != len(origin_mechs):
-            raise LVOCError("Number of PredictionMechanisms specified for {} ({}) "
-                           "must equal the number of {} ({}) in the Composition to which it belongs ({})".
-                           format(self.name, len(prediction_mech_specs),
-                           repr(ORIGIN_MECHANISMS), len(origin_mechs), self.composition.name))
-
-        for origin_mech, pm_spec in zip(origin_mechs, prediction_mech_specs):
-            state_names = []
-            variable = []
-            for state_name in origin_mech.input_states.names:
-                state_names.append(state_name)
-                variable.append(origin_mech.input_states[state_name].value)
-
-            # Instantiate PredictionMechanism
-            if isinstance(pm_spec, Mechanism):
-                prediction_mechanism=pm_spec
-            elif isinstance(pm_spec, tuple):
-                mech_class = pm_spec[0]
-                mech_params = pm_spec[1] or {}
-                prediction_mechanism = mech_class(
-                        name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                        default_variable=variable,
-                        input_states=state_names,
-                        # params = mech_params
-                        **mech_params,
-                        context=context
-                )
+        for spec in predictors:
+            if SHADOW_INPUTS in spec:
+                # If spec is SHADOW_INPUTS keyword on its own, assume inputs to all ORIGIN Mechanisms
+                if isinstance(spec, str):
+                    spec = {SHADOW_INPUTS:ALL}
+                spec = self._parse_shadow_input_spec(spec)
             else:
-                raise LVOCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
-                               format(pm_spec, repr(PREDICTION_MECHANISMS), self.name))
+                spec = [spec] # (so that extend can be used below)
+            parsed_predictors.extend(spec)
 
-            # prediction_mechanism._role = CONTROL
-            prediction_mechanism.origin_mech = origin_mech
+        return parsed_predictors
 
-            # Assign Projections to prediction_mechanism that duplicate those received by origin_mech
-            #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            #    and add Projections from prediction_mechanism to LVOCControlMechanism
-            i=0
-            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                                prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
-                    MappingProjection(sender=projection.sender,
-                                      receiver=prediction_input_state,
-                                      matrix=projection.matrix)
+    @tc.typecheck
+    def _parse_shadow_input_spec(self, spec:dict):
+        ''' Return a list of InputState specifications for the inputs specified in value of dict
 
-                self.add_states(InputState(projections=prediction_mechanism.output_states[i],
-                                           name='INPUT FROM ' + origin_mech.name + " " + PREDICTION_MECHANISM,
-                                           context=ContextFlags.METHOD))
-                i += 1
+        If ALL is specified, specify an InputState for each ORIGIN Mechanism in the Composition
+            with Projection from the OutputState of the Compoisitions Input CIM for that ORIGIN Mechanism
+        For any other specification, specify an InputState with a Projection from the sender of any Projections
+            that project to the specified item
+        If FUNCTION entry, assign as Function for all InputStates
+        '''
 
-            self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
+        input_state_specs = []
 
-            # Add to list of LVOCControlMechanism's prediction_object_items
-            # prediction_object_item = prediction_mechanism
-            self.prediction_mechs.append(prediction_mechanism)
+        shadow_spec = spec[SHADOW_INPUTS]
 
-            # Add to system execution_graph and execution_list
-            system.execution_graph[prediction_mechanism] = set()
-            system.execution_list.append(prediction_mechanism)
-            # system._instantiate_graph(context=context)
+        if shadow_spec is ALL:
+            # Generate list of InputState specification dictionaries,
+            #    one for each input to the Composition
+            # for composition_input in self.composition.input_CIM.output_states:
+            #     input_state_specs.append(composition_input)
+            input_state_specs.extend([{NAME:'INPUT TO ' + c.efferents[0].receiver.name +
+                                            ' of ' + c.efferents[0].receiver.owner.name,
+                                       PROJECTIONS:c}
+                                      for c in self.composition.input_CIM.output_states])
+        elif isinstance(shadow_spec, list):
+            for item in shadow_spec:
+                if isinstance(item, Mechanism):
+                    # Shadow all of the InputStates for the Mechanism
+                    input_states = item.input_states
+                if isinstance(item, InputState):
+                    # Place in a list for consistency of handling below
+                    input_states = [item]
+                # Shadow all of the Projections to each specified InputState
+                input_state_specs.extend([{NAME:i.name + 'of' + i.owner.name,
+                                           VARIABLE: i.variable,
+                                           PROJECTIONS: i.path_afferents}
+                                          for i in input_states])
 
-        self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
+        if FUNCTION in spec:
+            for i in input_state_specs:
+                i.update({FUNCTION:spec[FUNCTION]})
+
+        return input_state_specs
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Validate cost function'''
+        '''Validate cost function and instantiate Projections to ObjectiveMechansm for worth and current weights'''
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if self.composition is None or not self.composition.enable_controller:
+        if self.composition is None:
             return
+
+        # FIX: ADD OutputStates FOR PROJECTION OF current_predictor_weights AND ?worth? TO ObjectiveMechanism
+        o = OutputState(name='TEST', owner=self, projections=self.objective_mechanism)
+        self.add_states(OutputState(name='TEST', owner=self))
 
         cost_Function = self.cost_function
         if isinstance(cost_Function, Function):
@@ -998,6 +975,7 @@ class LVOCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
+
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         '''
@@ -1012,22 +990,28 @@ class LVOCControlMechanism(ControlMechanism):
         runtime_params=None,
         context=None
     ):
-        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for next run of System
+        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Update prediction mechanisms
+        FIX: MOVE THIS TO __init__
         Construct control_signal_search_space (from allocation_samples of each item in control_signals):
             * get `allocation_samples` for each ControlSignal in `control_signals`
             * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
               which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-        Call self.function -- default is ControlSignalGridSearch
+        Construct predictor_weights:  a 3D array that assigns a mean and variance for the weight from each
+            predictor to each control_signal
+        FIX: END OF MOVE
+        ------------
+        Get current_predictor_weights by drawing a value from the weight distribution of each predictor
+        Call self.function -- default: ControlSignalGradientDescent:
+            does gradient descent on allocation_policy to fit within budget
+            based on current_predictor_weights and control_signal costs.
         Return an allocation_policy
         """
 
+        # FIX: MOVE THIS TO __init__:
         # CONSTRUCT SEARCH SPACE
-
         control_signal_sample_lists = []
         control_signals = self.control_signals
-
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(control_signals)
 
@@ -1040,6 +1024,7 @@ class LVOCControlMechanism(ControlMechanism):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        # FIX: END OF MOVE
 
         # EXECUTE SEARCH
 

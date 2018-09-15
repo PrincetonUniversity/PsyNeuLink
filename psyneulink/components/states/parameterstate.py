@@ -304,7 +304,7 @@ following core attributes:
   "actual" value.
 
 * `value <ParameterState.value>` - the result of `function <ParameterState.function>`; used by the ParameterState's
-  owner as the value of the parameter for which the the ParameterState is responsible.
+  owner as the value of the parameter for which the ParameterState is responsible.
 
 .. _ParameterState_Configurable_Parameters:
 

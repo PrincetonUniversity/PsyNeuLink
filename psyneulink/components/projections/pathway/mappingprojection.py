@@ -123,7 +123,7 @@ description of how learning modifies a MappingProjection.
 Specifying Learning in a Tuple
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A tuple can be used to specify learning for a MappingProjection in the the **matrix** `argument of its constructor
+A tuple can be used to specify learning for a MappingProjection in the **matrix** `argument of its constructor
 <Mapping_Matrix_Specification>` or in the `pathway of a Process <Process_Projections>`.  In both cases,
 the second item of the tuple must be a learning specification, which can be any of the following:
 

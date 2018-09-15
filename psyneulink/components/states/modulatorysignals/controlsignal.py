@@ -155,7 +155,7 @@ computes a different component of the cost, and a function that combines them, a
     * `adjustment_cost` - calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
       `intensity` from its last value;
     ..
-    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
+    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the ControlSignal's
       `cost <ControlSignal.cost>`;
     ..
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are

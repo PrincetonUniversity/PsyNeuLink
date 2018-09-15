@@ -120,7 +120,7 @@ def reward():
 # Notes:
 #    - for illustrative purposes, this list contains two sets of stimuli;
 #        they will be used in sequence, and the sequence will be recycled for as many trials as specified by the
-#        *num_trials* argument in the call the the System's run method see below)
+#        *num_trials* argument in the call the System's run method see below)
 #    - rewards are specified by the reward function above
 input_list = {input_layer: [[1, 1],[1, 1]]}
 

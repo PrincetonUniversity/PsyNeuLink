@@ -788,7 +788,7 @@ class System(System_Base):
         one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
-        thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
+        thoese values to the TARGET `InputState` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
 

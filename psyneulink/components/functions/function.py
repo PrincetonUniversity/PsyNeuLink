@@ -9758,7 +9758,7 @@ class WaldDist(DistributionFunction):
 
 # endregion
 
-# region **************************************   OBJECTIVE FUNCTIONS **************************************************
+# region **************************************  OBJECTIVE FUNCTIONS ***************************************************
 
 class ObjectiveFunction(Function_Base):
     """Abstract class of `Function` used for evaluating states.
@@ -10074,8 +10074,6 @@ COMMENT
         return self.convert_output_type(result)
 
 
-# endregion
-
 class Distance(ObjectiveFunction):
     """
     Distance(                                    \
@@ -10279,6 +10277,62 @@ class Distance(ObjectiveFunction):
 
         return self.convert_output_type(result)
 
+
+class BayesGLM(ObjectiveFunction):
+    """
+    BayesGLM.py is crudely adapted from Falk Lieder's BayesianGLM.m. A normal linear model
+    y = X\Theta + \epsilon, with normal-gamma prior distribution.
+
+    Useful reference: http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf
+
+    Author: Yotam Sagiv
+    """
+
+    def __init__(self, nr_regressors=1, sigma=1):
+        self.nr_regressors = nr_regressors
+        self.sigma = sigma
+
+        # by assumption, errors are distributed as N(0, kI)
+        # failing some strong prior, we assume the regressors are N(0, kI) as well
+        mu = np.zeros((nr_regressors, 1))
+        Lambda = (1 / (sigma ** 2)) * np.eye(nr_regressors)
+
+        # set the prior parameters
+        self.initialize_prior(mu, Lambda=Lambda, a=1, b=1)
+
+        # before we see any data, the posterior is the prior
+        self.mu_n = self.mu_0
+        self.Lambda_n = self.Lambda_0
+        self.a_n = self.a_0
+        self.b_n = self.b_0
+
+    def initialize_prior(self, mu, Lambda = None, a = None, b = None):
+        '''Set prior parameters'''
+        self.mu_0 = mu
+        if not Lambda is None:
+            self.Lambda_0 = Lambda
+        if a and b:
+            self.a_0 = a
+            self.b_0 = b
+
+    def function(self, X, y):
+        '''Update posterior/prior parameters based on new data'''
+        # Today's prior is yesterday's posterior
+        self.Lambda_0 = self.Lambda_n
+        self.mu_0 = self.mu_n
+        self.a_0 = self.a_n
+        self.b_0 = self.b_n
+
+        # online update rules as per the given reference
+        self.Lambda_n = (X.T @ X) + self.Lambda_0
+        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((X.T @ y) + (self.Lambda_0 @ self.mu_0))
+        self.a_n = self.a_0 + y.shape[1]
+        self.b_n = self.b_0 + (y.T @ y) + (self.mu_0.T @ self.Lambda_0 @ self.mu_0) - (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+
+    def sample_coefficients(self):
+        '''Sample some coefficients'''
+        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
+        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
 
 # endregion
 
