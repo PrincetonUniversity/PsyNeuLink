@@ -2,16 +2,20 @@ import functools
 import logging
 from timeit import timeit
 
+from itertools import product
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, SimpleIntegrator, ModulationParam
+from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism, RECURRENT_OUTPUT
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
@@ -21,7 +25,7 @@ from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import IDENTITY_MATRIX, NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
+from psyneulink.globals.keywords import IDENTITY_MATRIX, NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP, SLOPE
 
 logger = logging.getLogger(__name__)
 
@@ -840,7 +844,7 @@ class TestExecutionOrder:
         assert expected_consideration_queue == comp.scheduler_processing.consideration_queue
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_3_mechanisms_frozen_values(self, benchmark, mode):
         #
         #   B
@@ -868,14 +872,15 @@ class TestExecutionOrder:
 
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(output, 320)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python'])
-    def test_5_mechanisms_1_origins_1_multi_control_1_terminal(self, benchmark, mode):
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
         #  /    \
@@ -908,13 +913,14 @@ class TestExecutionOrder:
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -948,13 +954,14 @@ class TestExecutionOrder:
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -988,13 +995,14 @@ class TestExecutionOrder:
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
+    @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -1028,9 +1036,10 @@ class TestExecutionOrder:
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(output, 600)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+
 
 # class TestValidateFeedDict:
 #
@@ -1522,7 +1531,51 @@ class TestRun:
     #     )
     #     assert 25 == output[0][0]
 
-    def test_run_2_mechanisms_input_5(self):
+    @pytest.mark.projection
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_input_grow(self, mode):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=[1.0, 2.0], function=Linear(slope=5.0))
+        B = TransferMechanism(default_variable=[1.0, 2.0, 3.0], function=Linear(slope=5.0))
+        P = MappingProjection(sender=A, receiver=B)
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(P, A, B)
+        comp._analyze_graph()
+        inputs_dict = {A: [5, 4]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
+        )
+        assert np.allclose(output, [[225, 225, 225]])
+
+    @pytest.mark.projection
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_input_shrink(self, mode):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=[1.0, 2.0, 3.0], function=Linear(slope=5.0))
+        B = TransferMechanism(default_variable=[4.0, 5.0], function=Linear(slope=5.0))
+        P = MappingProjection(sender=A, receiver=B)
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(P, A, B)
+        comp._analyze_graph()
+        inputs_dict = {A: [5, 4, 3]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
+        )
+        assert np.allclose(output, [[300, 300]])
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -1532,7 +1585,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(125, output[0][0])
 
     def test_projection_assignment_mistake_swap(self):
@@ -1572,7 +1625,9 @@ class TestRun:
 
         assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
-    def test_run_5_mechanisms_2_origins_1_terminal(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
         #              ==> E
         # B ----> D --
@@ -1600,11 +1655,13 @@ class TestRun:
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
         assert np.allclose([250], output)
 
-    def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator 
+    def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
         A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
@@ -1619,11 +1676,13 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
         assert np.allclose(50.0, output[0][0])
 
-    def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -1639,10 +1698,12 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose(50.0, output[0][0])
 
-    def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -1653,11 +1714,13 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
-    def test_sender_receiver_not_specified(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -1668,12 +1731,13 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
 
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
-
-    def test_run_2_mechanisms_reuse_input(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -1683,10 +1747,12 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5, bin_execute=(mode=='LLVM'))
         assert np.allclose([125], output)
 
-    def test_run_2_mechanisms_double_trial_specs(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -1696,11 +1762,13 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=(mode=='LLVM'))
 
         assert np.allclose([np.array([[125.]]), np.array([[100.]]), np.array([[75.]])], output)
 
-    def test_execute_composition(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_execute_composition(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
@@ -1712,11 +1780,14 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert np.allclose([75], output)
 
-    def test_LPP(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_LPP(self, mode):
 
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))   # 1 x 2 = 2
@@ -1730,11 +1801,14 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert np.allclose(32., output)
 
-    def test_LPP_with_projections(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_LPP_with_projections(self, mode):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))  # 1 x 2 = 2
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))  # 2 x 2 = 4
@@ -1749,7 +1823,8 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.execute(
             inputs=inputs_dict,
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=(mode=='LLVM')
         )
         assert np.allclose(32., output)
 
@@ -1813,7 +1888,9 @@ class TestRun:
 
         assert "Invalid projection" in str(error_text.value)
 
-    def test_LPP_two_origins_one_terminal(self):
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
         #              ==> E
         # B ----> D --
@@ -1834,9 +1911,345 @@ class TestRun:
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
         assert np.allclose([250], output)
 
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="LinearComposition")
+    @pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
+    def test_run_composition(self, benchmark, llvm):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler_processing=sched, bin_execute=(llvm == 'LLVM'))
+        assert np.allclose(25, output)
+
+
+    @pytest.mark.skip
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="LinearComposition")
+    @pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
+    def test_run_composition_default(self, benchmark, llvm):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, scheduler_processing=sched, bin_execute=(llvm == 'LLVM'))
+        assert 25 == output[0][0]
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="LinearComposition Vector")
+    @pytest.mark.parametrize("llvm, vector_length", product(('Python', 'LLVM'), [2**x for x in range(1)]))
+    def test_run_composition_vector(self, benchmark, llvm, vector_length):
+        var = [1.0 for x in range(vector_length)];
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
+        B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs={A: [var]}, scheduler_processing=sched, bin_execute=(llvm=='LLVM'))
+        assert np.allclose([25.0 for x in range(vector_length)], output[0])
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_2_origins_1_terminal(self, benchmark, mode):
+        # C --
+        #              ==> E
+        # D --
+
+        # 5 x 5 = 25 --
+        #                25 + 25 = 50  ==> 50 * 5 = 250
+        # 5 x 5 = 25 --
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [5.0],
+                       D: [5.0]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose(250, output)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_1_origin_2_terminals(self, benchmark, mode):
+        #       ==> D
+        # C
+        #       ==> E
+
+        #                25 * 4 = 100
+        # 5 x 5 = 25 --
+        #                25 * 6 = 150
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=4.0))
+        E = TransferMechanism(name="E", function=Linear(slope=6.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
+        comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [5.0]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose([[100], [150]], output)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar MIMO")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_2_origins_1_terminal_mimo_last(self, benchmark, mode):
+        # C --
+        #              ==> E
+        # D --
+
+        # [6] x 5 = [30] --
+        #                            [30, 40] * 5 = [150, 200]
+        # [8] x 5 = [40] --
+
+        comp = Composition()
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", input_states=['a', 'b'], function=Linear(slope=5.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C, receiver=E.input_states['a']), C, E)
+        comp.add_projection(MappingProjection(sender=D, receiver=E.input_states['b']), D, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [6.0],
+                       D: [8.0]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose([[150], [200]], output)
+
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar MIMO")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, mode):
+        # C --
+        #              ==> E
+        # D --
+
+        # [5, 6] x 5 = [25, 30] --
+        #                            [25 + 35, 30 + 40] = [60, 70]  ==> [60, 70] * 5 = [300, 350]
+        # [7, 8] x 5 = [35, 40] --
+
+        comp = Composition()
+        C = TransferMechanism(name="C", input_states=['a', 'b'], function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", input_states=['a', 'b'], function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", input_states=['a', 'b'], function=Linear(slope=5.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C.output_states[0], receiver=E.input_states['a']), C, E)
+        comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E.input_states['b']), C, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E.input_states['a']), D, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E.input_states['b']), D, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [[5.0], [6.0]],
+                       D: [[7.0], [8.0]]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose([[300], [350]], output)
+
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Merge composition scalar MIMO")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(self, benchmark, mode):
+        # C --
+        #              ==> E
+        # D --
+
+        # [5, 6] x 5 = [25, 30] --
+        #                            [25 + 35 + 30 + 40] = 130  ==> 130 * 5 = 650
+        # [7, 8] x 5 = [35, 40] --
+
+        comp = Composition()
+        C = TransferMechanism(name="C", input_states=['a', 'b'], function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", input_states=['a', 'b'], function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+        comp.add_c_node(E)
+        comp.add_projection(MappingProjection(sender=C.output_states[0], receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E), C, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E), D, E)
+        comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E), D, E)
+        comp._analyze_graph()
+        inputs_dict = {C: [[5.0], [6.0]],
+                       D: [[7.0], [8.0]]}
+        sched = Scheduler(composition=comp)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        assert np.allclose([[650]], output)
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism(self, benchmark, mode):
+        comp = Composition()
+        A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
+        comp.add_c_node(A)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+        assert np.allclose([5.0, 10.0, 15.0], output1)
+        output2 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+        # Using the hollow matrix: (10 + 15 + 1) * 5 = 130,
+        #                          ( 5 + 15 + 2) * 5 = 110,
+        #                          ( 5 + 10 + 3) * 5 = 90
+        assert np.allclose([130.0, 110.0, 90.0], output2[1])
+        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=1,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_c_node(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.95257413]])
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.98201379]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.99330715]])
+
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=1,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integration_rate=0.01,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_c_node(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.50749944]])
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.51741795]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.6320741]])
+
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=2, function=Logistic())
+        comp.add_c_node(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.81757448, 0.92414182]])
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.87259959,  0.94361816]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.87507549,  0.94660049]])
+
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=2,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_c_node(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.5, 0.73105858]])
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.3864837, 0.73105858]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.36286875, 0.78146724]])
+
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+
+    @pytest.mark.composition
+    @pytest.mark.benchmark(group="Recurrent")
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+    def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
+        comp = Composition()
+        R = RecurrentTransferMechanism(size=2,
+                                       function=Logistic(),
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integration_rate=0.01,
+                                       output_states = [RECURRENT_OUTPUT.RESULT])
+        comp.add_c_node(R)
+        comp._analyze_graph()
+        sched = Scheduler(composition=comp)
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.5, 0.50249998]])
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[0.4999875, 0.50497484]])
+
+        # execute 10 times
+        for i in range(10):
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+
+        assert np.allclose(val, [[0.49922843, 0.52838607]])
+
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
 
 class TestCallBeforeAfterTimescale:
 
