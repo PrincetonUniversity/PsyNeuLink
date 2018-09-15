@@ -840,8 +840,8 @@ class LVOCControlMechanism(ControlMechanism):
 
         # If input_states has SHADOW_INPUTS in any of its specifications, parse into input_states specifications
         if any(SHADOW_INPUTS in spec for spec in self.input_states):
-            self.input_states = self._parse_input_specs(composition=self.composition,
-                                                        inputs=self.input_states,
+            self.input_states = self._parse_predictor_specs(composition=self.composition,
+                                                        predictors=self.input_states,
                                                         context=context)
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
