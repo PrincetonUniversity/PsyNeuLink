@@ -975,7 +975,6 @@ class LVOCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         '''
