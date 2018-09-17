@@ -10357,7 +10357,6 @@ class BayesGLM(ObjectiveFunction):
         self.a_0 = self.a_n
         self.b_0 = self.b_n
 
-        # FIX: ??WHAT ARE X AND y??
         predictors = variable[0]  # should be an array with shape(num_samples, num_predictors)
         dependent_vars = variable[1] # should be an array with shape(num_samples, num_dependent_variables)
 
@@ -10369,7 +10368,8 @@ class BayesGLM(ObjectiveFunction):
                    (self.mu_0.T @ self.Lambda_0 @ self.mu_0) - \
                    (self.mu_n.T @ self.Lambda_n @ self.mu_n)
 
-        return [self.mu_n, np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+        # return [np.squeeze(self.mu_n), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+        return [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
 
 # endregion
 

@@ -392,13 +392,14 @@ from psyneulink.components.shellclasses import Function, Composition_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     COST_FUNCTION, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, PARAMETER_STATES, SUM, ALL, INPUT_STATE, \
-    STATE_TYPE, PROJECTIONS, VARIABLE, NAME
+    STATE_TYPE, PROJECTIONS, VARIABLE, NAME, OWNER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
 from psyneulink.library.subsystems.evc.evcauxiliary import \
     ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
-from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
+from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism, PREDICTOR_WEIGHTS, \
+    PREDICTOR_VARIANCES
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
@@ -854,8 +855,10 @@ class LVOCControlMechanism(ControlMechanism):
         # self.predictor_weights = np.zeros(self._num_predictors)
 
         # Insert InputState for ObjectiveMechanism as (primary) input_state
-        self.input_states.insert(0, {NAME:'WEIGHT_DISTRIBUTIONS_FROM_OBJECTIVE_MECHANISM',
-                                     VARIABLE:np.zeros((2,self._num_predictors))})
+        self.input_states.insert(0, {NAME:PREDICTOR_WEIGHTS,
+                                     VARIABLE:np.zeros(self._num_predictors)}),
+        self.input_states.insert(1, {NAME:PREDICTOR_VARIANCES,
+                                     VARIABLE:np.zeros(self._num_predictors)})
 
         # Configure default_variable to comport with input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
@@ -863,46 +866,18 @@ class LVOCControlMechanism(ControlMechanism):
         super()._instantiate_input_states(context=context)
 
     def _instantiate_objective_mechanism(self, context=None):
+        # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
+        self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
+                                                            num_predictors=self._num_predictors,
+                                                            predictor_weights_priors=self._predictor_weight_priors,
+                                                            predictor_variance_priors=self._predictor_variance_priors)
+        MappingProjection(sender=self.objective_mechanism.output_states[PREDICTOR_WEIGHTS],
+                          receiver=self.input_states[PREDICTOR_WEIGHTS])
+        MappingProjection(sender=self.objective_mechanism.output_states[PREDICTOR_VARIANCES],
+                          receiver=self.input_states[PREDICTOR_VARIANCES])
+        self.monitor_for_control = self.monitored_output_states
 
-        # FIX: ADD INPUTS FROM LVOCControlMechanism TO BEGINNING OF monitored_output_states
-        objective_mechanism=BayesGLMObjectiveMechanism(self.monitor_for_control,
-                                                       function=BayesGLM(num_predictors=self._num_predictors,
-                                                                         mu_prior=self._predictor_weight_priors,
-                                                                         sigma_prior=self._predictor_variance_priors))
-        assert True
-
-    # def _instantiate_predictor_weights_and_variances(self):
-    #
-    #     # Get shape of array of input_states for predictors (i.e., excluding first one used for ObjectiveMechanism
-    #     predictors = self.instance_defaults.variable.copy()
-    #     del predictors[0]
-    #     self.predictors = predictors
-    #
-    #     FIX:  MOVE THE CODE BELOW TO OBJECTIVE MECHANISM
-    #           PASS PRIORS AND SHAPE OF PREDICTORS TO OBJECTIVE MECHANISM
-    #           AND SET self.predictor_weights and self.predictor_variances
-    #           TO VALUES RECEIVED FROM OBJECTIVE MECHANISM IN LVOC MECHANISM'S FIRST INPUT_STATE
-    #
-    #     # WEIGHTS
-    #     if isinstance(self.predictor_weights, (int, float)):
-    #         filler = self.predictor_weights
-    #         self.predictor_weights = np.empty_like(predictors)
-    #         for i in range(len(self.predictor_weights)):
-    #             self.predictor_weights[i] = np.full_like(i, filler)
-    #     elif not np.array(self.predictor_weights.shape) == np.array(predictors.shape):
-    #       raise LVOCError("Shape of default_predictor_weights ({}) does not match list of specified predictors ({})".
-    #                       format(self.predictor_weights), predictors)
-    #     self.predictor_variance = np.array
-    #
-    #     # VARIANCES
-    #     if isinstance(self.predictor_variances, (int, float)):
-    #         filler = self.predictor_variances
-    #         self.predictor_variances = np.empty_like(predictors)
-    #         for i in range(len(self.predictor_variances)):
-    #             self.predictor_variances[i] = np.full_like(i, filler)
-    #     elif not np.array(self.predictor_variances.shape) == np.array(predictors.shape):
-    #       raise LVOCError("Shape of default_predictor_variances ({}) does not match list of specified predictors ({})".
-    #                       format(self.predictor_variances), predictors)
+        # super()._instantiate_objective_mechanism(context=context)
 
     tc.typecheck
     def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
@@ -972,7 +947,7 @@ class LVOCControlMechanism(ControlMechanism):
             #    one for each input to the Composition
             # for composition_input in self.composition.input_CIM.output_states:
             #     input_state_specs.append(composition_input)
-            input_state_specs.extend([{NAME:'INPUT TO ' + c.efferents[0].receiver.name +
+            input_state_specs.extend([{NAME:'INPUT OF ' + c.efferents[0].receiver.name +
                                             ' of ' + c.efferents[0].receiver.owner.name,
                                        PROJECTIONS:c}
                                       for c in self.composition.input_CIM.output_states])
@@ -1100,11 +1075,19 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Return sample from weighted distribution of predictors'''
 
-        predictors = variable[1:]
-        predictor_weights = variable[0][0]
-        predictor_variances = variable[0][1]
+        predictors = variable[2:]
+        predictor_weights = variable[0]
+        predictor_variances = variable[1]
 
-        return predictors * np.normal(loc=predictor_weights, scale=predictor_variances)
+        return predictors * np.random.normal(loc=predictor_weights, scale=predictor_variances)
+
+        # FIX: REPLACE ABOVE WITH:
+		# FROM BayesGLM:
+		# phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
+		# return np.random.multivariate_normal(predictor_weights, phi * np.linalg.inv(predictor_variances))
+        # FIX: MISSING phi:
+        # return np.random.multivariate_normal(predictor_weights, np.linalg.inv(np.atleast_2d((predictor_variances)))
+
 
     @property
     def value_function(self):

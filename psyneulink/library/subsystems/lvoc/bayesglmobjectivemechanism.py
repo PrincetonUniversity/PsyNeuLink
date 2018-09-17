@@ -66,18 +66,21 @@ Class Reference
 ---------------
 
 """
-from collections import Iterable
 
 import typecheck as tc
-from psyneulink.components.functions.function import BayesGLM
-from psyneulink.globals.preferences import PreferenceLevel, PreferenceEntry
-from psyneulink.globals.context import ContextFlags
-from psyneulink.components.mechanisms.processing.objectivemechanism import *
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import standard_output_states
-from psyneulink.globals.keywords import OBJECTIVE_MECHANISM, kwPreferenceSetName, FUNCTION, PRIMARY
-from psyneulink.globals.preferences.componentpreferenceset import kpReportOutputPref, is_pref_set
+import numpy as np
 
+from collections import Iterable
+
+from psyneulink.components.mechanisms.processing.objectivemechanism import *
+from psyneulink.components.functions.function import LinearCombination, BayesGLM
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.utilities import is_numeric
+from psyneulink.globals.keywords import NAME, VARIABLE, OWNER_VALUE
+
+PREDICTOR_WEIGHTS = 'PREDICTOR_WEIGHTS'
+PREDICTOR_VARIANCES = 'PREDICTOR_VARIANCES'
 
 class BayesGLMObjectiveMechanismError(Exception):
     def __init__(self, error_value):
@@ -92,6 +95,9 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
     """
     BayesGLMObjectiveMechanism(       \
         monitored_output_states,      \
+        num_predictors,               \
+        predictor_weights_priors,     \
+        predictor_variance_priors,    \
         default_variable,             \
         size,                         \
         function=LinearCombination,   \
@@ -101,8 +107,8 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
         prefs=None)
 
     Subclass of `ObjectiveMechanism` that evaluates the value(s) of its `monitored_output_states
-    <BayesGLMObjectiveMechanism>` and updates its `predictor_weights <BayesGLMObjectiveMechanism.predictor_weights>`
-    to improves its prediction of the outcome of the evaluation.
+    <BayesGLMObjectiveMechanism>` and then updates a set of `predictor_weights
+    <BayesGLMObjectiveMechanism.predictor_weights>` to improves its prediction of the outcome of the evaluation.
 
     Arguments
     ---------
@@ -122,6 +128,20 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+
+    num_predictors : int
+        specifies number of predictors used to predict the value returned by `function <BayesGLMObjectieMechanism>`.
+
+    predictor_weights_priors : int or 1d array
+        specifies initial value used for mean of the distribution for each predictor. If it is an int, the same value
+        is used for all predictors.  An array can be used to specify a different prior for each predictor, in which
+        case the length of the array must equal `num_predictors <BayesGLMObjectiveMechanism.num_predictors>`.
+
+    predictor_variance_priors :
+        specifies initial value used for variance of the distribution for each predictor. If it is an int,
+        the same value is used for all predictors.  An array can be used to specify a different prior for each
+        predictor, in which case the length of the array must equal `num_predictors
+        <BayesGLMObjectiveMechanism.num_predictors>`.
 
     COMMENT:
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
@@ -211,48 +231,49 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
 
     """
 
-    componentType = OBJECTIVE_MECHANISM
-
-    classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
-    classPreferences = {
-        kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
-
-    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
-    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
-    #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
-    class ClassDefaults(ObjectiveMechanism.ClassDefaults):
-        function = BayesGLM
-
-    # ObjectiveMechanism parameter and control signal assignments):
-    paramClassDefaults = ObjectiveMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION: BayesGLM,
-        })
-
-    standard_output_states = standard_output_states.copy()
-
-    # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
                  monitored_output_states=None,
                  default_variable=None,
                  size=None,
-                 function=BayesGLM,
-                 output_states:tc.optional(tc.any(str, Iterable))=OUTCOME,
+                 num_predictors:int=1,
+                 predictor_weights_priors:tc.optional(is_numeric)=None,
+                 predictor_variance_priors:tc.optional(is_numeric)=None,
+                 function=LinearCombination,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
 
+        monitored_output_states = [{NAME:'CURRENT_PREDICTOR_WEIGHTS',
+                                   VARIABLE:[0]*num_predictors}] + monitored_output_states
+
+        self._predictor_update_function = BayesGLM(num_predictors=num_predictors,
+                                                   mu_prior=predictor_weights_priors,
+                                                   sigma_prior=predictor_variance_priors)
+
         super().__init__(monitored_output_states=monitored_output_states,
                          default_variable=default_variable,
                          size=size,
                          function=function,
-                         output_states=output_states,
+                         output_states=[{NAME:PREDICTOR_WEIGHTS, VARIABLE:(OWNER_VALUE,0)},
+                                        {NAME:PREDICTOR_VARIANCES, VARIABLE:(OWNER_VALUE,1)}],
                          params=params,
                          name=name,
                          prefs=prefs,
                          **kwargs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        self.outcome = super()._execute(variable, runtime_params, context)
+        predictors = np.atleast_2d(variable[0])
+        dependent_vars = np.atleast_2d(self.outcome)
+        return self._predictor_update_function.function(variable=[predictors,dependent_vars])
+
+    def _parse_function_variable(self, variable, context=None):
+        '''Return all but first item of variable
+        First item of variable is reserved for current predictor weights used by update_function
+        '''
+        # return variable[1:]
+        return np.array([i.astype(float) for i in variable[1:]])
+
