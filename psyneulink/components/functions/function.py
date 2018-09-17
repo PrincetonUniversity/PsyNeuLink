@@ -10288,17 +10288,24 @@ class BayesGLM(ObjectiveFunction):
     Author: Yotam Sagiv
     """
 
-    def __init__(self, nr_regressors=1, sigma=1):
-        self.nr_regressors = nr_regressors
-        self.sigma = sigma
+    def __init__(self,
+                 # default_variable=np.zeros_like(np.array([[[0]],[[0]]])),
+                 default_variable=np.zeros((2,1,1)),
+                 num_predictors=1,
+                 mu_prior=0,
+                 sigma_prior=1,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
 
-        # by assumption, errors are distributed as N(0, kI)
-        # failing some strong prior, we assume the regressors are N(0, kI) as well
-        mu = np.zeros((nr_regressors, 1))
-        Lambda = (1 / (sigma ** 2)) * np.eye(nr_regressors)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        # FIX: ?SHOULD mu_prior and sigma_prior BE ASSIGNED AS PARAMS? (I.E., IN assig_args_to_param_dicts)??
+        #      IF SO, THEN MOVE ASSIGNMENTS BELOW TO _instantiate_attributes_before_function
 
         # set the prior parameters
-        self.initialize_prior(mu, Lambda=Lambda, a=1, b=1)
+        self.initialize_prior(num_predictors, mu_prior, sigma_prior, a=1, b=1)
 
         # before we see any data, the posterior is the prior
         self.mu_n = self.mu_0
@@ -10306,33 +10313,63 @@ class BayesGLM(ObjectiveFunction):
         self.a_n = self.a_0
         self.b_n = self.b_0
 
-    def initialize_prior(self, mu, Lambda = None, a = None, b = None):
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def initialize_prior(self, n, mu, sigma, a = None, b = None):
         '''Set prior parameters'''
-        self.mu_0 = mu
-        if not Lambda is None:
-            self.Lambda_0 = Lambda
+
+        if isinstance(mu, (int, float)):
+            mu_prior = np.full((n, 1),mu)
+        else:
+            if len(mu) != n:
+                raise FunctionError("Length of mu priors ({}) does not match number of predictors ({})".
+                                    format(len(mu), n))
+            mu_prior = mu
+
+        if isinstance(sigma, (int, float)):
+            lambda_prior = (1 / (sigma ** 2)) * np.eye(n)
+        else:
+            if len(sigma) != n:
+                raise FunctionError("Length of sigma priors ({}) does not match number of predictors ({})".
+                                    format(len(sigma), n))
+            lambda_prior = (1 / (np.array(sigma) ** 2)) * np.eye(n)
+
+        self.mu_0 = mu_prior
+        self.Lambda_0 = lambda_prior
         if a and b:
             self.a_0 = a
             self.b_0 = b
 
-    def function(self, X, y):
+    # def function(self, X, y, params, context):
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
         '''Update posterior/prior parameters based on new data'''
+
         # Today's prior is yesterday's posterior
         self.Lambda_0 = self.Lambda_n
         self.mu_0 = self.mu_n
         self.a_0 = self.a_n
         self.b_0 = self.b_n
 
-        # online update rules as per the given reference
-        self.Lambda_n = (X.T @ X) + self.Lambda_0
-        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((X.T @ y) + (self.Lambda_0 @ self.mu_0))
-        self.a_n = self.a_0 + y.shape[1]
-        self.b_n = self.b_0 + (y.T @ y) + (self.mu_0.T @ self.Lambda_0 @ self.mu_0) - (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+        # FIX: ??WHAT ARE X AND y??
+        predictors = variable[0]  # should be an array with shape(num_samples, num_predictors)
+        dependent_vars = variable[1] # should be an array with shape(num_samples, num_dependent_variables)
 
-    def sample_coefficients(self):
-        '''Sample some coefficients'''
-        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
-        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
+        # online update rules as per the given reference
+        self.Lambda_n = (predictors.T @ predictors) + self.Lambda_0
+        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_0 @ self.mu_0))
+        self.a_n = self.a_0 + dependent_vars.shape[1]
+        self.b_n = self.b_0 + (dependent_vars.T @ dependent_vars) + \
+                   (self.mu_0.T @ self.Lambda_0 @ self.mu_0) - \
+                   (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+
+        return [self.mu_n, np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
 
 # endregion
 

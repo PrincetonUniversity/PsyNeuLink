@@ -499,10 +499,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         OutputStates specified in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
-        the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
+        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
         any PsyNeuLink `CombinationFunction` or a Python function that takes a 2d array with an arbitrary number of
-        items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
-        input_states), and returns a 1d array.
+        items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e., its number of
+        input_states) and returns a 1d array.
 
     role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a

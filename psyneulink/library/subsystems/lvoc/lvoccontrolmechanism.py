@@ -379,7 +379,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -395,9 +395,10 @@ from psyneulink.globals.keywords import \
     STATE_TYPE, PROJECTIONS, VARIABLE, NAME
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
 from psyneulink.library.subsystems.evc.evcauxiliary import \
     ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
+from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
@@ -757,7 +758,9 @@ class LVOCControlMechanism(ControlMechanism):
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 predictor_weight_priors:is_numeric=0.0,
+                 predictor_variance_priors:is_numeric=1.0,
+                 # objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
@@ -770,9 +773,14 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
+        self._predictor_weight_priors = predictor_weight_priors
+        self._predictor_variance_priors = predictor_variance_priors
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
+                                                  # predictor_weights=predictor_weight_priors,
+                                                  # predictor_variances=predictor_variance_priors,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
@@ -780,7 +788,9 @@ class LVOCControlMechanism(ControlMechanism):
                                                   params=params)
 
         super().__init__(system=None,
-                         objective_mechanism=objective_mechanism,
+                         # objective_mechanism=ObjectiveMechanism(monitored_output_states=monitor_for_control,
+                         #                                        function=BayesGLM(predictor_weight_priors,
+                         #                                                          predictor_variance_priors)),
                          monitor_for_control=monitor_for_control,
                          function=function,
                          control_signals=control_signals,
@@ -835,17 +845,64 @@ class LVOCControlMechanism(ControlMechanism):
         # IF IT CONTAINS A DICT WITH A "SHADOW_INPUTS" ENTRY, IT CAN ALSO INCLUDE A FUNCTION:<Function> ENTRY
         #     THAT WILL BE USED AS THE FUNCTION OF THE input_states CREATED FOR THE LVOCControlMechanism
 
-        # Reserve first (primary) InputState for ObjectiveMechanism
-        self.input_states.insert(0, 'WEIGHTS_FROM_OBJECTIVE_MECHANISM')
-
         # If input_states has SHADOW_INPUTS in any of its specifications, parse into input_states specifications
         if any(SHADOW_INPUTS in spec for spec in self.input_states):
             self.input_states = self._parse_predictor_specs(composition=self.composition,
-                                                        predictors=self.input_states,
-                                                        context=context)
+                                                            predictors=self.input_states,
+                                                            context=context)
+        self._num_predictors = len(self.input_states)
+        # self.predictor_weights = np.zeros(self._num_predictors)
+
+        # Insert InputState for ObjectiveMechanism as (primary) input_state
+        self.input_states.insert(0, {NAME:'WEIGHT_DISTRIBUTIONS_FROM_OBJECTIVE_MECHANISM',
+                                     VARIABLE:np.zeros((2,self._num_predictors))})
+
+        # Configure default_variable to comport with input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
+
+    def _instantiate_objective_mechanism(self, context=None):
+
+        # FIX: ADD INPUTS FROM LVOCControlMechanism TO BEGINNING OF monitored_output_states
+        objective_mechanism=BayesGLMObjectiveMechanism(self.monitor_for_control,
+                                                       function=BayesGLM(num_predictors=self._num_predictors,
+                                                                         mu_prior=self._predictor_weight_priors,
+                                                                         sigma_prior=self._predictor_variance_priors))
+        assert True
+
+    # def _instantiate_predictor_weights_and_variances(self):
+    #
+    #     # Get shape of array of input_states for predictors (i.e., excluding first one used for ObjectiveMechanism
+    #     predictors = self.instance_defaults.variable.copy()
+    #     del predictors[0]
+    #     self.predictors = predictors
+    #
+    #     FIX:  MOVE THE CODE BELOW TO OBJECTIVE MECHANISM
+    #           PASS PRIORS AND SHAPE OF PREDICTORS TO OBJECTIVE MECHANISM
+    #           AND SET self.predictor_weights and self.predictor_variances
+    #           TO VALUES RECEIVED FROM OBJECTIVE MECHANISM IN LVOC MECHANISM'S FIRST INPUT_STATE
+    #
+    #     # WEIGHTS
+    #     if isinstance(self.predictor_weights, (int, float)):
+    #         filler = self.predictor_weights
+    #         self.predictor_weights = np.empty_like(predictors)
+    #         for i in range(len(self.predictor_weights)):
+    #             self.predictor_weights[i] = np.full_like(i, filler)
+    #     elif not np.array(self.predictor_weights.shape) == np.array(predictors.shape):
+    #       raise LVOCError("Shape of default_predictor_weights ({}) does not match list of specified predictors ({})".
+    #                       format(self.predictor_weights), predictors)
+    #     self.predictor_variance = np.array
+    #
+    #     # VARIANCES
+    #     if isinstance(self.predictor_variances, (int, float)):
+    #         filler = self.predictor_variances
+    #         self.predictor_variances = np.empty_like(predictors)
+    #         for i in range(len(self.predictor_variances)):
+    #             self.predictor_variances[i] = np.full_like(i, filler)
+    #     elif not np.array(self.predictor_variances.shape) == np.array(predictors.shape):
+    #       raise LVOCError("Shape of default_predictor_variances ({}) does not match list of specified predictors ({})".
+    #                       format(self.predictor_variances), predictors)
 
     tc.typecheck
     def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
@@ -940,17 +997,23 @@ class LVOCControlMechanism(ControlMechanism):
         return input_state_specs
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Validate cost function and instantiate Projections to ObjectiveMechansm for worth and current weights'''
+        '''Validate cost function, instantiate Projections to ObjectiveMechanism, and construct
+        control_signal_search_space.
+
+        Instantiate Projections to ObjectiveMechansm for worth and current weights
+
+        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
+            * get `allocation_samples` for each ControlSignal in `control_signals`
+            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
+              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
+        '''
 
         super()._instantiate_attributes_after_function(context=context)
 
         if self.composition is None:
             return
 
-        # FIX: ADD OutputStates FOR PROJECTION OF current_predictor_weights AND ?worth? TO ObjectiveMechanism
-        o = OutputState(name='TEST', owner=self, projections=self.objective_mechanism)
-        self.add_states(OutputState(name='TEST', owner=self))
-
+        # Validate cost function
         cost_Function = self.cost_function
         if isinstance(cost_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the cost_function
@@ -975,40 +1038,12 @@ class LVOCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
-        '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-        return control_signal
+        # Instantiate Projections to ObjectiveMechansm for worth and current weights
+        # FIX: ADD OutputStates FOR PROJECTION OF current_predictor_weights AND ?worth? TO ObjectiveMechanism
+        o = OutputState(name='TEST', owner=self, projections=self.objective_mechanism)
+        self.add_states(OutputState(name='TEST', owner=self))
 
-    def _execute(
-        self,
-        variable=None,
-        runtime_params=None,
-        context=None
-    ):
-        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
-
-        FIX: MOVE THIS TO __init__
-        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
-            * get `allocation_samples` for each ControlSignal in `control_signals`
-            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
-              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-        Construct predictor_weights:  a 3D array that assigns a mean and variance for the weight from each
-            predictor to each control_signal
-        FIX: END OF MOVE
-        ------------
-        Get current_predictor_weights by drawing a value from the weight distribution of each predictor
-        Call self.function -- default: ControlSignalGradientDescent:
-            does gradient descent on allocation_policy to fit within budget
-            based on current_predictor_weights and control_signal costs.
-        Return an allocation_policy
-        """
-
-        # FIX: MOVE THIS TO __init__:
-        # CONSTRUCT SEARCH SPACE
+        # Construct control_signal_search_space
         control_signal_sample_lists = []
         control_signals = self.control_signals
         # Get allocation_samples for all ControlSignals
@@ -1023,25 +1058,53 @@ class LVOCControlMechanism(ControlMechanism):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        # FIX: END OF MOVE
+
+    def _instantiate_control_signal(self, control_signal, context=None):
+        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        '''
+        control_signal = super()._instantiate_control_signal(control_signal, context)
+        if control_signal.cost_options is None:
+            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        return control_signal
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
+
+        Get current_predictor_weights by drawing a value for each using predictor_weights and predictor_variances
+        Call self.function -- default: ControlSignalGradientDescent:
+            does gradient descent on allocation_policy to fit within budget
+            based on current_predictor_weights control_signal costs.
+        Return an allocation_policy
+        """
 
         # EXECUTE SEARCH
 
         # IMPLEMENTATION NOTE:
         # self.composition._store_system_state()
 
-        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy = super(ControlMechanism, self)._execute(
-                controller=self,
-                variable=variable,
-                runtime_params=runtime_params,
-                context=context
-        )
+        # IMPLEMENTATION NOTE:
+        # - skip ControlMechanism._execute since it is a stub method that returns input_values
+        # - variable contains predictors, predictor_weights and predictor_variances;
+        #     these are parsed by _parse_function_variable, and a sample of predictors is passed to self.function
+        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
+                                                                   variable=variable,
+                                                                   runtime_params=runtime_params,
+                                                                   context=context
+                                                                   )
 
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
         return allocation_policy
+
+    def _parse_function_variable(self, variable, context=None):
+        '''Return sample from weighted distribution of predictors'''
+
+        predictors = variable[1:]
+        predictor_weights = variable[0][0]
+        predictor_variances = variable[0][1]
+
+        return predictors * np.normal(loc=predictor_weights, scale=predictor_variances)
 
     @property
     def value_function(self):
