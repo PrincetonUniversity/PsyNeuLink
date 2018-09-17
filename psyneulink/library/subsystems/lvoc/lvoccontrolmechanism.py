@@ -604,6 +604,10 @@ class LVOCControlMechanism(ControlMechanism):
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
+    sampled_predictor_weights :
+
+    weighted_predictor_values :
+
     function : function : default ControlSignalGridSearch
         determines the `allocation_policy` to use for the next round of the System's
         execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
@@ -852,7 +856,6 @@ class LVOCControlMechanism(ControlMechanism):
                                                             predictors=self.input_states,
                                                             context=context)
         self._num_predictors = len(self.input_states)
-        # self.predictor_weights = np.zeros(self._num_predictors)
 
         # Insert InputState for ObjectiveMechanism as (primary) input_state
         self.input_states.insert(0, {NAME:PREDICTOR_WEIGHTS,
@@ -1013,8 +1016,8 @@ class LVOCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-        # Instantiate Projections to ObjectiveMechansm for worth and current weights
-        # FIX: ADD OutputStates FOR PROJECTION OF current_predictor_weights AND ?worth? TO ObjectiveMechanism
+        # Instantiate Projections to ObjectiveMechanism for worth and current weights
+        # FIX: ADD OutputStates FOR PROJECTION OF CURRENT predictor_weights AND predictor_variances
         o = OutputState(name='TEST', owner=self, projections=self.objective_mechanism)
         self.add_states(OutputState(name='TEST', owner=self))
 
@@ -1045,7 +1048,8 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Get current_predictor_weights by drawing a value for each using predictor_weights and predictor_variances
+        Get sampled_predictor_weights by drawing a value for each using predictor_weights and predictor_variances
+            received from BayesGLMObjectiveMechanism.
         Call self.function -- default: ControlSignalGradientDescent:
             does gradient descent on allocation_policy to fit within budget
             based on current_predictor_weights control_signal costs.
@@ -1076,10 +1080,15 @@ class LVOCControlMechanism(ControlMechanism):
         '''Return sample from weighted distribution of predictors'''
 
         predictors = variable[2:]
+        # predictors = np.array(variable[2:]).reshape(-1)
         predictor_weights = variable[0]
         predictor_variances = variable[1]
 
-        return predictors * np.random.normal(loc=predictor_weights, scale=predictor_variances)
+        sample = np.random.normal(loc=predictor_weights, scale=predictor_variances)
+        self.sampled_predictor_weights = sample.reshape(self._num_predictors, 1)
+
+        self.weighted_predictor_values = self.sampled_predictor_weights * predictors
+        return self.weighted_predictor_values
 
         # FIX: REPLACE ABOVE WITH:
 		# FROM BayesGLM:
