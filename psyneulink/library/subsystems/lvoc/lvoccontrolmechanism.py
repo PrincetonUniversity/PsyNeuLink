@@ -860,8 +860,6 @@ class LVOCControlMechanism(ControlMechanism):
         # Insert InputState for ObjectiveMechanism as (primary) input_state
         self.input_states.insert(0, {NAME:PREDICTOR_WEIGHTS,
                                      VARIABLE:np.zeros(self._num_predictors)}),
-        self.input_states.insert(1, {NAME:PREDICTOR_VARIANCES,
-                                     VARIABLE:np.zeros(self._num_predictors)})
 
         # Configure default_variable to comport with input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
@@ -874,10 +872,8 @@ class LVOCControlMechanism(ControlMechanism):
                                                             num_predictors=self._num_predictors,
                                                             predictor_weights_priors=self._predictor_weight_priors,
                                                             predictor_variance_priors=self._predictor_variance_priors)
-        MappingProjection(sender=self.objective_mechanism.output_states[PREDICTOR_WEIGHTS],
+        MappingProjection(sender=self.objective_mechanism,
                           receiver=self.input_states[PREDICTOR_WEIGHTS])
-        MappingProjection(sender=self.objective_mechanism.output_states[PREDICTOR_VARIANCES],
-                          receiver=self.input_states[PREDICTOR_VARIANCES])
         self.monitor_for_control = self.monitored_output_states
 
         # super()._instantiate_objective_mechanism(context=context)
@@ -1016,11 +1012,6 @@ class LVOCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-        # Instantiate Projections to ObjectiveMechanism for worth and current weights
-        # FIX: ADD OutputStates FOR PROJECTION OF CURRENT predictor_weights AND predictor_variances
-        o = OutputState(name='TEST', owner=self, projections=self.objective_mechanism)
-        self.add_states(OutputState(name='TEST', owner=self))
-
         # Construct control_signal_search_space
         control_signal_sample_lists = []
         control_signals = self.control_signals
@@ -1079,15 +1070,10 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Return sample from weighted distribution of predictors'''
 
-        predictors = variable[2:]
-        # predictors = np.array(variable[2:]).reshape(-1)
-        predictor_weights = variable[0]
-        predictor_variances = variable[1]
+        self.predictor_weights = variable[0]
+        self.predictors = variable[1:]
 
-        sample = np.random.normal(loc=predictor_weights, scale=predictor_variances)
-        self.sampled_predictor_weights = sample.reshape(self._num_predictors, 1)
-
-        self.weighted_predictor_values = self.sampled_predictor_weights * predictors
+        self.weighted_predictor_values = self.predictor_weights * self.predictors
         return self.weighted_predictor_values
 
         # FIX: REPLACE ABOVE WITH:

@@ -256,8 +256,6 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                          default_variable=default_variable,
                          size=size,
                          function=function,
-                         output_states=[{NAME:PREDICTOR_WEIGHTS, VARIABLE:(OWNER_VALUE,0)},
-                                        {NAME:PREDICTOR_VARIANCES, VARIABLE:(OWNER_VALUE,1)}],
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -276,4 +274,17 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
         '''
         # return variable[1:]
         return np.array([i.astype(float) for i in variable[1:]])
+
+
+    -------------------
+
+        predictor_weights = variable[0]
+        predictor_variances = variable[1]
+
+        sample = np.random.normal(loc=predictor_weights, scale=predictor_variances)
+        self.sampled_predictor_weights = sample.reshape(self._num_predictors, 1)
+
+        self.weighted_predictor_values = self.sampled_predictor_weights * predictors
+        return self.weighted_predictor_values
+
 
