@@ -1085,8 +1085,10 @@ class LVOCControlMechanism(ControlMechanism):
         self.weighted_predictor_values = self.predictor_weights * self.predictors
 
         # FIX: NEED TO DEAL WITH self.control_signal_costs == None DURING INITIALIZATION)
-        return [self.weighted_predictor_values, self.control_signal_costs]
-        # return self.weighted_predictor_values
+        try:
+            return [self.weighted_predictor_values, self.control_signal_costs]
+        except:
+            return [self.weighted_predictor_values, None]
 
 
     @property
