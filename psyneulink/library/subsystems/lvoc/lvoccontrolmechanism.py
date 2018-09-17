@@ -398,14 +398,14 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
 from psyneulink.library.subsystems.evc.evcauxiliary import \
     ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
-from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism, PREDICTOR_WEIGHTS, \
-    PREDICTOR_VARIANCES
+from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
 ]
 
 SHADOW_INPUTS = 'SHADOW_INPUTS'
+PREDICTOR_WEIGHTS = 'PREDICTOR_WEIGHTS'
 
 class LVOCError(Exception):
     def __init__(self, error_value):
@@ -855,13 +855,18 @@ class LVOCControlMechanism(ControlMechanism):
             self.input_states = self._parse_predictor_specs(composition=self.composition,
                                                             predictors=self.input_states,
                                                             context=context)
-        self._num_predictors = len(self.input_states)
+
+        # FIX: ADD FEATURE HERE TO INCLUDE control_signals IN LIST OF PREDICTORS
+
+        # Get length of concantenated input_state values from parsing of variable:
+        variable, ignore = self._handle_arg_input_states(self.input_states)
+        self._num_predictors = len(np.array(variable).reshape(-1))
 
         # Insert InputState for ObjectiveMechanism as (primary) input_state
         self.input_states.insert(0, {NAME:PREDICTOR_WEIGHTS,
                                      VARIABLE:np.zeros(self._num_predictors)}),
 
-        # Configure default_variable to comport with input_states
+        # Configure default_variable to comport with full set of input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
@@ -1071,7 +1076,8 @@ class LVOCControlMechanism(ControlMechanism):
         '''Return sample from weighted distribution of predictors'''
 
         self.predictor_weights = variable[0]
-        self.predictors = variable[1:]
+        # FIX: CONCATENATE input_state.values HERE
+        self.predictors.variable[1:].reshape(-1)
 
         self.weighted_predictor_values = self.predictor_weights * self.predictors
         return self.weighted_predictor_values

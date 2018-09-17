@@ -79,9 +79,6 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import is_numeric
 from psyneulink.globals.keywords import NAME, VARIABLE, OWNER_VALUE
 
-PREDICTOR_WEIGHTS = 'PREDICTOR_WEIGHTS'
-PREDICTOR_VARIANCES = 'PREDICTOR_VARIANCES'
-
 class BayesGLMObjectiveMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -245,9 +242,6 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        monitored_output_states = [{NAME:'CURRENT_PREDICTOR_WEIGHTS',
-                                   VARIABLE:[0]*num_predictors}] + monitored_output_states
-
         self._predictor_update_function = BayesGLM(num_predictors=num_predictors,
                                                    mu_prior=predictor_weights_priors,
                                                    sigma_prior=predictor_variance_priors)
@@ -262,29 +256,29 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                          **kwargs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    # # MODIFIED 9/17/18 OLD:
+    # def _execute(self, variable=None, runtime_params=None, context=None):
+    #     self.outcome = super()._execute(variable, runtime_params, context)
+    #     predictors = np.atleast_2d(variable[0])
+    #     dependent_vars = np.atleast_2d(self.outcome)
+    #     return self._predictor_update_function.function(variable=[predictors,dependent_vars])
+
+    # MODIFIED 9/17/18 NEW:
     def _execute(self, variable=None, runtime_params=None, context=None):
         self.outcome = super()._execute(variable, runtime_params, context)
-        predictors = np.atleast_2d(variable[0])
-        dependent_vars = np.atleast_2d(self.outcome)
-        return self._predictor_update_function.function(variable=[predictors,dependent_vars])
+        # dependent_vars = np.atleast_2d(self.outcome)
+        dependent_vars = self.outcome.reshape(-1)
 
-    def _parse_function_variable(self, variable, context=None):
-        '''Return all but first item of variable
-        First item of variable is reserved for current predictor weights used by update_function
-        '''
-        # return variable[1:]
-        return np.array([i.astype(float) for i in variable[1:]])
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            old_predictor_weights = self._predictor_update_function.mu_0.reshape(-1)
+        else:
+            old_predictor_weights = self.sampled_predictor_weights
 
-
-    -------------------
-
-        predictor_weights = variable[0]
-        predictor_variances = variable[1]
+        predictor_weights, predictor_variances = self._predictor_update_function.function(
+                variable=[old_predictor_weights, dependent_vars])
 
         sample = np.random.normal(loc=predictor_weights, scale=predictor_variances)
         self.sampled_predictor_weights = sample.reshape(self._num_predictors, 1)
 
-        self.weighted_predictor_values = self.sampled_predictor_weights * predictors
-        return self.weighted_predictor_values
-
-
+        return self.sampled_predictor_weights
+    # MODIFIED 9/17/18 END
