@@ -396,8 +396,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
-from psyneulink.library.subsystems.evc.evcauxiliary import \
-    ControlSignalGridSearch, ValueFunction, PredictionMechanism, INPUT
+from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent, ValueFunction
 from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
@@ -416,11 +415,11 @@ class LVOCError(Exception):
 
 
 class LVOCControlMechanism(ControlMechanism):
-    """LVOCControlMechanism(                                            \
+    """LVOCControlMechanism(                                           \
     system=True,                                                       \
     objective_mechanism=None,                                          \
     prediction_mechanisms=PredictionMechanism,                         \
-    function=ControlSignalGridSearch                                   \
+    function=ControlSignalGradientAscent                               \
     value_function=ValueFunction,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
@@ -520,9 +519,10 @@ class LVOCControlMechanism(ControlMechanism):
             other forms of specification must be used.
         COMMENT
 
-    function : function or method : ControlSignalGridSearch
-        specifies the function used to determine the `allocation_policy` for the next execution of the
-        LVOCControlMechanism's `system <LVOCControlMechanism.system>` (see `function <LVOCControlMechanism.function>` for details).
+    function : function or method : ControlSignalGradientAscent
+        specifies the function used to determine the `allocation_policy` for the current execution of the
+        LVOCControlMechanism's `composition <LVOCControlMechanism.composition>` (see `function
+        <LVOCControlMechanism.function>` for details).
 
     value_function : function or method : value_function
         specifies the function used to calculate the `EVC <LVOCControlMechanism_EVC>` for the current `allocation_policy`
@@ -753,7 +753,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class ClassDefaults(ControlMechanism.ClassDefaults):
-        function = ControlSignalGridSearch
+        function = ControlSignalGradientAscent
 
     from psyneulink.components.functions.function import LinearCombination
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -767,7 +767,7 @@ class LVOCControlMechanism(ControlMechanism):
                  predictor_variance_priors:is_numeric=1.0,
                  # objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 function=ControlSignalGridSearch,
+                 function=ControlSignalGradientAscent,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
@@ -1059,13 +1059,16 @@ class LVOCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:
         # - skip ControlMechanism._execute since it is a stub method that returns input_values
-        # - variable contains predictors, predictor_weights and predictor_variances;
-        #     these are parsed by _parse_function_variable, and a sample of predictors is passed to self.function
         allocation_policy = super(ControlMechanism, self)._execute(controller=self,
                                                                    variable=variable,
                                                                    runtime_params=runtime_params,
                                                                    context=context
                                                                    )
+        # FIX: The call to _execute above should call ControlSignalGraidentAscent:
+        # - variable contains weighted predictors and control_signal_costs
+        #   (these are parsed by _parse_function_variable and passed to function by call to _execute);
+        #   function then does gradient ascent using these to determine and return the allocation_policy
+
 
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
@@ -1078,16 +1081,12 @@ class LVOCControlMechanism(ControlMechanism):
         self.predictor_weights = variable[0]
         # Concatenate variable items corresponding to features
         self.predictors = np.array(variable[1:]).reshape(-1)
-
+        # Get weighted_predictor_values using predictor_weights received from ObjectiveMechanism in input_state[0]
         self.weighted_predictor_values = self.predictor_weights * self.predictors
-        return self.weighted_predictor_values
 
-        # FIX: REPLACE ABOVE WITH:
-		# FROM BayesGLM:
-		# phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
-		# return np.random.multivariate_normal(predictor_weights, phi * np.linalg.inv(predictor_variances))
-        # FIX: MISSING phi:
-        # return np.random.multivariate_normal(predictor_weights, np.linalg.inv(np.atleast_2d((predictor_variances)))
+        # FIX: NEED TO DEAL WITH self.control_signal_costs == None DURING INITIALIZATION)
+        return [self.weighted_predictor_values, self.control_signal_costs]
+        # return self.weighted_predictor_values
 
 
     @property

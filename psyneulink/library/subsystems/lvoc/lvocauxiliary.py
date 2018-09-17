@@ -27,8 +27,8 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER',
-    'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
+    'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER',
+    'LVOCAuxiliaryError', 'LVOCAuxiliaryFunction', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
     'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
@@ -46,11 +46,11 @@ if MPI_IMPLEMENTATION:
 kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 kwValueFunction = "EVC VALUE FUNCTION"
-CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
+CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION = "LVOC CONTROL SIGNAL GRADIENT ASCENT FUNCTION"
 CONTROLLER = 'controller'
 
 
-class EVCAuxiliaryError(Exception):
+class LVOCAuxiliaryError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -58,7 +58,7 @@ class EVCAuxiliaryError(Exception):
         return repr(self.error_value)
 
 
-class EVCAuxiliaryFunction(Function_Base):
+class LVOCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
     """
     componentType = kwEVCAuxFunctionType
@@ -93,7 +93,55 @@ class EVCAuxiliaryFunction(Function_Base):
                          )
 
 
-class ValueFunction(EVCAuxiliaryFunction):
+class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
+    """Use gradient ascent to determine allocation_policy with the maximum `EVC <LVOCControlMechanism_LVOC>`.
+
+    This is the default `function <LVOCControlMechanism.function>` for an LVOCControlMechanism. It identifies the
+    `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting gradient ascent over
+    `allocation_policies <LVOCControlMechanism.allocation_policies>`
+
+    The ControlSignalGradientAscent function returns the `allocation_policy` that yields the maximum EVC.
+
+    """
+
+    componentName = CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION
+
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 function=None,
+                 owner=None):
+        function = function or self.function
+        super().__init__(function=function,
+                         owner=owner,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def function(
+        self,
+        controller=None,
+        variable=None,
+        runtime_params=None,
+        params=None,
+        context=None,
+    ):
+        """Gradient ascent search of control_signals in specified allocation ranges to find one that maximizes EVC
+        """
+
+        if (self.context.initialization_status == ContextFlags.INITIALIZING or
+                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
+            return defaultControlAllocation
+
+        if controller is None:
+            raise LVOCAuxiliaryError("Call to ControlSignalGradientAscent() missing controller argument")
+
+        weighted_predictor_values = variable[0]
+        control_signal_costs = variable[1]
+        # FIX: IMPLEMENT THE FOLLOWING
+        # - variable contains weighted_predictor_values and control_signal_costs;
+        #   this function should do gradient ascent using these to determine the allocation_policy that maximizes EVC
+
+
+class ValueFunction(LVOCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.
 
     ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
