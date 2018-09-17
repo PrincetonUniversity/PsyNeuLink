@@ -1076,8 +1076,8 @@ class LVOCControlMechanism(ControlMechanism):
         '''Return sample from weighted distribution of predictors'''
 
         self.predictor_weights = variable[0]
-        # FIX: CONCATENATE input_state.values HERE
-        self.predictors.variable[1:].reshape(-1)
+        # Concatenate variable items corresponding to features
+        self.predictors = np.array(variable[1:]).reshape(-1)
 
         self.weighted_predictor_values = self.predictor_weights * self.predictors
         return self.weighted_predictor_values

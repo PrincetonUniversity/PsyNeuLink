@@ -266,19 +266,18 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
     # MODIFIED 9/17/18 NEW:
     def _execute(self, variable=None, runtime_params=None, context=None):
         self.outcome = super()._execute(variable, runtime_params, context)
-        # dependent_vars = np.atleast_2d(self.outcome)
-        dependent_vars = self.outcome.reshape(-1)
+        dependent_vars = np.atleast_2d(self.outcome)
+        # dependent_vars = self.outcome.reshape(-1)
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            old_predictor_weights = self._predictor_update_function.mu_0.reshape(-1)
+            old_predictor_weights = np.atleast_2d(self._predictor_update_function.mu_0.reshape(-1))
         else:
-            old_predictor_weights = self.sampled_predictor_weights
+            old_predictor_weights = np.atleast_2d(self.sampled_predictor_weights)
 
         predictor_weights, predictor_variances = self._predictor_update_function.function(
                 variable=[old_predictor_weights, dependent_vars])
 
-        sample = np.random.normal(loc=predictor_weights, scale=predictor_variances)
-        self.sampled_predictor_weights = sample.reshape(self._num_predictors, 1)
+        self.sampled_predictor_weights = np.random.normal(loc=predictor_weights, scale=predictor_variances)
 
         return self.sampled_predictor_weights
     # MODIFIED 9/17/18 END
