@@ -314,8 +314,9 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    DIFFERENCE, FUNCTION, INITIALIZER, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, \
-    NAME, NOISE, SELECTION_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, RESULT, RESULTS, \
+    DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL,\
+    MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, SELECTION_FUNCTION_TYPE, OWNER_VALUE, PREVIOUS_VALUE, PROB, \
+    RATE, REINITIALIZE, RESULT, RESULTS, \
     STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -419,22 +420,23 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(                                  \
-    default_variable=None,                              \
-    size=None,                                          \
-    input_states=None,                                  \
-    function=Linear,                                    \
-    initial_value=None,                                 \
-    noise=0.0,                                          \
-    integration_rate=0.5,                               \
-    integrator_mode=False,                              \
-    clip=[float:min, float:max],                        \
-    convergence_function=Distance(metric=DIFFERENCE),   \
-    convergence_criterion=None,                         \
-    max_passes=None,                                    \
-    output_states=RESULTS                               \
-    params=None,                                        \
-    name=None,                                          \
+    TransferMechanism(                                                            \
+    default_variable=None,                                                        \
+    size=None,                                                                    \
+    input_states=None,                                                            \
+    function=Linear,                                                              \
+    initial_value=None,                                                           \
+    noise=0.0,                                                                    \
+    integration_rate=0.5,                                                         \
+    integrator_mode=False,                                                        \
+    on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,                           \
+    clip=[float:min, float:max],                                                  \
+    convergence_function=Distance(metric=DIFFERENCE),                             \
+    convergence_criterion=None,                                                   \
+    max_passes=None,                                                              \
+    output_states=RESULTS                                                         \
+    params=None,                                                                  \
+    name=None,                                                                    \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
@@ -512,6 +514,21 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism>` to integrate (exponentialy time-average) its `variable <TransferMechanism.variable>` (
         when set to `True`), or simply report the asymptotic value of the output of its `function
         <TransferMechanism.function>` (when set to `False`).
+
+    on_resume_integrator_mode : keyword : default INSTANTANEOUS_MODE_VALUE
+        specifies how the `integrator_function <TransferMechanism.integrator_function>` should resume its accumulation
+        when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
+        "Integrator Mode" (integrator_mode = True).
+
+        INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
+        the Mechanism during "Instantaneous Mode" is where the `integrator_function
+         <TransferMechanism.integrator_function>` begins.
+
+        INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
+        <TransferMechanism.integrator_function>` left off the last time the Mechanism was in "Integrator Mode".
+
+        REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
+        <AdaptiveIntegrator.reinitialize>`
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <TransferMechanism.function>`. The item in index 0
@@ -734,6 +751,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  noise=0.0,
                  integration_rate=0.5,
                  integrator_mode=False,
+                 on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  clip=None,
                  convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
                  convergence_criterion:float=0.01,
@@ -761,11 +779,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
+                                                  on_resume_integrator_mode=on_resume_integrator_mode,
                                                   convergence_function=convergence_function,
                                                   convergence_criterion=convergence_criterion,
                                                   max_passes=max_passes,
                                                   params=params)
-
+        self.on_resume_integrator_mode = on_resume_integrator_mode
         self.integrator_function = None
         self.original_integrator_function = None
         self._current_variable_index = 0
@@ -1296,6 +1315,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function is None:
                 self.integrator_function = self.original_integrator_function
                 self._integrator_mode = True
+                if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+                    self.reinitialize(self.value)
+                elif self.on_resume_integrator_mode == REINITIALIZE:
+                    self.reinitialize()
             if not hasattr(self, PREVIOUS_VALUE):
                 self.previous_value = None
             self.has_initializers = True
