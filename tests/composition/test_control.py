@@ -270,7 +270,7 @@ class TestControllers:
             [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
             [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
         ]
-   
+
         # for i in range(len(expected_results_array)):
         #     np.testing.assert_allclose(comp.results[i], expected_results_array[i], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 

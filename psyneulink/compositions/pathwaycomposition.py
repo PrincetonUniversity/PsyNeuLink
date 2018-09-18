@@ -88,6 +88,7 @@ class PathwayComposition(Composition):
         clamp_input=SOFT_CLAMP,
         targets=None,
         runtime_params=None,
+        bin_execute=False,
     ):
 
         if isinstance(inputs, list):
@@ -106,6 +107,7 @@ class PathwayComposition(Composition):
             execution_id,
             clamp_input,
             targets,
-            runtime_params
+            runtime_params,
+            bin_execute,
         )
         return output
