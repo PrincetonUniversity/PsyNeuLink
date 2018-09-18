@@ -396,7 +396,7 @@ from psyneulink.globals.utilities import ContentAddressableList, is_iterable
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch2, ValueFunction2, PredictionMechanism
 
 __all__ = [
-    'EVCControlMechanism', 'EVCError',
+    'Controller', 'EVCError',
 ]
 
 
@@ -408,7 +408,7 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
-class EVCControlMechanism2(ControlMechanism):
+class Controller(ControlMechanism):
     """EVCControlMechanism(                                            \
     system=True,                                                       \
     objective_mechanism=None,                                          \
@@ -811,137 +811,6 @@ class EVCControlMechanism2(ControlMechanism):
         if self.system is not None:
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
-
-    def _instantiate_prediction_mechanisms(self, system, context=None):
-        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
-
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
-        Mechanisms:
-            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
-            - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
-
-        For each `ORIGIN` Mechanism in system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the Process to system.processes
-
-        Instantiate self.predicted_input dict:
-            - key for each entry is an `ORIGIN` Mechanism of system
-            - value of each entry is a list of the values of the corresponding predictionMechanism,
-                one for each trial to be simulated; each value is a 2d array, each item of which is the value of an
-                InputState of the predictionMechanism
-
-        Args:
-            context:
-        """
-
-        # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
-        # If system's controller already has prediction_mechanisms, use those
-        if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
-            self.prediction_mechanisms = system.controller.prediction_mechanisms
-            self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
-            self.predicted_input = system.controller.predicted_input
-            return
-
-        # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
-        self.origin_prediction_mechanisms = {}
-
-        # List of prediction Mechanism tuples (used by System to execute them)
-        self.prediction_mechs = []
-
-        # IF IT IS A MECHANISM, PUT IT IN A LIST
-        # IF IT IS A CLASS, PUT IT IN A TUPLE WITH NONE
-        # NOW IF IT IS TUPLE,
-
-        # self.prediction_mechanisms is:
-        if isinstance(self.prediction_mechanisms, Mechanism):
-            # a single Mechanism, so put it in a list
-            prediction_mech_specs = [self.prediction_mechanisms]
-        elif isinstance(self.prediction_mechanisms, type):
-            # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
-            prediction_mech_specs = (self.prediction_mechanisms, None)
-        elif isinstance(self.prediction_mechanisms, dict):
-            # a dict, so put it as 2nd item in a 2-item tuple, with PredictionMechanism as 1st item
-            prediction_mech_specs = (PredictionMechanism, self.prediction_mechanisms)
-        elif isinstance(self.prediction_mechanisms, tuple):
-            # a tuple, so leave as is for now (put in list below)
-            prediction_mech_specs = self.prediction_mechanisms
-
-        if isinstance(prediction_mech_specs, tuple):
-            # a tuple, so create a list with same length as self.system.origin_mechanisms, and tuple as each item
-            prediction_mech_specs = [prediction_mech_specs] * len(system.origin_mechanisms)
-
-        # Make sure prediction_mechanisms is the same length as self.system.origin_mechanisms
-        from psyneulink.components.system import ORIGIN_MECHANISMS
-        if len(prediction_mech_specs) != len(system.origin_mechanisms):
-            raise EVCError("Number of PredictionMechanisms specified for {} ({}) "
-                           "must equal the number of {} ({}) in the System it controls ({})".
-                           format(self.name, len(prediction_mech_specs),
-                           repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.system.name))
-
-        for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
-            state_names = []
-            variable = []
-            for state_name in origin_mech.input_states.names:
-                state_names.append(state_name)
-                # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
-                variable.append(origin_mech.input_states[state_name].value)
-
-            # Instantiate PredictionMechanism
-            if isinstance(pm_spec, Mechanism):
-                prediction_mechanism=pm_spec
-            elif isinstance(pm_spec, tuple):
-                mech_class = pm_spec[0]
-                mech_params = pm_spec[1] or {}
-                prediction_mechanism = mech_class(
-                        name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                        default_variable=variable,
-                        input_states=state_names,
-                        # params = mech_params
-                        **mech_params,
-                        context=context
-                )
-            else:
-                raise EVCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
-                               format(pm_spec, repr(PREDICTION_MECHANISMS), self.name))
-
-            prediction_mechanism._role = CONTROL
-            prediction_mechanism.origin_mech = origin_mech
-
-            # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-            #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                            prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
-                    MappingProjection(sender=projection.sender,
-                                      receiver=prediction_input_state,
-                                      matrix=projection.matrix)
-
-            # Assign list of processes for which prediction_mechanism will provide input during the simulation
-            # - used in _get_simulation_system_inputs()
-            # - assign copy,
-            #       since don't want to include the prediction process itself assigned to origin_mech.processes below
-            prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
-
-            # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
-            self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
-
-            # Add to list of EVCControlMechanism's prediction_object_items
-            # prediction_object_item = prediction_mechanism
-            self.prediction_mechs.append(prediction_mechanism)
-
-            # Add to system execution_graph and execution_list
-            system.execution_graph[prediction_mechanism] = set()
-            system.execution_list.append(prediction_mechanism)
-
-        self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
-
-        # Assign list of destinations for predicted_inputs:
-        #    the variable of the ORIGIN Mechanism for each Process in the system
-        self.predicted_input = {}
-        for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
-            self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def apply_control_signal_values(self, control_signal_values, runtime_params, context):
         for i in range(len(control_signal_values)):

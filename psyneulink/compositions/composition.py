@@ -2836,6 +2836,10 @@ class Composition(object):
 
         if call_after_pass:
             call_after_pass()
+        output_values = []
+
+        for i in range(0, len(self.output_CIM.output_states)):
+            output_values.append(self.output_CIM.output_states[i].value)
 
         # control phase
         if self.context.execution_phase != ContextFlags.INITIALIZING \
@@ -2847,10 +2851,6 @@ class Composition(object):
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
-
-        output_values = []
-        for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].value)
 
         return output_values
 
@@ -3061,24 +3061,12 @@ class Composition(object):
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params)
 
-        # ---------------------------------------------------------------------------------
-            # store the result of this execute in case it will be the final result
-
-            # terminal_mechanisms = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
-            # for terminal_mechanism in terminal_mechanisms:
-            #     for terminal_output_state in terminal_mechanism.output_states:
-            #         CIM_output_state = self.output_CIM_states[terminal_output_state]
-            #         CIM_output_state.value = terminal_output_state.value
-
-            # object.results.append(result)
-            if isinstance(trial_output, Iterable):
-                result_copy = trial_output.copy()
-            else:
-                result_copy = trial_output
-            self.results.append(result_copy)
-
-            if trial_output is not None:
-                result = trial_output
+            if self.context.execution_phase != ContextFlags.SIMULATION:
+                if isinstance(trial_output, Iterable):
+                    result_copy = trial_output.copy()
+                else:
+                    result_copy = trial_output
+                self.results.append(result_copy)
 
         # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -3118,7 +3106,7 @@ class Composition(object):
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 
-        return self.results
+        return trial_output
 
     def _save_state(self):
         saved_state = {}
@@ -3141,13 +3129,17 @@ class Composition(object):
                             reinitialization_value.append(getattr(node.integrator_function, attr))
 
             saved_state[node] = reinitialization_value
-        return saved_state
+
+        node_values = {}
+        for node in self.c_nodes:
+            node_values[node] = (node.value, node.output_values)
+        return saved_state, node_values
 
     def run_simulations(self, allocation_policies, runtime_params=None, context=None):
         predicted_input = self.update_predicted_input()
 
         num_trials = 1
-        reinitialize_values = self._save_state()
+        reinitialize_values, node_values = self._save_state()
 
         outcome_list = []
         control_signal_list = []
@@ -3187,6 +3179,12 @@ class Composition(object):
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
+
+        for node in node_values:
+            node.value = node_values[node][0]
+            for i in range(len(node.output_states)):
+                node.output_states[i].value = node_values[node][1][i]
+
         return outcome_list, costs
 
     def _input_matches_variable(self, input_value, var):
