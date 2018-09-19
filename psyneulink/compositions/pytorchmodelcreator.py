@@ -8,7 +8,10 @@ import numpy as np
 
 # Note on notation: the "nodes" that are constantly referred to are vertices of the composition's processing
 # graph. For general compositions, the component a node represents can be a mechanism or a nested composition,
-# but for AC's, nodes always represent mechanisms. "Nodes" can be thought of as (but are not literally) mechanisms.
+# but for autodiff compositions, nodes always represent mechanisms. "Nodes" can be thought of as 
+# (but are not literally) mechanisms.
+
+
 
 class PytorchModelCreator(torch.nn.Module):
     
@@ -99,7 +102,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # store the current value of the node
                 self.node_to_forward_info[node][0] = value
                 
-                # save value if we're at a node in the last execution set
+                # save value in output list if we're at a node in the last execution set
                 if i == len(self.ordered_execution_sets)-1:
                     outputs.append(value)
         
@@ -150,3 +153,5 @@ class PytorchModelCreator(torch.nn.Module):
         for mechanism, biases in self.mechanisms_to_pytorch_biases.items():
             biases_in_numpy[mechanism] = biases.detach().numpy().copy()
         return biases_in_numpy
+
+

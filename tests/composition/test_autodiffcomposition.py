@@ -1,34 +1,18 @@
-import functools
 import logging
 import timeit as timeit
 
 import numpy as np
-import torch
-from torch import nn
 
 import pytest
 
 import psyneulink as pnl
 from psyneulink.components.system import System
 from psyneulink.components.process import Process
-from psyneulink.components.functions.function import Linear, Logistic, ReLU, SimpleIntegrator
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.components.functions.function import Logistic, Linear, ReLU
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
-from psyneulink.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
-from psyneulink.compositions.pathwaycomposition import PathwayComposition
-from psyneulink.compositions.systemcomposition import SystemComposition
-from psyneulink.scheduling.condition import EveryNCalls
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
+from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
 
@@ -311,10 +295,10 @@ class TestTrainingCorrectness:
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.parametrize(
         'eps, calls, opt, from_pnl_or_no', [
-            (2000, 'single', 'adam', True) # ,
-            # (6000, 'multiple', 'adam', True),
-            # (2000, 'single', 'adam', False) # ,
-            # (6000, 'multiple', 'adam', False)
+            (2000, 'single', 'adam', True),
+            (6000, 'multiple', 'adam', True),
+            (2000, 'single', 'adam', False),
+            (6000, 'multiple', 'adam', False)
         ]
     )
     def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no):
@@ -380,8 +364,8 @@ class TestTrainingCorrectness:
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_no', [
-            (1000, 'adam', True) # ,
-            # (1000, 'adam', False)
+            (1000, 'adam', True),
+            (1000, 'adam', False)
         ]
     )
     def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no):
@@ -545,9 +529,7 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
         
         # TRAIN THE MODEL
-        
-        hello = sem_net.run(inputs=inputs_dict)
-        
+                
         result = sem_net.run(inputs=inputs_dict,
                              targets=targets_dict,
                              epochs=eps,
@@ -555,8 +537,8 @@ class TestTrainingCorrectness:
         
         # CHECK CORRECTNESS
         
-        for i in range(len(result[1])): # go over trial outputs in the single results entry
-            for j in range(len(result[1][i])): # go over outputs for each output layer
+        for i in range(len(result[0])): # go over trial outputs in the single results entry
+            for j in range(len(result[0][i])): # go over outputs for each output layer
                 
                 # get target for terminal node whose output state corresponds to current output
                 correct_value = None
@@ -567,14 +549,14 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
                 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[1][i][j]), correct_value)
+                assert np.allclose(np.round(result[0][i][j]), correct_value)
 
 
 
 @pytest.mark.actime
 class TestTrainingTime:
     
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -687,7 +669,7 @@ class TestTrainingTime:
         print(msg)
         logger.info(msg)
     
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -822,7 +804,7 @@ class TestTrainingTime:
         print(msg)
         logger.info(msg)
     
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize(
         'eps, opt', [
             (1, 'sgd'),
@@ -1150,9 +1132,9 @@ class TestTrainingIdenticalness():
     
     @pytest.mark.parametrize(
         'eps, opt', [
-            # (1, 'sgd'),
-            (10, 'sgd') # ,
-            # (100, 'sgd')
+            (1, 'sgd'),
+            (10, 'sgd'),
+            (100, 'sgd')
         ]
     )
     def test_xor_training_identicalness(self, eps, opt):
@@ -1267,9 +1249,9 @@ class TestTrainingIdenticalness():
     
     @pytest.mark.parametrize(
         'eps, opt', [
-            # (1, 'sgd'),
-            (10, 'sgd') # ,
-            # (40, 'sgd')
+            (1, 'sgd'),
+            (10, 'sgd'),
+            (40, 'sgd')
         ]
     )
     def test_semantic_net_training_identicalness(self, eps, opt):
