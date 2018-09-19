@@ -779,7 +779,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   integration_rate=integration_rate,
                                                   integrator_mode=integrator_mode,
                                                   clip=clip,
-                                                  on_resume_integrator_mode=on_resume_integrator_mode,
                                                   convergence_function=convergence_function,
                                                   convergence_criterion=convergence_criterion,
                                                   max_passes=max_passes,
