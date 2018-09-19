@@ -10371,6 +10371,11 @@ class BayesGLM(ObjectiveFunction):
         # return [np.squeeze(self.mu_n), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
         return [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
 
+    def sample_weights(self):
+        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
+        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
+
+
 # endregion
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************

@@ -1084,12 +1084,12 @@ class LVOCControlMechanism(ControlMechanism):
         # Get weighted_predictor_values using predictor_weights received from ObjectiveMechanism in input_state[0]
         self.weighted_predictor_values = self.predictor_weights * self.predictors
 
-        # FIX: NEED TO DEAL WITH self.control_signal_costs == None DURING INITIALIZATION)
+        # FIX: NEED TO DEAL WITH self.control_signals == None DURING INITIALIZATION)
         try:
-            return [self.weighted_predictor_values, self.control_signal_costs]
+            current_control_signal_values = [c.value for c in self.control_signals]
+            return [self.weighted_predictor_values, current_control_signal_values]
         except:
             return [self.weighted_predictor_values, None]
-
 
     @property
     def value_function(self):

@@ -115,6 +115,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         super().__init__(function=function,
                          owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
+        # FIX: CONSTRUCT control_signal_search_space WHICH, IN THIS CASE, IS
+        #      A VECTOR OF ELEMENTS FOR CONTROL SIGNALS, PREDICTORS, CONTROL_SIGNAL X PREDICTORS, AND CONTROL_COSTS
 
     def function(
         self,
@@ -124,7 +126,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         params=None,
         context=None,
     ):
-        """Gradient ascent search of control_signals in specified allocation ranges to find one that maximizes EVC
+        """Gradient ascent over allocation_policies (combinations of control_signals) to find one that maximizes EVC
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING or
@@ -135,11 +137,15 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             raise LVOCAuxiliaryError("Call to ControlSignalGradientAscent() missing controller argument")
 
         weighted_predictor_values = variable[0]
-        control_signal_costs = variable[1]
+        initial_control_signal_values = variable[1]
+        assert True
         # FIX: IMPLEMENT THE FOLLOWING
-        # - variable contains weighted_predictor_values and control_signal_costs;
-        #   this function should do gradient ascent using these to determine the allocation_policy that maximizes EVC
-
+        # - variable contains weighted_predictor_values and initial control_signal values
+        # - populate control_signal_search_space with current predictor values
+        # - iterate over vector, updating control_signal, control_signal x predictor and control_cost terms
+        # - on each iteration, compute sum and gradients
+        # - continue to iterate until sum asymptotes, and use that as the EVC
+        # - return allocation policy with control_signal values from final iteration
 
 class ValueFunction(LVOCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.

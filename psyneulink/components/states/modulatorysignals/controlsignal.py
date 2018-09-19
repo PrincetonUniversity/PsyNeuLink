@@ -728,16 +728,19 @@ class ControlSignal(ModulatorySignal):
                          function=function,
                          )
 
-        # Default cost params
-        if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-            self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
-        else:
-            self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
-        self.adjustment_cost = 0
-        self.duration_cost = 0
-        self.last_duration_cost = self.duration_cost
-        self.cost = self.intensity_cost
-        self.last_cost = self.cost
+        # # MODIFIED 9/18/18 OLD:
+        # if self.cost_options:
+        #     # Default cost params
+        #     if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+        #         self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+        #     else:
+        #         self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+        #     self.adjustment_cost = 0
+        #     self.duration_cost = 0
+        #     self.last_duration_cost = self.duration_cost
+        #     self.cost = self.intensity_cost
+        #     self.last_cost = self.cost
+        # # MODIFIED 9/18/18 END
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -838,6 +841,20 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
+
+        # MODIFIED 9/18/18 NEW:
+        if self.cost_options:
+            # Default cost params
+            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+            else:
+                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+            self.adjustment_cost = 0
+            self.duration_cost = 0
+            self.last_duration_cost = self.duration_cost
+            self.cost = self.intensity_cost
+            self.last_cost = self.cost
+        # MODIFIED 9/18/18 END
 
         # Instantiate cost functions (if necessary) and assign to attributes
         for cost_function_name in costFunctionNames:
@@ -995,8 +1012,15 @@ class ControlSignal(ModulatorySignal):
 
         # Store current state for use in next call as last state
         self.last_intensity = intensity
-        self.last_cost = self.cost
-        self.last_duration_cost = self.duration_cost
+
+        # # MODIFIED 9/18/18 OLD:
+        # self.last_cost = self.cost
+        # self.last_duration_cost = self.duration_cost
+        # MODIFIED 9/18/18 NEW:
+        if self.cost_options:
+            self.last_cost = self.cost
+            self.last_duration_cost = self.duration_cost
+        # MODIFIED 9/18/18 END
 
         # Report new values to stdio
         if self.prefs.verbosePref:

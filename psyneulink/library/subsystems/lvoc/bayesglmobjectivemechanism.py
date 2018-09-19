@@ -256,28 +256,20 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                          **kwargs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # # MODIFIED 9/17/18 OLD:
-    # def _execute(self, variable=None, runtime_params=None, context=None):
-    #     self.outcome = super()._execute(variable, runtime_params, context)
-    #     predictors = np.atleast_2d(variable[0])
-    #     dependent_vars = np.atleast_2d(self.outcome)
-    #     return self._predictor_update_function.function(variable=[predictors,dependent_vars])
-
-    # MODIFIED 9/17/18 NEW:
     def _execute(self, variable=None, runtime_params=None, context=None):
+        '''Execute function to get outcome, call _predictor_update_function to update wts, and return sample of wts'''
+
         self.outcome = super()._execute(variable, runtime_params, context)
+
         dependent_vars = np.atleast_2d(self.outcome)
-        # dependent_vars = self.outcome.reshape(-1)
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             old_predictor_weights = np.atleast_2d(self._predictor_update_function.mu_0.reshape(-1))
         else:
             old_predictor_weights = np.atleast_2d(self.sampled_predictor_weights)
 
-        predictor_weights, predictor_variances = self._predictor_update_function.function(
-                variable=[old_predictor_weights, dependent_vars])
+        self._predictor_update_function.function(variable=[old_predictor_weights, dependent_vars])
 
-        self.sampled_predictor_weights = np.random.normal(loc=predictor_weights, scale=predictor_variances)
+        self.sampled_predictor_weights = self._predictor_update_function.sample_weights()
 
         return self.sampled_predictor_weights
-    # MODIFIED 9/17/18 END

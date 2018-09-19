@@ -978,8 +978,10 @@ class EVCControlMechanism(ControlMechanism):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        # # MODIFIED 9/18/18 OLD:
+        # if control_signal.cost_options is None:
+        #     control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        # MODIFIED 9/18/18 END
         return control_signal
 
 
@@ -1129,8 +1131,18 @@ class EVCControlMechanism(ControlMechanism):
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
         monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
 
-        for i in range(len(self.control_signals)):
-            self.control_signal_costs[i] = self.control_signals[i].cost
+        # # MODIFIED 9/18/18 OLD:
+        # for i in range(len(self.control_signals)):
+        #     self.control_signal_costs[i] = self.control_signals[i].cost
+        # # MODIFIED 9/18/18 NEW:
+        # for i in range(len(self.control_signals)):
+        #     if self.control_signal_costs[i].cost_options is not None:
+        #         self.control_signal_costs[i] = self.control_signals[i].cost
+        # MODIFIED 9/18/18 NEWER:
+        for i, c in enumerate(self.control_signals):
+            if c.cost_options is not None:
+                self.control_signal_costs[i] = c.cost
+        # MODIFIED 9/18/18 END
 
         return monitored_states
 
