@@ -986,9 +986,7 @@ class EVCControlMechanism(ControlMechanism):
         # MODIFIED 9/18/18 NEW:
             control_signal._instantiate_cost_attributes()
         # MODIFIED 9/18/18 END
-        # FIX: PUT INSTANTATION OF CONTROL_SIGNAL COST ATTRIBUTES IN METHOD ON CONTROL_SIGNAL AND CALL IT HERE
         return control_signal
-
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
