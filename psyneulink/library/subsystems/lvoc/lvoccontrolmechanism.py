@@ -404,7 +404,7 @@ __all__ = [
 ]
 
 SHADOW_INPUTS = 'SHADOW_INPUTS'
-PREDICTOR_WEIGHTS = 'PREDICTOR_WEIGHTS'
+PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 
 class LVOCError(Exception):
     def __init__(self, error_value):
@@ -418,7 +418,6 @@ class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                                           \
     system=True,                                                       \
     objective_mechanism=None,                                          \
-    prediction_mechanisms=PredictionMechanism,                         \
     function=ControlSignalGradientAscent                               \
     value_function=ValueFunction,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
@@ -492,33 +491,6 @@ class LVOCControlMechanism(ControlMechanism):
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
-    prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
-    default PredictionMechanism
-        the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
-        <LVOCControlMechanism_Prediction_Mechanisms>` and, optionally, their parameters (specified in a `parameter
-        specification dictionary <ParameterState_Specification>`);  see `LVOCControlMechanism_Prediction_Mechanisms`
-        for details.
-
-        COMMENT:
-        the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
-        <LVOCControlMechanism_Prediction_Mechanisms>`.  If a class, dict, or tuple is specified, it is used as the
-        specification for all prediction Mechanisms.  A dict specified on its own is assumed to be a `parameter
-        specification dictionary <ParameterState_Specification>` for a `PredictionMechanism`; a dict specified
-        in a tuple must be a `parameter specification dictionary <ParameterState_Specification>` appropriate for the
-        type of Mechanism specified as the first item of the tuple.  If a list is specified, its length must equal
-        the number of `ORIGIN` Mechanisms in the System for which the LVOCControlMechanism is the `controller
-        <System.controller>`;  each item must be a Mechanism, subclass of one, or a tuple specifying a subclass and
-        parameter specification dictionary, that is used as the specification for the prediction Mechanism for the
-        corresponding item in list of Systems in `ORIGIN` Mechanism in its `origin_mechanisms
-        <System.origin_mechanisms>` attribute.
-
-        ..note::
-            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
-            the System for which the LVOCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
-            Mechanism; this will cause an if the System has more than one `ORIGIN` Mechanism;  in that case, one of the
-            other forms of specification must be used.
-        COMMENT
-
     function : function or method : ControlSignalGradientAscent
         specifies the function used to determine the `allocation_policy` for the current execution of the
         LVOCControlMechanism's `composition <LVOCControlMechanism.composition>` (see `function
@@ -564,24 +536,6 @@ class LVOCControlMechanism(ControlMechanism):
         argument of the `system <LVOCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    prediction_mechanisms : List[ProcessingMechanism]
-        list of `predictions mechanisms <LVOCControlMechanism_Prediction_Mechanisms>` generated for the
-        LVOCControlMechanism's `system <LVOCControlMechanism.system>` when the LVOCControlMechanism is created,
-        one for each `ORIGIN` Mechanism in the `system <LVOCControlMechanism.system>`.  Each prediction Mechanism is
-        named using the name of the ` ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with
-        a name based on the same.
-
-    origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
-        dictionary of `prediction mechanisms <LVOCControlMechanism_Prediction_Mechanisms>` added to the LVOCControlMechanism's
-        `system <LVOCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
-        entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
-
-    predicted_input : Dict[ProcessingMechanism, value]
-        dictionary with the `value <Mechanism_Base.value>` of each `prediction Mechanism
-        <LVOCControlMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each `ORIGIN`
-        Mechanism of the System. The key for each entry is the name of an `ORIGIN` Mechanism, and its
-        value the `value <Mechanism_Base.value>` of the corresponding prediction Mechanism.
-
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the LVOCControlMechanism to evaluate the performance of its `system
         <LVOCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
@@ -604,7 +558,7 @@ class LVOCControlMechanism(ControlMechanism):
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
-    sampled_predictor_weights :
+    sampled_prediction_weights :
 
     weighted_predictor_values :
 
@@ -628,7 +582,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             Following attributes are available:
             controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
-            controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of `ORIGIN` Mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
             controller.monitored_states is a list of the Mechanism OutputStates being monitored for outcome
             controller.input_value is a list of current outcome values (values for monitored_states)
@@ -784,7 +737,7 @@ class LVOCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
-                                                  # predictor_weights=predictor_weight_priors,
+                                                  # prediction_weights=predictor_weight_priors,
                                                   # predictor_variances=predictor_variance_priors,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
@@ -803,26 +756,6 @@ class LVOCControlMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
-
-    # def _validate_params(self, request_set, target_set=None, context=None):
-    #     '''Validate prediction_mechanisms'''
-    #
-    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-    #
-    #     if PREDICTION_MECHANISMS in target_set:
-    #         prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
-    #         if isinstance(prediction_mechanisms, type) and not issubclass(prediction_mechanisms, Mechanism):
-    #             raise LVOCError("Class used to specify {} argument of {} ({}) must be a type of {}".
-    #                            format(self.name,repr(PREDICTION_MECHANISMS),prediction_mechanisms,Mechanism.__name__))
-    #         elif isinstance(prediction_mechanisms, list):
-    #             for pm in prediction_mechanisms:
-    #                 if not (isinstance(pm,Mechanism) or
-    #                         (isinstance(pm,type) and issubclass(pm,Mechanism)) or
-    #                         (isinstance(pm,tuple) and issubclass(pm[0],Mechanism) and isinstance(pm[1],dict))):
-    #                     raise LVOCError("Unrecognized item ({}) in the list specified for {} arg of constructor for {}; "
-    #                                    "must be a Mechanism, a class of Mechanism, or a tuple with a Mechanism class "
-    #                                    "and parameter specification dictionary".
-    #                                    format(pm, repr(PREDICTION_MECHANISMS), self.name))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
@@ -863,7 +796,7 @@ class LVOCControlMechanism(ControlMechanism):
         self._num_predictors = len(np.array(variable).reshape(-1))
 
         # Insert InputState for ObjectiveMechanism as (primary) input_state
-        self.input_states.insert(0, {NAME:PREDICTOR_WEIGHTS,
+        self.input_states.insert(0, {NAME:PREDICTION_WEIGHTS,
                                      VARIABLE:np.zeros(self._num_predictors)}),
 
         # Configure default_variable to comport with full set of input_states
@@ -875,10 +808,10 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
         self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
                                                             num_predictors=self._num_predictors,
-                                                            predictor_weights_priors=self._predictor_weight_priors,
+                                                            prediction_weights_priors=self._predictor_weight_priors,
                                                             predictor_variance_priors=self._predictor_variance_priors)
         MappingProjection(sender=self.objective_mechanism,
-                          receiver=self.input_states[PREDICTOR_WEIGHTS])
+                          receiver=self.input_states[PREDICTION_WEIGHTS])
         self.monitor_for_control = self.monitored_output_states
 
         # super()._instantiate_objective_mechanism(context=context)
@@ -1044,11 +977,11 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Get sampled_predictor_weights by drawing a value for each using predictor_weights and predictor_variances
+        Get sampled_prediction_weights by drawing a value for each using prediction_weights and predictor_variances
             received from BayesGLMObjectiveMechanism.
         Call self.function -- default: ControlSignalGradientDescent:
             does gradient descent on allocation_policy to fit within budget
-            based on current_predictor_weights control_signal costs.
+            based on current_prediction_weights control_signal costs.
         Return an allocation_policy
         """
 
@@ -1078,18 +1011,30 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Return sample from weighted distribution of predictors'''
 
-        self.predictor_weights = variable[0]
-        # Concatenate variable items corresponding to features
-        self.predictors = np.array(variable[1:]).reshape(-1)
-        # Get weighted_predictor_values using predictor_weights received from ObjectiveMechanism in input_state[0]
-        self.weighted_predictor_values = self.predictor_weights * self.predictors
+        # These are received from the LVOCObjectiveMechanism, and includes weights for:
+        #    predictors, control_signals, their Cartesian product, and control_signal costs;
+        #    used by function to do gradient ascent on predicted LVOC
+        self.prediction_weights = variable[0]
 
+        # This is a vector of the concatentated values received from all of the other InputStates (i.e., variable[1:])
+        self.predictor_values = np.array(variable[1:]).reshape(-1)
+
+        # # MODIFIED 9/19/18 OLD:
+        # # Get weighted_predictor_values using prediction_weights received from ObjectiveMechanism in input_state[0]
+        # self.weighted_predictor_values = self.prediction_weights * self.predictors
+        #
+        # # FIX: NEED TO DEAL WITH self.control_signals == None DURING INITIALIZATION)
+        # try:
+        #     current_control_signal_values = [c.value for c in self.control_signals]
+        #     return [self.weighted_predictor_values, current_control_signal_values]
+        # except:
+        #     return [self.weighted_predictor_values, None]
+        # MODIFIED 9/19/18 NEW:
+        # Get weighted_predictor_values using prediction_weights received from ObjectiveMechanism in input_state[0]
         # FIX: NEED TO DEAL WITH self.control_signals == None DURING INITIALIZATION)
-        try:
-            current_control_signal_values = [c.value for c in self.control_signals]
-            return [self.weighted_predictor_values, current_control_signal_values]
-        except:
-            return [self.weighted_predictor_values, None]
+        # FIX: MAKE SURE ControlSignalGradientAscent EXPECTS THESE ARGS
+        return [self.predictor_values, self.prediction_weights]
+        # MODIFIED 9/19/18 END
 
     @property
     def value_function(self):

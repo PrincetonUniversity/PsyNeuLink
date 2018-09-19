@@ -115,8 +115,11 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         super().__init__(function=function,
                          owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
-        # FIX: CONSTRUCT control_signal_search_space WHICH, IN THIS CASE, IS
-        #      A VECTOR OF ELEMENTS FOR CONTROL SIGNALS, PREDICTORS, CONTROL_SIGNAL X PREDICTORS, AND CONTROL_COSTS
+
+        # FIX: CONSTRUCT prediction_vector TO ACCOMODATE:
+        #        PREDICTORS, PREDICTORS X CONTROL_SIGNAL VALUES, CONTROL_SIGNAL VALUES, AND CONTROL_SIGNAL_COSTS
+        #
+        #        ASSIGN ATTRIBUTES TO OBJECT WITH TUPLES = FIELDS (START INDEX AND NUM ITEMS) FOR EACH OF THESE
 
     def function(
         self,
@@ -127,6 +130,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         context=None,
     ):
         """Gradient ascent over allocation_policies (combinations of control_signals) to find one that maximizes EVC
+
+        variable should have two items:  current predictor values and prediction_weights
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING or
@@ -136,16 +141,48 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         if controller is None:
             raise LVOCAuxiliaryError("Call to ControlSignalGradientAscent() missing controller argument")
 
-        weighted_predictor_values = variable[0]
-        initial_control_signal_values = variable[1]
-        assert True
-        # FIX: IMPLEMENT THE FOLLOWING
-        # - variable contains weighted_predictor_values and initial control_signal values
-        # - populate control_signal_search_space with current predictor values
-        # - iterate over vector, updating control_signal, control_signal x predictor and control_cost terms
-        # - on each iteration, compute sum and gradients
-        # - continue to iterate until sum asymptotes, and use that as the EVC
-        # - return allocation policy with control_signal values from final iteration
+        predictors = variable[0]
+        prediction_weights = variable[2]
+
+        # FIX: MOVE THIS TO __init__ IF POSSIBLE:
+        num_predictors = len(predictors)
+        num_control_signals = num_costs = len(controller.control_signals)
+        num_interactions = num_predictors * num_control_signals
+
+        prediction_vector = np.zeros(num_predictors + num_interactions + num_control_signals + num_costs)
+        if len(prediction_vector) != len(prediction_weights):
+            raise LVOCAuxiliaryError("PROGRAM ERROR: Length of prediction_vector ({}) != length of prediction_weights".
+                                     format(len(prediction_vector), len(prediction_weights)))
+
+        # Indices for fields
+        intrxn_start = num_predictors
+        intrxn_end = num_predictors+num_interactions
+        ctl_start = intrxn_end
+        ctl_end = intrxn_end + num_control_signals
+        costs_start = ctl_end
+        costs_end = len(prediction_vector)
+
+        control_signal_values = [c.value for c in controller.control_signals]
+        control_signal_costs = [c.cost for c in controller.control_signals]
+        # Generate vector of c*p:  [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...]
+        interactions = (predictors*control_signal_values.reshape(num_control_signals,1)).reshape(-1)
+
+        prediction_vector[0:num_predictors] = predictors
+        prediction_vector[intrxn_start:intrxn_end] = interactions
+        prediction_vector[ctl_start:ctl_end] = control_signal_values
+        prediction_vector[costs_start:costs_end] = control_signal_costs
+
+        lvoc = np.sum(prediction_vector * prediction_weights)
+
+        # FIX: DO GRADIENT ASCENT HERE:
+        # - iterate over prediction_vector, for each iteration:
+        #    - updating control_signal, control_signal x predictor and control_cost terms
+        #    - multiplying the vector by the prediction weights
+        #    - computing the sum and gradients
+        # - continue to iterate until sum asymptotes
+        # - return:
+
+        return prediction_vector
 
 class ValueFunction(LVOCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.

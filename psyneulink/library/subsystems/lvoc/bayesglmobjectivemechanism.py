@@ -15,7 +15,7 @@ Overview
 
 A BayesGLMObjectiveMechanism is an `ObjectiveMechanism <ObjectiveMechanism>` that uses the `BayesGLM` function
 to evaluate the `values <OutputState.value>` of its `monitored_output_states <BayseGLM.monitored_output_states>`,
-and updates a set of `predictor_weights` to improve its prediction of the outcome of that evaluation.
+and updates a set of `prediction_weights` to improve its prediction of the outcome of that evaluation.
 
 COMMENT:
 .. _BayesGLMObjectiveMechanism_Creation:
@@ -93,7 +93,7 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
     BayesGLMObjectiveMechanism(       \
         monitored_output_states,      \
         num_predictors,               \
-        predictor_weights_priors,     \
+        prediction_weights_priors,     \
         predictor_variance_priors,    \
         default_variable,             \
         size,                         \
@@ -104,8 +104,8 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
         prefs=None)
 
     Subclass of `ObjectiveMechanism` that evaluates the value(s) of its `monitored_output_states
-    <BayesGLMObjectiveMechanism>` and then updates a set of `predictor_weights
-    <BayesGLMObjectiveMechanism.predictor_weights>` to improves its prediction of the outcome of the evaluation.
+    <BayesGLMObjectiveMechanism>` and then updates a set of `prediction_weights
+    <BayesGLMObjectiveMechanism.prediction_weights>` to improves its prediction of the outcome of the evaluation.
 
     Arguments
     ---------
@@ -129,7 +129,7 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
     num_predictors : int
         specifies number of predictors used to predict the value returned by `function <BayesGLMObjectieMechanism>`.
 
-    predictor_weights_priors : int or 1d array
+    prediction_weights_priors : int or 1d array
         specifies initial value used for mean of the distribution for each predictor. If it is an int, the same value
         is used for all predictors.  An array can be used to specify a different prior for each predictor, in which
         case the length of the array must equal `num_predictors <BayesGLMObjectiveMechanism.num_predictors>`.
@@ -234,7 +234,7 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                  default_variable=None,
                  size=None,
                  num_predictors:int=1,
-                 predictor_weights_priors:tc.optional(is_numeric)=None,
+                 prediction_weights_priors:tc.optional(is_numeric)=None,
                  predictor_variance_priors:tc.optional(is_numeric)=None,
                  function=LinearCombination,
                  params=None,
@@ -243,7 +243,7 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
                  **kwargs):
 
         self._predictor_update_function = BayesGLM(num_predictors=num_predictors,
-                                                   mu_prior=predictor_weights_priors,
+                                                   mu_prior=prediction_weights_priors,
                                                    sigma_prior=predictor_variance_priors)
 
         super().__init__(monitored_output_states=monitored_output_states,
@@ -264,12 +264,12 @@ class BayesGLMObjectiveMechanism(ObjectiveMechanism):
         dependent_vars = np.atleast_2d(self.outcome)
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            old_predictor_weights = np.atleast_2d(self._predictor_update_function.mu_0.reshape(-1))
+            old_prediction_weights = np.atleast_2d(self._predictor_update_function.mu_0.reshape(-1))
         else:
-            old_predictor_weights = np.atleast_2d(self.sampled_predictor_weights)
+            old_prediction_weights = np.atleast_2d(self.sampled_prediction_weights)
 
-        self._predictor_update_function.function(variable=[old_predictor_weights, dependent_vars])
+        self._predictor_update_function.function(variable=[old_prediction_weights, dependent_vars])
 
-        self.sampled_predictor_weights = self._predictor_update_function.sample_weights()
+        self.sampled_prediction_weights = self._predictor_update_function.sample_weights()
 
-        return self.sampled_predictor_weights
+        return self.sampled_prediction_weights
