@@ -1,6 +1,8 @@
+import itertools as it
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, Linear, NormalDist, SimpleIntegrator
@@ -352,6 +354,8 @@ class TestReinitialize:
                and "(It does not have an accumulator to reinitialize)" in str(err_txt)
 
 
+VECTOR_SIZE=4
+
 class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
@@ -367,6 +371,84 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_input(self, mode):
+        I = IntegratorMechanism(
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[1], [2]],
+            input_states=['a', 'b'],
+        )
+        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[3]])
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_output(self, mode):
+        I = IntegratorMechanism(
+            default_variable=[5],
+            output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
+        )
+        val = I.execute([5], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[2.5], [2.5]])
+
+    @pytest.mark.mimo
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_multiple_input_output(self, mode):
+        I = IntegratorMechanism(
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[1], [2]],
+            input_states=['a', 'b'],
+            output_states=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
+                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
+        )
+        val = I.execute([[1], [2]], bin_execute=(mode=='LLVM'))
+        if mode == 'Python':
+            val = [x.value for x in I.output_states]
+        assert np.allclose(val, [[5], [3]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="ControlMechanism")
+    @pytest.mark.parametrize("mode, var", it.product(['Python', 'LLVM'], ['scalar']))
+    def test_FHN_simple(self, benchmark, mode, var):
+        var =  [1.0] if var == 'scalar' else [1.0, 3.0]
+        I = IntegratorMechanism(name="I",
+                default_variable=[var],
+                function=FHNIntegrator())
+
+        res = I.execute([var], bin_execute=(mode=='LLVM'))
+        if len(var) == 1:
+            #LLVM version returns output of all mechanisms (1)
+            # so check that part
+            assert np.allclose(res[0], [0.05127053])
+        else:
+            assert np.allclose(res[0], [0.05127053, 0.15379818])
+
+        benchmark(I.execute, var, bin_execute=(mode=='LLVM'))
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_transfer_integrator(self, benchmark, mode):
+        I = IntegratorMechanism(
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(slope=5.0))
+        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -492,10 +574,12 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_no_function(self):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_no_function(self, mode):
         I = IntegratorMechanism()
         # P = Process(pathway=[I])
-        val = I.execute(10)
+        val = I.execute(10, bin_execute=(mode=='LLVM'))
+        assert val == 5
         assert np.allclose(val, [[5.0]])
 
 class TestIntegratorInputs:

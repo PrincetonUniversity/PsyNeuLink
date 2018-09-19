@@ -354,9 +354,10 @@ import inspect
 
 import numpy as np
 import typecheck as tc
+import llvmlite.ir as ir
 
 from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.components.functions.function import get_param_value_for_keyword
+from psyneulink.components.functions.function import get_param_value_for_keyword, ModulationParam
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
@@ -854,6 +855,59 @@ class ParameterState(State_Base):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
+    def get_input_struct_type(self):
+        func_input_type = self.function_object.get_input_struct_type()
+        input_types = [func_input_type]
+        for mod in self.mod_afferents:
+            input_types.append(mod.get_output_struct_type())
+        return ir.LiteralStructType(input_types)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        state_f = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+
+        # Extract the original mechanism function's param value
+        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+
+        # Create a local copy of the function parameters
+        f_params = builder.alloca(state_f.args[0].type.pointee, 1)
+        builder.store(builder.load(params), f_params)
+
+        # FIXME: is this always true, by design?
+        assert len(self.mod_afferents) <= 1
+
+        for idx, afferent in enumerate(self.mod_afferents):
+            # The first input is function input (the old parameter value)
+            # Modulatory projections are ordered after that
+            # FIXME: It's expected to be a single element array,
+            #        so why is the parameter below a scalar?
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+
+            f_mod = builder.load(f_mod_ptr)
+
+            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
+                name = self.function_object.multiplicative_param
+            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
+                name = self.function_object.additive_param
+            elif afferent.sender.modulation is ModulationParam.DISABLE:
+                name = None
+            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
+                # Directly store the value in the output array
+                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(f_mod, output_ptr)
+                return builder
+            else:
+                print("Unsupported modulation parameter: ", afferent.sender.modulation)
+                assert False
+
+            if name is not None:
+                f_mod_param_idx = self.function_object.get_param_ids().index(name)
+                f_mod_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(f_mod_param_idx)])
+                builder.store(f_mod, f_mod_param_ptr)
+
+
+        builder.call(state_f, [f_params, context, f_input, arg_out])
+        return builder
 
 def _instantiate_parameter_states(owner, function=None, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them

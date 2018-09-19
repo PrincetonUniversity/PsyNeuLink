@@ -419,6 +419,9 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared_keys, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, prune_unused_args
 
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
     'DefaultsFlexibility', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
@@ -1078,11 +1081,62 @@ class Component(object):
 
         self.context.initialization_status = ContextFlags.INITIALIZED
 
+        self.__llvm_function_name = None
+        self.__llvm_bin_function = None
+
+        self.nv_state = None
+
+
+    @property
+    def llvmSymbolName(self):
+        if self.__llvm_function_name is None:
+            self.__llvm_function_name = self._gen_llvm_function()
+            self.__llvm_bin_function = None
+        return self.__llvm_function_name
+
+    @property
+    def _llvmBinFunction(self):
+        if self.__llvm_bin_function is None:
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
+        return self.__llvm_bin_function
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+
+            func_name = ctx.module.get_unique_name(self.name)
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, context, arg_in, arg_out = llvm_func.args
+            for p in params, context, arg_in, arg_out:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
+
+            builder.ret_void()
+        return func_name
+
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
-    __deepcopy__ = get_deepcopy_with_shared_keys(deepcopy_shared_keys)
+    def __deepcopy__(self, memo):
+        fun = get_deepcopy_with_shared_keys(self.deepcopy_shared_keys)
+        newone = fun(self, memo)
+        newone.__dict__['_Component__llvm_function_name'] = None
+        newone.__dict__['_Component__llvm_bin_function'] = None
+        return newone
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2151,15 +2205,6 @@ class Component(object):
         if not isinstance(variable, (list, np.ndarray)):
             variable = np.atleast_1d(variable)
 
-        try:
-            # if variable has a single int/float/etc. within some number of dimensions, and the
-            # instance default variable expects a single value within another number of dimensions,
-            # convert variable to match instance default
-            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
-                variable.resize(self.instance_defaults.variable.shape)
-        except AttributeError:
-            pass
-
         return convert_all_elements_to_np_array(variable)
 
     # ---------------------------------------------------------
@@ -2595,8 +2640,12 @@ class Component(object):
         from psyneulink.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
         from psyneulink.components.shellclasses import Function
 
-        function_variable = self._parse_function_variable(self.instance_defaults.variable,
-                                                          context=ContextFlags.INSTANTIATE)
+        function_variable = copy.deepcopy(
+            self._parse_function_variable(
+                self.instance_defaults.variable,
+                context=ContextFlags.INSTANTIATE
+            )
+        )
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(default_variable=function_variable,
