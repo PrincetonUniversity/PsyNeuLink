@@ -385,11 +385,11 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
@@ -976,12 +976,17 @@ class EVCControlMechanism(ControlMechanism):
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        EVCControlMechanism requires use of at least one of the cost options
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
-        # # MODIFIED 9/18/18 OLD:
-        # if control_signal.cost_options is None:
-        #     control_signal.cost_options = ControlSignalCosts.DEFAULTS
+
+        # MODIFIED 9/18/18 OLD:
+        if control_signal.cost_options is None:
+            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        # MODIFIED 9/18/18 NEW:
+            control_signal._instantiate_cost_attributes()
         # MODIFIED 9/18/18 END
+        # FIX: PUT INSTANTATION OF CONTROL_SIGNAL COST ATTRIBUTES IN METHOD ON CONTROL_SIGNAL AND CALL IT HERE
         return control_signal
 
 

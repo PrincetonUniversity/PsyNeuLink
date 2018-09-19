@@ -843,6 +843,16 @@ class ControlSignal(ModulatorySignal):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         # MODIFIED 9/18/18 NEW:
+        self._instantiate_cost_attributes()
+        self._instantiate_cost_functions()
+        # MODIFIED 9/18/18 END
+
+        # Assign instance attributes
+        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
+
+    # MODIFIED 9/18/18 NEW:
+    def _instantiate_cost_attributes(self):
+        # FIX: MOVE TO ITS OWN METHOD
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -854,8 +864,8 @@ class ControlSignal(ModulatorySignal):
             self.last_duration_cost = self.duration_cost
             self.cost = self.intensity_cost
             self.last_cost = self.cost
-        # MODIFIED 9/18/18 END
 
+    def _instantiate_cost_functions(self):
         # Instantiate cost functions (if necessary) and assign to attributes
         for cost_function_name in costFunctionNames:
             cost_function = self.paramsCurrent[cost_function_name]
@@ -879,9 +889,8 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
+    # MODIFIED 9/18/18 END
 
-        # Assign instance attributes
-        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
