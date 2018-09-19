@@ -8,9 +8,11 @@ from psyneulink.components.functions.function import ExponentialDist, GammaDist,
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.globals.keywords import INTEGRATOR_MODE_VALUE, INSTANTANEOUS_MODE_VALUE, REINITIALIZE
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
+from psyneulink.compositions.composition import Composition
 from psyneulink.scheduling.condition import Never
 
 VECTOR_SIZE=4
@@ -1367,7 +1369,8 @@ class TestIntegratorMode:
                and "try setting the integrator_mode argument to True." in str(err_txt)
 
     def test_switch_mode(self):
-        T = TransferMechanism(integrator_mode=True)
+        T = TransferMechanism(integrator_mode=True,
+                              on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
         P = Process(pathway=[T])
         S = System(processes=[P])
         integrator_function = T.integrator_function
@@ -1428,7 +1431,86 @@ class TestIntegratorMode:
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+class TestOnResumeIntegratorMode:
+    def test_integrator_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
 
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 1.25
+        # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
+        # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
+        assert np.allclose(T.value, [[1.5625]])
+
+    def test_instantaneous_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 2.0
+        # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
+        # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
+        assert np.allclose(T.value, [[1.75]])
+
+    def test_reinitialize_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                               # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                                # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
 
 class TestClip:
     def test_clip_float(self):

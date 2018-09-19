@@ -1314,10 +1314,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function is None:
                 self.integrator_function = self.original_integrator_function
                 self._integrator_mode = True
-                if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    self.reinitialize(self.value)
-                elif self.on_resume_integrator_mode == REINITIALIZE:
-                    self.reinitialize()
+                if self.integrator_function is not None:
+                    if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+                        self.reinitialize(self.value)
+                    elif self.on_resume_integrator_mode == REINITIALIZE:
+                        self.reinitialize()
             if not hasattr(self, PREVIOUS_VALUE):
                 self.previous_value = None
             self.has_initializers = True
