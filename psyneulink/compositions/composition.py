@@ -585,14 +585,23 @@ class Composition(object):
                 if isinstance(component, (Mechanism, Composition)):
                     self.add_c_node(component)
                 elif isinstance(component, Projection):
-                    projections.append(component)
+                    projections.append((component, False))
+                elif isinstance(component, tuple):
+                    if isinstance(component[0], Projection) and isinstance(component[1], bool):
+                        projections.append(component)
+                    else:
+                        raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
+                                               " is specified, then the index 0 item must be a Projection, and the "
+                                               "index 1 item must be the feedback specification (True or False)."
+                                               .format(component, node.name))
                 else:
                     raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
-                                           "Composition, or Projection".format(component.name, node.name))
+                                           "Composition, Projection, or (Projection, feedback_spec) tuple"
+                                           .format(component.name, node.name))
 
             # Add all projections to the composition
-            for proj in projections:
-                self.add_projection(proj)
+            for proj_spec in projections:
+                self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
 
     def add_controller(self, node):
         self.controller = node
