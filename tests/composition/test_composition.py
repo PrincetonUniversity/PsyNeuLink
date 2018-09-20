@@ -4318,3 +4318,52 @@ class TestInputSpecifications:
         assert np.allclose(D.output_values, [[4.]])
 
 
+class TestAuxComponents:
+    def test_two_transfer_mechanisms(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+
+        A.aux_components = [B, MappingProjection(sender=A, receiver=B)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+
+        comp.run(inputs={A: [[1.0]]})
+
+        assert np.allclose(B.value, [[1.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 1.0 | Output = 1.0
+
+        comp.run(inputs={A: [[2.0]]})
+        # Second Run:
+        # Input to A = 2.0 | Output = 2.0
+        # Input to B = 2.0 | Output = 2.0
+
+        assert np.allclose(B.value, [[2.0]])
+
+    def test_two_transfer_mechanisms_with_feedback_proj(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+
+        A.aux_components = [B, (MappingProjection(sender=A, receiver=B), True)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+
+        comp.run(inputs={A: [[1.0]],
+                         B: [[2.0]]})
+
+        assert np.allclose(B.value, [[2.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 2.0 | Output = 2.0
+
+        comp.run(inputs={A: [[1.0]],
+                         B: [[2.0]]})
+        # Second Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 2.0 + 1.0 | Output = 3.0
+
+        assert np.allclose(B.value, [[3.0]])
+
