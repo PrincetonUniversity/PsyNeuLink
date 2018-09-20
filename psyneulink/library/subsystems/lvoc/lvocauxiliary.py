@@ -195,6 +195,51 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         return allocation_policy, prediction_vector
 
+
+class UpdateWeights(LVOCAuxiliaryFunction):
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 size=None,
+                 num_predictors:int=1,
+                 prediction_weights_priors:tc.optional(is_numeric)=None,
+                 predictor_variance_priors:tc.optional(is_numeric)=None,
+                 function=BayesGLM,
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        self._predictor_update_function = BayesGLM(num_predictors=num_predictors,
+                                                   mu_prior=prediction_weights_priors,
+                                                   sigma_prior=predictor_variance_priors)
+
+        super().__init__(monitored_output_states=monitored_output_states,
+                         default_variable=default_variable,
+                         size=size,
+                         function=function,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         **kwargs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        '''Execute function to get outcome, call _predictor_update_function to update wts, and return sample of wts'''
+
+        dependent_vars = np.atleast_2d(variable)
+
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            old_prediction_weights = np.atleast_2d(self._predictor_update_function.mu_0.reshape(-1))
+        else:
+            old_prediction_weights = np.atleast_2d(self.sampled_prediction_weights)
+
+        self._predictor_update_function.function(variable=[old_prediction_weights, dependent_vars])
+
+        self.sampled_prediction_weights = self._predictor_update_function.sample_weights()
+
+        return self.sampled_prediction_weights
+
 class ValueFunction(LVOCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.
 

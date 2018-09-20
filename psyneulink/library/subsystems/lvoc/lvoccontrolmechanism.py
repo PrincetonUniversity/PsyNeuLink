@@ -807,17 +807,17 @@ class LVOCControlMechanism(ControlMechanism):
 
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_objective_mechanism(self, context=None):
-        # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
-        self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
-                                                            num_predictors=self.num_prediction_weights,
-                                                            prediction_weights_priors=self._predictor_weight_priors,
-                                                            predictor_variance_priors=self._predictor_variance_priors)
-        MappingProjection(sender=self.objective_mechanism,
-                          receiver=self.input_states[PREDICTION_WEIGHTS])
-        self.monitor_for_control = self.monitored_output_states
-
-        # super()._instantiate_objective_mechanism(context=context)
+    # def _instantiate_objective_mechanism(self, context=None):
+    #     # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
+    #     self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
+    #                                                         num_predictors=self.num_prediction_weights,
+    #                                                         prediction_weights_priors=self._predictor_weight_priors,
+    #                                                         predictor_variance_priors=self._predictor_variance_priors)
+    #     MappingProjection(sender=self.objective_mechanism,
+    #                       receiver=self.input_states[PREDICTION_WEIGHTS])
+    #     self.monitor_for_control = self.monitored_output_states
+    #
+    #     # super()._instantiate_objective_mechanism(context=context)
 
     tc.typecheck
     def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
