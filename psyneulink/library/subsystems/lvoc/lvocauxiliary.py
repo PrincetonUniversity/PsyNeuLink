@@ -131,7 +131,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     ):
         """Gradient ascent over allocation_policies (combinations of control_signals) to find one that maximizes EVC
 
-        variable should have two items:  current predictor values and prediction_weights
+        variable should have two items:  current prediction_vector and prediction_weights
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING or
@@ -142,17 +142,11 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             raise LVOCAuxiliaryError("Call to ControlSignalGradientAscent() missing controller argument")
 
         predictors = variable[0]
-        prediction_weights = variable[2]
+        prediction_weights = variable[1]
 
-        # FIX: MOVE THIS TO __init__ IF POSSIBLE:
-        num_predictors = len(predictors)
-        num_control_signals = num_costs = len(controller.control_signals)
-        num_interactions = num_predictors * num_control_signals
-
-        prediction_vector = np.zeros(num_predictors + num_interactions + num_control_signals + num_costs)
-        if len(prediction_vector) != len(prediction_weights):
-            raise LVOCAuxiliaryError("PROGRAM ERROR: Length of prediction_vector ({}) != length of prediction_weights".
-                                     format(len(prediction_vector), len(prediction_weights)))
+        num_predictors = controller.num_predictors
+        num_control_signals = num_costs = controller.num_control_signals
+        num_interactions = controller.num_interactions
 
         # Indices for fields
         intrxn_start = num_predictors
@@ -160,19 +154,26 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         ctl_start = intrxn_end
         ctl_end = intrxn_end + num_control_signals
         costs_start = ctl_end
-        costs_end = len(prediction_vector)
+        costs_end = num_predictors
+
+        prediction_vector = np.zeros(num_predictors + num_interactions + num_control_signals + num_costs)
+
+        if len(prediction_vector) != len(prediction_weights):
+            raise LVOCAuxiliaryError("PROGRAM ERROR: Length of prediction_vector ({}) != length of prediction_weights".
+                                     format(len(prediction_vector), len(prediction_weights)))
 
         control_signal_values = [c.value for c in controller.control_signals]
         control_signal_costs = [c.cost for c in controller.control_signals]
+        prediction_vector[0:num_predictors]=predictors
         # Generate vector of c*p:  [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...]
-        interactions = (predictors*control_signal_values.reshape(num_control_signals,1)).reshape(-1)
+        interactions = (np.array(predictors*control_signal_values).reshape(num_control_signals,1)).reshape(-1)
+        prediction_vector[intrxn_start:intrxn_end]=interactions
 
-        prediction_vector[0:num_predictors] = predictors
-        prediction_vector[intrxn_start:intrxn_end] = interactions
-        prediction_vector[ctl_start:ctl_end] = control_signal_values
-        prediction_vector[costs_start:costs_end] = control_signal_costs
-
-        lvoc = np.sum(prediction_vector * prediction_weights)
+        # FIX: REMOVE WHEN VALIDATED:
+        assert len(prediction_vector[0:num_predictors]) == len(predictors)
+        assert len(prediction_vector[intrxn_start:intrxn_end]) == len(interactions)
+        assert len(prediction_vector[ctl_start:ctl_end]) == len(control_signal_values)
+        assert len(prediction_vector[costs_start:costs_end]) == len(control_signal_costs)
 
         # FIX: DO GRADIENT ASCENT HERE:
         # - iterate over prediction_vector, for each iteration:
@@ -180,9 +181,19 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         #    - multiplying the vector by the prediction weights
         #    - computing the sum and gradients
         # - continue to iterate until sum asymptotes
-        # - return:
+        # - return allocation_policy and full prediction_vector
+        while gradient_ascent():
+            # Update control_signal_values, control_signal_costs and interactions
+            interactions = (np.array(predictors*control_signal_values).reshape(num_control_signals,1)).reshape(-1)
+            prediction_vector[intrxn_start:intrxn_end] = interactions
+            prediction_vector[ctl_start:ctl_end] = control_signal_values
+            prediction_vector[costs_start:costs_end] = control_signal_costs
 
-        return prediction_vector
+            lvoc = np.sum(prediction_vector * prediction_weights)
+
+        allocation_policy = prediction_vector[ctl_start:ctl_end]
+
+        return allocation_policy, prediction_vector
 
 class ValueFunction(LVOCAuxiliaryFunction):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.

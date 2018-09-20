@@ -789,15 +789,18 @@ class LVOCControlMechanism(ControlMechanism):
                                                             predictors=self.input_states,
                                                             context=context)
 
-        # FIX: ADD FEATURE HERE TO INCLUDE control_signals IN LIST OF PREDICTORS
+        # Determine length of prediction_weights vector from LVOCObjectiveMechanism and specify InputState for it
 
         # Get length of concantenated input_state values from parsing of variable:
         variable, ignore = self._handle_arg_input_states(self.input_states)
-        self._num_predictors = len(np.array(variable).reshape(-1))
-
-        # Insert InputState for ObjectiveMechanism as (primary) input_state
+        self.num_predictors = len(np.array(variable).reshape(-1))
+        self.num_control_signals = self.num_costs = len(self.control_signals)
+        self.num_interactions = self.num_predictors * self.num_control_signals
+        self.num_prediction_weights = \
+            self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
+        # Insert InputState for LVOCObjectiveMechanism as (primary) input_state
         self.input_states.insert(0, {NAME:PREDICTION_WEIGHTS,
-                                     VARIABLE:np.zeros(self._num_predictors)}),
+                                     VARIABLE:np.zeros(self.num_prediction_weights)}),
 
         # Configure default_variable to comport with full set of input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
@@ -807,7 +810,7 @@ class LVOCControlMechanism(ControlMechanism):
     def _instantiate_objective_mechanism(self, context=None):
         # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
         self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
-                                                            num_predictors=self._num_predictors,
+                                                            num_predictors=self.num_prediction_weights,
                                                             prediction_weights_priors=self._predictor_weight_priors,
                                                             predictor_variance_priors=self._predictor_variance_priors)
         MappingProjection(sender=self.objective_mechanism,
@@ -992,11 +995,12 @@ class LVOCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:
         # - skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
-                                                                   variable=variable,
-                                                                   runtime_params=runtime_params,
-                                                                   context=context
-                                                                   )
+        allocation_policy, prediction_vector = super(ControlMechanism, self)._execute(controller=self,
+                                                                                      variable=variable,
+                                                                                      runtime_params=runtime_params,
+                                                                                      context=context
+                                                                                      )
+
         # FIX: The call to _execute above should call ControlSignalGraidentAscent:
         # - variable contains weighted predictors and control_signal_costs
         #   (these are parsed by _parse_function_variable and passed to function by call to _execute);
@@ -1006,35 +1010,20 @@ class LVOCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
-        return allocation_policy
+        return allocation_policy, prediction_vector
 
     def _parse_function_variable(self, variable, context=None):
-        '''Return sample from weighted distribution of predictors'''
+        '''Return array of current predictor values and prediction weights received from LVOCObjectiveMechanism'''
 
         # These are received from the LVOCObjectiveMechanism, and includes weights for:
-        #    predictors, control_signals, their Cartesian product, and control_signal costs;
+        #    predictors, control_signals, their product (interaction), and control_signal costs;
         #    used by function to do gradient ascent on predicted LVOC
         self.prediction_weights = variable[0]
 
         # This is a vector of the concatentated values received from all of the other InputStates (i.e., variable[1:])
         self.predictor_values = np.array(variable[1:]).reshape(-1)
 
-        # # MODIFIED 9/19/18 OLD:
-        # # Get weighted_predictor_values using prediction_weights received from ObjectiveMechanism in input_state[0]
-        # self.weighted_predictor_values = self.prediction_weights * self.predictors
-        #
-        # # FIX: NEED TO DEAL WITH self.control_signals == None DURING INITIALIZATION)
-        # try:
-        #     current_control_signal_values = [c.value for c in self.control_signals]
-        #     return [self.weighted_predictor_values, current_control_signal_values]
-        # except:
-        #     return [self.weighted_predictor_values, None]
-        # MODIFIED 9/19/18 NEW:
-        # Get weighted_predictor_values using prediction_weights received from ObjectiveMechanism in input_state[0]
-        # FIX: NEED TO DEAL WITH self.control_signals == None DURING INITIALIZATION)
-        # FIX: MAKE SURE ControlSignalGradientAscent EXPECTS THESE ARGS
         return [self.predictor_values, self.prediction_weights]
-        # MODIFIED 9/19/18 END
 
     @property
     def value_function(self):
