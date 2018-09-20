@@ -30,7 +30,8 @@ __all__ = [
     'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'BOLD', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
-    'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
+    'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
+    'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
     'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
@@ -419,6 +420,12 @@ kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
 kpMechanismInputLogEntry = "Mechanism Input"
 kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
+#endregion
+
+#region ----------------------------------------------   COMPONENT   ---------------------------------------------------
+
+COMPOSITION = 'COMPOSITION'
+
 #endregion
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------

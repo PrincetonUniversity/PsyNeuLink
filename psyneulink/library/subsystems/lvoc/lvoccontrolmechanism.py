@@ -983,12 +983,6 @@ class LVOCControlMechanism(ControlMechanism):
                                                                    context=context
                                                                    )
 
-        # FIX: The call to _execute above should call ControlSignalGraidentAscent:
-        # - variable contains weighted predictors and control_signal_costs
-        #   (these are parsed by _parse_function_variable and passed to function by call to _execute);
-        #   function then does gradient ascent using these to determine and return the allocation_policy
-
-
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
