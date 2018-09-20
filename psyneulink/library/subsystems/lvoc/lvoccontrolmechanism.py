@@ -378,21 +378,18 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM
-from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, OUTCOME
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Function, Composition_Base
+from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    COST_FUNCTION, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, PARAMETER_STATES, SUM, ALL, INPUT_STATE, \
-    STATE_TYPE, PROJECTIONS, VARIABLE, NAME, OWNER_VALUE
+    ALL, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, NAME, PARAMETER_STATES, PROJECTIONS, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
@@ -980,11 +977,11 @@ class LVOCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:
         # - skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy, prediction_vector = super(ControlMechanism, self)._execute(controller=self,
-                                                                                      variable=variable,
-                                                                                      runtime_params=runtime_params,
-                                                                                      context=context
-                                                                                      )
+        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
+                                                                   variable=variable,
+                                                                   runtime_params=runtime_params,
+                                                                   context=context
+                                                                   )
 
         # FIX: The call to _execute above should call ControlSignalGraidentAscent:
         # - variable contains weighted predictors and control_signal_costs
@@ -995,7 +992,7 @@ class LVOCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
-        return allocation_policy
+        return allocation_policy.reshape((len(allocation_policy),1))
 
     def _parse_function_variable(self, variable, context=None):
         '''Return array of current predictor values and last prediction weights received from LVOCObjectiveMechanism'''
