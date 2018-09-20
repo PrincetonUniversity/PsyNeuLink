@@ -30,11 +30,10 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER',
-    'LVOCAuxiliaryError', 'LVOCAuxiliaryFunction', 'WINDOW_SIZE',
+    'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER',
+    'LVOCAuxiliaryError', 'LVOCAuxiliaryFunction',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
-    'INPUT_SEQUENCE', 'OUTCOME', 'PY_MULTIPROCESSING',
-    'TIME_AVERAGE_INPUT', 'FILTER_FUNCTION'
+    'OUTCOME', 'PY_MULTIPROCESSING'
 ]
 
 PY_MULTIPROCESSING = False
@@ -167,25 +166,27 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         ctl_start = intrxn_end
         ctl_end = intrxn_end + num_control_signals
         costs_start = ctl_end
-        costs_end = num_predictors
+        costs_end = len_prediction_vector
 
         initial_ctl_sig_values = [c.value for c in controller.control_signals]
-        initial_ctl_sig_costs = [0 if c.cost_options is None else c.cost for c in controller.control_signals]
+        initial_ctl_sig_costs = [0 if c.cost is None else c.cost for c in controller.control_signals]
 
         # Populate prediction_vector
         prediction_vector[0:num_predictors] = predictors
         # Ineractions: [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...]
-        interactions = (np.array(predictors*initial_ctl_sig_values).reshape(num_control_signals,1)).reshape(-1)
+        interactions = (np.array(predictors*initial_ctl_sig_values).reshape(num_interactions,1)).reshape(-1)
         prediction_vector[intrxn_start:intrxn_end]=interactions
         # Initialize gradient_ascent with latest ControlSignal values and costs to
         prediction_vector[ctl_start:ctl_end] = initial_ctl_sig_values
         prediction_vector[costs_start:costs_end] = initial_ctl_sig_costs
 
-        # FIX: REMOVE WHEN VALIDATED:
-        assert len(prediction_vector[0:num_predictors]) == len(predictors)
-        assert len(prediction_vector[intrxn_start:intrxn_end]) == len(interactions)
-        assert len(prediction_vector[ctl_start:ctl_end]) == len(controller.control_signals)
-        assert len(prediction_vector[costs_start:costs_end]) == len(controller.control_signals)
+        # Get sample of weights:
+        update_weight = BayesGLM(num_predictors=len_prediction_vector,
+                                 mu_prior=controller.prediction_weights_priors,
+                                 sigma_prior=controller.prediction_variances_priors)
+
+        update_weight.function([np.atleast_2d(prediction_vector), np.atleast_2d(outcome)])
+        prediction_weights = update_weight.sample_weights()
 
         # FIX: DO GRADIENT ASCENT HERE:
         # - iterate over prediction_vector, for each iteration:
@@ -200,7 +201,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             new_control_signal_values = initial_ctl_sig_values
             new_control_signal_costs = initial_ctl_sig_costs
             # FIX: END REPLACE
-            interactions = (np.array(predictors*new_control_signal_values).reshape(num_control_signals,1)).reshape(-1)
+            interactions = (np.array(predictors*new_control_signal_values).reshape(num_interactions,1)).reshape(-1)
             prediction_vector[intrxn_start:intrxn_end] = interactions
             prediction_vector[ctl_start:ctl_end] = new_control_signal_values
             prediction_vector[costs_start:costs_end] = new_control_signal_costs
@@ -218,52 +219,3 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         allocation_policy = prediction_vector[ctl_start:ctl_end]
 
         return allocation_policy
-
-
-class UpdateWeights(LVOCAuxiliaryFunction):
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 num_predictors:int=1,
-                 prediction_weights_priors:tc.optional(is_numeric)=None,
-                 prediction_variances_priors:tc.optional(is_numeric)=None,
-                 # function:tc.optional(is_callable)=None,
-                 params=None,
-                 name=None,
-                 prefs:is_pref_set=None,
-                 **kwargs):
-
-        function = BayesGLM(num_predictors=num_predictors,
-                            mu_prior=prediction_weights_priors,
-                            sigma_prior=prediction_variances_priors)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-    def _execute(self, variable=None, runtime_params=None, context=None):
-        '''Execute function to get outcome, call _predictor_update_function to update wts, and return sample of wts'''
-        super()._execute(variable=variable, runtime_params=runtime_params, context=context)
-        return self.function.sample_weights()
-
-    def _parse_function_variable(self, variable, context=None):
-        dependent_vars = np.atleast_2d(variable)
-        prediction_vector = np.atleast_2d(variable)
-        return prediction_vector, dependent_vars
-
-
-
-
-AVERAGE_INPUTS = 'AVERAGE_INPUTS'
-INPUT_SEQUENCE = 'INPUT_SEQUENCE'
-TIME_AVERAGE_INPUT = 'TIME_AVERAGE_INPUT'
-input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
-
-WINDOW_SIZE = 'window_size'
-FILTER_FUNCTION = 'filter_function'

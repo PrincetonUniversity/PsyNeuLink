@@ -1233,9 +1233,10 @@ class ControlSignal(ModulatorySignal):
         try:
             return self._cost
         except:
-            raise ControlSignalError("Attempt to access {} attribute for {} of {} that has not been assigned; "
-                                     "check that an appropriate (set of) cost_option(s) have been assigned".
-                                     format(repr('cost'), self.name, self.owner.name))
+            warnings.warn("Attempt to access {} attribute for {} of {} that has not been assigned; "
+                          "check that an appropriate (set of) cost_option(s) have been assigned".
+                          format(repr('cost'), self.name, self.owner.name))
+            return None
 
     @cost.setter
     def cost(self, value):

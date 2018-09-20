@@ -396,7 +396,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
-from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent, UpdateWeights
+from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent
 from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
@@ -722,8 +722,8 @@ class LVOCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
-                                                  prediction_weights=prediction_weights_priors,
-                                                  predictor_variances=prediction_variances_priors,
+                                                  prediction_weights_priors=prediction_weights_priors,
+                                                  prediction_variances_priors=prediction_variances_priors,
                                                   # update_function=update_function,
                                                   # cost_function=cost_function,
                                                   # combine_outcome_and_cost_function=combine_outcome_and_cost_function,
