@@ -1227,3 +1227,16 @@ class ControlSignal(ModulatorySignal):
     @property
     def intensity(self):
         return self.value
+
+    @property
+    def cost(self):
+        try:
+            return self._cost
+        except:
+            raise ControlSignalError("Attempt to access {} attribute for {} of {} that has not been assigned; "
+                                     "check that an appropriate (set of) cost_option(s) have been assigned".
+                                     format(repr('cost'), self.name, self.owner.name))
+
+    @cost.setter
+    def cost(self, value):
+        self._cost = value

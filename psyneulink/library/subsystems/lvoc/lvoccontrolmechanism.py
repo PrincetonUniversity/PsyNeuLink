@@ -382,7 +382,7 @@ from psyneulink.components.component import function_type
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, OUTCOME
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
@@ -396,7 +396,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
-from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent, ValueFunction
+from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent, UpdateWeights
 from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
@@ -419,7 +419,7 @@ class LVOCControlMechanism(ControlMechanism):
     system=True,                                                       \
     objective_mechanism=None,                                          \
     function=ControlSignalGradientAscent                               \
-    value_function=ValueFunction,                                      \
+    update_function=UpdateWeights,                                     \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
     save_all_values_and_policies=:keyword:`False`,                     \
@@ -597,23 +597,10 @@ class LVOCControlMechanism(ControlMechanism):
             controller.combine_outcome_and_cost_function - combines outcomes and costs
     COMMENT
 
-    value_function : function : default ValueFunction
-        calculates the `EVC <LVOCControlMechanism_EVC>` for a given `allocation_policy`.  It takes as its arguments an
-        `LVOCControlMechanism`, an **outcome** value and a list or ndarray of **costs**, uses these to calculate an EVC,
-        and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
-        used to calculate the EVC.  The default, `ValueFunction`,  calls the LVOCControlMechanism's `cost_function
-        <LVOCControlMechanism.cost_function>` to aggregate the value of the costs, and then calls its
-        `combine_outcome_and_costs <LVOCControlMechanism.combine_outcome_and_costs>` to calculate the EVC from the outcome
-        and aggregated cost (see `LVOCControlMechanism_Default_Configuration` for additional details).  A custom
-        function can be assigned to `value_function` so long as it returns a tuple with three items: the calculated
-        EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
-        values or `None`). If used with the LVOCControlMechanism's default `function <LVOCControlMechanism.function>`, a custom
-        `value_function` must accommodate three arguments (passed by name): a **controller** argument that is the
-        LVOCControlMechanism for which it is carrying out the calculation; an **outcome** argument that is a value; and a
-        `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can also call any
-        of the `helper functions <LVOCControlMechanism_Functions>` that it calls (however, see `note
-        <LVOCControlMechanism_Calling_and_Assigning_Functions>` above).
+    update_function : function : default UpdateWeights
+        TBW
 
+    COMMENT:
     cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost of the `ControlSignals <ControlSignal>` for the current `allocation_policy`.  The default
         function sums the `cost <ControlSignal.cost>` of each of the LVOCControlMechanism's `ControlSignals
@@ -646,6 +633,7 @@ class LVOCControlMechanism(ControlMechanism):
         an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
         allocation policies, using np.meshgrid to construct all permutations of `ControlSignal` values from the set
         specified for each by its `allocation_samples <LVOCControlMechanism.allocation_samples>` attribute.
+    COMMENT
 
     EVC_max : 1d np.array with single value
         the maximum `EVC <LVOCControlMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
@@ -716,33 +704,30 @@ class LVOCControlMechanism(ControlMechanism):
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
-                 predictor_weight_priors:is_numeric=0.0,
-                 predictor_variance_priors:is_numeric=1.0,
+                 prediction_weights_priors:is_numeric=0.0,
+                 prediction_variances_priors:is_numeric=1.0,
                  # objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGradientAscent,
-                 value_function=ValueFunction,
-                 cost_function=LinearCombination(operation=SUM),
-                 combine_outcome_and_cost_function=LinearCombination(operation=SUM),
-                 save_all_values_and_policies:bool=False,
+                 # update_function=None,
+                 # cost_function=LinearCombination(operation=SUM),
+                 # combine_outcome_and_cost_function=LinearCombination(operation=SUM),
+                 # save_all_values_and_policies:bool=False,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
-        self._predictor_weight_priors = predictor_weight_priors
-        self._predictor_variance_priors = predictor_variance_priors
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
-                                                  # prediction_weights=predictor_weight_priors,
-                                                  # predictor_variances=predictor_variance_priors,
-                                                  value_function=value_function,
-                                                  cost_function=cost_function,
-                                                  combine_outcome_and_cost_function=combine_outcome_and_cost_function,
-                                                  save_all_values_and_policies=save_all_values_and_policies,
+                                                  prediction_weights=prediction_weights_priors,
+                                                  predictor_variances=prediction_variances_priors,
+                                                  # update_function=update_function,
+                                                  # cost_function=cost_function,
+                                                  # combine_outcome_and_cost_function=combine_outcome_and_cost_function,
+                                                  # save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
         super().__init__(system=None,
@@ -756,6 +741,14 @@ class LVOCControlMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
+
+        # self.update_function = update_function or UpdateWeights(
+        #     prediction_weights_priors=prediction_weights_priors,
+        #     predictor_variance_priors=prediction_variances_priors,
+        #     function=BayesGLM(num_predictors=self.num_predictors,
+        #                       mu_prior=prediction_weights_priors,
+        #                       sigma_prior=prediction_variances_priors)
+        # )
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
@@ -789,35 +782,13 @@ class LVOCControlMechanism(ControlMechanism):
                                                             predictors=self.input_states,
                                                             context=context)
 
-        # Determine length of prediction_weights vector from LVOCObjectiveMechanism and specify InputState for it
-
-        # Get length of concantenated input_state values from parsing of variable:
-        variable, ignore = self._handle_arg_input_states(self.input_states)
-        self.num_predictors = len(np.array(variable).reshape(-1))
-        self.num_control_signals = self.num_costs = len(self.control_signals)
-        self.num_interactions = self.num_predictors * self.num_control_signals
-        self.num_prediction_weights = \
-            self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
-        # Insert InputState for LVOCObjectiveMechanism as (primary) input_state
-        self.input_states.insert(0, {NAME:PREDICTION_WEIGHTS,
-                                     VARIABLE:np.zeros(self.num_prediction_weights)}),
+        # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
+        self.input_states.insert(0, OUTCOME),
 
         # Configure default_variable to comport with full set of input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
-
-    # def _instantiate_objective_mechanism(self, context=None):
-    #     # FIX: MOVE THIS TO __INIT__ AND LET BayesGLMObjectiveMechanism FIGURE OUT num_predictors FROM INPUT IT RECEIVES
-    #     self.objective_mechanism=BayesGLMObjectiveMechanism(monitored_output_states=self.monitor_for_control,
-    #                                                         num_predictors=self.num_prediction_weights,
-    #                                                         prediction_weights_priors=self._predictor_weight_priors,
-    #                                                         predictor_variance_priors=self._predictor_variance_priors)
-    #     MappingProjection(sender=self.objective_mechanism,
-    #                       receiver=self.input_states[PREDICTION_WEIGHTS])
-    #     self.monitor_for_control = self.monitored_output_states
-    #
-    #     # super()._instantiate_objective_mechanism(context=context)
 
     tc.typecheck
     def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
@@ -928,46 +899,61 @@ class LVOCControlMechanism(ControlMechanism):
         if self.composition is None:
             return
 
-        # Validate cost function
-        cost_Function = self.cost_function
-        if isinstance(cost_Function, Function):
-            # Insure that length of the weights and/or exponents arguments for the cost_function
-            #    matches the number of control signals
-            num_control_projections = len(self.control_projections)
-            if cost_Function.weights is not None:
-                num_cost_weights = len(cost_Function.weights)
-                if  num_cost_weights != num_control_projections:
-                    raise LVOCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_weights,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
-            if cost_Function.exponents is not None:
-                num_cost_exponents = len(cost_Function.exponents)
-                if  num_cost_exponents != num_control_projections:
-                    raise LVOCError("The length of the exponents argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_exponents,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
+        # # Validate cost function
+        # cost_Function = self.cost_function
+        # if isinstance(cost_Function, Function):
+        #     # Insure that length of the weights and/or exponents arguments for the cost_function
+        #     #    matches the number of control signals
+        #     num_control_projections = len(self.control_projections)
+        #     if cost_Function.weights is not None:
+        #         num_cost_weights = len(cost_Function.weights)
+        #         if  num_cost_weights != num_control_projections:
+        #             raise LVOCError("The length of the weights argument {} for the {} of {} "
+        #                            "must equal the number of its control signals {}".
+        #                            format(num_cost_weights,
+        #                                   COST_FUNCTION,
+        #                                   self.name,
+        #                                   num_control_projections))
+        #     if cost_Function.exponents is not None:
+        #         num_cost_exponents = len(cost_Function.exponents)
+        #         if  num_cost_exponents != num_control_projections:
+        #             raise LVOCError("The length of the exponents argument {} for the {} of {} "
+        #                            "must equal the number of its control signals {}".
+        #                            format(num_cost_exponents,
+        #                                   COST_FUNCTION,
+        #                                   self.name,
+        #                                   num_control_projections))
+        #
+        # # Construct control_signal_search_space
+        # control_signal_sample_lists = []
+        # control_signals = self.control_signals
+        # # Get allocation_samples for all ControlSignals
+        # num_control_signals = len(control_signals)
+        #
+        # for control_signal in self.control_signals:
+        #     control_signal_sample_lists.append(control_signal.allocation_samples)
+        #
+        # # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        # #                                     (one sample from the allocationSample of each ControlProjection)
+        # # Reference for implementation below:
+        # # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        # self.control_signal_search_space = \
+        #     np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
-        # Construct control_signal_search_space
-        control_signal_sample_lists = []
-        control_signals = self.control_signals
-        # Get allocation_samples for all ControlSignals
-        num_control_signals = len(control_signals)
 
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+    def _instantiate_control_signal(self, control_signal, context=None):
+        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        EVCControlMechanism requires use of at least one of the cost options
+        '''
+        control_signal = super()._instantiate_control_signal(control_signal, context)
 
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        # MODIFIED 9/18/18 OLD:
+        if control_signal.cost_options is None:
+            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        # MODIFIED 9/18/18 NEW:
+            control_signal._instantiate_cost_attributes()
+        # MODIFIED 9/18/18 END
+        return control_signal
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
@@ -1013,53 +999,51 @@ class LVOCControlMechanism(ControlMechanism):
         return allocation_policy, prediction_vector
 
     def _parse_function_variable(self, variable, context=None):
-        '''Return array of current predictor values and prediction weights received from LVOCObjectiveMechanism'''
+        '''Return array of current predictor values and last prediction weights received from LVOCObjectiveMechanism'''
 
-        # These are received from the LVOCObjectiveMechanism, and includes weights for:
-        #    predictors, control_signals, their product (interaction), and control_signal costs;
-        #    used by function to do gradient ascent on predicted LVOC
-        self.prediction_weights = variable[0]
+        # This the value received from the ObjectiveMechanism:
+        outcome = variable[0]
 
-        # This is a vector of the concatentated values received from all of the other InputStates (i.e., variable[1:])
+        # This is a vector of the concatenated values received from all of the other InputStates (i.e., variable[1:])
         self.predictor_values = np.array(variable[1:]).reshape(-1)
 
-        return [self.predictor_values, self.prediction_weights]
+        return [self.predictor_values, outcome]
 
-    @property
-    def value_function(self):
-        return self._value_function
-
-    @value_function.setter
-    def value_function(self, assignment):
-        if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(assignment)
-        elif assignment is ValueFunction:
-            self._value_function = ValueFunction()
-        else:
-            self._value_function = assignment
-
-    @property
-    def cost_function(self):
-        return self._cost_function
-
-    @cost_function.setter
-    def cost_function(self, value):
-        from psyneulink.components.functions.function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._cost_function = udf
-        else:
-            self._cost_function = value
-
-    @property
-    def combine_outcome_and_cost_function(self):
-        return self._combine_outcome_and_cost_function
-
-    @combine_outcome_and_cost_function.setter
-    def combine_outcome_and_cost_function(self, value):
-        from psyneulink.components.functions.function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._combine_outcome_and_cost_function = udf
-        else:
-            self._combine_outcome_and_cost_function = value
+    # @property
+    # def update_function(self):
+    #     return self._update_function
+    #
+    # @update_function.setter
+    # def update_function(self, assignment):
+    #     if isinstance(assignment, function_type):
+    #         self._update_function = UpdateWeights(assignment)
+    #     elif assignment is UpdateWeights:
+    #         self._update_function = UpdateWeights()
+    #     else:
+    #         self._update_function = assignment
+    #
+    # @property
+    # def cost_function(self):
+    #     return self._cost_function
+    #
+    # @cost_function.setter
+    # def cost_function(self, value):
+    #     from psyneulink.components.functions.function import UserDefinedFunction
+    #     if isinstance(value, function_type):
+    #         udf = UserDefinedFunction(function=value)
+    #         self._cost_function = udf
+    #     else:
+    #         self._cost_function = value
+    #
+    # @property
+    # def combine_outcome_and_cost_function(self):
+    #     return self._combine_outcome_and_cost_function
+    #
+    # @combine_outcome_and_cost_function.setter
+    # def combine_outcome_and_cost_function(self, value):
+    #     from psyneulink.components.functions.function import UserDefinedFunction
+    #     if isinstance(value, function_type):
+    #         udf = UserDefinedFunction(function=value)
+    #         self._combine_outcome_and_cost_function = udf
+    #     else:
+    #         self._combine_outcome_and_cost_function = value
