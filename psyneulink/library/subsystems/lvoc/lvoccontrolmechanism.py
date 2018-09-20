@@ -397,7 +397,6 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
 from psyneulink.library.subsystems.lvoc.lvocauxiliary import ControlSignalGradientAscent
-from psyneulink.library.subsystems.lvoc.bayesglmobjectivemechanism import BayesGLMObjectiveMechanism
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
@@ -996,7 +995,7 @@ class LVOCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
-        return allocation_policy, prediction_vector
+        return allocation_policy
 
     def _parse_function_variable(self, variable, context=None):
         '''Return array of current predictor values and last prediction weights received from LVOCObjectiveMechanism'''
