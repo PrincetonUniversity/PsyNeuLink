@@ -577,6 +577,23 @@ class Composition(object):
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
+        if hasattr(node, "aux_components"):
+
+            projections = []
+            # Add all "c_nodes" to the composition first (in case projections reference them)
+            for component in node.aux_components:
+                if isinstance(component, (Mechanism, Composition)):
+                    self.add_c_node(component)
+                elif isinstance(component, Projection):
+                    projections.append(component)
+                else:
+                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                                           "Composition, or Projection".format(component.name, node.name))
+
+            # Add all projections to the composition
+            for proj in projections:
+                self.add_projection(proj)
+
     def add_controller(self, node):
         self.controller = node
         # self.add_c_node(node)
