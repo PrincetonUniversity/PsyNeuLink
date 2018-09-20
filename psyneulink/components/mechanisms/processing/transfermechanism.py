@@ -73,7 +73,7 @@ The `integrator_function <TransferMechanism.integrator_function>` of a TransferM
 `AdaptiveIntegrator`. Two parameters of the `AdaptiveIntegrator` are exposed on the TransferMechanism. Specifying the
 arguments **integration_rate** and/or **initial_value** in the mechanism's constructor will actually set the mechanism's
 `integrator_function <TransferMechanism.integrator_function>` to an `AdaptiveIntegrator` with those values specified for
-`rate <AdaptiveIntegrator.rate>` and `initializer <AdaptiveIntegrator.initializer>`, respectively.
+ `rate <AdaptiveIntegrator.rate>` and `initializer <AdaptiveIntegrator.initializer>`, respectively.
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
@@ -84,6 +84,25 @@ arguments **integration_rate** and/or **initial_value** in the mechanism's const
     If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
     **initial_value** are ignored, because the mechanism does not have an `integrator_function
     <TransferMechanism.integrator_function>` to construct.
+
+When switching between `integrator_mode <TransferMechanism.integrator_mode>` = True and `integrator_mode
+<TransferMechanism.integrator_mode>` = False, the behavior of the `integrator_function
+<TransferMechanism.integrator_function>` is determined by `on_resume_integrator_mode
+<TransferMechanism.on_resume_integrator_mode>`. There are three options for how the `integrator_function
+<TransferMechanism.integrator_function>` may resume accumulating when the Mechanism returns to `integrator_mode
+<TransferMechanism.integrator_mode>` = True.
+
+        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
+                the Mechanism during "Instantaneous Mode" is where the `integrator_function
+                <TransferMechanism.integrator_function>` begins accumulating.
+
+        (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
+                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
+                <TransferMechanism.integrator_mode>` was True.
+
+        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <TransferMechanism.initial_value>`
 
 Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
 **noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
@@ -520,15 +539,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
         "Integrator Mode" (integrator_mode = True).
 
-        INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
-        the Mechanism during "Instantaneous Mode" is where the `integrator_function
-         <TransferMechanism.integrator_function>` begins.
+        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
+                the Mechanism during "Instantaneous Mode" is where the `integrator_function
+                <TransferMechanism.integrator_function>` begins accumulating.
 
-        INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
-        <TransferMechanism.integrator_function>` left off the last time the Mechanism was in "Integrator Mode".
+        (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
+                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
+                <TransferMechanism.integrator_mode>` was True.
 
-        REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
-        <AdaptiveIntegrator.reinitialize>`
+        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <TransferMechanism.initial_value>`
 
     clip : list [float, float] : default None (Optional)
         specifies the allowable range for the result of `function <TransferMechanism.function>`. The item in index 0
@@ -650,6 +671,24 @@ class TransferMechanism(ProcessingMechanism_Base):
             COMMENT:
             leak and time_step_size were previoulsy mentioned, but don't appear in the integrator_mode equation above
             COMMENT
+
+
+    on_resume_integrator_mode : keyword
+        specifies how the `integrator_function <TransferMechanism.integrator_function>` should resume its accumulation
+        when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
+        "Integrator Mode" (integrator_mode = True). There are three options:
+
+        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
+                the Mechanism during "Instantaneous Mode" is where the `integrator_function
+                <TransferMechanism.integrator_function>` begins accumulating.
+
+        (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
+                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
+                <TransferMechanism.integrator_mode>` was True.
+
+        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
+                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
+                <TransferMechanism.initial_value>`
 
     integrator_function :  Function
         the `AdaptiveIntegrator` Function used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
