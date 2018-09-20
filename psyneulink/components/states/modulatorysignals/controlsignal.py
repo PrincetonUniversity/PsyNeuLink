@@ -1028,7 +1028,8 @@ class ControlSignal(ModulatorySignal):
         # MODIFIED 9/18/18 NEW:
         if self.cost_options:
             self.last_cost = self.cost
-            self.last_duration_cost = self.duration_cost
+            if self.cost_options & ControlSignalCosts.DURATION_COST:
+                self.last_duration_cost = self.duration_cost
         # MODIFIED 9/18/18 END
 
         # Report new values to stdio
