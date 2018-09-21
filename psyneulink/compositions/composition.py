@@ -614,9 +614,9 @@ class Composition(object):
         for input_state in control_mechanism._objective_mechanism.input_states:
             input_state.internal_only = True
         objective_node = control_mechanism._objective_mechanism
-        self.add_c_node(objective_node)
-        self.add_projection(objective_node.path_afferents[0])
-        self.add_projection(objective_node.efferents[0])
+        # self.add_c_node(objective_node)
+        # self.add_projection(objective_node.path_afferents[0])
+        # self.add_projection(objective_node.efferents[0])
         self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
         self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
 
