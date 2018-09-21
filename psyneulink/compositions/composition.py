@@ -726,7 +726,6 @@ class Composition(Composition_Base):
             self.needs_update_scheduler_learning = True
             self.projections.append(projection)
 
-
         else:
             raise CompositionError("Cannot add Projection: {}. This Projection is already in the Composition."
                                    .format(projection.name))
