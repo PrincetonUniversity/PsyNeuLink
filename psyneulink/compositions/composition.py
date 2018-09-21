@@ -3198,47 +3198,15 @@ class Composition(object):
             node_values[node] = (node.value, node.output_values)
         return saved_state, node_values
 
-    def run_simulations(self, allocation_policies, runtime_params=None, context=None):
+    def before_simulations(self, context=None):
         predicted_input = self.update_predicted_input()
 
         num_trials = 1
         reinitialize_values, node_values = self._save_state()
 
-        outcome_list = []
-        control_signal_list = []
-        costs = []
-        for allocation_policy in allocation_policies:
-            self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-            execution_id = self._get_unique_id()
+        return predicted_input, num_trials, reinitialize_values, node_values
 
-            allocation_policy_outcomes = []
-            for i in range(num_trials):
-                inputs = {}
-                for node in predicted_input:
-                    inputs[node] = predicted_input[node][i]
-
-                self.context.execution_phase = ContextFlags.SIMULATION
-                for output_state in self.controller.output_states:
-                    for proj in output_state.efferents:
-                        proj.context.execution_phase = ContextFlags.PROCESSING
-
-                self.run(inputs=inputs,
-                         reinitialize_values=reinitialize_values,
-                         execution_id=execution_id,
-                         runtime_params=runtime_params,
-                         context=context)
-
-                self.simulation_results.append(self.output_CIM.output_values)
-                current_costs = []
-                for signal in self.controller.control_signals:
-                    current_costs.append(signal.cost)
-
-                costs.append(current_costs)
-                monitored_states = self.controller.objective_mechanism.output_values
-
-                self.context.execution_phase = ContextFlags.PROCESSING
-                allocation_policy_outcomes.append(monitored_states)
-            outcome_list.append(allocation_policy_outcomes)
+    def after_simulations(self, reinitialize_values, node_values, context=None):
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
@@ -3247,8 +3215,6 @@ class Composition(object):
             node.value = node_values[node][0]
             for i in range(len(node.output_states)):
                 node.output_states[i].value = node_values[node][1][i]
-
-        return outcome_list, costs
 
     def get_param_struct_type(self):
         mech_param_type_list = [m.get_param_struct_type() for m in self.c_nodes]

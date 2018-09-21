@@ -7,8 +7,8 @@ from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISIO
     PROBABILITY_UPPER_THRESHOLD
 from psyneulink.components.functions.function import BogaczEtAl, Linear
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.library.subsystems.evc.controller import Controller
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.library.subsystems.evc.evccontroller import EVCController
+from psyneulink.library.mechanisms.adaptive.control.controller import Controller
 from psyneulink.compositions.composition import Composition
 
 
@@ -173,7 +173,7 @@ class TestControllers:
         task_execution_pathway = [Input, IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_controller(type=Controller,
+        comp.add_controller(type=EVCController,
                             control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                             monitor_for_control=[Reward,
                                                  Decision.PROBABILITY_UPPER_THRESHOLD,
