@@ -943,20 +943,9 @@ class LVOCControlMechanism(ControlMechanism):
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
-        # MODIFIED 9/18/18 OLD:
         if control_signal.cost_options is None:
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
-        # MODIFIED 9/18/18 NEW:
             control_signal._instantiate_cost_attributes()
-        # MODIFIED 9/18/18 END
-        return control_signal
-
-    def _instantiate_control_signal(self, control_signal, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
-        '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
         return control_signal
 
     def _execute(self, variable=None, runtime_params=None, context=None):
