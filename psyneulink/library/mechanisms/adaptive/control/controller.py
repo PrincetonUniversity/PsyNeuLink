@@ -860,16 +860,16 @@ class Controller(ControlMechanism):
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
         return control_signal
 
-    def run_simulations(self, allocation_policies, runtime_params=None, context=None):
+    def run_simulations(self, allocation_policies, call_after_simulation, runtime_params=None, context=None):
 
         predicted_input, num_trials, reinitialize_values, node_values = self.system.before_simulations()
 
         outcome_list = []
         control_signal_list = []
-        costs = []
+
         for allocation_policy in allocation_policies:
-            self.controller.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-            execution_id = self._get_unique_id()
+            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+            execution_id = self.system._get_unique_id()
 
             allocation_policy_outcomes = []
             for i in range(num_trials):
@@ -877,31 +877,27 @@ class Controller(ControlMechanism):
                 for node in predicted_input:
                     inputs[node] = predicted_input[node][i]
 
-                self.context.execution_phase = ContextFlags.SIMULATION
-                for output_state in self.controller.output_states:
+                self.system.context.execution_phase = ContextFlags.SIMULATION
+                for output_state in self.output_states:
                     for proj in output_state.efferents:
                         proj.context.execution_phase = ContextFlags.PROCESSING
 
-                self.run(inputs=inputs,
-                         reinitialize_values=reinitialize_values,
-                         execution_id=execution_id,
-                         runtime_params=runtime_params,
-                         context=context)
+                self.system.run(inputs=inputs,
+                                reinitialize_values=reinitialize_values,
+                                execution_id=execution_id,
+                                runtime_params=runtime_params,
+                                context=context)
 
-                self.simulation_results.append(self.output_CIM.output_values)
-                current_costs = []
-                for signal in self.controller.control_signals:
-                    current_costs.append(signal.cost)
+                self.system.simulation_results.append(self.system.output_CIM.output_values)
+                call_after_simulation()
+                monitored_states = self.objective_mechanism.output_values
 
-                costs.append(current_costs)
-                monitored_states = self.controller.objective_mechanism.output_values
-
-                self.context.execution_phase = ContextFlags.PROCESSING
+                self.system.context.execution_phase = ContextFlags.PROCESSING
                 allocation_policy_outcomes.append(monitored_states)
             outcome_list.append(allocation_policy_outcomes)
 
         self.system.after_simulations(reinitialize_values, node_values)
-        return outcome_list, costs
+        return outcome_list
 
 
     @tc.typecheck

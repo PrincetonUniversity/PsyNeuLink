@@ -1129,9 +1129,17 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
         EVC_values = np.array([])
         EVC_policies = np.array([[]])
 
-        outcomes, costs = controller.system.run_simulations(allocation_policies=controller.control_signal_search_space,
-                                                            runtime_params=runtime_params,
-                                                            context=context)
+        costs = []
+        def record_costs():
+            current_costs = []
+            for signal in self.owner.control_signals:
+                current_costs.append(signal.cost)
+            costs.append(current_costs)
+
+        outcomes = controller.run_simulations(allocation_policies=controller.control_signal_search_space,
+                                              call_after_simulation=record_costs,
+                                              runtime_params=runtime_params,
+                                              context=context)
 
         for i in range(len(outcomes)):
             allocation_policy_outcomes = outcomes[i]
