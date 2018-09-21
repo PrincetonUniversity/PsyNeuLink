@@ -11,12 +11,12 @@ class TestObjectiveMechanism:
     @pytest.mark.mechanism
     @pytest.mark.objective_mechanism
     @pytest.mark.benchmark(group="ObjectiveMechanism")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_objective_mech_inputs_list_of_ints(self, benchmark, mode):
 
         O = ObjectiveMechanism(
             name='O',
             default_variable=[0 for i in range(VECTOR_SIZE)],
         )
-        val = benchmark(O.execute, [10.0 for i in range(VECTOR_SIZE)])
+        val = benchmark(O.execute, [10.0 for i in range(VECTOR_SIZE)], bin_execute=(mode == 'LLVM'))
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])

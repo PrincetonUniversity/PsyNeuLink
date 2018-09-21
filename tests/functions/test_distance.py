@@ -4,7 +4,7 @@ import psyneulink.globals.keywords as kw
 import numpy as np
 import pytest
 
-SIZE=4
+SIZE=1000
 # Some metrics (CROSS_ENTROPY) don't like 0s
 test_var = [np.random.rand(SIZE) + Function.EPSILON, np.random.rand(SIZE) + Function.EPSILON]
 v1 = test_var[0]
@@ -67,5 +67,23 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
     f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
+    assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
+
+
+@pytest.mark.function
+@pytest.mark.distance_function
+@pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
+@pytest.mark.benchmark
+def test_llvm(variable, metric, normalize, fail, expected, benchmark):
+    if fail is not None:
+        # This is a rather ugly hack to stop pytest benchmark complains
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.xfail(fail)
+        return
+    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
+    res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
