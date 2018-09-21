@@ -552,7 +552,7 @@ class Composition(object):
     def _get_unique_id(self):
         return uuid.uuid4()
 
-    def add_c_node(self, node):
+    def add_c_node(self, node, required_roles=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -560,7 +560,10 @@ class Composition(object):
             ---------
 
             node : `Mechanism` or `Composition`
-                the node to add
+                the node to be added to the Composition
+
+            required_roles : CNodeRole or list of CNodeRoles
+                any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
 
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
@@ -574,6 +577,7 @@ class Composition(object):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
+        # Can eventually be replaced by required_roles and aux_components
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
@@ -587,21 +591,51 @@ class Composition(object):
                 elif isinstance(component, Projection):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
-                    if isinstance(component[0], Projection) and isinstance(component[1], bool):
-                        projections.append(component)
+                    if isinstance(component[0], Projection):
+                        if isinstance(component[1], bool):
+                            projections.append(component)
+                        else:
+                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                                                   "tuple is used to specify a Projection, then the index 0 item must "
+                                                   "be the Projection, and the index 1 item must be the feedback "
+                                                   "specification (True or False).".format(component, node.name))
+                    elif isinstance(component[0], (Mechanism, Composition)):
+                        if isinstance(component[1], CNodeRole):
+                            self.add_c_node(node=component[0], required_roles=component[1])
+                        elif isinstance(component[1], list):
+                            if isinstance(component[1], CNodeRole):
+                                self.add_c_node(node=component[0], required_roles=component[1])
+                            else:
+                                raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
+                                                       "If a tuple is used to specify a Mechanism or Composition, then "
+                                                       "the index 0 item must be the node, and the index 1 item must "
+                                                       "be the required_roles".format(component, node.name))
+
+                        else:
+                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                                                   "tuple is used to specify a Mechanism or Composition, then the "
+                                                   "index 0 item must be the node, and the index 1 item must be the "
+                                                   "required_roles".format(component, node.name))
                     else:
                         raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
-                                               " is specified, then the index 0 item must be a Projection, and the "
-                                               "index 1 item must be the feedback specification (True or False)."
-                                               .format(component, node.name))
+                                               " is specified, then the index 0 item must be a Projection, Mechanism, "
+                                               "or Composition.".format(component, node.name))
                 else:
                     raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
-                                           "Composition, Projection, or (Projection, feedback_spec) tuple"
+                                           "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
             # Add all projections to the composition
             for proj_spec in projections:
                 self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
+
+        if required_roles:
+            if not isinstance(required_roles, list):
+                required_roles = [required_roles]
+            for required_role in required_roles:
+                self.add_required_c_node_role(node, required_role)
+
+
 
     def add_controller(self, node):
         self.controller = node
@@ -614,9 +648,9 @@ class Composition(object):
         for input_state in control_mechanism._objective_mechanism.input_states:
             input_state.internal_only = True
         objective_node = control_mechanism._objective_mechanism
-        # self.add_c_node(objective_node)
-        # self.add_projection(objective_node.path_afferents[0])
-        # self.add_projection(objective_node.efferents[0])
+        self.add_c_node(objective_node)
+        self.add_projection(objective_node.path_afferents[0])
+        self.add_projection(objective_node.efferents[0])
         self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
         self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
 

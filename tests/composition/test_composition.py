@@ -4367,3 +4367,48 @@ class TestAuxComponents:
 
         assert np.allclose(B.value, [[3.0]])
 
+    def test_required_c_node_roles(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B',
+                              function=Linear(slope=2.0))
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A, required_roles=[CNodeRole.TERMINAL])
+        comp.add_linear_processing_pathway([A, B])
+
+        result = comp.run(inputs={A: [[1.0]]})
+
+        terminal_mechanisms = comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0], [2.0]])
+
+    def test_aux_component_with_required_role(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C',
+                              function=Linear(slope=2.0))
+
+        A.aux_components = [(B, CNodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([B, C])
+
+        comp.run(inputs={A: [[1.0]]})
+
+        assert np.allclose(B.value, [[1.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 1.0 | Output = 1.0
+
+        comp.run(inputs={A: [[2.0]]})
+        # Second Run:
+        # Input to A = 2.0 | Output = 2.0
+        # Input to B = 2.0 | Output = 2.0
+
+        assert np.allclose(B.value, [[2.0]])
+
+        assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+        assert np.allclose(C.value, [[4.0]])
+        assert np.allclose(comp.output_values, [[2.0], [4.0]])
