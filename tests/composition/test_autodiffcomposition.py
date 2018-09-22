@@ -551,8 +551,6 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
 
-
-
 @pytest.mark.actime
 class TestTrainingTime:
     
