@@ -2277,6 +2277,9 @@ class Composition(object):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
+        if bin_execute == 'Python':
+            bin_execute = False
+
         if bin_execute:
             self.__bin_initialize(inputs)
             bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
