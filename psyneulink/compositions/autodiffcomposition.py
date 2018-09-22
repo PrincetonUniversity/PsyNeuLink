@@ -143,8 +143,7 @@ class AutodiffComposition(Composition):
                     interface_output_state = OutputState(
                             owner=self.output_CIM,
                             variable=OWNER_VALUE,
-                            function=InterfaceStateMap(corresponding_input_state=interface_input_state), # ,
-                                                       # default_variable=self.output_CIM.value),
+                            function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                             reference_value=output_state.value,
                             name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
                     
@@ -164,8 +163,7 @@ class AutodiffComposition(Composition):
                     interface_output_state = OutputState(
                             owner=self.target_CIM,
                             variable=OWNER_VALUE,
-                            function=InterfaceStateMap(corresponding_input_state=interface_input_state), # ,
-                                                       # default_variable=self.target_CIM.value),
+                            function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                             reference_value=input_state.value,
                             name="TARGET_CIM_" + node.name + "_" + input_state.name)
                     
@@ -178,8 +176,6 @@ class AutodiffComposition(Composition):
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
             
             # remove the CIM input and output states associated with this Terminal Node output state
-            # self.output_CIM.input_states.remove(self.output_CIM_states[output_state][0])
-            # self.output_CIM.output_states.remove(self.output_CIM_states[output_state][1])
             self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             
@@ -192,8 +188,6 @@ class AutodiffComposition(Composition):
         for target_state in previous_terminal_target_states.difference(current_terminal_input_states):
             
             # remove the CIM input and output states associated with this Terminal Node output state
-            # self.target_CIM.input_states.remove(self.target_CIM_states[target_state][0])
-            # self.target_CIM.output_states.remove(self.target_CIM_states[target_state][1])
             self.target_CIM.remove_states(self.output_CIM_states[output_state][0])
             self.target_CIM.remove_states(self.output_CIM_states[output_state][1])
             
