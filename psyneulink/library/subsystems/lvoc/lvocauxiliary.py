@@ -99,7 +99,13 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     """Use gradient ascent to determine allocation_policy with the maximum `EVC <LVOCControlMechanism_LVOC>`.
 
     This is the default `function <LVOCControlMechanism.function>` for an LVOCControlMechanism. It identifies the
-    `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting gradient ascent over
+    `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` as follows:
+
+    - updates the distributions of weights for the prediction_vector using BayesGLM()
+    - draws a sample from the new weight distributions
+    - calls gradient_ascent to determine the allocation_policy with the maximum EVC for the new weights
+
+     by conducting gradient ascent over
     `allocation_policies <LVOCControlMechanism.allocation_policies>`
 
     The ControlSignalGradientAscent function returns the `allocation_policy` that yields the maximum EVC.
@@ -151,22 +157,22 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         # FIX: MOVE THIS TO __init__ OR _instantiate_XXX METHOD
         # num_predictors = len(np.array(variable).reshape(-1))
-        num_predictors = len(predictors)
-        num_control_signals = num_costs = len(controller.control_signals)
-        num_interactions = num_predictors * num_control_signals
-        len_prediction_vector = num_predictors + num_interactions + num_control_signals + num_costs
+        self.num_predictors = len(predictors)
+        self.num_control_signals = self.num_costs = len(controller.control_signals)
+        self.num_interactions = self.num_predictors * self.num_control_signals
+        len_prediction_vector = self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
         # FIX: END MOVE
 
         prediction_vector = np.zeros(len_prediction_vector)
 
         # FIX: GET RID OF THESE AND REPLACE WITH APPENDS OR CONCATENATES BELOW
         # Indices for fields of prediction_vector
-        intrxn_start = num_predictors
-        intrxn_end = num_predictors+num_interactions
-        ctl_start = intrxn_end
-        ctl_end = intrxn_end + num_control_signals
-        costs_start = ctl_end
-        costs_end = len_prediction_vector
+        self.intrxn_start = self.num_predictors
+        self.intrxn_end = self.num_predictors+self.num_interactions
+        self.ctl_start = self.intrxn_end
+        self.ctl_end = self.intrxn_end + self.num_control_signals
+        self.costs_start = self.ctl_end
+        self.costs_end = len_prediction_vector
 
         initial_ctl_sig_values = [c.value for c in controller.control_signals]
         initial_ctl_sig_costs = [0 if c.cost is None else c.cost for c in controller.control_signals]
@@ -174,12 +180,13 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # Populate prediction_vector
         prediction_vector[0:num_predictors] = predictors
         # Ineractions: [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...]
-        interactions = (np.array(predictors*initial_ctl_sig_values).reshape(num_interactions,1)).reshape(-1)
-        prediction_vector[intrxn_start:intrxn_end]=interactions
+        interactions = (np.array(predictors*initial_ctl_sig_values).reshape(self.num_interactions,1)).reshape(-1)
+        prediction_vector[self.intrxn_start:self.intrxn_end]=interactions
         # Initialize gradient_ascent with latest ControlSignal values and costs to
-        prediction_vector[ctl_start:ctl_end] = initial_ctl_sig_values
-        prediction_vector[costs_start:costs_end] = initial_ctl_sig_costs
+        prediction_vector[self.ctl_start:self.ctl_end] = initial_ctl_sig_values
+        prediction_vector[self.costs_start:self.costs_end] = initial_ctl_sig_costs
 
+        # FIX: SHOULD DO THIS IN __init__ (BUT NEED TO KNOW num_predictors)
         # Get sample of weights:
         update_weight = BayesGLM(num_predictors=len_prediction_vector,
                                  mu_prior=controller.prediction_weights_priors,
@@ -188,34 +195,78 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         update_weight.function([np.atleast_2d(prediction_vector), np.atleast_2d(outcome)])
         prediction_weights = update_weight.sample_weights()
 
-        # FIX: DO GRADIENT ASCENT HERE:
-        # - iterate over prediction_vector, for each iteration:
-        #    - updating control_signal, control_signal x predictor and control_cost terms
-        #    - multiplying the vector by the prediction weights
-        #    - computing the sum and gradients
-        # - continue to iterate until sum asymptotes
-        # - return allocation_policy and full prediction_vector
-        def gradient_ascent():
-            # Detertermine next set of ControlSignal values, compute their costs, and update prediction_vector with both
-            # FIX: REPLACE WITH PROPER GRADIENT ASCENT COMPUTATION:
-            new_control_signal_values = initial_ctl_sig_values
-            new_control_signal_costs = initial_ctl_sig_costs
-            # FIX: END REPLACE
-            interactions = (np.array(predictors*new_control_signal_values).reshape(num_interactions,1)).reshape(-1)
-            prediction_vector[intrxn_start:intrxn_end] = interactions
-            prediction_vector[ctl_start:ctl_end] = new_control_signal_values
-            prediction_vector[costs_start:costs_end] = new_control_signal_costs
-
-        def compute_lvoc():
-            return np.sum(prediction_vector * prediction_weights)
         continue_ascent = True
-        lvoc = compute_lvoc()
+        lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
         while continue_ascent :
             # Update control_signal_values, control_signal_costs and interactions
-            gradient_ascent()
-            new_lvoc = compute_lvoc()
+            prediction_vector = self.gradient_ascent(prediction_vector, prediction_weights)
+            new_lvoc = self.compute_lvoc(prediction_vector)
             continue_ascent = new_lvoc-lvoc > self.convergence_criterion
 
-        allocation_policy = prediction_vector[ctl_start:ctl_end]
+        allocation_policy = prediction_vector[self.ctl_start:self.ctl_end]
 
         return allocation_policy
+
+    def compute_lvoc(v, w):
+        return np.sum(v * w)
+
+    # FIX: DO GRADIENT ASCENT HERE:
+    # - iterate over prediction_vector, for each iteration:
+    #    - updating control_signal, control_signal x predictor and control_cost terms
+    #    - multiplying the vector by the prediction weights
+    #    - computing the sum and gradients
+    # - continue to iterate until sum asymptotes
+    # - return allocation_policy and full prediction_vector
+    def gradient_ascent(self, prediction_vector, prediction_weights):
+        # Detertermine next set of ControlSignal values, compute their costs, and update prediction_vector with both
+
+        # # FIX: REPLACE WITH PROPER GRADIENT ASCENT COMPUTATION:
+        # new_control_signal_values = initial_ctl_sig_values
+        # new_control_signal_costs = initial_ctl_sig_costs
+        # # FIX: END REPLACE
+
+        # Assign new values
+        predictors = prediction_vector[0:self.num_predictors]
+        interactions = (np.array(predictors*new_control_signal_values).reshape(self.num_interactions,1)).reshape(-1)
+        prediction_vector[self.intrxn_start:self.intrxn_end] = interactions
+        prediction_vector[self.ctl_start:self.ctl_end] = new_control_signal_values
+        prediction_vector[self.costs_start:self.costs_end] = new_control_signal_costs
+
+        ---------------
+
+        # GRADIENCE ASCENT  FROM SEBASTIAN
+        # parameters
+        convergenceCriterion = some small value, e.g. 0.001
+        maximumIterations = 1000
+        updateRate = 0.01
+        # initial values
+        convergenceMetric = some large value # this metric is computed every iteration
+        previousLVOC = 0
+        control_signal_vector = array with control signal intensities of previous trial
+        # perform gradient ascent until convergence criterion is reached
+        while (convergenceMetric > convergenceCriterion) {
+            # initialize gradient
+            # there is a separate gradient for each control signal
+            gradient = zeros(1, num_control_signals);
+            for each control_signal_scalar in control_signal_vector {
+                # compute gradient based on feature-control interaction terms.
+                for each regressor in control_signal_regressors {
+                    # get feature of feature-control interaction term
+                    feature = regressor(1) # for terms that only include the control signal, the feature is always set to 1
+                    # get sampled weight of feature-control interaction term
+                    weight = regressor(2)
+                    # compute gradient for that interaction term with respect to control signal
+                    gradient += feature * weight
+                }
+            # compute gradient for control cost term
+            # assuming that control costs are of the form exp(a * control_signal_scalar + b) where a and b are parameters of the cost function
+            gradient += a * exp(a * control_signal_scalar + b)
+            # update control signal with gradient
+            control_signal_vector(indexing current control signal) = control_signal_scalar + updateRate * gradient
+            }
+            # FIX: return control_signal_vector
+            # compute convergence metric with updated control signals
+            currentLVOC = compute LVOC using current features, weights and new control signals
+            convergenceMetric = currentLVOC - previousLVOC
+            currentLVOC = previousLVOC
+}

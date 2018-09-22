@@ -936,7 +936,6 @@ class LVOCControlMechanism(ControlMechanism):
         # self.control_signal_search_space = \
         #     np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
-
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         EVCControlMechanism requires use of at least one of the cost options

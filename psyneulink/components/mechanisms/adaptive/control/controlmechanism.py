@@ -809,7 +809,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
                               name=name)
 
         if hasattr(self, 'composition') and self.composition:
-            self.aux_components=[self._objective_mechanism, (p, True)]
+            # self.aux_components=[self._objective_mechanism, (p, True)]
+            self.composition.add_c_node(self._objective_mechanism)
+            self.aux_components=[(p, True)]
+
 
         self.monitor_for_control = self.monitored_output_states
 
