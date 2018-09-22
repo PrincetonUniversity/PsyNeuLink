@@ -10,7 +10,6 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.keywords import OWNER_VALUE
-from psyneulink.scheduling.time import TimeScale
 
 import numpy as np
 from toposort import toposort
@@ -434,16 +433,11 @@ class AutodiffComposition(Composition):
         targets=None,
         epochs=None,
         randomize=False,
-        scheduler_processing=None,
-        execution_id=None,
+        execution_id=None
     ):
         
-        # set up execution id, processing scheduler
+        # set up execution id
         execution_id = self._assign_execution_ids(execution_id)
-        
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
-        
         
         # if we're doing step-by-step processing
         if targets is None:
@@ -460,7 +454,7 @@ class AutodiffComposition(Composition):
             return output_values
         
         
-        # if we're doing batch learning
+        # if we're doing learning
         else:
             
             # create empty arrays to hold inputs/targets in correct form for pytorch
@@ -505,8 +499,7 @@ class AutodiffComposition(Composition):
         loss=None,
         randomize=False,
         refresh_losses=False,
-        scheduler_processing=None,
-        execution_id=None,
+        execution_id=None
     ):
         
         # validate arguments, and properties of the autodiff composition
@@ -561,16 +554,11 @@ class AutodiffComposition(Composition):
         if refresh_losses == True:
             self.losses = []
         
-        # set up processing scheduler
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
-        
         # get node roles, set up CIM's
         self._analyze_graph()
         
-        # get execution id, do some stuff with processing scheduler
+        # get execution id
         execution_id = self._assign_execution_ids(execution_id)
-        scheduler_processing._init_counts(execution_id=execution_id)
         
         # validate how inputs are specified - if there is only one origin mechanism, 
         # allow inputs to be specified in a list
@@ -594,10 +582,7 @@ class AutodiffComposition(Composition):
         
         # validate inputs, get adjusted inputs, number of input trial sets
         inputs, num_input_sets = self._adjust_stimulus_dict(inputs, 'inputs')
-        
-        # reset counts on processing scheduler
-        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
-        
+                
         
         # if we're just doing step-by-step processing
         if targets is None:
@@ -616,7 +601,6 @@ class AutodiffComposition(Composition):
                 
                 # call execute function to process current input
                 trial_output = self.execute(inputs=execution_stimuli,
-                                            scheduler_processing=scheduler_processing,
                                             execution_id=execution_id)
                 
                 # -----------------------------------------------------------------------------------
@@ -670,7 +654,6 @@ class AutodiffComposition(Composition):
                                         targets=targets,
                                         epochs=epochs,
                                         randomize=randomize,
-                                        scheduler_processing=scheduler_processing,
                                         execution_id=execution_id)
             
             # ---------------------------------------------------------------------------------------
@@ -683,8 +666,7 @@ class AutodiffComposition(Composition):
             self.results.append(result_copy)
         
         
-        # increment clock, return result
-        scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
+        # return result
         return self.results
     
     
