@@ -133,11 +133,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                          owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
 
-        # FIX: CONSTRUCT prediction_vector TO ACCOMODATE:
-        #        PREDICTORS, PREDICTORS X CONTROL_SIGNAL VALUES, CONTROL_SIGNAL VALUES, AND CONTROL_SIGNAL_COSTS
-        #
-        #        ASSIGN ATTRIBUTES TO OBJECT WITH TUPLES = FIELDS (START INDEX AND NUM ITEMS) FOR EACH OF THESE
-
     def function(self,
                  controller=None,
                  variable=None,
@@ -162,16 +157,13 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # Initialize attributes
         if not hasattr(self, 'prediction_vector'):
 
-            # num_predictors = len(np.array(variable).reshape(-1))
             self.num_predictors = len(predictors)
             self.num_control_signals = self.num_costs = len(controller.control_signals)
             self.num_interactions = self.num_predictors * self.num_control_signals
             len_prediction_vector = self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
-            # FIX: END MOVE
 
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            # FIX: GET RID OF THESE AND REPLACE WITH APPENDS OR CONCATENATES BELOW
             # Indices for fields of prediction_vector
             self.intrxn_start = self.num_predictors
             self.intrxn_end = self.num_predictors+self.num_interactions
@@ -202,20 +194,16 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         return allocation_policy
 
-    # FIX: DO GRADIENT ASCENT HERE:
-    # - iterate over prediction_vector, for each iteration:
-    #    - updating control_signal, control_signal x predictor and control_cost terms
-    #    - multiplying the vector by the prediction weights
-    #    - computing the sum and gradients
-    # - continue to iterate until sum asymptotes
-    # - return allocation_policy and full prediction_vector
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
-        # Detertermine next set of ControlSignal values, compute their costs, and update prediction_vector with both
+        '''Determine next set of ControlSignal values, compute their costs, and update prediction_vector with both
 
-        # # FIX: REPLACE WITH PROPER GRADIENT ASCENT COMPUTATION:
-        # new_control_signal_values = initial_ctl_sig_values
-        # new_control_signal_costs = initial_ctl_sig_costs
-        # # FIX: END REPLACE
+        Iterate over prediction_vector, for each iteration:
+            - updating control_signal, control_signal x predictor and control_cost terms
+            - multiplying the vector by the prediction weights
+            - computing the sum and gradients
+          - continue to iterate until sum asymptotes
+          - return allocation_policy and full prediction_vector
+        '''
 
         convergence_metric = np.finfo(np.float128).max # some large value; this metric is computed every iteration
         previous_lvoc = 0
@@ -248,17 +236,16 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
                 # FIX: ??SHOULD THIS BE -=:
                 # compute gradient for control cost term
-                costs[i] = control_signals[i].intensity_cost_function(control_signal)
+                costs[i] = -control_signals[i].intensity_cost_function(control_signal)
                 gradient[i] += costs[i]
 
                 # update control signal with gradient
                 control_signal_values[i] = control_signal + self.udpate_rate * gradient[i]
 
             # FIX: ??NECESSARY, SINCE ASSIGNED ABOVE:
-            prediction_vector[self.ctl_start:self.ctl_end] = control_signal_values
             prediction_vector[self.intrxn_start:self.intrxn_end] = interactions.reshape(-1)
             # FIX: ??SHOULD THESE BE INCLUDED (THAT IS, SHOULD COSTS BE INCLUDED IN COMPUTATION OF LVOC):
-            prediction_vector[self.costs_start:self.costs_end] = -costs
+            # prediction_vector[self.costs_start:self.costs_end] = -costs
 
             # Comput current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
