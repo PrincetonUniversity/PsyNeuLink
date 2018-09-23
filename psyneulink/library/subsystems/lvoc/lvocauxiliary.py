@@ -214,48 +214,67 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         control_signal_values = prediction_vector[self.ctl_start:self.ctl_end]
         control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
 
-        interactions = prediction_vector[self.intrxn_start:self.intrxn_end]
+        # get interaction weights and reshape so that there is one row per control_signal
+        #    containing the interaction terms for that control_signal with all of the predictors
+        interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
+                                                                                            self.num_predictors)
+        interactions = np.zeros_like(interaction_weights)
+        # multiply interactions terms by predictors (since those don't change during the gradient ascent)
+        interaction_weights_x_predictors = interaction_weights * predictors
 
         costs = prediction_vector[self.costs_start:self.costs_end]
+        cost_weights = prediction_weights[self.costs_start:self.costs_end]
+
+        # TEST PRINT:
+        print('\n\npredictors: ', predictors,
+              '\nprediction_weights: ', prediction_weights)
 
         # perform gradient ascent until convergence criterion is reached
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
             gradient = np.zeros(self.num_control_signals)
 
-            # recompute predictor-control interaction terms [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...] in each iteration
-            interactions_by_ctl_sig = np.array(predictors * control_signal_values.reshape(self.num_control_signals,1))
-            interactions = interactions_by_ctl_sig.reshape(-1)
-            # reshape interaction weights so that there is one row per control_signal (for calculations of gradients)
-            interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
-                                                                                                self.num_predictors)
+            # # recompute predictor-control interaction terms [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...] in each iteration
+            # interactions_by_ctl_sig = np.array(predictors * control_signal_values.reshape(self.num_control_signals,1))
+            # interactions = interactions_by_ctl_sig.reshape(-1)
 
-            for i, control_signal in enumerate(control_signal_values):
+            for i, control_signal_value in enumerate(control_signal_values):
+
+                # FIX: ?IS THIS NEEDED:
+                gradient[i] += np.sum(predictors * predictor_weights)
+
                 # Add gradient with respect to control_signal itself
-                gradient[i] += control_signal_weights[i] * control_signal
+                gradient[i] += control_signal_weights[i] * control_signal_value
 
-                # Add gradient with respect to control_signal-predictor interaction terms for that control_signal
-                gradient[i] += np.sum(interaction_weights[i] * interactions_by_ctl_sig[i])
+                # Add gradient with respect to control_signal-predictor interaction; as noted above,
+                #    interaction_weights[i] is a vector of interaction terms for a control_signal with all predictors
+                interactions[i] = interaction_weights_x_predictors[i] * control_signal_values[i]
+                gradient[i] += np.sum(interactions)
 
-                # FIX: ??SHOULD THIS BE -=:
+                # FIX: ??IS THE "-" CORRECT HERE:
                 # compute gradient for control cost term
-                costs[i] = -control_signals[i].intensity_cost_function(control_signal)
+                costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value) * cost_weights[i])
                 gradient[i] += costs[i]
 
                 # update control signal with gradient
-                control_signal_values[i] = control_signal + self.udpate_rate * gradient[i]
+                control_signal_values[i] = control_signal_value + self.udpate_rate * gradient[i]
 
-            # FIX: ??NECESSARY, SINCE ASSIGNED ABOVE:
             prediction_vector[self.intrxn_start:self.intrxn_end] = interactions.reshape(-1)
-            # FIX: ??SHOULD THESE BE INCLUDED (THAT IS, SHOULD COSTS BE INCLUDED IN COMPUTATION OF LVOC):
-            # prediction_vector[self.costs_start:self.costs_end] = -costs
 
-            # Comput current LVOC using current features, weights and new control signals
+            # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
             # compute convergence metric with updated control signals
             convergence_metric = current_lvoc - previous_lvoc
+            previous_previous_lvoc = previous_lvoc
             previous_lvoc = current_lvoc
-            print(current_lvoc ,previous_lvoc, control_signal_values)
+
+            # TEST PRINT:
+            print('\nprevious_lvoc: ', previous_previous_lvoc,
+                  '\ncurrent_lvoc: ',current_lvoc ,
+                  '\npredictors: ', predictors,
+                  '\ncontrol_signal_values: ', control_signal_values,
+                  '\ninteractions: ', interactions,
+                  '\ncosts: ', costs)
 
         return control_signal_values
 
