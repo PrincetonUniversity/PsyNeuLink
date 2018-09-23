@@ -214,6 +214,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         control_signal_values = prediction_vector[self.ctl_start:self.ctl_end]
         control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
 
+        interactions = prediction_vector[self.intrxn_start:self.intrxn_end]
+
         costs = prediction_vector[self.costs_start:self.costs_end]
 
         # perform gradient ascent until convergence criterion is reached
@@ -222,7 +224,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             gradient = np.zeros(self.num_control_signals)
 
             # recompute predictor-control interaction terms [c1*p1, c1*p2, c1*p3... c2*p1, c2*p2...] in each iteration
-            interactions = np.array(predictors * control_signal_values.reshape(self.num_control_signals,1))
+            interactions_by_ctl_sig = np.array(predictors * control_signal_values.reshape(self.num_control_signals,1))
+            interactions = interactions_by_ctl_sig.reshape(-1)
             # reshape interaction weights so that there is one row per control_signal (for calculations of gradients)
             interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
                                                                                                 self.num_predictors)
@@ -232,7 +235,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                 gradient[i] += control_signal_weights[i] * control_signal
 
                 # Add gradient with respect to control_signal-predictor interaction terms for that control_signal
-                gradient[i] += np.sum(interaction_weights[i] * interactions[i])
+                gradient[i] += np.sum(interaction_weights[i] * interactions_by_ctl_sig[i])
 
                 # FIX: ??SHOULD THIS BE -=:
                 # compute gradient for control cost term
