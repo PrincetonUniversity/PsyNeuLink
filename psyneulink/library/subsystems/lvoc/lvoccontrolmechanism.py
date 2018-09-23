@@ -389,7 +389,8 @@ from psyneulink.components.states.modulatorysignals.controlsignal import Control
 from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    ALL, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, NAME, PARAMETER_STATES, PROJECTIONS, VARIABLE
+    ALL, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, NAME, PARAMETER_STATES, PROJECTIONS, VARIABLE, \
+    FUNCTION_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
@@ -700,11 +701,9 @@ class LVOCControlMechanism(ControlMechanism):
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
-                 prediction_weights_priors:is_numeric=0.0,
-                 prediction_variances_priors:is_numeric=1.0,
                  # objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 function=ControlSignalGradientAscent,
+                 function=ControlSignalGradientAscent(),
                  # update_function=None,
                  # cost_function=LinearCombination(operation=SUM),
                  # combine_outcome_and_cost_function=LinearCombination(operation=SUM),
@@ -718,8 +717,6 @@ class LVOCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
-                                                  prediction_weights_priors=prediction_weights_priors,
-                                                  prediction_variances_priors=prediction_variances_priors,
                                                   # update_function=update_function,
                                                   # cost_function=cost_function,
                                                   # combine_outcome_and_cost_function=combine_outcome_and_cost_function,
