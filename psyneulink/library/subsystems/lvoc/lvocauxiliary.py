@@ -185,6 +185,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                                                                    for c in controller.control_signals]
 
         # Get sample of weights:
+        # FIX: ?SHOULD THE WEIGHTS ALWAYS BE CONSTRAINTED TO BE POSITIVE:
         update_weight.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
         prediction_weights = update_weight.sample_weights()
 

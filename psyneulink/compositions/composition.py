@@ -3050,7 +3050,7 @@ class Composition(Composition_Base):
                 if num_input_sets == -1:
                     num_input_sets = 1
                 elif num_input_sets != 1:
-                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {} "
                                    "conflicts with at least one other node's input specification.".format(self.name,
                                                                                                                node.name))
             else:
@@ -3079,7 +3079,7 @@ class Composition(Composition_Base):
                 if num_input_sets == -1:
                     num_input_sets = len(stimuli[node])
                 elif num_input_sets != len(stimuli[node]):
-                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {} "
                                    "conflicts with at least one other node's input specification."
                                    .format(self.name, (stimuli[node]), node.name))
 
