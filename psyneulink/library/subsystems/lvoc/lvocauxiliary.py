@@ -208,8 +208,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         convergence_metric = np.finfo(np.float128).max # some large value; this metric is computed every iteration
         previous_lvoc = 0
         predictors = prediction_vector[0:self.num_predictors]
-        # FIX: ??WHERE SHOULD THESE BE USED:
-        predictor_weights = prediction_weights[0:self.num_predictors]
+
+        # # FIX: GET RID OF THESE IF weight_predictors IS NOT USED BELOW
+        # predictor_weights = prediction_weights[0:self.num_predictors]
+        # weighted_predictors = np.sum(predictors * predictor_weights)
 
         control_signal_values = prediction_vector[self.ctl_start:self.ctl_end]
         control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
@@ -244,8 +246,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             for i, control_signal_value in enumerate(control_signal_values):
 
-                # FIX: ?IS THIS NEEDED:
-                gradient[i] += np.sum(predictors * predictor_weights)
+                # # FIX: ?IS THIS NEEDED:
+                # gradient[i] += weighted_predictors
 
                 # Add gradient with respect to control_signal itself
                 gradient[i] += control_signal_weights[i] * control_signal_value
@@ -288,7 +290,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
-
 
 
 
