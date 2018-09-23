@@ -31,18 +31,37 @@ class LLVMBuilderContext:
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
 
-    def get_llvm_function(self, name):
-        f = self.module.get_global(name)
-        if not isinstance(f, ir.Function):
-            raise ValueError("No such function: {}".format(name))
-        return f
-
     def __enter__(self):
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
         global _llvm_generation
         _llvm_generation += 1
+
+    def get_llvm_function(self, name):
+        f = self.module.get_global(name)
+        if not isinstance(f, ir.Function):
+            raise ValueError("No such function: {}".format(name))
+        return f
+
+    def convert_python_struct_to_llvm_ir(self, t):
+        if type(t) is list:
+            assert all(type(x) == type(t[0]) for x in t)
+            elem_t = self.convert_python_struct_to_llvm_ir(t[0])
+            return ir.ArrayType(elem_t, len(t))
+        elif type(t) is tuple:
+            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            return ir.LiteralStructType(elems_t)
+        elif isinstance(t, (int, float)):
+            return self.float_ty
+        elif isinstance(t, np.ndarray):
+            return self.convert_python_struct_to_llvm_ir(t.tolist())
+        elif t is None:
+            return ir.LiteralStructType([])
+
+        print(type(t))
+        assert(False)
+
 
 
 # Compiler binding
@@ -171,24 +190,6 @@ def _convert_llvm_ir_to_ctype(t):
     print(t)
     assert(False)
 
-
-def _convert_python_struct_to_llvm_ir(ctx, t):
-    if type(t) is list:
-        assert all(type(x) == type(t[0]) for x in t)
-        elem_t = _convert_python_struct_to_llvm_ir(ctx, t[0])
-        return ir.ArrayType(elem_t, len(t))
-    elif type(t) is tuple:
-        elems_t = [_convert_python_struct_to_llvm_ir(ctx, x) for x in t]
-        return ir.LiteralStructType(elems_t)
-    elif isinstance(t, (int, float)):
-        return ctx.float_ty
-    elif isinstance(t, np.ndarray):
-        return _convert_python_struct_to_llvm_ir(ctx, t.tolist())
-    elif t is None:
-        return ir.LiteralStructType([])
-
-    print(type(t))
-    assert(False)
 
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
