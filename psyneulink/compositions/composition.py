@@ -2281,6 +2281,23 @@ class Composition(object):
             bin_execute = False
 
         if bin_execute:
+            try:
+                node = self.input_CIM
+                self.__get_bin_mechanism(self.input_CIM)
+                node = self.output_CIM
+                self.__get_bin_mechanism(self.output_CIM)
+                for node in self.c_nodes:
+                    self.__get_bin_mechanism(node)
+                bin_execute = True
+            except:
+                string = "Failed to compile wrapper for `{}' in `{}'".format(node.name, self.name)
+                if bin_execute == 'LLVM':
+                    raise CompositionError(string)
+
+                print("WARNING: {}".format(string))
+                bin_execute = False
+
+        if bin_execute:
             self.__bin_initialize(inputs)
             bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
             c, p, i, di, do = bin_mechanism.byref_arg_types

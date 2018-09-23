@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam
+from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam, UserDefinedFunction
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -4317,4 +4317,22 @@ class TestInputSpecifications:
         assert np.allclose(C.output_values, [[0.]])
         assert np.allclose(D.output_values, [[4.]])
 
+    # FIXME: Find a way to recover llvmlite from failure and enable this test
+    @pytest.mark.skip
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'Fallback',
+                                      pytest.param('LLVM', marks=pytest.mark.xfail)])
+    def test_llvm_fallback(self, mode):
+        comp = Composition()
+        def myFunc(variable, params, context):
+            return variable * 2
+        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]])
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=U)
+        inputs = {A: [[10., 20.], [30., 40.]]}
+        comp.add_c_node(A)
 
+        res = comp.run(inputs=inputs, bin_execute=mode)
+
+        assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
