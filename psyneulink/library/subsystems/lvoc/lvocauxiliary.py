@@ -227,7 +227,11 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
+              '\ncontrol_signals: ', control_signal_values,
+              '\ncontrol_costs: ', costs,
               '\nprediction_weights: ', prediction_weights)
+
+        j = 0
 
         # perform gradient ascent until convergence criterion is reached
         while convergence_metric > self.convergence_criterion:
@@ -265,16 +269,19 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
             # compute convergence metric with updated control signals
             convergence_metric = current_lvoc - previous_lvoc
-            previous_previous_lvoc = previous_lvoc
-            previous_lvoc = current_lvoc
 
             # TEST PRINT:
-            print('\nprevious_lvoc: ', previous_previous_lvoc,
+            print('\niteration ', j,
+                  '\nprevious_lvoc: ', previous_lvoc,
                   '\ncurrent_lvoc: ',current_lvoc ,
+                  '\nconvergence_metric: ',convergence_metric,
                   '\npredictors: ', predictors,
                   '\ncontrol_signal_values: ', control_signal_values,
                   '\ninteractions: ', interactions,
                   '\ncosts: ', costs)
+            j+=1
+
+            previous_lvoc = current_lvoc
 
         return control_signal_values
 
