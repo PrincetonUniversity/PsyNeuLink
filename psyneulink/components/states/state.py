@@ -2103,6 +2103,24 @@ class State_Base(State):
     def _assign_default_state_name(self, context=None):
         return False
 
+    def get_input_struct_type(self):
+        return self.function_object.get_input_struct_type()
+
+    def get_output_struct_type(self):
+        return self.function_object.get_output_struct_type()
+
+    def get_param_struct_type(self):
+        return self.function_object.get_param_struct_type()
+
+    def get_param_initializer(self):
+        return self.function_object.get_param_initializer()
+
+    def get_context_struct_type(self):
+        return self.function_object.get_context_struct_type()
+
+    def get_context_initializer(self):
+        return self.function_object.get_context_initializer()
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value

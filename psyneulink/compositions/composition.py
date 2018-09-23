@@ -54,6 +54,10 @@ import numpy as np
 import typecheck as tc
 import uuid
 
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -65,6 +69,7 @@ from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
@@ -451,6 +456,8 @@ class Composition(Composition_Base):
         self.execution_ids = []
         self.controller = controller
 
+        self.projections = []
+
         self._scheduler_processing = None
         self._scheduler_learning = None
 
@@ -477,6 +484,13 @@ class Composition(Composition_Base):
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
+        # Compiled resources
+        self.__params_struct = None
+        self.__context_struct = None
+        self.__data_struct = None
+        self.__input_struct = None
+
+        self.__compiled_mech = {}
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -569,6 +583,32 @@ class Composition(Composition_Base):
         if isinstance(node, ControlMechanism):
             self.add_control_mechanism(node)
 
+        if hasattr(node, "aux_components"):
+
+            projections = []
+            # Add all "c_nodes" to the composition first (in case projections reference them)
+            for component in node.aux_components:
+                if isinstance(component, (Mechanism, Composition)):
+                    self.add_c_node(component)
+                elif isinstance(component, Projection):
+                    projections.append((component, False))
+                elif isinstance(component, tuple):
+                    if isinstance(component[0], Projection) and isinstance(component[1], bool):
+                        projections.append(component)
+                    else:
+                        raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
+                                               " is specified, then the index 0 item must be a Projection, and the "
+                                               "index 1 item must be the feedback specification (True or False)."
+                                               .format(component, node.name))
+                else:
+                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                                           "Composition, Projection, or (Projection, feedback_spec) tuple"
+                                           .format(component.name, node.name))
+
+            # Add all projections to the composition
+            for proj_spec in projections:
+                self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
+
     def add_controller(self, node):
         self.controller = node
         # self.add_c_node(node)
@@ -580,9 +620,9 @@ class Composition(Composition_Base):
         for input_state in control_mechanism._objective_mechanism.input_states:
             input_state.internal_only = True
         objective_node = control_mechanism._objective_mechanism
-        self.add_c_node(objective_node)
-        self.add_projection(objective_node.path_afferents[0])
-        self.add_projection(objective_node.efferents[0])
+        # self.add_c_node(objective_node)
+        # self.add_projection(objective_node.path_afferents[0])
+        # self.add_projection(objective_node.efferents[0])
         self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
         self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
 
@@ -684,6 +724,7 @@ class Composition(Composition_Base):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+            self.projections.append(projection)
 
         else:
             raise CompositionError("Cannot add Projection: {}. This Projection is already in the Composition."
@@ -1135,11 +1176,12 @@ class Composition(Composition_Base):
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
-                    MappingProjection(sender=interface_output_state,
-                                      receiver=input_state,
-                                      matrix= IDENTITY_MATRIX,
-                                      name="("+interface_output_state.name + ") to ("
-                                           + input_state.owner.name + "-" + input_state.name+")")
+                    self.projections.append(MappingProjection(
+                                                sender=interface_output_state,
+                                                receiver=input_state,
+                                                matrix= IDENTITY_MATRIX,
+                                                name="(" + interface_output_state.name + ") to (" +
+                                                input_state.owner.name + "-" + input_state.name + ")"))
 
         # TBI: allow projections from CIM to ANY node
         # for node in self.origin_input_sources:
@@ -1219,10 +1261,11 @@ class Composition(Composition_Base):
 
                     proj_name = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
 
-                    MappingProjection(sender=output_state,
-                                      receiver=interface_input_state,
-                                      matrix=IDENTITY_MATRIX,
-                                      name=proj_name)
+                    self.projections.append(MappingProjection(
+                                                sender=output_state,
+                                                receiver=interface_input_state,
+                                                matrix=IDENTITY_MATRIX,
+                                                name=proj_name))
 
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
@@ -2232,6 +2275,7 @@ class Composition(Composition_Base):
         clamp_input=SOFT_CLAMP,
         targets=None,
         runtime_params=None,
+        bin_execute=False,
         context=None
     ):
         '''
@@ -2315,6 +2359,17 @@ class Composition(Composition_Base):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
+        if bin_execute:
+            self.__bin_initialize(inputs)
+            bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
+            c, p, i, di, do = bin_mechanism.byref_arg_types
+            # Cast the arguments. Structures are the same but ctypes creates new class every time.
+            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
+
         if call_before_pass:
             call_before_pass()
 
@@ -2336,6 +2391,10 @@ class Composition(Composition_Base):
 
             frozen_values = {}
             new_values = {}
+            if bin_execute:
+                import copy
+                frozen_vals = copy.deepcopy(self.__data_struct)
+
             # execute each node with EXECUTING in context
             for node in next_execution_set:
                 frozen_values[node] = node.output_values
@@ -2369,23 +2428,34 @@ class Composition(Composition_Base):
                                                                                 execution_id=self._execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
-                    node.context.execution_phase = ContextFlags.PROCESSING
-                    if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
+                    if bin_execute:
+                        bin_mechanism = self.__get_bin_mechanism(node)
+                        c, p, i, di, do = bin_mechanism.byref_arg_types
+                        # Cast the arguments. Structures are the same but ctypes
+                        # creates new class every time.
+                        bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                                      ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                                      ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
+                                      ctypes.cast(ctypes.byref(frozen_vals), ctypes.POINTER(di)),
+                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
 
-                        node.execute(runtime_params=execution_runtime_params,
-                                     context=ContextFlags.COMPOSITION)
+                    else:
+                        node.context.execution_phase = ContextFlags.PROCESSING
+                        if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
+                            node.execute(runtime_params=execution_runtime_params,
+                                         context=ContextFlags.COMPOSITION)
 
+                        for key in node._runtime_params_reset:
+                            node._set_parameter_value(key, node._runtime_params_reset[key])
+                        node._runtime_params_reset = {}
 
-                    for key in node._runtime_params_reset:
-                        node._set_parameter_value(key, node._runtime_params_reset[key])
-                    node._runtime_params_reset = {}
-
-                    for key in node.function_object._runtime_params_reset:
-                        node.function_object._set_parameter_value(key,
-                                                                  node.function_object._runtime_params_reset[
+                        for key in node.function_object._runtime_params_reset:
+                            node.function_object._set_parameter_value(key,
+                                                                      node.function_object._runtime_params_reset[
                                                                            key])
-                    node.function_object._runtime_params_reset = {}
-                    node.context.execution_phase = ContextFlags.IDLE
+                        node.function_object._runtime_params_reset = {}
+                        node.context.execution_phase = ContextFlags.IDLE
+
                 elif isinstance(node, Composition):
                     node.execute(execution_id=self._execution_id)
                 if node in origin_nodes:
@@ -2409,6 +2479,20 @@ class Composition(Composition_Base):
 
         if call_after_pass:
             call_after_pass()
+
+        # extract result here
+        if bin_execute:
+            bin_mechanism = self.__get_bin_mechanism(self.output_CIM)
+            c, p, i, di, do = bin_mechanism.byref_arg_types
+            # Cast the arguments. Structures are the same but ctypes
+            # creates new class every time.
+            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
+                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
+
+            return self.__extract_mech_output(self.output_CIM)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
@@ -2438,6 +2522,7 @@ class Composition(Composition_Base):
         call_after_trial=None,
         clamp_input=SOFT_CLAMP,
         targets=None,
+        bin_execute=False,
         initial_values=None,
         runtime_params=None
     ):
@@ -2603,7 +2688,8 @@ class Composition(Composition_Base):
                                         call_after_pass=call_after_pass,
                                         execution_id=execution_id,
                                         clamp_input=clamp_input,
-                                        runtime_params=runtime_params)
+                                        runtime_params=runtime_params,
+                                        bin_execute=bin_execute)
 
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
@@ -2664,8 +2750,215 @@ class Composition(Composition_Base):
 
         return self.results
 
+    def get_param_struct_type(self):
+        mech_param_type_list = [m.get_param_struct_type() for m in self.c_nodes]
+        mech_param_type_list.append(self.input_CIM.get_param_struct_type())
+        mech_param_type_list.append(self.output_CIM.get_param_struct_type())
+        proj_param_type_list = [p.get_param_struct_type() for p in self.projections]
+        return ir.LiteralStructType([
+            ir.LiteralStructType(mech_param_type_list),
+            ir.LiteralStructType(proj_param_type_list)])
+
+    def get_context_struct_type(self):
+        mech_ctx_type_list = [m.get_context_struct_type() for m in self.c_nodes]
+        mech_ctx_type_list.append(self.input_CIM.get_context_struct_type())
+        mech_ctx_type_list.append(self.output_CIM.get_context_struct_type())
+        proj_ctx_type_list = [p.get_context_struct_type() for p in self.projections]
+        return ir.LiteralStructType([
+            ir.LiteralStructType(mech_ctx_type_list),
+            ir.LiteralStructType(proj_ctx_type_list)])
+
+    def get_input_struct_type(self):
+        return self.input_CIM.get_input_struct_type()
+
+    def get_data_struct_type(self):
+        output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
+        output_type_list.append(self.input_CIM.get_output_struct_type())
+        output_type_list.append(self.output_CIM.get_output_struct_type())
+        return ir.LiteralStructType(output_type_list)
+
+    def get_context_initializer(self):
+        mech_contexts = [tuple(m.get_context_initializer()) for m in self.c_nodes]
+        mech_contexts.append(tuple(self.input_CIM.get_context_initializer()))
+        mech_contexts.append(tuple(self.output_CIM.get_context_initializer()))
+        proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
+        return (tuple(mech_contexts), tuple(proj_contexts))
+
+    def get_param_initializer(self):
+        mech_params = [tuple(m.get_param_initializer()) for m in self.c_nodes]
+        mech_params.append(tuple(self.input_CIM.get_param_initializer()))
+        mech_params.append(tuple(self.output_CIM.get_param_initializer()))
+        proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
+        return (tuple(mech_params), tuple(proj_params))
+
+    def get_data_initializer(self):
+        def tupleize(x):
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return x
+
+        output = [[os.value for os in m.output_states] for m in self.c_nodes]
+        output.append([os.value for os in self.input_CIM.output_states])
+        output.append([os.value for os in self.output_CIM.output_states])
+        return tupleize(output)
+
+    def __get_mech_index(self, mechanism):
+        if mechanism is self.input_CIM:
+            return len(self.c_nodes)
+        elif mechanism is self.output_CIM:
+            return len(self.c_nodes) + 1
+        else:
+            return self.c_nodes.index(mechanism)
+
+    def __get_bin_mechanism(self, mechanism):
+        if mechanism not in self.__compiled_mech:
+            wrapper = self.__gen_mech_wrapper(mechanism)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_mech[mechanism] = bin_f
+            return bin_f
+
+        return self.__compiled_mech[mechanism]
+
+    def __extract_mech_output(self, mechanism):
+        mech_index = self.__get_mech_index(mechanism)
+        field = self.__data_struct._fields_[mech_index][0]
+        res_struct = getattr(self.__data_struct, field)
+        return pnlvm._convert_ctype_to_python(res_struct)
+
+    def reinitialize(self):
+        self.__data_struct = None
+        self.__params_struct = None
+        self.__context_struct = None
+
+    def __bin_initialize(self, inputs):
+        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        # Read provided input and split apart each input state
+        input_data = [[x] for m in origin_mechanisms for x in inputs[m]]
+
+        c_input = pnlvm._convert_llvm_ir_to_ctype(self.get_input_struct_type())
+        def tupleize(x):
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return x
+
+        self.__input_struct = c_input(*tupleize(input_data))
+
+        if self.__data_struct is None:
+            c_output = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
+            output = self.get_data_initializer()
+            self.__data_struct = c_output(*output)
+
+        if self.__params_struct is None:
+            c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
+            params = self.get_param_initializer()
+            self.__params_struct = c_params(*params)
+
+        if self.__context_struct is None:
+            c_contexts = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())
+            contexts = self.get_context_initializer()
+            self.__context_struct = c_contexts(*contexts)
+
+    def __gen_mech_wrapper(self, mech):
+
+        func_name = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
+            data_struct_ptr = self.get_data_struct_type().as_pointer()
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_context_struct_type().as_pointer(),
+                self.get_param_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                data_struct_ptr, data_struct_ptr))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            context, params, comp_in, data_in, data_out = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            m_function = ctx.get_llvm_function(mech.llvmSymbolName)
+            origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+
+            #TODO: This should be replaced by executing input_CIM
+            if mech is self.input_CIM:
+                m_in = comp_in
+                incoming_projections = []
+            else:
+                m_in = builder.alloca(m_function.args[2].type.pointee)
+                incoming_projections = mech.afferents
+
+            # Run all incoming projections
+            #TODO: This should filter out projections with different execution ID
+            for par_proj in incoming_projections:
+                # Skip autoassociative projections
+                if par_proj.sender.owner is par_proj.receiver.owner:
+                    continue
+                proj_idx = self.projections.index(par_proj)
+
+                # Get parent mechanism
+                par_mech = par_proj.sender.owner
+
+                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+                proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
+
+                output_s = par_proj.sender
+                assert output_s in par_mech.output_states
+                mech_idx = self.__get_mech_index(par_mech)
+                output_state_idx = par_mech.output_states.index(output_s)
+                proj_in = builder.gep(data_in, [ctx.int32_ty(0),
+                                                ctx.int32_ty(mech_idx),
+                                                ctx.int32_ty(output_state_idx)])
+
+                state = par_proj.receiver
+                assert state.owner is mech
+                if state in state.owner.input_states:
+                    state_idx = state.owner.input_states.index(state)
+
+                    assert par_proj in state.pathway_projections
+                    projection_idx = state.pathway_projections.index(par_proj)
+
+                    # Adjust for AutoAssociative projections
+                    for i in range(projection_idx):
+                        if isinstance(state.pathway_projections[i], AutoAssociativeProjection):
+                            projection_idx -= 1
+                elif state in state.owner.parameter_states:
+                    state_idx = state.owner.parameter_states.index(state) + len(state.owner.input_states)
+
+                    assert par_proj in state.mod_afferents
+                    projection_idx = state.mod_afferents.index(par_proj)
+                else:
+                    # Unknown state
+                    assert False
+
+                assert state_idx < len(m_in.type.pointee)
+                assert projection_idx < len(m_in.type.pointee.elements[state_idx])
+                proj_out = builder.gep(m_in, [ctx.int32_ty(0),
+                                              ctx.int32_ty(state_idx),
+                                              ctx.int32_ty(projection_idx)])
+
+                if proj_in.type != proj_function.args[2].type:
+                    assert mech is self.output_CIM
+                    proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
+                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
+
+
+            idx = self.__get_mech_index(mech)
+            m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            m_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            builder.call(m_function, [m_params, m_context, m_in, m_out])
+            builder.ret_void()
+
+        return func_name
+
     def run_simulation(self):
         print("simulation runs now")
+
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform
         if np.shape(np.atleast_2d(input_value)) == np.shape(var):

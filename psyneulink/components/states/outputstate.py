@@ -1265,6 +1265,10 @@ class OutputState(State_Base):
             label_dictionary = self.owner.output_labels_dict
         return self._get_value_label(label_dictionary, self.owner.output_states)
 
+    @property
+    def llvmSymbolName(self):
+        return self.function_object.llvmSymbolName
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)

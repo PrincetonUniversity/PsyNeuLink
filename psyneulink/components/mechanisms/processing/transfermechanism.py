@@ -327,6 +327,11 @@ __all__ = [
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
+import functools
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 # TransferMechanism parameter keywords:
 CLIP = "clip"
 INTEGRATION_RATE = "integration_rate"
@@ -1001,6 +1006,161 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[minCapIndices] = np.min(clip)
             current_input[maxCapIndices] = np.max(clip)
         return current_input
+
+    def get_param_struct_type(self):
+        input_param_list = []
+        for state in self.input_states:
+            input_param_list.append(state.get_param_struct_type())
+        input_param_struct = ir.LiteralStructType(input_param_list)
+
+        param_type_list = [self.function_object.get_param_struct_type()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            param_type_list.append(self.integrator_function.get_param_struct_type())
+        function_param_struct = ir.LiteralStructType(param_type_list)
+
+        output_param_list = []
+        for state in self.output_states:
+            output_param_list.append(state.get_param_struct_type())
+        output_param_struct = ir.LiteralStructType(output_param_list)
+
+        param_param_list = []
+        for state in self.parameter_states:
+            param_param_list.append(state.get_param_struct_type())
+        param_param_struct = ir.LiteralStructType(param_param_list)
+
+        return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct, param_param_struct])
+
+
+    def get_context_struct_type(self):
+        input_context_list = []
+        for state in self.input_states:
+            input_context_list.append(state.get_context_struct_type())
+        input_context_struct = ir.LiteralStructType(input_context_list)
+
+        context_type_list = [self.function_object.get_context_struct_type()]
+        if self.integrator_mode:
+           assert self.integrator_function is not None
+           context_type_list.append(self.integrator_function.get_context_struct_type())
+
+        function_context_struct = ir.LiteralStructType(context_type_list)
+
+        output_context_list = []
+        for state in self.output_states:
+            output_context_list.append(state.get_context_struct_type())
+        output_context_struct = ir.LiteralStructType(output_context_list)
+
+        parameter_context_list = []
+        for state in self.parameter_states:
+            parameter_context_list.append(state.get_context_struct_type())
+        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
+
+        return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
+
+
+    def get_param_initializer(self):
+        input_param_init_list = []
+        for state in self.input_states:
+            input_param_init_list.append(state.get_param_initializer())
+        input_param_init = tuple(input_param_init_list)
+
+        function_param_list = [self.function_object.get_param_initializer()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            function_param_list.append(self.integrator_function.get_param_initializer())
+        function_param_init = tuple(function_param_list)
+
+        output_param_init_list = []
+        for state in self.output_states:
+            output_param_init_list.append(state.get_param_initializer())
+        output_param_init = tuple(output_param_init_list)
+
+        param_param_init_list = []
+        for state in self.parameter_states:
+            param_param_init_list.append(state.get_param_initializer())
+        param_param_init = tuple(param_param_init_list)
+
+        return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
+
+
+    def get_context_initializer(self):
+        input_context_init_list = []
+        for state in self.input_states:
+            input_context_init_list.append(state.get_context_initializer())
+        input_context_init = tuple(input_context_init_list)
+
+        context_list = [self.function_object.get_context_initializer()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            context_list.append(self.integrator_function.get_context_initializer())
+        function_context_init = tuple(context_list)
+
+        output_context_init_list = []
+        for state in self.output_states:
+            output_context_init_list.append(state.get_context_initializer())
+        output_context_init = tuple(output_context_init_list)
+
+        parameter_context_init_list = []
+        for state in self.parameter_states:
+            parameter_context_init_list.append(state.get_context_initializer())
+        parameter_context_init = tuple(parameter_context_init_list)
+
+        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
+
+
+    def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
+        ptri = builder.gep(vo, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        val = pnlvm.helpers.fclamp_const(builder, val, min_val, max_val)
+
+        builder.store(val, ptro)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
+
+        # Params and context for both integrator and main function
+        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+        if self.integrator_mode:
+            # Integrator function is the second in the function param aggregate
+            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_params, builder = self._gen_llvm_param_states(self.integrator_function, if_param_ptr, ctx, builder, params, context, arg_in)
+
+            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function, if_params, if_context, is_out)
+        else:
+            mf_in = is_out
+
+        # Main function is the first in the function param aggregate
+        mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_param_ptr, ctx, builder, params, context, arg_in)
+
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_context, mf_in)
+
+        clip = self.get_current_mechanism_param("clip")
+        if clip is not None:
+            for i in range(mf_out.type.pointee.count):
+                mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                kwargs = {"ctx":ctx, "vo":mf_out_local, "min_val":clip[0], "max_val":clip[1]}
+                inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
+                vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
+                builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
+
+        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
+
+        return builder
+
+    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
+        # LLVM version of parse input variable
+        # FIXME: Should this be more targeted?
+        # FIXME: Remove this workaround
+        if func.args[2].type != func_in.type:
+            func_in = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        return func_in, builder
 
     def _execute(self,
                  variable=None,
