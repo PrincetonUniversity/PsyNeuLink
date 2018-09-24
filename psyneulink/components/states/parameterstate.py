@@ -901,8 +901,7 @@ class ParameterState(State_Base):
                 assert False
 
             if name is not None:
-                f_mod_param_idx = self.function_object.get_param_ids().index(name)
-                f_mod_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(f_mod_param_idx)])
+                f_mod_param_ptr, builder = self.function_object.get_param_ptr(ctx, builder, f_params, name)
                 builder.store(f_mod, f_mod_param_ptr)
 
 
