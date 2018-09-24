@@ -16,7 +16,8 @@ import os, sys
 from psyneulink.llvm import builtins
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
-_module = ir.Module(name="PsyNeuLinkModule")
+_modules = set()
+_compiled_modules = set()
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
@@ -24,6 +25,15 @@ _float_ty = ir.DoubleType()
 _llvm_generation = 0
 _binary_generation = 0
 
+def _find_llvm_function(name, mods = _modules | _compiled_modules):
+    f = None
+    for m in mods:
+        if name in m.globals:
+            f = m.get_global(name)
+
+    if not isinstance(f, ir.Function):
+        raise ValueError("No such function: {}".format(name))
+    return f
 
 class LLVMBuilderContext:
     module = None
@@ -37,7 +47,7 @@ class LLVMBuilderContext:
     def __enter__(self):
         if LLVMBuilderContext.nest_level == 0:
             assert LLVMBuilderContext.module is None
-            LLVMBuilderContext.module = _module
+            LLVMBuilderContext.module = ir.Module(name="PsyNeuLinkModule-" + str(_llvm_generation))
         LLVMBuilderContext.nest_level += 1
         return self
 
@@ -45,6 +55,7 @@ class LLVMBuilderContext:
         LLVMBuilderContext.nest_level -= 1
         if LLVMBuilderContext.nest_level == 0:
             assert LLVMBuilderContext.module is not None
+            _modules.add(LLVMBuilderContext.module)
             LLVMBuilderContext.module = None
 
         global _llvm_generation
@@ -55,9 +66,12 @@ class LLVMBuilderContext:
         return name + '-' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
-        f = self.module.get_global(name)
-        if not isinstance(f, ir.Function):
-            raise ValueError("No such function: {}".format(name))
+        f = _find_llvm_function(name, _compiled_modules | _modules | {LLVMBuilderContext.module})
+        # Add declaration to the current module
+        if f.name not in LLVMBuilderContext.module.globals:
+            decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)
+            assert decl_f.is_declaration
+            return decl_f
         return f
 
     def convert_python_struct_to_llvm_ir(self, t):
@@ -149,17 +163,22 @@ def _build_mod(module):
     return mod
 
 def _llvm_build():
-    new_mod = _build_mod(_module)
-    if new_mod is None:
-        return
 
-    # Remove the old module
+    mod_bundle = binding.parse_assembly("")
+    global _modules
+    for m in _modules:
+        new_mod = _build_mod(m)
+        if new_mod is not None:
+            mod_bundle.link_in(new_mod)
+            _compiled_modules.add(m)
+
+    _modules = set()
     global __mod
     if __mod is not None:
         _engine.remove_module(__mod)
-        __mod = None
-
-    __mod = new_mod
+        __mod.link_in(mod_bundle)
+    else:
+        __mod = mod_bundle
 
     # Now add the module and make sure it is ready for execution
     _engine.add_module(__mod)
@@ -257,7 +276,7 @@ class LLVMBinaryFunction:
         self.__ptr = ptr
 
         # Recompiled, update the signature
-        f = _module.get_global(self.__name)
+        f = _find_llvm_function(self.__name, _modules | _compiled_modules)
         assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)

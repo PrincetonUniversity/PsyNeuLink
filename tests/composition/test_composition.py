@@ -4318,7 +4318,6 @@ class TestInputSpecifications:
         assert np.allclose(D.output_values, [[4.]])
 
     # FIXME: Find a way to recover llvmlite from failure and enable this test
-    @pytest.mark.skip
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', 'Fallback',
                                       pytest.param('LLVM', marks=pytest.mark.xfail)])
