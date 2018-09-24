@@ -2289,11 +2289,11 @@ class Composition(object):
                 for node in self.c_nodes:
                     self.__get_bin_mechanism(node)
                 bin_execute = True
-            except:
-                string = "Failed to compile wrapper for `{}' in `{}'".format(node.name, self.name)
+            except Exception as e:
                 if bin_execute == 'LLVM':
-                    raise CompositionError(string)
+                    raise e
 
+                string = "Failed to compile wrapper for `{}' in `{}': {}".format(node.name, self.name, str(e))
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
