@@ -225,7 +225,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
-        costs = prediction_vector[self.costs_start:self.costs_end]
+        costs = -prediction_vector[self.costs_start:self.costs_end]
         cost_weights = prediction_weights[self.costs_start:self.costs_end]
 
         # TEST PRINT:
