@@ -34,17 +34,17 @@ class LLVMBuilderContext:
         self.float_ty = _float_ty
 
     def __enter__(self):
-        if self.nest_level == 0:
-            assert self.module is None
-            self.module = _module
-        self.nest_level += 1
+        if LLVMBuilderContext.nest_level == 0:
+            assert LLVMBuilderContext.module is None
+            LLVMBuilderContext.module = _module
+        LLVMBuilderContext.nest_level += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        self.nest_level -= 1
-        if self.nest_level == 0:
-            assert self.module is not None
-            self.module = None
+        LLVMBuilderContext.nest_level -= 1
+        if LLVMBuilderContext.nest_level == 0:
+            assert LLVMBuilderContext.module is not None
+            LLVMBuilderContext.module = None
 
         global _llvm_generation
         _llvm_generation += 1
@@ -119,23 +119,42 @@ _engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 __mod = None
 
 
-def _llvm_build():
-    # Remove the old module
-    global __mod
-    if __mod is not None:
-        _engine.remove_module(__mod)
+def _build_mod(module):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(_module)
+        print(module)
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
-    __mod = binding.parse_assembly(str(_module))
-    __mod.verify()
-    __pass_manager.run(__mod)
-    if __dumpenv is not None and __dumpenv.find("opt") != -1:
-        print(__mod)
+    try:
+        mod = binding.parse_assembly(str(module))
+        mod.verify()
+        __pass_manager.run(mod)
+        if __dumpenv is not None and __dumpenv.find("opt") != -1:
+            print(mod)
+        # This prints generated x86 assembly
+        if __dumpenv is not None and __dumpenv.find("isa") != -1:
+            print("ISA assembly:")
+            print(__target_machine.emit_assembly(mod))
+    except Exception as e:
+        print("ERROR: llvm parsing failed: {}".format(e))
+        mod = None
+
+    return mod
+
+def _llvm_build():
+    new_mod = _build_mod(_module)
+    if new_mod is None:
+        return
+
+    # Remove the old module
+    global __mod
+    if __mod is not None:
+        _engine.remove_module(__mod)
+        __mod = None
+
+    __mod = new_mod
 
     # Now add the module and make sure it is ready for execution
     _engine.add_module(__mod)
@@ -147,11 +166,6 @@ def _llvm_build():
 
     # update binary generation
     _binary_generation = _llvm_generation
-
-    # This prints generated x86 assembly
-    if __dumpenv is not None and __dumpenv.find("isa") != -1:
-        print("ISA assembly:")
-        print(__target_machine.emit_assembly(__mod))
 
 
 _field_count = 0
