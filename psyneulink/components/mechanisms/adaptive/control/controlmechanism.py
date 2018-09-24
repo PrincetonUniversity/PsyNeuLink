@@ -350,7 +350,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PRO
     MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, CNodeRole
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -777,7 +777,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
-
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
@@ -802,11 +801,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        MappingProjection(sender=self.objective_mechanism,
-                          receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX,
-                          name=name)
-
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      name=name)
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
+        self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
+        self.aux_components.append(projection_from_objective)
         self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):

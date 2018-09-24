@@ -17,7 +17,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
+from psyneulink.compositions.composition import Composition, CompositionError
+from psyneulink.globals.utilities import CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.compositions.systemcomposition import SystemComposition
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
