@@ -26,15 +26,26 @@ _binary_generation = 0
 
 
 class LLVMBuilderContext:
+    nest_level = 0
+    module = None
+
     def __init__(self):
-        self.module = _module
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
 
     def __enter__(self):
+        if self.nest_level == 0:
+            assert self.module is None
+            self.module = _module
+        self.nest_level += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
+        self.nest_level -= 1
+        if self.nest_level == 0:
+            assert self.module is not None
+            self.module = None
+
         global _llvm_generation
         _llvm_generation += 1
 
