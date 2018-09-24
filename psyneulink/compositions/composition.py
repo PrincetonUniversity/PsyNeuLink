@@ -2800,7 +2800,7 @@ class Composition(object):
 
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
+            func_name = ctx.get_unique_name("comp_wrap_" + mech.name)
             data_struct_ptr = self.get_data_struct_type().as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),

@@ -34,7 +34,7 @@ def test_fixed_dimensions__pnl_builtin_vxm():
     custom_name = None
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        custom_name = ctx.module.get_unique_name("vxsqm")
+        custom_name = ctx.get_unique_name("vxsqm")
         double_ptr_ty = ctx.convert_python_struct_to_llvm_ir(1.0).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 

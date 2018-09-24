@@ -26,8 +26,9 @@ _binary_generation = 0
 
 
 class LLVMBuilderContext:
-    nest_level = 0
     module = None
+    nest_level = 0
+    uniq_counter = 0
 
     def __init__(self):
         self.int32_ty = _int32_ty
@@ -48,6 +49,10 @@ class LLVMBuilderContext:
 
         global _llvm_generation
         _llvm_generation += 1
+
+    def get_unique_name(self, name):
+        LLVMBuilderContext.uniq_counter += 1
+        return name + '-' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
         f = self.module.get_global(name)
