@@ -172,18 +172,25 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             self.costs_start = self.ctl_end
             self.costs_end = len_prediction_vector
 
+            predictors_subvector = self.prediction_vector[0:self.num_predictors]
+            control_subvector = self.prediction_vector[self.ctl_start:self.ctl_end]
+            interxn_subvector = self.prediction_vector[self.intrxn_start:self.intrxn_end]
+            costs_subvector = self.prediction_vector[self.costs_start:self.costs_end]
+
             update_weight = BayesGLM(num_predictors=len(self.prediction_vector),
                                      mu_prior=self.prediction_weights_priors,
                                      sigma_prior=self.prediction_variances_priors)
 
-        # Populate prediction_vector
-        self.prediction_vector[0:self.num_predictors] = predictors
+        # Populate fields (subvectors) of prediction_vector
 
-        # Initialize with latest ControlSignal values and costs to
-        self.prediction_vector[self.ctl_start:self.ctl_end] = [c.value for c in controller.control_signals]
-        self.prediction_vector[self.costs_start:self.costs_end] = -[0 if c.cost is None else c.cost
-                                                                    for c in controller.control_signals]
-        self.prediction_vector[self.intrxn_start:self.intrxn_end] = RECOMPUTE
+        predictors_subvector = np.array(predictors)
+        control_subvector = np.array([c.value for c in controller.control_signals])
+        # FIX: RECOMPUTE interactions:
+        # interactions = interxn_subvector.reshape(self.num_control_signals, self.num_predictors)
+        interxn_subvector = \
+            np.array(predictors_subvector * control_subvector.reshape(self.num_control_signals,1)).reshape(-1)
+        costs_subvector = [0 if c.cost is None else c.cost for c in controller.control_signals] * -1
+        # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
         update_weight.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
@@ -211,9 +218,11 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
 
         predictors = prediction_vector[0:self.num_predictors]
-        interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end]
-        # predictors_for_interactions = np.repeat(np.atleast_2d(predictors],
-        #                                         self.num_control_signals, 0).reshape(-1)
+
+        # get interaction weights and reshape so that there is one row per control_signal
+        #    containing the terms for the interaction of that control_signal with each of the predictors
+        interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
+                                                                                            self.num_predictors)
         interactions = np.zeros_like(interaction_weights)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
@@ -221,17 +230,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         control_signal_values = prediction_vector[self.ctl_start:self.ctl_end]
         control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
 
-        # FIX: DO THIS HERE, OR IN FOR LOOP, RESTRICTING IT TO ONLY INTERACTION TERM FOR THE CURRENT CONTROL_SIGNAL
-        # FIX: OR, CONSTRUCT IT HERE, BUT AS VECTOR WITH SEPARATE TERM FOR EACH CONTROL_SIGNAL
-        gradient_constant = np.zeros(self.num_control_signals)
+        gradient_constants = np.zeros(self.num_control_signals)
         for i, c in enumerate(control_signal_values):
             gradient_constants[i] = control_signal_weights[i]
-            gradient_constants = np.sum(predictors_for_interactions * interaction_weights)
-
-            # get interaction weights and reshape so that there is one row per control_signal
-            #    containing the interaction terms for that control_signal with all of the predictors
-            interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
-                                                                                                self.num_predictors)
+            gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
 
         costs = prediction_vector[self.costs_start:self.costs_end]
         cost_weights = prediction_weights[self.costs_start:self.costs_end]
