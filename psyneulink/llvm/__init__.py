@@ -172,7 +172,8 @@ def _llvm_build():
             mod_bundle.link_in(new_mod)
             _compiled_modules.add(m)
 
-    _modules = set()
+    _modules.clear()
+
     global __mod
     if __mod is not None:
         _engine.remove_module(__mod)
