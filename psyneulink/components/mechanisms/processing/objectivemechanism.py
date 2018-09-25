@@ -877,3 +877,6 @@ def _instantiate_monitoring_projections(owner,
                                   receiver=receiver,
                                   matrix=projection_spec,
                                   name = sender.name + ' monitor')
+
+            # FIX: ADD THESE PROJECTIONS TO aux_components ATTRIBUTE
+
