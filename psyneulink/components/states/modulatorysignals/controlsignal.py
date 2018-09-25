@@ -934,8 +934,6 @@ class ControlSignal(ModulatorySignal):
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                owner=owner,
                                                                connections=state_specific_spec)
-            for proj in params_dict[PROJECTIONS]:
-                self.owner.aux_components.append(proj)
 
         elif state_specific_spec is not None:
             raise ControlSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".

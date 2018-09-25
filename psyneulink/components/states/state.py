@@ -1826,7 +1826,8 @@ class State_Base(State):
             #    and assigned Projection to self.efferents
             if not projection in self.efferents:
                 self.efferents.append(projection)
-
+            if isinstance(projection, ModulatoryProjection_Base):
+                self.owner.aux_components.append((projection, True))
             return projection
 
     def _get_primary_state(self, mechanism):
@@ -2313,7 +2314,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     Returns a State or None
     """
-
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     from psyneulink.globals.utilities import is_numeric

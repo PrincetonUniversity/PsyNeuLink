@@ -869,6 +869,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,
