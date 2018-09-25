@@ -2819,9 +2819,7 @@ class Composition(object):
             builder = ir.IRBuilder(block)
 
             m_function = ctx.get_llvm_function(mech.llvmSymbolName)
-            origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
-            #TODO: This should be replaced by executing input_CIM
             if mech is self.input_CIM:
                 m_in = comp_in
                 incoming_projections = []
