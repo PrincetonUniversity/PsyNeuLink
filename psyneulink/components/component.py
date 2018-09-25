@@ -3184,6 +3184,15 @@ class Component(object):
     def function_params(self, val):
         self.user_params.__additem__(FUNCTION_PARAMS, val)
 
+    @property
+    def is_pnl_inherent(self):
+        try:
+            return self._is_pnl_inherent
+        except AttributeError:
+            self._is_pnl_inherent = False
+            return self._is_pnl_inherent
+
+
 COMPONENT_BASE_CLASS = Component
 
 def make_property(name):

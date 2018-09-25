@@ -83,3 +83,10 @@ primary_registries = [
     ProjectionRegistry, StateRegistry, SystemRegistry, DeferredInitRegistry, ProcessRegistry,
     PreferenceSetRegistry,
 ]
+
+for reg in primary_registries:
+    def func(name, obj):
+        if isinstance(obj, Component):
+            obj._is_pnl_inherent = True
+
+    process_registry_object_instances(reg, func)
