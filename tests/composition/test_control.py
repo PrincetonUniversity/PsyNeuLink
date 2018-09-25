@@ -40,6 +40,7 @@ class TestControlMechanisms:
 
         path = [A, B, LC]
         S = pnl.Composition()
+        S.add_c_node(A, required_roles=pnl.CNodeRole.ORIGIN)
         S.add_linear_processing_pathway(pathway=path)
         LC.reinitialize_when = pnl.Never()
 
@@ -85,6 +86,7 @@ class TestControlMechanisms:
                             np.array([[0.73162414]]),
                             np.array([[0.73192822]]),
                             np.array([[0.73224618]])]
+
         assert np.allclose(A_value, expected_A_value)
 
         expected_B_value = [np.array([[0.8534092]]),

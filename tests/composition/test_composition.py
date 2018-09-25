@@ -909,7 +909,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -950,7 +950,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -991,7 +991,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -1032,7 +1032,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
