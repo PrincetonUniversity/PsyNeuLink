@@ -1827,7 +1827,7 @@ class State_Base(State):
             if not projection in self.efferents:
                 self.efferents.append(projection)
             if isinstance(projection, ModulatoryProjection_Base):
-                self.owner.aux_components.append((projection, True))
+                self.owner.aux_components.append(projection)
             return projection
 
     def _get_primary_state(self, mechanism):
