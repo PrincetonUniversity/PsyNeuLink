@@ -60,6 +60,7 @@ from llvmlite import ir
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.states.outputstate import OutputState
@@ -186,7 +187,6 @@ class Graph(object):
             vertex = Vertex(component, feedback=feedback)
             self.comp_to_vertex[component] = vertex
             self.add_vertex(vertex)
-
 
     def add_vertex(self, vertex):
         if vertex in self.vertices:
@@ -610,6 +610,8 @@ class Composition(object):
                 projection = MappingProjection(matrix=projection)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
+        elif isinstance(projection, ModulatoryProjection_Base):
+            pass
         elif projection is None:
             projection = MappingProjection()
         elif not isinstance(projection, Projection):

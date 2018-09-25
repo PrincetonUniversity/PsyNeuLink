@@ -899,8 +899,8 @@ class LCControlMechanism(ControlMechanism):
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
             parameter_state = mech._parameter_states[mech.multiplicative_param]
-            ControlProjection(sender=self.control_signals[0],
-                              receiver=parameter_state)
+            self.aux_components.append(ControlProjection(sender=self.control_signals[0],
+                                                         receiver=parameter_state))
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):
