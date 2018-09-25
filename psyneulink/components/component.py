@@ -1110,7 +1110,7 @@ class Component(object):
                  self.get_input_struct_type().as_pointer(),
                  self.get_output_struct_type().as_pointer()))
 
-            func_name = ctx.module.get_unique_name(self.name)
+            func_name = ctx.get_unique_name(self.name)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, context, arg_in, arg_out = llvm_func.args
             for p in params, context, arg_in, arg_out:

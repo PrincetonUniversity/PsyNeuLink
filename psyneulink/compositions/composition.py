@@ -2256,6 +2256,26 @@ class Composition(object):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
+        if bin_execute == 'Python':
+            bin_execute = False
+
+        if bin_execute:
+            try:
+                node = self.input_CIM
+                self.__get_bin_mechanism(self.input_CIM)
+                node = self.output_CIM
+                self.__get_bin_mechanism(self.output_CIM)
+                for node in self.c_nodes:
+                    self.__get_bin_mechanism(node)
+                bin_execute = True
+            except Exception as e:
+                if bin_execute == 'LLVM':
+                    raise e
+
+                string = "Failed to compile wrapper for `{}' in `{}': {}".format(node.name, self.name, str(e))
+                print("WARNING: {}".format(string))
+                bin_execute = False
+
         if bin_execute:
             self.__bin_initialize(inputs)
             bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
@@ -2759,7 +2779,7 @@ class Composition(object):
 
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
+            func_name = ctx.get_unique_name("comp_wrap_" + mech.name)
             data_struct_ptr = self.get_data_struct_type().as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
