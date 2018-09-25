@@ -24,6 +24,7 @@ def test_botvinick_model(benchmark, mode, reps):
         benchmark.disabled = True
         benchmark(lambda _:0,0)
         pytest.skip("not stressed")
+        return # This should not be reached
 
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 

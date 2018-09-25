@@ -24,7 +24,7 @@ def test_helper_fclamp():
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
 
         # Create clamp function
-        custom_name = ctx.module.get_unique_name("clamp")
+        custom_name = ctx.get_unique_name("clamp")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
         vec, count = function.args
         block = function.append_basic_block(name="entry")
@@ -61,7 +61,7 @@ def test_helper_fclamp_const():
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
 
         # Create clamp function
-        custom_name = ctx.module.get_unique_name("clamp")
+        custom_name = ctx.get_unique_name("clamp")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
         vec, count = function.args
         block = function.append_basic_block(name="entry")
