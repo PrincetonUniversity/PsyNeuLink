@@ -214,8 +214,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         '''
 
         convergence_metric = self.convergence_criterion + EPSILON
-        previous_lvoc = 0
-
+        previous_lvoc = # FIX: MAKE LARGE VALUE
 
         predictors = prediction_vector[0:self.num_predictors]
 
@@ -223,7 +222,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         #    containing the terms for the interaction of that control_signal with each of the predictors
         interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
                                                                                             self.num_predictors)
-        interactions = np.zeros_like(interaction_weights)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
@@ -231,7 +229,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
 
         gradient_constants = np.zeros(self.num_control_signals)
-        for i, c in enumerate(control_signal_values):
+        for i in range(self.num_control_signals):
             gradient_constants[i] = control_signal_weights[i]
             gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
 
@@ -243,22 +241,26 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
               '\ncontrol_signals: ', control_signal_values,
               '\ncontrol_costs: ', costs,
               '\nprediction_weights: ', prediction_weights)
-        j = 0
         # TEST PRINT END:
-
         # perform gradient ascent until convergence criterion is reached
+        j=0
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
-            gradient = gradient_constants
+            gradient = np.copy(gradient_constants)
+            cost_gradient = np.zeros(self.num_costs)
 
             for i, control_signal_value in enumerate(control_signal_values):
-                # Recompute costs and add to gradient
-                costs[i] = -(control_signals[i].intensity_cost_function.__self__.derivative(
-                        control_signal_value)*cost_weights[i])
-                gradient[i] += costs[i]
 
-                # update control signal with gradient
+                # Recompute costs and add to gradient
+                cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
+                cost_gradient[i] = -(cost_function_derivative(control_signal_value) * cost_weights[i])
+                gradient[i] += cost_gradient[i]
+
+                # Update control_signal_value with gradient
                 control_signal_values[i] = control_signal_value + self.udpate_rate * gradient[i]
+
+                # Update cost based on new control_signal_value
+                costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
             # FIX: BE SURE THAT CONTROL SIGNALS, COSTS AND INTEARCTION TERMS
             #      HAVE ALL BEEN UPDATED IN prediction_vector BASED ON NEW CTL SIGS
@@ -279,8 +281,12 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                   '\ncontrol_signal_values: ', control_signal_values,
                   '\ninteractions: ', interactions,
                   '\ncosts: ', costs)
-            j+=1
             # TEST PRINT END
+
+            j+=1
+            if j > self.max_iterations:
+                warn.warning("XXXXXX") # FIX: ADD WARNING ABOUT FAILURE TO CONVERGE
+                break
 
             previous_lvoc = current_lvoc
 
@@ -288,44 +294,3 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
-
-
-
-#         ---------------
-#
-#         # GRADIENCE ASCENT  FROM SEBASTIAN
-#         # parameters
-#         convergenceCriterion = some small value, e.g. 0.001
-#         max_iterations = 1000
-#         udpate_rate = 0.01
-#         # initial values
-#         convergenceMetric = some large value # this metric is computed every iteration
-#         previousLVOC = 0
-#         control_signals = array with control signal intensities of previous trial
-#         # perform gradient ascent until convergence criterion is reached
-#         while (convergenceMetric > convergenceCriterion) {
-#             # initialize gradient
-#             # there is a separate gradient for each control signal
-#             gradient = zeros(1, num_control_signals);
-#             for each control_signal_scalar in control_signals {
-#                 # compute gradient based on feature-control interaction terms.
-#                 for each regressor in control_signal_regressors {
-#                     # get feature of feature-control interaction term
-#                     feature = regressor(1) # for terms that only include the control signal, the feature is always set to 1
-#                     # get sampled weight of feature-control interaction term
-#                     weight = regressor(2)
-#                     # compute gradient for that interaction term with respect to control signal
-#                     gradient += feature * weight
-#                 }
-#             # compute gradient for control cost term
-#             # assuming that control costs are of the form exp(a * control_signal_scalar + b) where a and b are parameters of the cost function
-#             gradient += a * exp(a * control_signal_scalar + b)
-#             # update control signal with gradient
-#             control_signals(indexing current control signal) = control_signal_scalar + udpate_rate * gradient
-#             }
-#             # FIX: return control_signals
-#             # compute convergence metric with updated control signals
-#             currentLVOC = compute LVOC using current features, weights and new control signals
-#             convergenceMetric = currentLVOC - previousLVOC
-#             currentLVOC = previousLVOC
-# }
