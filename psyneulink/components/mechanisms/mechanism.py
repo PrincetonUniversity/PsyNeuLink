@@ -964,7 +964,7 @@ from llvmlite import ir
 import psyneulink.llvm as pnlvm
 
 __all__ = [
-    'Mechanism_Base', 'MechanismError'
+    'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
 ]
 
 logger = logging.getLogger(__name__)
