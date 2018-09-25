@@ -253,7 +253,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             for i, control_signal_value in enumerate(control_signal_values):
                 # Recompute costs and add to gradient
-                costs[i] = -(control_signals[i].intensity_cost_function.derivate(control_signal_value)*cost_weights[i])
+                costs[i] = -(control_signals[i].intensity_cost_function.__self__.derivative(
+                        control_signal_value)*cost_weights[i])
                 gradient[i] += costs[i]
 
                 # update control signal with gradient
