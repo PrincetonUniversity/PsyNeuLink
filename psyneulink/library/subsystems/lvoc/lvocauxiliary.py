@@ -177,7 +177,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                                      sigma_prior=self.prediction_variances_priors)
 
         # Populate fields (subvectors) of prediction_vector
-
         self.prediction_vector[self.pred] = np.array(predictors)
         self.prediction_vector[self.ctl] = np.array([c.value for c in controller.control_signals]).reshape(-1)
         self.prediction_vector[self.intrxn]= \
@@ -191,6 +190,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         update_weight.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
         prediction_weights = update_weight.sample_weights()
 
+        # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(controller.control_signals,
                                                       self.prediction_vector,
                                                       prediction_weights)
@@ -237,7 +237,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
               '\nprediction_weights: ', prediction_weights)
         # TEST PRINT END:
 
-        # perform gradient ascent until convergence criterion is reached
+        # Perform gradient ascent until convergence criterion is reached
         j=0
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
