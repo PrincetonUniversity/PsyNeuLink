@@ -172,11 +172,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            # predictors_subvector = self.prediction_vector[0:self.num_predictors]
-            # control_subvector = self.prediction_vector[self.ctl_start:self.ctl_end]
-            # interxn_subvector = self.prediction_vector[self.intrxn_start:self.intrxn_end]
-            # costs_subvector = self.prediction_vector[self.costs_start:self.costs_end]
-
             update_weight = BayesGLM(num_predictors=len(self.prediction_vector),
                                      mu_prior=self.prediction_weights_priors,
                                      sigma_prior=self.prediction_variances_priors)
