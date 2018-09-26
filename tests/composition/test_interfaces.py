@@ -549,6 +549,33 @@ class TestInputCIMOutputStateToOriginOneToMany:
         assert np.allclose(B.value, [[1.23]])
         assert np.allclose(C.value, [[4.56]])
 
+    def test_mix_and_match_input_sources(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.]])
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    A,
+                                    B.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = origin_input_sources
+
+        comp.run(inputs=input_dict)
+
+        assert np.allclose(A.value, [[2.]])
+        assert np.allclose(B.value, [[3.], [1.]])
+        assert np.allclose(C.value, [[1.], [2.], [3.]])
 
 class TestInputSpec:
 

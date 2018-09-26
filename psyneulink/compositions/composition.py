@@ -573,7 +573,7 @@ class Composition(object):
                                            len(cim_rep_input_state.value),
                                            len(node_input_state.value)))
 
-    def add_c_node(self, node, interface_source=True):
+    def add_c_node(self, node):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -1144,11 +1144,29 @@ class Composition(object):
                 elif self.origin_input_sources[node] in origin_nodes:
                     redirected_inputs.add(node)
                     continue
+                elif isinstance(self.origin_input_sources[node], list):
+                    valid_spec = True
+                    for source in self.origin_input_sources[node]:
+                        if isinstance(source, (Composition, Mechanism)):
+                            if source not in origin_nodes:
+                                valid_spec = False
+                        elif isinstance(source, InputState):
+                            if source.owner not in origin_nodes:
+                                valid_spec = False
+                    if valid_spec:
+                        redirected_inputs.add(node)
+                        continue
+                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
+                                           "corresponding states will be generated on CIM), None ({1} will not receive"
+                                           " input), another origin node, or a list of origin nodes and/or origin node "
+                                           "InputStates"
+                                           .format(self.origin_input_sources[node], node.name))
+
                 else:
                     raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
                                            "corresponding states will be generated on CIM), None ({1} will not receive"
-                                           " input), or another origin node (that origin node's corresponding states on"
-                                           " the CIM will provide input to {1} as well)"
+                                           " input), another origin node, or a list of origin nodes and/or origin node "
+                                           "InputStates"
                                            .format(self.origin_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
@@ -1202,8 +1220,9 @@ class Composition(object):
                     expanded_cim_rep_list = []
                     for rep in cim_rep:
                         if isinstance(rep, (Mechanism, Composition)):
-                            expanded_cim_rep_list.append(rep_state for rep_state in rep.external_input_states)
-                        elif isinstance(rep, (OutputState)):
+                            for rep_state in rep.external_input_states:
+                                expanded_cim_rep_list.append(rep_state)
+                        elif isinstance(rep, (InputState)):
                             expanded_cim_rep_list.append(rep)
                     if len(node.external_input_states) == len(expanded_cim_rep_list):
                         for i in range(len(node.external_input_states)):
@@ -1216,7 +1235,7 @@ class Composition(object):
                                                .format(node.name,
                                                        cim_rep,
                                                        len(node.external_input_states),
-                                                       len(cim_rep)))
+                                                       len(expanded_cim_rep_list)))
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
