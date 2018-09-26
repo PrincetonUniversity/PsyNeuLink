@@ -213,7 +213,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         predictors = prediction_vector[0:self.num_predictors]
 
-        # get interaction weights and reshape so that there is one row per control_signal
+        # Get interaction weights and reshape so that there is one row per control_signal
         #    containing the terms for the interaction of that control_signal with each of the predictors
         interaction_weights = prediction_weights[self.intrxn].reshape(self.num_control_signals,self.num_predictors)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
@@ -267,7 +267,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
 
-            # compute convergence metric with updated control signals
+            # Compute convergence metric with updated control signals
             convergence_metric = np.abs(current_lvoc - previous_lvoc)
 
             # TEST PRINT:
