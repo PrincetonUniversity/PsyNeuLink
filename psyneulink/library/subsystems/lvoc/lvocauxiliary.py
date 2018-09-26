@@ -12,6 +12,7 @@
 Auxiliary functions for `EVCControlMechanism`.
 
 """
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -157,25 +158,24 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # Initialize attributes
         if not hasattr(self, 'prediction_vector'):
 
+            # Numbers of terms in prediction_vector
             self.num_predictors = len(predictors)
             self.num_control_signals = self.num_costs = len(controller.control_signals)
             self.num_interactions = self.num_predictors * self.num_control_signals
             len_prediction_vector = self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
 
+            # Indices for fields of prediction_vector
+            self.pred = slice(0, self.num_predictors)
+            self.intrxn= slice(self.num_predictors, self.num_predictors+self.num_interactions)
+            self.ctl = slice(self.intrxn.stop, self.intrxn.stop + self.num_control_signals)
+            self.cst = slice(self.ctl.stop, len_prediction_vector)
+
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            # Indices for fields of prediction_vector
-            self.intrxn_start = self.num_predictors
-            self.intrxn_end = self.num_predictors+self.num_interactions
-            self.ctl_start = self.intrxn_end
-            self.ctl_end = self.intrxn_end + self.num_control_signals
-            self.costs_start = self.ctl_end
-            self.costs_end = len_prediction_vector
-
-            predictors_subvector = self.prediction_vector[0:self.num_predictors]
-            control_subvector = self.prediction_vector[self.ctl_start:self.ctl_end]
-            interxn_subvector = self.prediction_vector[self.intrxn_start:self.intrxn_end]
-            costs_subvector = self.prediction_vector[self.costs_start:self.costs_end]
+            # predictors_subvector = self.prediction_vector[0:self.num_predictors]
+            # control_subvector = self.prediction_vector[self.ctl_start:self.ctl_end]
+            # interxn_subvector = self.prediction_vector[self.intrxn_start:self.intrxn_end]
+            # costs_subvector = self.prediction_vector[self.costs_start:self.costs_end]
 
             update_weight = BayesGLM(num_predictors=len(self.prediction_vector),
                                      mu_prior=self.prediction_weights_priors,
@@ -183,13 +183,13 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
         # Populate fields (subvectors) of prediction_vector
 
-        predictors_subvector = np.array(predictors)
-        control_subvector = np.array([c.value for c in controller.control_signals])
-        # FIX: RECOMPUTE interactions:
-        # interactions = interxn_subvector.reshape(self.num_control_signals, self.num_predictors)
-        interxn_subvector = \
-            np.array(predictors_subvector * control_subvector.reshape(self.num_control_signals,1)).reshape(-1)
-        costs_subvector = [0 if c.cost is None else c.cost for c in controller.control_signals] * -1
+        self.prediction_vector[self.pred] = np.array(predictors)
+        self.prediction_vector[self.ctl] = np.array([c.value for c in controller.control_signals]).reshape(-1)
+        self.prediction_vector[self.intrxn]= \
+            np.array(self.prediction_vector[self.pred] *
+                     self.prediction_vector[self.ctl].reshape(self.num_control_signals,1)).reshape(-1)
+        self.prediction_vector[self.cst] = \
+            np.array([0 if c.cost is None else c.cost for c in controller.control_signals]).reshape(-1) * -1
         # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
@@ -214,27 +214,26 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         '''
 
         convergence_metric = self.convergence_criterion + EPSILON
-        previous_lvoc = # FIX: MAKE LARGE VALUE
+        previous_lvoc = np.finfo(np.float128).max
 
         predictors = prediction_vector[0:self.num_predictors]
 
         # get interaction weights and reshape so that there is one row per control_signal
         #    containing the terms for the interaction of that control_signal with each of the predictors
-        interaction_weights = prediction_weights[self.intrxn_start:self.intrxn_end].reshape(self.num_control_signals,
-                                                                                            self.num_predictors)
+        interaction_weights = prediction_weights[self.intrxn].reshape(self.num_control_signals,self.num_predictors)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
-        control_signal_values = prediction_vector[self.ctl_start:self.ctl_end]
-        control_signal_weights = prediction_weights[self.ctl_start:self.ctl_end]
+        control_signal_values = prediction_vector[self.ctl]
+        control_signal_weights = prediction_weights[self.ctl]
 
         gradient_constants = np.zeros(self.num_control_signals)
         for i in range(self.num_control_signals):
             gradient_constants[i] = control_signal_weights[i]
             gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
 
-        costs = prediction_vector[self.costs_start:self.costs_end]
-        cost_weights = prediction_weights[self.costs_start:self.costs_end]
+        costs = prediction_vector[self.cst]
+        cost_weights = prediction_weights[self.cst]
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
@@ -261,16 +260,20 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
                 # Update cost based on new control_signal_value
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
+                assert True
 
-            # FIX: BE SURE THAT CONTROL SIGNALS, COSTS AND INTEARCTION TERMS
-            #      HAVE ALL BEEN UPDATED IN prediction_vector BASED ON NEW CTL SIGS
+            # Assign new values of interaction terms, control_signals and costs to prediction_vector
+            prediction_vector[self.intrxn]= np.array(prediction_vector[self.pred] *
+                                                     prediction_vector[self.ctl].reshape(self.num_control_signals,1)).\
+                                                     reshape(-1)
+            prediction_vector[self.ctl] = control_signal_values
+            prediction_vector[self.cst] = costs
+
             # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
+
             # compute convergence metric with updated control signals
             convergence_metric = np.abs(current_lvoc - previous_lvoc)
-
-            # FIX: TEST FOR MAX INTERACTIONS
-
 
             # TEST PRINT:
             print('\niteration ', j,
@@ -279,13 +282,13 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                   '\nconvergence_metric: ',convergence_metric,
                   '\npredictors: ', predictors,
                   '\ncontrol_signal_values: ', control_signal_values,
-                  '\ninteractions: ', interactions,
+                  '\ninteractions: ', interaction_weights_x_predictors,
                   '\ncosts: ', costs)
             # TEST PRINT END
 
             j+=1
             if j > self.max_iterations:
-                warn.warning("XXXXXX") # FIX: ADD WARNING ABOUT FAILURE TO CONVERGE
+                warnings.warn("{} failed to converge after {} iterations").format(self.name, self.max_iterations)
                 break
 
             previous_lvoc = current_lvoc
