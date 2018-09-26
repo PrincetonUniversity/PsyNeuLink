@@ -2612,7 +2612,11 @@ class Composition(object):
             execution_stimuli = {}
             stimulus_index = trial_num % num_inputs_sets
             for node in inputs:
+                if len(inputs[node]) == 1:
+                    execution_stimuli[node] = inputs[node][0]
+                    continue
                 execution_stimuli[node] = inputs[node][stimulus_index]
+
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -2936,8 +2940,7 @@ class Composition(object):
         # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
 
         adjusted_stimuli = {}
-        num_input_sets = -1
-
+        nums_input_sets = set()
         for node, stim_list in stimuli.items():
             if isinstance(node, Composition):
                 if isinstance(stim_list, dict):
@@ -2981,14 +2984,8 @@ class Composition(object):
                     adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
                 else:
                     adjusted_stimuli[node] = [stim_list]
+                nums_input_sets.add(1)
 
-                # verify that all nodes have provided the same number of inputs
-                if num_input_sets == -1:
-                    num_input_sets = 1
-                elif num_input_sets != 1:
-                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
-                                   "conflicts with at least one other node's input specification.".format(self.name,
-                                                                                                               node.name))
             else:
                 adjusted_stimuli[node] = []
                 for stim in stimuli[node]:
@@ -3010,14 +3007,20 @@ class Composition(object):
                         adjusted_stimuli[node].append(np.atleast_2d(stim))
                     else:
                         adjusted_stimuli[node].append(stim)
+                nums_input_sets.add(len(stimuli[node]))
 
-                # verify that all nodes have provided the same number of inputs
-                if num_input_sets == -1:
-                    num_input_sets = len(stimuli[node])
-                elif num_input_sets != len(stimuli[node]):
-                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
-                                   "conflicts with at least one other node's input specification."
-                                   .format(self.name, (stimuli[node]), node.name))
+        if len(nums_input_sets) > 1:
+            if 1 in nums_input_sets:
+                nums_input_sets.remove(1)
+                if len(nums_input_sets) > 1:
+                    raise CompositionError("The input dictionary for {} contains input specifications of different "
+                                           "lengths ({}). The same number of inputs must be provided for each node "
+                                           "in a Composition.".format(self.name, nums_input_sets))
+            else:
+                raise CompositionError("The input dictionary for {} contains input specifications of different "
+                                       "lengths ({}). The same number of inputs must be provided for each node "
+                                       "in a Composition.".format(self.name, nums_input_sets))
+        num_input_sets = nums_input_sets.pop()
 
         return adjusted_stimuli, num_input_sets
 

@@ -473,3 +473,54 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(level_1.output_values, [14.0])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.output_values, [34.0])
+
+
+class TestInputSpec:
+
+    def test_valid_mismatched_input_lens(self):
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+        C = ProcessingMechanism(name="C")
+
+        comp = Composition(name="COMP")
+
+        comp.add_linear_processing_pathway([A, C])
+        comp.add_linear_processing_pathway([B, C])
+
+        inputs_to_A = [[1.0]]                           # same (1.0) on every trial
+        inputs_to_B = [[1.0], [2.0], [3.0], [4.0]]      # increment on every trial
+
+        results_A = []
+        results_B = []
+        results_C = []
+
+        def call_after_trial():
+            results_A.append(A.value)
+            results_B.append(B.value)
+            results_C.append(C.value)
+
+        comp.run(inputs={A: inputs_to_A,
+                         B: inputs_to_B},
+                 call_after_trial=call_after_trial)
+
+        assert np.allclose(results_A, [[[1.0]], [[1.0]], [[1.0]], [[1.0]]])
+        assert np.allclose(results_B, [[[1.0]], [[2.0]], [[3.0]], [[4.0]]])
+        assert np.allclose(results_C, [[[2.0]], [[3.0]], [[4.0]], [[5.0]]])
+
+    def test_invalid_mismatched_input_lens(self):
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+        C = ProcessingMechanism(name="C")
+
+        comp = Composition(name="COMP")
+
+        comp.add_linear_processing_pathway([A, C])
+        comp.add_linear_processing_pathway([B, C])
+
+        inputs_to_A = [[1.0], [2.0]]                    # 2 input specs
+        inputs_to_B = [[1.0], [2.0], [3.0], [4.0]]      # 4 input specs
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={A: inputs_to_A,
+                             B: inputs_to_B})
+        assert "input dictionary for COMP contains input specifications of different lengths" in str(error_text.value)
