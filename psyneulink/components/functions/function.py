@@ -238,6 +238,12 @@ __all__ = [
     'WT_MATRIX_SENDERS_DIM'
 ]
 
+import functools
+import ctypes
+import psyneulink.llvm as pnlvm
+from psyneulink.llvm import helpers
+from llvmlite import ir
+
 EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
@@ -848,6 +854,77 @@ class Function_Base(Function):
             return self.owner.name
         except AttributeError:
             return '<no owner>'
+
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.LiteralStructType([])
+
+    def get_context_initializer(self):
+        return tuple([])
+
+    def get_param_ids(self):
+        return []
+
+    def get_param_ptr(self, ctx, builder, params_ptr, param_name):
+        idx = ctx.int32_ty(self.get_param_ids().index(param_name))
+        ptr = builder.gep(params_ptr, [ctx.int32_ty(0), idx])
+        return ptr, builder
+
+    def get_params(self):
+        param_init = []
+        for p in self.get_param_ids():
+            param = self.get_current_function_param(p)
+            if not np.isscalar(param) and param is not None:
+                param = np.asfarray(param).flatten().tolist()
+            param_init.append(param)
+
+        return tuple(param_init)
+
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ctx.convert_python_struct_to_llvm_ir(self.get_params())
+
+    def get_param_initializer(self):
+        def tupleize(x):
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return x if x is not None else tuple()
+        return tupleize(self.get_params())
+
+    def get_input_struct_type(self):
+        default_var = self.instance_defaults.variable
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
+
+    def get_output_struct_type(self):
+        default_val = self.instance_defaults.value
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ctx.convert_python_struct_to_llvm_ir(default_val)
+
+    def bin_function(self,
+                     variable=None,
+                     params=None,
+                     context=None):
+
+        # TODO: Port this to llvm
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        bf = self._llvmBinFunction
+
+        # Covnert input to doubles
+        variable = np.asfarray(variable)
+
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        ct_param = par_struct_ty(*self.get_param_initializer())
+        ct_state = state_struct_ty(*self.get_context_initializer())
+
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = vo_ty()
+        bf(ctypes.byref(ct_param), ctypes.byref(ct_state), ct_vi,
+           ctypes.byref(ct_vo))
+
+        return pnlvm._convert_ctype_to_python(ct_vo)
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
@@ -2313,6 +2390,94 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
+    def get_input_struct_type(self):
+        # FIXME: Workaround a special case of simple array.
+        #        It should just pass through to modifiers, which matches what
+        #        single element 2d array does
+        default_var = np.atleast_2d(self.instance_defaults.variable)
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
+
+    def get_param_ids(self):
+        return SCALE, OFFSET, EXPONENTS
+
+    def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
+        scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+        scale_type = scale_ptr.type.pointee
+        if isinstance(scale_type, ir.ArrayType):
+            if len(scale_type) == 1:
+                scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            else:
+                scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
+
+        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+        offset_type = offset_ptr.type.pointee
+        if isinstance(offset_type, ir.ArrayType):
+            if len(offset_type) == 1:
+                offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            else:
+                offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
+
+        exponent_param_ptr, builder = self.get_param_ptr(ctx, builder, params, EXPONENTS)
+        exponent_type = exponent_param_ptr.type.pointee
+
+        scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
+
+        offset = ctx.float_ty(-0.0) if isinstance(offset_type, ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
+
+        # assume operation does not change dynamically
+        operation = self.get_current_function_param(OPERATION)
+        if operation is SUM:
+            val = ctx.float_ty(-0.0)
+        else:
+            val = ctx.float_ty(1.0)
+
+        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+
+        for i in range(vi.type.pointee.count):
+            # No exponent
+            if isinstance(exponent_type, ir.LiteralStructType):
+                exponent = ctx.float_ty(1.0)
+            # Vector exponent
+            elif isinstance(exponent_type, ir.ArrayType):
+                assert len(exponent_type) > 1
+                assert exponent_type.pointee.count == vo.type.pointee.count * vi.type.pointee.count
+                exponent_index = ctx.int32_ty(vo.type.pointee.count * (i - 1))
+                exponent_index = builder.add(exponent_index, index)
+                exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
+                exponent = builder.load(exponent_ptr)
+            # Scalar exponent
+            else:
+                exponent = builder.load(exponent_param_ptr)
+
+            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
+            in_val = builder.load(ptri)
+            in_val = builder.call(pow_f, [in_val, exponent])
+
+            if operation is SUM:
+                val = builder.fadd(val, in_val)
+            else:
+                val = builder.fmul(val, in_val)
+
+        val = builder.fmul(val, scale)
+        val = builder.fadd(val, offset)
+
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(val, ptro)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        # Sometimes we arg_out to 2d array
+        out_t = arg_out.type.pointee
+        if isinstance(out_t, ir.ArrayType) and isinstance(out_t.element, ir.ArrayType):
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
+        inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+
+        vector_length = ctx.int32_ty(arg_out.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+        return builder
+
     @property
     def offset(self):
         if not hasattr(self, '_offset'):
@@ -3041,6 +3206,34 @@ class Identity(
 
         return variable
 
+    def get_input_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if isinstance(self.owner, CompositionInterfaceMechanism):
+            variable = [state.instance_defaults.value for state in self.owner.input_states]
+            # Python list does not care about ndarrays of different lengths
+            # we do care, so convert to tuple to create struct
+            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
+                variable = tuple(variable)
+#        assert all(type(x) == type(t[0]) for x in t)
+            with pnlvm.LLVMBuilderContext() as ctx:
+                return ctx.convert_python_struct_to_llvm_ir(variable)
+        return super().get_input_struct_type()
+
+    def get_output_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if isinstance(self.owner, CompositionInterfaceMechanism):
+            return self.get_input_struct_type()
+        return super().get_output_struct_type()
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        val = builder.load(arg_in)
+        builder.store(val, arg_out)
+        return builder
+
 
 class InterfaceStateMap(InterfaceFunction):
     """
@@ -3182,6 +3375,20 @@ class InterfaceStateMap(InterfaceFunction):
         # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
+    def get_input_struct_type(self):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its instance_defaults shape
+        from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
+            return self.owner.owner.function_object.get_output_struct_type()
+        return super().get_input_struct_type()
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        index = self.corresponding_input_state.position_in_mechanism
+        val = builder.load(builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(index)]))
+        builder.store(val, arg_out)
+        return builder
+
 
 # endregion
 
@@ -3247,6 +3454,26 @@ class TransferFunction(Function_Base):
     @additive.setter
     def additive(self, val):
         setattr(self, self.additive_param, val)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        # Pretend we have one huge array to work on
+        # TODO: should this be invoked in parts?
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+            assert arg_in.type == arg_out.type
+            # Array elements need all to be of the same size
+            length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
+            arg_in = builder.bitcast(arg_in, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            arg_out = builder.bitcast(arg_out, ir.ArrayType(ctx.float_ty, length).as_pointer())
+
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
+        inner = functools.partial(self._gen_llvm_transfer, **kwargs)
+
+        assert arg_in.type.pointee.count == arg_out.type.pointee.count
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "transfer_loop")
+
+        return builder
 
 
 class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
@@ -3357,6 +3584,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def get_param_ids(self):
+        return SLOPE, INTERCEPT
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        slope_ptr, builder = self.get_param_ptr(ctx, builder, params, SLOPE)
+        intercept_ptr, builder = self.get_param_ptr(ctx, builder, params, INTERCEPT)
+
+        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+
+        val = builder.load(ptri)
+        val = builder.fmul(val, slope)
+        val = builder.fadd(val, intercept)
+
+        builder.store(val, ptro)
 
     def function(self,
                  variable=None,
@@ -3526,6 +3771,27 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def get_param_ids(self):
+        return RATE, SCALE
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        rate_ptr, builder = self.get_param_ptr(ctx, builder, params, RATE)
+        scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, rate)
+        val = builder.call(exp_f, [val])
+        val = builder.fmul(val, scale)
+
+        builder.store(val, ptro)
+
     def function(self,
                  variable=None,
                  params=None,
@@ -3683,6 +3949,32 @@ class Logistic(
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def get_param_ids(self):
+        return GAIN, BIAS, OFFSET
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
+        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
+        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fsub(val, bias)
+        val = builder.fmul(val, gain)
+        val = builder.fsub(offset, val)
+        val = builder.call(exp_f, [val])
+        val = builder.fadd(ctx.float_ty(1), val)
+        val = builder.fdiv(ctx.float_ty(1), val)
+
+        builder.store(val, ptro)
 
     def function(self,
                  variable=None,
@@ -4026,6 +4318,95 @@ class SoftMax(TransferFunction):
             self.one_hot_function = OneHot(mode=output_type).function
 
         super()._instantiate_function(function, function_params=function_params, context=context)
+
+    def get_param_ids(self):
+        return [GAIN]
+
+    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        exp_val = builder.call(exp_f, [val])
+
+        exp_sum = builder.load(exp_sum_ptr)
+        new_exp_sum = builder.fadd(exp_sum, exp_val)
+        builder.store(new_exp_sum, exp_sum_ptr)
+
+        old_max = builder.load(max_ptr)
+        gt = builder.fcmp_ordered(">", exp_val, old_max)
+        new_max = builder.select(gt, exp_val, old_max)
+        builder.store(new_max, max_ptr)
+
+        old_index = builder.load(max_ind_ptr)
+        new_index = builder.select(gt, index, old_index)
+        builder.store(new_index, max_ind_ptr)
+
+    def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
+        assert self.get_current_function_param(OUTPUT_TYPE) == ALL
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        val = builder.call(exp_f, [val])
+        val = builder.fdiv(val, exp_sum)
+
+        builder.store(val, ptro)
+
+    def __gen_llvm_apply(self, ctx, builder, params, _, arg_in, arg_out):
+        exp_sum_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(0), exp_sum_ptr)
+
+        max_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(float('-inf')), max_ptr)
+
+        max_ind_ptr = builder.alloca(ctx.int32_ty)
+        gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
+        inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
+
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
+
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        exp_sum = builder.load(exp_sum_ptr)
+        index = builder.load(max_ind_ptr)
+        ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
+
+        if output_type == ALL:
+            kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
+            inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
+        elif output_type == MAX_VAL:
+            ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
+            exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+            orig_val = builder.load(ptri)
+            val = builder.fmul(orig_val, gain)
+            val = builder.call(exp_f, [val])
+            val = builder.fdiv(val, exp_sum)
+            builder.store(val, ptro)
+        elif output_type == MAX_INDICATOR:
+            builder.store(ctx.float_ty(1), ptro)
+
+        return builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        if self.get_current_function_param(PER_ITEM):
+            assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply(ctx, builder, params, _, inner_in, inner_out)
+            return builder
+        else:
+            return self.__gen_llvm_apply(ctx, builder, params, _, arg_in, arg_out)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain
@@ -4583,6 +4964,26 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 return matrix
         else:
             return np.array(specification)
+
+    def get_param_ids(self):
+        return [MATRIX]
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        # Restrict to 1d arrays
+        assert self.instance_defaults.variable.ndim == 1
+
+        matrix, builder = self.get_param_ptr(ctx, builder, params, MATRIX)
+
+        # Convert array pointer to pointer to the fist element
+        matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        input_length = ctx.int32_ty(arg_in.type.pointee.count)
+        output_length = ctx.int32_ty(arg_out.type.pointee.count)
+        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
+        return builder
 
     def function(self,
                  variable=None,
@@ -6392,6 +6793,91 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             if rate < 0.0 or rate > 1.0:
                 raise FunctionError(rate_value_msg.format(rate, self.name))
 
+    def get_param_ids(self):
+        return RATE, OFFSET, NOISE
+
+    def get_context_struct_type(self):
+        return self.get_output_struct_type()
+
+    def get_context_initializer(self, data=None):
+        if data is None:
+            data = np.asfarray(self.previous_value).flatten().tolist()
+            if self.instance_defaults.value.ndim > 1:
+                return (tuple(data),)
+            return tuple(data)
+
+    def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate_p, builder = self.get_param_ptr(ctx, builder, params, RATE)
+        offset_p, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
+
+        noise_p, builder = self.get_param_ptr(ctx, builder, params, NOISE)
+        if isinstance(noise_p.type.pointee, ir.ArrayType) and noise_p.type.pointee.count > 1:
+            noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
+
+        noise = pnlvm.helpers.load_extract_scalar_array_one(builder, noise_p)
+
+        # FIXME: Standalone function produces 2d array value
+        if isinstance(state.type.pointee.element, ir.ArrayType):
+            assert state.type.pointee.count == 1
+            prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        else:
+            prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        vi_val = builder.load(vi_ptr)
+
+        rev_rate = builder.fsub(ctx.float_ty(1), rate)
+        old_val = builder.fmul(prev_val, rev_rate)
+        new_val = builder.fmul(vi_val, rate)
+
+        ret = builder.fadd(old_val, new_val)
+        ret = builder.fadd(ret, noise)
+        res = builder.fadd(ret, offset)
+
+        # FIXME: Standalone function produces 2d array value
+        if isinstance(vo.type.pointee.element, ir.ArrayType):
+            assert state.type.pointee.count == 1
+            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        else:
+            vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        # Eliminate one dimension for 2d variable
+        if self.instance_defaults.variable.ndim > 1:
+            assert self.instance_defaults.variable.shape[0] == 1
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
+        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
+
+        return builder
+
+    def bin_function(self,
+                     variable=None,
+                     params=None,
+                     context=None):
+
+        ret = super().bin_function(variable, params, context)
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        # ct_old also contains the correct value
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self.previous_value = ret
+
+        return ret
+
     def function(self,
                  variable=None,
                  params=None,
@@ -7723,6 +8209,265 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_v, self.previous_w, self.previous_time
+
+    def bin_function(self,
+                     variable=None,
+                     params=None,
+                     context=None):
+
+        ret = super().bin_function(variable, params, context)
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self.previous_v = ret[0]
+            self.previous_w = ret[1]
+            self.previous_time = ret[2]
+
+        return ret
+
+    def get_param_ids(self):
+        # Omit "integration_method" which is a compile time parameter
+        return ("a_v", "b_v", "c_v", "d_v", "e_v", "f_v", "a_w", "b_w", "c_w",
+                "time_constant_v", "time_constant_w", "threshold",
+                "uncorrelated_activity", "mode", TIME_STEP_SIZE)
+
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            context = (self.previous_v, self.previous_w, self.previous_time)
+            context_type = ctx.convert_python_struct_to_llvm_ir(context)
+        return context_type
+
+    def get_context_initializer(self):
+        v = self.previous_v if np.isscalar(self.previous_v) else tuple(self.previous_v)
+        w = self.previous_w if np.isscalar(self.previous_w) else tuple(self.previous_w)
+        time = self.previous_time if np.isscalar(self.previous_time) else tuple(self.previous_time)
+        return (v, w, time)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        zero_i32 = ctx.int32_ty(0)
+
+        # Get rid of 2d array
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        if isinstance(arg_in.type.pointee.element, ir.ArrayType):
+            assert(arg_in.type.pointee.count == 1)
+            arg_in = builder.gep(arg_in, [zero_i32, zero_i32])
+
+        # Load context values
+        previous_v_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(0)])
+        previous_w_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(1)])
+        previous_time_ptr = builder.gep(context, [zero_i32, ctx.int32_ty(2)])
+
+        # Output locations
+        out_v_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(0)])
+        out_w_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(1)])
+        out_time_ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(2)])
+
+        # Load parameters
+        param_vals = {}
+        for p in self.get_param_ids():
+            param_ptr, builder = self.get_param_ptr(ctx, builder, params, p)
+            param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
+                                            builder, param_ptr)
+
+        inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
+                      "out_v": out_v_ptr, "out_w": out_w_ptr,
+                      "out_time": out_time_ptr,
+                      "previous_v_ptr": previous_v_ptr,
+                      "previous_w_ptr": previous_w_ptr,
+                      "previous_time_ptr": previous_time_ptr}
+
+        method = self.get_current_function_param("integration_method")
+        if method == "RK4":
+            func = functools.partial(self.__gen_llvm_rk4_body, **inner_args)
+        elif method == "EULER":
+            func = functools.partial(self.__gen_llvm_euler_body, **inner_args)
+        else:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(integration_method, self.name))
+
+        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, func, method + "_body")
+
+        # Save context
+        result = builder.load(arg_out)
+        builder.store(result, context)
+        return builder
+
+    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
+        var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
+
+        previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
+        previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+        previous_time = builder.load(builder.gep(previous_time_ptr, [ctx.int32_ty(0), index]))
+
+        out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
+        out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+        out_time_ptr = builder.gep(out_time, [ctx.int32_ty(0), index])
+
+        time_step_size = param_vals[TIME_STEP_SIZE]
+
+        # Save output time
+        time = builder.fadd(previous_time, time_step_size)
+        builder.store(time, out_time_ptr)
+
+        # First approximation uses previous_v
+        input_v = previous_v
+        slope_v_approx_1 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # First approximation uses previous_w
+        input_w = previous_w
+        slope_w_approx_1 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        # Second approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_1
+        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(input_v, slope_v_approx_1)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_2 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(input_w, slope_w_approx_1)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_2 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        # Third approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
+        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(input_v, slope_v_approx_2)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_3 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(input_w, slope_w_approx_2)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_3 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        # Fourth approximation
+        # v is approximately previous_value_v + time_step_size * slope_v_approx_3
+        input_v = builder.fmul(time_step_size, slope_v_approx_3)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_4 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+        input_w = builder.fmul(time_step_size, slope_w_approx_3)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_4 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        ts = builder.fdiv(time_step_size, ctx.float_ty(6.0))
+        # new_v = previous_value_v \
+        #    + (time_step_size/6) * (slope_v_approx_1
+        #    + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+        new_v = builder.fadd(slope_v_approx_2, slope_v_approx_3)
+        new_v = builder.fmul(new_v, ctx.float_ty(2.0))
+        new_v = builder.fadd(new_v, slope_v_approx_1)
+        new_v = builder.fadd(new_v, slope_v_approx_4)
+        new_v = builder.fmul(new_v, ts)
+        new_v = builder.fadd(new_v, previous_v)
+        builder.store(new_v, out_v_ptr)
+
+        # new_w = previous_walue_w \
+        #    + (time_step_size/6) * (slope_w_approx_1
+        #    + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
+        new_w = builder.fadd(slope_w_approx_2, slope_w_approx_3)
+        new_w = builder.fmul(new_w, ctx.float_ty(2.0))
+        new_w = builder.fadd(new_w, slope_w_approx_1)
+        new_w = builder.fadd(new_w, slope_w_approx_4)
+        new_w = builder.fmul(new_w, ts)
+        new_w = builder.fadd(new_w, previous_w)
+        builder.store(new_w, out_w_ptr)
+
+    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
+
+        var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
+        previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
+        previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+        previous_time = builder.load(builder.gep(previous_time_ptr, [ctx.int32_ty(0), index]))
+        out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
+        out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+        out_time_ptr = builder.gep(out_time, [ctx.int32_ty(0), index])
+
+        time_step_size = param_vals[TIME_STEP_SIZE]
+
+        # Save output time
+        time = builder.fadd(previous_time, time_step_size)
+        builder.store(time, out_time_ptr)
+
+        # First approximation uses previous_v
+        slope_v_approx = self.__gen_llvm_dv_dt(builder, ctx, var, previous_v, previous_w, param_vals)
+
+        # First approximation uses previous_w
+        slope_w_approx = self.__gen_llvm_dw_dt(builder, ctx, previous_w, previous_v, param_vals)
+
+        # new_v = previous_value_v + time_step_size*slope_v_approx
+        new_v = builder.fmul(time_step_size, slope_v_approx)
+        new_v = builder.fadd(previous_v, new_v)
+        builder.store(new_v, out_v_ptr)
+        # new_w = previous_value_w + time_step_size*slope_w_approx
+        new_w = builder.fmul(time_step_size, slope_w_approx)
+        new_w = builder.fadd(previous_w, new_w)
+        builder.store(new_w, out_w_ptr)
+
+    def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
+        # val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v +
+        #       d_v + e_v*self.previous_w + f_v*variable)/time_constant_v
+        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+
+        v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
+        tmp1 = builder.fmul(param_vals["a_v"], v_3)
+
+        thr_p1 = builder.fadd(ctx.float_ty(1.0), param_vals["threshold"])
+        tmp2 = builder.fmul(thr_p1, param_vals["b_v"])
+        v_2 = builder.call(pow_f, [v, ctx.float_ty(2.0)])
+        tmp2 = builder.fmul(tmp2, v_2)
+
+        thr_neg = builder.fsub(ctx.float_ty(0.0), param_vals["threshold"])
+        tmp3 = builder.fmul(thr_neg, param_vals["c_v"])
+        tmp3 = builder.fmul(tmp3, v)
+
+        tmp4 = param_vals["d_v"]
+
+        tmp5 = builder.fmul(param_vals["e_v"], previous_w)
+
+        tmp6 = builder.fmul(param_vals["f_v"], var)
+
+        sum = ctx.float_ty(-0.0)
+        sum = builder.fadd(sum, tmp1)
+        sum = builder.fadd(sum, tmp2)
+        sum = builder.fadd(sum, tmp3)
+        sum = builder.fadd(sum, tmp4)
+        sum = builder.fadd(sum, tmp5)
+        sum = builder.fadd(sum, tmp6)
+
+        res = builder.fdiv(sum, param_vals["time_constant_v"])
+
+        return res
+
+    def __gen_llvm_dw_dt(self, builder, ctx, w, previous_v, param_vals):
+        # val = (mode*a_w*self.previous_v + b_w*w + c_w +
+        #       (1-mode)*uncorrelated_activity)/time_constant_w
+
+        tmp1 = builder.fmul(param_vals["mode"], previous_v)
+        tmp1 = builder.fmul(tmp1, param_vals["a_w"])
+
+        tmp2 = builder.fmul(param_vals["b_w"], w)
+
+        tmp3 = param_vals["c_w"]
+
+        mod_1 = builder.fsub(ctx.float_ty(1.0), param_vals["mode"])
+        tmp4 = builder.fmul(mod_1, param_vals["uncorrelated_activity"])
+
+        sum = ctx.float_ty(-0.0)
+        sum = builder.fadd(sum, tmp1)
+        sum = builder.fadd(sum, tmp2)
+        sum = builder.fadd(sum, tmp3)
+        sum = builder.fadd(sum, tmp4)
+
+        res = builder.fdiv(sum, param_vals["time_constant_w"])
+        return res
 
 
 class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
@@ -10024,6 +10769,58 @@ COMMENT
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
+    def get_param_ids(self):
+        return MATRIX,
+
+    def get_param_struct_type(self):
+        my_params = super().get_param_struct_type()
+        metric_params = self._metric_fct.get_param_struct_type()
+        transfer_params = self.transfer_fct.get_param_struct_type() if self.transfer_fct is not None else ir.LiteralStructType([])
+        return ir.LiteralStructType([my_params, metric_params, transfer_params])
+
+    def get_param_initializer(self):
+        my_params = super().get_param_initializer()
+        metric_params = self._metric_fct.get_param_initializer()
+        transfer_params = self.transfer_fct.get_param_initializer() if self.transfer_fct is not None else tuple()
+        return tuple([my_params, metric_params, transfer_params])
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        # Dot product
+        dot_out = builder.alloca(arg_in.type.pointee)
+        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        matrix, builder = self.get_param_ptr(ctx, builder, my_params, MATRIX)
+
+        # Convert array pointer to pointer to the fist element
+        matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(dot_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        input_length = ctx.int32_ty(arg_in.type.pointee.count)
+        output_length = ctx.int32_ty(arg_in.type.pointee.count)
+        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
+
+        # Prepare metric function
+        metric_fun = ctx.get_llvm_function(self._metric_fct.llvmSymbolName)
+        metric_in = builder.alloca(metric_fun.args[2].type.pointee)
+
+        # Transfer Function if configured
+        trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        if self.transfer_fct is not None:
+            assert False
+        else:
+            builder.store(builder.load(dot_out), trans_out)
+
+        # Copy original variable
+        builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+
+        # Distance Function
+        metric_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        metric_state = state
+        metric_out = arg_out
+        builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
+        return builder
+
     def function(self,
                  variable=None,
                  params=None,
@@ -10210,6 +11007,243 @@ class Distance(ObjectiveFunction):
         v2_norm = v2 - np.mean(v2)
         denom = np.sqrt(np.sum(v1_norm ** 2) * np.sum(v2_norm ** 2)) or EPSILON
         return np.sum(v1_norm * v2_norm) / denom
+
+    def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
+        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, abs_val)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        sqr = builder.fmul(sub, sub)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, sqr)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_cross_entropy(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        log_f = ctx.module.declare_intrinsic("llvm.log", [ctx.float_ty])
+        log = builder.call(log_f, [val2])
+        prod = builder.fmul(val1, log)
+
+        acc_val = builder.load(acc)
+        new_acc = builder.fsub(acc_val, prod)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_energy(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        prod = builder.fmul(val1, val2)
+        prod = builder.fmul(prod, ctx.float_ty(0.5))
+
+        acc_val = builder.load(acc)
+        new_acc = builder.fsub(acc_val, prod)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_correlate(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # This should be conjugate, but we don't deal with complex numbers
+        mul = builder.fmul(val1, val2)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, mul)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_max_diff(self, builder, index, ctx, v1, v2, max_diff_ptr):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # Get the difference
+        diff = builder.fsub(val1, val2)
+
+        # Get absolute value
+        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
+        diff = builder.call(fabs, [diff])
+
+        old_max = builder.load(max_diff_ptr)
+        # Maxnum for some reason needs full function prototype
+        fmax = ctx.module.declare_intrinsic("llvm.maxnum", [ctx.float_ty],
+            ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+
+        max_diff = builder.call(fmax, [diff, old_max])
+        builder.store(max_diff, max_diff_ptr)
+
+    def __gen_llvm_pearson(self, builder, index, ctx, v1, v2, acc_x, acc_y, acc_xy, acc_x2, acc_y2):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # Sum X
+        acc_x_val = builder.load(acc_x)
+        acc_x_val = builder.fadd(acc_x_val, val1)
+        builder.store(acc_x_val, acc_x)
+
+        # Sum Y
+        acc_y_val = builder.load(acc_y)
+        acc_y_val = builder.fadd(acc_y_val, val2)
+        builder.store(acc_y_val, acc_y)
+
+        # Sum XY
+        acc_xy_val = builder.load(acc_xy)
+        xy = builder.fmul(val1, val2)
+        acc_xy_val = builder.fadd(acc_xy_val, xy)
+        builder.store(acc_xy_val, acc_xy)
+
+        # Sum X2
+        acc_x2_val = builder.load(acc_x2)
+        x2 = builder.fmul(val1, val1)
+        acc_x2_val = builder.fadd(acc_x2_val, x2)
+        builder.store(acc_x2_val, acc_x2)
+
+        # Sum Y2
+        acc_y2_val = builder.load(acc_y2)
+        y2 = builder.fmul(val2, val2)
+        acc_y2_val = builder.fadd(acc_y2_val, y2)
+        builder.store(acc_y2_val, acc_y2)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
+
+        acc_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(0), acc_ptr)
+
+        kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
+        if self.metric == DIFFERENCE:
+            inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        elif self.metric == EUCLIDEAN:
+            inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
+        elif self.metric == CROSS_ENTROPY:
+            inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+        elif self.metric == ENERGY:
+            inner = functools.partial(self.__gen_llvm_energy, **kwargs)
+        elif self.metric == MAX_ABS_DIFF:
+            del kwargs['acc']
+            max_diff_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty("NaN"), max_diff_ptr)
+            kwargs['max_diff_ptr'] = max_diff_ptr
+            inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
+        elif self.metric == CORRELATION:
+            acc_x_ptr = builder.alloca(ctx.float_ty)
+            acc_y_ptr = builder.alloca(ctx.float_ty)
+            acc_xy_ptr = builder.alloca(ctx.float_ty)
+            acc_x2_ptr = builder.alloca(ctx.float_ty)
+            acc_y2_ptr = builder.alloca(ctx.float_ty)
+            for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
+                builder.store(ctx.float_ty(0), loc)
+            del kwargs['acc']
+            kwargs['acc_x'] = acc_x_ptr
+            kwargs['acc_y'] = acc_y_ptr
+            kwargs['acc_xy'] = acc_xy_ptr
+            kwargs['acc_x2'] = acc_x2_ptr
+            kwargs['acc_y2'] = acc_y2_ptr
+            inner = functools.partial(self.__gen_llvm_pearson, **kwargs)
+        else:
+            raise RuntimeError('Unsupported metric')
+
+        assert isinstance(arg_in.type.pointee, ir.ArrayType)
+        assert isinstance(arg_in.type.pointee.element, ir.ArrayType)
+        assert arg_in.type.pointee.count == 2
+
+        input_length = arg_in.type.pointee.element.count
+        vector_length = ctx.int32_ty(input_length)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
+        sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
+        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
+        ret = builder.load(acc_ptr)
+        if self.metric == EUCLIDEAN:
+            ret = builder.call(sqrt, [ret])
+        elif self.metric == MAX_ABS_DIFF:
+            ret = builder.load(max_diff_ptr)
+        elif self.metric == CORRELATION:
+            n = ctx.float_ty(input_length)
+            acc_xy = builder.load(acc_xy_ptr)
+            acc_x = builder.load(acc_x_ptr)
+            acc_y = builder.load(acc_y_ptr)
+            acc_x2 = builder.load(acc_x2_ptr)
+            acc_y2 = builder.load(acc_y2_ptr)
+
+            # We'll need meanx,y below
+            mean_x = builder.fdiv(acc_x, n)
+            mean_y = builder.fdiv(acc_y, n)
+
+            # Numerator: sum((x - mean(x))*(y - mean(y)) =
+            # sum(x*y - x*mean(y) - y*mean(x) + mean(x)*mean(y)) =
+            # sum(x*y) - sum(x)*mean(y) - sum(y)*mean(x) + mean(x)*mean(y)*n
+            b = builder.fmul(acc_x, mean_y)
+            c = builder.fmul(acc_y, mean_x)
+            d = builder.fmul(mean_x, mean_y)
+            d = builder.fmul(d, n)
+
+            numerator = builder.fsub(acc_xy, b)
+            numerator = builder.fsub(numerator, c)
+            numerator = builder.fadd(numerator, d)
+
+            # Denominator: sqrt(D_X * D_Y)
+            # D_X = sum((x - mean(x))^2) = sum(x^2 - 2*x*mean(x) + mean(x)^2) =
+            # sum(x^2) - 2 * sum(x) * mean(x) + n * mean(x)^2
+            dxb = builder.fmul(acc_x, mean_x)
+            dxb = builder.fadd(dxb, dxb)        # *2
+            dxc = builder.fmul(mean_x, mean_x)  # ^2
+            dxc = builder.fmul(dxc, n)
+
+            dx = builder.fsub(acc_x2, dxb)
+            dx = builder.fadd(dx, dxc)
+
+            # Similarly for y
+            dyb = builder.fmul(acc_y, mean_y)
+            dyb = builder.fadd(dyb, dyb)        # *2
+            dyc = builder.fmul(mean_y, mean_y)  # ^2
+            dyc = builder.fmul(dyc, n)
+
+            dy = builder.fsub(acc_y2, dyb)
+            dy = builder.fadd(dy, dyc)
+
+            # Denominator: sqrt(D_X * D_Y)
+            denominator = builder.fmul(dx, dy)
+            denominator = builder.call(sqrt, [denominator])
+
+            corr = builder.fdiv(numerator, denominator)
+
+            # ret =  1 - abs(corr)
+            ret = builder.call(fabs, [corr])
+            ret = builder.fsub(ctx.float_ty(1), ret)
+
+        # MAX_ABS_DIFF ignores normalization
+        if self.normalize and self.metric != MAX_ABS_DIFF and self.metric != CORRELATION:
+            norm_factor = input_length
+            if self.metric == ENERGY:
+                norm_factor = norm_factor ** 2
+            ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+        builder.store(ret, arg_out)
+
+        return builder
 
     def function(self,
                  variable=None,

@@ -175,6 +175,11 @@ import numpy as np
 import typecheck as tc
 import warnings
 
+import functools
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import \
     Function, Distance, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
@@ -1319,3 +1324,97 @@ class RecurrentTransferMechanism(TransferMechanism):
         '''
         return self.output_state
 
+    def get_input_struct_type(self):
+        input_type_list = []
+        # FIXME: What if we have more than one state? Does the autoprojection
+        # connect only to the first one?
+        assert len(self.input_states) == 1
+        for state in self.input_states:
+            s_type = state.get_input_struct_type()
+            if isinstance(s_type, ir.ArrayType):
+                # Subtract one incoming mapping projections.
+                # Unless it's the only incoming projection (mechanism is standalone)
+                new_count = max(s_type.count - 1, 1)
+                new_type = ir.ArrayType(s_type.element, new_count)
+            # FIXME consider struct types
+            else:
+                assert False
+            input_type_list.append(new_type)
+        for state in self.parameter_states:
+            state_input_type_list = []
+            for proj in state.mod_afferents:
+                state_input_type_list.append(proj.get_output_struct_type())
+            input_type_list.append(ir.LiteralStructType(state_input_type_list))
+        return ir.LiteralStructType(input_type_list)
+
+    def get_param_struct_type(self):
+        transfer_t = super().get_param_struct_type()
+        projection_t = self.recurrent_projection.get_param_struct_type()
+        return ir.LiteralStructType([transfer_t, projection_t])
+
+    def get_context_struct_type(self):
+        transfer_t = super().get_context_struct_type()
+        projection_t = self.recurrent_projection.get_context_struct_type()
+        return_t = self.get_output_struct_type()
+        return ir.LiteralStructType([transfer_t, projection_t, return_t])
+
+    def get_param_initializer(self):
+        transfer_params = super().get_param_initializer()
+        projection_params = self.recurrent_projection.get_param_initializer()
+        return tuple([transfer_params, projection_params])
+
+    def get_context_initializer(self):
+        transfer_init = super().get_context_initializer()
+        projection_init = self.recurrent_projection.get_context_initializer()
+
+        # Initialize to output state defaults. That is what the recurrent
+        # projection finds.
+        retval_init = [tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states]
+        return tuple([transfer_init, projection_init, tuple(retval_init)])
+    
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        real_input_type = super().get_input_struct_type()
+        real_in = builder.alloca(real_input_type, 1)
+        old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+        # FIXME: What if we have more than one state? Does the autoprojection
+        # connect only to the first one?
+        assert len(self.input_states) == 1
+        for i, state in enumerate(self.input_states):
+            is_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            for idx in range(len(is_current_input.type.pointee)):
+                curr_ptr = builder.gep(is_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                real_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                builder.store(builder.load(curr_ptr), real_ptr)
+
+            # FIXME: This is a workaround to find out if we are in a
+            #        composition
+            if len(state.pathway_projections) == 1:
+                continue
+
+            assert len(is_real_input.type.pointee) == len(is_current_input.type.pointee) + 1
+            last_idx = len(is_real_input.type.pointee) - 1
+            real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
+
+            recurrent_f = ctx.get_llvm_function(self.recurrent_projection.llvmSymbolName)
+            recurrent_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            # FIXME: Why does this have a wrapper struct?
+            recurrent_in = builder.gep(old_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.call(recurrent_f, [recurrent_params, recurrent_context, recurrent_in, real_last_ptr])
+
+        # Copy modulating inputs as well
+        for i, state in enumerate(self.parameter_states):
+            idx = i + len(self.input_states)
+            ps_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            ps_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            builder.store(builder.load(ps_current_input), ps_real_input)
+
+        transfer_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_context, real_in, arg_out)
+
+        builder.store(builder.load(arg_out), old_val)
+
+        return builder

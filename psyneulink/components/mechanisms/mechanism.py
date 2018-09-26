@@ -951,13 +951,17 @@ from psyneulink.globals.keywords import \
     CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, EXECUTION_COUNT, \
     FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, \
-    INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, \
+    INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, \
     PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
     VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, \
     append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+
+import ctypes
+from llvmlite import ir
+import psyneulink.llvm as pnlvm
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -2146,7 +2150,8 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 runtime_params=None,
                 ignore_execution_id = False,
-                context=None):
+                context=None,
+                bin_execute=False):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
 
@@ -2294,13 +2299,20 @@ class Mechanism_Base(Mechanism):
 
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
+        if bin_execute:
+            value = self._bin_execute(
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context,
+            )
+        else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
-        value = self._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
-        )
+            value = self._execute(
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
+            )
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2481,6 +2493,295 @@ class Mechanism_Base(Mechanism):
                                      format(value, append_type_to_name(self)))
         self.value = np.atleast_1d(value)
         self._update_output_states(context="INITIAL_VALUE")
+
+
+    def get_param_struct_type(self):
+        input_param_list = []
+        for state in self.input_states:
+            input_param_list.append(state.get_param_struct_type())
+        input_param_struct = ir.LiteralStructType(input_param_list)
+
+        output_param_list = []
+        for state in self.output_states:
+            output_param_list.append(state.get_param_struct_type())
+        output_param_struct = ir.LiteralStructType(output_param_list)
+
+        param_param_list = []
+        for state in self.parameter_states:
+            param_param_list.append(state.get_param_struct_type())
+        param_param_struct = ir.LiteralStructType(param_param_list)
+
+        param_list = [input_param_struct,
+                      self.function_object.get_param_struct_type(),
+                      output_param_struct,
+                      param_param_struct]
+
+        mech_params = self._get_mech_params_type()
+        if mech_params is not None:
+            param_list.append(mech_params)
+
+        return ir.LiteralStructType(param_list)
+
+
+    def _get_mech_params_type(self):
+        pass
+
+
+    def get_context_struct_type(self):
+        input_context_list = []
+        for state in self.input_states:
+            input_context_list.append(state.get_context_struct_type())
+        input_context_struct = ir.LiteralStructType(input_context_list)
+
+        output_context_list = []
+        for state in self.output_states:
+            output_context_list.append(state.get_context_struct_type())
+        output_context_struct = ir.LiteralStructType(output_context_list)
+
+        parameter_context_list = []
+        for state in self.parameter_states:
+            parameter_context_list.append(state.get_context_struct_type())
+        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
+
+        return ir.LiteralStructType([input_context_struct, self.function_object.get_context_struct_type(), output_context_struct, parameter_context_struct])
+
+
+    def get_output_struct_type(self):
+        output_type_list = []
+        for state in self.output_states:
+            output_type_list.append(state.get_output_struct_type())
+        return ir.LiteralStructType(output_type_list)
+
+
+    def get_input_struct_type(self):
+        input_type_list = []
+        for state in self.input_states:
+            input_type_list.append(state.get_input_struct_type())
+        for state in self.parameter_states:
+            state_input_type_list = []
+            for proj in state.mod_afferents:
+                state_input_type_list.append(proj.get_output_struct_type())
+            input_type_list.append(ir.LiteralStructType(state_input_type_list))
+        return ir.LiteralStructType(input_type_list)
+
+
+    def get_param_initializer(self):
+        input_param_init_list = []
+        for state in self.input_states:
+            input_param_init_list.append(state.get_param_initializer())
+        input_param_init = tuple(input_param_init_list)
+
+        function_param_init = self.function_object.get_param_initializer()
+
+        output_param_init_list = []
+        for state in self.output_states:
+            output_param_init_list.append(state.get_param_initializer())
+        output_param_init = tuple(output_param_init_list)
+
+        param_param_init_list = []
+        for state in self.parameter_states:
+            param_param_init_list.append(state.get_param_initializer())
+        param_param_init = tuple(param_param_init_list)
+
+        param_init_list = [input_param_init, function_param_init,
+                           output_param_init, param_param_init]
+
+        mech_params_init = self._get_mech_params_init()
+        if mech_params_init is not None:
+            param_init_list.append(mech_params_init)
+
+        return tuple(param_init_list)
+
+
+    def _get_mech_params_init(self):
+        pass
+
+
+    def get_context_initializer(self):
+        input_context_init_list = []
+        for state in self.input_states:
+            input_context_init_list.append(state.get_context_initializer())
+        input_context_init = tuple(input_context_init_list)
+
+        function_context_init = self.function_object.get_context_initializer()
+
+        output_context_init_list = []
+        for state in self.output_states:
+            output_context_init_list.append(state.get_context_initializer())
+        output_context_init = tuple(output_context_init_list)
+
+        parameter_context_init_list = []
+        for state in self.parameter_states:
+            parameter_context_init_list.append(state.get_context_initializer())
+        parameter_context_init = tuple(parameter_context_init_list)
+
+        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
+
+    def _gen_llvm_input_states(self, ctx, builder, params, context, si):
+        # Allocate temporary storage. We rely on the fact that series
+        # of input state results should match the main function input.
+        is_output_list = []
+        for state in self.input_states:
+            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            is_output_list.append(is_function.args[3].type.pointee)
+
+        # Check if all elements are the same
+        if len(set(is_output_list)) == 1:
+            is_output_type = ir.ArrayType(is_output_list[0], len(is_output_list))
+        else:
+            is_output_type = ir.LiteralStructType(is_output_list)
+        is_output = builder.alloca(is_output_type, 1)
+
+        for i, state in enumerate(self.input_states):
+            is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_in = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(is_function, [is_params, is_context, is_in, is_out])
+
+        return is_output, builder
+
+    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
+        # Allocate a shadow structure to overload user supplied parameters
+        f_params = builder.alloca(f_params_ptr.type.pointee, 1)
+
+        # Call parameter states for function
+        for idx, f_param in enumerate(func.get_param_ids()):
+            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            raw_param_val = builder.load(param_in_ptr)
+            param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            # If there is no param state, provide a copy of the user param value
+            # FIXME: why wouldn't it be there?
+            if f_param not in self._parameter_states:
+                builder.store(raw_param_val, param_out_ptr)
+                continue
+
+            state = self._parameter_states[f_param]
+            i = self._parameter_states.key_values.index(f_param)
+
+            assert state is self.parameter_states[i]
+
+            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+
+            # Param states are in the 4th block (idx 3).
+            # After input, function_object,  and output
+            ps_idx = ctx.int32_ty(3)
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
+
+            # Construct the input out of the user value and incoming projection
+            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builder.store(raw_param_val, raw_ptr)
+
+            # Copy mod_afferent inputs
+            for idx, ps_mod in enumerate(state.mod_afferents):
+                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
+                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                afferent_val = builder.load(mod_in_ptr)
+                builder.store(afferent_val, mod_out_ptr)
+
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = param_out_ptr
+
+            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+        return f_params, builder
+
+    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
+        for i, state in enumerate(self.output_states):
+            #FIXME: can we rely on this?
+            os_in_spec = state._variable
+            if os_in_spec == OWNER_VALUE:
+                os_input = value
+            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
+                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+            #FIXME: For some reason this can be wrapped in a list
+            elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
+                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
+            else:
+                #TODO: support more options
+                print(value.type)
+                print(os_in_spec)
+                assert False
+
+            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(os_function, [os_params, os_context, os_input, os_output])
+
+        return builder
+
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+        fun = ctx.get_llvm_function(function.llvmSymbolName)
+        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
+        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+
+        builder.call(fun, [params, context, fun_in, fun_out])
+
+        return fun_out, builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+
+        is_output, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
+
+        mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_params, builder = self._gen_llvm_param_states(self.function_object, mf_params_ptr, ctx, builder, params, context, arg_in)
+
+        mf_state = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function_object, mf_params, mf_state, is_output)
+
+        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
+
+        builder = self._gen_llvm_output_states(ctx, builder, params, context, ppval, arg_out)
+        return builder
+
+    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
+        return func_in, builder
+
+
+    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+        return mf_out, builder
+
+
+    def _bin_execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 context=None):
+
+
+        bf = self._llvmBinFunction
+
+        par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        if self.nv_state is None:
+            initializer = self.get_context_initializer()
+            self.nv_state = context_struct_ty(*initializer)
+
+        ct_context = self.nv_state
+
+        ct_param = par_struct_ty(*self.get_param_initializer())
+
+        def tupleize(val):
+            try:
+                return tuple([tupleize(x) for x in val])
+            except:
+                return val
+        # convert to 3d(we always assume the input is vector of input states
+        # input states take vector of projection outputs
+        # projection output can be a vector
+        new_var = np.asfarray([np.atleast_2d(x) for x in variable])
+        vi_init = tupleize(new_var)
+        ct_vi = vi_ty(*vi_init)
+
+        ct_vo = vo_ty()
+
+        bf(ctypes.byref(ct_param), ctypes.byref(ct_context),
+           ctypes.byref(ct_vi), ctypes.byref(ct_vo))
+
+        return pnlvm._convert_ctype_to_python(ct_vo)
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 

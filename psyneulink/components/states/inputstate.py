@@ -1233,6 +1233,10 @@ class InputState(State_Base):
         return self._get_value_label(label_dictionary, self.owner.input_states)
 
     @property
+    def llvmSymbolName(self):
+        return self.function_object.llvmSymbolName
+
+    @property
     def position_in_mechanism(self):
         if hasattr(self, "owner"):
             if self.owner is not None:
