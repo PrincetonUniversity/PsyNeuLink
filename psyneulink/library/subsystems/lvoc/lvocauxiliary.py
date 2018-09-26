@@ -241,6 +241,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
               '\ncontrol_costs: ', costs,
               '\nprediction_weights: ', prediction_weights)
         # TEST PRINT END:
+
         # perform gradient ascent until convergence criterion is reached
         j=0
         while convergence_metric > self.convergence_criterion:
@@ -260,7 +261,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
                 # Update cost based on new control_signal_value
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
-                assert True
 
             # Assign new values of interaction terms, control_signals and costs to prediction_vector
             prediction_vector[self.intrxn]= np.array(prediction_vector[self.pred] *
