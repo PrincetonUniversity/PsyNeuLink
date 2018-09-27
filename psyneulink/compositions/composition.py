@@ -48,7 +48,6 @@ Class Reference
 
 import collections
 from collections import Iterable, OrderedDict
-from enum import Enum
 import logging
 import numpy as np
 import typecheck as tc
@@ -61,101 +60,25 @@ from llvmlite import ir
 from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.utilities import CNodeRole
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'Composition', 'CompositionError', 'CNodeRole',
-]
+    'Composition', 'CompositionError', ]
 
 logger = logging.getLogger(__name__)
 
-class CNodeRole(Enum):
-    """
-
-    - ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`, and
-        that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may have
-        only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN` Mechanism of a Process is not
-        necessarily an `ORIGIN` of the System to which it belongs, as it may receive `Projections <Projection>` from
-        other Processes in the System (see `example <LearningProjection_Target_vs_Terminal_Figure>`). The `ORIGIN`
-        Mechanisms of a Process or System are listed in its :keyword:`origin_nodes` attribute, and can be displayed
-        using its :keyword:`show` method.  For additional details about `ORIGIN` Mechanisms in Processes, see `Process
-        Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`; and for Systems see
-        `System Mechanisms <System_Mechanisms>` and `System Input and Initialization
-        <System_Execution_Input_And_Initialization>`.
-
-    - INTERNAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
-
-    - CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
-        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
-
-    - INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
-        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-
-    - TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
-        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
-        Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-        as it may send Projections to other Processes in the System (see `example
-        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
-        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
-        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
-        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
-
-    - SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
-        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
-
-    - MONITORED
-        .
-
-    - LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
-
-    - TARGET
-        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
-        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_nodes` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET Mechanisms <LearningMechanism_Targets>`, `learning sequence <Process_Learning_Sequence>`,
-        and specifying `target values <Run_Targets>`.
-
-    - RECURRENT_INIT
-        .
-
-
-    """
-    ORIGIN = 0
-    INTERNAL = 1
-    CYCLE = 2
-    INITIALIZE_CYCLE = 3
-    TERMINAL = 4
-    SINGLETON = 5
-    MONITORED = 6
-    LEARNING = 7
-    TARGET = 8
-    RECURRENT_INIT = 9
-    OBJECTIVE = 10
 
 class CompositionError(Exception):
 
@@ -264,7 +187,6 @@ class Graph(object):
             vertex = Vertex(component, feedback=feedback)
             self.comp_to_vertex[component] = vertex
             self.add_vertex(vertex)
-
 
     def add_vertex(self, vertex):
         if vertex in self.vertices:
@@ -573,7 +495,7 @@ class Composition(object):
                                            len(cim_rep_input_state.value),
                                            len(node_input_state.value)))
 
-    def add_c_node(self, node):
+    def add_c_node(self, node, required_roles=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -581,7 +503,10 @@ class Composition(object):
             ---------
 
             node : `Mechanism` or `Composition`
-                the node to add
+                the node to be added to the Composition
+
+            required_roles : psyneulink.globals.utilities.CNodeRole or list of CNodeRoles
+                any CNodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
 
         if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
@@ -595,25 +520,76 @@ class Composition(object):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
-        if isinstance(node, ControlMechanism):
-            self.add_control_mechanism(node)
+        # # Can eventually be replaced by required_roles and aux_components
+        # if isinstance(node, ControlMechanism):
+        #     self.add_control_mechanism(node)
+
+        if hasattr(node, "aux_components"):
+
+            projections = []
+            # Add all "c_nodes" to the composition first (in case projections reference them)
+            for component in node.aux_components:
+                if isinstance(component, (Mechanism, Composition)):
+                    self.add_c_node(component)
+                elif isinstance(component, Projection):
+                    projections.append((component, False))
+                elif isinstance(component, tuple):
+                    if isinstance(component[0], Projection):
+                        if isinstance(component[1], bool):
+                            projections.append(component)
+                        else:
+                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                                                   "tuple is used to specify a Projection, then the index 0 item must "
+                                                   "be the Projection, and the index 1 item must be the feedback "
+                                                   "specification (True or False).".format(component, node.name))
+                    elif isinstance(component[0], (Mechanism, Composition)):
+                        if isinstance(component[1], CNodeRole):
+                            self.add_c_node(node=component[0], required_roles=component[1])
+                        elif isinstance(component[1], list):
+                            if isinstance(component[1], CNodeRole):
+                                self.add_c_node(node=component[0], required_roles=component[1])
+                            else:
+                                raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
+                                                       "If a tuple is used to specify a Mechanism or Composition, then "
+                                                       "the index 0 item must be the node, and the index 1 item must "
+                                                       "be the required_roles".format(component, node.name))
+
+                        else:
+                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                                                   "tuple is used to specify a Mechanism or Composition, then the "
+                                                   "index 0 item must be the node, and the index 1 item must be the "
+                                                   "required_roles".format(component, node.name))
+                    else:
+                        raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
+                                               " is specified, then the index 0 item must be a Projection, Mechanism, "
+                                               "or Composition.".format(component, node.name))
+                else:
+                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                                           "Composition, Projection, or tuple."
+                                           .format(component.name, node.name))
+
+            # Add all projections to the composition
+            for proj_spec in projections:
+                self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
+
+        if required_roles:
+            if not isinstance(required_roles, list):
+                required_roles = [required_roles]
+            for required_role in required_roles:
+                self.add_required_c_node_role(node, required_role)
+
+
 
     def add_controller(self, node):
         self.controller = node
         # self.add_c_node(node)
 
-    def add_control_mechanism(self, control_mechanism):
-
-        if not isinstance(control_mechanism, ControlMechanism):
-            raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
-        for input_state in control_mechanism._objective_mechanism.input_states:
-            input_state.internal_only = True
-        objective_node = control_mechanism._objective_mechanism
-        self.add_c_node(objective_node)
-        self.add_projection(objective_node.path_afferents[0])
-        self.add_projection(objective_node.efferents[0])
-        self._add_c_node_role(objective_node, CNodeRole.OBJECTIVE)
-        self.add_required_c_node_role(objective_node, CNodeRole.OBJECTIVE)
+    # def add_control_mechanism(self, control_mechanism):
+    #
+    #     if not isinstance(control_mechanism, ControlMechanism):
+    #         raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
+    #     for input_state in control_mechanism._objective_mechanism.input_states:
+    #         input_state.internal_only = True
 
     def add_projection(self, projection=None, sender=None, receiver=None, feedback=False):
         '''
@@ -655,6 +631,8 @@ class Composition(object):
                 projection = MappingProjection(matrix=projection)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
+        elif isinstance(projection, ModulatoryProjection_Base):
+            pass
         elif projection is None:
             projection = MappingProjection()
         elif not isinstance(projection, Projection):
@@ -854,19 +832,24 @@ class Composition(object):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
+        # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[0]:
-                self._add_c_node_role(node, CNodeRole.ORIGIN)
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             if graph.get_parents_from_component(node) == []:
-                self._add_c_node_role(node, CNodeRole.ORIGIN)
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.ORIGIN)
         # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
-                self._add_c_node_role(node, CNodeRole.TERMINAL)
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
@@ -1707,8 +1690,6 @@ class Composition(object):
                                           processes:tc.optional(list)=None,
                                           subgraphs:tc.optional(dict)=None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
-
-            from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
@@ -2944,11 +2925,17 @@ class Composition(object):
 
             # Run all incoming projections
             #TODO: This should filter out projections with different execution ID
+
             for par_proj in incoming_projections:
                 # Skip autoassociative projections
                 if par_proj.sender.owner is par_proj.receiver.owner:
                     continue
-                proj_idx = self.projections.index(par_proj)
+                # proj_idx = self.projections.index(par_proj)
+
+                if par_proj in self.projections:
+                    proj_idx = self.projections.index(par_proj)
+                else:
+                    continue
 
                 # Get parent mechanism
                 par_mech = par_proj.sender.owner
