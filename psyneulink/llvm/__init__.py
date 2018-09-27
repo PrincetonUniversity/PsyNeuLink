@@ -149,13 +149,6 @@ def _build_mod(module):
     try:
         mod = binding.parse_assembly(str(module))
         mod.verify()
-        __pass_manager.run(mod)
-        if __dumpenv is not None and __dumpenv.find("opt") != -1:
-            print(mod)
-        # This prints generated x86 assembly
-        if __dumpenv is not None and __dumpenv.find("isa") != -1:
-            print("ISA assembly:")
-            print(__target_machine.emit_assembly(mod))
     except Exception as e:
         print("ERROR: llvm parsing failed: {}".format(e))
         mod = None
@@ -172,13 +165,23 @@ def _llvm_build():
             mod_bundle.link_in(new_mod)
             _compiled_modules.add(m)
 
-    _modules = set()
+    _modules.clear()
+
     global __mod
     if __mod is not None:
         _engine.remove_module(__mod)
         __mod.link_in(mod_bundle)
     else:
         __mod = mod_bundle
+
+    __pass_manager.run(__mod)
+
+    if __dumpenv is not None and __dumpenv.find("opt") != -1:
+        print(__mod)
+    # This prints generated x86 assembly
+    if __dumpenv is not None and __dumpenv.find("isa") != -1:
+        print("ISA assembly:")
+        print(__target_machine.emit_assembly(__mod))
 
     # Now add the module and make sure it is ready for execution
     _engine.add_module(__mod)
