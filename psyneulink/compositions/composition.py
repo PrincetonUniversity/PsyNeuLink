@@ -495,7 +495,7 @@ class Composition(object):
                                            len(cim_rep_input_state.value),
                                            len(node_input_state.value)))
 
-    def add_c_node(self, node):
+    def add_c_node(self, node, required_roles=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
