@@ -1156,10 +1156,8 @@ class Composition(object):
                     if valid_spec:
                         redirected_inputs.add(node)
                         continue
-                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
-                                           "corresponding states will be generated on CIM), None ({1} will not receive"
-                                           " input), another origin node, or a list of origin nodes and/or origin node "
-                                           "InputStates"
+                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. It contains a "
+                                           "source which is not an origin node or an InputState of an origin node."
                                            .format(self.origin_input_sources[node], node.name))
 
                 else:
