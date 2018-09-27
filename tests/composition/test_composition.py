@@ -17,7 +17,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
+from psyneulink.compositions.composition import Composition, CompositionError
+from psyneulink.globals.utilities import CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.compositions.systemcomposition import SystemComposition
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
@@ -908,7 +909,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -949,7 +950,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -990,7 +991,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -1031,7 +1032,7 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
@@ -4384,4 +4385,49 @@ class TestAuxComponents:
 
         assert np.allclose(B.value, [[3.0]])
 
+    def test_required_c_node_roles(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B',
+                              function=Linear(slope=2.0))
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A, required_roles=[CNodeRole.TERMINAL])
+        comp.add_linear_processing_pathway([A, B])
+
+        result = comp.run(inputs={A: [[1.0]]})
+
+        terminal_mechanisms = comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0], [2.0]])
+
+    def test_aux_component_with_required_role(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C',
+                              function=Linear(slope=2.0))
+
+        A.aux_components = [(B, CNodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([B, C])
+
+        comp.run(inputs={A: [[1.0]]})
+
+        assert np.allclose(B.value, [[1.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 1.0 | Output = 1.0
+
+        comp.run(inputs={A: [[2.0]]})
+        # Second Run:
+        # Input to A = 2.0 | Output = 2.0
+        # Input to B = 2.0 | Output = 2.0
+
+        assert np.allclose(B.value, [[2.0]])
+
+        assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+        assert np.allclose(C.value, [[4.0]])
+        assert np.allclose(comp.output_values, [[2.0], [4.0]])
 

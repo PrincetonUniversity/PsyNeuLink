@@ -351,7 +351,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPOSITION, \
     PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, CNodeRole
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -778,7 +778,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
-
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
@@ -803,17 +802,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        p = MappingProjection(sender=self.objective_mechanism,
-                              receiver=self,
-                              matrix=AUTO_ASSIGN_MATRIX,
-                              name=name)
-
-        if hasattr(self, 'composition') and self.composition:
-            # self.aux_components=[self._objective_mechanism, (p, True)]
-            self.composition.add_c_node(self._objective_mechanism)
-            self.aux_components=[(p, True)]
-
-
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      name=name)
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
+        self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
+        self.aux_components.append(projection_from_objective)
         self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
@@ -874,6 +870,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,
