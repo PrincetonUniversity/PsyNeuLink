@@ -16,7 +16,8 @@ import os, sys
 from psyneulink.llvm import builtins
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
-_module = ir.Module(name="PsyNeuLinkModule")
+_modules = set()
+_compiled_modules = set()
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
@@ -24,25 +25,73 @@ _float_ty = ir.DoubleType()
 _llvm_generation = 0
 _binary_generation = 0
 
+def _find_llvm_function(name, mods = _modules | _compiled_modules):
+    f = None
+    for m in mods:
+        if name in m.globals:
+            f = m.get_global(name)
+
+    if not isinstance(f, ir.Function):
+        raise ValueError("No such function: {}".format(name))
+    return f
 
 class LLVMBuilderContext:
+    module = None
+    nest_level = 0
+    uniq_counter = 0
+
     def __init__(self):
-        self.module = _module
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
 
-    def get_llvm_function(self, name):
-        f = self.module.get_global(name)
-        if not isinstance(f, ir.Function):
-            raise ValueError("No such function: {}".format(name))
-        return f
-
     def __enter__(self):
+        if LLVMBuilderContext.nest_level == 0:
+            assert LLVMBuilderContext.module is None
+            LLVMBuilderContext.module = ir.Module(name="PsyNeuLinkModule-" + str(_llvm_generation))
+        LLVMBuilderContext.nest_level += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
+        LLVMBuilderContext.nest_level -= 1
+        if LLVMBuilderContext.nest_level == 0:
+            assert LLVMBuilderContext.module is not None
+            _modules.add(LLVMBuilderContext.module)
+            LLVMBuilderContext.module = None
+
         global _llvm_generation
         _llvm_generation += 1
+
+    def get_unique_name(self, name):
+        LLVMBuilderContext.uniq_counter += 1
+        return name + '-' + str(LLVMBuilderContext.uniq_counter)
+
+    def get_llvm_function(self, name):
+        f = _find_llvm_function(name, _compiled_modules | _modules | {LLVMBuilderContext.module})
+        # Add declaration to the current module
+        if f.name not in LLVMBuilderContext.module.globals:
+            decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)
+            assert decl_f.is_declaration
+            return decl_f
+        return f
+
+    def convert_python_struct_to_llvm_ir(self, t):
+        if type(t) is list:
+            assert all(type(x) == type(t[0]) for x in t)
+            elem_t = self.convert_python_struct_to_llvm_ir(t[0])
+            return ir.ArrayType(elem_t, len(t))
+        elif type(t) is tuple:
+            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            return ir.LiteralStructType(elems_t)
+        elif isinstance(t, (int, float)):
+            return self.float_ty
+        elif isinstance(t, np.ndarray):
+            return self.convert_python_struct_to_llvm_ir(t.tolist())
+        elif t is None:
+            return ir.LiteralStructType([])
+
+        print(type(t))
+        assert(False)
+
 
 
 # Compiler binding
@@ -89,23 +138,50 @@ _engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 __mod = None
 
 
-def _llvm_build():
-    # Remove the old module
-    global __mod
-    if __mod is not None:
-        _engine.remove_module(__mod)
+def _build_mod(module):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(_module)
+        print(module)
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
-    __mod = binding.parse_assembly(str(_module))
-    __mod.verify()
+    try:
+        mod = binding.parse_assembly(str(module))
+        mod.verify()
+    except Exception as e:
+        print("ERROR: llvm parsing failed: {}".format(e))
+        mod = None
+
+    return mod
+
+def _llvm_build():
+
+    mod_bundle = binding.parse_assembly("")
+    global _modules
+    for m in _modules:
+        new_mod = _build_mod(m)
+        if new_mod is not None:
+            mod_bundle.link_in(new_mod)
+            _compiled_modules.add(m)
+
+    _modules.clear()
+
+    global __mod
+    if __mod is not None:
+        _engine.remove_module(__mod)
+        __mod.link_in(mod_bundle)
+    else:
+        __mod = mod_bundle
+
     __pass_manager.run(__mod)
+
     if __dumpenv is not None and __dumpenv.find("opt") != -1:
         print(__mod)
+    # This prints generated x86 assembly
+    if __dumpenv is not None and __dumpenv.find("isa") != -1:
+        print("ISA assembly:")
+        print(__target_machine.emit_assembly(__mod))
 
     # Now add the module and make sure it is ready for execution
     _engine.add_module(__mod)
@@ -117,11 +193,6 @@ def _llvm_build():
 
     # update binary generation
     _binary_generation = _llvm_generation
-
-    # This prints generated x86 assembly
-    if __dumpenv is not None and __dumpenv.find("isa") != -1:
-        print("ISA assembly:")
-        print(__target_machine.emit_assembly(__mod))
 
 
 _field_count = 0
@@ -172,24 +243,6 @@ def _convert_llvm_ir_to_ctype(t):
     assert(False)
 
 
-def _convert_python_struct_to_llvm_ir(ctx, t):
-    if type(t) is list:
-        assert all(type(x) == type(t[0]) for x in t)
-        elem_t = _convert_python_struct_to_llvm_ir(ctx, t[0])
-        return ir.ArrayType(elem_t, len(t))
-    elif type(t) is tuple:
-        elems_t = [_convert_python_struct_to_llvm_ir(ctx, x) for x in t]
-        return ir.LiteralStructType(elems_t)
-    elif isinstance(t, (int, float)):
-        return ctx.float_ty
-    elif isinstance(t, np.ndarray):
-        return _convert_python_struct_to_llvm_ir(ctx, t.tolist())
-    elif t is None:
-        return ir.LiteralStructType([])
-
-    print(type(t))
-    assert(False)
-
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
         return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
@@ -226,7 +279,7 @@ class LLVMBinaryFunction:
         self.__ptr = ptr
 
         # Recompiled, update the signature
-        f = _module.get_global(self.__name)
+        f = _find_llvm_function(self.__name, _modules | _compiled_modules)
         assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)

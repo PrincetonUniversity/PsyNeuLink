@@ -882,7 +882,7 @@ class Function_Base(Function):
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, self.get_params())
+            return ctx.convert_python_struct_to_llvm_ir(self.get_params())
 
     def get_param_initializer(self):
         def tupleize(x):
@@ -894,12 +894,12 @@ class Function_Base(Function):
     def get_input_struct_type(self):
         default_var = self.instance_defaults.variable
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self):
         default_val = self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
+            return ctx.convert_python_struct_to_llvm_ir(default_val)
 
     def bin_function(self,
                      variable=None,
@@ -2396,7 +2396,7 @@ class LinearCombination(
         #        single element 2d array does
         default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_param_ids(self):
         return SCALE, OFFSET, EXPONENTS
@@ -3218,7 +3218,7 @@ class Identity(
                 variable = tuple(variable)
 #        assert all(type(x) == type(t[0]) for x in t)
             with pnlvm.LLVMBuilderContext() as ctx:
-                return pnlvm._convert_python_struct_to_llvm_ir(ctx, variable)
+                return ctx.convert_python_struct_to_llvm_ir(variable)
         return super().get_input_struct_type()
 
     def get_output_struct_type(self):
@@ -8236,7 +8236,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             context = (self.previous_v, self.previous_w, self.previous_time)
-            context_type = pnlvm._convert_python_struct_to_llvm_ir(ctx, context)
+            context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
     def get_context_initializer(self):
