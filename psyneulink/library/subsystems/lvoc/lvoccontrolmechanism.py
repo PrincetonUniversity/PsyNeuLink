@@ -846,29 +846,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         shadow_spec = spec[SHADOW_INPUTS]
 
-        if shadow_spec is ALL:
-            # Generate list of InputState specification dictionaries,
-            #    one for each input to the Composition
-            # for composition_input in self.composition.input_CIM.output_states:
-            #     input_state_specs.append(composition_input)
-            input_state_specs.extend([{NAME:'INPUT OF ' + c.efferents[0].receiver.name +
-                                            ' of ' + c.efferents[0].receiver.owner.name,
-                                       PROJECTIONS:c}
-                                      for c in self.composition.input_CIM.output_states])
-        elif isinstance(shadow_spec, list):
-            for item in shadow_spec:
-                if isinstance(item, Mechanism):
-                    # Shadow all of the InputStates for the Mechanism
-                    input_states = item.input_states
-                if isinstance(item, InputState):
-                    # Place in a list for consistency of handling below
-                    input_states = [item]
-                # Shadow all of the Projections to each specified InputState
-                input_state_specs.extend([{NAME:i.name + 'of' + i.owner.name,
-                                           VARIABLE: i.variable,
-                                           PROJECTIONS: i.path_afferents}
-                                          for i in input_states])
-
         if FUNCTION in spec:
             for i in input_state_specs:
                 i.update({FUNCTION:spec[FUNCTION]})

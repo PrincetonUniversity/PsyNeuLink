@@ -15,6 +15,26 @@ from psyneulink.compositions.composition import Composition
 
 class TestControlMechanisms:
 
+    def test_lvoc(self):
+        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m2 = pnl.TransferMechanism()
+        c = pnl.Composition()
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c._analyze_graph()
+        lvoc = pnl.LVOCControlMechanism(composition=c,
+                                        input_states=pnl.ORIGIN_MECHANISMS,
+                                        monitor_for_control=[m1, m2],
+                                        control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+        c.add_c_node(lvoc)
+        c.origin_input_sources = {lvoc: [m1.external_input_states[0], m2.external_input_states[0]]}
+        input_dict = {m1: [[1], [1]], m2: [1]}
+
+        # c.scheduler_processing.add_condition(lvoc.objective_mechanism,
+        #                                      pnl.EveryNCalls(m1, 1))
+        print(c.scheduler_processing.consideration_queue)
+        c.run(inputs=input_dict)
+
     def test_default_lc_control_mechanism(self):
         G = 1.0
         k = 0.5

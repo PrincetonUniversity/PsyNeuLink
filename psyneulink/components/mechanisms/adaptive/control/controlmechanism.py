@@ -809,8 +809,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
         self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
-        self.aux_components.append(projection_from_objective)
+        self.aux_components.append((projection_from_objective, True))
         self.monitor_for_control = self.monitored_output_states
+
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
