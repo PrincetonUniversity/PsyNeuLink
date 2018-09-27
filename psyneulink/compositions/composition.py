@@ -2460,7 +2460,7 @@ class Composition(Composition_Base):
 
                     else:
                         node.context.execution_phase = ContextFlags.PROCESSING
-                        if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
+                        if node is not self.controller:
                             node.execute(runtime_params=execution_runtime_params,
                                          context=ContextFlags.COMPOSITION)
 

@@ -30,9 +30,14 @@ class TestControlMechanisms:
         c.origin_input_sources = {lvoc: [m1.external_input_states[0], m2.external_input_states[0]]}
         input_dict = {m1: [[1], [1]], m2: [1]}
 
-        # c.scheduler_processing.add_condition(lvoc.objective_mechanism,
-        #                                      pnl.EveryNCalls(m1, 1))
-        print(c.scheduler_processing.consideration_queue)
+        first_pass = [m1, m2, lvoc]
+        second_pass = [lvoc._objective_mechanism]
+        passes = [first_pass, second_pass]
+
+        for i in range(len(passes)):
+            for node in passes[i]:
+                c.scheduler_processing.add_condition(node, pnl.AtPass(i))
+        # print(c.scheduler_processing.consideration_queue)
         c.run(inputs=input_dict)
 
     def test_default_lc_control_mechanism(self):
