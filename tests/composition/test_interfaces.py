@@ -475,6 +475,190 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(level_2.output_values, [34.0])
 
 
+class TestInputCIMOutputStateToOriginOneToMany:
+
+    def test_one_to_two(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: A}
+
+        comp.run(inputs={A: [[1.23]]})
+
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[1.23]])
+        assert np.allclose(C.value, [[1.23]])
+
+    def test_non_origin_receiver(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: A,
+                                     B: A}
+
+        comp.run(inputs={A: [[1.23]]})
+
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[2.46]])
+        assert np.allclose(C.value, [[1.23]])
+
+    def test_incorrect_origin_input_source_spec(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: B}
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={A: [[1.23]]})
+        assert "Origin input source" in str(error_text) and "specified for C is not valid" in str(error_text)
+
+    def test_origin_input_source_true_no_input(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[4.56]])
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {C: True}
+
+        comp.run(inputs={A: [[1.23]]})
+        
+        assert np.allclose(A.value, [[1.23]])
+        assert np.allclose(B.value, [[1.23]])
+        assert np.allclose(C.value, [[4.56]])
+
+    def test_mix_and_match_input_sources(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.]])
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    A,
+                                    B.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = origin_input_sources
+
+        comp.run(inputs=input_dict)
+
+        assert np.allclose(A.value, [[2.]])
+        assert np.allclose(B.value, [[3.], [1.]])
+        assert np.allclose(C.value, [[1.], [2.], [3.]])
+
+    def test_mix_and_match_input_sources_invalid_shape(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.], [0.]])
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    A,
+                                    B.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = origin_input_sources
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs=input_dict)
+        assert "has an incompatible number of external input states" in str(error_text.value)
+
+    def test_mix_and_match_input_sources_invalid_source(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.]])
+        D = ProcessingMechanism(name='D')
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    D,
+                                    B.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_linear_processing_pathway([C, D])
+
+        comp.origin_input_sources = origin_input_sources
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs=input_dict)
+        assert "source which is not an origin node or an InputState of an origin node" in str(error_text.value)
+
+    def test_input_sources_invalid_origin_source(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.]])
+        D = ProcessingMechanism(name='D')
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    D,
+                                    B.input_states[0]],
+                                D: [C.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+
+        comp.origin_input_sources = origin_input_sources
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs=input_dict)
+        assert "already borrowing input from yet another origin node" in str(error_text.value)
+
 class TestInputSpec:
 
     def test_valid_mismatched_input_lens(self):
@@ -553,3 +737,14 @@ class TestInputSpec:
             comp.run(inputs={A: inputs_to_A,
                              B: inputs_to_B})
         assert "input dictionary for COMP contains input specifications of different lengths" in str(error_text.value)
+
+    def test_valid_input_float(self):
+        A = ProcessingMechanism(name="A")
+        comp = Composition(name="comp")
+        comp.add_c_node(A)
+
+        comp.run(inputs={A: 5.0})
+        assert np.allclose(comp.results, [[5.0]])
+
+        comp.run(inputs={A: [5.0, 10.0, 15.0]})
+        assert np.allclose(comp.results, [[[5.0]], [[5.0]], [[10.0]], [[15.0]]])
