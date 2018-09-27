@@ -530,7 +530,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
             comp.run(inputs={A: [[1.23]]})
         assert "Origin input source" in str(error_text) and "specified for C is not valid" in str(error_text)
 
-    def test_origin_input_source_none(self):
+    def test_origin_input_source_true_no_input(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C',
@@ -541,7 +541,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.add_linear_processing_pathway([A, B])
         comp.add_c_node(C)
 
-        comp.origin_input_sources = {C: None}
+        comp.origin_input_sources = {C: True}
 
         comp.run(inputs={A: [[1.23]]})
         
@@ -629,6 +629,35 @@ class TestInputCIMOutputStateToOriginOneToMany:
         with pytest.raises(CompositionError) as error_text:
             comp.run(inputs=input_dict)
         assert "source which is not an origin node or an InputState of an origin node" in str(error_text.value)
+
+    def test_input_sources_invalid_origin_source(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        C = ProcessingMechanism(name='C',
+                                default_variable=[[0.], [0.], [0.]])
+        D = ProcessingMechanism(name='D')
+
+        input_dict = {A: [[2.0]],
+                      B: [[3.0], [1.0]]}
+
+        origin_input_sources = {C: [B.input_states[1],
+                                    D,
+                                    B.input_states[0]],
+                                D: [C.input_states[0]]}
+
+        comp = Composition(name="comp")
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+        comp.add_c_node(C)
+        comp.add_c_node(D)
+
+        comp.origin_input_sources = origin_input_sources
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs=input_dict)
+        assert "already borrowing input from yet another origin node" in str(error_text.value)
 
 class TestInputSpec:
 

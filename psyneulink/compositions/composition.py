@@ -1095,14 +1095,16 @@ class Composition(object):
 
             - for each origin node:
                 - if the origin node's origin_input_source specification is True or not listed, create a corresponding
-                  InputState and OutputState on the Input CompositionInterfaceMechanism for each InputState of each
-                  origin node, and a Projection between the newly created InputCIM OutputState and the origin
-                  InputState, unless the InputState's
+                  InputState and OutputState on the Input CompositionInterfaceMechanism for each "external" InputState
+                  of each origin node, and a Projection between the newly created InputCIM OutputState and the origin
+                  InputState
                 - if the origin node's origin_input_source specification is another origin node, create projections
                   from that other origin node's corresponding InputCIM OutputStates to the current origin node's
-                  InputStates.
-                - if the origin node's origin_input_source specification is None, it will use its own default variable
-                  value as input. Go to the next origin node.
+                  InputStates. The two nodes must have the same shape.
+                - if the origin node's origin_input_source specification is a list, the list must contain only origin
+                  nodes and/or InputStates of origin nodes. In this case, an origin node is shorthand for all of the
+                  InputStates of that origin node. The concatenation of the values of all of the origin nodes specified
+                  in the list must match the shape of the node whose origin_input_source is being specified.
 
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
               OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
@@ -1139,8 +1141,6 @@ class Composition(object):
             if node in self.origin_input_sources:
                 if self.origin_input_sources[node] == True:
                     pass
-                elif not self.origin_input_sources[node]:
-                    continue
                 elif self.origin_input_sources[node] in origin_nodes:
                     redirected_inputs.add(node)
                     continue
@@ -1150,21 +1150,31 @@ class Composition(object):
                         if isinstance(source, (Composition, Mechanism)):
                             if source not in origin_nodes:
                                 valid_spec = False
+                            elif source in self.origin_input_sources:
+                                if self.origin_input_sources[source] != True:
+                                    valid_spec = False
                         elif isinstance(source, InputState):
                             if source.owner not in origin_nodes:
                                 valid_spec = False
+                            elif source.owner in self.origin_input_sources:
+                                if self.origin_input_sources[source.owner] != True:
+                                    valid_spec = False
                     if valid_spec:
                         redirected_inputs.add(node)
                         continue
-                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. It contains a "
-                                           "source which is not an origin node or an InputState of an origin node."
+                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. It contains "
+                                           "either (1) a source which is not an origin node or an InputState of an "
+                                           "origin node, or (2) source which is an origin node (or origin node "
+                                           "InputState), but is already borrowing input from yet another origin node."
                                            .format(self.origin_input_sources[node], node.name))
 
                 else:
-                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be True ("
-                                           "corresponding states will be generated on CIM), None ({1} will not receive"
-                                           " input), another origin node, or a list of origin nodes and/or origin node "
-                                           "InputStates"
+                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be (1) True "
+                                           "[the key node is represented on the input_CIM by one or more pairs of "
+                                           "states that pass its input value], (2) another origin node [the key node "
+                                           "gets its input from another origin node's input_CIM representation], or (3)"
+                                           " a list of origin nodes and/or origin node InputStates [the key node gets "
+                                           "its input from a mix of other origin nodes' input_CIM representations."
                                            .format(self.origin_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
