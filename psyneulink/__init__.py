@@ -23,26 +23,30 @@ import logging as _logging
 
 import numpy as _numpy
 
-from psyneulink.compositions import composition
-from psyneulink.compositions.composition import *
 # starred imports to allow user imports from top level
+from . import llvm
 from . import components
 from . import globals
 from . import library
 from . import scheduling
+from . import compositions
+
 from ._version import get_versions
+from .llvm import *
 from .components import *
 from .globals import *
 from .library import *
 from .scheduling import *
+from .compositions import *
 
 _pnl_global_names = [
     'primary_registries',
 ]
 
 __all__ = list(_pnl_global_names)
+# __all__.extend(llvm.__all__)
 __all__.extend(components.__all__)
-__all__.extend(composition.__all__)
+__all__.extend(compositions.__all__)
 __all__.extend(globals.__all__)
 __all__.extend(library.__all__)
 __all__.extend(scheduling.__all__)
