@@ -11,3 +11,4 @@ matplotlib
 ipykernel>=4.6.1
 graphviz
 pillow
+torch
