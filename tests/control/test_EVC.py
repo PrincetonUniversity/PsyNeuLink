@@ -103,126 +103,119 @@ def test_EVC():
     mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
 
-    input_dict = {
-        Input: [0.5],
-        Reward: [20]
+    # Stimuli
+    stim_list_dict = {
+        Input: [0.5, 0.123],
+        Reward: [20, 20]
     }
 
-    results = mySystem.run(inputs=input_dict)
-    print(results)
-    # # Stimuli
-    # stim_list_dict = {
-    #     Input: [0.5, 0.123],
-    #     Reward: [20, 20]
-    # }
-    #
-    # mySystem.run(
-    #     inputs=stim_list_dict,
-    # )
-    #
-    # RewardPrediction = mySystem.execution_list[3]
-    # InputPrediction = mySystem.execution_list[4]
-    #
-    # # rearranging mySystem.results into a format that we can compare with pytest
-    # results_array = []
-    # for elem in mySystem.results:
-    #     elem_array = []
-    #     for inner_elem in elem:
-    #         elem_array.append(float(inner_elem))
-    #     results_array.append(elem_array)
-    #
-    # expected_results_array = [
-    #     [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
-    #     [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
-    # ]
-    #
-    # sim_results_array = []
-    # for elem in mySystem.simulation_results:
-    #     elem_array = []
-    #     for inner_elem in elem:
-    #         elem_array.append(float(inner_elem))
-    #     sim_results_array.append(elem_array)
-    #
-    # # mySystem.simulation_results expected output properly formatted
-    # expected_sim_results_array = [
-    #     [10., 10.0, 0.0, -0.1, 0.48999867, 0.50499983],
-    #     [10., 10.0, 0.0, -0.4, 1.08965888, 0.51998934],
-    #     [10., 10.0, 0.0, 0.7, 2.40680493, 0.53494295],
-    #     [10., 10.0, 0.0, -1., 4.43671978, 0.549834],
-    #     [10., 10.0, 0.0, 0.1, 0.48997868, 0.51998934],
-    #     [10., 10.0, 0.0, -0.4, 1.08459402, 0.57932425],
-    #     [10., 10.0, 0.0, 0.7, 2.36033556, 0.63645254],
-    #     [10., 10.0, 0.0, 1., 4.24948962, 0.68997448],
-    #     [10., 10.0, 0.0, 0.1, 0.48993479, 0.53494295],
-    #     [10., 10.0, 0.0, 0.4, 1.07378304, 0.63645254],
-    #     [10., 10.0, 0.0, 0.7, 2.26686573, 0.72710822],
-    #     [10., 10.0, 0.0, 1., 3.90353015, 0.80218389],
-    #     [10., 10.0, 0.0, 0.1, 0.4898672, 0.549834],
-    #     [10., 10.0, 0.0, -0.4, 1.05791834, 0.68997448],
-    #     [10., 10.0, 0.0, 0.7, 2.14222978, 0.80218389],
-    #     [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
-    #     [15., 15.0, 0.0, 0.1, 0.48999926, 0.50372993],
-    #     [15., 15.0, 0.0, -0.4, 1.08981011, 0.51491557],
-    #     [15., 15.0, 0.0, 0.7, 2.40822035, 0.52608629],
-    #     [15., 15.0, 0.0, 1., 4.44259627, 0.53723096],
-    #     [15., 15.0, 0.0, 0.1, 0.48998813, 0.51491557],
-    #     [15., 15.0, 0.0, 0.4, 1.0869779, 0.55939819],
-    #     [15., 15.0, 0.0, -0.7, 2.38198336, 0.60294711],
-    #     [15., 15.0, 0.0, 1., 4.33535807, 0.64492386],
-    #     [15., 15.0, 0.0, 0.1, 0.48996368, 0.52608629],
-    #     [15., 15.0, 0.0, 0.4, 1.08085171, 0.60294711],
-    #     [15., 15.0, 0.0, 0.7, 2.32712843, 0.67504223],
-    #     [15., 15.0, 0.0, 1., 4.1221271, 0.7396981],
-    #     [15., 15.0, 0.0, 0.1, 0.48992596, 0.53723096],
-    #     [15., 15.0, 0.0, -0.4, 1.07165729, 0.64492386],
-    #     [15., 15.0, 0.0, 0.7, 2.24934228, 0.7396981],
-    #     [15., 15.0, 0.0, 1., 3.84279648, 0.81637827]
-    # ]
-    #
-    # expected_output = [
-    #     # Decision Output | Second Trial
-    #     (Decision.output_states[0].value, np.array(1.0)),
-    #
-    #     # Input Prediction Output | Second Trial
-    #     (InputPrediction.output_states[0].value, np.array(0.1865)),
-    #
-    #     # RewardPrediction Output | Second Trial
-    #     (RewardPrediction.output_states[0].value, np.array(15.0)),
-    #
-    #     # --- Decision Mechanism ---
-    #     #    Output State Values
-    #     #       decision variable
-    #     (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
-    #     #       response time
-    #     (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
-    #     #       upper bound
-    #     (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
-    #     #       lower bound
-    #     # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-    #
-    #     # --- Reward Mechanism ---
-    #     #    Output State Values
-    #     #       transfer mean
-    #     (Reward.output_states[RESULT].value, np.array([15.])),
-    #     #       transfer_result
-    #     (Reward.output_states[MEAN].value, np.array(15.0)),
-    #     #       transfer variance
-    #     (Reward.output_states[VARIANCE].value, np.array(0.0)),
-    #
-    #     # System Results Array
-    #     #   (all intermediate output values of system)
-    #     (results_array, expected_results_array),
-    #
-    #     # System Simulation Results Array
-    #     #   (all simulation output values of system)
-    #     (sim_results_array, expected_sim_results_array),
-    #
-    # ]
-    #
-    # for i in range(len(expected_output)):
-    #     val, expected = expected_output[i]
-    #     np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
-    #
+    mySystem.run(
+        inputs=stim_list_dict,
+    )
+
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
+
+    # rearranging mySystem.results into a format that we can compare with pytest
+    results_array = []
+    for elem in mySystem.results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        results_array.append(elem_array)
+
+    expected_results_array = [
+        [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
+        [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
+    ]
+
+    sim_results_array = []
+    for elem in mySystem.simulation_results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        sim_results_array.append(elem_array)
+
+    # mySystem.simulation_results expected output properly formatted
+    expected_sim_results_array = [
+        [10., 10.0, 0.0, -0.1, 0.48999867, 0.50499983],
+        [10., 10.0, 0.0, -0.4, 1.08965888, 0.51998934],
+        [10., 10.0, 0.0, 0.7, 2.40680493, 0.53494295],
+        [10., 10.0, 0.0, -1., 4.43671978, 0.549834],
+        [10., 10.0, 0.0, 0.1, 0.48997868, 0.51998934],
+        [10., 10.0, 0.0, -0.4, 1.08459402, 0.57932425],
+        [10., 10.0, 0.0, 0.7, 2.36033556, 0.63645254],
+        [10., 10.0, 0.0, 1., 4.24948962, 0.68997448],
+        [10., 10.0, 0.0, 0.1, 0.48993479, 0.53494295],
+        [10., 10.0, 0.0, 0.4, 1.07378304, 0.63645254],
+        [10., 10.0, 0.0, 0.7, 2.26686573, 0.72710822],
+        [10., 10.0, 0.0, 1., 3.90353015, 0.80218389],
+        [10., 10.0, 0.0, 0.1, 0.4898672, 0.549834],
+        [10., 10.0, 0.0, -0.4, 1.05791834, 0.68997448],
+        [10., 10.0, 0.0, 0.7, 2.14222978, 0.80218389],
+        [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
+        [15., 15.0, 0.0, 0.1, 0.48999926, 0.50372993],
+        [15., 15.0, 0.0, -0.4, 1.08981011, 0.51491557],
+        [15., 15.0, 0.0, 0.7, 2.40822035, 0.52608629],
+        [15., 15.0, 0.0, 1., 4.44259627, 0.53723096],
+        [15., 15.0, 0.0, 0.1, 0.48998813, 0.51491557],
+        [15., 15.0, 0.0, 0.4, 1.0869779, 0.55939819],
+        [15., 15.0, 0.0, -0.7, 2.38198336, 0.60294711],
+        [15., 15.0, 0.0, 1., 4.33535807, 0.64492386],
+        [15., 15.0, 0.0, 0.1, 0.48996368, 0.52608629],
+        [15., 15.0, 0.0, 0.4, 1.08085171, 0.60294711],
+        [15., 15.0, 0.0, 0.7, 2.32712843, 0.67504223],
+        [15., 15.0, 0.0, 1., 4.1221271, 0.7396981],
+        [15., 15.0, 0.0, 0.1, 0.48992596, 0.53723096],
+        [15., 15.0, 0.0, -0.4, 1.07165729, 0.64492386],
+        [15., 15.0, 0.0, 0.7, 2.24934228, 0.7396981],
+        [15., 15.0, 0.0, 1., 3.84279648, 0.81637827]
+    ]
+
+    expected_output = [
+        # Decision Output | Second Trial
+        (Decision.output_states[0].value, np.array(1.0)),
+
+        # Input Prediction Output | Second Trial
+        (InputPrediction.output_states[0].value, np.array(0.1865)),
+
+        # RewardPrediction Output | Second Trial
+        (RewardPrediction.output_states[0].value, np.array(15.0)),
+
+        # --- Decision Mechanism ---
+        #    Output State Values
+        #       decision variable
+        (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
+        #       response time
+        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
+        #       upper bound
+        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
+        #       lower bound
+        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
+
+        # --- Reward Mechanism ---
+        #    Output State Values
+        #       transfer mean
+        (Reward.output_states[RESULT].value, np.array([15.])),
+        #       transfer_result
+        (Reward.output_states[MEAN].value, np.array(15.0)),
+        #       transfer variance
+        (Reward.output_states[VARIANCE].value, np.array(0.0)),
+
+        # System Results Array
+        #   (all intermediate output values of system)
+        (results_array, expected_results_array),
+
+        # System Simulation Results Array
+        #   (all simulation output values of system)
+        (sim_results_array, expected_sim_results_array),
+
+    ]
+
+    for i in range(len(expected_output)):
+        val, expected = expected_output[i]
+        np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
 
 def test_EVC_gratton():
 
