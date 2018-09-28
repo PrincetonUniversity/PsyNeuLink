@@ -168,42 +168,36 @@ Class Reference
 """
 
 import numbers
+import warnings
 from collections import Iterable
 from types import MethodType
 
 import numpy as np
 import typecheck as tc
-import warnings
 
 import functools
 import ctypes
 import psyneulink.llvm as pnlvm
 from llvmlite import ir
 
-from psyneulink.components.component import function_type, method_type
-from psyneulink.components.functions.function import \
-    Function, Distance, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-    ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
+from psyneulink.components.component import Param, function_type, method_type
+from psyneulink.components.functions.function import Distance, Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
-    AutoAssociativeLearningMechanism
-from psyneulink.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, \
-    PARAMS_CURRENT, PREVIOUS_VALUE, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.scheduling.condition import Condition, WhenFinished, TimeScale
-
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.scheduling.condition import Condition, TimeScale, WhenFinished
 
 __all__ = [
     'CONVERGENCE', 'DECAY', 'EXTERNAL', 'EXTERNAL_INDEX',
@@ -730,8 +724,19 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
-    class ClassDefaults(TransferMechanism.ClassDefaults):
-        variable = np.array([[0]])
+    class Params(TransferMechanism.Params):
+        matrix = HOLLOW_MATRIX
+
+        noise = Param(0.0, modulable=True)
+        smoothing_factor = Param(0.5, modulable=True)
+        learning_rate = Param(None, modulable=True)
+
+        auto = Param(1, modulable=True)
+        hetero = Param(0, modulable=True)
+        initial_value = None
+        integrator_mode = False
+        clip = None
+        learning_function = Hebbian
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
@@ -1371,7 +1376,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # projection finds.
         retval_init = [tuple(os.instance_defaults.value) if not np.isscalar(os.instance_defaults.value) else os.instance_defaults.value for os in self.output_states]
         return tuple([transfer_init, projection_init, tuple(retval_init)])
-    
+
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         real_input_type = super().get_input_struct_type()
         real_in = builder.alloca(real_input_type, 1)

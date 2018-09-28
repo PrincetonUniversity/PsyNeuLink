@@ -71,6 +71,7 @@ from collections import Iterable
 
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import AdaptiveIntegrator
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.context import ContextFlags
@@ -183,8 +184,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        function = AdaptiveIntegrator(rate=0.5)
+    class Params(ProcessingMechanism_Base.Params):
+        function = Param(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({

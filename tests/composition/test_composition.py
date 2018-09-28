@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam
+from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam, UserDefinedFunction
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -17,7 +17,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
+from psyneulink.compositions.composition import Composition, CompositionError
+from psyneulink.globals.utilities import CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.compositions.systemcomposition import SystemComposition
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
@@ -872,9 +873,9 @@ class TestExecutionOrder:
 
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 320)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -908,14 +909,14 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -949,14 +950,14 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -990,14 +991,14 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1031,14 +1032,14 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, E])
         comp.add_c_node(B)
         comp.add_c_node(A)
-        comp.add_projection(A.efferents[0])
+
         comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 600)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
 
 # class TestValidateFeedDict:
@@ -1548,7 +1549,7 @@ class TestRun:
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            bin_execute=(mode=='LLVM')
+            bin_execute=mode
         )
         assert np.allclose(output, [[225, 225, 225]])
 
@@ -1569,7 +1570,7 @@ class TestRun:
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            bin_execute=(mode=='LLVM')
+            bin_execute=mode
         )
         assert np.allclose(output, [[300, 300]])
 
@@ -1585,7 +1586,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(125, output[0][0])
 
     def test_projection_assignment_mistake_swap(self):
@@ -1655,7 +1656,7 @@ class TestRun:
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
         assert np.allclose([250], output)
 
@@ -1676,7 +1677,7 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
         assert np.allclose(50.0, output[0][0])
 
@@ -1698,7 +1699,7 @@ class TestRun:
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(50.0, output[0][0])
 
     @pytest.mark.composition
@@ -1714,7 +1715,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
@@ -1731,7 +1732,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
@@ -1747,7 +1748,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5, bin_execute=mode)
         assert np.allclose([125], output)
 
     @pytest.mark.composition
@@ -1762,7 +1763,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=mode)
 
         assert np.allclose([np.array([[125.]]), np.array([[100.]]), np.array([[75.]])], output)
 
@@ -1781,7 +1782,7 @@ class TestRun:
         output = comp.execute(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            bin_execute=(mode=='LLVM')
+            bin_execute=mode
         )
         assert np.allclose([75], output)
 
@@ -1802,7 +1803,7 @@ class TestRun:
         output = comp.execute(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            bin_execute=(mode=='LLVM')
+            bin_execute=mode
         )
         assert np.allclose(32., output)
 
@@ -1824,7 +1825,7 @@ class TestRun:
         output = comp.execute(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            bin_execute=(mode=='LLVM')
+            bin_execute=mode
         )
         assert np.allclose(32., output)
 
@@ -1911,7 +1912,7 @@ class TestRun:
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([250], output)
 
     @pytest.mark.composition
@@ -1987,7 +1988,7 @@ class TestRun:
         inputs_dict = {C: [5.0],
                        D: [5.0]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(250, output)
 
     @pytest.mark.composition
@@ -2014,7 +2015,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {C: [5.0]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([[100], [150]], output)
 
     @pytest.mark.composition
@@ -2042,7 +2043,7 @@ class TestRun:
         inputs_dict = {C: [6.0],
                        D: [8.0]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([[150], [200]], output)
 
 
@@ -2073,7 +2074,7 @@ class TestRun:
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([[300], [350]], output)
 
 
@@ -2104,7 +2105,7 @@ class TestRun:
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([[650]], output)
 
     @pytest.mark.composition
@@ -2137,18 +2138,18 @@ class TestRun:
         comp.add_c_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.95257413]])
-        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.98201379]])
 
         # execute 10 times
         for i in range(10):
-            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=mode)
 
         assert np.allclose(val, [[0.99330715]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -2164,18 +2165,18 @@ class TestRun:
         comp.add_c_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[3.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.50749944]])
-        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[4.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.51741795]])
 
         # execute 10 times
         for i in range(10):
-            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=(mode=='LLVM'))
+            val = comp.execute(inputs={R: [[5.0]]}, bin_execute=mode)
 
         assert np.allclose(val, [[0.6320741]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=(mode=='LLVM'))
+        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -2186,18 +2187,18 @@ class TestRun:
         comp.add_c_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.81757448, 0.92414182]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.87259959,  0.94361816]])
 
         # execute 10 times
         for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
         assert np.allclose(val, [[0.87507549,  0.94660049]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -2211,18 +2212,18 @@ class TestRun:
         comp.add_c_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.5, 0.73105858]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.3864837, 0.73105858]])
 
         # execute 10 times
         for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
         assert np.allclose(val, [[0.36286875, 0.78146724]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -2238,18 +2239,18 @@ class TestRun:
         comp.add_c_node(R)
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.5, 0.50249998]])
-        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
         assert np.allclose(val, [[0.4999875, 0.50497484]])
 
         # execute 10 times
         for i in range(10):
-            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+            val = comp.execute(inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
         assert np.allclose(val, [[0.49922843, 0.52838607]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=(mode=='LLVM'))
+        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
 class TestCallBeforeAfterTimescale:
 
@@ -4317,4 +4318,116 @@ class TestInputSpecifications:
         assert np.allclose(C.output_values, [[0.]])
         assert np.allclose(D.output_values, [[4.]])
 
+    # FIXME: Find a way to recover llvmlite from failure and enable this test
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', 'Fallback',
+                                      pytest.param('LLVM', marks=pytest.mark.xfail)])
+    def test_llvm_fallback(self, mode):
+        comp = Composition()
+        def myFunc(variable, params, context):
+            return variable * 2
+        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]])
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=U)
+        inputs = {A: [[10., 20.], [30., 40.]]}
+        comp.add_c_node(A)
+
+        res = comp.run(inputs=inputs, bin_execute=mode)
+        assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
+
+class TestAuxComponents:
+    def test_two_transfer_mechanisms(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+
+        A.aux_components = [B, MappingProjection(sender=A, receiver=B)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+
+        comp.run(inputs={A: [[1.0]]})
+
+        assert np.allclose(B.value, [[1.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 1.0 | Output = 1.0
+
+        comp.run(inputs={A: [[2.0]]})
+        # Second Run:
+        # Input to A = 2.0 | Output = 2.0
+        # Input to B = 2.0 | Output = 2.0
+
+        assert np.allclose(B.value, [[2.0]])
+
+    def test_two_transfer_mechanisms_with_feedback_proj(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+
+        A.aux_components = [B, (MappingProjection(sender=A, receiver=B), True)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+
+        comp.run(inputs={A: [[1.0]],
+                         B: [[2.0]]})
+
+        assert np.allclose(B.value, [[2.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 2.0 | Output = 2.0
+
+        comp.run(inputs={A: [[1.0]],
+                         B: [[2.0]]})
+        # Second Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 2.0 + 1.0 | Output = 3.0
+
+        assert np.allclose(B.value, [[3.0]])
+
+    def test_required_c_node_roles(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B',
+                              function=Linear(slope=2.0))
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A, required_roles=[CNodeRole.TERMINAL])
+        comp.add_linear_processing_pathway([A, B])
+
+        result = comp.run(inputs={A: [[1.0]]})
+
+        terminal_mechanisms = comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0], [2.0]])
+
+    def test_aux_component_with_required_role(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C',
+                              function=Linear(slope=2.0))
+
+        A.aux_components = [(B, CNodeRole.TERMINAL), MappingProjection(sender=A, receiver=B)]
+
+        comp = Composition(name='composition')
+        comp.add_c_node(A)
+        comp.add_linear_processing_pathway([B, C])
+
+        comp.run(inputs={A: [[1.0]]})
+
+        assert np.allclose(B.value, [[1.0]])
+        # First Run:
+        # Input to A = 1.0 | Output = 1.0
+        # Input to B = 1.0 | Output = 1.0
+
+        comp.run(inputs={A: [[2.0]]})
+        # Second Run:
+        # Input to A = 2.0 | Output = 2.0
+        # Input to B = 2.0 | Output = 2.0
+
+        assert np.allclose(B.value, [[2.0]])
+
+        assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
+        assert np.allclose(C.value, [[4.0]])
+        assert np.allclose(comp.output_values, [[2.0], [4.0]])
 

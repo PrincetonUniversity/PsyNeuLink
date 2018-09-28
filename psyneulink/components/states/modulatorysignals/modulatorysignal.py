@@ -374,6 +374,9 @@ class ModulatorySignal(OutputState):
     componentType = MODULATORY_SIGNAL
     # paramsType = OUTPUT_STATE_PARAMS
 
+    class Params(OutputState.Params):
+        modulation = None
+
     stateAttributes =  OutputState.stateAttributes | {MODULATION}
 
     classPreferenceLevel = PreferenceLevel.TYPE

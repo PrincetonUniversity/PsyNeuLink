@@ -86,8 +86,8 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
-from psyneulink.components.functions.function import get_matrix
+from psyneulink.components.component import Param, parameter_keywords
+from psyneulink.components.functions.function import LinearMatrix, get_matrix
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
@@ -104,9 +104,38 @@ __all__ = [
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 
+
 class AutoAssociativeError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+def _matrix_getter(owning_component=None, execution_id=None):
+    return owning_component.owner_mech.parameters.matrix.get(execution_id)
+
+
+def _matrix_setter(value, owning_component=None, execution_id=None):
+    owning_component.owner_mech.parameters.matrix.set(value, execution_id)
+    return value
+
+
+def _auto_getter(owning_component=None, execution_id=None):
+    return owning_component.owner_mech.parameters.auto.get(execution_id)
+
+
+def _auto_setter(value, owning_component=None, execution_id=None):
+    owning_component.owner_mech.parameters.auto.set(value, execution_id)
+    return value
+
+
+def _hetero_getter(owning_component=None, execution_id=None):
+    return owning_component.owner_mech.parameters.hetero.get(execution_id)
+
+
+def _hetero_setter(value, owning_component=None, execution_id=None):
+    owning_component.owner_mech.parameters.hetero.set(value, execution_id)
+    return value
+
 
 class AutoAssociativeProjection(MappingProjection):
     """
@@ -215,8 +244,14 @@ class AutoAssociativeProjection(MappingProjection):
     className = componentType
     suffix = " " + className
 
-    class ClassDefaults(MappingProjection.ClassDefaults):
-        variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
+    class Params(MappingProjection.Params):
+        variable = Param(np.array([[0]]), read_only=True)
+        # function is always LinearMatrix that requires 1D input
+        function = LinearMatrix
+
+        auto = Param(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
+        hetero = Param(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
+        matrix = Param(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

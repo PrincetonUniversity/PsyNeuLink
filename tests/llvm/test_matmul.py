@@ -40,7 +40,7 @@ def test_matmul_llvm(benchmark):
 custom_name = None
 
 with pnlvm.LLVMBuilderContext() as ctx:
-    custom_name = ctx.module.get_unique_name("vxsqm")
+    custom_name = ctx.get_unique_name("vxsqm")
     double_ptr_ty = ctx.float_ty.as_pointer()
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 

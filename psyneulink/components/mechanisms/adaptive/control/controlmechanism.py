@@ -336,6 +336,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -350,7 +351,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PRO
     MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, CNodeRole
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -551,27 +552,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class _DefaultsAliases(AdaptiveMechanism_Base._DefaultsAliases):
-        # alias allocation_policy to value for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation_policy(self):
-            return self.value
-
-        @allocation_policy.setter
-        def allocation_policy(self, value):
-            self.value = value
-
-    class _DefaultsMeta(AdaptiveMechanism_Base._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
+    class Params(AdaptiveMechanism_Base.Params):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.atleast_2d(defaultControlAllocation)
-        value = np.array(defaultControlAllocation)
-
-    class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
-        pass
+        variable = np.array([defaultControlAllocation])
+        value = Param(np.array(defaultControlAllocation), aliases='allocation_policy')
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -777,7 +761,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
-
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
@@ -802,11 +785,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        MappingProjection(sender=self.objective_mechanism,
-                          receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX,
-                          name=name)
-
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      name=name)
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
+        self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
+        self.aux_components.append(projection_from_objective)
         self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
@@ -867,6 +853,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,

@@ -202,7 +202,7 @@ from random import randint
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
+from psyneulink.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function, Mechanism
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
@@ -509,6 +509,18 @@ def get_param_value_for_function(owner, function):
             print("Function ({}) can't be evaluated for {}".format(function, owner.name))
         return None
 
+# Parameter Mixins *****************************************************************************************************
+
+# KDM 6/21/18: Below is left in for consideration; doesn't really gain much to justify relaxing the assumption
+# that every Params class has a single parent
+
+# class ScaleOffsetParamMixin:
+#     scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+#     offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+
+# Function Definitions *************************************************************************************************
+
 
 # KDM 8/9/18: below is added for future use when function methods are completely functional
 # used as a decorator for Function methods
@@ -670,8 +682,8 @@ class Function_Base(Function):
 
     variableClassDefault_locked = False
 
-    class ClassDefaults(Function.ClassDefaults):
-        variable = np.array([0])
+    class Params(Function.Params):
+        variable = Param(np.array([0]), read_only=True)
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
@@ -882,7 +894,7 @@ class Function_Base(Function):
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, self.get_params())
+            return ctx.convert_python_struct_to_llvm_ir(self.get_params())
 
     def get_param_initializer(self):
         def tupleize(x):
@@ -894,12 +906,12 @@ class Function_Base(Function):
     def get_input_struct_type(self):
         default_var = self.instance_defaults.variable
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_output_struct_type(self):
         default_val = self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
+            return ctx.convert_python_struct_to_llvm_ir(default_val)
 
     def bin_function(self,
                      variable=None,
@@ -1636,9 +1648,9 @@ class CombinationFunction(Function_Base):
     """
     componentType = COMBINATION_FUNCTION_TYPE
 
-    class ClassDefaults(Function_Base.ClassDefaults):
+    class Params(Function_Base.Params):
         # variable = np.array([0, 0])
-        variable = np.array([0])
+        variable = Param(np.array([0]), read_only=True)
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1787,6 +1799,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     multiplicative_param = SCALE
     additive_param = OFFSET
+
+    class Params(CombinationFunction.Params):
+        weights = None
+        exponents = None
+        operation = SUM
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -2130,6 +2147,12 @@ class LinearCombination(
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(CombinationFunction.Params):
+        weights = None
+        exponents = None
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2396,7 +2419,7 @@ class LinearCombination(
         #        single element 2d array does
         default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
+            return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_param_ids(self):
         return SCALE, OFFSET, EXPONENTS
@@ -2680,6 +2703,13 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
+    class Params(CombinationFunction.Params):
+        weights = None
+        exponents = None
+        operation = SUM
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -2926,7 +2956,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class ClassDefaults(CombinationFunction.ClassDefaults):
+    class Params(CombinationFunction.Params):
         variable = np.array([[1], [1]])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -3218,7 +3248,7 @@ class Identity(
                 variable = tuple(variable)
 #        assert all(type(x) == type(t[0]) for x in t)
             with pnlvm.LLVMBuilderContext() as ctx:
-                return pnlvm._convert_python_struct_to_llvm_ir(ctx, variable)
+                return ctx.convert_python_struct_to_llvm_ir(variable)
         return super().get_input_struct_type()
 
     def get_output_struct_type(self):
@@ -3414,6 +3444,9 @@ class TransferFunction(Function_Base):
     """
     componentType = TRANSFER_FUNCTION_TYPE
 
+    class Params(Function_Base.Params):
+        bounds = None
+
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
                  params,
@@ -3559,6 +3592,10 @@ class Linear(TransferFunction):  # ---------------------------------------------
         kwPreferenceSetName: 'LinearClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
+
+    class Params(TransferFunction.Params):
+        slope = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        intercept = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -3752,6 +3789,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(TransferFunction.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        scale = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -3928,6 +3969,11 @@ class Logistic(
     additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(TransferFunction.Params):
+        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Param(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -4106,7 +4152,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
-
+    class Params(TransferFunction.Params):
+        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        leak = Param(0.0, modulable=True)
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -4272,8 +4321,18 @@ class SoftMax(TransferFunction):
     multiplicative_param = GAIN
     additive_param = None
 
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = [0]
+    class Params(TransferFunction.Params):
+        variable = Param(np.array(0.0), read_only=True)
+        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bounds = (0, 1)
+        output = ALL
+
+        def _validate_output(self, output):
+            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
+            if output in options:
+                return None
+            else:
+                return 'not one of {0}'.format(options)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4652,6 +4711,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     DEFAULT_FILLER_VALUE = 0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(TransferFunction.Params):
+        matrix = Param(None, modulable=True)
+        bounds = None
 
     # def is_matrix_spec(m):
     #     if m is None:
@@ -5512,8 +5575,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     componentName = INTEGRATOR_FUNCTION
 
+    class Params(IntegratorFunction.Params):
+        noise = Param(0.0, modulable=True)
+        rate = Param(1.0, modulable=True)
+        previous_value = np.array([0])
+        initializer = np.array([0])
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -5987,7 +6055,6 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
     componentName = SIMPLE_INTEGRATOR_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -5995,6 +6062,10 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
 
     multiplicative_param = RATE
     additive_param = OFFSET
+
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -6190,8 +6261,13 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
     componentName = CONSTANT_INTEGRATOR_FUNCTION
 
+    class Params(Integrator.Params):
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Param(0.0, modulable=True)
+        noise = Param(0.0, modulable=True)
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
@@ -6410,15 +6486,18 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     componentName = BUFFER_FUNCTION
 
+    class Params(Integrator.Params):
+        rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        history = None
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
     })
 
     multiplicative_param = RATE
-    additive_param = OFFSET
+    # no additive_param?
 
     @tc.typecheck
     def __init__(self,
@@ -6672,11 +6751,14 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
     })
+
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -7071,8 +7153,16 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        threshold = Param(100.0, modulable=True)
+        time_step_size = Param(1.0, modulable=True)
+        previous_value = None
+        previous_time = None
+        t0 = 0.0
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -7314,8 +7404,14 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Param(1.0, modulable=True)
+        decay = Param(1.0, modulable=True)
+        t0 = 0.0
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -7815,16 +7911,37 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     componentName = FHN_INTEGRATOR_FUNCTION
 
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = np.array([1.0])
-        initial_v = np.array([1.0])
+    class Params(Integrator.Params):
+        variable = Param(np.array([1.0]), read_only=True)
+        scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Param(0.05, modulable=True)
+        a_v = Param(1.0/3, modulable=True)
+        b_v = Param(0.0, modulable=True)
+        c_v = Param(1.0, modulable=True)
+        d_v = Param(0.0, modulable=True)
+        e_v = Param(-1.0, modulable=True)
+        f_v = Param(1.0, modulable=True)
+        time_constant_v = Param(1.0, modulable=True)
+        a_w = Param(1.0, modulable=True)
+        b_w = Param(-0.8, modulable=True)
+        c_w = Param(0.7, modulable=True)
+        threshold = Param(-1.0, modulable=True)
+        time_constant_w = Param(12.5, modulable=True)
+        mode = Param(1.0, modulable=True)
+        uncorrelated_activity = Param(0.0, modulable=True)
+
+        integration_method = "RK4"
         initial_w = np.array([1.0])
+        initial_v = np.array([1.0])
+        t_0 = 0.0
+        previous_v = initial_v
+        previous_w = initial_w
+        previous_time = t_0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None,
         INCREMENT: None,
     })
 
@@ -8236,7 +8353,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             context = (self.previous_v, self.previous_w, self.previous_time)
-            context_type = pnlvm._convert_python_struct_to_llvm_ir(ctx, context)
+            context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
     def get_context_initializer(self):
@@ -8594,8 +8711,11 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
 
+    class Params(Integrator.Params):
+        rate = Param(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        increment = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
@@ -8841,8 +8961,12 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
 
     componentName = LCAMechanism_INTEGRATOR_FUNCTION
 
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Param(0.1, modulable=True)
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -9089,8 +9213,21 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
     multiplicative_param = RATE
     additive_param = OFFSET
 
+    class Params(Integrator.Params):
+        rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        short_term_gain = Param(1.0, modulable=True)
+        long_term_gain = Param(1.0, modulable=True)
+        short_term_bias = Param(0.0, modulable=True)
+        long_term_bias = Param(0.0, modulable=True)
+        short_term_rate = Param(0.9, modulable=True)
+        long_term_rate = Param(0.1, modulable=True)
+
+        operation = "s*l"
+        initial_short_term_utility = 0.0
+        initial_long_term_utility = 0.0
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None
@@ -9472,6 +9609,13 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(IntegratorFunction.Params):
+        drift_rate = Param(1.0, modulable=True)
+        starting_point = Param(0.0, modulable=True)
+        threshold = Param(1.0, modulable=True)
+        noise = Param(0.5, modulable=True)
+        t0 = .200
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -9782,6 +9926,13 @@ class NavarroAndFuss(
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(IntegratorFunction.Params):
+        drift_rate = Param(1.0, modulable=True)
+        starting_point = Param(0.0, modulable=True)
+        threshold = Param(1.0, modulable=True)
+        noise = Param(0.5, modulable=True)
+        t0 = .200
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -9946,6 +10097,10 @@ class NormalDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(DistributionFunction.Params):
+        mean = Param(0.0, modulable=True)
+        standard_dev = Param(1.0, modulable=True)
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -10066,8 +10221,10 @@ class UniformToNormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
+    class Params(DistributionFunction.Params):
+        variable = Param(np.array([0]), read_only=True)
+        mean = Param(0.0, modulable=True)
+        standard_dev = Param(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -10171,6 +10328,9 @@ class ExponentialDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(DistributionFunction.Params):
+        beta = Param(1.0, modulable=True)
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -10266,6 +10426,10 @@ class UniformDist(DistributionFunction):
     componentName = UNIFORM_DIST_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(DistributionFunction.Params):
+        low = Param(0.0, modulable=True)
+        high = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -10367,6 +10531,10 @@ class GammaDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(DistributionFunction.Params):
+        scale = Param(1.0, modulable=True)
+        dist_shape = Param(1.0, modulable=True)
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -10466,6 +10634,10 @@ class WaldDist(DistributionFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    class Params(DistributionFunction.Params):
+        scale = Param(1.0, modulable=True)
+        mean = Param(1.0, modulable=True)
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -10510,6 +10682,10 @@ class ObjectiveFunction(Function_Base):
     """
 
     componentType = OBJECTIVE_FUNCTION_TYPE
+
+    class Params(Function_Base.Params):
+        normalize = False
+        metric = None
 
 
 class Stability(ObjectiveFunction):
@@ -10632,6 +10808,11 @@ COMMENT
     componentName = STABILITY_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(ObjectiveFunction.Params):
+        matrix = HOLLOW_MATRIX
+        metric = ENERGY
+        transfer_fct = None
 
     @tc.typecheck
     def __init__(self,
@@ -10944,8 +11125,9 @@ class Distance(ObjectiveFunction):
 
     componentName = DISTANCE_FUNCTION
 
-    class ClassDefaults(ObjectiveFunction.ClassDefaults):
-        variable = np.array([[0], [0]])
+    class Params(ObjectiveFunction.Params):
+        variable = Param(np.array([[0], [0]]), read_only=True)
+        metric = DIFFERENCE
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -11376,8 +11558,9 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
-    class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0, 0])
+    class Params(Function_Base.Params):
+        variable = Param(np.array([0, 0, 0]), read_only=True)
+        learning_rate = Param(0.05, modulable=True)
 
     # def __init__(self, default_variable, params, owner, prefs, context):
     #     super().__init__(default_variable=default_variable,
@@ -11504,8 +11687,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     componentName = KOHONEN_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[0, 0], [0, 0], [[0,0],[0,0]] ]
+    class Params(LearningFunction.Params):
+        variable = Param([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
 
     default_learning_rate = 0.05
 
@@ -11759,8 +11942,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     componentName = HEBBIAN_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = np.array([0, 0])
+    class Params(LearningFunction.Params):
+        variable = Param(np.array([0, 0]), read_only=True)
 
     default_learning_rate = 0.05
 
@@ -11972,8 +12155,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     componentName = CONTRASTIVE_HEBBIAN_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = np.array([0, 0])
+    class Params(LearningFunction.Params):
+        variable = Param(np.array([0, 0]), read_only=True)
 
     default_learning_rate = 0.05
 
@@ -12229,8 +12412,8 @@ class Reinforcement(
 
     componentName = RL_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = np.array([[0], [0], [0]])
+    class Params(LearningFunction.Params):
+        variable = Param(np.array([[0], [0], [0]]), read_only=True)
 
     default_learning_rate = 0.05
 
@@ -12527,8 +12710,9 @@ class BackPropagation(LearningFunction):
 
     componentName = BACKPROPAGATION_FUNCTION
 
-    class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = np.array([[0], [0], [0]])
+    class Params(LearningFunction.Params):
+        variable = Param(np.array([[0], [0], [0]]), read_only=True)
+        learning_rate = Param(1.0, modulable=True)
 
     default_learning_rate = 1.0
 
@@ -12783,8 +12967,8 @@ class TDLearning(Reinforcement):
     """
     componentName = TDLEARNING_FUNCTION
 
-    class ClassDefaults(Reinforcement.ClassDefaults):
-        variable = [[0], [0]]
+    class Params(Reinforcement.Params):
+        variable = Param(np.array([[0], [0]]), read_only=True)
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,

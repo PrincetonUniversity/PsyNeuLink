@@ -131,6 +131,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
@@ -309,10 +310,12 @@ class ComparatorMechanism(ObjectiveMechanism):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ObjectiveMechanism.ClassDefaults):
+    class Params(ObjectiveMechanism.Params):
         # By default, ComparatorMechanism compares two 1D np.array input_states
-        variable = np.array([[0], [0]])
+        variable = Param(np.array([[0], [0]]), read_only=True)
         function = LinearCombination(weights=[[-1], [1]])
+        sample = None
+        target = None
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
