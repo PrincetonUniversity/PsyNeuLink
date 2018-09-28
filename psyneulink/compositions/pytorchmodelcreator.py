@@ -44,7 +44,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if len(node.parents) > 0:
                     
                     # if not copying parameters from psyneulink, set up pytorch biases for node
-                    if param_init_from_pnl == False:
+                    if not param_init_from_pnl:
                         biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).double())
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[node.component] = biases
@@ -59,7 +59,7 @@ class PytorchModelCreator(torch.nn.Module):
                         
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
-                        if param_init_from_pnl == True:
+                        if param_init_from_pnl:
                             weights = nn.Parameter(torch.tensor(mapping_proj.matrix.copy()).double())
                         else:
                             weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).double())
@@ -67,12 +67,8 @@ class PytorchModelCreator(torch.nn.Module):
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
                 
-                node_forward_info = []
-                node_forward_info.append(value)
-                node_forward_info.append(biases)
-                node_forward_info.append(function)
-                node_forward_info.append(afferents)
-                
+                node_forward_info = [value, biases, function, afferents]
+
                 self.node_to_forward_info[node] = node_forward_info
     
     

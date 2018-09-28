@@ -48,15 +48,14 @@ class AutodiffCompositionError(CompositionError):
 
 
 class AutodiffComposition(Composition):
-    
-    def __init__(self, param_init_from_pnl=True, name=None):
+
+    # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
+    def __init__(self, param_init_from_pnl=True, name="autodiff_composition"):
 
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                     '`pip install torch` or `pip3 install torch`')
 
-        if (name is None):
-            name = "autodiff_composition"
         self.name = name
         
         super(AutodiffComposition, self).__init__()
