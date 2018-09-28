@@ -1,6 +1,11 @@
 from psyneulink.components.functions.function import Linear, Logistic
-import torch
-from torch import nn
+try:
+    import torch
+    from torch import nn
+except ImportError:
+    raise Exception('Pytorch python module (torch) is not installed. Please install it with '
+                    '`pip install torch` or `pip3 install torch`')
+
 import numpy as np
 
 # Class that is called to create pytorch representations of autodiff compositions based on their processing graphs.
@@ -35,7 +40,7 @@ class PytorchModelCreator(torch.nn.Module):
                 function = self.function_creator(node) # the node's function
                 afferents = {} # dict for keeping track of afferent nodes and their connecting weights
                 
-                # if we don't have an origin node (origin nodes don't have biases or afferent connections)
+                # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
                 if len(node.parents) > 0:
                     
                     # if not copying parameters from psyneulink, set up pytorch biases for node
@@ -44,7 +49,7 @@ class PytorchModelCreator(torch.nn.Module):
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[node.component] = biases
                     
-                    # interate over incoming projections and set up pytorch weights for them
+                    # iterate over incoming projections and set up pytorch weights for them
                     for k in range(len(node.component.path_afferents)):
                         
                         # get projection, sender node for projection

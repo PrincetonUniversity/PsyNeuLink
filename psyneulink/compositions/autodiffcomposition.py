@@ -20,6 +20,13 @@ from torch import nn
 import torch.optim as optim
 
 import logging
+try:
+    import torch
+    from torch import nn
+    torch_available = True
+except ImportError:
+    torch_available = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,7 +50,11 @@ class AutodiffCompositionError(CompositionError):
 class AutodiffComposition(Composition):
     
     def __init__(self, param_init_from_pnl=True, name=None):
-        
+
+        if not torch_available:
+            raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
+                    '`pip install torch` or `pip3 install torch`')
+
         if (name is None):
             name = "autodiff_composition"
         self.name = name
