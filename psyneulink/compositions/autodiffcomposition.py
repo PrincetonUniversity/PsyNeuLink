@@ -84,9 +84,10 @@ class AutodiffComposition(Composition):
         
         # ordered execution sets for the pytorch model
         self.ordered_execution_sets = None
-    
-    
-    
+
+
+    # TODO (CW 9/28): this mirrors _create_CIM_states() in Composition but doesn't call super().
+    #   This is not ideal, but I don't see a simple way to rewrite this function to call super().
     # Very similar to the same function for the normal composition. 
     # Overriden to create target CIM as well as input and output CIM's
     def _create_CIM_states(self):
@@ -225,23 +226,12 @@ class AutodiffComposition(Composition):
     
     # overriden just to provide execution id for target CIM
     def _assign_execution_ids(self, execution_id=None):
-        
-        if execution_id is None:
-            execution_id = self._get_unique_id()
-        
-        if execution_id not in self.execution_ids:
-            self.execution_ids.append(execution_id)
-        
-        for v in self._graph_processing.vertices:
-            v.component._execution_id = execution_id
-        
-        self.input_CIM._execution_id = execution_id
-        self.output_CIM._execution_id = execution_id
-        self.target_CIM._execution_id = execution_id
-        
-        self._execution_id = execution_id
-        return execution_id
-    
+
+        exec_id = super()._assign_execution_ids(execution_id=execution_id)
+
+        self.target_CIM._execution_id = exec_id
+
+        return exec_id
     
     
     # similar function to _assign_values_to_input_CIM from the normal composition - however, this 
@@ -799,7 +789,8 @@ class AutodiffComposition(Composition):
             return ordered_exec_sets, max_dist
     
     
-    
+    # TODO (CW 9/28): this mirrors _adjust_stimulus_dict() in Composition but doesn't call super().
+    #   This is not ideal, but I don't see a simple way to rewrite this function to call super().
     # validates inputs/targets. overriden to be able to adjust a dictionary of inputs or targets
     # (not just inputs). the adjusting is exactly the same though.
     def _adjust_stimulus_dict(self, stimuli, inputs_or_targets):

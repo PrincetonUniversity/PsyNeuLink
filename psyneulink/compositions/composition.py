@@ -1066,6 +1066,7 @@ class Composition(object):
                                          "{!s} where the InputState takes values of length {!s}".
                                          format(i, mech.name, val_length, state_length))
 
+    # NOTE (CW 9/28): this is mirrored in autodiffcomposition.py, so any changes made here should also be made there
     def _create_CIM_states(self):
         '''
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
@@ -1242,7 +1243,6 @@ class Composition(object):
 
         self.input_CIM._execution_id = execution_id
         self.output_CIM._execution_id = execution_id
-        # self.target_CIM._execution_id = execution_id
 
         self._execution_id = execution_id
         return execution_id
@@ -2889,6 +2889,7 @@ class Composition(object):
             return "heterogeneous"
         return False
 
+    # NOTE (CW 9/28): this is mirrored in autodiffcomposition.py, so any changes made here should also be made there
     def _adjust_stimulus_dict(self, stimuli):
 
         # STEP 1: validate that there is a one-to-one mapping of input entries to origin nodes
