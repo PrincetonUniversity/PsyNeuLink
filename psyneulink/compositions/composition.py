@@ -681,9 +681,10 @@ class Composition(Composition_Base):
             self.needs_update_scheduler_learning = True
             self.projections.append(projection)
 
-        else:
-            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Composition."
-                                   .format(projection.name))
+        # else:
+        #     raise CompositionError("Cannot add Projection: {}. This Projection is already in the Composition."
+        #                            .format(projection.name))
+
         return projection
 
     def add_pathway(self, path):
@@ -2910,7 +2911,7 @@ class Composition(Composition_Base):
                 incoming_projections = []
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
-                incoming_projections = mech.afferents
+                incoming_projections = mech.path_afferents
 
             # Run all incoming projections
             #TODO: This should filter out projections with different execution ID
@@ -2919,12 +2920,9 @@ class Composition(Composition_Base):
                 # Skip autoassociative projections
                 if par_proj.sender.owner is par_proj.receiver.owner:
                     continue
-                # proj_idx = self.projections.index(par_proj)
 
-                if par_proj in self.projections:
-                    proj_idx = self.projections.index(par_proj)
-                else:
-                    continue
+                # par_proj not guaranteed to be in self.projections (needs to have been added to composition)
+                proj_idx = self.projections.index(par_proj)
 
                 # Get parent mechanism
                 par_mech = par_proj.sender.owner
