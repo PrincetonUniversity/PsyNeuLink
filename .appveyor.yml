@@ -5,8 +5,10 @@ branches:
     - appveyor
 version: '{build}'
 clone_depth: 25
+
 init:
 - cmd: ''
+
 environment:
   matrix:
   - PYTHON: C:\Python35
@@ -24,22 +26,23 @@ environment:
   - PYTHON: C:\Python37-x64
     PYTORCH: cp37-cp37m
     PATH: C:\Python37-x64\Scripts;%PATH%
+
 install:
-- cmd: >-
-    %PYTHON%\\python.exe -m pip install -U certifi pip
+  - choco upgrade graphviz.portable -y
+  - pip --version
+  - pip install -U certifi pip
+  - pip install git+https://github.com/benureau/leabra.git@master
 
-    %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
+  # pytorch does not distribute packages over pypi. Install it directly.
+  - if not "%PYTORCH%" == "" %PYTHON%\\python.exe -m pip install http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
 
-    REM pytorch does not distribute packages over pypi. Install it directly.
+  - pip install -e .[dev]
 
-    if not "%PYTORCH%" == "" %PYTHON%\\python.exe -m pip install http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
-
-    choco upgrade graphviz.portable -y
-
-    %PYTHON%\\python.exe -m pip install -e .[dev]
 cache:
-- '%PYTHON%\Scripts'
-- '%PYTHON%\lib\site-packages'
+    - '%PYTHON%\Scripts'
+    - '%PYTHON%\lib\site-packages'
+
 build: off
+
 test_script:
 - cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/'
