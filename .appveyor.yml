@@ -16,18 +16,23 @@ environment:
   - PYTHON: C:\Python37
     PATH: C:\Python37\Scripts;%PATH%
   - PYTHON: C:\Python35-x64
+    PYTORCH: cp35-cp35m
     PATH: C:\Python35-x64\Scripts;%PATH%
   - PYTHON: C:\Python36-x64
+    PYTORCH: cp36-cp36m
     PATH: C:\Python36-x64\Scripts;%PATH%
   - PYTHON: C:\Python37-x64
+    PYTORCH: cp37-cp37m
     PATH: C:\Python37-x64\Scripts;%PATH%
 install:
 - cmd: >-
     %PYTHON%\\python.exe -m pip install -U certifi pip
 
     %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
-    
-    %PYTHON%\\python.exe -m pip install torch
+
+    REM pytorch does not distribute packages over pypi. Install it directly.
+
+    if not "%PYTORCH%" == "" %PYTHON%\\python.exe -m pip install http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
 
     choco upgrade graphviz.portable -y
 
