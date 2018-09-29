@@ -13,10 +13,13 @@ environment:
   matrix:
   - PYTHON: C:\Python35
     PATH: C:\Python35\Scripts;%PATH%
+    MARK: -m llvm
   - PYTHON: C:\Python36
     PATH: C:\Python36\Scripts;%PATH%
+    MARK: -m llvm
   - PYTHON: C:\Python37
     PATH: C:\Python37\Scripts;%PATH%
+    MARK: -m llvm
   - PYTHON: C:\Python35-x64
     PYTORCH: cp35-cp35m
     PATH: C:\Python35-x64\Scripts;%PATH%
@@ -48,4 +51,4 @@ cache:
 build: off
 
 test_script:
-- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/'
+- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/ %MARK%'
