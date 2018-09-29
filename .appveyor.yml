@@ -12,12 +12,12 @@ init:
 environment:
   PATH: '%PYTHON%\Scripts;%PATH%'
   matrix:
-  - PYTHON: C:\Python35
-    MARK: -m llvm
-  - PYTHON: C:\Python36
-    MARK: -m llvm
-  - PYTHON: C:\Python37
-    MARK: -m llvm
+#  - PYTHON: C:\Python35
+#    MARK: -m llvm
+#  - PYTHON: C:\Python36
+#    MARK: -m llvm
+#  - PYTHON: C:\Python37
+#    MARK: -m llvm
   - PYTHON: C:\Python35-x64
     PYTORCH: cp35-cp35m
   - PYTHON: C:\Python36-x64
