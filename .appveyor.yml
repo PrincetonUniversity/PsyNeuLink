@@ -26,6 +26,8 @@ install:
     %PYTHON%\\python.exe -m pip install -U certifi pip
 
     %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
+    
+    %PYTHON%\\python.exe -m pip install torch
 
     choco upgrade graphviz.portable -y
 
