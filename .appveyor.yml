@@ -46,4 +46,4 @@ cache:
 build: off
 
 test_script:
-- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/ %MARK%'
+- cmd: pytest --cov=psyneulink tests/ %MARK%
