@@ -544,7 +544,7 @@ class Composition(Composition_Base):
                         if isinstance(component[1], CNodeRole):
                             self.add_c_node(node=component[0], required_roles=component[1])
                         elif isinstance(component[1], list):
-                            if isinstance(component[1], CNodeRole):
+                            if isinstance(component[1][0], CNodeRole):
                                 self.add_c_node(node=component[0], required_roles=component[1])
                             else:
                                 raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
@@ -820,24 +820,19 @@ class Composition(Composition_Base):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
+        for node_role_pair in self.required_c_node_roles:
+            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+
         # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[0]:
-                if not isinstance(node, ObjectiveMechanism):
+                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-                if not isinstance(node, ObjectiveMechanism):
+                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
-        # Identify Origin nodes
-        for node in self.c_nodes:
-            if graph.get_parents_from_component(node) == []:
-                if not isinstance(node, ObjectiveMechanism):
-                    self._add_c_node_role(node, CNodeRole.ORIGIN)
-        # Identify Terminal nodes
-            if graph.get_children_from_component(node) == []:
-                if not isinstance(node, ObjectiveMechanism):
-                    self._add_c_node_role(node, CNodeRole.TERMINAL)
+
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
@@ -870,13 +865,6 @@ class Composition(Composition_Base):
                             self._add_c_node_role(child, CNodeRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
-
-        # toposorted_graph = self.scheduler_processing._call_toposort(graph)[0]
-        # if len(toposorted_graph) > 0:
-        #     for node in toposorted_graph[-1]:
-        #         self._add_c_node_role(node, CNodeRole.TERMINAL)
-        for node_role_pair in self.required_c_node_roles:
-            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
         self._create_CIM_states()
 

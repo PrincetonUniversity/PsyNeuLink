@@ -24,6 +24,7 @@ class TestControlMechanisms:
         lvoc = pnl.LVOCControlMechanism(composition=c,
                                         input_states=pnl.ORIGIN_MECHANISMS,
                                         monitor_for_control=[m1, m2],
+                                        terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         c.origin_input_sources = {lvoc: [m1.external_input_states[0], m2.external_input_states[0]]}
@@ -36,9 +37,8 @@ class TestControlMechanisms:
         for i in range(len(passes)):
             for node in passes[i]:
                 c.scheduler_processing.add_condition(node, pnl.AtPass(i))
-        c.add_required_c_node_role(lvoc.objective_mechanism, pnl.CNodeRole.TERMINAL)
         c._analyze_graph()
-        print(c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL))
+        c.show_graph()
         c.run(inputs=input_dict)
 
     def test_default_lc_control_mechanism(self):
@@ -153,6 +153,65 @@ class TestControlMechanisms:
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
 
+# class TestObjectiveMechanismRoles:
+#
+#     def test_origin_objective_mechanism_false(self):
+#         #  When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
+#         #  ObjectiveMechanism is not marked as origin. The origin role is deferred to the next node(s) in the graph.
+#
+#         c = pnl.Composition()
+#
+#         A = pnl.TransferMechanism()
+#         B = pnl.TransferMechanism()
+#         lvoc = pnl.LVOCControlMechanism(composition=c)
+#
+#         c.add_linear_processing_pathway([lvoc, A])
+#
+#         # these pathways ensure that c is the ONLY origin, and origin role must be passed on to lvoc and B
+#         c.add_linear_processing_pathway([lvoc.objective_mechanism, lvoc])
+#         c.add_linear_processing_pathway([lvoc.objective_mechanism, B])
+#
+#         c._analyze_graph()
+#         print(c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN))
+#         assert lvoc.objective_mechanism not in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
+#
+#     def test_origin_objective_mechanism_true_origin(self):
+#         # When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
+#         # normally.
+#         c = pnl.Composition()
+#
+#         A = pnl.TransferMechanism()
+#         lvoc = pnl.LVOCControlMechanism(composition=c,
+#                                         origin_objective_mechanism=True)
+#         B = pnl.TransferMechanism()
+#
+#         c.add_linear_processing_pathway([lvoc, A])
+#         c.add_c_node(B)
+#
+#         c._analyze_graph()
+#
+#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN) and \
+#                B in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
+#
+#
+#
+#     def test_origin_objective_mechanism_true_not_origin(self):
+#         # If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
+#         # takes on origin as a required role.
+#         c = pnl.Composition()
+#
+#         A = pnl.TransferMechanism()
+#         lvoc = pnl.LVOCControlMechanism(composition=c,
+#                                         origin_objective_mechanism=True)
+#         B = pnl.TransferMechanism()
+#
+#         c.add_linear_processing_pathway([lvoc, A])
+#         c.add_linear_processing_pathway([B, lvoc.objective_mechanism])
+#
+#         c._analyze_graph()
+#
+#         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN) and \
+#                B in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
 
 # class TestControllers:
 #

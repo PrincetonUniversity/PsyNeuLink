@@ -702,6 +702,8 @@ class LVOCControlMechanism(ControlMechanism):
                  composition:tc.optional(Composition_Base)=None,
                  input_states:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
                  # objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 origin_objective_mechanism=False,
+                 terminal_objective_mechanism=False,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGradientAscent(),
                  # update_function=None,
@@ -717,6 +719,8 @@ class LVOCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=input_states,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
+                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   # update_function=update_function,
                                                   # cost_function=cost_function,
                                                   # combine_outcome_and_cost_function=combine_outcome_and_cost_function,

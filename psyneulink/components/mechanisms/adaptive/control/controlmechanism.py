@@ -388,6 +388,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
+        origin_objective_mechanism=False           \
+        terminal_objective_mechanism=False         \
         function=Linear,                           \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
@@ -450,6 +452,27 @@ class ControlMechanism(AdaptiveMechanism_Base):
         should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
+    origin_objective_mechanism : Boolean : default False
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as origin. The origin role is deferred to the next node(s) in the graph.
+
+        When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
+        takes on origin as a required role.
+
+    terminal_objective_mechanism : Boolean : default False
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as terminal. The terminal role is deferred to the previous node(s) in the
+        graph.
+
+        When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
+        takes on terminal as a required role.
+
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
@@ -486,6 +509,27 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism_Base.input_state>`.
+
+    origin_objective_mechanism : Boolean
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as origin. The origin role is deferred to the next node(s) in the graph.
+
+        When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
+        takes on origin as a required role.
+
+    terminal_objective_mechanism : Boolean
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as terminal. The terminal role is deferred to the previous node(s) in the
+        graph.
+
+        When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
+        takes on terminal as a required role.
 
     monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
@@ -586,6 +630,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
+                 origin_objective_mechanism=False,
+                 terminal_objective_mechanism=False,
                  function=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -601,19 +647,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
+                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
                                                   modulation=modulation,
                                                   params=params)
 
         super(ControlMechanism, self).__init__(default_variable=default_variable,
-                                                    size=size,
-                                                    modulation=modulation,
-                                                    params=params,
-                                                    name=name,
-                                                    function=function,
-                                                    prefs=prefs,
-                                                    context=ContextFlags.CONSTRUCTOR)
+                                               size=size,
+                                               modulation=modulation,
+                                               params=params,
+                                               name=name,
+                                               function=function,
+                                               prefs=prefs,
+                                               context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -808,7 +856,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                       name=name)
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
-        self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
+
+        objective_roles = [CNodeRole.OBJECTIVE]
+        if self.origin_objective_mechanism:
+            objective_roles.append(CNodeRole.ORIGIN)
+        if self.terminal_objective_mechanism:
+            objective_roles.append(CNodeRole.TERMINAL)
+        self.aux_components.append((self.objective_mechanism, objective_roles))
         self.aux_components.append((projection_from_objective, True))
         self.monitor_for_control = self.monitored_output_states
 

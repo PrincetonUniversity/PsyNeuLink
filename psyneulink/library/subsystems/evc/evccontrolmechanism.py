@@ -754,6 +754,8 @@ class EVCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 origin_objective_mechanism=False,
+                 terminal_objective_mechanism=False,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
@@ -769,6 +771,8 @@ class EVCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
+                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
