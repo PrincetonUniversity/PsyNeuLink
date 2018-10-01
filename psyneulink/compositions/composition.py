@@ -694,9 +694,9 @@ class Composition(object):
             self.projections.append(projection)
 
 
-        else:
-            raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
-                                   .format(projection.name))
+        # else:
+        #     raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
+        #                            .format(projection.name))
         return projection
 
     def add_pathway(self, path):
@@ -2930,12 +2930,8 @@ class Composition(object):
                 # Skip autoassociative projections
                 if par_proj.sender.owner is par_proj.receiver.owner:
                     continue
-                # proj_idx = self.projections.index(par_proj)
 
-                if par_proj in self.projections:
-                    proj_idx = self.projections.index(par_proj)
-                else:
-                    continue
+                proj_idx = self.projections.index(par_proj)
 
                 # Get parent mechanism
                 par_mech = par_proj.sender.owner
