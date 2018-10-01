@@ -14,6 +14,12 @@ from psyneulink.components.mechanisms.processing.compositioninterfacemechanism i
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
+try:
+    import torch
+    torch_available = True
+except ImportError:
+    torch_available = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +31,11 @@ logger = logging.getLogger(__name__)
 # or override functions in Composition
 
 
-
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
 @pytest.mark.acconstructor
 class TestACConstructor:
     
@@ -56,7 +66,11 @@ class TestACConstructor:
         assert comp.target_CIM.reportOutputPref == False
 
 
-
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
 @pytest.mark.acmisc
 class TestMiscTrainingFunctionality:
     
@@ -288,7 +302,11 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
 
-
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
     
@@ -551,6 +569,11 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
 
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
 @pytest.mark.actime
 class TestTrainingTime:
     
@@ -1124,7 +1147,11 @@ class TestTrainingTime:
         logger.info(msg)
 
 
-
+@pytest.mark.skipif(
+    not torch_available,
+    reason='Pytorch python module (torch) is not installed. Please install it with '
+           '`pip install torch` or `pip3 install torch`'
+)
 @pytest.mark.acidenticalness
 class TestTrainingIdenticalness():
     
