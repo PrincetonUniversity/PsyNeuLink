@@ -12,10 +12,10 @@ from psyneulink.components.functions.function import Logistic, Linear, ReLU
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
 try:
     import torch
+    from psyneulink.compositions.autodiffcomposition import AutodiffComposition
     torch_available = True
 except ImportError:
     torch_available = False
