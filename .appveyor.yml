@@ -12,12 +12,12 @@ init:
 environment:
   PATH: '%PYTHON%\Scripts;%PATH%'
   matrix:
-#  - PYTHON: C:\Python35
-#    MARK: -m llvm
-#  - PYTHON: C:\Python36
-#    MARK: -m llvm
-#  - PYTHON: C:\Python37
-#    MARK: -m llvm
+  - PYTHON: C:\Python35
+    EXTRA_ARGS: -m llvm
+  - PYTHON: C:\Python36
+    EXTRA_ARGS: -m llvm
+  - PYTHON: C:\Python37
+    EXTRA_ARGS: -m llvm
   - PYTHON: C:\Python35-x64
     PYTORCH: cp35-cp35m
   - PYTHON: C:\Python36-x64
@@ -46,4 +46,4 @@ cache:
 build: off
 
 test_script:
-- cmd: pytest --cov=psyneulink tests/ %MARK%
+- cmd: pytest tests/ %EXTRA_ARGS%
