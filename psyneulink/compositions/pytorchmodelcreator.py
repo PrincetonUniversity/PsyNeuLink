@@ -2,9 +2,9 @@ from psyneulink.components.functions.function import Linear, Logistic
 try:
     import torch
     from torch import nn
+    torch_available = True
 except ImportError:
-    raise Exception('Pytorch python module (torch) is not installed. Please install it with '
-                    '`pip install torch` or `pip3 install torch`')
+    torch_available = False
 
 import numpy as np
 
@@ -22,6 +22,10 @@ class PytorchModelCreator(torch.nn.Module):
     
     # sets up parameters of model & the information required for forward computation
     def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets):
+
+        if not torch_available:
+            raise Exception('Pytorch python module (torch) is not installed. Please install it with '
+                    '`pip install torch` or `pip3 install torch`')
         
         super(PytorchModelCreator, self).__init__()
         
