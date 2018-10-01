@@ -33,8 +33,8 @@ as described below.
 
 .. _ObjectiveMechanism_Monitored_Output_States:
 
-Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~
+*Monitored OutputStates*
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
 FOR DEVELOPERS:
@@ -103,8 +103,8 @@ Structure
 
 .. _ObjectiveMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
 **monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
@@ -131,8 +131,8 @@ combined with that of the other InputStates to generate the ObjectiveMechanism's
 
 .. _ObjectiveMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 The ObjectiveMechanism's `function <ObjectiveMechanism.function>` uses the values of its `input_states
 <ObjectiveMechanism.input_states>` to compute an `objective (or "loss") function
@@ -151,8 +151,8 @@ If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those 
 
 .. _ObjectiveMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 The `primary OutputState <OutputState_Primary>` of an Objective mechanism is a 1d array, named *OUTCOME*, that is the
 result of its `function <ObjectiveMechanism.function>` (as described above).
@@ -328,10 +328,12 @@ Class Reference
 
 """
 import warnings
+
 from collections import Iterable
 
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -545,8 +547,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
     # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        function = LinearCombination
+    class Params(ProcessingMechanism_Base.Params):
+        function = Param(LinearCombination, stateful=False, loggable=False)
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -873,7 +875,8 @@ def _instantiate_monitoring_projections(owner,
                 receiver.path_afferents[0].init_args[SENDER] = sender
                 receiver.path_afferents[0]._deferred_init()
             else:
-                MappingProjection(sender=sender,
-                                  receiver=receiver,
-                                  matrix=projection_spec,
-                                  name = sender.name + ' monitor')
+                proj = MappingProjection(sender=sender,
+                                         receiver=receiver,
+                                         matrix=projection_spec,
+                                         name=sender.name + ' monitor')
+                receiver.aux_components.append(proj)

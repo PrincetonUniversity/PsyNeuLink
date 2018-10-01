@@ -1047,11 +1047,6 @@ class LearningComponents(object):
             if not self.activation_mech_output:
                 return None
             projections = self.activation_mech_output.efferents
-            # # MODIFIED 3/11/17 OLD:
-            # # error_proj must be a MappingProjection that has a LearningProjection to it
-            # error_proj = next((projection for projection in projections if
-            #                   (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
-            # MODIFIED 3/11/17 NEW:
             # error_proj must be a MappingProjection that:
             #    - projects to another Mechanism in the same Process as the one that projects to it and
             #    - has a LearningProjection to it
@@ -1062,7 +1057,6 @@ class LearningComponents(object):
                                     # for process in self.activation_output_mech.processes))),
                                     for process in self.activation_mech_input.owner.processes))),
                               None)
-            # MODIFIED 3/11/17 END
             if not error_proj:
                 return None
             self.error_projection = error_proj

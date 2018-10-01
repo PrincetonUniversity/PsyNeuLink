@@ -97,7 +97,7 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
+from psyneulink.globals.keywords import PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -258,10 +258,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
-
-    })
 
     @tc.typecheck
     def __init__(self,

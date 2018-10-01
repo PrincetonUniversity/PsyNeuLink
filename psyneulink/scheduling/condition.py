@@ -39,8 +39,8 @@ Creating Conditions
 
 .. _Condition_Pre_Specified:
 
-Pre-specified Conditions
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Pre-specified Conditions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Pre-specified Conditions <Condition_Pre-Specified_List>` can be instantiated and added to a `Scheduler` at any time,
 and take effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more
@@ -60,8 +60,8 @@ Here, `EveryNCalls(A, 2)` for example, is assigned the `owner` `B`.
 
 .. _Condition_Custom:
 
-Custom Conditions
-~~~~~~~~~~~~~~~~~
+*Custom Conditions*
+~~~~~~~~~~~~~~~~~~~
 
 Custom Conditions can be created by calling the constructor for the base class (`Condition()`) or one of the
 `generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any arguments it
@@ -112,8 +112,8 @@ five types:
 
 .. _Condition_Pre-Specified_List:
 
-List of Pre-specified Conditions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*List of Pre-specified Conditions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
     The optional `TimeScale` argument in many `Conditions <Condition>` specifies the unit of time over which the

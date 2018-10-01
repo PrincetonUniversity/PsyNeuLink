@@ -55,8 +55,8 @@ If the **owner** argument is not specified, `initialization <State_Deferred_Init
 
 .. _InputState_Deferred_Initialization:
 
-Owner Assignment and Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Owner Assignment and Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
@@ -70,8 +70,8 @@ the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mec
 
 .. _InputState_Primary:
 
-Primary InputState
-~~~~~~~~~~~~~~~~~~~
+*Primary InputState*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every Mechanism has at least one InputState, referred to as its *primary InputState*.  If InputStates are not
 `explicitly specified <InputState_Specification>` for a Mechanism, a primary InputState is automatically created
@@ -82,8 +82,8 @@ entry of the Mechanism's `input_states <Mechanism_Base.input_states>` attribute 
 
 .. _InputState_Specification:
 
-InputState Specification
-~~~~~~~~~~~~~~~~~~~~~~~~
+*InputState Specification*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specifying InputStates when a Mechanism is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -460,6 +460,7 @@ import collections
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
@@ -713,8 +714,11 @@ class InputState(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class ClassDefaults(State_Base.ClassDefaults):
-        function = LinearCombination(operation=SUM)
+    class Params(State_Base.Params):
+        function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
+        weight = Param(None, modulable=True)
+        exponent = Param(None, modulable=True)
+        combine = None
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -1231,6 +1235,19 @@ class InputState(State_Base):
         if hasattr(self.owner, "input_labels_dict"):
             label_dictionary = self.owner.input_labels_dict
         return self._get_value_label(label_dictionary, self.owner.input_states)
+
+    @property
+    def llvmSymbolName(self):
+        return self.function_object.llvmSymbolName
+
+    @property
+    def position_in_mechanism(self):
+        if hasattr(self, "owner"):
+            if self.owner is not None:
+                return self.owner.get_input_state_position(self)
+            else:
+                return None
+        return None
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):

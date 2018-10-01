@@ -21,6 +21,7 @@ or :class:`Scheduler.clock.simple_time <SimpleTime>`
 
 """
 
+import copy
 import enum
 import functools
 import types
@@ -185,6 +186,13 @@ class Clock:
         self._simple_time.time_step = self.time.time_step
         return self._simple_time
 
+    @property
+    def previous_time(self):
+        """
+        the time that has occurred last : `Time`
+        """
+        return self.history.previous_time
+
 
 class Time(types.SimpleNamespace):
     '''
@@ -308,6 +316,9 @@ class TimeHistoryTree:
             the parent node of this tree, if it exists. \
             None represents no parent (i.e. root node)
 
+        previous_time : `Time`
+            a `Time` object that represents the last time that has occurred in the tree
+
         current_time : `Time`
             a `Time` object that represents the current time in the tree
 
@@ -332,6 +343,7 @@ class TimeHistoryTree:
     ):
         if enable_current_time:
             self.current_time = Time()
+            self.previous_time = None
         self.index = index
         self.time_scale = time_scale
         self.max_depth = max_depth
@@ -378,8 +390,8 @@ class TimeHistoryTree:
                 self.children[-1].increment_time(time_scale)
         self.total_times[time_scale] += 1
         try:
+            self.previous_time = copy.copy(self.current_time)
             self.current_time._increment_by_time_scale(time_scale)
-            self.simple_time._increment_by_time_scale(time_scale)
         except AttributeError:
             # not all of these objects have time tracking
             pass

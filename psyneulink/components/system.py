@@ -56,8 +56,8 @@ class, and listed in its `processes <System.processes>` attribute.
 
 .. _System_Control_Specification:
 
-Specifying Control
-~~~~~~~~~~~~~~~~~~
+*Specifying Control*
+~~~~~~~~~~~~~~~~~~~~
 
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
@@ -129,8 +129,8 @@ The Components of a System are shown in the figure below and summarized in the s
 
 .. _System_Mechanisms:
 
-Mechanisms
-~~~~~~~~~~
+*Mechanisms*
+~~~~~~~~~~~~
 
 The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph
 <System.graph>` and/or the role they play in a System:
@@ -169,8 +169,8 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
 
 .. _System_Graph:
 
-Graph
-~~~~~
+*Graph*
+~~~~~~~
 
 When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
 `Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System.graph>` attribute.  A
@@ -192,8 +192,8 @@ COMMENT
 
 .. _System_Scheduler:
 
-Scheduler
-~~~~~~~~~
+*Scheduler*
+~~~~~~~~~~~
 
 Every System has two `Schedulers <Scheduler>`, one that handles the ordering of execution of its Components for
 `processing <System_Execution_Processing>` (assigned to its `scheduler_processing` attribute), and one that
@@ -209,8 +209,8 @@ additional details).  Both schedulers maintain a `Clock` that can be used to acc
 
 .. _System_Control:
 
-Control
-~~~~~~~
+*Control*
+~~~~~~~~~
 
 A System can be assigned a `ControlMechanism` as its `controller <System.controller>`, that can be  used to
 control parameters of other `Mechanisms <Mechanism>` in the System. Although any number of ControlMechanism can be
@@ -237,8 +237,8 @@ when a System is executed. The control Components of a System can be displayed u
 
 .. _System_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
 <System.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
@@ -267,8 +267,8 @@ met.  The execution of each `TRIAL` occurs in four phases: `initialization <Syst
 
 .. _System_Execution_Input_And_Initialization:
 
-Input and Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Input and Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The input to a System is specified in the **input** argument of either its `execute <System.execute>` or
 `run <System.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
@@ -286,8 +286,8 @@ and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mec
 
 .. _System_Execution_Processing:
 
-Processing
-~~~~~~~~~~
+*Processing*
+~~~~~~~~~~~~
 
 Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are executed
 in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is executed,
@@ -304,8 +304,8 @@ settle before another one execute -- see `example <Condition_Recurrent_Example>`
 
 .. _System_Execution_Learning:
 
-Learning
-~~~~~~~~
+*Learning*
+~~~~~~~~~~
 
 A System executes learning if it is specified for one or more `Processes <Process_Learning_Sequence>` in the System.
 The System's `learning <System.learning>` attribute indicates whether learning is enabled for the System. Learning
@@ -316,8 +316,8 @@ before the `controller <System.controller> is executed <System_Execution_Control
 The learning Components of a System can be displayed using the System's `show_graph <System.show_graph>` method with its
 **show_learning** argument assigned `True` or *ALL*. The target values used for learning can be specified in either of
 two formats: dictionary or function, which are described in the `Run` module (see `Run_Targets`). Both formats require
-that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_mechanisms
-<System.target_mechanisms>` attribute).
+that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_nodes
+<System.target_nodes>` attribute).
 
 .. note::
    A `TARGET` Mechanism of a Process is not necessarily one of the `TARGET` Mechanisms of the System to which it belongs
@@ -328,8 +328,8 @@ that a target value be provided for each `TARGET` Mechanism of the System (liste
 
 .. _System_Execution_Control:
 
-Control
-~~~~~~~
+*Control*
+~~~~~~~~~
 
 The System's `controller <System.controller>` is executed in the last phase of execution in a `TRIAL`, after all
 other Mechanisms in the System have executed.  Although a System may have more than one `ControlMechanism`, only one
@@ -359,8 +359,8 @@ COMMENT
 
 .. _System_Control_Examples:
 
-Specifying Control for a System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying Control for a System*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
 that include two `Mechanisms <Mechanism>` (not shown)::
@@ -431,18 +431,22 @@ import numbers
 import re
 import warnings
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, Iterable
+from os import path, remove
+from shutil import rmtree
+from PIL import Image
+
 
 import numpy as np
 import typecheck as tc
 
 from toposort import toposort, toposort_flatten
 
-from psyneulink.components.component import Component
+from psyneulink.components.component import Component, Defaults
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import \
     _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, OUTCOME, \
@@ -456,25 +460,30 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, CONDITION, CONTROL, CONTROLLER, CYCLE, \
+from psyneulink.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, \
     EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
-    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
-    SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
+    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, \
+    SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, \
+    kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
+from psyneulink.globals.utilities import \
+    AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
-from psyneulink.scheduling.condition import AtTimeStep, Never
+from psyneulink.scheduling.condition import AtPass, AtTimeStep, Never
 
 __all__ = [
-    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
-    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple',
-    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
+    'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
+    'kwSystemInputState',
+    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
+    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
-    'SCHEDULER', 'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
-    'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
+    'SAVE_IMAGES', 'SCHEDULER',
+    'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS', 'UNIT'
 ]
 
 logger = logging.getLogger(__name__)
@@ -495,7 +504,7 @@ TERMINAL_MECHANISMS = 'terminal_mechanisms'
 OUTPUT_STATE_NAMES = 'output_state_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
-TARGET_MECHANISMS = 'target_mechanisms'
+TARGET_MECHANISMS = 'target_nodes'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 LEARNING_MECHANISMS = 'learning_mechanisms'
 CONTROL_MECHANISM = 'control_mechanism'
@@ -523,6 +532,20 @@ EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
 MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
+# show_graph options
+SHOW_CONTROL = 'show_control'
+SHOW_LEARNING = 'show_learning'
+
+# Animation Keywords
+NUM_TRIALS = 'num_trials'
+UNIT = 'unit'
+DURATION = 'duration'
+MOVIE_NAME = 'movie_name'
+SAVE_IMAGES = 'save_images'
+SHOW = 'show'
+INITIAL_FRAME = 'INITIAL_FRAME'
+
+EXECUTION_SET = 'EXECUTION_SET'
 
 class SystemWarning(Warning):
      def __init__(self, error_value):
@@ -550,13 +573,17 @@ def sys(*args, **kwargs):
     """
 
     processes = []
-    if not any(isinstance(arg, list) for arg in args):
+    if not any(isinstance(arg, (list, Process)) for arg in args):
         processes = Process(pathway=list(args))
     else:
         for arg in args:
-            if not isinstance(arg, list):
-                arg = [arg]
-            processes.append(Process(pathway=arg))
+            if isinstance(arg, Process):
+                proc = arg
+            else:
+                if not isinstance(arg, list):
+                    arg = [arg]
+                proc = Process(pathway=arg)
+            processes.append(proc)
 
     return System(processes=processes, **kwargs)
 
@@ -753,13 +780,13 @@ class System(System_Base):
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
-        ``target_mechanisms.data``.
+        ``target_nodes.data``.
         COMMENT:
             based on _target_mechs)
         COMMENT
 
     target_input_states : List[SystemInputState]
-        one item for each `TARGET` Mechanism in the System (listed in its `target_mechanisms
+        one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
         thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
@@ -830,7 +857,7 @@ class System(System_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    class ClassDefaults(System_Base.ClassDefaults):
+    class Params(System_Base.Params):
         variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
@@ -928,11 +955,9 @@ class System(System_Base):
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
+        # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
-
-        if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1174,13 +1199,10 @@ class System(System_Base):
 
             process._all_mechanisms = MechanismList(process, components_list=process._mechs)
 
-        # MODIFIED 6/24/18 NEW:
         # Call all ControlMechanisms to allow them to implement specification of ALL
         #    in monitor_for_control and/or control_signals arguments of their constructors
         for mech in self.mechanisms:
             pass
-        # MODIFIED 6/24/18 END
-
 
         # # Instantiate processList using process_tuples, and point self.processes to it
         # # Note: this also points self.params[PROCESSES] to self.processes
@@ -1274,10 +1296,7 @@ class System(System_Base):
                 # If sender is a ControlMechanism that is not the controller for the System,
                 #    assign its dependency to its ObjectiveMechanism and label as INTERNAL
                 elif (isinstance(sender_mech, ControlMechanism)
-                      # MODIFIED 6/24/18 NEW:
-                      and is_in_system(sender_mech)
-                      # MODIFIED 6/24/18 END:
-                ):
+                      and is_in_system(sender_mech)):
                     sender_mech._add_system(self, INTERNAL)
 
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
@@ -1350,11 +1369,10 @@ class System(System_Base):
                         for output_state in sender_mech.output_states):
                     pass
 
-                # If sender_mech projects to an AutoAssociativeLearningMechanism,
-                #    let it pass, as that is a legitimate dependent that should be including in the execution_list
+                # If sender_mech projects to an LearningMechanism that executes in the execution phase,
+                #    let it pass, as that is a legitimate dependent that should be included in the execution_list
                 elif any(
-                        # Projection to a ControlMechanism that is not the System's controller
-                        (isinstance(projection.receiver.owner, AutoAssociativeLearningMechanism)
+                        (projection.receiver.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                          for projection in output_state.efferents)
                         for output_state in sender_mech.output_states):
                     pass
@@ -1364,10 +1382,8 @@ class System(System_Base):
 
             # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
-            # MODIFIED 6/24/18 NEW:
             if not sender_mech.output_states:
                 return
-            # MODIFIED 6/24/18 END
 
             for output_state in sender_mech.output_states:
 
@@ -1385,10 +1401,8 @@ class System(System_Base):
                             # FIX:      THAT SHOULD BE IDENTIFIED AS CYCLES AND ASSIGNED INITIALIZATION ROLE
                             receiver is sender_mech
                             # MODIFIED 7/8/17 END
-                            # MODIFIED 6/24/18 NEW:
                             # Exclude any Mechanisms not in any processes belonging to the current System
                             or not is_in_system(receiver)
-                            # MODIFIED 6/24/18 END
                     ):
                         continue
                     if is_monitoring_mech(receiver):
@@ -1400,14 +1414,19 @@ class System(System_Base):
                                 or (self.controller is not None and
                                     isinstance(receiver, self.controller.objective_mechanism))
                                 or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
-                            # If it is an AutoAssociativeLearningMechanism for the sender_mech, include it
-                            #    (since these are executed during execute_processing rather than execute_learning)
-                            if isinstance(receiver, AutoAssociativeLearningMechanism):
-                                if not receiver == sender_mech.learning_mechanism:
-                                    raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection from {} "
-                                                      "but does not project to its {}".
-                                                      format(receiver.name, AutoAssociativeLearningMechanism.__name__,
-                                                             sender_mech.name, AutoAssociativeProjection.__name__))
+                            # If it is a LearningMechanism for the sender_mech that executes in the execution phase,
+                            #    include it
+                            if (isinstance(receiver, LearningMechanism) and
+                                    receiver.learning_timing is LearningTiming.EXECUTION_PHASE):
+                                # If it is an AutoassociativeLearningMechanism, check that it projects to itself
+                                if isinstance(receiver, AutoAssociativeLearningMechanism):
+                                    if not receiver == sender_mech.learning_mechanism:
+                                        raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection "
+                                                          "from {} but does not project to its {}".
+                                                          format(receiver.name,
+                                                                 AutoAssociativeLearningMechanism.__name__,
+                                                                 sender_mech.name,
+                                                                 AutoAssociativeProjection.__name__))
                             # Otherwise, exclude from execute_graph
                             else:
                                 continue
@@ -1448,11 +1467,7 @@ class System(System_Base):
                             if not sender_mech.systems or not (sender_mech.systems[self] in
                                                                {ORIGIN, SINGLETON,TERMINAL}):
                                 sender_mech._add_system(self, INITIALIZE_CYCLE)
-                            # # MODIFIED 6/24/18 OLD:
-                            # if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
-                            # MODIFIED 6/24/18 NEW:
                             if not (receiver.systems[self] in {ORIGIN, SINGLETON, TERMINAL}):
-                            # MODIFIED 6/24/18 END
                                 receiver._add_system(self, CYCLE)
                             continue
 
@@ -1644,7 +1659,7 @@ class System(System_Base):
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
             # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
-            # origin mechanism (useful only if the origin mechanism is a KWTA) Check, for each ORIGIN mechanism,
+            # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
@@ -1689,9 +1704,10 @@ class System(System_Base):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # MODIFIED 6/30/18 NEW:
-            # Exclude AutoAssociativeLearningMechanisms as they are included in (and executed as part of) System.graph
-            elif isinstance(sender_mech, AutoAssociativeLearningMechanism):
+            # Exclude LearningMechanisms that execute in the execution phase
+            #    as they are included in (and executed as part of) System.graph
+            elif (isinstance(sender_mech, LearningMechanism) and
+                  sender_mech.learning_timing is LearningTiming.EXECUTION_PHASE):
                 return
 
             # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
@@ -1791,15 +1807,16 @@ class System(System_Base):
                         other_obj_mech = next((projection.receiver.owner for projection in
                                                sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
-                        sender_mech = other_obj_mech
-                        sender_mech._add_process(process, TARGET)
-                        obj_mech_replaced = TERMINAL
-                        # Move error_signal Projections from old obj_mech to new one (now sender_mech)
-                        for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
-                            # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
-                            MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
-                            _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
-                            # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
+                        if not other_obj_mech is obj_mech:
+                            sender_mech = other_obj_mech
+                            sender_mech._add_process(process, TARGET)
+                            obj_mech_replaced = TERMINAL
+                            # Move error_signal Projections from old obj_mech to new one (now sender_mech)
+                            for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
+                                # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
+                                MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
+                                _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
+                                # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
@@ -1921,7 +1938,7 @@ class System(System_Base):
         self.learning_execution_list = toposort_flatten(self.learning_execution_graph, sort=False)
         # self.learning_execution_list = self._toposort_with_ordered_mechs(self.learning_execution_graph)
 
-        # Construct learning_mechanisms and target_mechanisms MechanismLists
+        # Construct learning_mechanisms and target_nodes MechanismLists
 
         self._learning_mechs = []
         self._target_mechs = []
@@ -1948,30 +1965,40 @@ class System(System_Base):
         # Instantiate TargetInputStates
         self._instantiate_target_inputs(context=context)
 
+        # Assign scheduler for _execute_learning:
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        # Assign conditions to scheduler_learning:
+        #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
+        condition_set = {}
+        for item in self.learning_execution_list:
+            if isinstance(item, MappingProjection):
+                condition_set[item] = AtPass(1)
+            else:
+                condition_set[item] = AtPass(0)
+        self.scheduler_learning.add_condition_set(condition_set)
+
+
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
             # MODIFIED CW and KM 1/29/18: changed below from error to warning
             if not self.target_mechanisms:
                 if self.verbosePref:
-                    warnings.warn("WARNING: Learning has been specified for {} but it has no target_mechanisms. This "
+                    warnings.warn("WARNING: Learning has been specified for {} but it has no target_nodes. This "
                                   "is okay if the learning (e.g. Hebbian learning) does not need a target.".
                                   format(self.name))
                 return
-            # # MODIFIED 6/25/17 OLD:
-            # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
-            #                   format(self.name))
-            # MODIFIED 6/25/17 NEW:
             # target arg was not specified in System's constructor,
             #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
             self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
-            # MODIFIED 6/25/17 END
+
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
-
 
         if isinstance(self.targets, dict):
             for target_mech in self.target_mechanisms:
@@ -2023,7 +2050,7 @@ class System(System_Base):
 
 
 
-            # Create SystemInputState for each TARGET mechanism in target_mechanisms and
+            # Create SystemInputState for each TARGET mechanism in target_nodes and
             #    assign MappingProjection from the SystemInputState
             #    to the TARGET mechanism's TARGET inputSate
             #    (i.e., from the SystemInputState to the ComparatorMechanism)
@@ -2593,14 +2620,13 @@ class System(System_Base):
                 termination_learning=None,
                 runtime_params=None,
                 context=None):
-        """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
-        specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
+        """Execute mechanisms in System in order specified by the `execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
 
         Execute any learning components specified at the appropriate phase.
 
-        Execute controller after all mechanisms have been executed (after each numPhases)
+        Execute controller after all other Mechanisms have been executed.
 
         .. Execution:
             - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and
@@ -2645,6 +2671,11 @@ class System(System_Base):
 
         runtime_params = self._parse_runtime_params(runtime_params)
 
+        if not hasattr(self, '_animate'):
+            # These are meant to be assigned in run method;  needed here for direct call to execute method
+            self._animate = False
+            self._component_execution_count = 0
+
         if not context:
             context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
@@ -2653,6 +2684,7 @@ class System(System_Base):
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
+
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learning_execution_list
         for mech in self.execution_graph:
@@ -2698,12 +2730,12 @@ class System(System_Base):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
+            # Get SystemInputState that projects to each ORIGIN Mechanism and assign input to it
             for origin_mech in self.origin_mechanisms:
                 # For each inputState of the ORIGIN mechanism
 
                 for j in range(len(origin_mech.external_input_states)):
-                   # Get the input from each projection to that inputState (from the corresponding SystemInputState)
+                   # Get the input from each Projection to that InputState (from the corresponding SystemInputState)
                     system_input_state = next((projection.sender
                                                for projection in origin_mech.input_states[j].path_afferents
                                                if isinstance(projection.sender, SystemInputState)), None)
@@ -2732,6 +2764,10 @@ class System(System_Base):
         if self._report_system_output:
             self._report_system_initiation()
 
+
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+            self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif')
 
         # EXECUTE MECHANISMS
 
@@ -2770,12 +2806,18 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.context.execution_phase = ContextFlags.CONTROL
             self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
                     runtime_params=None,
                     context=context
                 )
+
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
+                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif')
+                self._component_execution_count += 1
+
                 if self._report_system_output:
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
@@ -2784,6 +2826,7 @@ class System(System_Base):
                     raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
                                       "attribute (\'{}\') encountered for it or one of the methods it calls."
                                       .format(self.controller.name, self.name, error_msg.args[0]))
+            self.context.execution_phase = ContextFlags.IDLE
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2806,6 +2849,9 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
+            if not self._animate is False and self._animate_unit is EXECUTION_SET:
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
 
@@ -2825,14 +2871,19 @@ class System(System_Base):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
                 mechanism.context.execution_phase = self.context.execution_phase
 
-                # FIX: DO THIS LOCALLY IN AutoAssociativeLearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
-                if isinstance(mechanism, AutoAssociativeLearningMechanism):
+                # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
+                if (isinstance(mechanism, LearningMechanism) and
+                        mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
                     mechanism.context.execution_phase = ContextFlags.LEARNING
 
                 # Execute
                 # # TEST PRINT:
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
+
+                if not self._animate is False and self._animate_unit is COMPONENT:
+                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
+                self._component_execution_count += 1
 
                 # Reset runtime params and context
                 for key in mechanism._runtime_params_reset:
@@ -2879,11 +2930,6 @@ class System(System_Base):
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-        # if isinstance(self.targets, function_type):
-        #     self.current_targets = self.targets()
-        #     for i in range(len(self.target_mechanisms)):
-        #         self.target_input_states[i].value = self.current_targets[i]
 
         if not hasattr(self, "target"):
             self.target = self.targets
@@ -2901,79 +2947,67 @@ class System(System_Base):
             for i in range(len(self.target_mechanisms)):
                 self.target_input_states[i].value = self.current_targets[i]
 
-        # NEXT, execute all components involved in learning
+        # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
             raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
+
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+
+            if (not self._animate is False and
+                    self._animate_unit is EXECUTION_SET and
+                    SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
+                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif')
+
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-                if isinstance(component, MappingProjection):
-                    continue
-
-                params = None
-
-                component_type = component.componentType
-
-                processes = list(component.processes.keys())
-
-                # Sort for consistency of reporting:
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                process_names = list(p.name for p in process_keys_sorted)
-
-                context_str = str("{} | {}: {} [in processes: {}]".
-                                  format(context,
-                                         component_type,
-                                         component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
-
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = context_str
 
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(runtime_params=params, context=context)
+                if isinstance(component, Mechanism):
+                    params = None
+
+                    component_type = component.componentType
+
+                    processes = list(component.processes.keys())
+
+                    # Sort for consistency of reporting:
+                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    process_names = list(p.name for p in process_keys_sorted)
+
+                    context_str = str("{} | {}: {} [in processes: {}]".
+                                      format(context,
+                                             component_type,
+                                             component.name,
+                                             re.sub(r'[\[,\],\n]','',str(process_names))))
+                    component.context.string = context_str
+
+                    # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                    component.execute(runtime_params=params, context=context)
+
+                elif isinstance(component, MappingProjection):
+                    processes = list(component.sender.owner.processes.keys())
+                    component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+                                                                                 component.name, self.name)
+                    component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
+
+                component.context.execution_phase = ContextFlags.IDLE
+
+                if not self._animate is False:
+                    if (self._animate_unit is COMPONENT and
+                            SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
+                            self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+
+                self._component_execution_count += 1
 
                 component.context.execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
-
-        # THEN update all MappingProjections
-        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
-            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
-            for component in next_execution_set:
-                logger.debug('\tRunning component {0}'.format(component))
-
-                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                    continue
-                if not isinstance(component, MappingProjection):
-                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
-
-                component_type = "mappingProjection"
-                processes = list(component.sender.owner.processes.keys())
-
-
-                # Sort for consistency of reporting:
-                # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                # process_names = list(p.name for p in process_keys_sorted)
-                #
-                # component.context.string = str("{} | {}: {} [in processes: {}]".
-                #                   format(context,
-                #                          component_type,
-                #                          component.name,
-                #                          re.sub(r'[\[,\],\n]','',str(process_names))))
-                component.context.execution_phase = ContextFlags.LEARNING
-                component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                             component.name, self.name)
-
-                component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
-
-                component.context.execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
                 # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
@@ -2982,7 +3016,7 @@ class System(System_Base):
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
-            # Report learning for target_mechanisms (and the processes to which they belong)
+            # Report learning for target_nodes (and the processes to which they belong)
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
@@ -3014,12 +3048,18 @@ class System(System_Base):
             termination_learning=None,
             runtime_params=None,
             reinitialize_values=None,
+            animate=False,
             context=None):
 
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
-        formatting input specifications.
+        formatting input specifications. The **animate** argument can be used to generate a movie of the execution of
+        the System.
+
+        .. note::
+           Use of the animation argument relies on `imageio <http://imageio.github.io>`_, which must be
+           installed and imported (standard with PsyNeuLink pip install)
 
         Arguments
         ---------
@@ -3075,6 +3115,55 @@ class System(System_Base):
             that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
             <Component.reinitialize_when>` Condition is satisfied.
 
+        animate : dict or bool : False
+            specifies use of the `show_graph <System.show_graph>` method to generate a gif movie showing the sequence
+            of Components executed in a trial.  A dict can be specified containing options to pass to the `show_graph
+            <System.show_graph>` method;  each key must be an argument of the `show_graph <System.show_graph>`
+            method, and its value a specification for that argument.  The entries listed below can also be included
+            in the dict to specify parameters of the animation.  If the **animate** argument is specified simply as
+            `True`, defaults are used for all arguments of `show_graph <System.show_graph>` and the options below:
+
+            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\ *EXECUTION_SET*\ ) -- specifies which Components to
+              treat as active in each call to `show_graph <System.show_graph>`. *COMPONENT* generates an image for the
+              execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
+              <System.execution_sets>`, showing all of the Components in that set as active.
+
+            * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
+
+            * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
+              If the number specified is less than the total number of trials being run, only the number specified are
+              animated; if it is greater than the number of trials being run, only the number being run are animated.
+
+            * *MOVIE_NAME*: str (default=\ `name <System.name>` + 'movie') -- specifies the name to be used for the
+              movie file; it is automatically appended with '.gif'.
+
+            * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to
+              construct the animation in separate gif files, in addition to the file containing the animation.
+
+            * *SHOW*: bool (default=\ `False`\ ) -- specifies whether to show the animation after it is constructed,
+              using the OS's default viewer.
+
+        Examples
+        --------
+
+        This figure shows an animation of the System in the Multilayer-Learning example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
+
+        .. _System_Multilayer_Learning_movie:
+
+        .. figure:: _static/Multilayer_Learning_movie.gif
+           :alt: Animation of System in Multilayer-Learning example script
+           :scale: 50 %
+
+        This figure shows an animation of the System in the EVC Gratton example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _System_EVC_Gratton_movie:
+
+        .. figure:: _static/EVC_Gratton_movie.gif
+           :alt: Animation of System in EVC Gratton example script
+           :scale: 150 %
+
         Returns
         -------
 
@@ -3093,10 +3182,61 @@ class System(System_Base):
 
         self.initial_values = initial_values
 
+        self._component_execution_count=0
+
+        # Set animation attributes
+        if animate is True:
+            animate = {}
+        self._animate = animate
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            here = path.abspath(path.dirname(__file__))
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(UNIT), repr('animate'), repr('run'),
+                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
+                                  format(repr(DURATION), repr('animate'), repr('run'),
+                                         self.name, self._image_duration))
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
+                                  format(repr(NUM_TRIALS), repr('animate'), repr('run'),
+                                         self.name, self._animate_num_trials, repr('show_graph')))
+            if not isinstance(self._movie_filename, str):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._movie_filename))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._save_images, repr(True), repr(False)))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(SHOW), repr('animate'), repr('run'),
+                                         self.name, self._show_animation, repr(True), repr(False)))
+
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError("{} argument for {} method of {} ({}) must boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+
         logger.debug(inputs)
 
         from psyneulink.globals.environment import run
-        return run(self,
+        result = run(self,
                    inputs=inputs,
                    num_trials=num_trials,
                    initialize=initialize,
@@ -3111,6 +3251,22 @@ class System(System_Base):
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
                    context=ContextFlags.COMPOSITION)
+
+        if self._animate is not False:
+            # Save list of gifs in self._animation as movie file
+            movie_path = self._animate_directory + '/' + self._movie_filename
+            self._animation[0].save(fp=movie_path,
+                                    format='GIF',
+                                    save_all=True,
+                                    append_images=self._animation[1:],
+                                    duration=self._image_duration*1000,
+                                    loop=0)
+            print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
+            if self._show_animation:
+                movie = Image.open(movie_path)
+                movie.show()
+
+        return result
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
@@ -3560,8 +3716,8 @@ class System(System_Base):
                    show_headers=True,
                    show_projection_labels=False,
                    direction = 'BT',
-                   active_item = None,
-                   active_color = 'yellow',
+                   active_items = None,
+                   active_color = BOLD,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3756,11 +3912,12 @@ class System(System_Base):
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-        active_item : Component : default None
-            specifies the item in the graph to display in the color specified by *active_color**.
+        active_items : List[Component] : default None
+            specifies one or more items in the graph to display in the color specified by *active_color**.
 
         active_color : keyword : default 'yellow'
-            specifies the color in which to display the item specified in *active_item**.
+            specifies how to highlight the item(s) specified in *active_items**:  either a color recognized
+            by GraphViz, or the keyword *BOLD*.
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
@@ -3803,6 +3960,9 @@ class System(System_Base):
 
         """
 
+        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        #     return
+
         # IMPLEMENTATION NOTE:
         #    The helper methods below (_assign_XXX__components) all take the main graph *and* subgraph as arguments:
         #        - the main graph (G) is used to assign edges
@@ -3821,29 +3981,61 @@ class System(System_Base):
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
-            if rcvr is active_item:
-                rcvr_color = active_color
-                rcvr_penwidth = bold_width
-            elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
-                rcvr_color = origin_and_terminal_color
-                rcvr_penwidth = bold_width
+            if ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = origin_and_terminal_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    rcvr_color = origin_and_terminal_color
+                    rcvr_penwidth = str(bold_width)
             elif ORIGIN in rcvr.systems[self]:
-                rcvr_color = origin_color
-                rcvr_penwidth = bold_width
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = origin_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    rcvr_color = origin_color
+                    rcvr_penwidth = str(bold_width)
                 rcvr_rank = origin_rank
             elif TERMINAL in rcvr.systems[self]:
-                rcvr_color = terminal_color
-                rcvr_penwidth = bold_width
+                if rcvr in active_items:
+                    if active_color is BOLD:
+                        rcvr_color = terminal_color
+                    else:
+                        rcvr_color = active_color
+                    rcvr_penwidth = str(bold_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    rcvr_color = terminal_color
+                    rcvr_penwidth = str(bold_width)
                 rcvr_rank = terminal_rank
+            elif rcvr in active_items:
+                if active_color is BOLD:
+                    if LEARNING in rcvr.systems[self]:
+                        rcvr_color = learning_color
+                    else:
+                        rcvr_color = default_node_color
+                else:
+                    rcvr_color = active_color
+                rcvr_penwidth = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             elif LEARNING in rcvr.systems[self]:
                 rcvr_color = learning_color
-                rcvr_penwidth = default_width
+                rcvr_penwidth = str(default_width)
             else:
                 rcvr_color = default_node_color
-                rcvr_penwidth = default_width
+                rcvr_penwidth = str(default_width)
 
-            if isinstance(rcvr, AutoAssociativeLearningMechanism) and not show_learning:
-                return
+            if isinstance(rcvr, LearningMechanism):
+                if rcvr.learning_timing is LearningTiming.EXECUTION_PHASE and not show_learning:
+                    return
 
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
@@ -3859,6 +4051,7 @@ class System(System_Base):
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
+
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
@@ -3874,38 +4067,52 @@ class System(System_Base):
                     else:
                         edge_label = ''
                     try:
-                        has_learning = proj.has_learning_projection
+                        has_learning = proj.has_learning_projection is not None
                     except AttributeError:
                         has_learning = None
 
-                    # Handle learning components for autoassociative projection
+                    # Handle learning components for AutoassociativeProjection
                     #  calls _assign_learning_components,
                     #  but need to manage it from here since MappingProjection needs be shown as node rather than edge
                     if show_learning and has_learning:
-                        # show projection as node
-                        if proj is active_item:
-                            proj_color = active_color
+                        # Render projection as node
+                        if proj in active_items:
+                            if active_color is BOLD:
+                                proj_color = default_node_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
+                            self.active_item_rendered = True
                         else:
                             proj_color = default_node_color
+                            proj_width = str(default_width)
                         proj_label = self._get_label(proj, show_dimensions, show_roles)
-                        sg.node(proj_label, shape=projection_shape, color=proj_color)
-                        G.edge(sndr_proj_label, proj_label, arrowhead='none')
-                        G.edge(proj_label, proc_mech_rcvr_label)
-                        learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
-                        learning_rcvrs = [learning_mech, proj]
-                        learning_graph={proj:{learning_mech}}
-                        for lr in learning_rcvrs:
-                            _assign_learning_components(G, sg, learning_graph, lr, processes)
+                        render_projection_as_node(G=G, sg=sg, processes=processes,
+                                                  rcvr=rcvr, proj=proj,
+                                                  label=proj_label,
+                                                  rcvr_label=proc_mech_rcvr_label,
+                                                  sndr_label=sndr_proj_label,
+                                                  proj_color=proj_color,
+                                                  proj_width=proj_width)
                     else:
                         # show projection as edge
-                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
+                        if proj.sender in active_items:
+                            if active_color is BOLD:
+                                proj_color = default_node_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
+                            self.active_item_rendered = True
+                        else:
+                            proj_color = default_node_color
+                            proj_width = str(default_width)
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
+                               color=proj_color, penwidth=proj_width)
 
-            # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-            #    break, as those are handled below
+            # if rcvr is a LearningMechanism, break, as those are handled below
             if isinstance(rcvr, LearningMechanism):
                 return
-            # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-            #    break, as those handled below
+            # if recvr is ObjectiveMechanism for System's controller, break, as those handled below
             if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
                 return
 
@@ -3915,13 +4122,9 @@ class System(System_Base):
             for sndr in sndrs:
                 if not processes or any(p in processes for p in sndr.processes.keys()):
 
-                # Set sndr info
+                    # Set sndr info
 
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                if sndr is active_item:
-                    sndr_color = active_color
-                else:
-                    sndr_color = default_node_color
 
                     # find edge name
                     for output_state in sndr.output_states:
@@ -3940,47 +4143,58 @@ class System(System_Base):
                                 edge_name = self._get_label(proj, show_dimensions, show_roles)
                                 # edge_shape = proj.matrix.shape
                                 try:
-                                    has_learning = proj.has_learning_projection
+                                    has_learning = proj.has_learning_projection is not None
                                 except AttributeError:
                                     has_learning = None
+                                selected_proj = proj
                     edge_label = edge_name
 
                     # Render projections
-                    if proj is active_item:
-                        proj_color = active_color
+                    if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
+                        if active_color is BOLD:
+                            if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                                proj_color = learning_color
+                            else:
+                                proj_color = default_node_color
+                        else:
+                            proj_color = active_color
+                        proj_width = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+
+                    # Projection to or from a LearningMechanism
+                    elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                        proj_color = learning_color
+                        proj_width = str(default_width)
+
                     else:
                         proj_color = default_node_color
+                        proj_width = str(default_width)
                     proc_mech_label = edge_label
 
                     if show_learning and has_learning:
                         # Render Projection as node
-                        # Note: Projections can't yet use structured nodes:
-
-                        # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
-                        #     assignment of nodes for Projections to it will be taken care of below
-                        #     to insure that they are assigned to the Process(es) from which they originate
-                        if processes:
-                            # Get any processes to which recvr belongs
-                            procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
-                            # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
-                            if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
-                                   and proj.receiver.owner._role == LEARNING
-                                   and set(procs).intersection(proj.receiver.owner.processes)
-                                   for proj in rcvr.efferents)):
-                                continue
-
-                        sg.node(proc_mech_label, shape=projection_shape, color=proj_color)
-                        # Edges to and from Projection node
-                        G.edge(sndr_proj_label, proc_mech_label, arrowhead='none', color=proj_color)
-                        G.edge(proc_mech_label, proc_mech_rcvr_label, color=proj_color)
-
+                        #    (do it here rather than in _assign_learning_components,
+                        #     as it needs afferent and efferent edges to other nodes)
+                        # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
+                        deferred = not render_projection_as_node(G=G, sg=sg, processes=processes,
+                                                                 rcvr=rcvr, proj=selected_proj,
+                                                                 label=proc_mech_label,
+                                                                 rcvr_label=proc_mech_rcvr_label,
+                                                                 sndr_label=sndr_proj_label,
+                                                                 proj_color=proj_color,
+                                                                 proj_width=proj_width)
+                        # Deferred if it is the last Mechanism in a learning sequence
+                        # (see _render_projection_as_node)
+                        if deferred:
+                            continue
                     else:
                         # Render Projection normally (as edge)
                         if show_projection_labels:
                             label = proc_mech_label
                         else:
                             label = ''
-                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label, color=proj_color)
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                               color=proj_color, penwidth=proj_width)
 
             # Add node for Projection to the last Mechanism in a learning sequence in its originating Process
             # (i.e., the Process to which its sender belongs)
@@ -4020,157 +4234,243 @@ class System(System_Base):
 
         tc.typecheck
         def _assign_learning_components(G, sg, lg, rcvr, processes:tc.optional(list)=None):
-            '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
+            '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**'''
+
+            # if rcvr is Projection, skip (handled in _assign_processing_components)
+            if isinstance(rcvr, MappingProjection):
+                return
 
             # Get rcvr info
             rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
-            if rcvr is active_item:
-                rcvr_color = active_color
+            if rcvr in active_items:
+                if active_color is BOLD:
+                    rcvr_color = learning_color
+                else:
+                    rcvr_color = active_color
+                rcvr_width = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             else:
                 rcvr_color = learning_color
-
-            # if rcvr is projection (i.e., recipient of a LearningProjection)
-            if isinstance(rcvr, MappingProjection):
-                # for each sndr of rcvr
-                sndrs = lg[rcvr]
-                for sndr in sndrs:
-                    sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                    if show_projection_labels:
-                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                    else:
-                        edge_label = ''
-                    if show_mechanism_structure:
-                        # G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                        G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                               self._get_label(rcvr, show_dimensions, show_roles),
-                               label=edge_label,
-                               color=rcvr_color)
-                    else:
-                        G.edge(self._get_label(sndr, show_dimensions, show_roles),
-                               self._get_label(rcvr, show_dimensions, show_roles),
-                               label = edge_label,
-                               color=rcvr_color)
+                rcvr_width = str(default_width)
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
+            if self not in rcvr.systems and processes and not any(p in rcvr.processes for p in processes):
+                return
+
+            # Implement node for Mechanism
+            if show_mechanism_structure:
+                sg.node(rcvr_label,
+                        rcvr.show_structure(**mech_struct_args),
+                        rank=obj_mech_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
-                if self not in rcvr.systems and processes and not any(p in rcvr.processes for p in processes):
-                    return
+                sg.node(rcvr_label,
+                        color=rcvr_color, penwidth=rcvr_width,
+                        rank=obj_mech_rank, shape=mechanism_shape)
 
-                # Implement node for Mechanism
-                if rcvr is active_item:
-                    rcvr_color = active_color
-                else:
-                    rcvr_color = learning_color
+            # Projections to ObjectiveMechanism
+            if isinstance(rcvr, ObjectiveMechanism):
+                if (self in rcvr.systems
+                        and rcvr._role is LEARNING
+                        and show_learning is ALL):
+                    # Projections to ObjectiveMechanism
+                    for input_state in rcvr.input_states:
+                        for proj in input_state.path_afferents:
 
-                if show_mechanism_structure:
-                    sg.node(rcvr_label,
-                            rcvr.show_structure(**mech_struct_args),
-                            rank=obj_mech_rank,
-                            color=rcvr_color)
-                else:
-                    sg.node(rcvr_label,
-                            color=rcvr_color,
-                            rank=obj_mech_rank,
-                            shape=mechanism_shape)
+                            smpl_or_trgt_src = proj.sender.owner
 
-                # Projections to ObjectiveMechanism
-                if isinstance(rcvr, ObjectiveMechanism):
-                    if (self in rcvr.systems
-                            and rcvr._role is LEARNING
-                            and show_learning is ALL):
-                        # Projections to ObjectiveMechanism
-                        for input_state in rcvr.input_states:
-                            for proj in input_state.path_afferents:
-
-                                smpl_or_trgt_src = proj.sender.owner
-
-                                # Skip any Projections from ProcesInputStates
-                                if isinstance(smpl_or_trgt_src, Process):
-                                    continue
-
-                                # Projection is from System
-                                # Create node for System "TARGET" input
-                                # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
-                                elif isinstance(smpl_or_trgt_src, System):
-
-                                    if smpl_or_trgt_src is active_item:
-                                        smpl_or_trgt_src_color = active_color
-                                    else:
-                                        smpl_or_trgt_src_color = system_color
-
-                                    sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                                           color=smpl_or_trgt_src_color,
-                                           rank='min',
-                                           penwidth='3')
-
-                                if proj is active_item:
-                                    learning_proj_color = active_item
-                                else:
-                                    learning_proj_color = learning_color
-
-                                if show_projection_labels:
-                                    edge_label = proj.name
-                                else:
-                                    edge_label = ''
-
-                                sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
-                                rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                                if show_mechanism_structure:
-                                    proc_mech_rcvr_label = rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name
-                                else:
-                                    proc_mech_rcvr_label = rcvr_label
-
-                                G.edge(sndr_label, proc_mech_rcvr_label, label=edge_label, color=learning_proj_color)
-                    return
-
-                # Implement edges for Projections to LearningMechanism
-                #    from other LearningMechanisms or ObjectiveMechanism, and from ProcessingMechanisms if 'ALL' is set
-                for input_state in rcvr.input_states:
-                    for proj in input_state.path_afferents:
-
-                        if proj is active_item:
-                            learning_proj_color = active_color
-                        else:
-                            learning_proj_color = learning_color
-
-                        # Get sndr info
-                        sndr = proj.sender.owner
-                        sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                        # # FIX: NEED TO ASSIGN sndr_color TO sndr NODE AFTER COLOR ASSIGNMENT BELOW
-                        # if sndr is active_item:
-                        #     sndr_color = active_color
-                        # else:
-                        #     sndr_color = learning_color
-
-                        # Create an edge for the Projection to the LearningMechanism if:
-                        #    - it is from another LearningMechanism in the same System
-                        #    - it is from an ObjectiveMechanism used for learning in the same System
-                        #    - **show_learning** argument was specifid as ALL
-                        if (((isinstance(sndr, LearningMechanism)
-                              or (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)))
-                                or show_learning is ALL):
-                            if not self in sndr.systems:
+                            # Skip any Projections from ProcesInputStates
+                            if isinstance(smpl_or_trgt_src, Process):
                                 continue
+
+                            # Projection is from System
+                            # Create node for System "TARGET" input
+                            # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
+                            elif isinstance(smpl_or_trgt_src, System):
+
+                                if smpl_or_trgt_src in active_items:
+                                    if active_color is BOLD:
+                                        smpl_or_trgt_src_color = system_color
+                                    else:
+                                        smpl_or_trgt_src_color = active_color
+                                    smpl_or_trgt_src_width = str(bold_width + active_thicker_by)
+                                    self.active_item_rendered = True
+                                else:
+                                    smpl_or_trgt_src_color = system_color
+                                    smpl_or_trgt_src_width = str(bold_width)
+
+                                sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                        color=smpl_or_trgt_src_color,
+                                        rank='min',
+                                        penwidth=smpl_or_trgt_src_width)
+
+                            if proj.receiver.owner in active_items:
+                                if active_color is BOLD:
+                                    learning_proj_color = learning_color
+                                else:
+                                    learning_proj_color = active_color
+                                learning_proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                learning_proj_color = learning_color
+                                learning_proj_width = str(default_width)
                             if show_projection_labels:
                                 edge_label = proj.name
                             else:
                                 edge_label = ''
+
+                            sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
+                            rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                             if show_mechanism_structure:
-                                G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                                       rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                       label=edge_label,
-                                       color=learning_proj_color)
+                                proc_mech_rcvr_label = rcvr_label +':'+ InputState.__name__ +'-'+ proj.receiver.name
                             else:
-                                G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
+                                proc_mech_rcvr_label = rcvr_label
+
+                            G.edge(sndr_label, proc_mech_rcvr_label, label=edge_label,
+                                   color=learning_proj_color, penwidth=learning_proj_width)
+                return
+
+            # Implement edges for Projections to LearningMechanism
+            #    from other LearningMechanisms or ObjectiveMechanism, and from ProcessingMechanisms if 'ALL' is set
+            for input_state in rcvr.input_states:
+                for proj in input_state.path_afferents:
+
+                    if proj.receiver.owner in active_items:
+                        if active_color is BOLD:
+                            learning_proj_color = learning_color
+                        else:
+                            learning_proj_color = active_color
+                        learning_proj_width = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        learning_proj_color = learning_color
+                        learning_proj_width = str(default_width)
+
+                    # Get sndr info
+                    sndr = proj.sender.owner
+                    sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+
+                    # Create an edge for the Projection to the LearningMechanism if:
+                    #    - it is from another LearningMechanism in the same System
+                    #    - it is from an ObjectiveMechanism used for learning in the same System
+                    #    - **show_learning** argument was specifid as ALL
+                    if (((isinstance(sndr, LearningMechanism)
+                          or (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)))
+                            or show_learning is ALL):
+                        if not self in sndr.systems:
+                            continue
+                        if show_projection_labels:
+                            edge_label = proj.name
+                        else:
+                            edge_label = ''
+                        if show_mechanism_structure:
+                            G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                   rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                   label=edge_label, color=learning_proj_color, penwidth=learning_proj_width)
+                        else:
+                            G.edge(sndr_label, rcvr_label, label=edge_label,
+                                   color=learning_proj_color, penwidth=learning_proj_width)
+
+        def render_projection_as_node(G, sg, processes,
+                                      rcvr, proj, label,
+                                      proj_color, proj_width,
+                                      sndr_label=None,
+                                      rcvr_label=None):
+            from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
+            proj_receiver = proj.receiver.owner
+            proj_learning_in_execution_phase = (proj.has_learning_projection and
+                                                proj.has_learning_projection.sender.owner.learning_timing is
+                                                LearningTiming.EXECUTION_PHASE)
+
+            # If Projection has a LearningProjection from a LearningMechanism
+            #    that executes in the execution_phase, include it here
+            if proj_learning_in_execution_phase:
+                learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                learning_rcvrs = [learning_mech, proj]
+                learning_graph={proj:{learning_mech}}
+                for lr in learning_rcvrs:
+                    _assign_learning_components(G, sg, learning_graph, lr, processes)
+
+            # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
+            #     assignment of nodes for Projections to it will be taken care of below
+            #     to insure that they are assigned to the Process(es) from which they originate
+            if processes:
+                # Get any processes to which recvr belongs
+                procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
+                if (any(isinstance(proj_receiver, ComparatorMechanism)
+                       and proj_receiver._role == LEARNING
+                       and set(procs).intersection(proj_receiver.processes)
+                       for proj in rcvr.efferents)):
+                    return False
+
+            # Node for Projection
+            sg.node(label, shape=projection_shape, color=proj_color, penwidth=proj_width)
+
+            # FIX: ??
+            if proj_receiver in active_items:
+                # edge_color = proj_color
+                # edge_width = str(proj_width)
+                if active_color is BOLD:
+                    edge_color = proj_color
+                else:
+                    edge_color = active_color
+                edge_width = str(default_width + active_thicker_by)
+            else:
+                edge_color = default_node_color
+                edge_width = str(default_width)
+
+            # Edges to and from Projection node
+            if sndr_label:
+                G.edge(sndr_label, label, arrowhead='none',
+                       color=edge_color, penwidth=edge_width)
+            if rcvr_label:
+                G.edge(label, rcvr_label,
+                       color=edge_color, penwidth=edge_width)
+
+            # LearningProjection(s) to node
+            if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
+                if active_color is BOLD:
+                    learning_proj_color = learning_color
+                else:
+                    learning_proj_color = active_color
+                learning_proj_width = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
+            else:
+                learning_proj_color = learning_color
+                learning_proj_width = str(default_width)
+            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            for sndr in sndrs:
+                sndr_label = self._get_label(sndr.sender.owner, show_dimensions, show_roles)
+                rcvr_label = self._get_label(proj, show_dimensions, show_roles)
+                if show_projection_labels:
+                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                else:
+                    edge_label = ''
+                if show_mechanism_structure:
+                    G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                           rcvr_label,
+                           label=edge_label,
+                           color=learning_proj_color, penwidth=learning_proj_width)
+                else:
+                    G.edge(sndr_label, rcvr_label, label = edge_label,
+                           color=learning_proj_color, penwidth=learning_proj_width)
+            return True
 
         def _assign_control_components(G, sg):
             '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             controller = self.controller
-            if controller is active_item:
-                ctlr_color = active_color
+            if controller in active_items:
+                if active_color is BOLD:
+                    ctlr_color = control_color
+                else:
+                    ctlr_color = active_color
+                ctlr_width = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             else:
                 ctlr_color = control_color
+                ctlr_width = str(default_width)
 
             if controller is None:
                 print ("\nWARNING: {} has not been assigned a \'controller\', so \'show_control\' option "
@@ -4179,34 +4479,52 @@ class System(System_Base):
 
             # get projection from ObjectiveMechanism to ControlMechanism
             objmech_ctlr_proj = controller.input_state.path_afferents[0]
-            if objmech_ctlr_proj is active_item:
-                objmech_ctlr_proj_color = active_color
+            if controller in active_items:
+                if active_color is BOLD:
+                    objmech_ctlr_proj_color = control_color
+                else:
+                    objmech_ctlr_proj_color = active_color
+                objmech_ctlr_proj_width = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             else:
                 objmech_ctlr_proj_color = control_color
+                objmech_ctlr_proj_width = str(default_width)
 
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
-            if objmech is active_item:
-                objmech_color = active_color
+            if objmech in active_items:
+                if active_color is BOLD:
+                    objmech_color = control_color
+                else:
+                    objmech_color = active_color
+                objmech_width = str(default_width + active_thicker_by)
+                self.active_item_rendered = True
             else:
                 objmech_color = control_color
+                objmech_width = str(default_width)
 
             ctlr_label = self._get_label(controller, show_dimensions, show_roles)
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                       controller.show_structure(**mech_struct_args),
-                       color=ctlr_color,
-                       rank = control_rank
+                        controller.show_structure(**mech_struct_args),
+                        color=ctlr_color,
+                        penwidth=ctlr_width,
+                        rank = control_rank
                        )
                 sg.node(objmech_label,
-                       objmech.show_structure(**mech_struct_args),
-                       color=objmech_color,
-                       rank = control_rank
-                       )
+                        objmech.show_structure(**mech_struct_args),
+                        color=objmech_color,
+                        penwidth=ctlr_width,
+                        rank = control_rank
+                        )
             else:
-                sg.node(ctlr_label, color=ctlr_color, shape=mechanism_shape, rank=control_rank)
-                sg.node(objmech_label, color=objmech_color, shape=mechanism_shape, rank=control_rank)
+                sg.node(ctlr_label,
+                        color=ctlr_color, penwidth=ctlr_width, shape=mechanism_shape,
+                        rank=control_rank)
+                sg.node(objmech_label,
+                        color=objmech_color, penwidth=objmech_width, shape=mechanism_shape,
+                        rank=control_rank)
 
             # objmech to controller edge
             if show_projection_labels:
@@ -4219,7 +4537,8 @@ class System(System_Base):
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
-            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
+            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
+                   color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
             # IMPLEMENTATION NOTE:
             #   When two (or more?) Processes (e.g., A and B) have homologous constructions, and a ControlProjection is
@@ -4237,10 +4556,16 @@ class System(System_Base):
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
-                    if ctl_proj is active_item:
-                        ctl_proj_color = active_color
+                    if controller in active_items:
+                        if active_color is BOLD:
+                            ctl_proj_color = control_color
+                        else:
+                            ctl_proj_color = active_color
+                        ctl_proj_width = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
                     else:
                         ctl_proj_color = control_color
+                        ctl_proj_width = str(default_width)
                     if show_projection_labels:
                         edge_label = ctl_proj.name
                     else:
@@ -4255,15 +4580,23 @@ class System(System_Base):
                     G.edge(ctl_sndr_label,
                            proc_mech_rcvr_label,
                            label=edge_label,
-                           color=ctl_proj_color)
+                           color=ctl_proj_color,
+                           penwidth=ctl_proj_width
+                           )
 
             # incoming edges (from monitored mechs to objective mechanism)
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
-                    if projection is active_item:
-                        proj_color = active_color
+                    if objmech in active_items:
+                        if active_color is BOLD:
+                            proj_color = control_color
+                        else:
+                            proj_color = active_color
+                        proj_width = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
                     else:
                         proj_color = control_color
+                        proj_width = str(default_width)
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
                                           ':' + OutputState.__name__ + '-' + projection.sender.name
@@ -4275,42 +4608,54 @@ class System(System_Base):
                         edge_label = projection.name
                     else:
                         edge_label = ''
-                    G.edge(sndr_proj_label, objmech_proj_label ,color=proj_color, label=edge_label)
+                    G.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                           color=proj_color, penwidth=proj_width)
 
             # prediction mechanisms
             for mech in self.execution_list:
-                if mech is active_item:
-                    pred_mech_color = active_color
+                if mech in active_items:
+                    if active_color is BOLD:
+                        pred_mech_color = prediction_mechanism_color
+                    else:
+                        pred_mech_color = active_color
+                    pred_mech_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
                 else:
                     pred_mech_color = prediction_mechanism_color
+                    pred_mech_width = str(default_width)
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                # if hasattr(mech, 'for_control') and mech.for_control is True and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:
                     #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                     if show_mechanism_structure and False:
                         proj = mech.output_state.efferents[0]
-                        if proj is active_item:
-                            pred_proj_color = active_color
+                        if proj in active_items:
+                            if active_color is BOLD:
+                                pred_proj_color = prediction_mechanism_color
+                            else:
+                                pred_proj_color = active_color
+                            pred_proj_width = str(default_width + active_thicker_by)
+                            self.active_item_rendered = True
                         else:
                             pred_proj_color = prediction_mechanism_color
+                            pred_proj_width = str(default_width)
                         sg.node(mech.name,
-                               shape=mech.show_structure(**mech_struct_args),
-                               color=pred_mech_color)
+                                shape=mech.show_structure(**mech_struct_args),
+                                color=pred_mech_color,
+                                penwidth=pred_mech_width)
 
                         G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
                                recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                label=' prediction assignment',
-                               color=pred_proj_color)
+                               color=pred_proj_color, penwidth=pred_proj_width)
                     else:
                         sg.node(self._get_label(mech, show_dimensions, show_roles),
-                                color=pred_mech_color, shape=mechanism_shape)
+                                color=pred_mech_color, shape=mechanism_shape, penwidth=pred_mech_width)
                         G.edge(self._get_label(mech, show_dimensions, show_roles),
                                recvr_label,
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
-                    pass
 
         # MAIN BODY OF METHOD:
 
@@ -4318,10 +4663,26 @@ class System(System_Base):
 
         system_graph = self.graph
         learning_graph=self.learningGraph
+
         if show_dimensions == True:
             show_dimensions = ALL
         if show_processes:
             show_headers = False
+
+        if not active_items:
+            active_items = []
+        elif active_items is INITIAL_FRAME:
+            active_items = [INITIAL_FRAME]
+        elif not isinstance(active_items, Iterable):
+            active_items = [active_items]
+        elif not isinstance(active_items, list):
+            active_items = list(active_items)
+        for item in active_items:
+            if not isinstance(item, Component) and item is not INITIAL_FRAME:
+                raise SystemError("PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                                  format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+
+        self.active_item_rendered = False
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
@@ -4348,8 +4709,9 @@ class System(System_Base):
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
-        bold_width = '3'
-        default_width = '1'
+        bold_width = 3
+        default_width = 1
+        active_thicker_by = 2
 
         pos = None
 
@@ -4372,7 +4734,7 @@ class System(System_Base):
                     # 'shape':mechanism_shape,
                     'shape':'record',
                     'color':default_node_color,
-                    'penwidth':default_width
+                    'penwidth':str(default_width)
                 },
                 edge_attr  = {
                     # 'arrowhead':'halfopen',
@@ -4391,7 +4753,7 @@ class System(System_Base):
         # learning_rcvrs = list(learning_graph.keys())
         learning_rcvrs = self.learning_execution_list
 
-        # MANAGE ProcessMechanisms
+        # MANAGE ProcessingMechanisms and LearningMechanisms
 
         # if show_processes is specified, create subgraphs for each Process
         if show_processes:
@@ -4434,7 +4796,6 @@ class System(System_Base):
                             else:
                                 processes = l.processes
                             intersection = [p for p in self.processes if p in processes]
-                            # if [p for p in self.processes if p in processes]:
                             # If the Component is in only one Process, add it to the subgraph for that Process
                             if len(intersection)==1:
                                 if process in processes:
@@ -4475,14 +4836,6 @@ class System(System_Base):
                     #     break
                     _assign_learning_components(G, G, learning_graph, rcvr)
 
-        # MANAGE LEARNING Components
-
-        # # Add learning-related Components to graph if show_learning
-        # if show_learning:
-        #     rcvrs = list(learning_graph.keys())
-        #     for rcvr in rcvrs:
-        #         _assign_learning_components(G, rcvr)
-
         # MANAGE CONTROL Components
 
         # Add control-related Components to graph if show_control
@@ -4497,9 +4850,62 @@ class System(System_Base):
             else:
                 _assign_control_components(G, G)
 
-        # return
+        # GENERATE OUTPUT
+
+        # Show as pdf
         if output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
+            # G.format = 'svg'
+            G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+
+        # Generate images for animation
+        elif output_fmt == 'gif':
+            if self.active_item_rendered or INITIAL_FRAME in active_items:
+                G.format = 'gif'
+                if INITIAL_FRAME in active_items:
+                    time_string = ''
+                    phase_string = ''
+                elif self.context.execution_phase == ContextFlags.PROCESSING:
+                    # time_string = repr(self.scheduler_processing.clock.simple_time)
+                    time = self.scheduler_processing.clock.time
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                        format(time.run, time.trial, time.pass_, time.time_step)
+                    phase_string = 'Processing Phase - '
+                elif self.context.execution_phase == ContextFlags.LEARNING:
+                    time = self.scheduler_learning.clock.time
+                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
+                        format(time.run, time.trial, time.pass_, time.time_step)
+                    phase_string = 'Learning Phase - '
+                elif self.context.execution_phase == ContextFlags.CONTROL:
+                    time_string = ''
+                    phase_string = 'Control phase'
+                else:
+                    raise SystemError("PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
+                G.attr(label=label)
+                G.attr(labelloc='b')
+                G.attr(fontname='Helvetica')
+                G.attr(fontsize='14')
+                if INITIAL_FRAME in active_items:
+                    index = '-'
+                else:
+                    index = repr(self._component_execution_count)
+                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
+                image_file = self._animate_directory + '/' + image_filename + '.gif'
+                G.render(filename = image_filename,
+                         directory=self._animate_directory,
+                         cleanup=True,
+                         # view=True
+                         )
+                # Append gif to self._animation
+                image = Image.open(image_file)
+                if not self._save_images:
+                    remove(image_file)
+                if not hasattr(self, '_animation'):
+                    self._animation = [image]
+                else:
+                    self._animation.append(image)
+
+        # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
 
@@ -4524,7 +4930,7 @@ class SystemInputState(OutputState):
 
     A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
     *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
-    in `target_mechanisms <System.target_mechanisms>`.  A `MappingProjection` is created that projects to each
+    in `target_nodes <System.target_nodes>`.  A `MappingProjection` is created that projects to each
     of these InputStates from the corresponding SystemInputState.  When the System's `execute <System.execute>` or
     `run <System.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
     the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the
@@ -4551,3 +4957,5 @@ class SystemInputState(OutputState):
         self.owner = owner
         self.value = variable
 
+        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.defaults = Defaults(owner=self, variable=variable, value=variable)

@@ -34,8 +34,8 @@ Understanding a few basic concepts about how the :keyword:`run` function operate
 
 .. _Run_Scope_of_Execution:
 
-Scope of Execution
-~~~~~~~~~~~~~~~~~~
+*Scope of Execution*
+~~~~~~~~~~~~~~~~~~~~
 
 When the :keyword:`run` method of a Component is called, it executes that Component and all others within its scope of
 execution.  For a `Mechanism <Mechanism>`, the scope of execution is simply the Mechanism itself.  For a `Process`,
@@ -45,8 +45,8 @@ all of the Mechanisms in the Processes specified in the System's `processes <Sys
 
 .. _Run_Timing:
 
-Timing
-~~~~~~
+*Timing*
+~~~~~~~~
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
 `input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
@@ -57,8 +57,8 @@ with `Condition` specifications for individual Components to execute different C
 
 .. _Run_Inputs:
 
-Inputs
-~~~~~~
+*Inputs*
+~~~~~~~~
 
 The :keyword:`run` function presents the inputs for each `TRIAL` to the input_states of the relevant Mechanisms in
 the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
@@ -205,8 +205,7 @@ Shorthand - drop the outer list on each input because **Mechanism a** only has o
         s.run(inputs=input_dictionary)
 ..
 
-Shorthand - drop the remaining list on each input because **Mechanism a**'s `external_input_values
-    <MechanismBase.external_input_values>` is length 1:
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one input state's value is length 1:
 
 ::
 
@@ -326,8 +325,8 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
 
 .. _Run_Runtime_Parameters:
 
-Runtime Parameters
-~~~~~~~~~~~~~~~~~~
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
 
 Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
 specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
@@ -398,8 +397,8 @@ the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was 
 COMMENT:
 .. _Run_Initial_Values:
 
-Initial Values
-~~~~~~~~~~~~~~
+*Initial Values*
+~~~~~~~~~~~~~~~~
 
 Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
 System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
@@ -413,8 +412,8 @@ COMMENT
 
 .. _Run_Targets:
 
-Targets
-~~~~~~~
+*Targets*
+~~~~~~~~~
 
 If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
 target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
@@ -812,9 +811,12 @@ def run(obj,
     # EXECUTE
     execution_inputs = {}
     execution_targets = {}
+
+    execution_id = _get_unique_id()
+
     for execution in range(num_trials):
 
-        execution_id = _get_unique_id()
+        # execution_id = _get_unique_id()
 
         if call_before_trial:
             call_before_trial()
@@ -828,7 +830,7 @@ def run(obj,
 
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when"):
+                if hasattr(mechanism, "reinitialize_when") and mechanism.has_initializers:
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
                         mechanism.reinitialize(None)
 

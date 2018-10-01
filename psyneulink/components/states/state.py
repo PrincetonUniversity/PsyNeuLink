@@ -112,8 +112,8 @@ COMMENT
 
 .. _State_Specification:
 
-Specifying a State
-~~~~~~~~~~~~~~~~~~
+*Specifying a State*
+~~~~~~~~~~~~~~~~~~~~
 
 A State can be specified using any of the following:
 
@@ -210,8 +210,8 @@ A State can be specified using any of the following:
 
 .. _State_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a State is created, it can be assigned one or more `Projections <Projection>`, in either the **projections**
 argument of its constructor, or a *PROJECTIONS* entry of a `State specification dictionary
@@ -256,8 +256,8 @@ assigned to it.
 
 .. _State_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a State is created on its own, and its `owner <State_Owner>` Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is `deferred <State_Deferred_Initialization>`.
@@ -274,8 +274,8 @@ Structure
 
 .. _State_Owner:
 
-Owner
-~~~~~
+*Owner*
+~~~~~~~
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
 owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
@@ -288,8 +288,8 @@ assigned to the specified Mechanism).  If the **owner** argument is not specifie
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner using the owner's `add_states
 <Mechanism_Base.add_states>` method.
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 Every State has attributes that lists the `Projections <Projection>` it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the `table <State_Projections_Table>`):
@@ -309,8 +309,8 @@ In addition to these attributes, all of the Projections sent and received by a S
 <State_Base.projections>` attribute.
 
 
-Variable, Function and Value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Variable, Function and Value*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
@@ -338,8 +338,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 
 .. _State_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
 <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal <ModulatorySignal>`
@@ -732,24 +732,18 @@ Class Reference
 import inspect
 import numbers
 import warnings
+
 from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+from psyneulink.components.component import Component, ComponentError, DefaultsFlexibility, Param, component_keywords, function_type, method_type
 from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
     ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
-    CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
-    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING_PROJECTION_PARAMS, \
-    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
-    NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, \
-    PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, \
-    STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
-    VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1000,8 +994,8 @@ class State_Base(State):
     suffix = " " + className
     paramsType = None
 
-    class ClassDefaults(State.ClassDefaults):
-        function = Linear
+    class Params(State.Params):
+        function = Param(Linear, stateful=False, loggable=False)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -1142,10 +1136,8 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context & ContextFlags.COMMAND_LINE:
-            state_list = getattr(owner, owner.stateListAttr[self.__class__])
-            if state_list and not self in state_list:
-                owner.add_states(self)
+        if context == ContextFlags.COMMAND_LINE:
+            owner.add_states([self])
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1544,6 +1536,8 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
 
+            self.owner._projection_added(projection, context)
+
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
@@ -1826,7 +1820,8 @@ class State_Base(State):
             #    and assigned Projection to self.efferents
             if not projection in self.efferents:
                 self.efferents.append(projection)
-
+            if isinstance(projection, ModulatoryProjection_Base):
+                self.owner.aux_components.append(projection)
             return projection
 
     def _get_primary_state(self, mechanism):
@@ -1930,7 +1925,6 @@ class State_Base(State):
         variable = []
         # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
-
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
             # Get sender's execution id
@@ -2103,6 +2097,24 @@ class State_Base(State):
 
     def _assign_default_state_name(self, context=None):
         return False
+
+    def get_input_struct_type(self):
+        return self.function_object.get_input_struct_type()
+
+    def get_output_struct_type(self):
+        return self.function_object.get_output_struct_type()
+
+    def get_param_struct_type(self):
+        return self.function_object.get_param_struct_type()
+
+    def get_param_initializer(self):
+        return self.function_object.get_param_initializer()
+
+    def get_context_struct_type(self):
+        return self.function_object.get_context_struct_type()
+
+    def get_context_initializer(self):
+        return self.function_object.get_context_initializer()
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
@@ -2296,7 +2308,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     Returns a State or None
     """
-
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     from psyneulink.globals.utilities import is_numeric
@@ -2687,6 +2698,7 @@ def _parse_state_spec(state_type=None,
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
             if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
+            # if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value
             else:
@@ -2910,6 +2922,9 @@ def _parse_state_spec(state_type=None,
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
     # FIX:    OR VARIABLE MUST BE WRAPPED IN A LIST, ELSE LINEAR COMB MAY TREAT A 2D ARRAY
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
+    # KDM 6/7/18: below this can end up assigning to the state a variable of the same shape as a default function
+    #   (because when calling the function, _check_args is called and if given None, will fall back to instance or
+    #   class defaults)
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):

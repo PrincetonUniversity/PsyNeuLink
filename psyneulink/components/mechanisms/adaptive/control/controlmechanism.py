@@ -41,8 +41,8 @@ COMMENT
 
 .. _ControlMechanism_System_Controller:
 
-ControlMechanisms and a System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ControlMechanisms and a System*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlMechanism can be assigned to `Process` and executed within one or more Systems, just like any other Mechanism.
 It also be assigned as the `controller <System.controller>` of a `System`, that has a special relation to the System:
@@ -81,8 +81,8 @@ automatically, as described below.
 
 .. _ControlMechanism_ObjectiveMechanism:
 
-ObjectiveMechanism
-~~~~~~~~~~~~~~~~~~
+*ObjectiveMechanism*
+~~~~~~~~~~~~~~~~~~~~
 
 Whenever a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that monitors and evaluates
 the `value <OutputState.value>`\\(s) of a set of `OutputState(s) <OutputState>`; this evaluation is used to determine
@@ -150,8 +150,8 @@ OutputStates to be monitored can also be added to an existing ControlMechanism b
 
 .. _ControlMechanism_Control_Signals:
 
-Specifying Parameters to Control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying Parameters to Control*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlMechanism is used to control the parameter values of other `Components <Component>`.  A `ControlSignal` is
 assigned for each parameter controlled by a ControlMechanism, and a `ControlProjection` is assigned from each
@@ -189,8 +189,8 @@ Structure
 
 .. _ControlMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
 input to the ControlMechanism's `function <ControlMechanism.function>`, that determines the ControlMechanism's
@@ -208,8 +208,8 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 
 .. _ControlMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
 *ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism.allocation_policy>`.  By
@@ -221,8 +221,8 @@ default, each item of the `allocation_policy <ControlMechanism.allocation_policy
 
 .. _ControlMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 A ControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
@@ -263,7 +263,7 @@ subsequent `TRIAL` of execution.
 .. _ControlMechanism_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
@@ -336,6 +336,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -350,7 +351,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PRO
     MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, CNodeRole
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -551,27 +552,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class _DefaultsAliases(AdaptiveMechanism_Base._DefaultsAliases):
-        # alias allocation_policy to value for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation_policy(self):
-            return self.value
-
-        @allocation_policy.setter
-        def allocation_policy(self, value):
-            self.value = value
-
-    class _DefaultsMeta(AdaptiveMechanism_Base._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
+    class Params(AdaptiveMechanism_Base.Params):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.atleast_2d(defaultControlAllocation)
-        value = np.array(defaultControlAllocation)
-
-    class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
-        pass
+        variable = np.array([defaultControlAllocation])
+        value = Param(np.array(defaultControlAllocation), aliases='allocation_policy')
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -777,7 +761,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
-
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
@@ -802,11 +785,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        MappingProjection(sender=self.objective_mechanism,
-                          receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX,
-                          name=name)
-
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      name=name)
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
+        self.aux_components.append((self.objective_mechanism, CNodeRole.OBJECTIVE))
+        self.aux_components.append(projection_from_objective)
         self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
@@ -867,6 +853,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,

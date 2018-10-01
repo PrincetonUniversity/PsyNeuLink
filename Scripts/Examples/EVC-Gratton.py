@@ -128,7 +128,7 @@ mySystem = pnl.System(
         FlankerAutomaticProcess,
         RewardProcess
     ],
-    controller=pnl.EVCControlMechanism,
+    controller=pnl.EVCControlMechanism(name='Task Controller'),
     enable_controller=True,
     monitor_for_control=[
         Reward,
@@ -144,8 +144,9 @@ mySystem.show()
 mySystem.controller.show()
 
 # Show graph of system (with control components)
+# mySystem.show_graph()
 # mySystem.show_graph(show_dimensions=pnl.ALL, show_projection_labels=True)
-mySystem.show_graph(show_control=True, show_projection_labels=False)
+# mySystem.show_graph(show_control=True, show_projection_labels=False)
 # mySystem.show_graph(show_control=True, show_processes=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False, show_processes=True)
@@ -198,9 +199,11 @@ mySystem.controller.reportOutputPref = True
 Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextFlags.CONTROL))
 
 mySystem.run(
-    num_trials=nTrials,
-    inputs=stim_list_dict,
+        num_trials=nTrials,
+        inputs=stim_list_dict,
+        animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
 )
+
 
 Flanker_Rep.log.print_entries()
 

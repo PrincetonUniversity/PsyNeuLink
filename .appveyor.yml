@@ -1,0 +1,49 @@
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
+version: '{build}'
+clone_depth: 25
+
+init:
+- cmd: ''
+
+environment:
+  PATH: '%PYTHON%\Scripts;%PATH%'
+  matrix:
+#  - PYTHON: C:\Python35
+#    MARK: -m llvm
+#  - PYTHON: C:\Python36
+#    MARK: -m llvm
+#  - PYTHON: C:\Python37
+#    MARK: -m llvm
+  - PYTHON: C:\Python35-x64
+    PYTORCH: cp35-cp35m
+  - PYTHON: C:\Python36-x64
+    PYTORCH: cp36-cp36m
+  - PYTHON: C:\Python37-x64
+    PYTORCH: cp37-cp37m
+
+install:
+  - choco upgrade graphviz.portable -y
+  - pip --version
+  - pip install -U certifi pip
+  - pip install git+https://github.com/benureau/leabra.git@master
+
+  # pytorch does not distribute packages over pypi. Install it directly.
+  - if not "%PYTORCH%" == "" pip install http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
+
+  # Remove pytorch from requirements if none is available
+  - if "%PYTORCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt)
+
+  - pip install -e .[dev]
+
+cache:
+    - '%PYTHON%\Scripts'
+    - '%PYTHON%\lib\site-packages'
+
+build: off
+
+test_script:
+- cmd: pytest --cov=psyneulink tests/ %MARK%

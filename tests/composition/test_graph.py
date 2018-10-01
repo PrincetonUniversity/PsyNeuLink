@@ -1,6 +1,9 @@
 import pytest
+import numpy as np
 
-from psyneulink.compositions.composition import Graph, Vertex
+from psyneulink.compositions.composition import Graph, Vertex, Composition
+from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 
 
 class TestGraph:

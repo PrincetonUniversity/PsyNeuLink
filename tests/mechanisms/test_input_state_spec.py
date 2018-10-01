@@ -588,8 +588,8 @@ class TestInputStateSpec:
         T1 = TransferMechanism()
         T2 = TransferMechanism()
         InputState(owner=T2, projections=[T1])
-        assert T2.input_states[1].path_afferents[0].sender.owner is T1
 
+        assert T2.input_states[1].path_afferents[0].sender.owner is T1
     # ------------------------------------------------------------------------------------------------
     # TEST 29
 

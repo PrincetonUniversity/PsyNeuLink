@@ -42,8 +42,8 @@ that projects from the GatingMechanism to the specified target
 
 .. _GatingMechanism_Specifying_Gating:
 
-Specifying gating
-~~~~~~~~~~~~~~~~~
+*Specifying gating*
+~~~~~~~~~~~~~~~~~~~
 
 GatingMechanism are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
@@ -87,16 +87,16 @@ Structure
 
 .. _GatingMechanism_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 By default, a GatingMechanism has a single `InputState`, the `value <InputState.value>` of which is used
 as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 
 .. _GatingMechanism_Function:
 
-Function
-~~~~~~~~
+*Function*
+~~~~~~~~~~
 
 A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its `primary
 InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`.  The default
@@ -108,8 +108,8 @@ is assigned more than one `GatingSignal`.
 
 .. _GatingMechanism_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
 <GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
@@ -172,9 +172,7 @@ from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSi
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import \
-    GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
-    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
+from psyneulink.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -367,7 +365,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
+    class Params(AdaptiveMechanism_Base.Params):
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
 

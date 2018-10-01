@@ -36,8 +36,8 @@ components and requirements for configuration that must be met for it to functio
 
 .. _ControlSignal_Specification:
 
-Specifying ControlSignals
-~~~~~~~~~~~~~~~~~~~~~~~~~
+*Specifying ControlSignals*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
@@ -79,8 +79,8 @@ that are described below.
 
 .. _ControlSignal_Projections:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
 the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
@@ -97,8 +97,8 @@ creating a State.
 
 .. _ControlSignal_Modulation:
 
-Modulation
-~~~~~~~~~~
+*Modulation*
+~~~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
 `value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \\s
@@ -113,8 +113,8 @@ all of the `ControlProjections <ControlProjection>` that project from that Contr
 
 .. _ControlSignal_Allocation_and_Intensity
 
-Allocation, Function and Intensity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Allocation, Function and Intensity*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
 which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
@@ -141,8 +141,8 @@ its value from the previous `TRIAL` is assigned to the `last_intensity` attribut
 
 .. _ControlSignal_Costs:
 
-Costs and Cost Functions
-~~~~~~~~~~~~~~~~~~~~~~~~
+*Costs and Cost Functions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
 belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
@@ -210,7 +210,7 @@ evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust
 .. _ControlSignal_Examples:
 
 Examples
-~~~~~~~~
+--------
 
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
@@ -291,12 +291,13 @@ Class Reference
 
 import inspect
 import warnings
+
 from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type, method_type
+from psyneulink.components.component import Param, function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -307,10 +308,10 @@ from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.globals.utilities import get_validator_by_function, get_validator_by_type_only, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -615,26 +616,25 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    class _DefaultsAliases(ModulatorySignal._DefaultsAliases):
-        # alias allocation to variable for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation(self):
-            return self.variable
+    class Params(ModulatorySignal.Params):
+        variable = Param(np.array(defaultControlAllocation), aliases='allocation')
+        allocation_samples = Param(np.arange(0.1, 1.01, 0.3), modulable=True)
+        cost_options = ControlSignalCosts.DEFAULTS
+        intensity_cost_function = Exponential
+        adjustment_cost_function = Linear
+        duration_cost_function = SimpleIntegrator
+        cost_combination_function = Reduce(operation=SUM)
+        modulation = None
 
-        @allocation.setter
-        def allocation(self, value):
-            self.variable = value
+        _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
+        _validate_intensity_cost_function = get_validator_by_function(is_function_type)
+        _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
+        _validate_duration_cost_function = get_validator_by_function(is_function_type)
 
-    class _DefaultsMeta(ModulatorySignal._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(ModulatorySignal.ClassDefaults, metaclass=_DefaultsMeta):
-        variable = defaultControlAllocation
-        allocation_samples = np.arange(0.1, 1.01, 0.3)
-
-    class InstanceDefaults(ModulatorySignal.InstanceDefaults, _DefaultsAliases):
-        pass
+        # below cannot validate because the default value is None and this is considered
+        # invalid. Is it that tc.typecheck only runs if an argument is specified at
+        # construction?
+        # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
     stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
 
@@ -673,7 +673,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=ClassDefaults.allocation_samples,
+                 allocation_samples=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,

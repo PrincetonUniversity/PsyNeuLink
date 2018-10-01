@@ -44,7 +44,8 @@ class TestContrastiveHebbian:
                 enable_learning=True,
                 function=pnl.Linear,
                 learning_function=pnl.Hebbian,
-                convergence_criterion=.01,
+                minus_phase_termination_criterion=.01,
+                plus_phase_termination_criterion=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )
@@ -108,7 +109,8 @@ class TestContrastiveHebbian:
                 integrator_mode=True,
                 integration_rate=0.2,
                 learning_function=pnl.Hebbian,
-                convergence_criterion=.01,
+                minus_phase_termination_criterion=.01,
+                plus_phase_termination_criterion=.01,
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )
@@ -118,7 +120,7 @@ class TestContrastiveHebbian:
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
-        assert R.current_execution_time.pass_ == 19
+        assert R.current_execution_time.pass_ == 18
         np.testing.assert_allclose(R.output_states[pnl.ACTIVITY_DIFFERENCE_OUTPUT].value,
                                    [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.plus_phase_activity, [1.14142296, 0.0, 1.14142296, 0.0])

@@ -68,8 +68,8 @@ The DDM Mechanism implements a general form of the decision process.
 
 .. _DDM_Input:
 
-Input
-~~~~~
+*Input*
+~~~~~~~
 
 The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
 <DDM_Modes>` that is used.  Accordingly, the default `InputState` for a DDM takes a single scalar value as its input,
@@ -95,8 +95,8 @@ COMMENT
 
 .. _DDM_Output:
 
-Output
-~~~~~~
+*Output*
+~~~~~~~~
 
 The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
@@ -148,8 +148,8 @@ OutputStates <OutputState_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
-DDM Function Types
-~~~~~~~~~~~~~~~~~~
+*DDM Function Types*
+~~~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
@@ -335,7 +335,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import method_type
+from psyneulink.components.component import Param, method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -703,14 +703,19 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        function = BogaczEtAl(
-            drift_rate=1.0,
-            starting_point=0.0,
-            threshold=1.0,
-            noise=0.5,
-            t0=.200,
+    class Params(ProcessingMechanism_Base.Params):
+        function = Param(
+            BogaczEtAl(
+                drift_rate=1.0,
+                starting_point=0.0,
+                threshold=1.0,
+                noise=0.5,
+                t0=.200,
+            ),
+            stateful=False,
+            loggable=False
         )
+        initializer = np.array([[0]])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

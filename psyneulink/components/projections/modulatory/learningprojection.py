@@ -46,8 +46,8 @@ to a `LearningSignal` of the `LearningMechanism` for the MappingProjection. If t
 
 .. _LearningProjection_Deferred_Initialization:
 
-Deferred Initialization
-~~~~~~~~~~~~~~~~~~~~~~~
+*Deferred Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
@@ -67,8 +67,8 @@ Structure
 
 .. _LearningProjection_Sender:
 
-Sender
-~~~~~~
+*Sender*
+~~~~~~~~
 
 The `sender <LearningProjection.sender>` of a LearningProjection is a `LearningSignal` of a `LearningMechanism`,
 The `value <LearningSignal.value>` of the `sender <LearningProjection.sender>` -- a matrix of weight changes --
@@ -78,8 +78,8 @@ is used by the LearningProjection as its `variable <LearningProjection.variable>
 
 .. _LearningProjection_Function_and_Learning_Rate:
 
-Function and learning_rate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Function and learning_rate*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The default `function <LearningProjection.function>` of a LearningProjection is an identity function (`Linear` with
 **slope**\\ =1 and **intercept**\\ =0).  However, its result can be modified by the LearningProjection's `learning_rate
@@ -104,8 +104,8 @@ over the direct specification of the `learning_rate <LearningProjection.learning
 
 .. _Learning_Weight_Exponent:
 
-Weight and Exponent
-~~~~~~~~~~~~~~~~~~~
+*Weight and Exponent*
+~~~~~~~~~~~~~~~~~~~~~
 
 Every LearningProjection has a `weight <LearningProjection.weight>` and `exponent <LearningProjection.exponent>`
 attribute that are applied to its `value <LearningProjection.value>` before it is combined  with other
@@ -124,8 +124,8 @@ additional details).
 
 .. _LearningProjection_Receiver:
 
-Receiver
-~~~~~~~~
+*Receiver*
+~~~~~~~~~~
 
 The `receiver <LearningProjection.receiver>` of a LearningProject is the *MATRIX* `ParameterState` of a
 `MappingProjection`, that uses the `weight_change_matrix <LearningProjection.weight_change_matrix>` provided by the
@@ -165,7 +165,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -404,8 +404,11 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        function = Linear
+    class Params(ModulatoryProjection_Base.Params):
+        function = Param(Linear, stateful=False, loggable=False)
+        error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
+        learning_function = Param(BackPropagation, stateful=False, loggable=False)
+        learning_rate = Param(None, modulable=True)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -601,7 +604,7 @@ class LearningProjection(ModulatoryProjection_Base):
             #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
         learned_projection.learning_mechanism = learning_mechanism
-        learned_projection.has_learning_projection = True
+        learned_projection.has_learning_projection = self
 
     def _execute(self, variable, runtime_params=None, context=None):
         """

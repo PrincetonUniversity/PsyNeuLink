@@ -26,15 +26,15 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM',
-    'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE','ASSERT',
+    'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE',
     'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
-    'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'ASSIGN', 'CHANGED', 'CLAMP_INPUT',
+    'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'BOLD', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
-    'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
+    'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM',
     'CONDITION', 'CONSTANT', 'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
-    'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS',
-    'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION', 'COST_FUNCTION', 'CROSS_ENTROPY',
+    'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
+    'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
     'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
@@ -45,38 +45,41 @@ __all__ = [
     'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
     'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
     'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_PHASE', 'EXECUTION_TIME',
-    'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
+    'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
-    'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING',
-    'GATING_MECHANISM', 'GATING_POLICY', 'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
-    'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GILZENRAT_INTEGRATOR_FUNCTION', 'HARD_CLAMP',
-    'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION',
+    'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING', 'GATING_MECHANISM', 'GATING_POLICY',
+    'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
+    'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GAUSSIAN', 'GILZENRAT_INTEGRATOR_FUNCTION',
+    'HARD_CLAMP', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT__EXECUTE__METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
     'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
-    'INPUTS_DIM', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE',
-    'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'kpMechanismControlAllocationsLogEntry',
-    'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry', 'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry',
-    'kwAddInputState', 'kwAddOutputState', 'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet',
-    'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
-    'kwMechanismComponentCategory', 'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue',
-    'kwMechanismDefaultParams', 'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
+    'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
+    'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
+    'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
+    'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
+    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
+    'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
+    'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction', 'kwMechanismComponentCategory',
+    'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue', 'kwMechanismDefaultParams',
+    'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
     'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
     'kwMechanismParamValue', 'kwMechanismPerformance', 'kwMechanismTerminateFunction', 'kwMechanismType', 'kwParams',
     'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
-    'LCA_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
+    'kwSystemComponentCategory', 'kwThreshold',
+    'LABELS', 'LCA_MECHANISM', 'LEARNED_PARAM', 'LEARNING',
+    'LCAMechanism_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES',
     'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
-    'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
+    'CNodeRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
     'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
@@ -89,10 +92,10 @@ __all__ = [
     'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM',
     'PRODUCT', 'PROJECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
     'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
-    'BUFFER_FUNCTION', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RELU_FUNCTION', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
-    'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR',
-    'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE',
-    'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
+    'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'RELU_FUNCTION', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION',
+    'RUN', 'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR',
+    'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
+    'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
     'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
     'SYSTEM_INIT', 'TARGET', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
@@ -103,7 +106,7 @@ __all__ = [
 ]
 
 
-class MechanismRoles:
+class CNodeRoles:
     """
     Attributes
     ----------
@@ -159,7 +162,7 @@ class MechanismRoles:
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
         associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
-        System are listed in its :keyword:`target_mechanisms` attribute, and can be displayed using its
+        System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
 
@@ -370,7 +373,8 @@ CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
 STATEFUL_ATTRIBUTES = 'stateful_attributes'
-
+COUNT = 'COUNT'
+BOLD = 'bold'
 
 #endregion
 
@@ -418,6 +422,8 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
+COMPONENT = 'COMPONENT'
+
 # Standard arg / attribute names:
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
@@ -455,7 +461,7 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
-FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
+FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type
 
 #endregion
 
@@ -479,6 +485,7 @@ LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
+KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -516,6 +523,8 @@ DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 NORMALIZING_FUNCTION_TYPE = "NORMALIZING FUNCTION TYPE"
+INTERFACE_FUNCTION_TYPE = "INTERFACE FUNCTION TYPE"
+SELECTION_FUNCTION_TYPE = "SELECTION FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
@@ -534,8 +543,9 @@ TRANSFER_MECHANISM = "TransferMechanism"
 LEABRA_MECHANISM = "LeabraMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 CONTRASTIVE_HEBBIAN_MECHANISM = "ContrastiveHebbianMechanism"
-LCA = "LCA"
-KWTA = "KWTA"
+LCA_MECHANISM = "LCAMechanism"
+KOHONEN_MECHANISM = 'KohonenMechanism'
+KWTA_MECHANISM = "KWTAMechanism"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
@@ -563,19 +573,21 @@ ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
 UTILITY_INTEGRATOR_FUNCTION = "AGTUtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
-LCA_INTEGRATOR_FUNCTION = 'LCAIntegrator Function'
+LCAMechanism_INTEGRATOR_FUNCTION = 'LCAIntegrator Function'
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
-CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbianFunction'
+CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
+KOHONEN_FUNCTION = 'Kohonen Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
-
+IDENTITY_FUNCTION = 'Identity Function'
+STATE_MAP_FUNCTION = 'State Map Function'
 # Distribution functions
 
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"
@@ -712,6 +724,7 @@ MODULATION = 'modulation'
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
 LEARNED_PARAM = 'learned_param'
+LEARNED_PROJECTION = 'learned_projection'
 
 # ControlMechanism / EVCControlMechanism
 OBJECTIVE_MECHANISM = "objective_mechanism"
@@ -814,7 +827,7 @@ HETERO = 'hetero'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
-FUNCTION_OUTPUT_TYPE = 'functionOutputType'
+FUNCTION_OUTPUT_TYPE = 'output_type'
 
 COMBINE = 'combine'
 SUM = 'sum'
@@ -844,6 +857,9 @@ INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 DECAY = 'decay'
+INTEGRATOR_MODE_VALUE = "integrator_mode_value"
+INSTANTANEOUS_MODE_VALUE = "instantaenous_mode_value"
+REINITIALIZE = "reinitialize"
 
 LOW = 'low'
 HIGH = 'high'
@@ -882,6 +898,9 @@ CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
+EXPONENTIAL = 'exponential'
+GAUSSIAN = 'gaussian'
+SINUSOID = 'sinusoid'
 
 REWARD = 'reward'
 NETWORK = 'network'
