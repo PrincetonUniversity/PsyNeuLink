@@ -2911,7 +2911,7 @@ class Composition(Composition_Base):
                 incoming_projections = []
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
-                incoming_projections = mech.path_afferents
+                incoming_projections = mech.afferents
 
             # Run all incoming projections
             #TODO: This should filter out projections with different execution ID

@@ -21,7 +21,6 @@ class TestControlMechanisms:
         c = pnl.Composition()
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
-        c._analyze_graph()
         lvoc = pnl.LVOCControlMechanism(composition=c,
                                         input_states=pnl.ORIGIN_MECHANISMS,
                                         monitor_for_control=[m1, m2],
@@ -37,7 +36,9 @@ class TestControlMechanisms:
         for i in range(len(passes)):
             for node in passes[i]:
                 c.scheduler_processing.add_condition(node, pnl.AtPass(i))
-        # print(c.scheduler_processing.consideration_queue)
+        c.add_required_c_node_role(lvoc.objective_mechanism, pnl.CNodeRole.TERMINAL)
+        c._analyze_graph()
+        print(c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL))
         c.run(inputs=input_dict)
 
     def test_default_lc_control_mechanism(self):
@@ -67,6 +68,7 @@ class TestControlMechanisms:
         S = pnl.Composition()
         S.add_c_node(A, required_roles=pnl.CNodeRole.ORIGIN)
         S.add_linear_processing_pathway(pathway=path)
+        S.add_c_node(LC, required_roles=pnl.CNodeRole.TERMINAL)
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_state_1 = []
