@@ -456,7 +456,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
 
         When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as origin. The origin role is deferred to the next node(s) in the graph.
+        ObjectiveMechanism is not marked as origin. If the ObjectiveMechanism was the only origin node, then the user
+        must use required_roles to assign the origin role to another node.
 
         When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
         normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
@@ -466,8 +467,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
 
         When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as terminal. The terminal role is deferred to the previous node(s) in the
-        graph.
+        ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
+        user must use required_roles to assign the terminal role to another node.
 
         When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
         normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
@@ -514,7 +515,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
 
         When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as origin. The origin role is deferred to the next node(s) in the graph.
+        ObjectiveMechanism is not marked as origin. If the ObjectiveMechanism was the only origin node, then the
+        user must use required_roles to assign the origin role to another node.
 
         When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
         normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
@@ -524,8 +526,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
 
         When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as terminal. The terminal role is deferred to the previous node(s) in the
-        graph.
+        ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
+        user must use required_roles to assign the terminal role to another node.
 
         When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
         normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
