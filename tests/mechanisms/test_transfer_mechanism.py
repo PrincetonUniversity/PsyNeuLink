@@ -52,6 +52,7 @@ class TestTransferMechanismInputs:
         val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
@@ -154,6 +155,7 @@ class TestTransferMechanismNoise:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise")
@@ -221,6 +223,7 @@ class TestTransferMechanismNoise:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
@@ -465,6 +468,7 @@ class TestTransferMechanismFunctions:
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Logistic")
@@ -495,6 +499,7 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
@@ -525,6 +530,7 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
@@ -614,7 +620,7 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_llvm(self):
@@ -645,7 +651,7 @@ class TestTransferMechanismTimeConstant:
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
@@ -675,7 +681,7 @@ class TestTransferMechanismTimeConstant:
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
@@ -708,7 +714,7 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_initial_0_5_llvm(self):

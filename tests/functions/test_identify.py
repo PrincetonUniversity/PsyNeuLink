@@ -13,6 +13,7 @@ def test_basic(size, benchmark):
     res = benchmark(f.function, variable)
     assert np.allclose(res, variable)
 
+@pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.identity_function
 @pytest.mark.parametrize("size", [1, 2, 4, 8, 16])
