@@ -201,22 +201,9 @@ _cpu_engine = cpu_jit_engine
 class LLVMBinaryFunction:
     def __init__(self, name):
         self.__name = name
-        # Binary pointer.
-        self.ptr = _cpu_engine._engine.get_function_address(name)
+        self.__ptr = None
 
-    def __call__(self, *args, **kwargs):
-        return self.c_func(*args, **kwargs)
-
-    # This will be useful for non-native targets
-    @property
-    def ptr(self):
-        return self.__ptr
-
-    @ptr.setter
-    def ptr(self, ptr):
-        self.__ptr = ptr
-
-        # Recompiled, update the signature
+        # Function signature
         f = _find_llvm_function(self.__name, _compiled_modules)
         assert(isinstance(f, ir.Function))
 
@@ -235,7 +222,23 @@ class LLVMBinaryFunction:
             self.__byref_arg_types.append(byref_type)
             params.append(param_type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
-        self.__c_func = self.__c_func_type(self.__ptr)
+
+        # Binary pointer.
+        self.ptr = _cpu_engine._engine.get_function_address(name)
+
+    def __call__(self, *args, **kwargs):
+        return self.c_func(*args, **kwargs)
+
+    # This will be useful for non-native targets
+    @property
+    def ptr(self):
+        return self.__ptr
+
+    @ptr.setter
+    def ptr(self, ptr):
+        if self.__ptr != ptr:
+            self.__ptr = ptr
+            self.__c_func = self.__c_func_type(self.__ptr)
 
     @property
     def byref_arg_types(self):
