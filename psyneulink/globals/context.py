@@ -464,7 +464,12 @@ class Context():
 
     @property
     def execution_phase(self):
-        return self.flags & ContextFlags.EXECUTION_PHASE_MASK
+        v = self.flags & ContextFlags.EXECUTION_PHASE_MASK
+        if v == 0:
+            return ContextFlags.IDLE
+        else:
+            return v
+
 
     @execution_phase.setter
     def execution_phase(self, flag):
