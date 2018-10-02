@@ -87,8 +87,9 @@ import copy
 import inspect
 import logging
 import numbers
+import types
 import warnings
-
+import weakref
 from enum import Enum, EnumMeta, IntEnum
 
 import collections
@@ -98,7 +99,8 @@ from psyneulink.globals.keywords import \
     DISTANCE_METRICS, EXPONENTIAL,GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
+    'convert_all_elements_to_np_array', 'CNodeRole', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -109,7 +111,7 @@ __all__ = [
     'normpdf',
     'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
     'TEST_CONDTION', 'type_match',
-    'underscore_to_camelCase', 'UtilitiesError',
+    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
 
 logger = logging.getLogger(__name__)
@@ -185,7 +187,6 @@ class AutoNumber(IntEnum):
         obj = int.__new__(component_type)
         obj._value_ = value
         return obj
-
 
 # ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 
@@ -681,6 +682,138 @@ def get_deepcopy_with_shared_keys(shared_keys_iter):
         return result
 
     return __deepcopy__
+
+
+def get_alias_property_getter(name, attr=None):
+    if attr is not None:
+        def getter(obj):
+            return getattr(getattr(obj, attr), name)
+    else:
+        def getter(obj):
+            return getattr(obj, name)
+
+    return getter
+
+
+def get_alias_property_setter(name, attr=None):
+    if attr is not None:
+        def setter(obj, value):
+            setattr(getattr(obj, attr), name, value)
+    else:
+        def setter(obj, value):
+            setattr(obj, name, value)
+
+    return setter
+
+
+def get_validator_by_type_only(valid_types):
+    if not isinstance(valid_types, collections.Iterable):
+        valid_types = [valid_types]
+
+    def validator(self, value):
+        for t in valid_types:
+            if isinstance(value, t):
+                return None
+        else:
+            return 'valid types: {0}'.format(valid_types)
+
+    return validator
+
+
+def get_validator_by_function(function):
+    def validator(self, value):
+        if function(value):
+            return None
+        else:
+            return '{0} returned False'.format(function.__name__)
+
+    return validator
+
+
+class ParamsTemplate:
+    _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
+    _values_default_excluded_attrs = {'user': False}
+
+    def __init__(self, owner, parent=None):
+        # using weakref to allow garbage collection of unused objects of this type
+        self._owner = weakref.proxy(owner)
+        self._parent = parent
+        if isinstance(self._parent, ParamsTemplate):
+            # using weakref to allow garbage collection of unused children
+            self._parent._children.add(weakref.ref(self))
+
+        # create list of params currently existing
+        self._params = set()
+        try:
+            parent_keys = list(self._parent._params)
+        except AttributeError:
+            parent_keys = dir(type(self))
+        source_keys = dir(self) + parent_keys
+        for k in source_keys:
+            if self._is_parameter(k):
+                self._params.add(k)
+
+        self._children = set()
+
+    def __repr__(self):
+        return '{0} :\n{1}'.format(super().__repr__(), str(self))
+
+    def __str__(self):
+        return self.show()
+
+    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+
+    def __iter__(self):
+        return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
+
+    def _is_parameter(self, param_name):
+        if param_name[0] is '_':
+            return False
+        else:
+            try:
+                return not isinstance(getattr(self, param_name), (types.MethodType, types.BuiltinMethodType))
+            except AttributeError:
+                return True
+
+    def _register_parameter(self, param_name):
+        self._params.add(param_name)
+        to_remove = set()
+
+        for child in self._children:
+            if child() is None:
+                to_remove.add(child)
+            else:
+                child()._register_parameter(param_name)
+
+        for rem in to_remove:
+            self._children.remove(rem)
+
+    def values(self, show_all=False):
+        result = {}
+        for k in self._params:
+            val = getattr(self, k)
+
+            if show_all:
+                result[k] = val
+            else:
+                # exclude any values that have an attribute/value pair listed in ParamsTemplate._values_default_excluded_attrs
+                for excluded_key, excluded_val in self._values_default_excluded_attrs.items():
+                    try:
+                        if getattr(val, excluded_key) == excluded_val:
+                            break
+                    except AttributeError:
+                        pass
+                else:
+                    result[k] = val
+
+        return result
+
+    def show(self, show_all=False):
+        vals = self.values(show_all=show_all)
+        return '(\n\t{0}\n)'.format('\n\t'.join(sorted(['{0} = {1},'.format(k, vals[k]) for k in vals])))
+
+    def names(self, show_all=False):
+        return sorted([p for p in self.values(show_all)])
 
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
@@ -1336,3 +1469,100 @@ def prune_unused_args(func, args=None, kwargs=None):
 def call_with_pruned_args(func, *args, **kwargs):
     args, kwargs = prune_unused_args(func, args, kwargs)
     return func(*args, **kwargs)
+
+
+class CNodeRole(Enum):
+    """
+
+    - ORIGIN
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`, and
+        that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may have
+        only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN` Mechanism of a Process is not
+        necessarily an `ORIGIN` of the System to which it belongs, as it may receive `Projections <Projection>` from
+        other Processes in the System (see `example <LearningProjection_Target_vs_Terminal_Figure>`). The `ORIGIN`
+        Mechanisms of a Process or System are listed in its :keyword:`origin_nodes` attribute, and can be displayed
+        using its :keyword:`show` method.  For additional details about `ORIGIN` Mechanisms in Processes, see `Process
+        Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`; and for Systems see
+        `System Mechanisms <System_Mechanisms>` and `System Input and Initialization
+        <System_Execution_Input_And_Initialization>`.
+
+    - INTERNAL
+        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+
+    - CYCLE
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
+        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
+        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
+
+    - INITIALIZE_CYCLE
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
+        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
+        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
+        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
+        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    - TERMINAL
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
+        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
+        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
+        Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
+        as it may send Projections to other Processes in the System (see `example
+        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
+        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
+        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
+        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+
+    - SINGLETON
+        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
+
+    - MONITORED
+        .
+
+    - LEARNING
+        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
+
+    - TARGET
+        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
+        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
+        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
+        :keyword:`target_nodes` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        details, see `TARGET Mechanisms <LearningMechanism_Targets>`, `learning sequence <Process_Learning_Sequence>`,
+        and specifying `target values <Run_Targets>`.
+
+    - RECURRENT_INIT
+        .
+
+
+    """
+    ORIGIN = 0
+    INTERNAL = 1
+    CYCLE = 2
+    INITIALIZE_CYCLE = 3
+    TERMINAL = 4
+    SINGLETON = 5
+    MONITORED = 6
+    LEARNING = 7
+    TARGET = 8
+    RECURRENT_INIT = 9
+    OBJECTIVE = 10
+
+
+def parse_execution_context(execution_context):
+    try:
+        return execution_context.default_execution_id
+    except AttributeError:
+        return execution_context
+
+
+def unproxy_weakproxy(proxy):
+    """
+        Returns the actual object weak-referenced by a weakproxy.proxy object
+        Much like
+            >>> a = weakref.ref(b)
+            >>> a() is b
+            True
+    """
+    return proxy.__repr__.__self__

@@ -15,6 +15,7 @@
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import SystemDefaultInputValue
@@ -55,10 +56,9 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(Mechanism_Base.ClassDefaults):
+    class Params(Mechanism_Base.Params):
         variable = np.array([SystemDefaultInputValue])
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION: Linear,

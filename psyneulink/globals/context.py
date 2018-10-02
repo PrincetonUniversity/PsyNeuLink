@@ -558,7 +558,7 @@ def _get_context(context:tc.any(ContextFlags, str)):
     return context_flag
 
 
-def _get_time(component, context_flags):
+def _get_time(component, context_flags, execution_id=None):
 
     """Get time from Scheduler of System in which Component is being executed.
 
@@ -607,7 +607,7 @@ def _get_time(component, context_flags):
     else:
         execution_context = component.context.string
 
-    system = ref_mech.context.composition
+    system = ref_mech.parameters.context.get().composition
 
     if system:
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK

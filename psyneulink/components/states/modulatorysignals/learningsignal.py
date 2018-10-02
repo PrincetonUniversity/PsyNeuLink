@@ -351,6 +351,8 @@ class LearningSignal(ModulatorySignal):
     })
     #endregion
 
+    class Params(ModulatorySignal.Params):
+        learning_rate = None
 
     @tc.typecheck
     def __init__(self,
