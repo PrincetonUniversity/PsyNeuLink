@@ -231,10 +231,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         cost_weights = prediction_weights[self.cst]
 
         # TEST PRINT:
-        print('\n\npredictors: ', predictors,
-              '\ncontrol_signals: ', control_signal_values,
-              '\ncontrol_costs: ', costs,
-              '\nprediction_weights: ', prediction_weights)
+        # print('\n\npredictors: ', predictors,
+        #       '\ncontrol_signals: ', control_signal_values,
+        #       '\ncontrol_costs: ', costs,
+        #       '\nprediction_weights: ', prediction_weights)
         # TEST PRINT END:
 
         # Perform gradient ascent until convergence criterion is reached
@@ -271,14 +271,14 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             convergence_metric = np.abs(current_lvoc - previous_lvoc)
 
             # TEST PRINT:
-            print('\niteration ', j,
-                  '\nprevious_lvoc: ', previous_lvoc,
-                  '\ncurrent_lvoc: ',current_lvoc ,
-                  '\nconvergence_metric: ',convergence_metric,
-                  '\npredictors: ', predictors,
-                  '\ncontrol_signal_values: ', control_signal_values,
-                  '\ninteractions: ', interaction_weights_x_predictors,
-                  '\ncosts: ', costs)
+            # print('\niteration ', j,
+            #       '\nprevious_lvoc: ', previous_lvoc,
+            #       '\ncurrent_lvoc: ',current_lvoc ,
+            #       '\nconvergence_metric: ',convergence_metric,
+            #       '\npredictors: ', predictors,
+            #       '\ncontrol_signal_values: ', control_signal_values,
+            #       '\ninteractions: ', interaction_weights_x_predictors,
+            #       '\ncosts: ', costs)
             # TEST PRINT END
 
             j+=1
