@@ -14,6 +14,7 @@ import ctypes
 import os, sys
 
 from psyneulink.llvm import builtins
+from psyneulink.llvm.jit_engine import cpu_jit_engine
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _modules = set()
@@ -92,53 +93,7 @@ class LLVMBuilderContext:
         print(type(t))
         assert(False)
 
-
-
-# Compiler binding
-binding.initialize()
-
-# native == currently running CPU
-binding.initialize_native_target()
-
-# TODO: This prevents 'LLVM ERROR: Target does not support MC emission!',
-# but why?
-binding.initialize_native_asmprinter()
-
-__features = binding.get_host_cpu_features().flatten()
-__cpu_name = binding.get_host_cpu_name()
-
-# Create compilation target, use default triple
-__target = binding.Target.from_default_triple()
-__target_machine = __target.create_target_machine(cpu=__cpu_name, features=__features, opt=3)
-
-
-__pass_manager_builder = binding.PassManagerBuilder()
-__pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
-__pass_manager_builder.loop_vectorize = True
-__pass_manager_builder.slp_vectorize = True
-__pass_manager_builder.opt_level = 3  # Most aggressive optimizations
-
-__pass_manager = binding.ModulePassManager()
-
-__target_machine.add_analysis_passes(__pass_manager)
-__pass_manager_builder.populate(__pass_manager)
-
-# And an execution engine with an empty backing module
-# TODO: why is empty backing mod necessary?
-# TODO: It looks like backing_mod is just another compiled module.
-#       Can we use it to avoid recompiling builtins?
-#       Would cross module calls work? and for GPUs?
-__backing_mod = binding.parse_assembly("")
-
-# There are other engines beside MCJIT
-# MCJIT makes it easier to run the compiled function right away.
-_engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
-
-
-__mod = None
-
-
-def _build_mod(module):
+def _try_parse_module(module):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
         print(module)
 
@@ -156,36 +111,19 @@ def _build_mod(module):
     return mod
 
 def _llvm_build():
-
+    # Parse generated modules and link them
     mod_bundle = binding.parse_assembly("")
     global _modules
     for m in _modules:
-        new_mod = _build_mod(m)
+        new_mod = _try_parse_module(m)
         if new_mod is not None:
             mod_bundle.link_in(new_mod)
             _compiled_modules.add(m)
 
     _modules.clear()
 
-    global __mod
-    if __mod is not None:
-        _engine.remove_module(__mod)
-        __mod.link_in(mod_bundle)
-    else:
-        __mod = mod_bundle
-
-    __pass_manager.run(__mod)
-
-    if __dumpenv is not None and __dumpenv.find("opt") != -1:
-        print(__mod)
-    # This prints generated x86 assembly
-    if __dumpenv is not None and __dumpenv.find("isa") != -1:
-        print("ISA assembly:")
-        print(__target_machine.emit_assembly(__mod))
-
-    # Now add the module and make sure it is ready for execution
-    _engine.add_module(__mod)
-    _engine.finalize_object()
+    # Add the new module to jit engine
+    _cpu_engine.opt_and_append_bin_module(mod_bundle)
 
     if __dumpenv is not None and __dumpenv.find("compile") != -1:
         global _binary_generation
@@ -258,13 +196,13 @@ def _convert_ctype_to_python(x):
 
 
 _binaries = {}
-
+_cpu_engine = cpu_jit_engine
 
 class LLVMBinaryFunction:
     def __init__(self, name):
         self.__name = name
-        # Binary pointer
-        self.ptr = _engine.get_function_address(name)
+        # Binary pointer.
+        self.ptr = _cpu_engine._engine.get_function_address(name)
 
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
@@ -326,14 +264,14 @@ def _updateNativeBinaries(module, buffer):
         if sys.getrefcount(v) == 4:
             to_delete.append(k)
         else:
-            new_ptr = _engine.get_function_address(k)
+            new_ptr = _cpu_engine._engine.get_function_address(k)
             v.ptr = new_ptr
 
     for d in to_delete:
         del _binaries[d]
 
 
-_engine.set_object_cache(_updateNativeBinaries)
+_cpu_engine._engine.set_object_cache(_updateNativeBinaries)
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:
