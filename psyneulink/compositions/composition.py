@@ -832,7 +832,15 @@ class Composition(Composition_Base):
             for node in self.scheduler_processing.consideration_queue[-1]:
                 if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
-
+        # Identify Origin nodes
+        for node in self.c_nodes:
+            if graph.get_parents_from_component(node) == []:
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.ORIGIN)
+            # Identify Terminal nodes
+            if graph.get_children_from_component(node) == []:
+                if not isinstance(node, ObjectiveMechanism):
+                    self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
         for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
