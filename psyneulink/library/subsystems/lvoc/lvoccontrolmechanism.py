@@ -705,7 +705,7 @@ class LVOCControlMechanism(ControlMechanism):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 function=ControlSignalGradientAscent(),
+                 function=ControlSignalGradientAscent,
                  # update_function=None,
                  # cost_function=LinearCombination(operation=SUM),
                  # combine_outcome_and_cost_function=LinearCombination(operation=SUM),
