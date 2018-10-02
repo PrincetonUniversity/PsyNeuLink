@@ -217,7 +217,7 @@ class LLVMBinaryFunction:
         self.__ptr = ptr
 
         # Recompiled, update the signature
-        f = _find_llvm_function(self.__name, _modules | _compiled_modules)
+        f = _find_llvm_function(self.__name, _compiled_modules)
         assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
