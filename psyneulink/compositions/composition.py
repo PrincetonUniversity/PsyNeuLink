@@ -412,6 +412,7 @@ class Composition(object):
         self.__input_struct = None
 
         self.__compiled_mech = {}
+        self.__compiled_execution = None
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -2380,9 +2381,12 @@ class Composition(object):
                 self.__get_bin_mechanism(self.output_CIM)
                 for node in self.c_nodes:
                     self.__get_bin_mechanism(node)
+
+                if bin_execute == 'LLVMExec':
+                    bin_f = self.__get_bin_execution()
                 bin_execute = True
             except Exception as e:
-                if bin_execute == 'LLVM':
+                if bin_execute[:4] == 'LLVM':
                     raise e
 
                 string = "Failed to compile wrapper for `{}' in `{}': {}".format(node.name, self.name, str(e))
@@ -2844,6 +2848,14 @@ class Composition(object):
 
         return self.__compiled_mech[mechanism]
 
+    def __get_bin_execution(self):
+        if self.__compiled_execution is None:
+            wrapper = self.__gen_exec_wrapper()
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_execution = bin_f
+
+        return self.__compiled_execution
+
     def __extract_mech_output(self, mechanism):
         mech_index = self.__get_mech_index(mechanism)
         field = self.__data_struct._fields_[mech_index][0]
@@ -2979,6 +2991,31 @@ class Composition(object):
             builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
+        return func_name
+
+
+    def __gen_exec_wrapper(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.get_unique_name('exec_wrap_' + self.name)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_context_struct_type().as_pointer(),
+                self.get_param_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                self.get_data_struct_type().as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            context, params, comp_in, data = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            builder.ret_void()
         return func_name
 
     def run_simulation(self):
