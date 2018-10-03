@@ -97,6 +97,11 @@ class LLVMBinaryFunction:
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
 
+    def wrap_call(self, *pargs):
+        args = zip(self.byref_arg_types, pargs)
+        cargs = [ctypes.cast(ctypes.byref(p), ctypes.POINTER(t)) for t, p in args]
+        self(*tuple(cargs))
+
     # This will be useful for non-native targets
     @property
     def ptr(self):
