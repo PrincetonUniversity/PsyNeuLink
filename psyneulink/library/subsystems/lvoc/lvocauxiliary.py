@@ -6,10 +6,10 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *************************************************  EVCAuxiliary ******************************************************
+# *************************************************  LVOCAuxiliary *****************************************************
 
 """
-Auxiliary functions for `EVCControlMechanism`.
+Auxiliary functions for `LVOCControlMechanism`.
 
 """
 import warnings
@@ -27,7 +27,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER',
+    'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER', 'ControlSignalGradientAscent',
     'LVOCAuxiliaryError', 'LVOCAuxiliaryFunction',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
     'OUTCOME', 'PY_MULTIPROCESSING'
@@ -58,7 +58,7 @@ class LVOCAuxiliaryError(Exception):
 
 
 class LVOCAuxiliaryFunction(Function_Base):
-    """Base class for EVC auxiliary functions
+    """Base class for LVOC auxiliary functions
     """
     componentType = kwEVCAuxFunctionType
 
@@ -96,7 +96,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     """Use gradient ascent to determine allocation_policy with the maximum `EVC <LVOCControlMechanism_LVOC>`.
 
     This is the default `function <LVOCControlMechanism.function>` for an LVOCControlMechanism. It identifies the
-    `allocation_policy` with the maximum `EVC <EVCControlMechanism_EVC>` as follows:
+    `allocation_policy <LVOCControlMechanism.allocation_policy>` with the maximum `EVC <EVCControlMechanism_EVC>` as
+    follows:
 
     - updates the distributions of weights for the prediction_vector using BayesGLM()
     - draws a sample from the new weight distributions
@@ -106,7 +107,6 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     `allocation_policies <LVOCControlMechanism.allocation_policies>`
 
     The ControlSignalGradientAscent function returns the `allocation_policy` that yields the maximum EVC.
-
     """
 
     componentName = CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION

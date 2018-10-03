@@ -44,18 +44,18 @@ COMMENT
 *ControlMechanisms and a System*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be assigned to `Process` and executed within one or more Systems, just like any other Mechanism.
-It also be assigned as the `controller <System.controller>` of a `System`, that has a special relation to the System:
-it is used to control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
-in that System.  A ControlMechanism can be the `controller <System.controller>` for only one System, and a System can
-have only one one `controller <System.controller>`.  The System's `controller <System.controller>` is executed after
-all of the other Components in the System have been executed, including any other ControlMechanisms that belong to it
-(see `System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System.controller>`
-for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
-as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
-<ControlMechanism.assign_as_controller>` method. A System's `controller  <System.controller>` and its
-associated Components can be displayed using the System's `show_graph <System.show_graph>` method with its
-**show_control** argument assigned as `True`.
+A ControlMechanism can be assigned to a `Process` and executed within one or more Systems, just like any other
+Mechanism. It can also be assigned as the `controller <System.controller>` of a `System`, that has a special relation
+to the System: it is used to control all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` in that System.  A ControlMechanism can be the `controller <System.controller>`
+for only one System, and a System can have only one `controller <System.controller>`.  The System's `controller
+<System.controller>` is executed after all of the other Components in the System have been executed, including any
+other ControlMechanisms that belong to it (see `System Execution <System_Execution>`).  A ControlMechanism can be
+assigned as the `controller <System.controller>` for a System by specifying it in the **controller** argument of the
+System's constructor, or by specifying the System as the **system** argument of either the ControlMechanism's
+constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A System's `controller
+<System.controller>` and its associated Components can be displayed using the System's `show_graph
+<System.show_graph>` method with its **show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -68,13 +68,13 @@ A ControlMechanism is also created automatically whenever a `System is created <
 ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's constructor
 (see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), it must be included
 in a `Process` assigned to the System.  The `OutputStates <OutputState>` monitored by its `ObjectiveMechanism` are
-specified in the *monitor_for_control** argument of its constructor, and the parameters it controls are specified in
+specified in the **monitor_for_control** argument of its constructor, and the parameters it controls are specified in
 the **control_signals** argument; an ObjectiveMechanism is automatically created that monitors and evaluates the
 specified OutputStates.  The ObjectiveMechanism can also be explicitly specified in the **objective_mechanism**
 argument of the ControlMechanism's constructor (see `below <ControlMechanism_ObjectiveMechanism>`). If the
-ControlMechanism is created automatically by a System (as its `controller <System.controller>`, then the specification
+ControlMechanism is created automatically by a System (as its `controller <System.controller>`), then the specification
 of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
-themselves (see `System_Control_Specification`).  In either case the Components needed to monitor the specified
+themselves (see `System_Control_Specification`).  In either case, the Components needed to monitor the specified
 OutputStates (an `ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters
 (`ControlSignals <ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created
 automatically, as described below.
