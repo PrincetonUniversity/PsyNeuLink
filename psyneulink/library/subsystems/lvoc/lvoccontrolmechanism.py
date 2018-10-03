@@ -16,44 +16,39 @@ Overview
 An LVOCControlMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in
 order to optimize the performance of the `Composition` to which it belongs.  It implements a form of the Learned Value
 of Control model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi
-.1006043&rev=2>`_, which learns to predict the optimal choice of `ControlSignals <ControlSignal>` (i.e., its
-`allocation_policy <LVOCControlMechanism.allocation_policy>`) from a given set of predictors (usually the input to the
-Composition to which it belongs).
+.1006043&rev=2>`_, which learns to select the optimal value for its `control_signals
+<LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy <LVOCControlMechanism.allocation_policy>`)
+based on a set of `predictors <LVOCControlMechanism.predictors>`.
 
 .. _LVOCControlMechanism_Creation:
 
 Creating an LVOCControlMechanism
 ------------------------
 
-An LVOCControlMechanism can be created in any of the ways used to `create a ControlMechanism
-<ControlMechanism_Creation>`, with the following differences:
+ An LVOCControlMechanism can be created in the same was as any `ControlMechanism`, with the exception that it cannot
+ be assigned as the `controller <Composition.controller>` of a Composition.  The following arguments of its
+ constructor are specific to the LVOCControlMechanism:
 
-  * *Inputs* -- in addition to the `Projection` that it receives from its `objective_mechanism
-    <LVOCControlMechanism.objective_mechanism>`, an LVOCControlMechanism can be configured to receive inputs that it
-    learns to use as predictors for choosing its `allocation_policy <LVOCControlMechanism>` in each `trial` of
-    execution.  These can be specified in the **predictors** argument of its constructor, using any of the following:
-
-    * *SHADOW_INPUTS* - a copy of the input received by each `ORIGIN` Mechanisms of the `Composition` to which the
-      LVOCControlMechanism belongs is used as its `predictors <LVOCControlMechanism.predictors>`.
-
-    * A list of
-
-An LVOCControlMechanism is similar to a standard `ControlMechanism`, with the following exceptions:
-
-  * by default, its input is a copy of the input received by the `ORIGIN` Mechanisms of the Composition to which it
-    belongs; these are used as predictors for selecting the optimal `allocation_policy
-    <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
+  * **composition** -- specifies the `Composition` to which the LVOCControlMechanism is to be assigned.
   ..
-  * it is automatically assigned `ControlSignalGradientAscent` as its primary function which, using a weighted
-    combination  of the predictors to determine the optimal `allocation_policy <LVOCControlMechanism.allocation_policy>`
-    for the current `trial`.
+  * **predictors** -- this takes the place of the standard **input_states** argument in the constructor for a
+  ` Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
+    <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.  By default, the input to every `ORIGIN`
+    Mechanism of the `Composition` to which the LVOCControlMechanism belongs is used as its `predictors
+    <LVOCControlMechanism.predictors>`.  However, it can be specified using any of the following, singly or combined
+    in a list:
 
-
-
-Function of ControlSignalGradientAscent:  BayesGLM is DEFAULT
-
-
-  * **objective_mechanism** -- this can be specified using any of the following:
+        * *InputState specification* -- this can be any legal form of `InputState specification
+          <InputState_Specification>` that includes a specification of a `Mechanism` or `OutputState` to project to
+          the InputState;  the `value <OutputState.value>` of the specified OutputState (or `primary OutputState
+          <OutputState_Primary>` of the specified Mechanism) is used as a `predictor <LVOCControlMechanism.predictor>`.
+        |
+        * {*SHADOW_INPUTS*: <*ALL* or List[InputState(s) and/or Mechanism(s)>][,FUNCTION:<Function]} -- dictionary that
+          specifies InputStates, the inputs to which are used as `predictors <LVOCControlMechanism.predictors>`.  If
+          *ALL* is specified, then every InputState of every *ORIGIN* Mechanism in the Composition is used;  all of
+          the InputStates are used for any Mechanism(s) specified.  If the *FUNCTION* entry is included, the 'Function`
+          specified in its value is assigned to each of the InputStates created on the LVOCControlMechanism to shadow
+          the ones specified in the *SHADOW_INPUTS* entry (see `LVOC_Structure`).
 
 
 .. _LVOCControlMechanism_Structure:
@@ -61,16 +56,43 @@ Function of ControlSignalGradientAscent:  BayesGLM is DEFAULT
 Structure
 ---------
 
-An LVOCControlMechanism must belong to a `System` (identified in its `system <LVOCControlMechanism.system>` attribute).
-In addition to the standard Components of a `ControlMechanism`, has a specialized set of `prediction mechanisms
-<LVOCControlMechanism_Prediction_Mechanisms>` and `functions <LVOCControlMechanism_Functions>` that it uses to simulate
-and evaluate the performance of its `system <LVOCControlMechanism.system>` under the influence of different values of
-its `ControlSignals <LVOCControlMechanism_ControlSignals>`.  Each of these specialized Components is described below.
+An LVOCControlMechanism must belong to a `Composition` (identified in its `composition
+<LVOCControlMechanism.composition>` attribute).
 
 .. _LVOCControlMechanism_Input:
 
 *Input*
 ~~~~~~~
+
+.. _LVOCControlMechanism_Predictors:
+
+Predictors and InputStates
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An LVOCControlMechanism has one `InputState` that receives a Projection from its `objective_mechanism
+<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`, and one for
+each of its `predictors <LVOCControlMechanism.predictors>`.  The latter can be of two types:
+
+Input Predictors
+
+Output Predictors
+
+
+
+If the *SHADOW_INPUTS* keyword is used to
+specify the **predictors** argument in the LVOCControlMechanism's constructor, then an InputState is created
+for the LVOCControlMechanism corresponding to every InputState of every `ORIGIN` Mechanism in the Composition to
+which it belongs, with a Projection to it paralleling the one from the Composition's `Input CIM` to the corresponding
+`ORIGIN` Mechanism InputState.  If *SHADOW_INPUTS* is used to specify an entry in a dict in the **predictors**
+specification, then d
+
+
+as the specification
+sole specificadtion, or as an entry in a dict in the specification of the **predictors** argument in the
+LVOCControlMechanism's constructor, or as
+
+For `predictors <LVOCControlMechanism.predictors>`
+specified in
 
 .. _LVOCControlMechanism_ObjectiveMechanism:
 

@@ -394,9 +394,10 @@ By default, an OutputState uses the first (and usually only) item of the owner M
 <Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
 any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
 <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
-using the following keywords:
+using the following:
 
-    *OWNER_VALUE* -- the entire `value <Mechanism_Base.value>` of the OutputState's `owner <OutputState.owner>`.
+    *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputState's `owner
+    <OutputState.owner>`.
 
     *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputState.owner>`\\'s `value
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
@@ -405,9 +406,9 @@ using the following keywords:
     in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
     of the named attribute for use in the OutputState's `variable <OutputState.variable>`.
 
-    *PARAMS_DICT* -- the `owner <OutputState.owner>` Mechanism's entire `params_dict <Mechanism.attributes_dict>`
-    dictionary, that contains entries for all of it accessible attributes.  The OutputState's `function
-    <OutputState.function>` must be able to parse the dictionary.
+    *PARAMS_DICT* -- keyword specifying the `owner <OutputState.owner>` Mechanism's entire `params_dict
+    <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
+    OutputState's `function <OutputState.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
     COMMENT

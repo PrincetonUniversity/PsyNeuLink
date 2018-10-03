@@ -103,10 +103,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     - draws a sample from the new weight distributions
     - calls gradient_ascent to determine the allocation_policy with the maximum EVC for the new weights
 
-     by conducting gradient ascent over
-    `allocation_policies <LVOCControlMechanism.allocation_policies>`
-
-    The ControlSignalGradientAscent function returns the `allocation_policy` that yields the maximum EVC.
+    Return the `allocation_policy` that yields the maximum EVC.
     """
 
     componentName = CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION
