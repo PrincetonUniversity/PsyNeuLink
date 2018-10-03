@@ -2392,13 +2392,11 @@ class Composition(object):
         if bin_execute:
             self.__bin_initialize(inputs)
             bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
-            c, p, i, di, do = bin_mechanism.byref_arg_types
-            # Cast the arguments. Structures are the same but ctypes creates new class every time.
-            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
-                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
-                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
-                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
-                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
+            bin_mechanism.wrap_call(self.__context_struct,
+                                    self.__params_struct,
+                                    self.__input_struct,
+                                    self.__data_struct,
+                                    self.__data_struct)
 
         if call_before_pass:
             call_before_pass()
@@ -2460,15 +2458,11 @@ class Composition(object):
 
                     if bin_execute:
                         bin_mechanism = self.__get_bin_mechanism(node)
-                        c, p, i, di, do = bin_mechanism.byref_arg_types
-                        # Cast the arguments. Structures are the same but ctypes
-                        # creates new class every time.
-                        bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
-                                      ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
-                                      ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
-                                      ctypes.cast(ctypes.byref(frozen_vals), ctypes.POINTER(di)),
-                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
-
+                        bin_mechanism.wrap_call(self.__context_struct,
+                                                self.__params_struct,
+                                                self.__input_struct,
+                                                frozen_vals,
+                                                self.__data_struct)
                     else:
                         node.context.execution_phase = ContextFlags.PROCESSING
                         if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
@@ -2513,14 +2507,11 @@ class Composition(object):
         # extract result here
         if bin_execute:
             bin_mechanism = self.__get_bin_mechanism(self.output_CIM)
-            c, p, i, di, do = bin_mechanism.byref_arg_types
-            # Cast the arguments. Structures are the same but ctypes
-            # creates new class every time.
-            bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
-                          ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
-                          ctypes.cast(ctypes.byref(self.__input_struct), ctypes.POINTER(i)),
-                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(di)),
-                          ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(do)))
+            bin_mechanism.wrap_call(self.__context_struct,
+                                    self.__params_struct,
+                                    self.__input_struct,
+                                    self.__data_struct,
+                                    self.__data_struct)
 
             return self.__extract_mech_output(self.output_CIM)
 
