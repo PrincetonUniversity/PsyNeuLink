@@ -1787,8 +1787,9 @@ class TestRun:
         assert np.allclose([75], output)
 
     @pytest.mark.composition
+    @pytest.mark.benchmark
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
-    def test_LPP(self, mode):
+    def test_LPP(self, benchmark, mode):
 
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))   # 1 x 2 = 2
@@ -1800,7 +1801,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
+        output = benchmark(comp.execute,
             inputs=inputs_dict,
             scheduler_processing=sched,
             bin_execute=mode
