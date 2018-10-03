@@ -526,38 +526,29 @@ class LVOCControlMechanism(ControlMechanism):
                          name=name,
                          prefs=prefs)
 
-        # self.update_function = update_function or UpdateWeights(
-        #     prediction_weights_priors=prediction_weights_priors,
-        #     predictor_variance_priors=prediction_variances_priors,
-        #     function=BayesGLM(num_predictors=self.num_predictors,
-        #                       mu_prior=prediction_weights_priors,
-        #                       sigma_prior=prediction_variances_priors)
-        # )
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
 
-        # FIX:
-        #  IF input_states ARGUMENT IS SPECIFIED, USE THOSE BY CALLING RELEVANT super()._instantiate_input_states
-        #    this should allow the output of any other Mechanism in the Composition to be used as the source of
-        #    signals LVOC uses in learning to predict control
-        #  IF THE KEYWORD "SHADOW" APPEARS IN THE SPECIFICATION DICT
-        #      IF System ARGUMENT IS SPECIFIED:
-        #           CREATE:
-        #             CIM OutputState -[MappingProjection]-> PredictionMechanism -[MappingProjection]-> LVOC InputState
-        #           FOR ALL MECHANISMS LISTED IN SHADOW ENTRY
-        #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
-        #  IF input_states ARGUMENT IS NOT SPECIFIED:
-        #      IF System ARGUMENT IS SPECIFIED, SHADOW ALL ORIGIN MECHANISMS [DEFAULT CASE] AS ABOVE
-        #      IF System ARGUMENT IS NOT SPECIFIED, RAISE EXCEPTION
+        The input_states are specified in the **predictor** argument of the LVOCControlMechanism's constructor.
 
-        # input_states CAN BE ANY SPECIFICATION FOR input_states (REF TO DOCS)
-        #     THAT WILL ASSIGN AN input_state WITH A PROJECTION FROM THE SPECIFIED SOURCE
-        # AND/OR DICT WITH KEYWORD "SHADOW_INPUTS" AS THE KEY FOR AN ENTRY AND EITHER OF THE FOLLOWING AS ITS VALUE:
-        #     - KEYWORD "ORIGIN_MECHANISMS":  INPUT_STATES FOR AND POJECTIONS FROM ALL OUTPUT_STATES OF COMPOSITION
-        #     - LIST OF ORIGIN MECHANISMS AND/OR THEIR INPUT_STATES
-        # IF IT CONTAINS A DICT WITH A "SHADOW_INPUTS" ENTRY, IT CAN ALSO INCLUDE A FUNCTION:<Function> ENTRY
-        #     THAT WILL BE USED AS THE FUNCTION OF THE input_states CREATED FOR THE LVOCControlMechanism
+        input_states can be any legal InputState specification, which will generate a Projection from the
+           source specified (FIX: WHAT IF NONE IS SPECIFIED??);
+           this allows the output of any Mechanism in the Composition to be used as a predictor.
+        input_states can also include a dict with an entry that has the keyword *SHADOW_INPUTS* as its key,
+            and either the keyword *ALL* or a list of Mechanisms and/or InputStates as its value.  This creates
+            one or more InputStates on the LVOCControlMechanism, each of which "shadows" -- that is, receives a
+            Projection from the same source as — the InputState(s) specified in the value of the entry, as follows:
+            - *ALL*: InputStates and Projections are created that shadow every InputState of every ORIGIN Mechanism of
+                the Composition -- these receive a Projection from the Input CIM OutputState associated with the
+                InputState of the ORIGIN Mechanism to the InputState created for it on the LVOCControlMechanism.
+            - List of Mechanisms and/or InputStates:  An InputState and Projection is created that shadows the each
+                InputState listed, and all of the InputStates of any Mechanism listed.
+            The dict can also contain an entry using the keyword *FUNCTION* as its key and a Function as its value; that
+                Function will be used as the function of all of the InputStates created for the LVOCControlMechanism.
+
+        An InputState is also created for the Projection from the LVOCControlMechanism's objective_mechanism;  this is
+              inserted as the first (primary) InputState in input_states.
+
         """
 
         # If input_states has SHADOW_INPUTS in any of its specifications, parse into input_states specifications
@@ -590,13 +581,14 @@ class LVOCControlMechanism(ControlMechanism):
             if not composition is self.composition:
                 raise LVOCError("Specified composition ({}) conflicts with one to which {} is already assigned ({})".
                                 format(composition.name, self.name, self.composition.name))
-        predictors = self._parse_input_specs(composition=composition,
-                                                 inputs=predictors,
+        predictors = self._parse_predictor_specs(composition=composition,
+                                                 predictors=predictors,
                                                  context=ContextFlags.COMMAND_LINE)
         self.add_states(InputState, predictors)
 
     @tc.typecheck
-    def _parse_predictor_specs(self, composition:Composition_Base, predictors=SHADOW_INPUTS, context=None):
+    def _parse_predictor_specs(self, composition:Composition_Base,
+                               predictors:tc.any(str,list)=SHADOW_INPUTS, context=None):
         """Parse entries of _input_states list that specify shadowing of Mechanisms' or Composition's inputs
 
         Generate an InputState specification dictionary for each predictor specified in predictors argument
