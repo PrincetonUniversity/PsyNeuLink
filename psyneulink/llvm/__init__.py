@@ -68,11 +68,11 @@ _cpu_engine = cpu_jit_engine
 
 class LLVMBinaryFunction:
     def __init__(self, name):
-        self.__name = name
+        self.name = name
         self.__ptr = None
 
         # Function signature
-        f = _find_llvm_function(self.__name, _compiled_modules)
+        f = _find_llvm_function(self.name, _compiled_modules)
         assert(isinstance(f, ir.Function))
 
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
