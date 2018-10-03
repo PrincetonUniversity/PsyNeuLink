@@ -925,6 +925,18 @@ class Param(types.SimpleNamespace):
                     )
                 )
 
+    def clear_log(self, execution_ids=NotImplemented):
+        if execution_ids is NotImplemented:
+            eids = list(self.log.keys())
+        elif not isinstance(execution_ids, list):
+            eids = [execution_ids]
+        else:
+            eids = execution_ids
+
+        for eid in eids:
+            if eid in self.log:
+                del self.log[eid]
+
     def _initialize_from_context(self, execution_context=None, base_execution_context=None):
         try:
             self.set(value=copy.deepcopy(self.get(base_execution_context)), execution_context=execution_context, override=True, skip_history=True, skip_log=True)
