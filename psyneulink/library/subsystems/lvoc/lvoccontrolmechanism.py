@@ -580,7 +580,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         **predictors** argument can use any of the forms of specification allowed
             for the **input_states** argument of the LVOCMechanism,
-            as well as the keywor SHADOW_INPUTS, either alone or as the keyword for an entry in a dictionary,
+            as well as the keyword SHADOW_INPUTS, either alone or as the keyword for an entry in a dictionary,
             the value of which must a list of InputStates.
         '''
 
@@ -628,10 +628,39 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_shadow_input_spec(self, spec:dict):
         ''' Return a list of InputState specifications for the inputs specified in value of dict
 
+        If ALL is specified, specify an InputState for each ORIGIN Mechanism in the Composition
+            with Projection from the OutputState of the Compoisitions Input CIM for that ORIGIN Mechanism
+        For any other specification, specify an InputState with a Projection from the sender of any Projections
+            that project to the specified item
         If FUNCTION entry, assign as Function for all InputStates
         '''
 
         input_state_specs = []
+
+        shadow_spec = spec[SHADOW_INPUTS]
+
+        if shadow_spec is ALL:
+            # Generate list of InputState specification dictionaries,
+            #    one for each input to the Composition
+            # for composition_input in self.composition.input_CIM.output_states:
+            #     input_state_specs.append(composition_input)
+            input_state_specs.extend([{NAME:'INPUT OF ' + c.efferents[0].receiver.name +
+                                            ' of ' + c.efferents[0].receiver.owner.name,
+                                       PROJECTIONS:c}
+                                      for c in self.composition.input_CIM.output_states])
+        elif isinstance(shadow_spec, list):
+            for item in shadow_spec:
+                if isinstance(item, Mechanism):
+                    # Shadow all of the InputStates for the Mechanism
+                    input_states = item.input_states
+                if isinstance(item, InputState):
+                    # Place in a list for consistency of handling below
+                    input_states = [item]
+                # Shadow all of the Projections to each specified InputState
+                input_state_specs.extend([{NAME:i.name + 'of' + i.owner.name,
+                                           VARIABLE: i.variable,
+                                           PROJECTIONS: i.path_afferents}
+                                          for i in input_states])
 
         if FUNCTION in spec:
             for i in input_state_specs:
