@@ -660,6 +660,83 @@ class TestInputCIMOutputStateToOriginOneToMany:
             comp.run(inputs=input_dict)
         assert "already borrowing input from yet another origin node" in str(error_text.value)
 
+    def test_non_origin_partial_input_spec(self):
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=2.0))
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.origin_input_sources = {B: [None, A]}
+        comp.run(inputs={A: [[1.23]]})
+        assert np.allclose(B.input_values, [[2.46], [1.23]])
+
+    def test_non_origin_too_many_input_states(self):
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=2.0))
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.]])
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_c_node(C)
+
+        comp.origin_input_sources = {B: [A, C]}
+        with pytest.raises(CompositionError) as error_text: 
+            comp.run(inputs={A: [[1.23]],
+                             C: [[4.0]]})
+        assert "too many external input states" in str(error_text.value)
+
+    def test_origin_partial_input_spec(self):
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=2.0))
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+
+        comp = Composition(name='comp')
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+
+        comp.origin_input_sources = {B: [None, A]}
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={A: [[1.23]]})
+        assert "incompatible number of external input states" in str(error_text.value)
+
+    def test_specify_origin_input_sources_on_mechanism_nonorigin(self):
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=2.0))
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.], [0.]])
+        B.origin_input_sources = [None, A]
+        comp = Composition(name='comp')
+
+        comp.add_linear_processing_pathway([A, B])
+
+        comp.run(inputs={A: [[1.23]]})
+        assert np.allclose(B.input_values, [[2.46], [1.23]])
+
+    def test_specify_origin_input_sources_on_mechanism_origin(self):
+        A = ProcessingMechanism(name='A',
+                                function=Linear(slope=2.0))
+        B = ProcessingMechanism(name='B',
+                                default_variable=[[0.]])
+        B.origin_input_sources = [A]
+        comp = Composition(name='comp')
+
+        comp.add_c_node(A)
+        comp.add_c_node(B)
+
+        comp.run(inputs={A: [[1.23]]})
+        assert np.allclose(B.input_values, [[1.23]])
+
+
 class TestInputSpec:
 
     def test_valid_mismatched_input_lens(self):

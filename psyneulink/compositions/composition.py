@@ -480,20 +480,11 @@ class Composition(object):
         return uuid.uuid4()
 
     def shadow_interface_mechanism_connection(self, node_input_state, cim_rep_input_state):
-        if len(node_input_state.value) == len(cim_rep_input_state.value):
-            interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-            MappingProjection(sender=interface_output_state,
-                              receiver=node_input_state,
-                              matrix=IDENTITY_MATRIX,
-                              name="(" + interface_output_state.name + ") to ("
-                                   + node_input_state.owner.name + "-" + node_input_state.name + ")")
-        else:
-            raise CompositionError("{0}'s CIM representation cannot be used to provide input to {1} due to "
-                                   "incompatible shapes. ({0} has length {2} while {1} has length {3}."
-                                   .format(cim_rep_input_state.name,
-                                           node_input_state.name,
-                                           len(cim_rep_input_state.value),
-                                           len(node_input_state.value)))
+        interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
+        MappingProjection(sender=interface_output_state,
+                          receiver=node_input_state,
+                          name="(" + interface_output_state.name + ") to ("
+                               + node_input_state.owner.name + "-" + node_input_state.name + ")")
 
     def add_c_node(self, node, required_roles=None):
         '''
@@ -571,6 +562,9 @@ class Composition(object):
             # Add all projections to the composition
             for proj_spec in projections:
                 self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
+
+        if hasattr(node, "origin_input_sources"):
+            self.origin_input_sources[node] = node.origin_input_sources
 
         if required_roles:
             if not isinstance(required_roles, list):
@@ -1188,46 +1182,59 @@ class Composition(object):
                                                 name="(" + interface_output_state.name + ") to (" +
                                                 input_state.owner.name + "-" + input_state.name + ")"))
 
-        # allow projections from CIM to ANY node
+        # allow projections from CIM to ANY node listed in origin_input_sources
         for node in self.origin_input_sources:
             if node not in origin_nodes or node in redirected_inputs:
+
                 cim_rep = self.origin_input_sources[node]
-                # cim_rep is a mechanism or composition -- must match shape of node!
+                expanded_cim_rep = []
                 if isinstance(cim_rep, (Mechanism, Composition)):
-                    if len(node.external_input_states) == len(cim_rep.external_input_states):
-                        for i in range(len(node.external_input_states)):
-                            self.shadow_interface_mechanism_connection(node.external_input_states[i],
-                                                                       cim_rep.external_input_states[i])
-                    else:
-                        raise CompositionError("The node specified as the origin source of {0} ({1}) has an "
-                                               "incompatible number of external input states. {0} has {2} external "
-                                               "input states while {1} has {3}.".format(node.name,
-                                                                                        cim_rep.name,
-                                                                                        len(node.external_input_states),
-                                                                                        len(cim_rep.
-                                                                                            external_input_states)))
-                # cim_rep is a list of input states -- may be mixed and matched from multiple origin nodes.
-                # their concatenation must match shape of node
+                    for state in cim_rep.external_input_states:
+                        expanded_cim_rep.append(state)
                 elif isinstance(cim_rep, list):
-                    expanded_cim_rep_list = []
                     for rep in cim_rep:
                         if isinstance(rep, (Mechanism, Composition)):
                             for rep_state in rep.external_input_states:
-                                expanded_cim_rep_list.append(rep_state)
+                                expanded_cim_rep.append(rep_state)
                         elif isinstance(rep, (InputState)):
-                            expanded_cim_rep_list.append(rep)
-                    if len(node.external_input_states) == len(expanded_cim_rep_list):
-                        for i in range(len(node.external_input_states)):
-                            self.shadow_interface_mechanism_connection(node.external_input_states[i],
-                                                                       expanded_cim_rep_list[i])
-                    else:
+                            expanded_cim_rep.append(rep)
+                        elif rep is None:
+                            if node not in redirected_inputs:
+                                expanded_cim_rep.append(rep)
+                        else:
+                            raise CompositionError("Invalid item: {} in origin_input_source specified for {}: {}. Each "
+                                                   "items in list must be a Mechanism, Composition, InputStates, or "
+                                                   "None.".format(rep, node.name, cim_rep))
+                else:
+                    raise CompositionError("Invalid origin_input_source specified for {}: {}. Must be a Mechanism, "
+                                           "Composition, or a List of Mechanisms, Compositions, and/or InputStates."
+                                           .format(node.name, cim_rep))
+
+                if node in redirected_inputs:
+                    # each node in redirected inputs requires an input for each of its input states
+                    if len(node.external_input_states) != len(expanded_cim_rep) and len(expanded_cim_rep) > 0:
                         raise CompositionError("The origin source specification of {0} ({1}) has an "
                                                "incompatible number of external input states. {0} has {2} external "
                                                "input states while the origin source specification has a total of {3}."
                                                .format(node.name,
                                                        cim_rep,
-                                                       len(node.external_input_states),
-                                                       len(expanded_cim_rep_list)))
+                                                           len(node.external_input_states),
+                                                           len(expanded_cim_rep)))
+
+                # for non-origin nodes, too few origin sources specified is ok, but too many is not
+                if len(expanded_cim_rep) > len(node.external_input_states):
+                    raise CompositionError("The origin source specification of {0} ({1}) has too many external input "
+                                           "states. {0} has {2} external input states while the origin source "
+                                           "specification has a total of {3}."
+                                           .format(node.name,
+                                                   cim_rep,
+                                                   len(node.external_input_states),
+                                                   len(expanded_cim_rep)))
+
+                for i in range(len(expanded_cim_rep)):
+                    if expanded_cim_rep[i]:
+                        self.shadow_interface_mechanism_connection(node.external_input_states[i],
+                                                                   expanded_cim_rep[i])
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
