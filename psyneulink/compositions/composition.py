@@ -2384,6 +2384,12 @@ class Composition(object):
 
                 if bin_execute == 'LLVMExec':
                     bin_f = self.__get_bin_execution()
+                    self.__bin_initialize(inputs)
+                    bin_f.wrap_call(self.__context_struct,
+                                    self.__params_struct,
+                                    self.__input_struct,
+                                    self.__data_struct)
+                    return self.__extract_mech_output(self.output_CIM)
                 bin_execute = True
             except Exception as e:
                 if bin_execute[:4] == 'LLVM':
@@ -3012,8 +3018,45 @@ class Composition(object):
                 a.attributes.add('noalias')
 
             # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            entry_block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(entry_block)
+
+            # Call input CIM
+            input_cim_name = self.__get_bin_mechanism(self.input_CIM).name;
+            input_cim_f = ctx.get_llvm_function(input_cim_name)
+            builder.call(input_cim_f, [context, params, comp_in, data, data])
+
+            loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
+            loop_body = builder.append_basic_block(name="scheduling_loop_body")
+            exit_block = builder.append_basic_block(name="exit")
+
+            run_cond_ptr = builder.alloca(ir.IntType(1))
+            builder.store(ir.IntType(1)(1), run_cond_ptr)
+
+            builder.branch(loop_condition)
+
+            builder.position_at_end(loop_condition)
+            # TODO: Implement end condition here
+            run_cond = builder.load(run_cond_ptr)
+            builder.cbranch(run_cond, loop_body, exit_block)
+
+
+            builder.position_at_end(loop_body)
+            # TODO: Add support for frozen values
+            for mech in self.c_nodes:
+                mech_name = self.__get_bin_mechanism(mech).name;
+                mech_f = ctx.get_llvm_function(mech_name)
+                builder.call(mech_f, [context, params, comp_in, data, data])
+                # TODO: Update conditions here
+                builder.store(ir.IntType(1)(0), run_cond_ptr)
+
+            builder.branch(loop_condition)
+
+            builder.position_at_end(exit_block)
+            # Call output CIM
+            output_cim_name = self.__get_bin_mechanism(self.output_CIM).name;
+            output_cim_f = ctx.get_llvm_function(output_cim_name)
+            builder.call(output_cim_f, [context, params, comp_in, data, data])
 
             builder.ret_void()
         return func_name

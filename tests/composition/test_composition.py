@@ -1788,7 +1788,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_LPP(self, benchmark, mode):
 
         comp = Composition()
