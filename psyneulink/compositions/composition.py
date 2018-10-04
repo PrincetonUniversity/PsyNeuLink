@@ -3066,20 +3066,24 @@ class Composition(object):
             array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # TODO: Add support for frozen values
             for idx, mech in enumerate(self.c_nodes):
-                mech_name = self.__get_bin_mechanism(mech).name;
-                mech_f = ctx.get_llvm_function(mech_name)
-                builder.call(mech_f, [context, params, comp_in, data, data])
+                # TODO: Add support for mechanism condition evaluation
+                mech_cond = ir.IntType(1)(1)
+                with builder.if_then(mech_cond):
+                    mech_name = self.__get_bin_mechanism(mech).name;
+                    mech_f = ctx.get_llvm_function(mech_name)
+                    builder.call(mech_f, [context, params, comp_in, data, data])
 
-                # Update number of runs
-                node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(0)])
-                node_runs = builder.load(node_runs_ptr)
-                node_runs = builder.add(node_runs, ctx.int32_ty(1))
-                builder.store(node_runs, node_runs_ptr)
+                    # Update number of runs
+                    node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0),
+                                                            ctx.int32_ty(idx),
+                                                            ctx.int32_ty(0)])
+                    node_runs = builder.load(node_runs_ptr)
+                    node_runs = builder.add(node_runs, ctx.int32_ty(1))
+                    builder.store(node_runs, node_runs_ptr)
 
-                # Update timestamp
-                mech_ts_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(1)])
-                builder.store(time_stamp, mech_ts_ptr)
-
+                    # Update timestamp
+                    mech_ts_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(1)])
+                    builder.store(time_stamp, mech_ts_ptr)
 
             builder.branch(loop_condition)
 
