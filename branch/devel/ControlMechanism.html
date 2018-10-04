@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanism &mdash; PsyNeuLink 0.4.8.0+631.g593a200 documentation</title>
+  <title>Control Mechanism &mdash; PsyNeuLink 0.4.8.0+632.gbfde5dc documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+631.g593a200 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+632.gbfde5dc documentation" href="index.html"/>
         <link rel="up" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/>
         <link rel="next" title="Gating Mechanism" href="GatingMechanism.html"/>
         <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+631
+                0.4.8.0+632
               </div>
             
           
@@ -369,12 +369,12 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism that is a System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to be executed in a
-<a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for that System (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a> and <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a>).  The
+<a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for that System (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a> and <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a>).  The
 ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes as its input the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 its <em>ERROR_SIGNAL</em> <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a>, and uses that to determine its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each ControlSignal uses that value to
 calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a>
 to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
-subsequent <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+subsequent <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
@@ -647,7 +647,7 @@ for that System.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+631.g593a200',
+            VERSION:'0.4.8.0+632.gbfde5dc',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
