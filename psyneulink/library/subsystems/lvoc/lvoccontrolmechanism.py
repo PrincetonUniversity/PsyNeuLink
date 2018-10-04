@@ -25,16 +25,8 @@ based on a set of `predictors <LVOCControlMechanism.predictors>`.
 *Expected Value of Control (EVC)*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its
-`system <EVCControlMechanism.system>`.  In the `default configuration <EVCControlMechanism_Default_Configuration>`,
-an EVCControlMechanism carries out an exhaustive evaluation of allocation policies, simulating its `system
-<EVCControlMechanism.system>` under each, and using an `ObjectiveMechanism` and several `auxiliary functions
-<EVCControlMechanism_Functions>` to calculate the **expected value of control (EVC)** for each `allocation_policy`:
-a cost-benefit analysis that weighs the `cost <ControlSignal.cost> of the ControlSignals against the outcome of the
-`system <EVCControlMechanism.system>` \\s performance for a given `allocation_policy`. The EVCControlMechanism
-selects the `allocation_policy` that generates the maximum EVC, and implements that for the next `TRIAL`. Each step
-of this procedure can be modified, or replaced entirely, by assigning custom functions to corresponding parameters of
-the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
+The LVOCControlMechanism uses it `function <LVOCControlMechanism.function>` to select its `allocation_policy`.
+By default, it uses XXXX
 
 
 .. _LVOCControlMechanism_Creation:
@@ -232,7 +224,7 @@ import typecheck as tc
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -264,8 +256,9 @@ class LVOCError(Exception):
 
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                        \
-    composition:tc.optional(Composition_Base)=None, \
+    composition=None,                               \
     predictors=SHADOW_INPUTS,                       \
+    objective_mechanism=
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     monitor_for_control=None,                       \
@@ -282,38 +275,23 @@ class LVOCControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    system : System : default None
-        specifies the `System` for which the LVOCControlMechanism should serve as a `controller <System.controller>`;
-        the LVOCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <LVOCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
+    composition : Composition
+        specifies the `Composition` to which the LVOCControlMechanism belongs.
 
-    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
-    np.array]] : \
-    default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
-        specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism or a list of the OutputStates it should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
-        a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
+    predictors : SHADOW_INPUTS, dict, InputState, OutputState, or Mechanism : SHADOW_INPUTS
+        specifies the values that the LVOCControlMechanism learns to use for determining its `allocation_policy
+        <LVOCControlMechanism.allocation_policy>` (see `LVOCControlMechanism_Creation` for details).
+
+    objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
+        specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
+        <OutputState>`\\s it should monitor; if a list of `OutputState specifications
+        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
+        is passed to its **monitored_output_states** argument.
 
     function : function or method : ControlSignalGradientAscent
         specifies the function used to determine the `allocation_policy` for the current execution of the
         LVOCControlMechanism's `composition <LVOCControlMechanism.composition>` (see `function
         <LVOCControlMechanism.function>` for details).
-
-    value_function : function or method : value_function
-        specifies the function used to calculate the `EVC <LVOCControlMechanism_EVC>` for the current `allocation_policy`
-        (see `value_function <LVOCControlMechanism.value_function>` for details).
-
-    cost_function : function or method : LinearCombination(operation=SUM)
-        specifies the function used to calculate the cost associated with the current `allocation_policy`
-        (see `cost_function <LVOCControlMechanism.cost_function>` for details).
-
-    combine_outcome_and_cost_function : function or method : LinearCombination(operation=SUM)
-        specifies the function used to combine the outcome and cost associated with the current `allocation_policy`,
-        to determine its value (see `combine_outcome_and_cost_function` for details).
-
-    save_all_values_and_policies : bool : default False
-        specifes whether to save every `allocation_policy` tested in `EVC_policies` and their values in `EVC_values`.
 
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the LVOCControlMechanism
@@ -334,133 +312,40 @@ class LVOCControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    system : System
-        the `System` for which LVOCControlMechanism is the `controller <System.controller>`;
-        the LVOCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <LVOCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
+    composition : Composition
+        the `Composition` to which LVOCControlMechanism belongs.
+
+    predictor_values : 1d ndarray
+        the current `values <InputState.value>` of the InputStates used by `function <LVOCControlMechanism.function>`
+        to determine `allocation_policy <LVOCControlMechanism.allocation_policy>` (see
+        `LVOCControlMechanism_Creation` for details about predictors).
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the LVOCControlMechanism to evaluate the performance of its `system
-        <LVOCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
-        LVOCControlMechanism's constructor, they are assigned as the `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-        attribute for the `objective_mechanism <LVOCControlMechanism.objective_mechanism>`.
+        <LVOCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument
+        of the LVOCControlMechanism's constructor, they are assigned as the `monitored_output_states
+        <ObjectiveMechanism.monitored_output_states>` attribute for the `objective_mechanism
+        <LVOCControlMechanism.objective_mechanism>` (see LVOCControlMechanism_ObjectiveMechanism for additional
+        details).
 
     monitored_output_states : List[OutputState]
-        list of the OutputStates monitored by `objective_mechanism <LVOCControlMechanism.objective_mechanism>` (and listed in
-        its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to evaluate the
-        performance of the LVOCControlMechanism's `system <LVOCControlMechanism.system>`.
-
-    COMMENT:
-    [TBI]
-        monitored_output_states : 3D np.array
-            an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the LVOCControlMechanism's `input_states <LVOCControlMechanism.input_states>`).
-    COMMENT
+        list of the OutputStates monitored by `objective_mechanism <LVOCControlMechanism.objective_mechanism>`
+        (and listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute),
+        and used to evaluate the performance of the LVOCControlMechanism's `system <LVOCControlMechanism.system>`.
 
     monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
-    sampled_prediction_weights :
+    function : function : default ControlSignalGradientAscent
+        determines the `allocation_policy`. The default function, `ControlSignalGridAscent`, takes `predictor_values
+        <LVOCControlMechanism.predictor_values>` and the outcome value received by the `objective_mechanism
+        <LVOCControlMechanism.objective_mechanism>`, and returns an current `allocation_polcy
+        <LVOCControlMechanism.allocation_policy>` (see `LVOCControlMechanism_Function` for additional details).
 
-    weighted_predictor_values :
-
-    function : function : default ControlSignalGridSearch
-        determines the `allocation_policy` to use for the next round of the System's
-        execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
-        combinations of the `allocation_samples` of its ControlSignals (and contained in its
-        `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
-        combination, evaluating the result using `value_function`, and returning the `allocation_policy` that yielded
-        the greatest `EVC <LVOCControlMechanism_EVC>` value (see `LVOCControlMechanism_Default_Configuration` for additional details).
         If a custom function is specified, it must accommodate a **controller** argument that specifies an LVOCControlMechanism
         (and provides access to its attributes, including `control_signal_search_space`), and must return an array with
         the same format (number and type of elements) as the LVOCControlMechanism's `allocation_policy` attribute.
-
-    COMMENT:
-        NOTES ON API FOR CUSTOM VERSIONS:
-            Gets controller as argument (along with any standard params specified in call)
-            Must include **kwargs to receive standard args (variable, params, and context)
-            Must return an allocation policy compatible with controller.allocation_policy:
-                2d np.array with one array for each allocation value
-
-            Following attributes are available:
-            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
-            controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the Mechanism OutputStates being monitored for outcome
-            controller.input_value is a list of current outcome values (values for monitored_states)
-            controller.monitored_output_states_weights_and_exponents is a list of parameterizations for OutputStates
-            controller.control_signals is a list of control_signal objects
-            controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
-            control_signal.allocation_samples is the set of samples specified for that control_signal
-            [TBI:] control_signal.allocation_range is the range that the control_signal value can take
-            controller.allocation_policy - holds current allocation_policy
-            controller.output_values is a list of current control_signal values
-            controller.value_function - calls the three following functions (done explicitly, so each can be specified)
-            controller.cost_function - aggregate costs of control signals
-            controller.combine_outcome_and_cost_function - combines outcomes and costs
-    COMMENT
-
-    update_function : function : default UpdateWeights
-        TBW
-
-    COMMENT:
-    cost_function : function : default LinearCombination(operation=SUM)
-        calculates the cost of the `ControlSignals <ControlSignal>` for the current `allocation_policy`.  The default
-        function sums the `cost <ControlSignal.cost>` of each of the LVOCControlMechanism's `ControlSignals
-        <LVOCControlMechanism_ControlSignals>`.  The `weights <LinearCombination.weights>` and/or `exponents
-        <LinearCombination.exponents>` parameters of the function can be used, respectively, to scale and/or
-        exponentiate the contribution of each ControlSignal cost to the combined cost.  These must be specified as
-        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
-        assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
-        each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
-        LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>` attribute. The default function can also be
-        replaced with any `custom function <LVOCControlMechanism_Calling_and_Assigning_Functions>` that takes an array as
-        input and returns a scalar value.  If used with the LVOCControlMechanism's default `value_function
-        <LVOCControlMechanism.value_function>`, a custom `cost_function <LVOCControlMechanism.cost_function>` must accommodate two
-        arguments (passed by name): a **controller** argument that is the LVOCControlMechanism itself;  and a **costs**
-        argument that is a 1d array of scalar values specifying the `cost <ControlSignal.cost>` for each ControlSignal
-        listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
-
-    combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
-        combines the outcome and cost for given `allocation_policy` to determine its `EVC <LVOCControlMechanisms_EVC>`. The
-        default function subtracts the cost from the outcome, and returns the difference.  This can be modified using
-        the `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>` parameters of the
-        function, as described for the `cost_function <LVOCControlMechanisms.cost_function>`.  The default function can also be
-        replaced with any `custom function <LVOCControlMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with the LVOCControlMechanism's default `value_function`, a custom
-        If used with the LVOCControlMechanism's default `value_function`, a custom combine_outcome_and_cost_function must
-        accomoudate three arguments (passed by name): a **controller** argument that is the LVOCControlMechanism itself; an
-        **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`; and a **cost**
-        argument that is 1d array with the cost of the current `allocation_policy`.
-
-    control_signal_search_space : 2d np.array
-        an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
-        allocation policies, using np.meshgrid to construct all permutations of `ControlSignal` values from the set
-        specified for each by its `allocation_samples <LVOCControlMechanism.allocation_samples>` attribute.
-    COMMENT
-
-    EVC_max : 1d np.array with single value
-        the maximum `EVC <LVOCControlMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
-
-    EVC_max_state_values : 2d np.array
-        an array of the values for the OutputStates in `monitored_output_states` using the `allocation_policy` that
-        generated `EVC_max`.
-
-    EVC_max_policy : 1d np.array
-        an array of the ControlSignal `intensity <ControlSignal.intensity> values for the allocation policy that
-        generated `EVC_max`.
-
-    save_all_values_and_policies : bool : default False
-        specifies whether or not to save every `allocation_policy and associated EVC value (in addition to the max).
-        If it is specified, each `allocation_policy` tested in the `control_signal_search_space` is saved in
-        `EVC_policies`, and their values are saved in `EVC_values`.
-
-    EVC_policies : 2d np.array
-        array with every `allocation_policy` tested in `control_signal_search_space`.  The `EVC <LVOCControlMechanism_EVC>`
-        value of each is stored in `EVC_values`.
-
-    EVC_values :  1d np.array
-        array of `EVC <LVOCControlMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in `EVC_policies`;
 
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
@@ -508,9 +393,9 @@ class LVOCControlMechanism(ControlMechanism):
     def __init__(self,
                  composition:tc.optional(Composition_Base)=None,
                  predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_INPUTS,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGradientAscent,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -523,17 +408,10 @@ class LVOCControlMechanism(ControlMechanism):
                                                   input_states=predictors,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
-                                                  # update_function=update_function,
-                                                  # cost_function=cost_function,
-                                                  # combine_outcome_and_cost_function=combine_outcome_and_cost_function,
-                                                  # save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
         super().__init__(system=None,
-                         # objective_mechanism=ObjectiveMechanism(monitored_output_states=monitor_for_control,
-                         #                                        function=BayesGLM(predictor_weight_priors,
-                         #                                                          predictor_variance_priors)),
-                         monitor_for_control=monitor_for_control,
+                         objective_mechanism=objective_mechanism,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
@@ -747,11 +625,10 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Get sampled_prediction_weights by drawing a value for each using prediction_weights and predictor_variances
-            received from BayesGLMObjectiveMechanism.
         Call self.function -- default: ControlSignalGradientDescent:
-            does gradient descent on allocation_policy to fit within budget
-            based on current_prediction_weights control_signal costs.
+            does gradient descent based on `predictor_values <LVOCControlMechanism.predictor_values>` and outcome
+            received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to determine the
+            `allocation_policy <LVOCControlMechanism.allocation_policy>`.
         Return an allocation_policy
         """
 
@@ -783,42 +660,3 @@ class LVOCControlMechanism(ControlMechanism):
         self.predictor_values = np.array(variable[1:]).reshape(-1)
 
         return [self.predictor_values, outcome]
-
-    # @property
-    # def update_function(self):
-    #     return self._update_function
-    #
-    # @update_function.setter
-    # def update_function(self, assignment):
-    #     if isinstance(assignment, function_type):
-    #         self._update_function = UpdateWeights(assignment)
-    #     elif assignment is UpdateWeights:
-    #         self._update_function = UpdateWeights()
-    #     else:
-    #         self._update_function = assignment
-    #
-    # @property
-    # def cost_function(self):
-    #     return self._cost_function
-    #
-    # @cost_function.setter
-    # def cost_function(self, value):
-    #     from psyneulink.components.functions.function import UserDefinedFunction
-    #     if isinstance(value, function_type):
-    #         udf = UserDefinedFunction(function=value)
-    #         self._cost_function = udf
-    #     else:
-    #         self._cost_function = value
-    #
-    # @property
-    # def combine_outcome_and_cost_function(self):
-    #     return self._combine_outcome_and_cost_function
-    #
-    # @combine_outcome_and_cost_function.setter
-    # def combine_outcome_and_cost_function(self, value):
-    #     from psyneulink.components.functions.function import UserDefinedFunction
-    #     if isinstance(value, function_type):
-    #         udf = UserDefinedFunction(function=value)
-    #         self._combine_outcome_and_cost_function = udf
-    #     else:
-    #         self._combine_outcome_and_cost_function = value

@@ -453,26 +453,30 @@ class ControlMechanism(AdaptiveMechanism_Base):
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     origin_objective_mechanism : Boolean : default False
-        specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
+        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `ORIGIN`
+        node of `composition <LVOCControlMechanism.composition>`.
 
-        When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as origin. If the ObjectiveMechanism was the only origin node, then the user
-        must use required_roles to assign the origin role to another node.
+        When False, even if the `ObjectiveMechanism` is an `ORIGIN` node according to the structure of the
+        Composition's `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `ORIGIN`. If the
+        ObjectiveMechanism would be the only `ORIGIN` node, then the user must use `required_roles
+        <Composition.required_roles>` to assign another node as `ORIGIN`.
 
-        When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
-        normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
-        takes on origin as a required role.
+        When True, if the ObjectiveMechanism is an `ORIGIN` node according to the structure of the Composition's `graph
+        <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not an `ORIGIN` node according to
+        the structure of the graph, then it takes on `ORIGIN` as a required role.
 
     terminal_objective_mechanism : Boolean : default False
-        specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
+        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `TERMINAL`
+        node of `composition <LVOCControlMechanism.composition>`.
 
-        When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
-        ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
-        user must use required_roles to assign the terminal role to another node.
+        When False, even if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
+        `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `TERMINAL`. If the ObjectiveMechanism
+        was the only `TERMINAL` node, then the user must use `required_roles <Composition.required_roles>` to assign
+        another node as `TERMINAL` for the Composition.
 
-        When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
-        normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
-        takes on terminal as a required role.
+        When True, if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
+        `graph <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not a `TERMINAL` node
+        according to the structure of the graph, then it takes on `TERMINAL` as a required role.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
