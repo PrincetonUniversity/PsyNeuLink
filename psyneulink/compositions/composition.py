@@ -3072,6 +3072,7 @@ class Composition(object):
             # Generate loop body
             builder.position_at_end(loop_body)
 
+            time_stamp = builder.load(builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)]))
             # TODO: Add support for frozen values
             for idx, mech in enumerate(self.c_nodes):
                 mech_name = self.__get_bin_mechanism(mech).name;
@@ -3084,7 +3085,9 @@ class Composition(object):
                 node_runs = builder.add(node_runs, ctx.int32_ty(1))
                 builder.store(node_runs, node_runs_ptr)
 
-                # TODO: Update timestamp
+                # Update timestamp
+                mech_ts_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(1)])
+                builder.store(time_stamp, mech_ts_ptr)
 
 
             builder.branch(loop_condition)
