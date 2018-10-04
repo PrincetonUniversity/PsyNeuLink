@@ -20,6 +20,23 @@ of Control model described in `Leider et al. <https://journals.plos.org/ploscomp
 <LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy <LVOCControlMechanism.allocation_policy>`)
 based on a set of `predictors <LVOCControlMechanism.predictors>`.
 
+.. _LVOCControlMechanism_EVC:
+
+*Expected Value of Control (EVC)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its
+`system <EVCControlMechanism.system>`.  In the `default configuration <EVCControlMechanism_Default_Configuration>`,
+an EVCControlMechanism carries out an exhaustive evaluation of allocation policies, simulating its `system
+<EVCControlMechanism.system>` under each, and using an `ObjectiveMechanism` and several `auxiliary functions
+<EVCControlMechanism_Functions>` to calculate the **expected value of control (EVC)** for each `allocation_policy`:
+a cost-benefit analysis that weighs the `cost <ControlSignal.cost> of the ControlSignals against the outcome of the
+`system <EVCControlMechanism.system>` \\s performance for a given `allocation_policy`. The EVCControlMechanism
+selects the `allocation_policy` that generates the maximum EVC, and implements that for the next `TRIAL`. Each step
+of this procedure can be modified, or replaced entirely, by assigning custom functions to corresponding parameters of
+the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
+
+
 .. _LVOCControlMechanism_Creation:
 
 Creating an LVOCControlMechanism
@@ -50,6 +67,8 @@ Creating an LVOCControlMechanism
           specified in its value is assigned to each of the InputStates created on the LVOCControlMechanism to shadow
           the ones specified in the *SHADOW_INPUTS* entry (see `LVOC_Structure`).
 
+    Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
+
 
 .. _LVOCControlMechanism_Structure:
 
@@ -64,35 +83,28 @@ An LVOCControlMechanism must belong to a `Composition` (identified in its `compo
 *Input*
 ~~~~~~~
 
+An LVOCControlMechanism has one `InputState` that receives a Projection from its `objective_mechanism
+<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`), and one for
+each of its `predictors <LVOCControlMechanism.predictors>`.  Predictors can be of two types:
+
 .. _LVOCControlMechanism_Predictors:
 
-Predictors and InputStates
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Predictors
+^^^^^^^^^^
 
-An LVOCControlMechanism has one `InputState` that receives a Projection from its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`, and one for
-each of its `predictors <LVOCControlMechanism.predictors>`.  The latter can be of two types:
+* *Input Predictor* -- this is a value received as input by some other Mechanism in the Composition.
+    These are typically specified in a *SHADOW_INPUTS* entry of a dict in the **predictors** argument of the
+    LVOCControlMechanism's constructor (see `LVOCControlMechanism_Creation`), designating an InputState to be
+    shadowed.  A Projection projects to the InputState of the LVOCControlMechanism for that predictor,
+    from the same OutputState that projects to the InputState being "shadowed" (including an OutputState of the
+    Composition's `InputCIM` if the input being shadowed belongs to an `ORIGIN` Mechanism of the Composition).
 
-Input Predictors
+* *Output Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism in the
+    Composition.  These too are specified in the **predictors** argument of the LVOCControlMechanism's constructor,
+    (see `LVOCControlMechanism_Creation`), and each is assigned a Projection to the InputState of the
+    LVOCControlMechanism for that predictor.
 
-Output Predictors
-
-
-
-If the *SHADOW_INPUTS* keyword is used to
-specify the **predictors** argument in the LVOCControlMechanism's constructor, then an InputState is created
-for the LVOCControlMechanism corresponding to every InputState of every `ORIGIN` Mechanism in the Composition to
-which it belongs, with a Projection to it paralleling the one from the Composition's `Input CIM` to the corresponding
-`ORIGIN` Mechanism InputState.  If *SHADOW_INPUTS* is used to specify an entry in a dict in the **predictors**
-specification, then d
-
-
-as the specification
-sole specificadtion, or as an entry in a dict in the specification of the **predictors** argument in the
-LVOCControlMechanism's constructor, or as
-
-For `predictors <LVOCControlMechanism.predictors>`
-specified in
+The predictors of an LVOCControlMechanism are listed in its `predictors <LVOCControlMechanism.predictors` attribute.
 
 .. _LVOCControlMechanism_ObjectiveMechanism:
 
@@ -100,27 +112,25 @@ ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
 Like any ControlMechanism, an LVOCControlMechanism receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputState_Primary>`.  The ObjectiveFunction is listed in the LVOCControlMechanism's `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
-`LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
-this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
-`monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be customized
-in a variety of ways:
+<ObjectiveMechanism_Output>` of its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`,
+via a MappingProjection to its `primary InputState <InputState_Primary>`. By default, the ObjectiveMechanism's
+function is a `LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as
+*PRODUCT*; this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed
+in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be
+customized in a variety of ways:
 
     * by specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in the
-      **objective_mechanism** argument of the LVOCControlMechanism's constructor;
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in either the
+      **monitor_for_control** or **objective_mechanism** arguments of the LVOCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
       <LVOCControlMechanism.objective_mechanism>` argument of the LVOCControlMechanism's constructor;
     ..
     * specifying a different `ObjectiveMechanism` in the **objective_mechanism** argument of the LVOCControlMechanism's
-      constructor. The result of the `objective_mechanism <LVOCControlMechanism.objective_mechanism>`'s `function
-      <ObjectiveMechanism.function>` is used as the outcome in the calculations described below.
+      constructor.
 
     .. _LVOCControlMechanism_Objective_Mechanism_Function_Note:
 
@@ -138,29 +148,19 @@ in a variety of ways:
        example under `System_Control_Examples`).
 
 The result of the LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>` is used by
-its `function <ObjectiveMechanism.function>` to evaluate the performance of its `system <LVOCControlMechanism.system>`
-when computing the `EVC <LVOCControlMechanism_EVC>`.
+its `function <LVOCControlMechanism.function>` to evaluate the performance of its `Composition
+<LVOCControlMechanism.composition>` when computing the `EVC <LVOCControlMechanism_EVC>`.
 
-.. _LVOCControlMechanism_Functions:
+.. _LVOCControlMechanism_Function:
 
 *Function*
 ~~~~~~~~~~
 
-By default, the primary `function <LVOCControlMechanism.function>` is `ControlSignalGridSearch` (see
-`LVOCControlMechanism_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the
-performance of its `system <LVOCControlMechanism.system>` to identify an `allocation_policy
-<LVOCControlMechanism.allocation_policy>` that yields the highest `EVC <LVOCControlMechanism_EVC>`.  However,
-any function can be used that returns an appropriate value (i.e., that specifies an `allocation_policy` for the
-number of `ControlSignals <LVOCControlMechanism_ControlSignals>` in the LVOCControlMechanism's `control_signals`
-attribute, using the correct format for the `allocation <ControlSignal.allocation>` value of each ControlSignal).
-In addition to its primary `function <LVOCControlMechanism.function>`, an LVOCControlMechanism has several auxiliary
-functions, that can be used by its `function <LVOCControlMechanism.function>` to calculate the EVC to select an
-`allocation_policy` with the maximum EVC among a range of policies specified by its ControlSignals.  The default
-set of functions and their operation are described in the section that follows;  however, the LVOCControlMechanism's
-`function <LVOCControlMechanism.function>` can call any other function to customize how the EVC is calcualted.
-
-.. _LVOCControlMechanism_Default_Configuration:
-
+By default, the primary `function <LVOCControlMechanism.function>` is `ControlSignalGradientAscent, which learns to
+use the LVOCControlMechanism's  `predictors <LVOCControlMechanism.predictors>` to select the `allocation_policy
+<LVOCControlMechanism.allocation_policy>` that yields the greatest `EVC <LVOCControlMechanism_EVC>`. However,
+any function can be used that returns an array with the same shape as the LVOCControlMechanism's `allocation_policy
+<LVOCControlMechanism.allocation_policy>`.
 
 .. _LVOCControlMechanism_ControlSignals:
 
@@ -169,7 +169,7 @@ set of functions and their operation are described in the section that follows; 
 
 The OutputStates of an LVOCControlMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <LVOCControlMechanism.control_signals>` attribute (as well as
-its `output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
+its `output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a `ControlProjection`
 that projects to the `ParameterState` for a parameter controlled by the LVOCControlMechanism.  Each ControlSignal is
 assigned an item of the LVOCControlMechanism's `allocation_policy`, that determines its `allocation
 <ControlSignal.allocation>` for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by
@@ -178,45 +178,38 @@ a ControlSignal to determine its `intensity <ControlSignal.intensity>`, which is
 ControlProjection is used by the `ParameterState` to which it projects to modify the value of the parameter (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter it controls).
 A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>`
-and/or its time course. The `cost <ControlSignal.cost>` is included in the evaluation that the LVOCControlMechanism
-carries out for a given `allocation_policy`, and that it uses to adapt the ControlSignal's `allocation
-<ControlSignal.allocation>` in the future.  When the LVOCControlMechanism chooses an `allocation_policy` to evaluate,
-it selects an allocation value from the ControlSignal's `allocation_samples <ControlSignal.allocation_samples>`
-attribute.
-
+and/or its time course. The `cost <ControlSignal.cost>` may be included in the evaluation carried out by the
+LVOCControlMechanism's `function <LVOCControlMechanism.function>` for a given `allocation_policy`,
+and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the future.
 
 .. _LVOCControlMechanism_Execution:
 
 Execution
 ---------
 
-An LVOCControlMechanism must be the `controller <System.controller>` of a System, and as a consequence it is always the
-last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <LVOCControlMechanism.system>` (see `System
-Control <System_Execution_Control>` and `Execution <System_Execution>`). When an LVOCControlMechanism is executed,
-it updates the value of its `prediction_mechanisms` and `objective_mechanism`, and then calls its `function
-<LVOCControlMechanism.function>`, which determines and implements the `allocation_policy` for the next `TRIAL` of its
-`system <LVOCControlMechanism.system>`\\s execution.  The default `function <LVOCControlMechanism.function>` executes
-the following steps (described in greater detailed `above <LVOCControlMechanism_Default_Configuration>`):
+When an LVOCControlMechanism is executed, it uses the values of its `predictors <LVOCControlMechanism.predictors>`
+to determines and implement the `allocation_policy` for the current `trial` of execution of its
+`composition <LVOCControlMechanism.composition>`.  The default `function <LVOCControlMechanism.function>` --
+`ControlSignalGradientAscent -- executes the following steps:
 
-* Samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the
-  LVOCControlMechanism's ControlSignals specified by their `allocation_samples` attributes);  for each
-  `allocation_policy`, it:
+  * Updates its `prediction_vector <ControlSignalGradientAscent.prediction_vector>` with the current values of the
+    LVOCControlMechanism's `predictors <LVOCControlMechanism.predictors>`, `control_signals
+    <LVOCControlMechanism.control_signals>`, and their `costs <ControlSignal.cost>`.
 
-  * Runs a simulation of the LVOCControlMechanism's `system <LVOCControlMechanism.system>` with the parameter values
-    specified by that `allocation_policy`, by calling the system's  `run_simulation <System.run_simulation>` method;
-    each simulation uses inputs provided by the LVOCControlMechanism's `prediction_mechanisms
-    <LVOCControlMechanism.prediction_mechanisms>` and includes execution of its `objective_mechanism`, which provides
-    its result to the LVOCControlMechanism.
+  * Calls the `BayesGLM` Function with the `prediction_vector <ControlSignalGradientAscent.prediction_vector>`
+    and the outcome received from the LVOCControlMechanism's `objective_mechanism
+    <LVOCControlMechanism_EVC.objective_mechanism>`.  This Function updates the means and variances associated with
+    each element of the `prediction_vector <ControlSignalGradientAscent.prediction_vector>` in order to better predict
+    the outcome, and returns a vector of prediction weights sampled using the updated means and variances.
 
-  * Calls the LVOCControlMechanism's `value_function <LVOCControlMechanism.value_function>`, which in turn calls
-    LVOCControlMechanism's `cost_function <LVOCControlMechanism.cost_function>` and `combine_outcome_and_cost_function
-    <LVOCControlMechanism.combine_outcome_and_cost_function>` to evaluate the EVC for that `allocation_policy`.
+  * Uses the prediction weights returned by the `BayesGLM` Function to determine, by a `gradient ascent process
+    <ControlSignalGradientAscent.gradient_ascent>`, the `allocation_policy <LVOCControlMechanism>` that yields the
+    greatest `EVC <LVOCControlMechanism_EVC>`, and returns that `allocation_policy
+    <LVOCControlMechanism.allocation_policy>`.
 
-* Selects and returns the `allocation_policy` that generates the maximum EVC value.
-
-This procedure can be modified by specifying a custom function for any or all of the `functions
-<LVOCControlMechanism_Functions>` referred to above.
-
+The values specified by the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by the
+LVOCControlMechanism's `function <LVOCControlMechanism.function>` are assigned as the `values <ControlSignal.values>`
+of its `control_signals <LVOCControlMechanism.control_signals>`.
 
 COMMENT:
 .. _LVOCControlMechanism_Examples:

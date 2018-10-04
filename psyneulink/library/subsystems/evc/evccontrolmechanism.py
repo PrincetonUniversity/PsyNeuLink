@@ -104,7 +104,7 @@ ObjectiveMechanism
 
 Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputState_Primary>`.  The ObjectiveFunction is listed in the EVCControlMechanism's `objective_mechanism
+<InputState_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
 <EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
 `LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
 this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
@@ -115,8 +115,8 @@ in a variety of ways:
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in the
-      **objective_mechanism** argument of the EVCControlMechanism's constructor;
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in either the
+      **monitor_for_control** or **objective_mechanism** arguments of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
       <EVCControlMechanism.objective_mechanism>` argument of the EVCControlMechanism's constructor;
@@ -141,7 +141,7 @@ in a variety of ways:
        example under `System_Control_Examples`).
 
 The result of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` is used by
-its `function <ObjectiveMechanism.function>` to evaluate the performance of its `system <EVCControlMechanism.system>`
+its `function <EVCControlMechanism.function>` to evaluate the performance of its `System <EVCControlMechanism.system>`
 when computing the `EVC <EVCControlMechanism_EVC>`.
 
 
