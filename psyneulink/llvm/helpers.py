@@ -67,8 +67,10 @@ def load_extract_scalar_array_one(builder, ptr):
 
 def generate_sched_condition(ctx, builder, condition, cond_ptr, comp_nodes):
 
-    from psyneulink.scheduling.condition import AllHaveRun
-    if isinstance(condition, AllHaveRun):
+    from psyneulink.scheduling.condition import AllHaveRun, Always
+    if isinstance(condition, Always):
+        return ir.IntType(1)(1)
+    elif isinstance(condition, AllHaveRun):
         run_cond = ir.IntType(1)(1)
         array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         for idx, _ in enumerate(comp_nodes):
