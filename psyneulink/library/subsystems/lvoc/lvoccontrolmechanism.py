@@ -75,14 +75,19 @@ An LVOCControlMechanism must belong to a `Composition` (identified in its `compo
 *Input*
 ~~~~~~~
 
-An LVOCControlMechanism has one `InputState` that receives a Projection from its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`), and one for
-each of its `predictors <LVOCControlMechanism.predictors>`.  Predictors can be of two types:
+An LVOCControlMechanism has an `InputState` that receives a Projection from its `objective_mechanism
+<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`), and additional ones for
+each of its `predictors <LVOCControlMechanism.predictors>`, as described below.
 
 .. _LVOCControlMechanism_Predictors:
 
 Predictors
 ^^^^^^^^^^
+
+Predictors are used by the LVOCControlMechanism's `function <LVOCControlMechanism.function>` to determine its
+`allocation_policy <LVOCControlMechanism.allocation_policy>`.
+
+Predictors can be of two types:
 
 * *Input Predictor* -- this is a value received as input by some other Mechanism in the Composition.
     These are typically specified in a *SHADOW_INPUTS* entry of a dict in the **predictors** argument of the
@@ -96,7 +101,8 @@ Predictors
     (see `LVOCControlMechanism_Creation`), and each is assigned a Projection to the InputState of the
     LVOCControlMechanism for that predictor.
 
-The predictors of an LVOCControlMechanism are listed in its `predictors <LVOCControlMechanism.predictors` attribute.
+The current `values <InputState.value>` of the InputStates for the predictors are listed in the `predictor_values
+<LVOCControlMechanism.predictor_values>` attribute.
 
 .. _LVOCControlMechanism_ObjectiveMechanism:
 
