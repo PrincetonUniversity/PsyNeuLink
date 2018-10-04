@@ -3030,25 +3030,62 @@ class Composition(object):
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
             exit_block = builder.append_basic_block(name="exit")
 
-            run_cond_ptr = builder.alloca(ir.IntType(1))
-            builder.store(ir.IntType(1)(1), run_cond_ptr)
+            # Allocate condition structure
+            structure = ir.LiteralStructType([
+                ir.LiteralStructType([ # current time stamp (trial, run, step)
+                ctx.int32_ty, ctx.int32_ty, ctx.int32_ty]),
+                ir.ArrayType( # for each node
+                    ir.LiteralStructType([
+                        ctx.int32_ty, # number of executions
+                        ir.LiteralStructType([ # time stamp of last execution
+                            ctx.int32_ty, ctx.int32_ty, ctx.int32_ty])
+                    ]), len(self.c_nodes)
+                )
+            ])
+            cond_ptr = builder.alloca(structure)
+
+            # Init the condition structure
+            cond_init = structure(((0, 0, 0), [(0,(0, 0, 0)) for n in self.c_nodes]))
+            builder.store(cond_init, cond_ptr)
 
             builder.branch(loop_condition)
 
             builder.position_at_end(loop_condition)
+
             # TODO: Implement end condition here
-            run_cond = builder.load(run_cond_ptr)
+            from psyneulink.scheduling.condition import AllHaveRun
+            assert isinstance(self.termination_processing[TimeScale.TRIAL],
+                              AllHaveRun)
+            run_cond = ir.IntType(1)(0)
+
+            array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            for idx, _ in enumerate(self.c_nodes):
+                node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(0)])
+                node_runs = builder.load(node_runs_ptr)
+                node_ran = builder.icmp_unsigned('>', node_runs, ctx.int32_ty(0))
+                run_cond = builder.or_(run_cond, node_ran)
+
+            run_cond = builder.not_(run_cond)
             builder.cbranch(run_cond, loop_body, exit_block)
 
 
+            # Generate loop body
             builder.position_at_end(loop_body)
+
             # TODO: Add support for frozen values
-            for mech in self.c_nodes:
+            for idx, mech in enumerate(self.c_nodes):
                 mech_name = self.__get_bin_mechanism(mech).name;
                 mech_f = ctx.get_llvm_function(mech_name)
                 builder.call(mech_f, [context, params, comp_in, data, data])
-                # TODO: Update conditions here
-                builder.store(ir.IntType(1)(0), run_cond_ptr)
+
+                # Update number of runs
+                node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(0)])
+                node_runs = builder.load(node_runs_ptr)
+                node_runs = builder.add(node_runs, ctx.int32_ty(1))
+                builder.store(node_runs, node_runs_ptr)
+
+                # TODO: Update timestamp
+
 
             builder.branch(loop_condition)
 
