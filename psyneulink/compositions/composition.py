@@ -3050,21 +3050,11 @@ class Composition(object):
 
             builder.branch(loop_condition)
 
+            # Generate a while not 'end condition' loop
             builder.position_at_end(loop_condition)
-
-            # TODO: Implement end condition here
-            from psyneulink.scheduling.condition import AllHaveRun
-            assert isinstance(self.termination_processing[TimeScale.TRIAL],
-                              AllHaveRun)
-            run_cond = ir.IntType(1)(0)
-
-            array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            for idx, _ in enumerate(self.c_nodes):
-                node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(0)])
-                node_runs = builder.load(node_runs_ptr)
-                node_ran = builder.icmp_unsigned('>', node_runs, ctx.int32_ty(0))
-                run_cond = builder.or_(run_cond, node_ran)
-
+            run_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
+                            self.termination_processing[TimeScale.TRIAL],
+                            cond_ptr, self.c_nodes)
             run_cond = builder.not_(run_cond)
             builder.cbranch(run_cond, loop_body, exit_block)
 
@@ -3073,6 +3063,7 @@ class Composition(object):
             builder.position_at_end(loop_body)
 
             time_stamp = builder.load(builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # TODO: Add support for frozen values
             for idx, mech in enumerate(self.c_nodes):
                 mech_name = self.__get_bin_mechanism(mech).name;

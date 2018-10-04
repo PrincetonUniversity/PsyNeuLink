@@ -64,3 +64,19 @@ def load_extract_scalar_array_one(builder, ptr):
     if isinstance(val.type, ir.ArrayType) and val.type.count == 1:
         val = builder.extract_value(val, [0])
     return val
+
+def generate_sched_condition(ctx, builder, condition, cond_ptr, comp_nodes):
+
+    from psyneulink.scheduling.condition import AllHaveRun
+    if isinstance(condition, AllHaveRun):
+        run_cond = ir.IntType(1)(1)
+        array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        for idx, _ in enumerate(comp_nodes):
+            node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0),
+                                        ctx.int32_ty(idx), ctx.int32_ty(0)])
+            node_runs = builder.load(node_runs_ptr)
+            node_ran = builder.icmp_unsigned('>', node_runs, ctx.int32_ty(0))
+            return builder.and_(run_cond, node_ran)
+    else:
+        print("ERROR: Unsupported scheduling condition: ", condition)
+        assert False
