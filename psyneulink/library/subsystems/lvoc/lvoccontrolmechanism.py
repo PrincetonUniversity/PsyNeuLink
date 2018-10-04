@@ -18,7 +18,7 @@ order to optimize the performance of the `Composition` to which it belongs.  It 
 of Control model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi
 .1006043&rev=2>`_, which learns to select the optimal value for its `control_signals
 <LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy <LVOCControlMechanism.allocation_policy>`)
-based on a set of `predictors <LVOCControlMechanism.predictors>`.
+based on a set of `predictors <LVOCControlMechanism_Predictors>`.
 
 .. _LVOCControlMechanism_EVC:
 
@@ -41,10 +41,10 @@ Creating an LVOCControlMechanism
   * **composition** -- specifies the `Composition` to which the LVOCControlMechanism is to be assigned.
   ..
   * **predictors** -- this takes the place of the standard **input_states** argument in the constructor for a
-  ` Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
+    Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.  By default, the input to every `ORIGIN`
     Mechanism of the `Composition` to which the LVOCControlMechanism belongs is used as its `predictors
-    <LVOCControlMechanism.predictors>`.  However, it can be specified using any of the following, singly or combined
+    <LVOCControlMechanism_Predictors>`.  However, it can be specified using any of the following, singly or combined
     in a list:
 
         * *InputState specification* -- this can be any legal form of `InputState specification
@@ -53,7 +53,7 @@ Creating an LVOCControlMechanism
           <OutputState_Primary>` of the specified Mechanism) is used as a `predictor <LVOCControlMechanism.predictor>`.
         |
         * {*SHADOW_INPUTS*: <*ALL* or List[InputState(s) and/or Mechanism(s)>][,FUNCTION:<Function]} -- dictionary that
-          specifies InputStates, the inputs to which are used as `predictors <LVOCControlMechanism.predictors>`.  If
+          specifies InputStates, the inputs to which are used as `predictors <LVOCControlMechanism_Predictors>`.  If
           *ALL* is specified, then every InputState of every *ORIGIN* Mechanism in the Composition is used;  all of
           the InputStates are used for any Mechanism(s) specified.  If the *FUNCTION* entry is included, the 'Function`
           specified in its value is assigned to each of the InputStates created on the LVOCControlMechanism to shadow
@@ -77,7 +77,7 @@ An LVOCControlMechanism must belong to a `Composition` (identified in its `compo
 
 An LVOCControlMechanism has an `InputState` that receives a Projection from its `objective_mechanism
 <LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`), and additional ones for
-each of its `predictors <LVOCControlMechanism.predictors>`, as described below.
+each of its predictors, as described below.
 
 .. _LVOCControlMechanism_Predictors:
 
@@ -155,7 +155,7 @@ its `function <LVOCControlMechanism.function>` to evaluate the performance of it
 ~~~~~~~~~~
 
 By default, the primary `function <LVOCControlMechanism.function>` is `ControlSignalGradientAscent, which learns to
-use the LVOCControlMechanism's  `predictors <LVOCControlMechanism.predictors>` to select the `allocation_policy
+use the LVOCControlMechanism's  `predictors <LVOCControlMechanism_Predictors>` to select the `allocation_policy
 <LVOCControlMechanism.allocation_policy>` that yields the greatest `EVC <LVOCControlMechanism_EVC>`. However,
 any function can be used that returns an array with the same shape as the LVOCControlMechanism's `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
@@ -185,14 +185,14 @@ and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocat
 Execution
 ---------
 
-When an LVOCControlMechanism is executed, it uses the values of its `predictors <LVOCControlMechanism.predictors>`
-to determines and implement the `allocation_policy` for the current `trial` of execution of its
-`composition <LVOCControlMechanism.composition>`.  The default `function <LVOCControlMechanism.function>` --
-`ControlSignalGradientAscent -- executes the following steps:
+When an LVOCControlMechanism is executed, it uses the values of its `predictors <LVOCControlMechanism_Predictors>`,
+listed in its `predictor_values <LVOCControlMechanism.predictor_values>` attribute, to determines and implement the
+`allocation_policy` for the current `trial` of execution of its `composition <LVOCControlMechanism.composition>`.
+The default `function <LVOCControlMechanism.function>` -- `ControlSignalGradientAscent -- executes the following steps:
 
-  * Updates its `prediction_vector <ControlSignalGradientAscent.prediction_vector>` with the current values of the
-    LVOCControlMechanism's `predictors <LVOCControlMechanism.predictors>`, `control_signals
-    <LVOCControlMechanism.control_signals>`, and their `costs <ControlSignal.cost>`.
+  * Updates its `prediction_vector <ControlSignalGradientAscent.prediction_vector>` with `predictors_values
+    <LVOCControlMechanism.predictor_values>`, `control_signals <LVOCControlMechanism.control_signals>`,
+    and their `costs <ControlSignal.cost>`.
 
   * Calls the `BayesGLM` Function with the `prediction_vector <ControlSignalGradientAscent.prediction_vector>`
     and the outcome received from the LVOCControlMechanism's `objective_mechanism
@@ -323,7 +323,7 @@ class LVOCControlMechanism(ControlMechanism):
     predictor_values : 1d ndarray
         the current `values <InputState.value>` of the InputStates used by `function <LVOCControlMechanism.function>`
         to determine `allocation_policy <LVOCControlMechanism.allocation_policy>` (see
-        `LVOCControlMechanism_Creation` for details about predictors).
+        `LVOCControlMechanism_Predictors` for details about predictors).
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the LVOCControlMechanism to evaluate the performance of its `system
