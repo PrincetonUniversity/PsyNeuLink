@@ -3056,18 +3056,33 @@ class Composition(object):
                             self.termination_processing[TimeScale.TRIAL],
                             cond_ptr, self.c_nodes)
             run_cond = builder.not_(run_cond)
+
+
+            run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
+            run_set_ptr = builder.alloca(run_set_type)
+            builder.store(run_set_type([0] * len(self.c_nodes)), run_set_ptr)
+
             builder.cbranch(run_cond, loop_body, exit_block)
 
 
             # Generate loop body
             builder.position_at_end(loop_body)
 
-            time_stamp = builder.load(builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)]))
-            array_ptr = builder.gep(cond_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            # TODO: Add support for frozen values
+            zero = ctx.int32_ty(0)
+            time_stamp = builder.load(builder.gep(cond_ptr, [zero, ctx.int32_ty(0)]))
+            array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
+            # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
+                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 # TODO: Add support for mechanism condition evaluation
                 mech_cond = ir.IntType(1)(1)
+                builder.store(mech_cond, run_set_mech_ptr)
+
+            # TODO: Add support for frozen values
+            for idx, mech in enumerate(self.c_nodes):
+                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
+                # TODO: Add support for mechanism condition evaluation
+                mech_cond = builder.load(run_set_mech_ptr)
                 with builder.if_then(mech_cond):
                     mech_name = self.__get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
