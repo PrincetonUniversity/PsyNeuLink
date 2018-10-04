@@ -264,10 +264,9 @@ class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                        \
     composition=None,                               \
     predictors=SHADOW_INPUTS,                       \
-    objective_mechanism=
+    objective_mechanism=None,                       \
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
-    monitor_for_control=None,                       \
     function=ControlSignalGradientAscent,           \
     control_signals=None,                           \
     modulation=ModulationParam.MULTIPLICATIVE,      \
