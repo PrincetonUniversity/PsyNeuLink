@@ -2999,6 +2999,10 @@ class Composition(object):
 
         return func_name
 
+    def __get_processing_condition_set(self, node):
+        if node not in self.scheduler_processing.condition_set.conditions:
+            return Always()
+        return self.scheduler_processing.condition_set.conditions[node]
 
     def __gen_exec_wrapper(self):
         func_name = None
@@ -3075,7 +3079,9 @@ class Composition(object):
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 # TODO: Add support for mechanism condition evaluation
-                mech_cond = ir.IntType(1)(1)
+                mech_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
+                                self.__get_processing_condition_set(mech),
+                                cond_ptr, self.c_nodes)
                 builder.store(mech_cond, run_set_mech_ptr)
 
             # TODO: Add support for frozen values
