@@ -67,7 +67,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import ALL, ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.globals.utilities import CNodeRole
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.condition import Always
@@ -340,6 +340,34 @@ class Composition(object):
             A list of all Composition Nodes (`Mechanisms <Mechanism>` and `Compositions <Composition>`) contained in
             this Composition
 
+        external_input_sources : 'Dict`
+            A dictionary in which the keys are Composition Nodes and the values are specifications of the node's
+            external input source. Origin nodes are expected to receive an external input for each of their
+            InputStates, via the input_CIM. If an origin node is specified as a key node in external_input_sources, it
+            may borrow input_CIM output states from one or more other origin nodes, but still must receive an external
+            input for each InputState. If a non-origin node is specified as a key node in external_input_sources, the
+            external inputs are in addition to any other inputs the key node may receive, so there is not a requirement
+            that all key node InputStates receive an input.
+
+            Below are the options for specifying an external input source:
+
+            - an origin node
+                projections are created from the origin node's corresponding input_CIM OutputState(s) to the key node's
+                InputState(s).
+
+            - a list of origin nodes and origin node InputStates
+                projections are created from each origin node InputState's correpsonding input_CIM OutputState to the
+                key node's InputStates. If an origin node is included in the list, it is used as a short hand for all
+                of its InputStates. If the key node is an origin node, then the number of InputStates represented in
+                the list must exactly match the number of InputStates on the key node. Otherwise, the list may have the
+                same number or fewer InputStates as the key node, and None may be used to "skip" over key node
+                InputStates to which there should not be an external input.
+
+            - `ALL`
+                projections are created from each origin node's corresponding input_CIM OutputState(s) to the key node's
+                InputState(s). (Excludes origin nodes that are already borrowing inputs from another origin node).
+
+
         COMMENT:
         name : str
             see `name <Composition_Name>`
@@ -350,11 +378,11 @@ class Composition(object):
 
     '''
 
-    def __init__(self, 
+    def __init__(self,
                  name=None,
                  controller=None,
                  enable_controller=None,
-                 origin_input_sources=None):
+                 external_input_sources=None):
         # core attributes
         if name is None:
             name = "composition"
@@ -365,9 +393,9 @@ class Composition(object):
         self.required_c_node_roles = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
-        self.origin_input_sources = origin_input_sources
-        if origin_input_sources is None:
-            self.origin_input_sources = {}
+        self.external_input_sources = external_input_sources
+        if external_input_sources is None:
+            self.external_input_sources = {}
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
         self.input_CIM_states = {}
@@ -480,22 +508,13 @@ class Composition(object):
         return uuid.uuid4()
 
     def shadow_interface_mechanism_connection(self, node_input_state, cim_rep_input_state):
-        if len(node_input_state.value) == len(cim_rep_input_state.value):
-            interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-            MappingProjection(sender=interface_output_state,
-                              receiver=node_input_state,
-                              matrix=IDENTITY_MATRIX,
-                              name="(" + interface_output_state.name + ") to ("
-                                   + node_input_state.owner.name + "-" + node_input_state.name + ")")
-        else:
-            raise CompositionError("{0}'s CIM representation cannot be used to provide input to {1} due to "
-                                   "incompatible shapes. ({0} has length {2} while {1} has length {3}."
-                                   .format(cim_rep_input_state.name,
-                                           node_input_state.name,
-                                           len(cim_rep_input_state.value),
-                                           len(node_input_state.value)))
+        interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
+        MappingProjection(sender=interface_output_state,
+                          receiver=node_input_state,
+                          name="(" + interface_output_state.name + ") to ("
+                               + node_input_state.owner.name + "-" + node_input_state.name + ")")
 
-    def add_c_node(self, node, required_roles=None):
+    def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
             Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
@@ -519,10 +538,6 @@ class Composition(object):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
-
-        # # Can eventually be replaced by required_roles and aux_components
-        # if isinstance(node, ControlMechanism):
-        #     self.add_control_mechanism(node)
 
         if hasattr(node, "aux_components"):
 
@@ -578,6 +593,8 @@ class Composition(object):
             for required_role in required_roles:
                 self.add_required_c_node_role(node, required_role)
 
+        if external_input_source:
+            self.external_input_sources[node] = external_input_source
 
 
     def add_controller(self, node):
@@ -945,18 +962,18 @@ class Composition(object):
 
     def get_c_nodes_by_role(self, role):
         '''
-            Returns a set of Composition Nodes in this Composition that have the role `role`
+            Returns a List of Composition Nodes in this Composition that have the role `role`
 
             Arguments
             _________
 
             role : CNodeRole
-                the set of nodes having this role to return
+                the List of nodes having this role to return
 
             Returns
             -------
 
-            set of Compositon Nodes with `CNodeRole` `role` : set(`Mechanisms <Mechanism>` and
+            List of Compositon Nodes with `CNodeRole` `role` : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         '''
         if role not in CNodeRole:
@@ -1078,17 +1095,17 @@ class Composition(object):
               InputStates and OutputStates are being added to the CIMs
 
             - for each origin node:
-                - if the origin node's origin_input_source specification is True or not listed, create a corresponding
+                - if the origin node's external_input_sources specification is True or not listed, create a corresponding
                   InputState and OutputState on the Input CompositionInterfaceMechanism for each "external" InputState
                   of each origin node, and a Projection between the newly created InputCIM OutputState and the origin
                   InputState
-                - if the origin node's origin_input_source specification is another origin node, create projections
+                - if the origin node's external_input_sources specification is another origin node, create projections
                   from that other origin node's corresponding InputCIM OutputStates to the current origin node's
                   InputStates. The two nodes must have the same shape.
-                - if the origin node's origin_input_source specification is a list, the list must contain only origin
+                - if the origin node's external_input_sources specification is a list, the list must contain only origin
                   nodes and/or InputStates of origin nodes. In this case, an origin node is shorthand for all of the
                   InputStates of that origin node. The concatenation of the values of all of the origin nodes specified
-                  in the list must match the shape of the node whose origin_input_source is being specified.
+                  in the list must match the shape of the node whose external_input_sources is being specified.
 
             - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
               OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
@@ -1122,44 +1139,44 @@ class Composition(object):
         origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
         redirected_inputs = set()
         for node in origin_nodes:
-            if node in self.origin_input_sources:
-                if self.origin_input_sources[node] == True:
+            if node in self.external_input_sources:
+                if self.external_input_sources[node] == True:
                     pass
-                elif self.origin_input_sources[node] in origin_nodes:
+                elif self.external_input_sources[node] in origin_nodes:
                     redirected_inputs.add(node)
                     continue
-                elif isinstance(self.origin_input_sources[node], list):
+                elif isinstance(self.external_input_sources[node], list):
                     valid_spec = True
-                    for source in self.origin_input_sources[node]:
+                    for source in self.external_input_sources[node]:
                         if isinstance(source, (Composition, Mechanism)):
                             if source not in origin_nodes:
                                 valid_spec = False
-                            elif source in self.origin_input_sources:
-                                if self.origin_input_sources[source] != True:
+                            elif source in self.external_input_sources:
+                                if self.external_input_sources[source] != True:
                                     valid_spec = False
                         elif isinstance(source, InputState):
                             if source.owner not in origin_nodes:
                                 valid_spec = False
-                            elif source.owner in self.origin_input_sources:
-                                if self.origin_input_sources[source.owner] != True:
+                            elif source.owner in self.external_input_sources:
+                                if self.external_input_sources[source.owner] != True:
                                     valid_spec = False
                     if valid_spec:
                         redirected_inputs.add(node)
                         continue
-                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. It contains "
+                    raise CompositionError("External input source ({0}) specified for {1} is not valid. It contains "
                                            "either (1) a source which is not an origin node or an InputState of an "
                                            "origin node, or (2) source which is an origin node (or origin node "
                                            "InputState), but is already borrowing input from yet another origin node."
-                                           .format(self.origin_input_sources[node], node.name))
+                                           .format(self.external_input_sources[node], node.name))
 
                 else:
-                    raise CompositionError("Origin input source ({0}) specified for {1} is not valid. Must be (1) True "
+                    raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
                                            "[the key node is represented on the input_CIM by one or more pairs of "
                                            "states that pass its input value], (2) another origin node [the key node "
                                            "gets its input from another origin node's input_CIM representation], or (3)"
                                            " a list of origin nodes and/or origin node InputStates [the key node gets "
                                            "its input from a mix of other origin nodes' input_CIM representations."
-                                           .format(self.origin_input_sources[node], node.name))
+                                           .format(self.external_input_sources[node], node.name))
 
             for input_state in node.external_input_states:
                 # add it to our set of current input states
@@ -1188,46 +1205,64 @@ class Composition(object):
                                                 name="(" + interface_output_state.name + ") to (" +
                                                 input_state.owner.name + "-" + input_state.name + ")"))
 
-        # allow projections from CIM to ANY node
-        for node in self.origin_input_sources:
+        # allow projections from CIM to ANY node listed in external_input_sources
+        for node in self.external_input_sources:
             if node not in origin_nodes or node in redirected_inputs:
-                cim_rep = self.origin_input_sources[node]
-                # cim_rep is a mechanism or composition -- must match shape of node!
+
+                cim_rep = self.external_input_sources[node]
+                expanded_cim_rep = []
                 if isinstance(cim_rep, (Mechanism, Composition)):
-                    if len(node.external_input_states) == len(cim_rep.external_input_states):
-                        for i in range(len(node.external_input_states)):
-                            self.shadow_interface_mechanism_connection(node.external_input_states[i],
-                                                                       cim_rep.external_input_states[i])
-                    else:
-                        raise CompositionError("The node specified as the origin source of {0} ({1}) has an "
-                                               "incompatible number of external input states. {0} has {2} external "
-                                               "input states while {1} has {3}.".format(node.name,
-                                                                                        cim_rep.name,
-                                                                                        len(node.external_input_states),
-                                                                                        len(cim_rep.
-                                                                                            external_input_states)))
-                # cim_rep is a list of input states -- may be mixed and matched from multiple origin nodes.
-                # their concatenation must match shape of node
+                    for state in cim_rep.external_input_states:
+                        expanded_cim_rep.append(state)
                 elif isinstance(cim_rep, list):
-                    expanded_cim_rep_list = []
                     for rep in cim_rep:
                         if isinstance(rep, (Mechanism, Composition)):
                             for rep_state in rep.external_input_states:
-                                expanded_cim_rep_list.append(rep_state)
+                                expanded_cim_rep.append(rep_state)
                         elif isinstance(rep, (InputState)):
-                            expanded_cim_rep_list.append(rep)
-                    if len(node.external_input_states) == len(expanded_cim_rep_list):
-                        for i in range(len(node.external_input_states)):
-                            self.shadow_interface_mechanism_connection(node.external_input_states[i],
-                                                                       expanded_cim_rep_list[i])
-                    else:
+                            expanded_cim_rep.append(rep)
+                        elif rep is None:
+                            if node not in redirected_inputs:
+                                expanded_cim_rep.append(rep)
+                        else:
+                            raise CompositionError("Invalid item: {} in external_input_sources specified for {}: {}. Each "
+                                                   "items in list must be a Mechanism, Composition, InputStates, or "
+                                                   "None.".format(rep, node.name, cim_rep))
+                elif cim_rep is ALL:
+                    for origin_node in origin_nodes:
+                        if origin_node not in redirected_inputs:
+                            for state in origin_node.external_input_states:
+                                expanded_cim_rep.append(state)
+                else:
+                    raise CompositionError("Invalid external_input_sources specified for {}: {}. Must be a Mechanism, "
+                                           "Composition, or a List of Mechanisms, Compositions, and/or InputStates."
+                                           .format(node.name, cim_rep))
+
+                if node in redirected_inputs:
+                    # each node in redirected inputs requires an input for each of its input states
+                    if len(node.external_input_states) != len(expanded_cim_rep) and len(expanded_cim_rep) > 0:
                         raise CompositionError("The origin source specification of {0} ({1}) has an "
                                                "incompatible number of external input states. {0} has {2} external "
                                                "input states while the origin source specification has a total of {3}."
                                                .format(node.name,
                                                        cim_rep,
-                                                       len(node.external_input_states),
-                                                       len(expanded_cim_rep_list)))
+                                                           len(node.external_input_states),
+                                                           len(expanded_cim_rep)))
+
+                # for non-origin nodes, too few origin sources specified is ok, but too many is not
+                if len(expanded_cim_rep) > len(node.external_input_states):
+                    raise CompositionError("The origin source specification of {0} ({1}) has too many external input "
+                                           "states. {0} has {2} external input states while the origin source "
+                                           "specification has a total of {3}."
+                                           .format(node.name,
+                                                   cim_rep,
+                                                   len(node.external_input_states),
+                                                   len(expanded_cim_rep)))
+
+                for i in range(len(expanded_cim_rep)):
+                    if expanded_cim_rep[i]:
+                        self.shadow_interface_mechanism_connection(node.external_input_states[i],
+                                                                   expanded_cim_rep[i])
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
