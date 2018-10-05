@@ -281,7 +281,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             j+=1
             if j > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations").format(self.name, self.max_iterations)
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
             previous_lvoc = current_lvoc
