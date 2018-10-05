@@ -8,7 +8,7 @@ except ImportError:
                       '`pip install torch` or `pip3 install torch`')
 
 import psyneulink as pnl
-
+from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
 # In this file, we create and train a neural network to approximate the XOR function (henceforth referred to
 # as an XOR model) in PsyNeuLink's System, in PsyNeuLink's AutodiffComposition, and in Pytorch.
@@ -26,7 +26,7 @@ import psyneulink as pnl
 
 
 # Inputs and targets for the XOR model ------------------------------------------------------------
-
+# used by all three systems (PsyNeuLink System, AutodiffComposition, and PyTorch)
 xor_inputs = np.array(  # the inputs we will provide to the model
     [[0, 0],
      [0, 1],
@@ -43,7 +43,9 @@ xor_targets = np.array(  # the outputs we wish to see from the model
 # Parameters for training -------------------------------------------------------------------------
 # these parameters are used by all three systems (PsyNeuLink System, AutodiffComposition, and PyTorch)
 # number of training rounds (epochs)
-num_epochs = 100
+num_epochs = 200
+# This script takes ~40 seconds to run, if num_epochs = 200. Reducing num_epochs speeds it up but weakens training results.
+
 
 # learning rate (determines the size of learning updates during training)
 # higher learning rates speed up training but may reduce accuracy or prevent convergence
@@ -146,7 +148,7 @@ out_map = pnl.MappingProjection(name='hidden_to_output',
                             receiver=xor_out)
 
 # initialize an empty AutodiffComposition
-xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True)
+xor_autodiff = AutodiffComposition(param_init_from_pnl=True)
 
 # add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
 xor_autodiff.add_c_node(xor_in)
