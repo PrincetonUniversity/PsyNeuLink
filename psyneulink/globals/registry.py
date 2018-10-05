@@ -16,7 +16,8 @@ from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATIN
 
 __all__ = [
     'RegistryError',
-    'clear_registry'
+    'clear_registry',
+    'process_registry_object_instances'
 ]
 
 # IMPLEMENTATION NOTE:
@@ -291,6 +292,11 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
             if component == c:
                 name = n
 
+    try:
+        clear_registry(registry_entry.instanceDict[name]._stateRegistry)
+    except AttributeError:
+        pass
+
     # Delete instance
     del registry_entry.instanceDict[name]
 
@@ -331,3 +337,9 @@ def clear_registry(registry):
         for name in instance_dict:
             remove_instance_from_registry(registry, category, name)
         registry[category].renamed_instance_counts.clear()
+
+
+def process_registry_object_instances(registry, func):
+    for category in registry:
+        for (name, obj) in registry[category].instanceDict.items():
+            func(name, obj)

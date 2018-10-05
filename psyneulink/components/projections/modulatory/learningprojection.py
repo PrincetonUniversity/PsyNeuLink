@@ -165,7 +165,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -404,8 +404,11 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        function = Linear
+    class Params(ModulatoryProjection_Base.Params):
+        function = Param(Linear, stateful=False, loggable=False)
+        error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
+        learning_function = Param(BackPropagation, stateful=False, loggable=False)
+        learning_rate = Param(None, modulable=True)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,

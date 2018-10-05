@@ -240,6 +240,7 @@ def test_linear_combination_function_in_mechanism(operation, input, size, input_
 
     assert np.allclose(res, expected)
 
+@pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)

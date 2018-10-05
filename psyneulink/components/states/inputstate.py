@@ -460,6 +460,7 @@ import collections
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
@@ -713,8 +714,11 @@ class InputState(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class ClassDefaults(State_Base.ClassDefaults):
-        function = LinearCombination(operation=SUM)
+    class Params(State_Base.Params):
+        function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
+        weight = Param(None, modulable=True)
+        exponent = Param(None, modulable=True)
+        combine = None
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,

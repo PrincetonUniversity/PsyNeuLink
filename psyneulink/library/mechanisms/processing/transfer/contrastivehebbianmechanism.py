@@ -166,10 +166,10 @@ as follows:
 In addition to its primary `function <ContrastiveHebbianMechanism.function>`, if either the
 `minus_phase_termination_condition <ContrastiveHebbianMechanism.minus_phase_termination_condition>` or
 `plus_phase_termination_condition <ContrastiveHebbianMechanism.plus_phase_termination_condition>`
-is specified as *CONVERGENCE*, then its `convergence_function <ContrastiveHebbianMechanism.convergence_function>`, 
-that is used to determine when the corresponding `phase of execution <ContrastiveHebbian_Execution>` is complete.  
-Its `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as 
-`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity states") and 
+is specified as *CONVERGENCE*, then its `convergence_function <ContrastiveHebbianMechanism.convergence_function>`,
+that is used to determine when the corresponding `phase of execution <ContrastiveHebbian_Execution>` is complete.
+Its `learning_function <ContrastiveHebbianMechanism.learning_function>` is automatically assigned as
+`ContrastiveHebbian`, but this can be replaced by any function that takes two 1d arrays ("activity states") and
 compares them to determine the `matrix <MappingProjection.matrix>`  of the Mechanism's `recurrent_projection
 <ContrastiveHebbianMechanism.recurrent_projection>`.  If **mode** is specified as `SIMPLE_HEBBIAN
 <ContrastiveHebbian_SIMPLE_HEBBIAN>`), the default `function <ContrastiveHebbianMechanism.function>` is `Hebbian`,
@@ -305,18 +305,14 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import \
-    ContrastiveHebbian, Distance, Function, Hebbian, Linear, LinearCombination, is_function_type, EPSILON, get_matrix
-from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
+from psyneulink.components.functions.function import ContrastiveHebbian, Distance, Function, Hebbian, Linear, get_matrix, is_function_type
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism, RECURRENT, CONVERGENCE
-from psyneulink.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, \
-    MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
+from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, SIZE, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import CONVERGENCE, RECURRENT, RECURRENT_INDEX, RecurrentTransferMechanism
 
 __all__ = [
     'ContrastiveHebbianError', 'ContrastiveHebbianMechanism', 'CONTRASTIVE_HEBBIAN_OUTPUT',
@@ -549,8 +545,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that determines when a `phase of execution <ContrastiveHebbian_Execution>` complete
-        if the termination condition for that phase is specified as *CONVERGENCE*, by comparing `current_activity 
-        <ContrastiveHebbianMechanism.current_activity>` with the `previous_value 
+        if the termination condition for that phase is specified as *CONVERGENCE*, by comparing `current_activity
+        <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
         <ContrastiveHebbianMechanism.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
         of the same length as `variable <ContrastiveHebbianMechanism.variable>` and returns a scalar value. The default
         is the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
@@ -745,19 +741,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         compares the value of `current_activity <ContrastiveHebbianMechanism.current_activity>` with `previous_value
         <ContrastiveHebbianMechanism.previous_value>`; result is assigned as the value of `delta
         <ContrastiveHebbianMechanism.delta>.  Used to determine when a `phase of execution
-        <ContrastiveHebbian_Execution>` is complete if the termination condition for that phase is specified as 
+        <ContrastiveHebbian_Execution>` is complete if the termination condition for that phase is specified as
         *CONVERGENCE*.
-    
+
     minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
         `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`;
         if it is *CONVERGENCE*, execution continues until the value returned by `convergence_function
-        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
-        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`. 
+        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to
+        `minus_phase_termination_criterion <ContrastiveHebbianMechanism.minus_phase_termination_criterion>`.
 
     minus_phase_termination_criterion : float
-        the value used for the specified `minus_phase_termination_condition 
+        the value used for the specified `minus_phase_termination_condition
         <ContrastiveHebbianMechanism.minus_phase_termination_condition>` to determine when the `minus phase of execution
         <ContrastiveHebbian_Minus_Phase>` completes.
 
@@ -766,11 +762,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         execution.  If it is *COUNT*, the Mechanism is executed the number of times specified in
         `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`;
         if it is *CONVERGENCE*, execution continues until the value returned by `convergence_function
-        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to 
-        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`. 
+        <ContrastiveHebbianMechanism.convergence_function>` is less than or equal to
+        `plus_phase_termination_criterion <ContrastiveHebbianMechanism.plus_phase_termination_criterion>`.
 
     plus_phase_termination_criterion : float
-        the value used for the specified `plus_phase_termination_condition 
+        the value used for the specified `plus_phase_termination_condition
         <ContrastiveHebbianMechanism.plus_phase_termination_condition>` to determine when the `plus phase of execution
         <ContrastiveHebbian_Plus_Phase>` completes.
 
@@ -845,8 +841,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
     componentType = CONTRASTIVE_HEBBIAN_MECHANISM
 
-    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        variable = np.array([[0,0]])
+    class Params(RecurrentTransferMechanism.Params):
+        variable = np.array([[0, 0]])
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 

@@ -458,7 +458,7 @@ from collections import UserList, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type
+from psyneulink.components.component import Component, Defaults, function_type
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
@@ -824,7 +824,7 @@ class Process(Process_Base):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
-    class ClassDefaults(Process_Base.ClassDefaults):
+    class Params(Process_Base.Params):
         variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
@@ -2547,7 +2547,8 @@ class ProcessInputState(OutputState):
         self.owner = owner
         self.value = variable
 
-        self.instance_defaults = self.InstanceDefaults(variable=variable, value=variable)
+        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value

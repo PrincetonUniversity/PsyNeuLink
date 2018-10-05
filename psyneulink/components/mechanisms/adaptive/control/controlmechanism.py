@@ -336,6 +336,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -602,27 +603,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class _DefaultsAliases(AdaptiveMechanism_Base._DefaultsAliases):
-        # alias allocation_policy to value for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation_policy(self):
-            return self.value
-
-        @allocation_policy.setter
-        def allocation_policy(self, value):
-            self.value = value
-
-    class _DefaultsMeta(AdaptiveMechanism_Base._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
+    class Params(AdaptiveMechanism_Base.Params):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.atleast_2d(defaultControlAllocation)
-        value = np.array(defaultControlAllocation)
-
-    class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
-        pass
+        variable = np.array([defaultControlAllocation])
+        value = Param(np.array(defaultControlAllocation), aliases='allocation_policy')
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

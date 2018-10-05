@@ -60,6 +60,7 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
     assert np.allclose(res[2], expected[2])
 
 
+@pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)

@@ -260,7 +260,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, get_matrix
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
@@ -437,8 +437,9 @@ class MappingProjection(PathwayProjection_Base):
     className = componentType
     suffix = " " + className
 
-    class ClassDefaults(PathwayProjection_Base.ClassDefaults):
-        function = LinearMatrix
+    class Params(PathwayProjection_Base.Params):
+        function = Param(LinearMatrix, stateful=False, loggable=False)
+        matrix = Param(DEFAULT_MATRIX, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -460,6 +461,7 @@ class MappingProjection(PathwayProjection_Base):
     paramClassDefaults.update({FUNCTION: LinearMatrix,
                                PROJECTION_SENDER: OutputState,
                                })
+
     @tc.typecheck
     def __init__(self,
                  sender=None,

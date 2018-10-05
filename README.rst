@@ -46,7 +46,7 @@ PsyNeuLink is:
 
  ..
 
- - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
+ - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
    disparate components that vary in their granularity of representation and function (from individual neurons or
    neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
 
@@ -159,7 +159,7 @@ click on "PsyNeuLink Tutorial.ipynb".
 Contributors
 ------------
 
-* **Kara Arora**, Department of Computer Science, Princeton University
+* **Karan Arora**, Department of Computer Science, Princeton University
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University

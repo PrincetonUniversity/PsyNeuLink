@@ -317,6 +317,7 @@ Class Reference
 """
 import inspect
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -779,6 +780,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({NOISE: None})
 
     standard_output_states = standard_output_states.copy()
+
+    class Params(ProcessingMechanism_Base.Params):
+        initial_value = None
+        clip = None
+        noise = 0.0
 
     @tc.typecheck
     def __init__(self,

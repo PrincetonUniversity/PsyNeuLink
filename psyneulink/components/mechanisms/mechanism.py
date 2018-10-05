@@ -938,7 +938,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type
+from psyneulink.components.component import Component, Param, function_type, method_type
 from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
@@ -964,7 +964,7 @@ from llvmlite import ir
 import psyneulink.llvm as pnlvm
 
 __all__ = [
-    'Mechanism_Base', 'MechanismError'
+    'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
 ]
 
 logger = logging.getLogger(__name__)
@@ -1306,8 +1306,9 @@ class Mechanism_Base(Mechanism):
     className = componentCategory
     suffix = " " + className
 
-    class ClassDefaults(Mechanism.ClassDefaults):
-        variable = np.array([[0]])
+    class Params(Mechanism.Params):
+        variable = Param(np.array([[0]]), read_only=True)
+        value = Param(np.array([[0]]), read_only=True)
         function = Linear
 
     registry = MechanismRegistry
@@ -1508,8 +1509,7 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._handle_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
 
             # updated here in case it was parsed in _handle_arg_input_states
             params[INPUT_STATES] = self.input_states
