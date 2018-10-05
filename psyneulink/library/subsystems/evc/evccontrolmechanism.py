@@ -383,14 +383,12 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import C
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.shellclasses import Function, System_Base
-from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
     INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
