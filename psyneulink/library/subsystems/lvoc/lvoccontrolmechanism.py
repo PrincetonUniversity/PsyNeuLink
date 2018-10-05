@@ -408,12 +408,14 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
+        predictors = self._parse_predictor_specs(composition, predictors)
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(composition=composition,
                                                   input_states=predictors,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
+
 
         super().__init__(system=None,
                          objective_mechanism=objective_mechanism,
@@ -450,10 +452,10 @@ class LVOCControlMechanism(ControlMechanism):
         """
 
         # If input_states has SHADOW_INPUTS in any of its specifications, parse into input_states specifications
-        if any(SHADOW_INPUTS in spec for spec in self.input_states):
-            self.input_states = self._parse_predictor_specs(composition=self.composition,
-                                                            predictors=self.input_states,
-                                                            context=context)
+        # if any(SHADOW_INPUTS in spec for spec in self.input_states):
+        #     self.input_states = self._parse_predictor_specs(composition=self.composition,
+        #                                                     predictors=self.input_states,
+        #                                                     context=context)
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
         self.input_states.insert(0, OUTCOME),
