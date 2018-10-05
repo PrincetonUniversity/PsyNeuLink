@@ -1157,6 +1157,9 @@ class Composition(Composition_Base):
                                            "InputState), but is already borrowing input from yet another origin node."
                                            .format(self.external_input_sources[node], node.name))
 
+                elif self.external_input_sources[node] == ALL:
+                    redirected_inputs.add(node)
+                    continue
                 else:
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
                                            "[the key node is represented on the input_CIM by one or more pairs of "
