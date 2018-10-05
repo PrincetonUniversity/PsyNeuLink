@@ -3030,28 +3030,28 @@ class Composition(object):
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
-            loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
-            loop_body = builder.append_basic_block(name="scheduling_loop_body")
-            exit_block = builder.append_basic_block(name="exit")
-
-            # Allocate condition structure
+            # Time stamp (trial, run, step)
+            time_stamp_struct = ir.LiteralStructType([ctx.int32_ty, ctx.int32_ty, ctx.int32_ty])
             structure = ir.LiteralStructType([
-                ir.LiteralStructType([ # current time stamp (trial, run, step)
-                ctx.int32_ty, ctx.int32_ty, ctx.int32_ty]),
+                time_stamp_struct, # current time stamp
                 ir.ArrayType( # for each node
                     ir.LiteralStructType([
                         ctx.int32_ty, # number of executions
-                        ir.LiteralStructType([ # time stamp of last execution
-                            ctx.int32_ty, ctx.int32_ty, ctx.int32_ty])
+                        time_stamp_struct # time stamp of last execution
                     ]), len(self.c_nodes)
                 )
             ])
-            cond_ptr = builder.alloca(structure)
 
-            # Init the condition structure
+            # Allocate and init condition structure
+            cond_ptr = builder.alloca(structure)
             cond_init = structure(((0, 0, 0), [(0,(0, 0, 0)) for n in self.c_nodes]))
             builder.store(cond_init, cond_ptr)
 
+            # Allocate run set structure
+            run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
+            run_set_ptr = builder.alloca(run_set_type)
+
+            loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
 
             # Generate a while not 'end condition' loop
@@ -3061,11 +3061,8 @@ class Composition(object):
                             cond_ptr, self.c_nodes)
             run_cond = builder.not_(run_cond)
 
-
-            run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
-            run_set_ptr = builder.alloca(run_set_type)
-            builder.store(run_set_type([0] * len(self.c_nodes)), run_set_ptr)
-
+            loop_body = builder.append_basic_block(name="scheduling_loop_body")
+            exit_block = builder.append_basic_block(name="exit")
             builder.cbranch(run_cond, loop_body, exit_block)
 
 
@@ -3087,7 +3084,6 @@ class Composition(object):
             # TODO: Add support for frozen values
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                # TODO: Add support for mechanism condition evaluation
                 mech_cond = builder.load(run_set_mech_ptr)
                 with builder.if_then(mech_cond):
                     mech_name = self.__get_bin_mechanism(mech).name;
@@ -3095,7 +3091,7 @@ class Composition(object):
                     builder.call(mech_f, [context, params, comp_in, data, data])
 
                     # Update number of runs
-                    node_runs_ptr = builder.gep(array_ptr, [ctx.int32_ty(0),
+                    node_runs_ptr = builder.gep(array_ptr, [zero,
                                                             ctx.int32_ty(idx),
                                                             ctx.int32_ty(0)])
                     node_runs = builder.load(node_runs_ptr)
@@ -3103,8 +3099,13 @@ class Composition(object):
                     builder.store(node_runs, node_runs_ptr)
 
                     # Update timestamp
-                    mech_ts_ptr = builder.gep(array_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx), ctx.int32_ty(1)])
+                    mech_ts_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx), ctx.int32_ty(1)])
                     builder.store(time_stamp, mech_ts_ptr)
+
+            # Update step counter
+            step = builder.extract_value(time_stamp, 2)
+            step = builder.add(step, ctx.int32_ty(1))
+            builder.store(step, builder.gep(cond_ptr, [zero, ctx.int32_ty(0), ctx.int32_ty(2)]))
 
             builder.branch(loop_condition)
 
