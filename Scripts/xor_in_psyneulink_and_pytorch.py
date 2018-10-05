@@ -8,12 +8,6 @@ except ImportError:
                       '`pip install torch` or `pip3 install torch`')
 
 import psyneulink as pnl
-from psyneulink.components.system import System
-from psyneulink.components.process import Process
-from psyneulink.components.functions.function import Logistic
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
 
 # In this file, we create and train a neural network to approximate the XOR function (henceforth referred to
@@ -61,27 +55,27 @@ learning_rate = 10
 system_start_time = time.time()  # used to time how long the system takes to train
 # Create mechanisms and projections to represent the layers and parameters:
 
-xor_in = TransferMechanism(name='input_layer',
+xor_in = pnl.TransferMechanism(name='input_layer',
                            default_variable=np.zeros(2))
 
-xor_hid = TransferMechanism(name='hidden_layer',
+xor_hid = pnl.TransferMechanism(name='hidden_layer',
                             default_variable=np.zeros(10),
-                            function=Logistic())
+                            function=pnl.Logistic())
 
-xor_out = TransferMechanism(name='output_layer',
+xor_out = pnl.TransferMechanism(name='output_layer',
                             default_variable=np.zeros(1),
-                            function=Logistic())
+                            function=pnl.Logistic())
 
 # projection that takes the signal from the input layer and transforms it to get an input for 
 # the hidden layer (the xor_hid mechanism)
-hid_map = MappingProjection(name='input_to_hidden',
+hid_map = pnl.MappingProjection(name='input_to_hidden',
                             matrix=np.random.randn(2,10)*0.1,
                             sender=xor_in,
                             receiver=xor_hid)
 
 # projection that takes the signal from the hidden layer and transforms it to get an input for
 # the output layer (the xor_out mechanism)
-out_map = MappingProjection(name='hidden_to_output',
+out_map = pnl.MappingProjection(name='hidden_to_output',
                             matrix=np.random.randn(10,1)*0.1,
                             sender=xor_hid,
                             receiver=xor_out)
@@ -89,7 +83,7 @@ out_map = MappingProjection(name='hidden_to_output',
 # Put together the mechanisms and projections to get the System representing the XOR model:
 
 # the order of mechanisms and projections is specified at the process level
-xor_process = Process(pathway=[xor_in,
+xor_process = pnl.Process(pathway=[xor_in,
                                hid_map,
                                xor_hid,
                                out_map,
@@ -97,7 +91,7 @@ xor_process = Process(pathway=[xor_in,
                       learning=pnl.LEARNING)
 
 # the learning_rate parameter determines the size of learning updates during training for the System.
-xor_sys = System(processes=[xor_process],
+xor_sys = pnl.System(processes=[xor_process],
                  learning_rate=learning_rate)
 
 # The comparator mechanism for computing loss and the learning mechanisms/projections for doing
@@ -130,29 +124,29 @@ print('\n')
 
 autodiff_start_time = time.time()
 # The mechanisms and projections provided to AutodiffComposition are the same as above
-xor_in = TransferMechanism(name='xor_in',
+xor_in = pnl.TransferMechanism(name='xor_in',
                            default_variable=np.zeros(2))
 
-xor_hid = TransferMechanism(name='xor_hid',
+xor_hid = pnl.TransferMechanism(name='xor_hid',
                             default_variable=np.zeros(10),
-                            function=Logistic())
+                            function=pnl.Logistic())
 
-xor_out = TransferMechanism(name='xor_out',
+xor_out = pnl.TransferMechanism(name='xor_out',
                             default_variable=np.zeros(1),
-                            function=Logistic())
+                            function=pnl.Logistic())
 
-hid_map = MappingProjection(name='input_to_hidden',
+hid_map = pnl.MappingProjection(name='input_to_hidden',
                             matrix=np.random.randn(2,10)*0.1,
                             sender=xor_in,
                             receiver=xor_hid)
 
-out_map = MappingProjection(name='hidden_to_output',
+out_map = pnl.MappingProjection(name='hidden_to_output',
                             matrix=np.random.randn(10,1)*0.1,
                             sender=xor_hid,
                             receiver=xor_out)
 
 # initialize an empty AutodiffComposition
-xor_autodiff = AutodiffComposition(param_init_from_pnl=True)
+xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True)
 
 # add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
 xor_autodiff.add_c_node(xor_in)
