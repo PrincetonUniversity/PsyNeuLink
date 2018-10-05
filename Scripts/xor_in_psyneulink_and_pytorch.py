@@ -1,6 +1,11 @@
 import numpy as np
-import torch
-from torch import nn
+import time
+try:
+    import torch
+    from torch import nn
+except ImportError:
+    raise ImportError('Pytorch python module (torch) is not installed. Please install it with '
+                      '`pip install torch` or `pip3 install torch`')
 
 import psyneulink as pnl
 from psyneulink.components.system import System
@@ -8,11 +13,11 @@ from psyneulink.components.process import Process
 from psyneulink.components.functions.function import Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.compositions.autodiffcomposition import AutodiffComposition
 
 
-
-# In this file, we create a neural network to approximate the XOR function (henceforth referred to 
-# as an XOR model) in PsyNeuLink and in Pytorch, and go over some Pytorch basics. 
+# In this file, we create and train a neural network to approximate the XOR function (henceforth referred to
+# as an XOR model) in PsyNeuLink's System, in PsyNeuLink's AutodiffComposition, and in Pytorch.
 
 # The XOR function takes an input signal of 2 values and produces an output signal of a single value.
 # The function maps inputs to outputs as follows:
@@ -23,43 +28,63 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 # 1, 1  -->  0
 
 # The model we create will have an input layer of 2 neurons (for the two input values), a hidden layer
-# of 10 neurons (10 was chosen randomely), and an output layer of 1 neuron (for the single output). 
+# of 10 neurons (10 was chosen arbitrarily), and an output layer of 1 neuron (for the single output).
 
 
+# Inputs and targets for the XOR model ------------------------------------------------------------
 
-# XOR in PsyNeuLink -------------------------------------------------------------------------------
+xor_inputs = np.array(  # the inputs we will provide to the model
+    [[0, 0],
+     [0, 1],
+     [1, 0],
+     [1, 1]])
+
+xor_targets = np.array(  # the outputs we wish to see from the model
+    [[0],
+     [1],
+     [1],
+     [0]])
 
 
+# Parameters for training -------------------------------------------------------------------------
+# these parameters are used by all three systems (PsyNeuLink System, AutodiffComposition, and PyTorch)
+# number of training rounds (epochs)
+num_epochs = 100
+
+# learning rate (determines the size of learning updates during training)
+# higher learning rates speed up training but may reduce accuracy or prevent convergence
+learning_rate = 10
+
+
+# XOR in PsyNeuLink System ------------------------------------------------------------------------
+
+system_start_time = time.time()  # used to time how long the system takes to train
 # Create mechanisms and projections to represent the layers and parameters:
 
-# mechanism representing the input layer
-xor_in = TransferMechanism(name='xor_in',
+xor_in = TransferMechanism(name='input_layer',
                            default_variable=np.zeros(2))
 
-# mechanism representing the hidden layer
-xor_hid = TransferMechanism(name='xor_hid',
+xor_hid = TransferMechanism(name='hidden_layer',
                             default_variable=np.zeros(10),
                             function=Logistic())
 
-# mechanism representing the output layer
-xor_out = TransferMechanism(name='xor_out',
+xor_out = TransferMechanism(name='output_layer',
                             default_variable=np.zeros(1),
                             function=Logistic())
 
 # projection that takes the signal from the input layer and transforms it to get an input for 
 # the hidden layer (the xor_hid mechanism)
-hid_map = MappingProjection(name='hid_map',
+hid_map = MappingProjection(name='input_to_hidden',
                             matrix=np.random.randn(2,10)*0.1,
                             sender=xor_in,
                             receiver=xor_hid)
 
 # projection that takes the signal from the hidden layer and transforms it to get an input for
 # the output layer (the xor_out mechanism)
-out_map = MappingProjection(name='out_map',
+out_map = MappingProjection(name='hidden_to_output',
                             matrix=np.random.randn(10,1)*0.1,
                             sender=xor_hid,
                             receiver=xor_out)
-
 
 # Put together the mechanisms and projections to get the System representing the XOR model:
 
@@ -72,57 +97,96 @@ xor_process = Process(pathway=[xor_in,
                       learning=pnl.LEARNING)
 
 # the learning_rate parameter determines the size of learning updates during training for the System.
-# it provides the only easy way for users to control learning during training (afaik there's no 
-# way to change the actual optimizer that uses the learning rate to update parameters, or the loss)
 xor_sys = System(processes=[xor_process],
-                 learning_rate=0.1)
+                 learning_rate=learning_rate)
 
 # The comparator mechanism for computing loss and the learning mechanisms/projections for doing
-# backpropagation/the learning update during training are set up for the System automatically. 
+# backpropagation/the learning update during training are set up for the System automatically.
 
 
-# Inputs and targets for the XOR model:
-
-xor_inputs = np.zeros((4,2))
-xor_inputs[0] = [0, 0]
-xor_inputs[1] = [0, 1]
-xor_inputs[2] = [1, 0]
-xor_inputs[3] = [1, 1]
-
-xor_targets = np.zeros((4,1))
-xor_targets[0] = [0]
-xor_targets[1] = [1]
-xor_targets[2] = [1]
-xor_targets[3] = [0]
-
-
-# Train the System representing the XOR model for some number of epochs by calling run. 
+# Train the System representing the XOR model by calling run.
 
 # The 4 learning steps are performed by the run method behind the scenes - as stated in the design doc,
-# the loss measurement computed by the system's comparator mechanism defaults to MSE loss, and the 
-# learning update carried out by learning mechanisms/projections defaults to that in basic stochastic
-# gradient descent. 
-
-epochs = 100
+# the loss measurement computed by the system's comparator mechanism defaults to MSE loss, and the learning
+# update carried out by learning mechanisms/projections defaults to basic stochastic gradient descent (sgd).
 
 results_sys = xor_sys.run(inputs={xor_in:xor_inputs}, 
                           targets={xor_out:xor_targets},
-                          num_trials=(len(xor_inputs) * epochs + 1))
+                          num_trials=(len(xor_inputs) * num_epochs + 1))
 
-# process the inputs after training
-proc_results_sys = xor_sys.run(inputs={xor_in:xor_inputs})
+system_total_time = time.time() - system_start_time
+
+# process the inputs after training (this computes the system's output values after training)
+system_outputs = xor_sys.run(inputs={xor_in:xor_inputs})
 
 # see outputs for the 4 processed inputs after training
-print(proc_results_sys[(len(xor_inputs) * epochs + 1):])
+print('Output of System after', num_epochs,
+      'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
+print(system_outputs[(len(xor_inputs) * num_epochs + 1):])
+print('Initializing and training System took ', system_total_time, ' seconds.')
+print('\n')
 
-print("\n")
-print("\n")
+# XOR in Autodiff Composition ---------------------------------------------------------------------
 
+autodiff_start_time = time.time()
+# The mechanisms and projections provided to AutodiffComposition are the same as above
+xor_in = TransferMechanism(name='xor_in',
+                           default_variable=np.zeros(2))
 
+xor_hid = TransferMechanism(name='xor_hid',
+                            default_variable=np.zeros(10),
+                            function=Logistic())
+
+xor_out = TransferMechanism(name='xor_out',
+                            default_variable=np.zeros(1),
+                            function=Logistic())
+
+hid_map = MappingProjection(name='input_to_hidden',
+                            matrix=np.random.randn(2,10)*0.1,
+                            sender=xor_in,
+                            receiver=xor_hid)
+
+out_map = MappingProjection(name='hidden_to_output',
+                            matrix=np.random.randn(10,1)*0.1,
+                            sender=xor_hid,
+                            receiver=xor_out)
+
+# initialize an empty AutodiffComposition
+xor_autodiff = AutodiffComposition(param_init_from_pnl=True)
+
+# add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
+xor_autodiff.add_c_node(xor_in)
+xor_autodiff.add_c_node(xor_hid)
+xor_autodiff.add_c_node(xor_out)
+
+# train the AutodiffComposition
+xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+result = xor_autodiff.run(inputs={xor_in: xor_inputs},
+                 targets={xor_out: xor_targets},
+                 epochs=num_epochs,
+                 learning_rate=learning_rate,
+                 optimizer='sgd')  # the default optimizer in System is sgd, so we use sgd here as well
+
+autodiff_total_time = time.time() - autodiff_start_time
+
+autodiff_outputs = []
+for input in xor_inputs:
+    output = xor_autodiff.execute(
+        inputs={xor_in: [input]},
+        epochs=1,
+    )
+    autodiff_outputs.append(output)
+print('Output of AutodiffComposition after', num_epochs,
+      'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
+print(autodiff_outputs)
+print('Initializing and training AutodiffComposition took ', autodiff_total_time, ' seconds.')
+print('\n')
 
 # XOR in Pytorch ----------------------------------------------------------------------------------
 
-
+pytorch_start_time = time.time()
 # The XOR model class - As can be seen, the class subclasses pytorch's neural net module. 
 # The class defines a "blueprint" for the XOR model - to actually get a model we can do 
 # processing/learning with, we create an instance of the class.
@@ -231,10 +295,10 @@ l = nn.MSELoss()
 
 # we use stochastic gradient descent, like PsyNeuLink, and set the learning rate to the same
 # value used in the system above
-optim = torch.optim.SGD(xor_pt.parameters(), lr=0.1)
+optim = torch.optim.SGD(xor_pt.parameters(), lr=learning_rate)
 
 # same number of epochs as system
-epochs = 100
+epochs = num_epochs
 
 xor_pt_training(model = xor_pt,
                 inputs = xor_inputs_pt,
@@ -242,6 +306,8 @@ xor_pt_training(model = xor_pt,
                 epochs = epochs,
                 loss_measure = l,
                 optimizer = optim)
+
+pytorch_total_time = time.time() - pytorch_start_time
 
 # process inputs after training 
 with torch.no_grad(): # shut off tracking computations for parameters for the time being
@@ -251,10 +317,13 @@ with torch.no_grad(): # shut off tracking computations for parameters for the ti
     proc_results4 = xor_pt.forward(xor_inputs_pt[3])
 
 # print outputs
-print(proc_results1)
-print(proc_results2)
-print(proc_results3)
-print(proc_results4)
+print('Output of PyTorch XOR Model after', num_epochs,
+      'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
+print([proc_results1.item(),
+       proc_results2.item(),
+       proc_results3.item(),
+       proc_results4.item()])
+print('Initializing and training PyTorch XOR took ', pytorch_total_time, ' seconds.')
 
 
 
