@@ -387,7 +387,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism.ClassDefaults):
+    class ClassParams(ControlMechanism.Params):
         function = ControlSignalGradientAscent
 
     from psyneulink.components.functions.function import LinearCombination
