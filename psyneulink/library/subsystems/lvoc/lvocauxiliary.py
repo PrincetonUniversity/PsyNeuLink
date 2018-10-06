@@ -105,7 +105,12 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     name=None,                        \
     prefs=None)
 
-    Use gradient ascent to determine allocation_policy with the maximum `EVC <LVOCControlMechanism_LVOC>`.
+    Use **learning_function** to improve prediction of outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
+    `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from LVOCControlMechanism's `predictors
+    <LVOCControlMechanism.predictors>`, `control_signals <LVOCControlMechanism.control_signals>`, their interactions,
+    and the `costs <ControlSignal.cost>` of the `control_signals <LVOCControlMechanism.control_signals>`, and then use
+    gradient ascent based on the updated prediction_weights to determine the `allocation_policy
+    <LVOCControlMechanism.allocation_policy>` that maximizes `EVC <LVOCControlMechanism_EVC>`.
 
     This is the default `function <LVOCControlMechanism.function>` for an `LVOCControlMechanism`. It identifies the
     `allocation_policy <LVOCControlMechanism.allocation_policy>` with the maximum `EVC <EVCControlMechanism_EVC>` using
@@ -114,7 +119,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     - update the distributions (means and variances) of weights for `prediction_vector
       <ControlSignalGradientAscent.prediction_vector>` using the function specified in the **learning_function**
       argument of the constructor (and assigned as the `update_prediction_weights_function
-      <ControlSignalGradientAscent.update_prediction_weights_function>` attribute.
+      <ControlSignalGradientAscent.update_prediction_weights_function>` attribute) in order to better predict the
+      outcome of the LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>`.
 
     - draw a sample from the new weight distributions by calling the sample method of the
       `update_prediction_weights_function <ControlSignalGradientAscent.update_prediction_weights_function>`.

@@ -31,11 +31,11 @@ as determined by its `objective_mechanism <LVOCControlMechanism.objective_mechan
 <ControlSignal.cost> of the `control_signals <LVOCControlMechanism.control_signals>` under that `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
-The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the EVC for a given
-`allocation_policy <LVOCControlMechanism.allocation_policy>` (the "learned value of control," or LVOC), by
-adjusting the weights associated with its `predictors <LVOCControlMechanism.predictors>`, `control_signals
-<LVOCControlMechanism.control_signals>`, interactions among these, and the costs of the
-`control_signals <LVOCControlMechanism.control_signals>`.
+The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the outcome of its
+`objective_mechanism <LVOCControlMechanism.objective_mechanism>` from a weighted sum of its `predictors
+<LVOCControlMechanism.predictors>`, `control_signals <LVOCControlMechanism.control_signals>`, interactions among
+these, and the costs of the `control_signals <LVOCControlMechanism.control_signals>`.  This is referred to as the
+"learned value of control," or LVOC.
 
 .. _LVOCControlMechanism_Creation:
 
@@ -476,7 +476,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     tc.typecheck
     def add_predictors(self, predictors, composition:tc.optional(Composition_Base)=None):
-        '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict allocation_policy
+        '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict outcome
 
         **predictors** argument can use any of the forms of specification allowed
             for the **input_states** argument of the LVOCMechanism,
