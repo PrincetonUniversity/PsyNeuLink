@@ -170,7 +170,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            update_weight = BayesGLM(num_predictors=len(self.prediction_vector),
+            update_prediction_weights = BayesGLM(num_predictors=len(self.prediction_vector),
                                      mu_prior=self.prediction_weights_priors,
                                      sigma_prior=self.prediction_variances_priors)
 
@@ -185,8 +185,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
-        update_weight.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
-        prediction_weights = update_weight.sample_weights()
+        update_prediction_weights.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
+        prediction_weights = update_prediction_weights.sample_weights()
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(controller.control_signals,

@@ -16,18 +16,25 @@ Overview
 An LVOCControlMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in
 order to optimize the performance of the `Composition` to which it belongs.  It implements a form of the Learned Value
 of Control model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi
-.1006043&rev=2>`_, which learns to select the optimal value for its `control_signals
-<LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy <LVOCControlMechanism.allocation_policy>`)
-based on a set of `predictors <LVOCControlMechanism_Predictors>`.
+.1006043&rev=2>`_, which learns to select the value for its `control_signals <LVOCControlMechanism.control_signals>`
+(i.e., its `allocation_policy  <LVOCControlMechanism.allocation_policy>`) that maximzes its `EVC
+<LVOCControlMechanism_EVC>` based on a set of `predictors <LVOCControlMechanism_Predictors>`.
 
 .. _LVOCControlMechanism_EVC:
 
 *Expected Value of Control (EVC)*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The LVOCControlMechanism uses it `function <LVOCControlMechanism.function>` to select its `allocation_policy`.
-By default, it uses XXXX
+The **expected value of control (EVC)** is the outcome of executing the `composition <EVCControlMechanism.composition>`
+to which the LVOCControlMechanism belongs under a given `allocation_policy <LVOCControlMechanism.allocation_policy>`,
+as determined by its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, discounted by the `cost
+<ControlSignal.cost> of the `control_signals <LVOCControlMechanism.control_signals>` under that `allocation_policy
+<LVOCControlMechanism.allocation_policy>`.
 
+The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the EVC for a given
+`allocation_policy <LVOCControlMechanism.allocation_policy>` based on the current value of its `predictors
+<LVOCControlMechanism.predictors>`, uses gradient ascent to determine the `allocation_policy
+<LVOCControlMechanism.allocation_policy>` that maximizes the EVC, and implements that policy.
 
 .. _LVOCControlMechanism_Creation:
 
@@ -348,9 +355,9 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>`, and returns an current `allocation_polcy
         <LVOCControlMechanism.allocation_policy>` (see `LVOCControlMechanism_Function` for additional details).
 
-        If a custom function is specified, it must accommodate a **controller** argument that specifies an LVOCControlMechanism
-        (and provides access to its attributes, including `control_signal_search_space`), and must return an array with
-        the same format (number and type of elements) as the LVOCControlMechanism's `allocation_policy` attribute.
+        If a custom function is specified, it must accommodate a **controller** argument that specifies an
+        LVOCControlMechanism (and provides access to its attributes), and must return an array with the same format
+        (number and type of elements) as the LVOCControlMechanism's `allocation_policy` attribute.
 
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
