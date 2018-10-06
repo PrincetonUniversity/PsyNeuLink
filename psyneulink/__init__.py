@@ -85,7 +85,7 @@ for handler in _logging.root.handlers:
 primary_registries = [
     FunctionRegistry, ControlMechanismRegistry, GatingMechanismRegistry, MechanismRegistry,
     ProjectionRegistry, StateRegistry, SystemRegistry, DeferredInitRegistry, ProcessRegistry,
-    PreferenceSetRegistry,
+    PreferenceSetRegistry, CompositionRegistry
 ]
 
 for reg in primary_registries:
