@@ -1792,11 +1792,11 @@ class TestRun:
     def test_LPP(self, benchmark, mode):
 
         comp = Composition()
-        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))   # 1 x 2 = 2
-        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))   # 2 x 2 = 4
-        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0))   # 4 x 2 = 8
-        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))   # 8 x 2 = 16
-        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))  # 16 x 2 = 32
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0, intercept=1.0))   # 1 x 2 + 1 = 3
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0, intercept=2.0))   # 3 x 2 + 2 = 8
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0, intercept=3.0))   # 8 x 2 + 3 = 19
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0, intercept=4.0))   # 19 x 2 + 4 = 42
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0, intercept=5.0))   # 42 x 2 + 5 = 89
         comp.add_linear_processing_pathway([A, B, C, D, E])
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
@@ -1806,7 +1806,7 @@ class TestRun:
             scheduler_processing=sched,
             bin_execute=mode
         )
-        assert np.allclose(32., output)
+        assert np.allclose(89., output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
