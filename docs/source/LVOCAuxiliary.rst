@@ -6,4 +6,4 @@ LVOCAuxiliary
 
 .. automodule:: psyneulink.library.subsystems.lvoc.lvocauxiliary
    :members:
-   :exclude-members: random, LinearCombination, LVOCAuxiliaryFunction
+   :exclude-members: random, LinearCombination, LVOCAuxiliaryFunction, function

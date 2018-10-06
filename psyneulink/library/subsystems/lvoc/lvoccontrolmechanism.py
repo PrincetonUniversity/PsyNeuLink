@@ -32,9 +32,10 @@ as determined by its `objective_mechanism <LVOCControlMechanism.objective_mechan
 <LVOCControlMechanism.allocation_policy>`.
 
 The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the EVC for a given
-`allocation_policy <LVOCControlMechanism.allocation_policy>` based on the current value of its `predictors
-<LVOCControlMechanism.predictors>`, uses gradient ascent to determine the `allocation_policy
-<LVOCControlMechanism.allocation_policy>` that maximizes the EVC, and implements that policy.
+`allocation_policy <LVOCControlMechanism.allocation_policy>` (the "learned value of control," or LVOC), by
+adjusting the weights associated with its `predictors <LVOCControlMechanism.predictors>`, `control_signals
+<LVOCControlMechanism.control_signals>`, interactions among these, and the costs of the
+`control_signals <LVOCControlMechanism.control_signals>`.
 
 .. _LVOCControlMechanism_Creation:
 
@@ -203,7 +204,7 @@ The default `function <LVOCControlMechanism.function>` -- `ControlSignalGradient
 
   * Calls its `update_prediction_weights_function <ControlSignalGradientAscent.update_prediction_weights_function>`
     with the `prediction_vector <ControlSignalGradientAscent.prediction_vector>` and the outcome received from the
-    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism_EVC.objective_mechanism>` to update the means and
+    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to update the means and
     variances associated with each element of the `prediction_vector <ControlSignalGradientAscent.prediction_vector>`
     in order to better predict the outcome.  It then calls that function to get a vector of prediction weights sampled
     using the updated means and variances of the weights.
