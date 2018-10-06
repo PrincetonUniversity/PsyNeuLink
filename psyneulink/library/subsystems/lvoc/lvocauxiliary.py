@@ -113,6 +113,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     def __init__(self,
                  default_variable=None,
                  params=None,
+                 learning_function=BayesGLM,
                  prediction_weights_priors:is_numeric=0.0,
                  prediction_variances_priors:is_numeric=1.0,
                  convergence_criterion:tc.any(int,float)=.001,
@@ -120,7 +121,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
                  udpate_rate:tc.any(int,float) = 0.01,
                  function=None,
                  owner=None):
+
         function = function or self.function
+        self.update_prediction_weights_function = learning_function
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(prediction_weights_priors=prediction_weights_priors,
                                                   prediction_variances_priors=prediction_variances_priors,
@@ -170,9 +174,11 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            update_prediction_weights = BayesGLM(num_predictors=len(self.prediction_vector),
-                                     mu_prior=self.prediction_weights_priors,
-                                     sigma_prior=self.prediction_variances_priors)
+            self.update_prediction_weights_function = self.update_prediction_weights_function(
+                    num_predictors=len(self.prediction_vector),
+                    mu_prior=self.prediction_weights_priors,
+                    sigma_prior=self.prediction_variances_priors
+            )
 
         # Populate fields (subvectors) of prediction_vector
         self.prediction_vector[self.pred] = np.array(predictors)
@@ -185,8 +191,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
-        update_prediction_weights.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
-        prediction_weights = update_prediction_weights.sample_weights()
+        self.update_prediction_weights_function.function(
+                [np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)]
+        )
+        prediction_weights = self.update_prediction_weights_function.sample_weights()
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(controller.control_signals,

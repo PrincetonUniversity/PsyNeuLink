@@ -201,15 +201,16 @@ The default `function <LVOCControlMechanism.function>` -- `ControlSignalGradient
     <LVOCControlMechanism.predictor_values>`, `control_signals <LVOCControlMechanism.control_signals>`,
     and their `costs <ControlSignal.cost>`.
 
-  * Calls the `BayesGLM` Function with the `prediction_vector <ControlSignalGradientAscent.prediction_vector>`
-    and the outcome received from the LVOCControlMechanism's `objective_mechanism
-    <LVOCControlMechanism_EVC.objective_mechanism>`.  This Function updates the means and variances associated with
-    each element of the `prediction_vector <ControlSignalGradientAscent.prediction_vector>` in order to better predict
-    the outcome, and returns a vector of prediction weights sampled using the updated means and variances.
+  * Calls its `update_prediction_weights_function <ControlSignalGradientAscent.update_prediction_weights_function>`
+    with the `prediction_vector <ControlSignalGradientAscent.prediction_vector>` and the outcome received from the
+    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism_EVC.objective_mechanism>` to update the means and
+    variances associated with each element of the `prediction_vector <ControlSignalGradientAscent.prediction_vector>`
+    in order to better predict the outcome.  It then calls that function to get a vector of prediction weights sampled
+    using the updated means and variances of the weights.
 
-  * Uses the prediction weights returned by the `BayesGLM` Function to determine, by a `gradient ascent process
-    <ControlSignalGradientAscent.gradient_ascent>`, the `allocation_policy <LVOCControlMechanism>` that yields the
-    greatest `EVC <LVOCControlMechanism_EVC>`, and returns that `allocation_policy
+  * Uses the sample of prediction weights to determine, by a `gradient ascent process
+    <ControlSignalGradientAscent.gradient_ascent>`, the `allocation_policy <LVOCControlMechanism>`
+    that yields the greatest `EVC <LVOCControlMechanism_EVC>`, and returns that `allocation_policy
     <LVOCControlMechanism.allocation_policy>`.
 
 The values specified by the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by the
