@@ -202,15 +202,15 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
     prediction_vector : ndarray
-        array containing, in order, values of the LVOCControlMechanism's `predictor <LVOCControlMechanism.predictors>`,
-        interaction terms with its `control_signals <LVOCControlMechanism.control_signals>`, the `values
-        <ControlSignal.value>` of its `control_signals <LVOCControlMechanism.control_signals>`, and their
-        `costs <ControlSignal.cost>`.
+        array containing, in order, the LVOCControlMechanism's `predictor_values
+        <LVOCControlMechanism.predictor_vaues>`, interaction terms with  `control_signals
+        <LVOCControlMechanism.control_signals>`, the `values <ControlSignal.value>` of its `control_signals
+        <LVOCControlMechanism.control_signals>`, and their `costs <ControlSignal.cost>`.
 
     num_predictors : int
         the number of elements in the predictors field of the `prediction_vector
         <ControlSignalGradientAscent.prediction_vector>` (same as the number of items in the
-        LVOCControlMechanism's `predictors <LVOCControlMechanism.predictors>` attribute).
+        LVOCControlMechanism's `predictor_values <LVOCControlMechanism.predictor_values>` attribute).
 
     num_interactions : int
         the number of elements in the interactions field of the `prediction_vector
@@ -286,6 +286,10 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         outcome = variable[1]
 
         # Initialize attributes
+        # IMPLEMENTATION NOTE:  This has to happen here rather than in __init__, as it requires
+        #                       the LVOCControlMechanism to have fully instantiated its predictors
+        #                       (the values of which are passed in here as variable[0]),
+        #                       which is not the case when ControlSignalGradientAscent is initialized.
         if not hasattr(self, 'prediction_vector'):
 
             # Numbers of terms in prediction_vector
