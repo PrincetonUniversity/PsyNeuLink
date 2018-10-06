@@ -880,7 +880,7 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -921,7 +921,7 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -962,7 +962,7 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -1003,7 +1003,7 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -1534,7 +1534,7 @@ class TestRun:
 
     @pytest.mark.projection
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_input_grow(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=[1.0, 2.0], function=Linear(slope=5.0))
@@ -1555,7 +1555,7 @@ class TestRun:
 
     @pytest.mark.projection
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_input_shrink(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=[1.0, 2.0, 3.0], function=Linear(slope=5.0))
@@ -1575,7 +1575,7 @@ class TestRun:
         assert np.allclose(output, [[300, 300]])
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1627,7 +1627,7 @@ class TestRun:
         assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
         #              ==> E
@@ -1682,7 +1682,7 @@ class TestRun:
         assert np.allclose(50.0, output[0][0])
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
 
@@ -1703,7 +1703,7 @@ class TestRun:
         assert np.allclose(50.0, output[0][0])
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
 
@@ -1720,7 +1720,7 @@ class TestRun:
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
 
@@ -1737,7 +1737,7 @@ class TestRun:
         assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1752,7 +1752,7 @@ class TestRun:
         assert np.allclose([125], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1768,7 +1768,7 @@ class TestRun:
         assert np.allclose([np.array([[125.]]), np.array([[100.]]), np.array([[75.]])], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_execute_composition(self, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1809,7 +1809,7 @@ class TestRun:
         assert np.allclose(89., output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_LPP_with_projections(self, mode):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))  # 1 x 2 = 2
@@ -1891,7 +1891,7 @@ class TestRun:
         assert "Invalid projection" in str(error_text.value)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
         #              ==> E
@@ -1918,7 +1918,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_composition(self, benchmark, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1935,7 +1935,7 @@ class TestRun:
     @pytest.mark.skip
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_composition_default(self, benchmark, mode):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1950,7 +1950,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition Vector")
-    @pytest.mark.parametrize("mode, vector_length", product(('Python', pytest.param('LLVM', marks=pytest.mark.llvm)), [2**x for x in range(1)]))
+    @pytest.mark.parametrize("mode, vector_length", product(('Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)), [2**x for x in range(1)]))
     def test_run_composition_vector(self, benchmark, mode, vector_length):
         var = [1.0 for x in range(vector_length)];
         comp = Composition()
@@ -1966,7 +1966,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_terminal(self, benchmark, mode):
         # C --
         #              ==> E
@@ -1994,7 +1994,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_1_origin_2_terminals(self, benchmark, mode):
         #       ==> D
         # C
@@ -2021,7 +2021,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_terminal_mimo_last(self, benchmark, mode):
         # C --
         #              ==> E
@@ -2050,7 +2050,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, mode):
         # C --
         #              ==> E
@@ -2081,7 +2081,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(self, benchmark, mode):
         # C --
         #              ==> E
@@ -2111,7 +2111,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism(self, benchmark, mode):
         comp = Composition()
         A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
@@ -2129,7 +2129,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=1,
@@ -2154,7 +2154,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=1,
@@ -2181,7 +2181,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2, function=Logistic())
@@ -2203,7 +2203,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2,
@@ -2228,7 +2228,7 @@ class TestRun:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
         R = RecurrentTransferMechanism(size=2,
