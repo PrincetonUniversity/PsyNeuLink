@@ -70,7 +70,7 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
 from psyneulink.globals.utilities import CNodeRole
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-from psyneulink.scheduling.condition import Always
+from psyneulink.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -3000,9 +3000,21 @@ class Composition(object):
         return func_name
 
     def __get_processing_condition_set(self, node):
+        dep_group = []
+        for group in self.scheduler_processing.consideration_queue:
+            if node in group:
+                break
+            dep_group = group
+
+        # NOTE: This is not ideal we don't need to depend on
+        # the entire previous group. Only our dependencies
+        cond = [EveryNCalls(dep, 1) for dep in dep_group]
         if node not in self.scheduler_processing.condition_set.conditions:
-            return Always()
-        return self.scheduler_processing.condition_set.conditions[node]
+            cond.append(Always())
+        else:
+            cond += self.scheduler_processing.condition_set.conditions[node]
+
+        return All(*cond)
 
     def __gen_exec_wrapper(self):
         func_name = None
@@ -3058,7 +3070,7 @@ class Composition(object):
             builder.position_at_end(loop_condition)
             run_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
                             self.termination_processing[TimeScale.TRIAL],
-                            cond_ptr, self.c_nodes)
+                            cond_ptr, self.c_nodes, None)
             run_cond = builder.not_(run_cond)
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -3075,10 +3087,9 @@ class Composition(object):
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                # TODO: Add support for mechanism condition evaluation
                 mech_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
                                 self.__get_processing_condition_set(mech),
-                                cond_ptr, self.c_nodes)
+                                cond_ptr, self.c_nodes, mech)
                 builder.store(mech_cond, run_set_mech_ptr)
 
             # TODO: Add support for frozen values
