@@ -104,7 +104,8 @@ def generate_sched_condition(ctx, builder, condition, cond_ptr, comp_nodes, node
                                         ctx.int32_ty(idx), ctx.int32_ty(0)])
             node_runs = builder.load(node_runs_ptr)
             node_ran = builder.icmp_unsigned('>', node_runs, ctx.int32_ty(0))
-            return builder.and_(run_cond, node_ran)
+            run_cond = builder.and_(run_cond, node_ran)
+        return run_cond
     elif isinstance(condition, EveryNCalls):
         target, count = condition.args
 
