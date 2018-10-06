@@ -3090,16 +3090,16 @@ class Composition(object):
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, data])
 
+                    status_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx)])
+
                     # Update number of runs
-                    node_runs_ptr = builder.gep(array_ptr, [zero,
-                                                            ctx.int32_ty(idx),
-                                                            ctx.int32_ty(0)])
+                    node_runs_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(0)])
                     node_runs = builder.load(node_runs_ptr)
                     node_runs = builder.add(node_runs, ctx.int32_ty(1))
                     builder.store(node_runs, node_runs_ptr)
 
                     # Update timestamp
-                    mech_ts_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx), ctx.int32_ty(1)])
+                    mech_ts_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(1)])
                     builder.store(time_stamp, mech_ts_ptr)
 
             # Update step counter
