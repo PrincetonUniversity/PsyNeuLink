@@ -845,6 +845,7 @@ class TestExecutionOrder:
         assert expected_consideration_queue == comp.scheduler_processing.consideration_queue
 
     @pytest.mark.composition
+    @pytest.mark.benchmark(group="Frozen values")
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_3_mechanisms_frozen_values(self, benchmark, mode):
         #
