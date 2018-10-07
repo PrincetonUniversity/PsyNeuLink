@@ -2126,7 +2126,7 @@ class TestRun:
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2[1])
-        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
+        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
