@@ -244,7 +244,7 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[4][1], [0.94524311])
         assert np.allclose(res[5][1], [0.89963791])
 
-    if mode == 'LLVM' or reps != 10:
+    if mode[:4] == 'LLVM' or reps != 10:
         return
     r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
     energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY
