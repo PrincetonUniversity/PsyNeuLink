@@ -8,14 +8,14 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import numpy as np
-from llvmlite import binding, ir
 import ctypes
 import os, sys
+import numpy as np
+from llvmlite import binding, ir
 
 from . import builtins
-from psyneulink.llvm.jit_engine import cpu_jit_engine
-from psyneulink.llvm.builder_context import *
+from .jit_engine import cpu_jit_engine
+from .builder_context import *
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext', '_convert_llvm_ir_to_ctype', '_convert_ctype_to_python']
 
