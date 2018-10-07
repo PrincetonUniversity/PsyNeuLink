@@ -646,7 +646,20 @@ class LVOCControlMechanism(ControlMechanism):
             received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to determine the
             `allocation_policy <LVOCControlMechanism.allocation_policy>`.
         Return an allocation_policy
+
+        # NEW: -----------------------------------------------------------------------------------------------
+        Update prediction_weights to better predct outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
+        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from prediction_vector, then optimize
+        `allocation_policy <LVOCControlMechanism>` given new prediction_weights.
+
+        variable should have two items:  current prediction_vector and outcome
+        Call `learning_function <LearnAllocationPolicy.learning_function>` to update prediction_weights.
+        Call `gradient_ascent` to optimize `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
+        prediction_weights.
+        # -----------------------------------------------------------------------------------------------
         """
+
+        # OLD: -----------------------------------------------------------------------------------------------
 
         # EXECUTE SEARCH
 
@@ -660,11 +673,182 @@ class LVOCControlMechanism(ControlMechanism):
                                                                    runtime_params=runtime_params,
                                                                    context=context
                                                                    )
-
         # IMPLEMENTATION NOTE:
         # self.composition._restore_system_state()
 
         return allocation_policy.reshape((len(allocation_policy),1))
+
+
+        # NEW: -----------------------------------------------------------------------------------------------
+
+
+        if (self.context.initialization_status == ContextFlags.INITIALIZING or
+                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
+            return defaultControlAllocation
+
+        outcome = variable[0]
+
+        # This is a vector of the concatenated values received from all of the other InputStates (i.e., variable[1:])
+        self.predictor_values = np.array(variable[1:]).reshape(-1)
+
+        # Initialize attributes
+        # IMPLEMENTATION NOTE:  This has to happen here rather than in __init__, as it requires
+        #                       the LVOCControlMechanism to have fully instantiated its predictors
+        #                       (the values of which are passed in here as variable[0]),
+        #                       which is not the case when LearnAllocationPolicy is initialized.
+        if not hasattr(self, 'prediction_vector'):
+
+            # Numbers of terms in prediction_vector
+            self.num_predictors = len(predictors)
+            self.num_control_signals = self.num_costs = len(controller.control_signals)
+            self.num_interactions = self.num_predictors * self.num_control_signals
+            len_prediction_vector = \
+                self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
+
+            # Indices for fields of prediction_vector
+            self.pred = slice(0, self.num_predictors)
+            self.intrxn= slice(self.num_predictors, self.num_predictors+self.num_interactions)
+            self.ctl = slice(self.intrxn.stop, self.intrxn.stop + self.num_control_signals)
+            self.cst = slice(self.ctl.stop, len_prediction_vector)
+
+            self.prediction_vector = np.zeros(len_prediction_vector)
+
+            # FIX: INSTEAD OF INITIALZING FUNCTION HERE, RE-INITIALIZE ITS VARIABLE TO PROPER SIZE
+            #      OR MAYBE JUST CALL FUNCTION WITH "CONTEXT = INITIALIZING" SO THAT *ITS* FUNCTION CAN DO THE SIZING
+
+            if isinstance(self.learning_function, type):
+                self.learning_function = self.learning_function(
+                        num_predictors=len(self.prediction_vector),
+                        mu_prior=self.prediction_weights_priors,
+                        sigma_prior=self.prediction_variances_priors
+                )
+
+        # Populate fields (subvectors) of prediction_vector
+        self.prediction_vector[self.pred] = np.array(predictors)
+        self.prediction_vector[self.ctl] = np.array([c.value for c in controller.control_signals]).reshape(-1)
+        self.prediction_vector[self.intrxn]= \
+            np.array(self.prediction_vector[self.pred] *
+                     self.prediction_vector[self.ctl].reshape(self.num_control_signals,1)).reshape(-1)
+        self.prediction_vector[self.cst] = \
+            np.array([0 if c.cost is None else c.cost for c in controller.control_signals]).reshape(-1) * -1
+        # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
+
+        # Get sample of weights:
+        self.update_prediction_weights_function.function(
+                [np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)]
+        )
+        prediction_weights = self.update_prediction_weights_function.sample_weights()
+
+        # Compute allocation_policy using gradient_ascent
+        allocation_policy = self.gradient_ascent(controller.control_signals,
+                                                      self.prediction_vector,
+                                                      prediction_weights)
+
+        return allocation_policy
+
+    def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
+        '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
+        <LVOCControlMechanism_EVC>`.
+
+        Iterate over prediction_vector; for each iteration: \n
+        - compute gradients based on current control_signal values and their costs (in prediction_vector);
+        - compute new control_signal values based on gradients;
+        - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
+        - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
+
+        Continue to iterate until difference between new and old EVC is less than `convergence_criterion
+        <LearnAllocationPolicy.convergence_criterion>` or number of iterations exceeds `max_iterations
+        <LearnAllocationPolicy.max_iterations>`.
+
+        Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
+        <LVOCControlMechanism.allocation_policy>`).
+
+        '''
+
+        convergence_metric = self.convergence_criterion + EPSILON
+        previous_lvoc = np.finfo(np.float128).max
+
+        predictors = prediction_vector[0:self.num_predictors]
+
+        # Get interaction weights and reshape so that there is one row per control_signal
+        #    containing the terms for the interaction of that control_signal with each of the predictors
+        interaction_weights = prediction_weights[self.intrxn].reshape(self.num_control_signals,self.num_predictors)
+        # multiply interactions terms by predictors (since those don't change during the gradient ascent)
+        interaction_weights_x_predictors = interaction_weights * predictors
+
+        control_signal_values = prediction_vector[self.ctl]
+        control_signal_weights = prediction_weights[self.ctl]
+
+        gradient_constants = np.zeros(self.num_control_signals)
+        for i in range(self.num_control_signals):
+            gradient_constants[i] = control_signal_weights[i]
+            gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
+
+        costs = prediction_vector[self.cst]
+        cost_weights = prediction_weights[self.cst]
+
+        # TEST PRINT:
+        # print('\n\npredictors: ', predictors,
+        #       '\ncontrol_signals: ', control_signal_values,
+        #       '\ncontrol_costs: ', costs,
+        #       '\nprediction_weights: ', prediction_weights)
+        # TEST PRINT END:
+
+        # Perform gradient ascent until convergence criterion is reached
+        j=0
+        while convergence_metric > self.convergence_criterion:
+            # initialize gradient arrray (one gradient for each control signal)
+            gradient = np.copy(gradient_constants)
+            cost_gradient = np.zeros(self.num_costs)
+
+            for i, control_signal_value in enumerate(control_signal_values):
+
+                # Recompute costs and add to gradient
+                cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
+                cost_gradient[i] = -(cost_function_derivative(control_signal_value) * cost_weights[i])
+                gradient[i] += cost_gradient[i]
+
+                # Update control_signal_value with gradient
+                control_signal_values[i] = control_signal_value + self.udpate_rate * gradient[i]
+
+                # Update cost based on new control_signal_value
+                costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
+
+            # Assign new values of interaction terms, control_signals and costs to prediction_vector
+            prediction_vector[self.intrxn]= np.array(prediction_vector[self.pred] *
+                                                     prediction_vector[self.ctl].reshape(self.num_control_signals,1)).\
+                                                     reshape(-1)
+            prediction_vector[self.ctl] = control_signal_values
+            prediction_vector[self.cst] = costs
+
+            # Compute current LVOC using current features, weights and new control signals
+            current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
+
+            # Compute convergence metric with updated control signals
+            convergence_metric = np.abs(current_lvoc - previous_lvoc)
+
+            # TEST PRINT:
+            # print('\niteration ', j,
+            #       '\nprevious_lvoc: ', previous_lvoc,
+            #       '\ncurrent_lvoc: ',current_lvoc ,
+            #       '\nconvergence_metric: ',convergence_metric,
+            #       '\npredictors: ', predictors,
+            #       '\ncontrol_signal_values: ', control_signal_values,
+            #       '\ninteractions: ', interaction_weights_x_predictors,
+            #       '\ncosts: ', costs)
+            # TEST PRINT END
+
+            j+=1
+            if j > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            previous_lvoc = current_lvoc
+
+        return control_signal_values
+
+    def compute_lvoc(self, v, w):
+        return np.sum(v * w)
 
     def _parse_function_variable(self, variable, context=None):
         '''Return array of current predictor values and last prediction weights received from LVOCObjectiveMechanism'''
