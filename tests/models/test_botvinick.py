@@ -202,7 +202,7 @@ def test_botvinick_model(benchmark, mode, reps):
 
         return results
 
-    res = benchmark(run, mode=='LLVM')
+    res = benchmark(run, mode)
 
     if reps == 1:
         assert np.allclose(res[0][0], [0.4888244,  0.4888244])
