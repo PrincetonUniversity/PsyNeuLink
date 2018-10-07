@@ -1788,7 +1788,7 @@ class TestRun:
         assert np.allclose([75], output)
 
     @pytest.mark.composition
-    @pytest.mark.benchmark
+    @pytest.mark.benchmark(group="LPP")
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
     def test_LPP(self, benchmark, mode):
 
