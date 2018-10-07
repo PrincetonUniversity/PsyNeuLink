@@ -830,7 +830,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
         self.on_resume_integrator_mode = on_resume_integrator_mode
         self.integrator_function = None
-        self.original_integrator_function = None
+        self.has_integrated = False
         self._current_variable_index = 0
         self.integrator_function_value = None
 
@@ -1052,7 +1052,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                           rate=integration_rate,
                                                           owner=self)
 
-            self.original_integrator_function = self.integrator_function
+            self.has_integrated = True
         current_input = self.integrator_function.execute(function_variable,
                                                          # Should we handle runtime params?
                                                          runtime_params={INITIALIZER: initial_value,
@@ -1356,8 +1356,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @integrator_mode.setter
     def integrator_mode(self, val):
         if val is True:
-            if self.integrator_function is None:
-                self.integrator_function = self.original_integrator_function
+            if not self.integrator_mode and self.has_integrated:
                 self._integrator_mode = True
                 if self.integrator_function is not None:
                     if self.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
@@ -1368,9 +1367,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.previous_value = None
             self.has_initializers = True
         elif val is False:
-            if self.integrator_function is not None:
-                self.original_integrator_function = self.integrator_function
-            self.integrator_function = None
             self._integrator_mode = False
             self.has_initializers = False
             if not hasattr(self, "reinitialize_when"):
@@ -1396,7 +1392,3 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Otherwise just return True
         else:
             return None
-
-
-
-

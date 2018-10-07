@@ -443,7 +443,7 @@ class TestTransferMechanismFunctions:
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
-    
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_relu_fun(self):
@@ -1392,7 +1392,6 @@ class TestIntegratorMode:
         T.integrator_mode = False
 
         assert T.integrator_mode is False
-        assert T.integrator_function is None
 
         S.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.value, [[1.0]])
@@ -1401,6 +1400,7 @@ class TestIntegratorMode:
         T.integrator_mode = True
 
         assert T.integrator_mode is True
+        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         S.run({T: [[1.0], [1.0], [1.0]]})

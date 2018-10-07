@@ -399,9 +399,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
-                result_tuple = _compute_EVC(args=(controller, allocation_vector,
-                                                  runtime_params,
-                                                  context))
+                result_tuple = _compute_EVC(controller, allocation_vector, runtime_params, context)
                 EVC, outcome, cost = result_tuple
 
                 EVC_max = max(EVC, EVC_max)
@@ -512,7 +510,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
 
-def _compute_EVC(args):
+def _compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
@@ -531,8 +529,6 @@ def _compute_EVC(args):
         (EVC_current, outcome, aggregated_costs)
 
     """
-
-    ctlr, allocation_vector, runtime_params, context = args
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),

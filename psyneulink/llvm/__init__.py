@@ -13,7 +13,7 @@ from llvmlite import binding, ir
 import ctypes
 import os, sys
 
-from psyneulink.llvm import builtins
+from . import builtins
 from psyneulink.llvm.jit_engine import cpu_jit_engine
 from psyneulink.llvm.builder_context import *
 

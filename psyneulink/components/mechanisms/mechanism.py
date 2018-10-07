@@ -2146,6 +2146,18 @@ class Mechanism_Base(Mechanism):
         except (AttributeError, TypeError):
             return getattr(self, param_name)
 
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for input_state in self.input_states:
+            input_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        for output_state in self.output_states:
+            output_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        for parameter_state in self.parameter_states:
+            parameter_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
+
     def execute(self,
                 input=None,
                 runtime_params=None,

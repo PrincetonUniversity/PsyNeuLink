@@ -962,33 +962,6 @@ class OutputState(State_Base):
                          function=function,
                          )
 
-    def _parse_function_variable(self, variable, context=None):
-        # variable is passed to OutputState by _instantiate_function for OutputState
-        if variable is not None:
-            return variable
-        # otherwise, OutputState uses specified item(s) of owner's value
-        else:
-            # variable attribute should not be used for computations!
-            fct_var = self.variable
-
-            # If variable is not specified, check if OutputState has index attribute
-            #    (for backward compatibility with INDEX and ASSIGN)
-            if fct_var is None:
-                try:
-                    # Get indexed item of owner's value
-                    fct_var = self.owner.value[self.index]
-                except IndexError:
-                    # Index is ALL, so use owner's entire value
-                    if self.index is ALL:
-                        fct_var = self.owner.value
-                    else:
-                        raise IndexError
-                except AttributeError:
-                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
-                                           format(self.name, self.owner.name))
-
-            return fct_var
-
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
 
@@ -1169,6 +1142,33 @@ class OutputState(State_Base):
                                   format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        if variable is None:
+            # fall back to specified item(s) of owner's value
+            variable = self.variable
+
+            # If variable is not specified, check if OutputState has index attribute
+            #    (for backward compatibility with INDEX and ASSIGN)
+            if variable is None:
+                try:
+                    # Get indexed item of owner's value
+                    variable = self.owner.value[self.index]
+                except IndexError:
+                    # Index is ALL, so use owner's entire value
+                    if self.index is ALL:
+                        variable = self.owner.value
+                    else:
+                        raise IndexError
+                except AttributeError:
+                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
+                                           format(self.name, self.owner.name))
+
+        return super()._execute(
+            variable=variable,
+            runtime_params=runtime_params,
+            context=context,
+        )
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
