@@ -12550,7 +12550,7 @@ class BayesGLM(LearningFunction):
 
     def __init__(self,
                  default_variable=np.zeros((2,1,1)),
-                 num_predictors=1,
+                 # num_predictors=1,
                  mu_prior=0,
                  sigma_prior=1,
                  params=None,
@@ -12567,7 +12567,7 @@ class BayesGLM(LearningFunction):
         #      This is because when the function is first initialized, the size of the predictor array and priors
         #      may not yet be known.  That block should also reset the size of the variable
         # set the prior parameters
-        self.initialize_prior(num_predictors, mu_prior, sigma_prior, a=1, b=1)
+        self.initialize_prior(len(default_variable[0]), mu_prior, sigma_prior, a=1, b=1)
 
         # before we see any data, the posterior is the prior
         self.mu_n = self.mu_prior
@@ -12581,6 +12581,11 @@ class BayesGLM(LearningFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    # def _validate_variable(self, variable, context=None):
+    #     if (variable.ndim !=3) or (variable.shape[0] != 2) or (variable.shape[1] != variable.shape[2]):
+    #         raise FunctionError("Bad shape of variable for {} (\'{}\'); it must be a 3d array with exactly two items "
+    #                             "in axis 0 that are of equal length (shape=(2,x,x))".format(self.name, variable.shape))
 
     def initialize_prior(self, n, mu, sigma, a = None, b = None):
         '''Set prior parameters'''
@@ -12621,8 +12626,9 @@ class BayesGLM(LearningFunction):
         self.a_0 = self.a_n
         self.b_0 = self.b_n
 
-        predictors = variable[0]  # should be an array with shape(num_samples, num_predictors)
-        dependent_vars = variable[1] # should be an array with shape(num_samples, num_dependent_variables)
+        predictors = np.atleast_2d(variable[0])  # should be an array with shape(num_samples, num_predictors)
+        dependent_vars = np.atleast_2d(variable[1]) # should be an array with shape(num_samples,
+        # num_dependent_variables)
 
         # online update rules as per the given reference
         self.Lambda_n = (predictors.T @ predictors) + self.Lambda_prior
