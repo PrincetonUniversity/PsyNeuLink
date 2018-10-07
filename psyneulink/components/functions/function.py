@@ -12507,6 +12507,12 @@ class Reinforcement(
         error array : List[1d np.array, 1d np.array]
             Two copies of a 1d array with a single non-zero error term.
 
+        Attributes
+        ----------
+
+        mu_and_Lambda_values : 2d ndarray
+            current set of mu and Lambda values in the 1st and 2nd items of axis 0, respectively
+
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -12627,7 +12633,10 @@ class BayesGLM(LearningFunction):
                    (self.mu_n.T @ self.Lambda_n @ self.mu_n)
 
         # return [np.squeeze(self.mu_n), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
-        return [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+        self.mu_and_Lambda_values = \
+            [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+
+        return self.sample_weights()
 
     def sample_weights(self):
         phi = np.random.gamma(self.a_n / 2, self.b_n / 2)

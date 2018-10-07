@@ -691,6 +691,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         outcome = variable[0]
         predictors = variable[1:]
+        self.predictor_values = np.array(variable[1:]).reshape(-1)
 
         # Initialize attributes
         # IMPLEMENTATION NOTE:  This has to happen here rather than in __init__, as it requires
@@ -735,10 +736,10 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
-        self.update_prediction_weights_function.function(
+        self.learning_function.function(
                 [np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)]
         )
-        prediction_weights = self.update_prediction_weights_function.sample_weights()
+        prediction_weights = self.learning_function.sample_weights()
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(controller.control_signals,
