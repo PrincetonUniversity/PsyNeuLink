@@ -3108,6 +3108,9 @@ class Composition(object):
             run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
             run_set_ptr = builder.alloca(run_set_type)
 
+            # Allocate temporary output storage
+            output_storage = builder.alloca(data.type.pointee, name="output_storage")
+
             loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
 
@@ -3137,14 +3140,13 @@ class Composition(object):
                                 cond_ptr, self.c_nodes, mech)
                 builder.store(mech_cond, run_set_mech_ptr)
 
-            # TODO: Add support for frozen values
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 mech_cond = builder.load(run_set_mech_ptr)
                 with builder.if_then(mech_cond):
                     mech_name = self.__get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
-                    builder.call(mech_f, [context, params, comp_in, data, data])
+                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
 
                     status_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx)])
 
@@ -3157,6 +3159,15 @@ class Composition(object):
                     # Update timestamp
                     mech_ts_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(1)])
                     builder.store(time_stamp, mech_ts_ptr)
+
+            # Writeback results
+            for idx, mech in enumerate(self.c_nodes):
+                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
+                mech_cond = builder.load(run_set_mech_ptr)
+                with builder.if_then(mech_cond):
+                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)])
+                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)])
+                    builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
             step = builder.extract_value(time_stamp, 2)
