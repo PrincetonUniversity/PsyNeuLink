@@ -686,10 +686,11 @@ class LVOCControlMechanism(ControlMechanism):
                 self.owner.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        outcome = variable[0]
+        if controller is None:
+            raise LVOCAuxiliaryError("Call to LearnAllocationPolicy() missing controller argument")
 
-        # This is a vector of the concatenated values received from all of the other InputStates (i.e., variable[1:])
-        self.predictor_values = np.array(variable[1:]).reshape(-1)
+        outcome = variable[0]
+        predictors = variable[1:]
 
         # Initialize attributes
         # IMPLEMENTATION NOTE:  This has to happen here rather than in __init__, as it requires
@@ -724,7 +725,7 @@ class LVOCControlMechanism(ControlMechanism):
                 )
 
         # Populate fields (subvectors) of prediction_vector
-        self.prediction_vector[self.pred] = np.array(predictors)
+        self.prediction_vector[self.pred] = predictors
         self.prediction_vector[self.ctl] = np.array([c.value for c in controller.control_signals]).reshape(-1)
         self.prediction_vector[self.intrxn]= \
             np.array(self.prediction_vector[self.pred] *
@@ -856,7 +857,5 @@ class LVOCControlMechanism(ControlMechanism):
         # This the value received from the ObjectiveMechanism:
         outcome = variable[0]
 
-        # This is a vector of the concatenated values received from all of the other InputStates (i.e., variable[1:])
-        self.predictor_values = np.array(variable[1:]).reshape(-1)
-
-        return [self.predictor_values, outcome]
+        # prediction_vector is constructed in self._execute
+        return [self.predictor_vector, outcome]

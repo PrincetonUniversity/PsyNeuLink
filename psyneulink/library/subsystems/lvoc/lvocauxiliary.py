@@ -335,10 +335,8 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
         # FIX: VALIDATE THAT FIELDS OF prediction_vector HAVE BEEN UPDATED
 
         # Get sample of weights:
-        self.update_prediction_weights_function.function(
-                [np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)]
-        )
-        prediction_weights = self.update_prediction_weights_function.sample_weights()
+        self.learning_function.function([np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)])
+        prediction_weights = self.learning_function.sample_weights()
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(controller.control_signals,
