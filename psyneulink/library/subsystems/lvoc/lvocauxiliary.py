@@ -272,9 +272,14 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
                  runtime_params=None,
                  params=None,
                  context=None):
-        """Gradient ascent over allocation_policies (combinations of control_signals) to find one that maximizes EVC
+        """Update prediction_weights to better predct outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
+        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from prediction_vector, then optimize
+        `allocation_policy <LVOCControlMechanism>` given new prediction_weights.
 
         variable should have two items:  current prediction_vector and outcome
+        Call `learning_function <LearnAllocationPolicy.learning_function>` to update prediction_weights.
+        Call `gradient_ascent` to optimize `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
+        prediction_weights.
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING or
@@ -308,6 +313,9 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
             self.cst = slice(self.ctl.stop, len_prediction_vector)
 
             self.prediction_vector = np.zeros(len_prediction_vector)
+
+            # FIX: INSTEAD OF INITIALZING FUNCTION HERE, RE-INITIALIZE ITS VARIABLE TO PROPER SIZE
+            #      OR MAYBE JUST CALL FUNCTION WITH "CONTEXT = INITIALIZING" SO THAT *ITS* FUNCTION CAN DO THE SIZING
 
             if isinstance(self.learning_function, type):
                 self.learning_function = self.learning_function(

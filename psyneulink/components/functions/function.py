@@ -12557,6 +12557,9 @@ class BayesGLM(LearningFunction):
         # FIX: ?SHOULD mu_prior and sigma_prior BE ASSIGNED AS PARAMS? (I.E., IN assig_args_to_param_dicts)??
         #      IF SO, THEN MOVE ASSIGNMENTS BELOW TO _instantiate_attributes_before_function
 
+        # FIX: MOVE FOLLOWING TO BLOCK IN function THAT TESTS FOR CONTEXT = INITIALIZING
+        #      This is because when the function is first initialized, the size of the predictor array and priors
+        #      may not yet be known.  That block should also reset the size of the variable
         # set the prior parameters
         self.initialize_prior(num_predictors, mu_prior, sigma_prior, a=1, b=1)
 
@@ -12565,6 +12568,7 @@ class BayesGLM(LearningFunction):
         self.Lambda_n = self.Lambda_prior
         self.a_n = self.a_0
         self.b_n = self.b_0
+        # FIX: END MOVE
 
         super().__init__(default_variable=default_variable,
                          params=params,
