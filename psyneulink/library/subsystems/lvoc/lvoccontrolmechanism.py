@@ -162,7 +162,7 @@ its `function <LVOCControlMechanism.function>` to evaluate the performance of it
 *Function*
 ~~~~~~~~~~
 
-By default, the primary `function <LVOCControlMechanism.function>` is `LearnToPredictAllocationPolicy, which learns to
+By default, the primary `function <LVOCControlMechanism.function>` is `LearnAllocationPolicy, which learns to
 use the LVOCControlMechanism's  `predictors <LVOCControlMechanism_Predictors>` to select the `allocation_policy
 <LVOCControlMechanism.allocation_policy>` that yields the greatest `EVC <LVOCControlMechanism_EVC>`. However,
 any function can be used that returns an array with the same shape as the LVOCControlMechanism's `allocation_policy
@@ -196,21 +196,21 @@ Execution
 When an LVOCControlMechanism is executed, it uses the values of its `predictors <LVOCControlMechanism_Predictors>`,
 listed in its `predictor_values <LVOCControlMechanism.predictor_values>` attribute, to determines and implement the
 `allocation_policy` for the current `trial` of execution of its `composition <LVOCControlMechanism.composition>`.
-The default `function <LVOCControlMechanism.function>` -- `LearnToPredictAllocationPolicy -- executes the following steps:
+The default `function <LVOCControlMechanism.function>` -- `LearnAllocationPolicy -- executes the following steps:
 
-  * Updates its `prediction_vector <LearnToPredictAllocationPolicy.prediction_vector>` with `predictors_values
+  * Updates its `prediction_vector <LearnAllocationPolicy.prediction_vector>` with `predictors_values
     <LVOCControlMechanism.predictor_values>`, `control_signals <LVOCControlMechanism.control_signals>`,
     and their `costs <ControlSignal.cost>`.
 
-  * Calls its `update_prediction_weights_function <LearnToPredictAllocationPolicy.update_prediction_weights_function>`
-    with the `prediction_vector <LearnToPredictAllocationPolicy.prediction_vector>` and the outcome received from the
+  * Calls its `update_prediction_weights_function <LearnAllocationPolicy.update_prediction_weights_function>`
+    with the `prediction_vector <LearnAllocationPolicy.prediction_vector>` and the outcome received from the
     LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to update the means and
-    variances associated with each element of the `prediction_vector <LearnToPredictAllocationPolicy.prediction_vector>`
+    variances associated with each element of the `prediction_vector <LearnAllocationPolicy.prediction_vector>`
     in order to better predict the outcome.  It then calls that function to get a vector of prediction weights sampled
     using the updated means and variances of the weights.
 
   * Uses the sample of prediction weights to determine, by a `gradient ascent process
-    <LearnToPredictAllocationPolicy.gradient_ascent>`, the `allocation_policy <LVOCControlMechanism>`
+    <LearnAllocationPolicy.gradient_ascent>`, the `allocation_policy <LVOCControlMechanism>`
     that yields the greatest `EVC <LVOCControlMechanism_EVC>`, and returns that `allocation_policy
     <LVOCControlMechanism.allocation_policy>`.
 
@@ -252,7 +252,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
-from psyneulink.library.subsystems.lvoc.lvocauxiliary import LearnToPredictAllocationPolicy
+from psyneulink.library.subsystems.lvoc.lvocauxiliary import LearnAllocationPolicy
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
@@ -276,7 +276,7 @@ class LVOCControlMechanism(ControlMechanism):
     objective_mechanism=None,                       \
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
-    function=LearnToPredictAllocationPolicy,           \
+    function=LearnAllocationPolicy,           \
     control_signals=None,                           \
     modulation=ModulationParam.MULTIPLICATIVE,      \
     params=None,                                    \
@@ -302,7 +302,7 @@ class LVOCControlMechanism(ControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    function : function or method : LearnToPredictAllocationPolicy
+    function : function or method : LearnAllocationPolicy
         specifies the function used to determine the `allocation_policy` for the current execution of the
         LVOCControlMechanism's `composition <LVOCControlMechanism.composition>` (see `function
         <LVOCControlMechanism.function>` for details).
@@ -351,7 +351,7 @@ class LVOCControlMechanism(ControlMechanism):
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
-    function : function : default LearnToPredictAllocationPolicy
+    function : function : default LearnAllocationPolicy
         determines the `allocation_policy`. The default function, `ControlSignalGridAscent`, takes `predictor_values
         <LVOCControlMechanism.predictor_values>` and the outcome value received by the `objective_mechanism
         <LVOCControlMechanism.objective_mechanism>`, and returns an current `allocation_polcy
@@ -397,7 +397,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class Params(ControlMechanism.Params):
-        function = LearnToPredictAllocationPolicy
+        function = LearnAllocationPolicy
 
     from psyneulink.components.functions.function import LinearCombination
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -410,7 +410,7 @@ class LVOCControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 function=LearnToPredictAllocationPolicy,
+                 function=LearnAllocationPolicy,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -641,7 +641,7 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Call self.function -- default: LearnToPredictAllocationPolicy:
+        Call self.function -- default: LearnAllocationPolicy:
             does gradient descent based on `predictor_values <LVOCControlMechanism.predictor_values>` and outcome
             received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to determine the
             `allocation_policy <LVOCControlMechanism.allocation_policy>`.
