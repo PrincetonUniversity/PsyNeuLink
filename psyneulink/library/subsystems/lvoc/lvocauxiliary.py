@@ -103,7 +103,8 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
     max_iterations=1000,              \
     params=None,                      \
     name=None,                        \
-    prefs=None)
+    prefs=None,                       \
+    **kwags)
 
     Use **learning_function** to improve prediction of outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
     `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from LVOCControlMechanism's `predictors
@@ -252,7 +253,7 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
                  owner=None):
 
         function = function or self.function
-        self.update_prediction_weights_function = learning_function
+        self.learning_function = learning_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(prediction_weights_priors=prediction_weights_priors,
@@ -308,11 +309,12 @@ class LearnAllocationPolicy(LVOCAuxiliaryFunction):
 
             self.prediction_vector = np.zeros(len_prediction_vector)
 
-            self.update_prediction_weights_function = self.update_prediction_weights_function(
-                    num_predictors=len(self.prediction_vector),
-                    mu_prior=self.prediction_weights_priors,
-                    sigma_prior=self.prediction_variances_priors
-            )
+            if isinstance(self.learning_function, type):
+                self.learning_function = self.learning_function(
+                        num_predictors=len(self.prediction_vector),
+                        mu_prior=self.prediction_weights_priors,
+                        sigma_prior=self.prediction_variances_priors
+                )
 
         # Populate fields (subvectors) of prediction_vector
         self.prediction_vector[self.pred] = np.array(predictors)

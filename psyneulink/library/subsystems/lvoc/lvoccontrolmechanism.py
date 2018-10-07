@@ -352,14 +352,14 @@ class LVOCControlMechanism(ControlMechanism):
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     function : function : default LearnAllocationPolicy
-        determines the `allocation_policy`. The default function, `ControlSignalGridAscent`, takes `predictor_values
+        determines the `allocation_policy`. The default function, `LearnAllocationPolicy`, takes `predictor_values
         <LVOCControlMechanism.predictor_values>` and the outcome value received by the `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>`, and returns an current `allocation_polcy
+        <LVOCControlMechanism.objective_mechanism>`, and returns an `allocation_polcy
         <LVOCControlMechanism.allocation_policy>` (see `LVOCControlMechanism_Function` for additional details).
-
         If a custom function is specified, it must accommodate a **controller** argument that specifies an
         LVOCControlMechanism (and provides access to its attributes), and must return an array with the same format
-        (number and type of elements) as the LVOCControlMechanism's `allocation_policy` attribute.
+        (number and type of elements) as the LVOCControlMechanism's `allocation_policy
+        <LVOCControlMechanism.allocation_policy>` attribute.
 
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its

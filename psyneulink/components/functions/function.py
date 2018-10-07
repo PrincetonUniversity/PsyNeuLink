@@ -63,9 +63,11 @@ Objective Functions:
   * `Distance`
 
 Learning Functions:
+  * `Kohonen`
   * `Hebbian`
   * `ContrastiveHebbian`
   * `Reinforcement`
+  * `BayesGLM`
   * `BackPropagation`
   * `TDLearning`
 
@@ -213,8 +215,8 @@ from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metr
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
-    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
-    'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
+    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy', 'AUTOASSOCIATIVE',
+    'BackPropagation', 'BayesGLM', 'BogaczEtAl', 'BOUNDS',
     'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
     'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
@@ -11493,105 +11495,6 @@ class Distance(ObjectiveFunction):
 
         return self.convert_output_type(result)
 
-
-class BayesGLM(ObjectiveFunction):
-    """
-    BayesGLM.py is crudely adapted from Falk Lieder's BayesianGLM.m. A normal linear model
-    y = X\Theta + \epsilon, with normal-gamma prior distribution.
-
-    Useful reference: http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf
-
-    Author: Yotam Sagiv
-    """
-
-    def __init__(self,
-                 # default_variable=np.zeros_like(np.array([[[0]],[[0]]])),
-                 default_variable=np.zeros((2,1,1)),
-                 num_predictors=1,
-                 mu_prior=0,
-                 sigma_prior=1,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
-
-        # FIX: ?SHOULD mu_prior and sigma_prior BE ASSIGNED AS PARAMS? (I.E., IN assig_args_to_param_dicts)??
-        #      IF SO, THEN MOVE ASSIGNMENTS BELOW TO _instantiate_attributes_before_function
-
-        # set the prior parameters
-        self.initialize_prior(num_predictors, mu_prior, sigma_prior, a=1, b=1)
-
-        # before we see any data, the posterior is the prior
-        self.mu_n = self.mu_0
-        self.Lambda_n = self.Lambda_0
-        self.a_n = self.a_0
-        self.b_n = self.b_0
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-    def initialize_prior(self, n, mu, sigma, a = None, b = None):
-        '''Set prior parameters'''
-
-        if isinstance(mu, (int, float)):
-            mu_prior = np.full((n, 1),mu)
-        else:
-            if len(mu) != n:
-                raise FunctionError("Length of mu priors ({}) does not match number of predictors ({})".
-                                    format(len(mu), n))
-            mu_prior = mu
-
-        if isinstance(sigma, (int, float)):
-            lambda_prior = (1 / (sigma ** 2)) * np.eye(n)
-        else:
-            if len(sigma) != n:
-                raise FunctionError("Length of sigma priors ({}) does not match number of predictors ({})".
-                                    format(len(sigma), n))
-            lambda_prior = (1 / (np.array(sigma) ** 2)) * np.eye(n)
-
-        self.mu_0 = mu_prior
-        self.Lambda_0 = lambda_prior
-        if a and b:
-            self.a_0 = a
-            self.b_0 = b
-
-    # def function(self, X, y, params, context):
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
-        '''Update posterior/prior parameters based on new data'''
-
-        # Today's prior is yesterday's posterior
-        self.Lambda_0 = self.Lambda_n
-        self.mu_0 = self.mu_n
-        self.a_0 = self.a_n
-        self.b_0 = self.b_n
-
-        predictors = variable[0]  # should be an array with shape(num_samples, num_predictors)
-        dependent_vars = variable[1] # should be an array with shape(num_samples, num_dependent_variables)
-
-        # online update rules as per the given reference
-        self.Lambda_n = (predictors.T @ predictors) + self.Lambda_0
-        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_0 @ self.mu_0))
-        self.a_n = self.a_0 + dependent_vars.shape[1]
-        self.b_n = self.b_0 + (dependent_vars.T @ dependent_vars) + \
-                   (self.mu_0.T @ self.Lambda_0 @ self.mu_0) - \
-                   (self.mu_n.T @ self.Lambda_n @ self.mu_n)
-
-        # return [np.squeeze(self.mu_n), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
-        return [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
-
-    def sample_weights(self):
-        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
-        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
-
-
 # endregion
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
@@ -11657,20 +11560,6 @@ class LearningFunction(Function_Base):
     class Params(Function_Base.Params):
         variable = Param(np.array([0, 0, 0]), read_only=True)
         learning_rate = Param(0.05, modulable=True)
-
-    # def __init__(self, default_variable, params, owner, prefs, context):
-    #     super().__init__(default_variable=default_variable,
-    #                      params=params,
-    #                      owner=owner,
-    #                      prefs=prefs,
-    #                      context=context)
-
-    #     self.learning_rate_dim = None
-    #     if learning_rate is not None:
-    #         self.learning_rate_dim = np.array(learning_rate).ndim
-
-    #     self.return_val = return_val(None, None)
-
 
     def _validate_learning_rate(self, learning_rate, type=None):
 
@@ -12047,8 +11936,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
@@ -12260,7 +12147,6 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -12517,7 +12403,6 @@ class Reinforcement(
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -12645,6 +12530,104 @@ class Reinforcement(
         weight_change_matrix = np.diag(error_array)
 
         return [error_array, error_array]
+
+
+class BayesGLM(LearningFunction):
+    """
+    BayesGLM.py is crudely adapted from Falk Lieder's BayesianGLM.m. A normal linear model
+    y = X\Theta + \epsilon, with normal-gamma prior distribution.
+
+    Useful reference: http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf
+
+    Author: Yotam Sagiv
+    """
+
+    def __init__(self,
+                 default_variable=np.zeros((2,1,1)),
+                 num_predictors=1,
+                 mu_prior=0,
+                 sigma_prior=1,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        # FIX: ?SHOULD mu_prior and sigma_prior BE ASSIGNED AS PARAMS? (I.E., IN assig_args_to_param_dicts)??
+        #      IF SO, THEN MOVE ASSIGNMENTS BELOW TO _instantiate_attributes_before_function
+
+        # set the prior parameters
+        self.initialize_prior(num_predictors, mu_prior, sigma_prior, a=1, b=1)
+
+        # before we see any data, the posterior is the prior
+        self.mu_n = self.mu_prior
+        self.Lambda_n = self.Lambda_prior
+        self.a_n = self.a_0
+        self.b_n = self.b_0
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def initialize_prior(self, n, mu, sigma, a = None, b = None):
+        '''Set prior parameters'''
+
+        if isinstance(mu, (int, float)):
+            mu_prior = np.full((n, 1),mu)
+        else:
+            if len(mu) != n:
+                raise FunctionError("Length of mu priors ({}) does not match number of predictors ({})".
+                                    format(len(mu), n))
+            mu_prior = mu
+
+        if isinstance(sigma, (int, float)):
+            Lambda_prior = (1 / (sigma ** 2)) * np.eye(n)
+        else:
+            if len(sigma) != n:
+                raise FunctionError("Length of sigma priors ({}) does not match number of predictors ({})".
+                                    format(len(sigma), n))
+            Lambda_prior = (1 / (np.array(sigma) ** 2)) * np.eye(n)
+
+        self.mu_prior = mu_prior
+        self.sigma_prior = sigma  # Store for user reference
+        self.Lambda_prior = Lambda_prior
+        if a and b:
+            self.a_0 = a
+            self.b_0 = b
+
+    # def function(self, X, y, params, context):
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        '''Update posterior/prior parameters based on new data'''
+
+        # Today's prior is yesterday's posterior
+        self.Lambda_prior = self.Lambda_n
+        self.mu_prior = self.mu_n
+        self.a_0 = self.a_n
+        self.b_0 = self.b_n
+
+        predictors = variable[0]  # should be an array with shape(num_samples, num_predictors)
+        dependent_vars = variable[1] # should be an array with shape(num_samples, num_dependent_variables)
+
+        # online update rules as per the given reference
+        self.Lambda_n = (predictors.T @ predictors) + self.Lambda_prior
+        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_prior @ self.mu_prior))
+        self.a_n = self.a_0 + dependent_vars.shape[1]
+        self.b_n = self.b_0 + (dependent_vars.T @ dependent_vars) + \
+                   (self.mu_prior.T @ self.Lambda_prior @ self.mu_prior) - \
+                   (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+
+        # return [np.squeeze(self.mu_n), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+        return [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+
+    def sample_weights(self):
+        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
+        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
 
 
 # Argument names:
@@ -12817,7 +12800,6 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -13068,7 +13050,6 @@ class TDLearning(Reinforcement):
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
