@@ -27,7 +27,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER', 'ControlSignalGradientAscent',
+    'CONTROL_SIGNAL_GRADIENT_ASCENT_FUNCTION', 'CONTROLLER', 'LearnToPredictAllocationPolicy',
     'LVOCAuxiliaryError', 'LVOCAuxiliaryFunction',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
     'OUTCOME', 'PY_MULTIPROCESSING'
@@ -93,8 +93,8 @@ class LVOCAuxiliaryFunction(Function_Base):
                          )
 
 
-class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
-    """ControlSignalGradientAscent(   \
+class LearnToPredictAllocationPolicy(LVOCAuxiliaryFunction):
+    """LearnToPredictAllocationPolicy(   \
     learning_function=BayesGLM,       \
     prediction_weights_priors=0.0,    \
     prediction_variances_priors=1.0,  \
@@ -109,24 +109,25 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
     `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from LVOCControlMechanism's `predictors
     <LVOCControlMechanism.predictors>`, `control_signals <LVOCControlMechanism.control_signals>`, their interactions,
     and the `costs <ControlSignal.cost>` of the `control_signals <LVOCControlMechanism.control_signals>`, and then call
-    `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>` method with updated prediction_weights to determine
-    the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes `EVC <LVOCControlMechanism_EVC>`.
+    `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>` method with updated prediction_weights to
+    determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes `EVC
+    <LVOCControlMechanism_EVC>`.
 
     This is the default `function <LVOCControlMechanism.function>` for an `LVOCControlMechanism`. It identifies the
     `allocation_policy <LVOCControlMechanism.allocation_policy>` with the maximum `EVC <EVCControlMechanism_EVC>` using
     the following procedure:
 
     - update the distributions (means and variances) of weights for `prediction_vector
-      <ControlSignalGradientAscent.prediction_vector>` using the function specified in the **learning_function**
+      <LearnToPredictAllocationPolicy.prediction_vector>` using the function specified in the **learning_function**
       argument of the constructor (and assigned as the `update_prediction_weights_function
-      <ControlSignalGradientAscent.update_prediction_weights_function>` attribute) in order to better predict the
+      <LearnToPredictAllocationPolicy.update_prediction_weights_function>` attribute) in order to better predict the
       outcome of the LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>`.
 
     - draw a sample from the new weight distributions by calling the sample method of the
-      `update_prediction_weights_function <ControlSignalGradientAscent.update_prediction_weights_function>`.
+      `update_prediction_weights_function <LearnToPredictAllocationPolicy.update_prediction_weights_function>`.
 
-    - call `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>` to determine the allocation_policy with the
-      maximum `EVC <LVOCControlMechanism_EVC>` given the new prediction weights.
+    - call `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>` to determine the allocation_policy with
+      the maximum `EVC <LVOCControlMechanism_EVC>` given the new prediction weights.
 
     - return the `allocation_policy` that yields the maximum EVC.
 
@@ -135,37 +136,37 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
     learning_function : Function class : default BayesGLM
         assigned to the `update_prediction_weights_function
-        <ControlSignalGradientAscent.update_prediction_weights_function>` attribute and used to update distributions
-        (means and variances) of weights for `prediction_vector <ControlSignalGradientAscent.prediction_vector>`.
+        <LearnToPredictAllocationPolicy.update_prediction_weights_function>` attribute and used to update distributions
+        (means and variances) of weights for `prediction_vector <LearnToPredictAllocationPolicy.prediction_vector>`.
         The variable of its function must be a 2d array that contains two items -- a prediction vector and an outcome
         -- used to update the weights; and it must have a *sample* method that returns a set of prediction weights.
 
     prediction_weights_priors : int, float or 1d array of numbers : default 0.0
         specifies the value(s) used by `update_prediction_weights_function
-        <ControlSignalGradientAscent.update_prediction_weights_function>` to initialze the means of the
+        <LearnToPredictAllocationPolicy.update_prediction_weights_function>` to initialze the means of the
         prediction weights; if a single number is specified, that is used to initialize all of the means;
         if an array is specified, it must the anticipated length of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>`.
+        <LearnToPredictAllocationPolicy.prediction_vector>`.
 
     prediction_variances_priors : int, float or 1d array of numbers : default 1.0
         specifies the value(s) used by `update_prediction_weights_function
-        <ControlSignalGradientAscent.update_prediction_weights_function>` to initialze the variances of the
+        <LearnToPredictAllocationPolicy.update_prediction_weights_function>` to initialze the variances of the
         prediction weights; if a single number is specified, that is used to initialize all of the variances;
         if an array is specified, it must the anticipated length of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>`.
+        <LearnToPredictAllocationPolicy.prediction_vector>`.
 
     udpate_rate : int or float : default 0.01
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
-        `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>` function.
+        `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>` function.
 
     convergence_criterion : int or float : default .001
         specifies the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
-        <ControlSignalGradientAscent.gradient_ascent>` function should terminate and return an `allocation_policy
+        <LearnToPredictAllocationPolicy.gradient_ascent>` function should terminate and return an `allocation_policy
         <LVOCControlMechanism.allocation_policy>`.
 
     max_iterations : int : default 1000
-        specifies the maximum number of iterations the `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>`
+        specifies the maximum number of iterations `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>`
         function is allowed to execute; if exceeded, a warning is issued and the function terminates, and returns the
         last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
@@ -174,30 +175,30 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
     prediction_weights_priors : int, float or 1d array of numbers
         determines the value(s) used by `update_prediction_weights_function
-        <ControlSignalGradientAscent.update_prediction_weights_function>` to initialze the means of the
+        <LearnToPredictAllocationPolicy.update_prediction_weights_function>` to initialze the means of the
         prediction weights; if a single number is specified, that is used to initialize all of the means;
         if an array is specified, it must the anticipated length of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>`.
+        <LearnToPredictAllocationPolicy.prediction_vector>`.
 
     prediction_variances_priors : int, float or 1d array
         determines the value(s) used by `update_prediction_weights_function
-        <ControlSignalGradientAscent.update_prediction_weights_function>` to initialze the variances of the
+        <LearnToPredictAllocationPolicy.update_prediction_weights_function>` to initialze the variances of the
         prediction weights; if a single number is specified, that is used to initialize all of the variances;
         if an array is specified, it must the anticipated length of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>`.
+        <LearnToPredictAllocationPolicy.prediction_vector>`.
 
     udpate_rate : int or float : default 0.01
         determines the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
-        `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>` function.
+        `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>` function.
 
     convergence_criterion : int or float
         determines the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
-        <ControlSignalGradientAscent.gradient_ascent>` function should terminate and return an `allocation_policy
+        <LearnToPredictAllocationPolicy.gradient_ascent>` function should terminate and return an `allocation_policy
         <LVOCControlMechanism.allocation_policy>`.
 
     max_iterations : int
-        determines the maximum number of iterations the `gradient_ascent <ControlSignalGradientAscent.gradient_ascent>`
+        determines the maximum number of iterations `gradient_ascent <LearnToPredictAllocationPolicy.gradient_ascent>`
         function is allowed to execute; if exceeded, a warning is issued and the function terminates, and returns the
         last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
@@ -209,28 +210,28 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
 
     num_predictors : int
         the number of elements in the predictors field of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>` (same as the number of items in the
+        <LearnToPredictAllocationPolicy.prediction_vector>` (same as the number of items in the
         LVOCControlMechanism's `predictor_values <LVOCControlMechanism.predictor_values>` attribute).
 
     num_interactions : int
         the number of elements in the interactions field of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>` (= `num_predictiors
-        <ControlSignalGradientAscent.num_predictors>` * `num_control_signals
-        <ControlSignalGradientAscent.num_control_signals>`).
+        <LearnToPredictAllocationPolicy.prediction_vector>` (= `num_predictiors
+        <LearnToPredictAllocationPolicy.num_predictors>` * `num_control_signals
+        <LearnToPredictAllocationPolicy.num_control_signals>`).
 
     num_control_signals : int
         the number of elements in the control_signals field of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>` (same as the number of ControlSignals in the
+        <LearnToPredictAllocationPolicy.prediction_vector>` (same as the number of ControlSignals in the
         LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>` attribute).
 
     num_costs : int
         the number of elements in the costs field of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>` (same as num_control_signals
-        <ControlSignalGradientAscent.num_control_signals>).
+        <LearnToPredictAllocationPolicy.prediction_vector>` (same as num_control_signals
+        <LearnToPredictAllocationPolicy.num_control_signals>).
 
     update_prediction_weights_function : Function
         the function used to upated the prediction weights, based on the current value of the `prediction_vector
-        <ControlSignalGradientAscent.prediction_vector>` and the outcome received by the LVOCControlMechanism
+        <LearnToPredictAllocationPolicy.prediction_vector>` and the outcome received by the LVOCControlMechanism
         from its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`.
 
     """
@@ -280,7 +281,7 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
             return defaultControlAllocation
 
         if controller is None:
-            raise LVOCAuxiliaryError("Call to ControlSignalGradientAscent() missing controller argument")
+            raise LVOCAuxiliaryError("Call to LearnToPredictAllocationPolicy() missing controller argument")
 
         predictors = variable[0]
         outcome = variable[1]
@@ -289,14 +290,15 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         # IMPLEMENTATION NOTE:  This has to happen here rather than in __init__, as it requires
         #                       the LVOCControlMechanism to have fully instantiated its predictors
         #                       (the values of which are passed in here as variable[0]),
-        #                       which is not the case when ControlSignalGradientAscent is initialized.
+        #                       which is not the case when LearnToPredictAllocationPolicy is initialized.
         if not hasattr(self, 'prediction_vector'):
 
             # Numbers of terms in prediction_vector
             self.num_predictors = len(predictors)
             self.num_control_signals = self.num_costs = len(controller.control_signals)
             self.num_interactions = self.num_predictors * self.num_control_signals
-            len_prediction_vector = self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
+            len_prediction_vector = \
+                self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
 
             # Indices for fields of prediction_vector
             self.pred = slice(0, self.num_predictors)
@@ -346,8 +348,8 @@ class ControlSignalGradientAscent(LVOCAuxiliaryFunction):
         - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
 
         Continue to iterate until difference between new and old EVC is less than `convergence_criterion
-        <ControlSignalGradientAscent.convergence_criterion>` or number of iterations exceeds `max_iterations
-        <ControlSignalGradientAscent.max_iterations>`.
+        <LearnToPredictAllocationPolicy.convergence_criterion>` or number of iterations exceeds `max_iterations
+        <LearnToPredictAllocationPolicy.max_iterations>`.
 
         Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
         <LVOCControlMechanism.allocation_policy>`).
