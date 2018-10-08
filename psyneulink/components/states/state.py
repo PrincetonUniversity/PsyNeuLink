@@ -2010,7 +2010,7 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                self._mod_proj_values[mod_meta_param].append(mod_value)
+                    self._mod_proj_values[mod_meta_param].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2074,6 +2074,12 @@ class State_Base(State):
             if np.allclose(labels_dict[key][label], self.value):
                 return label
         return self.value
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for eff in self.efferents:
+            eff._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     @property
     def owner(self):

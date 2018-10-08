@@ -10,6 +10,7 @@
 #
 
 import re
+
 from collections import defaultdict, namedtuple
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
@@ -139,13 +140,6 @@ def register_category(entry,
            entry.modulators
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a modulators attribute".format(entry.__name__))
-
-
-    from psyneulink.components.component import Component
-    from psyneulink.globals.preferences.preferenceset import PreferenceSet
-    if not issubclass(base_class, (Component, PreferenceSet)):
-        raise RegistryError("base_class ({0}) for registry must be a subclass of "
-                            "Component or PreferenceSet".format(base_class))
 
     if not isinstance(registry, dict):
         raise RegistryError("Registry ({0}) for {1} must be a dict".format(registry,base_class.__name__))

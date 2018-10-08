@@ -13,7 +13,8 @@ from llvmlite import binding, ir
 import ctypes
 import os, sys
 
-from psyneulink.llvm import builtins
+from . import builtins
+from .builtins import *
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _modules = set()

@@ -47,28 +47,31 @@ Class Reference
 """
 
 import collections
-from collections import Iterable, OrderedDict
 import logging
 import numpy as np
 import typecheck as tc
 import uuid
 
+from collections import Iterable, OrderedDict
+
 import ctypes
 import psyneulink.llvm as pnlvm
+
 from llvmlite import ir
 
 from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.components.component import function_type
-from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.functions.function import InterfaceStateMap
+from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, ROLES, FUNCTIONS, VALUES, LABELS, BOLD, MATRIX_KEYWORD_VALUES, OWNER_VALUE, HARD_CLAMP, IDENTITY_MATRIX, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.globals.keywords import ALL, BOLD, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, NO_CLAMP, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import CNodeRole
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 from psyneulink.scheduling.condition import Always
@@ -76,11 +79,12 @@ from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'Composition', 'CompositionError', 'CNodeRole'
+    'Composition', 'CompositionError', 'CNodeRole', 'CompositionRegistry'
 ]
 
 logger = logging.getLogger(__name__)
 
+CompositionRegistry = {}
 
 class CompositionError(Exception):
 
@@ -385,10 +389,15 @@ class Composition(Composition_Base):
                  controller=None,
                  enable_controller=None,
                  external_input_sources=None):
-        # core attributes
-        if name is None:
-            name = "composition"
-        self.name = name
+        # also sets name
+        register_category(
+            entry=self,
+            base_class=Composition,
+            registry=CompositionRegistry,
+            name=name,
+        )
+
+        # core attribute
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.c_nodes = []
