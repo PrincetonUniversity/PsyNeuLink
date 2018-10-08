@@ -16,23 +16,28 @@ from psyneulink.compositions.composition import Composition
 class TestControlMechanisms:
 
     def test_lvoc(self):
-        placeholder = pnl.TransferMechanism(name="placeholder",
-                                            default_variable=[[0.]])
+        # placeholder = pnl.TransferMechanism(name="placeholder",
+        #                                     default_variable=[[0.]])
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
-        c = pnl.Composition()
-        c.add_c_node(placeholder)
+        c = pnl.Composition(name="C")
+        # c.add_c_node(placeholder)
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(composition=c,
-                                        predictors=pnl.ALL,
+        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
-        c.add_c_node(lvoc, external_input_source=pnl.ALL)
-        c.origin_input_sources = {lvoc: [m1.external_input_states[0], m2.external_input_states[0]]}
+        lvoc.input_states[0].internal_only = True
+        # lvoc.input_states[4].internal_only = True
+        c.add_c_node(lvoc,
+                     # external_input_source=pnl.ALL
+                     )
+        c._analyze_graph()
+        # for state in lvoc.input_states:
+        #     print(state.name, " projections = ", state.path_afferents)
         input_dict = {m1: [[1], [1]], m2: [1]}
         # c._analyze_graph()
         # print(c.scheduler_processing.consideration_queue)

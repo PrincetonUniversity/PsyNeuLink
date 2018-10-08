@@ -605,6 +605,8 @@ class Composition(Composition_Base):
 
         if external_input_source:
             self.external_input_sources[node] = external_input_source
+        if hasattr(node, "shadow_external_inputs"):
+            self.external_input_sources[node] = node.shadow_external_inputs
 
 
     def add_controller(self, node):
@@ -3156,13 +3158,13 @@ class Composition(Composition_Base):
         adjusted_stimuli = {}
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
-                input_must_match = node.input_values
+                input_must_match = node.external_input_values
                 if isinstance(stimulus, dict):
                     adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
                     adjusted_stimuli[node] = adjusted_stimulus_dict
                     continue
             else:
-                input_must_match = node.instance_defaults.variable
+                input_must_match = node.default_external_input_values
 
 
             check_spec_type = self._input_matches_variable(stimulus, input_must_match)
