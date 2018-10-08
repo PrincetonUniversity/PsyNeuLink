@@ -260,7 +260,6 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric
-from psyneulink.library.subsystems.lvoc.lvocauxiliary import LearnAllocationPolicy
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_INPUTS',
@@ -411,7 +410,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     kp<pref>: <setting>...}
 
     class Params(ControlMechanism.Params):
-        function = LearnAllocationPolicy
+        function = BayesGLM
 
     from psyneulink.components.functions.function import LinearCombination
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
