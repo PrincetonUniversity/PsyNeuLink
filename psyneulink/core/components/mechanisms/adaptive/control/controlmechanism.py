@@ -393,6 +393,13 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
+def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
+    try:
+        return [c.compute_costs(c.parameters.variable.get(execution_id)) for c in owning_component.control_signals]
+    except TypeError:
+        return None
+
+
 # class ControlMechanism(Mechanism_Base):
 class ControlMechanism(AdaptiveMechanism_Base):
     """
@@ -661,6 +668,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
         value = Param(np.array(defaultControlAllocation), aliases='allocation_policy')
+
+        combine_costs = Param(np.sum, stateful=False, loggable=False)
+        compute_net_outcome = Param(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
+
+        costs = Param(None, read_only=True, getter=_control_mechanism_costs_getter)
+
+        modulation = ModulationParam.MULTIPLICATIVE
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

@@ -728,13 +728,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         noise = Param(0.0, modulable=True)
         smoothing_factor = Param(0.5, modulable=True)
         learning_rate = Param(None, modulable=True)
-
         auto = Param(1, modulable=True)
         hetero = Param(0, modulable=True)
+        integration_rate = Param(0.5, modulable=True)
+
         initial_value = None
-        integrator_mode = False
-        clip = None
-        learning_function = Hebbian
+        enable_learning = False
+
+        learning_function = Param(Hebbian, stateful=False, loggable=False)
+        learning_condition = Param(None, stateful=False, loggable=False)
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 

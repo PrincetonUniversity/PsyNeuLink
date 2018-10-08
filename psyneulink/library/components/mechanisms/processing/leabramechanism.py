@@ -448,6 +448,14 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
+    class Params(ProcessingMechanism_Base.Params):
+        input_size = 1
+        output_size = 1
+        hidden_layers = 0
+        hidden_sizes = None
+        training_flag = None
+        quarter_size = 50
+
     def __init__(self,
                  leabra_net=None,
                  input_size=1,

@@ -228,8 +228,10 @@ Class Reference
 
 """
 
+import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Linear, _is_modulation_param
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL
@@ -401,6 +403,9 @@ class GatingSignal(ModulatorySignal):
     # classPreferences = {
     #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
+
+    class Params(ModulatorySignal.Params):
+        value = Param(np.array([0]), read_only=True, aliases=['gating_signal'])
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

@@ -82,7 +82,7 @@ Creating an LVOCControlMechanism
     **prediction_terms** argument.
     
   * **prediction_terms** -- specifies the terms used by the `learning_function <LVOCControlMechanism.learning_function>`
-    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the 
+    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the
     `allocation_policy <ControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
 
@@ -118,17 +118,17 @@ Feature_Predictors can be of two types:
 * *Input Feature Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the `Composition`.
     These are specified in the **feature_predictors** argument of the LVOCControlMechanism's constructor (see
     `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
-    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each, 
-    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's 
-    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState 
+    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each,
+    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's
+    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState
     of the LVOCControlMechanism assigned to that feature_predictor.
 
 * *Output Feature Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism
     in the Composition.  These too are specified in the **feature_predictors** argument of the LVOCControlMechanism's
-    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified 
+    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified
     OutputState(s) to the InputState of the LVOCControlMechanism for that feature.
 
-The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the 
+The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the
 `feature_values <LVOCControlMechanism.feature_values>` attribute.
 
 *Functions*
@@ -239,6 +239,7 @@ from enum import Enum
 
 import numpy as np
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
     SEARCH_SPACE
@@ -389,8 +390,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its 
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in 
+        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its
+        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
     name : str : default see `name <LVOCControlMechanism.name>`
@@ -462,8 +463,15 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     kp<pref>: <setting>...}
 
     # FIX: ADD OTHER Params() HERE??
-    class Params(ControlMechanism.Params):
+    class Params(OptimizationControlMechanism.Params):
         function = GradientOptimization
+
+        # no parameter states so not modulable=True
+        update_rate = 0.1
+        convergence_criterion = 0.001
+        max_iterations = 1000
+
+
 
     paramClassDefaults = OptimizationControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates

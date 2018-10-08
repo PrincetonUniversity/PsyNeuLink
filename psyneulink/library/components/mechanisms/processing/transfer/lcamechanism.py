@@ -141,8 +141,9 @@ import typecheck as tc
 
 from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import LCAIntegrator, Logistic, SelectionFunction, max_vs_avg, max_vs_next
+from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, RATE, RESULT, OUTPUT_STD_DEV, TIME_STEP_SIZE, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
@@ -503,7 +504,15 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     class Params(RecurrentTransferMechanism.Params):
         function = Param(Logistic, stateful=False, loggable=False)
-        competition = 1.0
+
+        matrix = Param(None, modulable=True)
+        leak = Param(0.5, modulable=True)
+        competition = Param(1.0, modulable=True)
+        self_excitation = Param(0.0, modulable=True)
+        time_step_size = Param(0.1, modulable=True)
+
+        initial_value = None
+        integrator_mode = Param(True, setter=_integrator_mode_setter)
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})

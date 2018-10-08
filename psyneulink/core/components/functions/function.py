@@ -1836,6 +1836,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
+        scale = Param(1.0, modulable=True)
+        offset = Param(0.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -2182,6 +2184,7 @@ class LinearCombination(
     class Params(CombinationFunction.Params):
         weights = None
         exponents = None
+        operation = SUM
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -2986,6 +2989,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     class Params(CombinationFunction.Params):
         variable = np.array([[1], [1]])
+        gamma = Param(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     multiplicative_param = None
@@ -4618,6 +4622,7 @@ class SoftMax(TransferFunction):
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
+        per_item = True
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -5621,6 +5626,18 @@ class OneHot(SelectionFunction):
     paramClassDefaults.update({
         PARAMETER_STATE_PARAMS: None
     })
+
+    class Params(SelectionFunction.Params):
+        mode = Param(MAX_VAL, stateful=False)
+
+        def _validate_mode(self, mode):
+            options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR}
+            if mode in options:
+                # returns None indicating no error message (this is a valid assignment)
+                return None
+            else:
+                # returns error message
+                return 'not one of {0}'.format(options)
 
     @tc.typecheck
     def __init__(self,
@@ -6787,6 +6804,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     class Params(Integrator.Params):
         rate = Param(0.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Param(0.0, modulable=True)
         history = None
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -7058,6 +7076,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     class Params(Integrator.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        time_step_size = Param(0.02, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -7454,7 +7473,6 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Param(100.0, modulable=True)
         time_step_size = Param(1.0, modulable=True)
-        previous_value = None
         previous_time = None
         t0 = 0.0
 
@@ -8212,7 +8230,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Param(0.05, modulable=True)
-        a_v = Param(1.0/3, modulable=True)
+        a_v = Param(1.0 / 3, modulable=True)
         b_v = Param(0.0, modulable=True)
         c_v = Param(1.0, modulable=True)
         d_v = Param(0.0, modulable=True)
@@ -8227,13 +8245,14 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         mode = Param(1.0, modulable=True)
         uncorrelated_activity = Param(0.0, modulable=True)
 
+        # FIX: make an integration_method enum class for RK4/EULER
         integration_method = "RK4"
         initial_w = np.array([1.0])
         initial_v = np.array([1.0])
         t_0 = 0.0
-        previous_v = initial_v
-        previous_w = initial_w
-        previous_time = t_0
+        previous_w = np.array([1.0])
+        previous_v = np.array([1.0])
+        previous_time = 0.0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -9790,6 +9809,12 @@ kwBogaczEtAl = "BogaczEtAl"
 kwNavarrosAndFuss = "NavarroAndFuss"
 
 
+def _BogaczEtAl_bias_getter(owning_component=None, execution_id=None):
+    starting_point = owning_component.parameters.starting_point.get(execution_id)
+    threshold = owning_component.parameters.threshold.get(execution_id)
+    return (starting_point + threshold) / (2 * threshold)
+
+
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 class BogaczEtAl(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
@@ -9905,6 +9930,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         threshold = Param(1.0, modulable=True)
         noise = Param(0.5, modulable=True)
         t0 = .200
+        bias = Param(0.5, read_only=True, getter=_BogaczEtAl_bias_getter)
 
     @tc.typecheck
     def __init__(self,
@@ -10975,7 +11001,7 @@ class ObjectiveFunction(Function_Base):
 
     class Params(Function_Base.Params):
         normalize = False
-        metric = None
+        metric = Param(None, stateful=False)
 
 
 class Stability(ObjectiveFunction):
@@ -11104,8 +11130,9 @@ COMMENT
 
     class Params(ObjectiveFunction.Params):
         matrix = HOLLOW_MATRIX
-        metric = ENERGY
+        metric = Param(ENERGY, stateful=False)
         transfer_fct = None
+        normalize = False
 
     @tc.typecheck
     def __init__(self,
@@ -11415,7 +11442,7 @@ class Distance(ObjectiveFunction):
 
     class Params(ObjectiveFunction.Params):
         variable = Param(np.array([[0], [0]]), read_only=True)
-        metric = DIFFERENCE
+        metric = Param(DIFFERENCE, stateful=False)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -11972,6 +11999,18 @@ class OptimizationFunction(Function_Base):
     class Params(Function_Base.Params):
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
+        objective_function = Param(lambda x: 0, stateful=False, loggable=False)
+        search_function = Param(lambda x: x, stateful=False, loggable=False)
+        search_termination_function = Param(lambda x, y, z: True, stateful=False, loggable=False)
+        search_space = Param([0], stateful=False, loggable=False)
+
+        # these are created as parameter states, but should they be?
+        save_samples = Param(False, modulable=True)
+        save_values = Param(False, modulable=True)
+        max_iterations = Param(None, modulable=True)
+
+        saved_samples = Param([], read_only=True)
+        saved_values = Param([], read_only=True)
 
     @tc.typecheck
     def __init__(self,
@@ -12327,18 +12366,23 @@ class GradientOptimization(OptimizationFunction):
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
 
-    class Params(Function_Base.Params):
+    class Params(OptimizationFunction.Params):
         variable = Param([[0], [0]], read_only=True)
-        objective_function = None
-        direction = ASCENT
+
+        # these should be removed and use switched to .get_previous()
+        previous_variable = Param([[0], [0]], read_only=True)
+        previous_value = Param([[0], [0]], read_only=True)
+
+        annealing_function = Param(None, stateful=False, loggable=False)
+
         step_size = Param(1.0, modulable=True)
-        annealing_function = None
-        convergence_criterion = VALUE,
         convergence_threshold = Param(.001, modulable=True)
         max_iterations = Param(1000, modulable=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        direction = ASCENT
+        convergence_criterion = VALUE
 
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -12581,9 +12625,13 @@ class GridSearch(OptimizationFunction):
 
     componentName = GRID_SEARCH_FUNCTION
 
-    class Params(Function_Base.Params):
+    class Params(OptimizationFunction.Params):
         variable = Param([[0], [0]], read_only=True)
-        objective_function = None
+
+        # these are created as parameter states, but should they be?
+        save_samples = Param(True, modulable=True)
+        save_values = Param(True, modulable=True)
+
         direction = MAXIMIZE
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -12943,6 +12991,16 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     class Params(LearningFunction.Params):
         variable = Param([[0, 0], [0, 0], [[0, 0], [0, 0]]], read_only=True)
+        distance_function = Param(GAUSSIAN, stateful=False)
+
+        def _validate_distance_function(self, distance_function):
+            options = {GAUSSIAN, LINEAR, EXPONENTIAL}
+            if distance_function in options:
+                # returns None indicating no error message (this is a valid assignment)
+                return None
+            else:
+                # returns error message
+                return 'not one of {0}'.format(options)
 
     default_learning_rate = 0.05
 
@@ -13544,6 +13602,18 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         return self.convert_output_type(weight_change_matrix)
 
 
+def _activation_input_getter(owning_component=None, execution_id=None):
+    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_INPUT]
+
+
+def _activation_output_getter(owning_component=None, execution_id=None):
+    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
+
+
+def _error_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
+
+
 class Reinforcement(LearningFunction):  # -----------------------------------------------------------------------------
     """
     Reinforcement(                     \
@@ -13664,6 +13734,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     class Params(LearningFunction.Params):
         variable = Param(np.array([[0], [0], [0]]), read_only=True)
+        activation_input = Param([0], read_only=True, getter=_activation_input_getter)
+        activation_output = Param([0], read_only=True, getter=_activation_output_getter)
+        error_signal = Param([0], read_only=True, getter=_error_signal_getter)
 
     default_learning_rate = 0.05
 
@@ -13938,9 +14011,27 @@ class BayesGLM(LearningFunction):
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
-
     class Params(LearningFunction.Params):
-        variable = Param([np.array([0,0,0]),np.array([0])], read_only=True)
+        variable = Param([np.array([0, 0, 0]), np.array([0])], read_only=True)
+        value = Param(np.array([0]), read_only=True, aliases=['sample_weights'])
+
+        Lambda_0 = 0
+        Lambda_prior = 0
+        Lambda_n = 0
+
+        mu_0 = 0
+        mu_prior = 0
+        mu_n = 0
+
+        sigma_0 = 1
+
+        gamma_shape_0 = 1
+        gamma_shape_n = 1
+        gamma_shape_prior = 1
+
+        gamma_size_0 = 1
+        gamma_size_n = 1
+        gamma_size_prior = 1
 
     def __init__(self,
                  default_variable = None,
@@ -14096,8 +14187,7 @@ class BayesGLM(LearningFunction):
         # self.mu_and_Lambda_values = \
         #     [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
 
-        self.weights_sample = self.sample_weights()
-        return self.weights_sample
+        return self.sample_weights()
 
     def sample_weights(self):
         '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
@@ -14269,6 +14359,10 @@ class BackPropagation(LearningFunction):
     class Params(LearningFunction.Params):
         variable = Param(np.array([[0], [0], [0]]), read_only=True)
         learning_rate = Param(1.0, modulable=True)
+
+        activation_input = Param([0], read_only=True, getter=_activation_input_getter)
+        activation_output = Param([0], read_only=True, getter=_activation_output_getter)
+        error_signal = Param([0], read_only=True, getter=_error_signal_getter)
 
     default_learning_rate = 1.0
 

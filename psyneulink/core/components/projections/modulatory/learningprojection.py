@@ -204,6 +204,15 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
+def _learning_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _learning_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override=override)
+    return value
+
+
 class LearningProjection(ModulatoryProjection_Base):
     """
     LearningProjection(               \
@@ -405,10 +414,12 @@ class LearningProjection(ModulatoryProjection_Base):
         receiver=[PARAMETER_STATE]
 
     class Params(ModulatoryProjection_Base.Params):
+        value = Param(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
         function = Param(Linear, stateful=False, loggable=False)
         error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         learning_function = Param(BackPropagation, stateful=False, loggable=False)
         learning_rate = Param(None, modulable=True)
+        learning_signal = Param(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,

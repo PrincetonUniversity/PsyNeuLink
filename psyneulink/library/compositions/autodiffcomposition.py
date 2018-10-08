@@ -106,6 +106,7 @@ Class Reference
 
 """
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import InterfaceStateMap
 from psyneulink.core.components.functions.function import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -209,6 +210,15 @@ class AutodiffComposition(Composition):
     -------
     instance of AutodiffComposition : AutodiffComposition
     """
+
+    class Params(Composition.Params):
+        optimizer = Param(None, stateful=False, loggable=False)
+        loss = Param(None, stateful=False, loggable=False)
+
+        learning_rate = None
+        losses = None
+        patience = None
+        min_delta = 0
 
     # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
     def __init__(self,

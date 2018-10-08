@@ -1306,6 +1306,7 @@ class Mechanism_Base(Mechanism):
         variable = Param(np.array([[0]]), read_only=True)
         value = Param(np.array([[0]]), read_only=True)
         function = Linear
+        has_initializers = False
 
     registry = MechanismRegistry
 

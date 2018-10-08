@@ -715,6 +715,7 @@ class InputState(State_Base):
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)
         combine = None
+        internal_only = Param(False, stateful=False, loggable=False)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,

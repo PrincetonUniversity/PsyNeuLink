@@ -905,10 +905,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-
     class Params(AdaptiveMechanism_Base.Params):
         function = Param(BackPropagation, stateful=False, loggable=False)
         error_matrix = Param(None, modulable=True)
+
+        learning_enabled = True
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

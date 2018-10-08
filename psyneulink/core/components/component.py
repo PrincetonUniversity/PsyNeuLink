@@ -1416,8 +1416,6 @@ class Component(object, metaclass=ComponentsMeta):
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)
 
-        function = Param(None, stateful=False)
-
         def _parse_variable(self, variable):
             return variable
 
@@ -1590,7 +1588,11 @@ class Component(object, metaclass=ComponentsMeta):
             if FUNCTION in param_defaults and param_defaults[FUNCTION] is not None:
                 function = param_defaults[FUNCTION]
             else:
-                function = self.ClassDefaults.function
+                try:
+                    function = self.ClassDefaults.function
+                except AttributeError:
+                    # assume function is a method on self
+                    pass
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:

@@ -17,6 +17,7 @@ import numpy as np
 import typecheck as tc
 import warnings
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Buffer, Function_Base, Integrator, Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
@@ -66,7 +67,7 @@ class EVCAuxiliaryFunction(Function_Base):
     componentType = kwEVCAuxFunctionType
 
     class Params(Function_Base.Params):
-        variable = None
+        variable = Param(None, read_only=True)
 
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
@@ -791,6 +792,12 @@ class PredictionMechanism(IntegratorMechanism):
     """
 
     componentType = PREDICTION_MECHANISM
+
+    class Params(IntegratorMechanism.Params):
+        window_size = Param(1, stateful=False, loggable=False)
+        filter_function = Param(None, stateful=False, loggable=False)
+
+        rate = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,

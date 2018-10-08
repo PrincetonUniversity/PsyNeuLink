@@ -323,7 +323,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type, method_type
+from psyneulink.core.components.component import Param, function_type, method_type
 from psyneulink.core.components.functions.function import AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, SelectionFunction, TransferFunction, UserDefinedFunction, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
@@ -434,6 +434,27 @@ class TransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _integrator_mode_setter(value, owning_component=None, execution_id=None):
+    if value is True:
+        if (
+            not owning_component.parameters.integrator_mode.get(execution_id)
+            and owning_component.parameters.has_integrated.get(execution_id)
+        ):
+            if owning_component.integrator_function is not None:
+                if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+                    owning_component.reinitialize(owning_component.parameters.value.get(execution_id), execution_context=execution_id)
+                elif owning_component.on_resume_integrator_mode == REINITIALIZE:
+                    owning_component.reinitialize(execution_context=execution_id)
+        owning_component.parameters.has_initializers.set(True, execution_id)
+    elif value is False:
+        owning_component.parameters.has_initializers.set(False, execution_id)
+        if not hasattr(owning_component, "reinitialize_when"):
+            owning_component.reinitialize_when = Never()
+
+    return value
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
@@ -782,7 +803,21 @@ class TransferMechanism(ProcessingMechanism_Base):
     class Params(ProcessingMechanism_Base.Params):
         initial_value = None
         clip = None
-        noise = 0.0
+        noise = Param(0.0, modulable=True)
+        convergence_criterion = Param(0.01, modulable=True)
+        integration_rate = Param(0.5, modulable=True)
+        integrator_mode = Param(False, setter=_integrator_mode_setter)
+        integrator_function_value = Param([[0]], read_only=True)
+        has_integrated = Param(False, user=False)
+        has_initializers = False
+
+        max_passes = Param(1000, stateful=False)
+        on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
+        convergence_function = Param(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+
+        def _validate_integrator_mode(self, integrator_mode):
+            if not isinstance(integrator_mode, bool):
+                return 'may only be True or False.'
 
     @tc.typecheck
     def __init__(self,

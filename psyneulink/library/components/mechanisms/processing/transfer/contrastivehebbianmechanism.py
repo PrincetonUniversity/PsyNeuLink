@@ -305,7 +305,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ContrastiveHebbian, Distance, Function, Hebbian, Linear, get_matrix, is_function_type
+from psyneulink.core.components.component import Param
+from psyneulink.core.components.functions.function import ContrastiveHebbian, Distance, Hebbian, Linear, get_matrix, is_function_type
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
@@ -843,6 +844,24 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     class Params(RecurrentTransferMechanism.Params):
         variable = np.array([[0, 0]])
+        current_activity = Param(None, aliases=['recurrent_activity'])
+        plus_phase_activity = None
+        minus_phase_activity = None
+
+        input_size = Param(None, stateful=False, loggable=False)
+        hidden_size = Param(None, stateful=False, loggable=False)
+        target_size = Param(None, stateful=False, loggable=False)
+        separated = Param(True, stateful=False, loggable=False)
+        mode = Param(None, stateful=False, loggable=False)
+        continuous = Param(True, stateful=False, loggable=False)
+        clamp = Param(HARD_CLAMP, stateful=False, loggable=False)
+        combination_function = Param(None, stateful=False, loggable=False)
+        minus_phase_termination_condition = Param(CONVERGENCE, stateful=False, loggable=False)
+        plus_phase_termination_condition = Param(CONVERGENCE, stateful=False, loggable=False)
+        learning_function = Param(ContrastiveHebbian, stateful=False, loggable=False)
+
+        minus_phase_termination_criterion = Param(0.01, modulable=True)
+        plus_phase_termination_criterion = Param(0.01, modulable=True)
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 

@@ -116,6 +116,15 @@ class GatingProjectionError(Exception):
         return repr(self.error_value)
 
 
+def _gating_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _gating_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override=override)
+    return value
+
+
 class GatingProjection(ModulatoryProjection_Base):
     """
     GatingProjection(           \
@@ -264,6 +273,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     class Params(ModulatoryProjection_Base.Params):
         function = Param(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
+        gating_signal = Param(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

@@ -378,6 +378,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Param, function_type
+from psyneulink.core.components.functions.function import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
@@ -751,9 +752,21 @@ class EVCControlMechanism(ControlMechanism):
 
     class Params(ControlMechanism.Params):
         function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
-        simulation_ids = Param(list, user=False)
+        value_function = Param(ValueFunction, stateful=False, loggable=False)
+        cost_function = Param(LinearCombination, stateful=False, loggable=False)
+        combine_outcome_and_cost_function = Param(LinearCombination, stateful=False, loggable=False)
 
-    from psyneulink.core.components.functions.function import LinearCombination
+        simulation_ids = Param(list, user=False)
+        control_signal_costs = Param(None, read_only=True)
+
+        modulation = ModulationParam.MULTIPLICATIVE
+
+        EVC_max = Param(None, read_only=True)
+        EVC_values = Param([], read_only=True)
+        EVC_policies = Param([], read_only=True)
+        EVC_max_state_values = Param(None, read_only=True)
+        EVC_max_policy = Param(None, read_only=True)
+
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
