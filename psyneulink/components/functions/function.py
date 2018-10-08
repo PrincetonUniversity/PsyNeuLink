@@ -12549,7 +12549,9 @@ class BayesGLM(LearningFunction):
     """
 
     def __init__(self,
-                 default_variable=np.zeros((2,1,1)),
+                 # default_variable=np.zeros((2,1,1)),
+                 # default_variable=[[[0]],[[0]]],
+                 default_variable=[[0,0],[0]],
                  # num_predictors=1,
                  mu_prior=0,
                  sigma_prior=1,

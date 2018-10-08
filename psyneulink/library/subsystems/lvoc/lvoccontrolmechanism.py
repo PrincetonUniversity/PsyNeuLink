@@ -699,7 +699,7 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>` '''
 
         # This the value received from the ObjectiveMechanism:
-        outcome = np.atleast_2d(variable[0])
+        outcome = variable[0]
 
         # This is the current values of the predictors
         self.predictor_values = np.array(variable[1:]).reshape(-1)
