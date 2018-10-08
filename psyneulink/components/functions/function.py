@@ -12551,32 +12551,23 @@ class BayesGLM(LearningFunction):
     def __init__(self,
                  # default_variable=np.zeros((2,1,1)),
                  # default_variable=[[[0]],[[0]]],
-                 default_variable=[[0,0],[0]],
+                 # default_variable=[[0,0],[0]],
+                 default_variable =  None,
                  # num_predictors=1,
-                 mu_prior=0,
-                 sigma_prior=1,
+                 mu_0=0,
+                 sigma_0=1,
+                 gamma_shape_0=1,
+                 gamma_size_0=1,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
-
-        # FIX: ?SHOULD mu_prior and sigma_prior BE ASSIGNED AS PARAMS? (I.E., IN assig_args_to_param_dicts)??
-        #      IF SO, THEN MOVE ASSIGNMENTS BELOW TO _instantiate_attributes_before_function
-
-        # FIX: MOVE FOLLOWING TO BLOCK IN function THAT TESTS FOR CONTEXT = INITIALIZING
-        #      This is because when the function is first initialized, the size of the predictor array and priors
-        #      may not yet be known.  That block should also reset the size of the variable
-        # set the prior parameters
-        self.initialize_prior(len(default_variable[0]), mu_prior, sigma_prior, a=1, b=1)
-
-        # before we see any data, the posterior is the prior
-        self.mu_n = self.mu_prior
-        self.Lambda_n = self.Lambda_prior
-        self.a_n = self.a_0
-        self.b_n = self.b_0
-        # FIX: END MOVE
+        params = self._assign_args_to_param_dicts(mu_0=mu_0,
+                                                  sigma_0=sigma_0,
+                                                  gamma_shape_0=gamma_shape_0,
+                                                  gamma_size_0=gamma_size_0,
+                                                  params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -12584,49 +12575,55 @@ class BayesGLM(LearningFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # def _validate_variable(self, variable, context=None):
-    #     if (variable.ndim !=3) or (variable.shape[0] != 2) or (variable.shape[1] != variable.shape[2]):
-    #         raise FunctionError("Bad shape of variable for {} (\'{}\'); it must be a 3d array with exactly two items "
-    #                             "in axis 0 that are of equal length (shape=(2,x,x))".format(self.name, variable.shape))
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    def _instantiate_priors(self):
+        '''Set the prior parameters'''
 
-    def initialize_prior(self, n, mu, sigma, a = None, b = None):
-        '''Set prior parameters'''
+        # # FIX: MOVE FOLLOWING TO BLOCK IN function THAT TESTS FOR CONTEXT = INITIALIZING
+        # #      This is because when the function is first initialized, the size of the predictor array and priors
+        # #      may not yet be known.  That block should also reset the size of the variable
 
-        if isinstance(mu, (int, float)):
-            mu_prior = np.full((n, 1),mu)
+        variable = np.array(self.instance_defaults.variable)
+        if variable.dtype != object:
+            variable = np.atleast_2d(variable)
+        n = len(variable[0])
+
+        if isinstance(self.mu_0, (int, float)):
+            self.mu_prior = np.full((n, 1),self.mu_0)
         else:
-            if len(mu) != n:
-                raise FunctionError("Length of mu priors ({}) does not match number of predictors ({})".
-                                    format(len(mu), n))
-            mu_prior = mu
+            if len(self.mu_0) != n:
+                raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.mu_0), n))
 
-        if isinstance(sigma, (int, float)):
-            Lambda_prior = (1 / (sigma ** 2)) * np.eye(n)
+        if isinstance(self.sigma_0, (int, float)):
+            Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
         else:
-            if len(sigma) != n:
-                raise FunctionError("Length of sigma priors ({}) does not match number of predictors ({})".
-                                    format(len(sigma), n))
-            Lambda_prior = (1 / (np.array(sigma) ** 2)) * np.eye(n)
+            if len(self.sigma_0) != n:
+                raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.sigma_0), n))
+            Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
+        self.Lambda_prior = Lambda_0
 
-        self.mu_prior = mu_prior
-        self.sigma_prior = sigma  # Store for user reference
-        self.Lambda_prior = Lambda_prior
-        if a and b:
-            self.a_0 = a
-            self.b_0 = b
+        # before we see any data, the posterior is the prior
+        self.mu_n = self.mu_prior
+        self.Lambda_n = self.Lambda_prior
+        self.gamma_shape_n = self.gamma_shape_0
+        self.gamma_size_n = self.gamma_size_0
 
-    # def function(self, X, y, params, context):
     def function(self,
                  variable=None,
                  params=None,
                  context=None):
         '''Update posterior/prior parameters based on new data'''
 
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            self._instantiate_priors()
+
         # Today's prior is yesterday's posterior
         self.Lambda_prior = self.Lambda_n
         self.mu_prior = self.mu_n
-        self.a_0 = self.a_n
-        self.b_0 = self.b_n
+        self.gamma_shape_prior = self.gamma_shape_n
+        self.gamma_size_prior = self.gamma_size_n
 
         predictors = np.atleast_2d(variable[0])  # should be an array with shape(num_samples, num_predictors)
         dependent_vars = np.atleast_2d(variable[1]) # should be an array with shape(num_samples,
@@ -12635,8 +12632,8 @@ class BayesGLM(LearningFunction):
         # online update rules as per the given reference
         self.Lambda_n = (predictors.T @ predictors) + self.Lambda_prior
         self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_prior @ self.mu_prior))
-        self.a_n = self.a_0 + dependent_vars.shape[1]
-        self.b_n = self.b_0 + (dependent_vars.T @ dependent_vars) + \
+        self.gamma_shape_n = self.gamma_shape_prior + dependent_vars.shape[1]
+        self.gamma_size_n = self.gamma_size_prior + (dependent_vars.T @ dependent_vars) + \
                    (self.mu_prior.T @ self.Lambda_prior @ self.mu_prior) - \
                    (self.mu_n.T @ self.Lambda_n @ self.mu_n)
 
@@ -12647,7 +12644,7 @@ class BayesGLM(LearningFunction):
         return self.sample_weights()
 
     def sample_weights(self):
-        phi = np.random.gamma(self.a_n / 2, self.b_n / 2)
+        phi = np.random.gamma(self.gamma_shape_n / 2, self.gamma_size_n / 2)
         return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
 
 
