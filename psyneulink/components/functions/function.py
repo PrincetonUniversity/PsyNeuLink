@@ -12506,12 +12506,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         error array : List[1d np.array, 1d np.array]
             Two copies of a 1d array with a single non-zero error term.
 
-        Attributes
-        ----------
-
-        mu_and_Lambda_values : 2d ndarray
-            current set of mu and Lambda values in the 1st and 2nd items of axis 0, respectively
-
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -12548,21 +12542,23 @@ class BayesGLM(LearningFunction):
         params=None,            \
         prefs=None)
 
-    Implements Bayesian regression that fits weights and distributions of variable[0] to predict variable[1].
-    Uses a normal linear model variable[01] = viable[1]\Theta + \epsilon, with normal-gamma prior distribution.
-    `Useful reference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.
-    [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and PsyNeuLink by Jon Cohen]
+    Implements Bayesian regression that fits means and distributions of weights to predict dependent variable(s) in
+    `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
+
+    Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
+    [based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen].
+    Useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.
 
     Arguments
     ---------
 
     default_variable : 3d array : default None
-        first item of axis 0 should be a 2d array with one or more 1d arrays to use as prediction vectors;
+        first item of axis 0 should be a 2d array with one or more 1d arrays to use as predictor vectors;
         second item should be a 2d array of equal length to the first item, with one or more 1d arrays each of
         which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, the shape
         of `variable <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`,
         as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior
-        <BayesGLM.gamma_shape_prior>` and gamma_size_prior <BayesGLM.gamma_size_prior>`.
+        <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
 
     mu_0 : int, float or 1d array : default 0
         specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
@@ -12571,18 +12567,18 @@ class BayesGLM(LearningFunction):
         the predictor array(s) in axis 0 of **default_variable**.
 
     sigma_0 : int, float or 1d array : default 0
-        specifies initial value of `sigma_prior <BayesGLM.sigma_prior>` (the prior for the variance of the distribution
+        specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
         for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
-        all elements of `sigma_prior <BayesGLM.sigma_prior>`;  if it is an array, it must be the same length as the
+        all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
         predictor array(s) in axis 0 of **default_variable**.
 
     gamma_shape_0 : int or float : default 1
         specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
-        for `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_
+        for `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
 
     gamma_size_0 : int or float : default 1
         specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
-        `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_
+        `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -12603,8 +12599,8 @@ class BayesGLM(LearningFunction):
 
     variable : 3d array
         samples used to update parameters of prediction weight distributions.
-        variable[0] is a 2d array of prediction vectors, all of the same length;
-        variable[1] is a 2d array of scalar dependent variables, one for each prediction vector.
+        variable[0] is a 2d array of predictor vectors, all of the same length;
+        variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.
 
     mu_0 : int, float or 2d np.array
         determines the initial prior(s) for the means of the distributions of the prediction weights;
@@ -12647,13 +12643,13 @@ class BayesGLM(LearningFunction):
         current value of the size parameter of the gamma distribution used to sample the prediction weights.
 
     function : function
-        updates mean (`mu_n <BayesGLM.mu_n>` and variance (`Lambda_n <BayesGLM.Lambda_n>` of predictions weights
+        updates mean (`mu_n <BayesGLM.mu_n>`) and variance (`Lambda_n <BayesGLM.Lambda_n>`) of weight distributions
         to improve prediction of of dependent variable sample(s) in `variable <BayesGLM.variable>`\\[1] from
-        prediction_vector(s) in `variable <BayesGLM.variable>`\\[1].  Returns a sample from the weight disributions
-        (`weights_sample <BayesGLM.weights_sample>`).
+        predictor vector(s) in `variable <BayesGLM.variable>`\\[1].  Returns a vector of weights `weights_sample
+        <BayesGLM.weights_sample>`) sampled from the weight disributions.
 
     weights_sample : 1d np.array
-        sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
+        last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
         `function <BayesGLM.function>`.
 
     owner : Component
@@ -12688,7 +12684,7 @@ class BayesGLM(LearningFunction):
 
     # def _instantiate_attributes_before_function(self, function=None, context=None):
     def initialize_priors(self):
-        '''Set the prior parameters to inital (_0) values'''
+        '''Set the prior parameters to inital (_0) values.'''
 
         # # FIX: MOVE FOLLOWING TO BLOCK IN function THAT TESTS FOR CONTEXT = INITIALIZING
         # #      This is because when the function is first initialized, the size of the predictor array and priors
@@ -12725,8 +12721,32 @@ class BayesGLM(LearningFunction):
                  variable=None,
                  params=None,
                  context=None):
-        '''Use new data to update weight distribution parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n
-        <BayesGLM.Lambda_n>`, gamma_shape_n <BayesGLM.gamma_shape_n>`, and gamma_size_n <BayesGLM.gamma_size_n>`.'''
+        '''Use predictor(s) and dependent variable(s) in `variable <BayesGLM.variable>` to update weight distribution
+        parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`,
+        and `gamma_size_n <BayesGLM.gamma_size_n>`, and return an array of weights sampled from the distributions.
+
+        Arguments
+        ---------
+
+        variable : 2d or 3d np.array : default ClassDefaults.variable
+           If it is a 2d array, the first item must be a 1d array of scalar predictors, and the second item must
+           be a 1d array containing the dependent variable to be predicted by the predictors.
+           If it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
+           1d arrays of predictors, and the second item be a 2d array containing 1d arrays each of which is the
+           dependent variable for the corresponding predictor vector.
+
+        params : Dict[param keyword: param value] : default None
+           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+           arguments of the constructor.
+
+        Returns
+        -------
+
+        sample weights : 1d np.array
+            array of weights drawn from updated distribution.
+
+        '''
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
@@ -12758,7 +12778,7 @@ class BayesGLM(LearningFunction):
 
     def sample_weights(self):
         '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
-        `Lambda_n <BayesGLM.Lambda_n>`, gamma_shape_n <BayesGLM.gamma_shape_n>`, and gamma_size_n
+        `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
         <BayesGLM.gamma_size_n>`.'''
         phi = np.random.gamma(self.gamma_shape_n / 2, self.gamma_size_n / 2)
         return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
