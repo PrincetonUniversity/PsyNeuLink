@@ -10,3 +10,5 @@ particular brain function and/or psychological process.
    AGT
    EVC
    LVOC
+   AutodiffComposition
+
