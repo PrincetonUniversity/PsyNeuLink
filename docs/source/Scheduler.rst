@@ -1,6 +1,6 @@
 Scheduler
 =========
 
-.. automodule:: psyneulink.scheduling.scheduler
+.. automodule:: psyneulink.core.scheduling.scheduler
    :members:
    :exclude-members: random

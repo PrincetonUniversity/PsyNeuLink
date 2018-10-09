@@ -1,7 +1,7 @@
 import psyneulink as pnl
 import pytest
 
-from psyneulink.scheduling.time import Time, TimeHistoryTree, TimeScale
+from psyneulink.core.scheduling.time import Time, TimeHistoryTree, TimeScale
 
 
 class TestTime:

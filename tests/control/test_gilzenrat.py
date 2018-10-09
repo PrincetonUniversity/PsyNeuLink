@@ -1,10 +1,10 @@
 import numpy as np
 
-from psyneulink.components.functions.function import FHNIntegrator, Linear
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.transfer.lcamechanism import LCAMechanism
+from psyneulink.core.components.functions.function import FHNIntegrator, Linear
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 
 class TestGilzenratMechanisms:

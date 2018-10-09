@@ -1,6 +1,6 @@
 ControlProjection
 =================
 
-.. automodule:: psyneulink.components.projections.modulatory.controlprojection
+.. automodule:: psyneulink.core.components.projections.modulatory.controlprojection
    :members:
    :exclude-members: random, execute

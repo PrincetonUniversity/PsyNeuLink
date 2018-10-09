@@ -1,5 +1,5 @@
 PredictionErrorMechanism
 ========================
 
-.. automodule:: psyneulink.library.mechanisms.processing.objective.predictionerrormechanism
+.. automodule:: psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism
     :members:

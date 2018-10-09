@@ -4,14 +4,11 @@ This module provides implementations of theory using the core components of psyn
 https://princetonuniversity.github.io/PsyNeuLink/Library.html
 '''
 
-from . import mechanisms
-from . import projections
-from . import subsystems
+from . import components
+from . import compositions
 
-from .mechanisms import *
-from .projections import *
-from .subsystems import *
+from .components import *
+from .compositions import *
 
-__all__ = list(mechanisms.__all__)
-__all__.extend(projections.__all__)
-__all__.extend(subsystems.__all__)
+__all__ = list(components.__all__)
+__all__.extend(compositions.__all__)

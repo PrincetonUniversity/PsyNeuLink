@@ -13,7 +13,7 @@ Modulatory Signals
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: psyneulink.components.states.modulatorysignals.modulatorysignal
+.. automodule:: psyneulink.core.components.states.modulatorysignals.modulatorysignal
    :members:
    :exclude-members: random, update
 
