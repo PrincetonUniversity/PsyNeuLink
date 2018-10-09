@@ -12546,7 +12546,7 @@ class BayesGLM(LearningFunction):
     in `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
 
     Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
-    and returns a sample of prediction weights from a multivariate normal distribution.
+    and returns a vector of prediction weights sampled from the multivariate normal-gamma distribution.
     [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
     useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
 
