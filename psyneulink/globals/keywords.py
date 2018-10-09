@@ -58,7 +58,7 @@ __all__ = [
     'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
     'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
     'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
-    'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
+    'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
     'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
     'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
     'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
@@ -795,6 +795,7 @@ INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
 WEIGHT = 'weight'
 EXPONENT = 'exponent'
+INTERNAL_ONLY = 'internal_only'
 
 # ParameterStates:
 PARAMETER_STATES = 'parameter_states'
