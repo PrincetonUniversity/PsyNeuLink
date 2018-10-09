@@ -730,7 +730,6 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_vector[self.cst] = \
                 np.array([0 if c.cost is None else c.cost for c in self.control_signals]).reshape(-1) * -1
 
-        # return [np.atleast_2d(self.prediction_vector), np.atleast_2d(outcome)]
         return [self.prediction_vector, outcome]
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
