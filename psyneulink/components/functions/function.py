@@ -12684,11 +12684,9 @@ class BayesGLM(LearningFunction):
 
     # def _instantiate_attributes_before_function(self, function=None, context=None):
     def initialize_priors(self):
-        '''Set the prior parameters to inital (_0) values.'''
-
-        # # FIX: MOVE FOLLOWING TO BLOCK IN function THAT TESTS FOR CONTEXT = INITIALIZING
-        # #      This is because when the function is first initialized, the size of the predictor array and priors
-        # #      may not yet be known.  That block should also reset the size of the variable
+        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
+        to their initial (_0) values, and assign current (_n) values to the priors'''
 
         variable = np.array(self.instance_defaults.variable)
         if variable.dtype != object:
@@ -12728,12 +12726,12 @@ class BayesGLM(LearningFunction):
         Arguments
         ---------
 
-        variable : 2d or 3d np.array : default ClassDefaults.variable
-           If it is a 2d array, the first item must be a 1d array of scalar predictors, and the second item must
-           be a 1d array containing the dependent variable to be predicted by the predictors.
-           If it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
-           1d arrays of predictors, and the second item be a 2d array containing 1d arrays each of which is the
-           dependent variable for the corresponding predictor vector.
+        variable : 2d or 3d array : default ClassDefaults.variable
+           if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
+           be a 1d array containing the dependent variable to be predicted by the predictors;
+           if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
+           1d arrays of scalar predictors, and the second item be a 2d array containing 1d arrays each of which
+           contains a scalar dependent variable for the corresponding predictor vector.
 
         params : Dict[param keyword: param value] : default None
            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -12744,7 +12742,7 @@ class BayesGLM(LearningFunction):
         -------
 
         sample weights : 1d np.array
-            array of weights drawn from updated distribution.
+            array of weights drawn from updated weight distributions.
 
         '''
 
