@@ -1023,8 +1023,8 @@ class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
     def get(self, execution_context=None, **kwargs):
         self.source.get(execution_context, **kwargs)
 
-    def set(self, value, execution_context=None, override=False):
-        self.source.set(value, execution_context, override)
+    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
+        self.source.set(value, execution_context, override, skip_history, skip_log, **kwargs)
 
 
 class Parameters(ParamsTemplate):
