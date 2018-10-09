@@ -520,10 +520,11 @@ class Composition(Composition_Base):
 
     def shadow_interface_mechanism_connection(self, node_input_state, cim_rep_input_state):
         interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-        MappingProjection(sender=interface_output_state,
-                          receiver=node_input_state,
-                          name="(" + interface_output_state.name + ") to ("
-                               + node_input_state.owner.name + "-" + node_input_state.name + ")")
+        shadow_projection = MappingProjection(sender=interface_output_state,
+                                              receiver=node_input_state,
+                                              name="(" + interface_output_state.name + ") to ("
+                                                   + node_input_state.owner.name + "-" + node_input_state.name + ")")
+        self.projections.append(shadow_projection)
 
     def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
