@@ -2255,6 +2255,9 @@ def _instantiate_state_list(owner,
                                    state_spec=state_spec,
                                    # name=name,
                                    context=context)
+        # automatically generated projections (e.g. when an InputState is specified by the OutputState of another mech)
+        for proj in state.path_afferents:
+            owner.aux_components.append(proj)
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state._assign_default_state_name()
         # if default_name:
