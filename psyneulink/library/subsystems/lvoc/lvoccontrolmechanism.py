@@ -238,6 +238,7 @@ from psyneulink.components.functions.function import ModulationParam, _is_modula
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
+from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -245,7 +246,7 @@ from psyneulink.components.states.modulatorysignals.controlsignal import Control
 from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    ALL, FUNCTION, INIT_FUNCTION_METHOD_ONLY, LVOC_MECHANISM, NAME, PARAMETER_STATES, PROJECTIONS, VARIABLE, \
+    ALL, FUNCTION, INIT_FUNCTION_METHOD_ONLY, INTERNAL_ONLY, LVOC_MECHANISM, NAME, PARAMETER_STATES, PARAMS, PROJECTIONS, VARIABLE, \
     FUNCTION_PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -391,7 +392,6 @@ class LVOCControlMechanism(ControlMechanism):
     class Params(ControlMechanism.Params):
         function = LearnAllocationPolicy
 
-    from psyneulink.components.functions.function import LinearCombination
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
@@ -423,6 +423,8 @@ class LVOCControlMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
+
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
@@ -464,7 +466,7 @@ class LVOCControlMechanism(ControlMechanism):
         super()._instantiate_input_states(context=context)
 
     tc.typecheck
-    def add_predictors(self, predictors, ):
+    def add_predictors(self, predictors):
         '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict outcome
 
         **predictors** argument can use any of the forms of specification allowed
@@ -479,13 +481,16 @@ class LVOCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def _parse_predictor_specs(self, predictors, context=None):
-        """Parse entries of _input_states list that specify shadowing of Mechanisms' or Composition's inputs
+        """Parse entries of predictors into InputState spec dictionaries
 
-        Generate an InputState specification dictionary for each predictor specified in predictors argument
-        If it is InputState specification, use as is
-        If it is a SHADOW_INPUT entry, generate a Projection from the OutputState that projects to the specified item
+        For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
+            - Call _parse_shadow_input_spec
 
-        Returns list of InputState specifications
+        For standard InputState specs ("shadowing" a non-Origin InputState):
+            - Call _parse_state_spec
+            - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+
+        Returns list of InputState specification dictionaries
         """
 
         parsed_predictors = []
@@ -503,9 +508,11 @@ class LVOCControlMechanism(ControlMechanism):
                 else:
                     raise LVOCError("Incorrect specification ({}) in predictors argument of {}."
                                     .format(spec, self.name))
-            # e.g. Mechanism
+            # e.g. Mechanism, OutputState
             else:
-                spec = [spec] # (so that extend can be used below)
+                spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
+                spec[PARAMS][INTERNAL_ONLY] = True
+                spec = [spec]   # so that extend works below
 
             parsed_predictors.extend(spec)
 
@@ -515,8 +522,6 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_shadow_input_spec(self, spec:dict):
         ''' Return a list of InputState specifications for the inputs specified in value of dict
 
-        If ALL is specified, specify an InputState for each ORIGIN Mechanism in the Composition
-            with Projection from the OutputState of the Compoisitions Input CIM for that ORIGIN Mechanism
         For any other specification, specify an InputState with a Projection from the sender of any Projections
             that project to the specified item
         If FUNCTION entry, assign as Function for all InputStates
@@ -536,7 +541,8 @@ class LVOCControlMechanism(ControlMechanism):
                     input_states = [item]
                 # Shadow all of the Projections to each specified InputState
                 input_state_specs.extend([{NAME:i.name + 'of' + i.owner.name,
-                                           VARIABLE: i.variable}
+                                           VARIABLE: i.variable,
+                                }
                                           for i in input_states])
 
         if FUNCTION in spec:
