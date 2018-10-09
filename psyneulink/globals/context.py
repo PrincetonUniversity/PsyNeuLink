@@ -101,7 +101,7 @@ from uuid import UUID
 import typecheck as tc
 
 from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
-from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
+from psyneulink.globals.utilities import get_deepcopy_with_shared
 
 
 __all__ = [
@@ -402,7 +402,7 @@ class Context():
         self.execution_time = None
         self.string = string
 
-    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 
     @property
     def composition(self):

@@ -829,16 +829,7 @@ class ParameterState(State_Base):
         if variable is not None:
             return super()._execute(variable, runtime_params=runtime_params, context=context)
         else:
-            # Most commonly, ParameterState is for the parameter of a function
-            try:
-                variable = getattr(self.owner.function_object, '_'+ self.name)
-                # param_value = self.owner.function_object.params[self.name]
-
-           # Otherwise, should be for an attribute of the ParameterState's owner:
-            except AttributeError:
-                # param_value = self.owner.params[self.name]
-                variable = getattr(self.owner, '_'+ self.name)
-
+            variable = getattr(self.source, '_' + self.name)
             return super()._execute(
                 variable=variable,
                 runtime_params=runtime_params,
@@ -1121,6 +1112,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
+                # will be parsed on assignment of function
+                state.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
@@ -1133,6 +1126,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
+            state.source = owner
 
 
 def _is_legal_param_value(owner, value):

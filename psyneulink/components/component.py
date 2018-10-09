@@ -417,7 +417,7 @@ from psyneulink.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, ParamsTemplate, ReadOnlyOrderedDict, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_np_array, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared_keys, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, parse_execution_context, prune_unused_args
+from psyneulink.globals.utilities import ContentAddressableList, ParamsTemplate, ReadOnlyOrderedDict, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_np_array, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, parse_execution_context, prune_unused_args
 from psyneulink.scheduling.condition import AtTimeStep, Never
 
 import psyneulink.llvm as pnlvm
@@ -434,6 +434,10 @@ logger = logging.getLogger(__name__)
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
+
+
+def get_deepcopy_with_shared_Components(shared_keys=None):
+    return get_deepcopy_with_shared(shared_keys, (Component, ))
 
 
 class ResetMode(Enum):
@@ -920,6 +924,18 @@ class Param(types.SimpleNamespace):
                         value
                     )
                 )
+
+    def clear_log(self, execution_ids=NotImplemented):
+        if execution_ids is NotImplemented:
+            eids = list(self.log.keys())
+        elif not isinstance(execution_ids, list):
+            eids = [execution_ids]
+        else:
+            eids = execution_ids
+
+        for eid in eids:
+            if eid in self.log:
+                del self.log[eid]
 
     def _initialize_from_context(self, execution_context=None, base_execution_context=None):
         try:
@@ -1427,9 +1443,8 @@ class Component(object, metaclass=ComponentsMeta):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
-    deepcopy_shared_keys = set([
-        'owner',
-        'function_object'
+    _deepcopy_shared_keys = set([
+        'init_args'
     ])
 
     def __init__(self,
@@ -1669,7 +1684,7 @@ class Component(object, metaclass=ComponentsMeta):
         #return '{1}'.format(type(self).__name__, self.name)
 
     def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_keys(self.deepcopy_shared_keys)
+        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
         newone.__dict__['_Component__llvm_function_name'] = None
         newone.__dict__['_Component__llvm_bin_function'] = None
@@ -2715,6 +2730,16 @@ class Component(object, metaclass=ComponentsMeta):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        try:
+            context_param = self.parameters.context.get(execution_id)
+        except ComponentError:
+            self.parameters.context._initialize_from_context(execution_id, base_execution_id)
+            context_param = self.parameters.context.get(execution_id)
+
+        for context_item, value in kwargs.items():
+            setattr(context_param, context_item, value)
+
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -3267,9 +3292,7 @@ class Component(object, metaclass=ComponentsMeta):
         if self.function_object.has_initializers:
             self.has_initializers = True
 
-        # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
-        # that ultimately doesn't end up assigning the attribute
-        # self._function_params = self.function_object.user_params
+        self._parse_param_state_sources()
 
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_states"):
@@ -3362,6 +3385,14 @@ class Component(object, metaclass=ComponentsMeta):
         fct_context_attrib.execution_phase = ContextFlags.IDLE
 
         return value
+
+    def _parse_param_state_sources(self):
+        try:
+            for param_state in self._parameter_states:
+                if param_state.source is FUNCTION:
+                    param_state.source = self.function_object
+        except AttributeError:
+            pass
 
     @property
     def current_execution_count(self):
@@ -3714,6 +3745,16 @@ class Component(object, metaclass=ComponentsMeta):
             return self.function_object.function
         except AttributeError:
             return None
+
+    @property
+    def function_object(self):
+        return self._function_object
+
+    @function_object.setter
+    def function_object(self, value):
+        # TODO: currently no validation, should replicate from _instantiate_function
+        self._function_object = value
+        self._parse_param_state_sources()
 
     @property
     def function_params(self):

@@ -600,16 +600,20 @@ def _instantiate_learning_components(learning_projection, context=None):
     # (FOLLOWING DESIGN OF _instantiate_error_signal_projection IN LearningMechanism):
 
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
-    MappingProjection(sender=lc.activation_mech_input,
+    lc._activation_mech_input_projection = MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX,
                       name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
-    MappingProjection(sender=lc.activation_mech_output,
+    lc._activation_mech_output_projection = MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX,
                       name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT)
+
+    lc.learning_mechanism = learning_mechanism
+
+    learning_projection._learning_components = lc
 
 
 def _instantiate_error_signal_projection(sender, receiver):
@@ -815,9 +819,11 @@ class LearningComponents(object):
         self._activation_mech_projection = None
         self._activation_output_mech = None
         self._activation_mech_input = None
+        self._activation_mech_input_projection = None
         self._activation_mech_fct = None
         self._activation_derivative = None
         self._activation_mech_output = None
+        self._activation_mech_output_projection = None
         self._error_projection = None
         self._error_matrix = None
         self._error_derivative = None
@@ -827,22 +833,6 @@ class LearningComponents(object):
         self._error_signal_mech_output = None
         # self._error_objective_mech = None
         # self._error_objective_mech_output = None
-
-        self.activation_mech_projection
-        self.activation_output_mech
-        self.activation_mech_input
-        self.activation_mech_fct
-        self.activation_derivative
-        self.activation_mech_output
-        self.error_projection
-        self.error_matrix
-        self.error_mech
-        self.error_derivative
-        self.error_mech_output
-        self.error_signal_mech
-        self.error_signal_mech_output
-        # self.error_objective_mech
-        # self.error_objective_mech_output
 
 
     def _validate_learning_projection(self, learning_projection):

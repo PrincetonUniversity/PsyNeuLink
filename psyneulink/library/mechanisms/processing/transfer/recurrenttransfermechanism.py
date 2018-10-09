@@ -982,6 +982,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self._auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
+                state.source = self
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -999,6 +1000,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        context=context)
             if state is not None:
                 self._parameter_states[HETERO] = state
+                state.source = self
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))

@@ -759,11 +759,7 @@ class Function_Base(Function):
         try:
             return self.owner._parameter_states[param_name].value
         except (AttributeError, TypeError):
-            try:
-                return self._parameter_states[param_name].value
-            except (AttributeError, TypeError):
-
-                return getattr(self, param_name)
+            return getattr(self, param_name)
 
     def convert_output_type(self, value, output_type=None):
         if output_type is None:
