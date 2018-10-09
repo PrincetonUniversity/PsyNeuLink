@@ -1,6 +1,6 @@
 AutoAssociativeMechanism
 ========================
 
-.. automodule:: psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism
+.. automodule:: psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism
    :members:
    :exclude-members: random, execute

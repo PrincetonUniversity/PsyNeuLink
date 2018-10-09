@@ -1,6 +1,6 @@
 AGTControlMechanism
 ===================
 
-.. automodule:: psyneulink.library.subsystems.agt.agtcontrolmechanism
+.. automodule:: psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism
    :members:
    :exclude-members: random, LinearCombination, Linear

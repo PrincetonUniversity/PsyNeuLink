@@ -1,17 +1,17 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism, RECURRENT_OUTPUT
-from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
@@ -640,7 +640,7 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
 
     def test_transfer_mech_process_matrix_change(self):
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         T1 = TransferMechanism(
             size=4,
             function=Linear)

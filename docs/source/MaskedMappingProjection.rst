@@ -1,6 +1,6 @@
 MaskedMappingProjection
 =========================
 
-.. automodule:: psyneulink.library.projections.pathway.maskedmappingprojection
+.. automodule:: psyneulink.library.components.projections.pathway.maskedmappingprojection
    :members:
    :exclude-members: random, execute

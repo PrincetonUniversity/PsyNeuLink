@@ -1,12 +1,12 @@
-import pytest
 import numpy as np
+import pytest
 
-from psyneulink.library.mechanisms.processing.transfer.lcamechanism import LCAMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.functions.function import Linear
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.function import Linear
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 class TestLCA:
     def test_LCAMechanism_length_1(self):

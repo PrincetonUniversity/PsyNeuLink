@@ -3,5 +3,5 @@ Preferences
 
 [DOCUMENTATION COMING...]
 
-.. automodule:: psyneulink.globals.preferences
+.. automodule:: psyneulink.core.globals.preferences
 	:members:

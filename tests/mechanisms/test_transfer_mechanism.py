@@ -1,19 +1,19 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
-from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.globals.keywords import INTEGRATOR_MODE_VALUE, INSTANTANEOUS_MODE_VALUE, REINITIALIZE
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.compositions.composition import Composition
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, ReLU, Reduce, Reinforcement, SoftMax, UserDefinedFunction
+from psyneulink.core.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, UniformToNormalDist, WaldDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.condition import Never
 
 VECTOR_SIZE=4
 
@@ -1084,7 +1084,7 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
     def test_transfer_mech_2d_variable_mean(self):
-        from psyneulink.globals.keywords import MEAN
+        from psyneulink.core.globals.keywords import MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
@@ -1134,7 +1134,7 @@ class TestTransferMechanismMultipleInputStates:
     # @pytest.mark.transfer_mechanism
     # @pytest.mark.mimo
     # def test_OWNER_VALUE_standard_output_state(self):
-    #     from psyneulink.globals.keywords import OWNER_VALUE
+    #     from psyneulink.core.globals.keywords import OWNER_VALUE
     #     T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
     #                               output_states=OWNER_VALUE)
     #     print(T.value)

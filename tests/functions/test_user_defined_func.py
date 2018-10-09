@@ -1,14 +1,11 @@
-import pytest
 import numpy as np
+import pytest
 
-from psyneulink.library.mechanisms.processing.transfer.lcamechanism import LCAMechanism
-from psyneulink.components.mechanisms.processing import ProcessingMechanism
-from psyneulink.components.mechanisms.processing import TransferMechanism
-from psyneulink.components.functions.function import Linear, Logistic, UserDefinedFunction
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-
-#
+from psyneulink.core.components.functions.function import Linear, Logistic, UserDefinedFunction
+from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
 
 class TestUserDefFunc:
 

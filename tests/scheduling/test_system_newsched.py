@@ -1,16 +1,16 @@
 import numpy
 
-from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.time import TimeScale
+from psyneulink.core.components.functions.function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
+from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 
