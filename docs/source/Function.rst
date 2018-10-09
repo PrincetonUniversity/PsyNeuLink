@@ -47,5 +47,6 @@ Functions
              ContrastiveHebbian,
              Reinforcement,
              BackPropagation,
-             TDLearning
+             TDLearning,
+             BayesGLM
    :exclude-members: MappingProjection, ParameterState

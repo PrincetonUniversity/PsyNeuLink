@@ -1,6 +1,6 @@
 LVOCControlMechanism
 ====================
 
-.. automodule:: psyneulink.library.subsystems.lvoc.lvoccontrolmechanism
+.. automodule:: psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism
    :members:
    :exclude-members: random, LinearCombination, Linear
