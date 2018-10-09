@@ -9,3 +9,4 @@ particular brain function and/or psychological process.
 
    AGT
    EVC
+   AutodiffComposition
