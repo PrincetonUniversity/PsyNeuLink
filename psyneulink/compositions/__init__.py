@@ -1,6 +1,7 @@
 from . import composition
 from . import systemcomposition
 from . import pathwaycomposition
+from . import autodiffcomposition
 
 from .composition import *
 from .systemcomposition import *

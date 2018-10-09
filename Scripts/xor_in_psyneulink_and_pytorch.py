@@ -125,7 +125,7 @@ print('\n')
 # XOR in Autodiff Composition ---------------------------------------------------------------------
 
 autodiff_start_time = time.time()
-# The mechanisms and projections provided to AutodiffComposition are the same as above
+# The mechanisms and projections provided to AutodiffComposition are basically the same as above, but reinitialized
 xor_in = pnl.TransferMechanism(name='xor_in',
                            default_variable=np.zeros(2))
 
@@ -164,19 +164,11 @@ result = xor_autodiff.run(inputs={xor_in: xor_inputs},
                  epochs=num_epochs,
                  learning_rate=learning_rate,
                  optimizer='sgd')  # the default optimizer in System is sgd, so we use sgd here as well
-
 autodiff_total_time = time.time() - autodiff_start_time
 
-autodiff_outputs = []
-for input in xor_inputs:
-    output = xor_autodiff.execute(
-        inputs={xor_in: [input]},
-        epochs=1,
-    )
-    autodiff_outputs.append(output)
 print('Output of AutodiffComposition after', num_epochs,
       'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
-print(autodiff_outputs)
+print(result[0])
 print('Initializing and training AutodiffComposition took ', autodiff_total_time, ' seconds.')
 print('\n')
 

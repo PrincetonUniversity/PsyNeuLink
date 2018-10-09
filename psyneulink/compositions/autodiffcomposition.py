@@ -1,3 +1,4 @@
+Creating an AutodiffComposition
 from psyneulink.compositions.composition import Composition
 from psyneulink.compositions.composition import CompositionError
 from psyneulink.compositions.composition import RunError
