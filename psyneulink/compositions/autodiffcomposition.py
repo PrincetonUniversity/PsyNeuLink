@@ -1,4 +1,107 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+
+# ********************************************* AutodiffComposition *************************************************
+
+"""
+
+.. _AutodiffComposition_Overview:
+
+Overview
+--------
+
+AutodiffComposition is a subclass of `Composition` which trains models more quickly by integrating with
+`PyTorch <https://pytorch.org/>`_, a popular machine learning library. In situations with training,
+AutodiffComposition is used similarly to a `Composition`, but is much faster.
+
+The `xor_in_psyneulink_and_pytorch.py` script (in the Scripts folder of the PsyNeuLink source code) is an example of
+how to use AutodiffComposition. The script also gives a comparison of runtimes.
+
+.. _AutodiffComposition_Creation:
+
 Creating an AutodiffComposition
+-------------------------------
+
+An AutodiffComposition can be created by calling the constructor, and then adding `Components <Component>` using the
+add methods of its parent class `Composition`. The only significant argument in initialization is
+**param_init_from_pnl**, which controls how parameters are set up for the internal PyTorch representation of the model.
+
+If set to True:
+
+* Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they
+don’t exist for the autodiff composition’s mechanisms.
+
+* The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the tensor
+of the parameter object corresponding to a particular projection not only has the same dimensionality as the
+projection’s matrix, it has the same exact values.
+
+* Pytorch functions representing mechanism functions incorporate their scalar, untrainable biases.
+
+If set to False:
+
+* Both weight parameters corresponding to projections and trainable bias parameters for mechanisms are created.
+
+* Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those
+of the bias parameters - are sampled from a random distribution.
+
+* Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar,
+untrainable biases.
+
+.. warning:: Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
+    first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
+
+.. _AutodiffComposition_Structure:
+
+Structure
+---------
+
+AutodiffComposition has all the attributes of its parent class `Composition`, in addition to several more.
+
+The `target_CIM <AutodiffComposition.target_CIM>` attribute is analogous to the `input_CIM <Composition.input_CIM>` of
+any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.
+
+The `pytorch_representation <AutodiffComposition.pytorch_representation>` attribute holds the PyTorch representation
+of the PsyNeuLink model that AutodiffComposition contains. The `losses <AutodiffComposition.losses>` attribute tracks
+the average loss for each training epoch.
+
+.. _AutodiffComposition_Execution:
+
+Execution
+---------
+
+Execute an AutodiffComposition with its `run` method. During training, both **inputs** and **targets** must be
+specified. If you wish to run the AutodiffComposition without training it, only specify **inputs**. Some arguments to an
+AutodiffComposition's `run` method (such as **inputs** and **execution_id**) are the same as in a Composition's
+`run <Composition.run>` method. There are several different arguments as well:
+
+**epochs** specifies the number of times the entire input set will be run. This is in contrast to **num_trials** in
+Composition's `run <Composition.run>` method, which specifies the number of inputs that will be run. For example, if
+your input set has size 3, setting **epochs** to 1 in AutodiffComposition is equivalent to setting **num_trials** to 3
+in Composition.
+
+**learning_rate** specifies the learning rate for this run (default 0.001), which is passed to the **optimizer**
+argument. **optimizer** specifies the kind of optimizer used in training. The current options are 'sgd' (the default)
+or 'adam'.
+
+**loss** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
+
+**randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
+run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
+
+If **refresh_losses** is set to True, the AutodiffComposition resets the self.losses attribute before running.
+
+.. _Composition_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
 from psyneulink.compositions.composition import Composition
 from psyneulink.compositions.composition import CompositionError
 from psyneulink.compositions.composition import RunError
@@ -49,6 +152,48 @@ class AutodiffCompositionError(CompositionError):
 
 
 class AutodiffComposition(Composition):
+    """
+    AutodiffComposition(            \
+    param_init_from_pnl=True,       \
+    name="autodiff_composition")
+
+    Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
+
+    Arguments
+    ---------
+
+    param_init_from_pnl : boolean : default True
+        a Boolean specifying how parameters are initialized. (See
+        `Creating an AutodiffComposition <AutodiffComposition_Creation>` for details)
+
+    Attributes
+    ----------
+
+    target_CIM : CompositionInterfaceMechanism
+        analogous to the input_CIM attribute, except it provides targets
+
+    pytorch_representation : PytorchModelCreator
+        the PyTorch representation of the PsyNeuLink model
+
+    losses : list of floats
+        tracks the average loss for each training epoch
+
+    name : str : default LeabraMechanism-<index>
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Projection;
+        if not specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    Returns
+    -------
+    instance of LeabraMechanism : LeabraMechanism
+    """
 
     # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
     def __init__(self, param_init_from_pnl=True, name="autodiff_composition"):
@@ -511,7 +656,7 @@ class AutodiffComposition(Composition):
         # if we're doing learning/training, set up learning rate, optimizer, and loss
         if (targets is not None):
             
-            if learning_rate is None:
+            if learning_rate is None: # FIX DCW 10/8/18: I think this logic is wrong!
                 if self.learning_rate is None:
                     self.learning_rate = 0.001
             else:
