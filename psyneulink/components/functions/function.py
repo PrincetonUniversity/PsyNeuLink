@@ -12542,12 +12542,13 @@ class BayesGLM(LearningFunction):
         params=None,            \
         prefs=None)
 
-    Implements Bayesian regression that fits means and distributions of weights to predict dependent variable(s) in
-    `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
+    Implements Bayesian linear regression that fits means and distributions of weights to predict dependent variable(s)
+    in `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
 
     Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
-    [based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen].
-    Useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.
+    and returns a sample of prediction weights from a multivariate normal distribution.
+    [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
+    useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
 
     Arguments
     ---------
