@@ -679,7 +679,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         '''
 
-        # This the value received from the ObjectiveMechanism:
+        # This is the value received from the objective_mechanism's OUTCOME OutputState:
         obj_mech_outcome = variable[0]
 
         # This is the current values of the predictors
