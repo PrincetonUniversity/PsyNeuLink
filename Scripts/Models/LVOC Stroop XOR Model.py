@@ -44,6 +44,7 @@ lvoc = pnl.LVOCControlMechanism(predictors={pnl.SHADOW_EXTERNAL_INPUTS:[sc,sw]},
 c.add_c_node(lvoc)
 c._analyze_graph()
 
+
 c.show_graph()
 # input_dict = {m1:[[[1],[1]]],
 #               m2:[[1]]}
