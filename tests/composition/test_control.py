@@ -136,7 +136,7 @@ class TestControlMechanisms:
     #                              control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
     #                                                                projections=(pnl.SLOPE, Tz)))
     #     comp = pnl.Composition()
-    #     # sched = pnl.Scheduler(composition=comp)
+    #     # sched = pnl.Scheduler(omp)
     #     # sched.add_condition(Tz, pnl.AllHaveRun([C]))
     #     comp.add_linear_processing_pathway([Tx, Tz])
     #     comp.add_linear_processing_pathway([Ty, C])
@@ -161,7 +161,7 @@ class TestObjectiveMechanismRoles:
 
         A = pnl.TransferMechanism()
         B = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c)
+        lvoc = pnl.ControlMechanism()
 
         c.add_linear_processing_pathway([lvoc, A])
 
@@ -175,7 +175,7 @@ class TestObjectiveMechanismRoles:
         c = pnl.Composition()
 
         A = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c,
+        lvoc = pnl.ControlMechanism(
                                         origin_objective_mechanism=True)
         B = pnl.TransferMechanism()
 
@@ -193,7 +193,7 @@ class TestObjectiveMechanismRoles:
         c = pnl.Composition()
 
         A = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c,
+        lvoc = pnl.ControlMechanism(
                                         origin_objective_mechanism=True)
         B = pnl.TransferMechanism()
 
@@ -213,7 +213,7 @@ class TestObjectiveMechanismRoles:
         c = pnl.Composition()
 
         A = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c)
+        lvoc = pnl.ControlMechanism()
         B = pnl.TransferMechanism()
 
         c.add_linear_processing_pathway([lvoc, A])
@@ -229,7 +229,7 @@ class TestObjectiveMechanismRoles:
         c = pnl.Composition()
 
         A = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c,
+        lvoc = pnl.ControlMechanism(
                                         terminal_objective_mechanism=True)
         B = pnl.TransferMechanism()
 
@@ -245,7 +245,7 @@ class TestObjectiveMechanismRoles:
         c = pnl.Composition()
 
         A = pnl.TransferMechanism()
-        lvoc = pnl.LVOCControlMechanism(composition=c,
+        lvoc = pnl.ControlMechanism(
                                         terminal_objective_mechanism=True
                                         )
         B = pnl.TransferMechanism()
