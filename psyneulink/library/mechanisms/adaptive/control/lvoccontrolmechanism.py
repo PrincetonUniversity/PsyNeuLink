@@ -49,23 +49,20 @@ Creating an LVOCControlMechanism
   * **predictors** -- this takes the place of the standard **input_states** argument in the constructor for a
     Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
-    COMMENT:
-    By default, the input to every `ORIGIN`
-    Mechanism of the `Composition` to which the LVOCControlMechanism belongs is used as its `predictors
-    <LVOCControlMechanism_Predictors>`.
-    COMMENT
     It can be specified using any of the following, singly or combined in a list:
 
-        * *InputState specification* -- this can be any legal form of `InputState specification
-          <InputState_Specification>` that includes a specification of a `Mechanism` or `OutputState` to project to
-          the InputState;  the `value <OutputState.value>` of the specified OutputState (or `primary OutputState
-          <OutputState_Primary>` of the specified Mechanism) is used as a `predictor <LVOCControlMechanism.predictor>`.
+        * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
+          that resolves to an OutputState from which the InputState receives a Projection;  the `value
+          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`.
         |
-        * {*SHADOW_EXTERNAL_INPUTS*: <List[InputState(s) and/or Mechanism(s)>][,FUNCTION:<Function]} -- dictionary that
-          specifies InputStates, the inputs to which are used as `predictors <LVOCControlMechanism_Predictors>`.  All of
-          the InputStates are used for any Mechanism(s) specified.  If the *FUNCTION* entry is included, the 'Function`
-          specified in its value is assigned to each of the InputStates created on the LVOCControlMechanism to shadow
-          the ones specified in the *SHADOW_EXTERNAL_INPUTS* entry (see `LVOC_Structure`).
+        * {*SHADOW_EXTERNAL_INPUTS*: <List>[, FUNCTION:<Function]} -- the list can contain one or more `ORIGIN`
+          Mechanisms and/or their InputStates, which specifies that the input they receive from the `Composition`
+          be used as predictors.  If the *FUNCTION* entry is included, its value is assigned as the `function
+          <InputState.function>` for each of the InputStates created on the LVOCControlMechanism to shadow
+          the ones specified in the *SHADOW_EXTERNAL_INPUTS* entry (see `LVOC_Structure` for additional details).
+          Note that this Function will be assigned only to InputStates specified in the *SHADOW_EXTERNAL_INPUTS*
+          entry of the same dictionary; to specify the `function <InputState.function> of any other InputStates
+          specified in the **predictors** argument, it must be included in the specification of those InputStates.
 
     Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
 
@@ -80,8 +77,8 @@ Structure
 *Input*
 ~~~~~~~
 
-An LVOCControlMechanism has an `InputState` that receives a Projection from its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` (it primary InputState <InputState_Primary>`), and additional ones for
+An LVOCControlMechanism has one `InputState` that receives a `Projection` from its `objective_mechanism
+<LVOCControlMechanism.objective_mechanism>` (its primary InputState <InputState_Primary>`), and additional ones for
 each of its predictors, as described below.
 
 .. _LVOCControlMechanism_Predictors:
@@ -94,21 +91,20 @@ are used by its `function <LVOCControlMechanism.function>` to learn to predict t
 `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and to determine its `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
-COMMENT:
 Predictors can be of two types:
 
-* *Input Predictor* -- this is a value received as input by some other Mechanism in the Composition.
-    These are typically specified in a *SHADOW_EXTERNAL_INPUTS* entry of a dict in the **predictors** argument of the
-    LVOCControlMechanism's constructor (see `LVOCControlMechanism_Creation`), designating an InputState to be
-    shadowed.  A Projection projects to the InputState of the LVOCControlMechanism for that predictor,
-    from the same OutputState that projects to the InputState being "shadowed" (including an OutputState of the
-    Composition's `InputCIM` if the input being shadowed belongs to an `ORIGIN` Mechanism of the Composition).
+* *Input Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the Composition.
+    These are specified in the **predictors** argument of the LVOCControlMechanism's constructor (see
+    `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
+    which is one or more `ORIGIN` Mechanisms and/or their InputStates to be shadowed.  For each, a Projection is
+    automatically created that parallels ("shadows") the Projection from the Composition's `InputCIM` to the `ORIGIN`
+    Mechanism, projecting from the same `OutputState` of the InputCIM to the the InputState of the
+    LVOCControlMechanism assigned to that predictor.
 
 * *Output Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism in the
-    Composition.  These too are specified in the **predictors** argument of the LVOCControlMechanism's constructor,
+    Composition.  These too are specified in the **predictors** argument of the LVOCControlMechanism's constructor
     (see `LVOCControlMechanism_Creation`), and each is assigned a Projection to the InputState of the
     LVOCControlMechanism for that predictor.
-COMMENT
 
 The current `values <InputState.value>` of the InputStates for the predictors are listed in the `predictor_values
 <LVOCControlMechanism.predictor_values>` attribute.
@@ -245,7 +241,8 @@ from psyneulink.components.functions.function import ModulationParam, _is_modula
     EPSILON
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
+    MONITORED_OUTPUT_STATES
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
@@ -253,7 +250,8 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import INTERNAL_ONLY, PARAMS,  FUNCTION, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, VARIABLE
+from psyneulink.globals.keywords import INTERNAL_ONLY, PARAMS, FUNCTION, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
+    VARIABLE, OBJECTIVE_MECHANISM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.defaults import defaultControlAllocation
@@ -276,11 +274,14 @@ class LVOCError(Exception):
 
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                        \
-    predictors=SHADOW_EXTERNAL_INPUTS,                       \
+    predictors,                                     \
     objective_mechanism=None,                       \
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     function=BayesGLM,                              \
+    update_rate=.01,                                \
+    convergence_criterion=.001,                     \
+    max_iterations=1000,                            \
     control_signals=None,                           \
     modulation=ModulationParam.MULTIPLICATIVE,      \
     params=None,                                    \
@@ -293,12 +294,14 @@ class LVOCControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-
-    predictors : SHADOW_EXTERNAL_INPUTS, dict, InputState, OutputState, or Mechanism : SHADOW_EXTERNAL_INPUTS
+    predictors : Mechanism, OutputState, dict, or list containing any of these
         specifies the values that the LVOCControlMechanism learns to use for determining its `allocation_policy
-        <LVOCControlMechanism.allocation_policy>` (see `LVOCControlMechanism_Creation` for details).
+        <LVOCControlMechanism.allocation_policy>`.  Any legal `InputState specifications <InputState_Specification>`
+        can be used, in addition to a dictionary containing an entry with the keyword *SHADOW_EXTERNAL_INPUTS* (and
+        optionally a *FUNCTION* entry) can be used to shadow the input to `ORIGIN` Mechanisms (see
+        `LVOCControlMechanism_Creation` for details).
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
+    objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
         <OutputState>`\\s it should monitor; if a list of `OutputState specifications
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
@@ -308,6 +311,21 @@ class LVOCControlMechanism(ControlMechanism):
         specifies the function used to learn to predict the outcome of `objective_mechanism
         <LVOCControlMechanism.objective_mechanism>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details);
+
+    udpate_rate : int or float : default 0.01
+        specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
+        `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
+        `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
+
+    convergence_criterion : int or float : default 0.001
+        specifies the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
+        <LVOCControlMechanism.gradient_ascent>` method should terminate and return an `allocation_policy
+        <LVOCControlMechanism.allocation_policy>`.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of iterations `gradient_ascent <LVOCControlMechanism.gradient_ascent>`
+        method is allowed to execute; if exceeded, a warning is issued, and the method returns the
+        last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the LVOCControlMechanism
@@ -365,6 +383,21 @@ class LVOCControlMechanism(ControlMechanism):
         `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Function`
         for additional details).
 
+    udpate_rate : int or float
+        determines the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
+        `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
+        `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
+
+    convergence_criterion : int or float
+        determines the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
+        <LVOCControlMechanism.gradient_ascent>` method should terminate and return an `allocation_policy
+        <LVOCControlMechanism.allocation_policy>`.
+
+    max_iterations : int
+        determines the maximum number of iterations `gradient_ascent <LVOCControlMechanism.gradient_ascent>`
+        method is allowed to execute; if exceeded, a warning is issued, and the method returns the
+        last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
+
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
         associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
@@ -409,14 +442,14 @@ class LVOCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=SHADOW_EXTERNAL_INPUTS,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)),
+                 objective_mechanism:tc.any(ObjectiveMechanism, list),
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 convergence_criterion=0.1,
-                 max_iterations=1000,
-                 update_rate=0.01,
                  function=BayesGLM,
+                 update_rate=0.01,
+                 convergence_criterion=0.001,
+                 max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -443,37 +476,42 @@ class LVOCControlMechanism(ControlMechanism):
                          prefs=prefs)
 
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if (OBJECTIVE_MECHANISM in request_set and
+                isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
+                and not request_set[OBJECTIVE_MECHANISM].path_afferents):
+            raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
+                            format(ObjectiveMechanism.__name__, self.name,
+                                   request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
+
+        # if isinstance(self.objective_mechanism , ObjectiveMechanism) and not self.objective_mechanism .path_afferents:
+        #     raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
+        #                     format(ObjectiveMechanism.__name__, self.name,
+        #                            request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
 
         The input_states are specified in the **predictor** argument of the LVOCControlMechanism's constructor.
 
-        input_states can be any legal InputState specification, which will generate a Projection from the
-           source specified (FIX: WHAT IF NONE IS SPECIFIED??);
-           this allows the output of any Mechanism in the Composition to be used as a predictor.
+        input_states can be any legal InputState specification (allowing the output of any Mechanism in the Composition
+        to be used as a predictor).
         input_states can also include a dict with an entry that has the keyword *SHADOW_EXTERNAL_INPUTS* as its key,
-            and either the keyword *ALL* or a list of Mechanisms and/or InputStates as its value.  This creates
+            and a list of `ORIGIN` Mechanisms and/or their InputStates as its value.  This creates
             one or more InputStates on the LVOCControlMechanism, each of which "shadows" -- that is, receives a
-            Projection from the same source as — the InputState(s) specified in the value of the entry, as follows:
-            - *ALL*: InputStates and Projections are created that shadow every InputState of every ORIGIN Mechanism of
-                the Composition -- these receive a Projection from the Input CIM OutputState associated with the
-                InputState of the ORIGIN Mechanism to the InputState created for it on the LVOCControlMechanism.
-            - List of Mechanisms and/or InputStates:  An InputState and Projection is created that shadows the each
-                InputState listed, and all of the InputStates of any Mechanism listed.
-            The dict can also contain an entry using the keyword *FUNCTION* as its key and a Function as its value; that
-                Function will be used as the function of all of the InputStates created for the LVOCControlMechanism.
+            Projection from the same source as — the InputState(s) specified in the value of the entry;
+            for Mechanisms that are specified, this applies to all of their InputStates.
+            The dict can also contain an entry using the keyword *FUNCTION* as its key and a Function as its value;
+            that Function will be used as the function of all of the InputStates created for the LVOCControlMechanism.
 
         An InputState is also created for the Projection from the LVOCControlMechanism's objective_mechanism;  this is
               inserted as the first (primary) InputState in input_states.
 
         """
-
-        # If input_states has SHADOW_EXTERNAL_INPUTS in any of its specifications, parse into input_states specifications
-        # if any(SHADOW_EXTERNAL_INPUTS in spec for spec in self.input_states):
-        #     self.input_states = self._parse_predictor_specs(composition=self.composition,
-        #                                                     predictors=self.input_states,
-        #                                                     context=context)
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
         self.input_states.insert(0, OUTCOME),
@@ -487,10 +525,9 @@ class LVOCControlMechanism(ControlMechanism):
     def add_predictors(self, predictors):
         '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict outcome
 
-        **predictors** argument can use any of the forms of specification allowed
-            for the **input_states** argument of the LVOCMechanism,
-            as well as the keyword SHADOW_EXTERNAL_INPUTS, either alone or as the keyword for an entry in a dictionary,
-            the value of which must a list of InputStates.
+        **predictors** argument can use any of the forms of specification allowed for InputState(s),
+            as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
+            list of `ORIGIN` Mechanisms and/or their InputStates as its value.
         '''
 
         predictors = self._parse_predictor_specs(predictors=predictors,
@@ -504,7 +541,7 @@ class LVOCControlMechanism(ControlMechanism):
         For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
             - Call _parse_shadow_input_spec
 
-        For standard InputState specs ("shadowing" a non-Origin InputState):
+        For standard InputState specs:
             - Call _parse_state_spec
             - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
 
@@ -520,7 +557,10 @@ class LVOCControlMechanism(ControlMechanism):
 
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
-                if set(spec.keys()) == {SHADOW_EXTERNAL_INPUTS}:
+                # FIX: THIS PRECLUDES INCLUSION OF FUNCTION ENTRY
+                # if set(spec.keys()) == {SHADOW_EXTERNAL_INPUTS}:
+                if SHADOW_EXTERNAL_INPUTS in spec:
+                    # FIX: WHY IS THIS BEING SET?  IS IT BEING USED ANYWHERE?
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_input_spec(spec)
                 else:
@@ -549,20 +589,20 @@ class LVOCControlMechanism(ControlMechanism):
 
         shadow_spec = spec[SHADOW_EXTERNAL_INPUTS]
 
-        if isinstance(shadow_spec, list):
-            for item in shadow_spec:
-                if isinstance(item, Mechanism):
-                    # Shadow all of the InputStates for the Mechanism
-                    input_states = item.input_states
-                if isinstance(item, InputState):
-                    # Place in a list for consistency of handling below
-                    input_states = [item]
-                # Shadow all of the Projections to each specified InputState
-                input_state_specs.extend([{NAME:i.name + 'of' + i.owner.name,
-                                           VARIABLE: i.variable,
-                                }
-                                          for i in input_states])
-
+        if not isinstance(shadow_spec, list):
+            shadow_spec = [shadow_spec]
+        for item in shadow_spec:
+            if isinstance(item, Mechanism):
+                # Shadow all of the InputStates for the Mechanism
+                input_states = item.input_states
+            if isinstance(item, InputState):
+                # Place in a list for consistency of handling below
+                input_states = [item]
+            # Shadow all of the Projections to each specified InputState
+            input_state_specs.extend([{#NAME:i.name + ' of ' + i.owner.name,
+                                       VARIABLE: i.variable,
+                            }
+                                      for i in input_states])
         if FUNCTION in spec:
             for i in input_state_specs:
                 i.update({FUNCTION:spec[FUNCTION]})
