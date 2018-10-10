@@ -286,7 +286,7 @@ class LVOCControlMechanism(ControlMechanism):
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     function=BayesGLM,                              \
-    update_rate=.01,                                \
+    update_rate=.1,                                 \
     convergence_criterion=.001,                     \
     max_iterations=1000,                            \
     control_signals=None,                           \
@@ -323,7 +323,7 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details);
 
-    update_rate : int or float : default 0.01
+    update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
@@ -456,7 +456,7 @@ class LVOCControlMechanism(ControlMechanism):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
-                 update_rate=0.01,
+                 update_rate=0.1,
                  convergence_criterion=0.001,
                  max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
@@ -806,10 +806,10 @@ class LVOCControlMechanism(ControlMechanism):
         cost_weights = prediction_weights[self.cst]
 
         # TEST PRINT:
-        # print('\n\npredictors: ', predictors,
-        #       '\ncontrol_signals: ', control_signal_values,
-        #       '\ncontrol_costs: ', costs,
-        #       '\nprediction_weights: ', prediction_weights)
+        print('\n\npredictors: ', predictors,
+              '\ncontrol_signals: ', control_signal_values,
+              '\ncontrol_costs: ', costs,
+              '\nprediction_weights: ', prediction_weights)
         # TEST PRINT END:
 
         # Perform gradient ascent until convergence criterion is reached
@@ -846,14 +846,14 @@ class LVOCControlMechanism(ControlMechanism):
             convergence_metric = np.abs(current_lvoc - previous_lvoc)
 
             # TEST PRINT:
-            # print('\niteration ', j,
-            #       '\nprevious_lvoc: ', previous_lvoc,
-            #       '\ncurrent_lvoc: ',current_lvoc ,
-            #       '\nconvergence_metric: ',convergence_metric,
-            #       '\npredictors: ', predictors,
-            #       '\ncontrol_signal_values: ', control_signal_values,
-            #       '\ninteractions: ', interaction_weights_x_predictors,
-            #       '\ncosts: ', costs)
+            print('\niteration ', j,
+                  '\nprevious_lvoc: ', previous_lvoc,
+                  '\ncurrent_lvoc: ',current_lvoc ,
+                  '\nconvergence_metric: ',convergence_metric,
+                  '\npredictors: ', predictors,
+                  '\ncontrol_signal_values: ', control_signal_values,
+                  '\ninteractions: ', interaction_weights_x_predictors,
+                  '\ncosts: ', costs)
             # TEST PRINT END
 
             j+=1
