@@ -26,6 +26,7 @@ c.add_c_node(d, required_roles=pnl.CNodeRole.ORIGIN)
 c.add_projection(sender=tc, receiver=d)
 # c.add_projection(sender=tw, receiver=d)
 c._analyze_graph()
+# c.show_graph()
 
 def o_fct(v):
     return np.sum(v[0]*v[1])

@@ -304,15 +304,19 @@ Custom Functions
 
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
-Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCControlMechanism`). A user-defined function can be assigned using the Mechanism's
+Mechanism's defaults for that function.  This is also true for auxiliary functions that appear as arguments in a
+Mechanism's constructor (e.g., the `EVCControlMechanism`).  A user-defined function can be assigned using the Mechanism's
 `assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
-(for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
-auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
-Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>` of a
-`TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
-arguments in the constructor for the Mechanism, and thus changing the function could produce confusing and/or
-unpredictable effects.
+(for its primary function, its `function <Mechanism_Base.function>` attribute). When a user-defined function is
+specified, it is automatically converted to a `UserDefinedFunction`.
+
+.. note::
+   It is *strongly advised* that auxiliary functions that are inherent to a Mechanism
+   (i.e., ones that do *not* appear as an argument in the Mechanism's constructor,
+   such as the `integrator_function <TransferMechanism.integrator_function>` of a
+   `TransferMechanism`) *not* be assigned custom functions;  this is because their
+   parameters are included as arguments in the constructor for the Mechanism,
+   and thus changing the function could produce confusing and/or unpredictable effects.
 
 
 COMMENT:
