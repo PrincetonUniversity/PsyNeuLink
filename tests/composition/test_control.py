@@ -26,8 +26,6 @@ class TestControlMechanisms:
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-
-        lvoc.input_states[0].internal_only = True # objective mech input state
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 

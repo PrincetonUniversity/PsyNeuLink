@@ -422,9 +422,6 @@ class LVOCControlMechanism(ControlMechanism):
     """
 
     componentType = LVOCCONTROLMECHANISM
-    # initMethod = INIT_FUNCTION_METHOD_ONLY
-    # initMethod = INIT__EXECUTE__METHOD_ONLY
-
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -487,12 +484,6 @@ class LVOCControlMechanism(ControlMechanism):
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
 
-        # if isinstance(self.objective_mechanism , ObjectiveMechanism) and not self.objective_mechanism .path_afferents:
-        #     raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
-        #                     format(ObjectiveMechanism.__name__, self.name,
-        #                            request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
-
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
 
@@ -514,7 +505,7 @@ class LVOCControlMechanism(ControlMechanism):
         """
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
-        self.input_states.insert(0, OUTCOME),
+        self.input_states.insert(0, {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}),
 
         # Configure default_variable to comport with full set of input_states
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
@@ -582,7 +573,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         For any other specification, specify an InputState with a Projection from the sender of any Projections
             that project to the specified item
-        If FUNCTION entry, assign as Function for all InputStates
+        If FUNCTION entry, assign as Function for all InputStates specified in SHADOW_EXTERNAL_INPUTS
         '''
 
         input_state_specs = []
