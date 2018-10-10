@@ -465,10 +465,6 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # FIX: assign predictors to input_states and predictor_function to self.predictor_function
-        # FIX: and then move call to _parse_preditor_specs to _instantiate_input_states
-        # predictors = self._parse_predictor_specs(predictors, predictor_function)
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=predictors,
                                                   predictor_function=predictor_function,
@@ -509,7 +505,6 @@ class LVOCControlMechanism(ControlMechanism):
         **predictor_function** arguments of the LVOCControlMechanism constructor.
         """
 
-        # FIX: addd call to _parse_predictor_specs here and assign results to self.input_states
         self.input_states = self._parse_predictor_specs(self.input_states, self.predictor_function)
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
