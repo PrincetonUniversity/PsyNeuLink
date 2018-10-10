@@ -562,6 +562,7 @@ class LVOCControlMechanism(ControlMechanism):
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
                 if SHADOW_EXTERNAL_INPUTS in spec:
+                    #  composition looks for node.shadow_external_inputs and uses it to set external_origin_sources
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_inputs_spec(spec, predictor_function)
                 else:

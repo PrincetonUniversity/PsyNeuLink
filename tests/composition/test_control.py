@@ -22,7 +22,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m1],
+        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -36,6 +36,52 @@ class TestControlMechanisms:
         #     print("\n", state.name, " receives: ", state.path_afferents, " | internal only? ", state.internal_only)
         #
         #
+        c.show_graph()
+
+        assert len(lvoc.input_states) == 4
+
+    def test_lvoc_both_predictors_specs(self):
+        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m2 = pnl.TransferMechanism()
+        c = pnl.Composition()
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c._analyze_graph()
+        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                        objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
+                                        terminal_objective_mechanism=True,
+                                        control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+        c.add_c_node(lvoc)
+        input_dict = {m1: [[1], [1]], m2: [1]}
+
+
+        c.run(inputs=input_dict)
+
+        assert len(lvoc.input_states) == 5
+
+    def test_lvoc_predictors_function(self):
+        m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
+        m2 = pnl.TransferMechanism()
+        c = pnl.Composition()
+        c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
+        c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
+        c._analyze_graph()
+        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                        predictor_function=pnl.LinearCombination(offset=10.0),
+                                        objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
+                                        terminal_objective_mechanism=True,
+                                        control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+        c.add_c_node(lvoc)
+        input_dict = {m1: [[1], [1]], m2: [1]}
+
+
+        c.run(inputs=input_dict)
+
+        assert len(lvoc.input_states) == 5
+
+        for i in range(1,5):
+            assert lvoc.input_states[i].function_object.offset == 10.0
+
 
     def test_default_lc_control_mechanism(self):
         G = 1.0
