@@ -18,7 +18,7 @@ class TestControlMechanisms:
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
-        c = pnl.Composition(name="C")
+        c = pnl.Composition()
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
