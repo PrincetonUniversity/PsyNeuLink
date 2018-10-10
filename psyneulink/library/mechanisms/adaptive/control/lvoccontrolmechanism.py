@@ -666,14 +666,16 @@ class LVOCControlMechanism(ControlMechanism):
         '''Update current prediction_vector, and return prediction vector and outcome from previous trial
 
         Determines prediction_vector for current trial, and buffers this in prediction_buffer;  also buffers
-            costs of control_signals used in previous trial and buffers this previous_costs.
+        costs of control_signals used in previous trial and buffers this in previous_costs.
 
-        Returns prediction_vector and outcome from previous trial.  The outcome is calculated from the value received
-        from `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and `costs <ControlSignal.cost>` of
-        `control_signals <LVOCControlMechanism.control_signals>`, both of which reflect values from previous trial
-        (since projection from objective_mechanism is a feedback projection, the value received from it corresponds
-        to the one computed on the previous trial).
+        Computes outcome for previous trial by subtracting costs of control_signals from outcome received
+        from objective_mechanism, both of which reflect values assigned in previous trial (since Projection from
+        objective_mechanism is a feedback Projection, the value received from it corresponds to the one computed on
+        the previous trial).
         # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
+
+        Returns prediction_vector and outcome from previous trial, to be used by function to update prediction_weights
+        that will be used to predict the EVC for the current trial.
 
         '''
 
