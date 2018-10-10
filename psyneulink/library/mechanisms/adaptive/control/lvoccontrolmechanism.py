@@ -286,7 +286,7 @@ class LVOCControlMechanism(ControlMechanism):
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     function=BayesGLM,                              \
-    update_rate=.1,                                 \
+    update_rate=0.1,                                \
     convergence_criterion=.001,                     \
     max_iterations=1000,                            \
     control_signals=None,                           \
