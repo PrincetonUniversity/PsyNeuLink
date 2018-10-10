@@ -13,18 +13,23 @@ from psyneulink.components.system import System
 class TestUserDefFunc:
 
     def test_python_func(self):
-        def myFunction(variable, params, context):
+        def myFunction(variable, param1, param2):
             return sum(variable[0]) + 2
         myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
+        # assert 'param1' in myMech.parameter_states.names # <- FIX reinstate when problem with function params is fixed
+        # assert 'param2' in myMech.parameter_states.names # <- FIX reinstate when problem with function params is fixed
         val = myMech.execute(input=[-1, 2, 3, 4])
         assert np.allclose(val, [[10]])
 
     def test_user_def_func(self):
-        def myFunction(variable, params, context):
+        def myFunction(variable, param1, param2):
             return variable * 2 + 3
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
-        myMech = ProcessingMechanism(function=myFunction, size=2, name='myMech')
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=0)
+        myMech = ProcessingMechanism(function=U, size=2, name='myMech')
+        # assert 'param1' in myMech.parameter_states.names # <- FIX reinstate when problem with function params is fixed
+        assert 'param2' in myMech.parameter_states.names
         val = myMech.execute([1, 3])
+        assert np.allclose(val, [[5, 9]])
 
     def test_udf_system_origin(self):
         def myFunction(variable, params, context):
