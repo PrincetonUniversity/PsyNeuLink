@@ -3114,11 +3114,13 @@ class Composition(object):
             loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
 
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+
             # Generate a while not 'end condition' loop
             builder.position_at_end(loop_condition)
-            run_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
+            run_cond = cond_gen.generate_sched_condition(builder,
                             self.termination_processing[TimeScale.TRIAL],
-                            cond_ptr, self.c_nodes, None)
+                            cond_ptr, None)
             run_cond = builder.not_(run_cond)
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -3135,9 +3137,9 @@ class Composition(object):
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = pnlvm.helpers.generate_sched_condition(ctx, builder,
+                mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
-                                cond_ptr, self.c_nodes, mech)
+                                cond_ptr, mech)
                 builder.store(mech_cond, run_set_mech_ptr)
 
             for idx, mech in enumerate(self.c_nodes):
