@@ -51,10 +51,6 @@ Creating an LVOCControlMechanism
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
     It can be specified using any of the following, singly or combined in a list:
 
-        * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
-          that resolves to an OutputState from which the InputState receives a Projection;  the `value
-          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`.
-        |
         * {*SHADOW_EXTERNAL_INPUTS*: <List>[, FUNCTION:<Function]} -- the list can contain one or more `ORIGIN`
           Mechanisms and/or their InputStates, which specifies that the input they receive from the `Composition`
           be used as predictors.  If the *FUNCTION* entry is included, its value is assigned as the `function
@@ -63,6 +59,10 @@ Creating an LVOCControlMechanism
           Note that this Function will be assigned only to InputStates specified in the *SHADOW_EXTERNAL_INPUTS*
           entry of the same dictionary; to specify the `function <InputState.function> of any other InputStates
           specified in the **predictors** argument, it must be included in the specification of those InputStates.
+        |
+        * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
+          that resolves to an OutputState from which the InputState receives a Projection;  the `value
+          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`.
 
     Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
 
@@ -275,7 +275,7 @@ class LVOCError(Exception):
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                        \
     predictors,                                     \
-    objective_mechanism=None,                       \
+    objective_mechanism,                            \
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     function=BayesGLM,                              \
@@ -294,12 +294,12 @@ class LVOCControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    predictors : Mechanism, OutputState, dict, or list containing any of these
+    predictors : Mechanism, OutputState, Projection, dict, or list containing any of these
         specifies the values that the LVOCControlMechanism learns to use for determining its `allocation_policy
-        <LVOCControlMechanism.allocation_policy>`.  Any legal `InputState specifications <InputState_Specification>`
-        can be used, in addition to a dictionary containing an entry with the keyword *SHADOW_EXTERNAL_INPUTS* (and
-        optionally a *FUNCTION* entry) can be used to shadow the input to `ORIGIN` Mechanisms (see
-        `LVOCControlMechanism_Creation` for details).
+        <LVOCControlMechanism.allocation_policy>`.  Any `InputState specification <InputState_Specification>`
+        can be used that resolves to an `OutputState` that projects to the InputState.  In addition, a dictionary
+        with a *SHADOW_EXTERNAL_INPUTS* (and optionally a *FUNCTION*) entry can be used to shadow inputs to the
+        Composition's `ORIGIN` Mechanism(s) (see `LVOCControlMechanism_Creation` for details).
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
