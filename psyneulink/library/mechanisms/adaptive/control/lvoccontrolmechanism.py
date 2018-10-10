@@ -323,7 +323,7 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details);
 
-    udpate_rate : int or float : default 0.01
+    update_rate : int or float : default 0.01
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
@@ -394,7 +394,7 @@ class LVOCControlMechanism(ControlMechanism):
         `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Function`
         for additional details).
 
-    udpate_rate : int or float
+    update_rate : int or float
         determines the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
