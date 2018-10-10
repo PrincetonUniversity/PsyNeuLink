@@ -61,11 +61,8 @@ Creating an LVOCControlMechanism
 
     Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
 
-  * **predictor_functions** -- can contain a single `Function`, function, or list of them.
-        If a single item is specified, it is used as the `function <InputState>` for the InputState created for
-        each item listed in **predictors**.  If it is a list, then it must have the same length as **predictors**,
-        and each item is assigned to the corresponding item in **preditors**.  The default is a Buffer with `history
-        <Buffer.history>`\\=2.
+  * **predictor_function** specifies `function <InputState>` of the InputState created for each item listed in
+    **predictors**.
 
 .. _LVOCControlMechanism_Structure:
 
@@ -170,6 +167,15 @@ any function can be used that accepts a 2d array, the first item of which is an 
 terms) and the second that is a scalar value (the outcome to be predicted), and returns an array with the same shape as
 the LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
+.. note::
+  The LVOCControlMechanism's `function <LVOCControlMechanism.function>` is provided the values of the `predictors
+  <LVOCControlMechanmism.predictors>` and outcome of its `objective_mechanism
+  <LVOCControlMechanmism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
+  `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to determine (and implement)
+  the `allocation_policy <LVOCControlMechanism.allocation_policy>` that is predicted to generate the greatest `EVC
+  <LVOCControlMechanism_EVC>` based on the `predictor_values <LVOCControlMechanism.predictor_values>` for the current
+  trial.
+
 .. _LVOCControlMechanism_ControlSignals:
 
 *ControlSignals*
@@ -232,13 +238,13 @@ Class Reference
 
 """
 import warnings
-from collections import Iterable
+from collections import Iterable, deque
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, \
-    EPSILON
+    EPSILON, is_function_type
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -248,10 +254,10 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Composition_Base
+from psyneulink.components.shellclasses import Composition_Base, Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import INTERNAL_ONLY, PARAMS, FUNCTION, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM
+from psyneulink.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.defaults import defaultControlAllocation
@@ -275,7 +281,7 @@ class LVOCError(Exception):
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                        \
     predictors,                                     \
-    predictor_functions=Buffer(history=2),          \
+    predictor_function=None,                        \
     objective_mechanism=None,                       \
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
@@ -302,11 +308,9 @@ class LVOCControlMechanism(ControlMechanism):
         with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the Composition's `ORIGIN` Mechanism(s)
         (see `LVOCControlMechanism_Creation` for details).
 
-    predictor_functions : Function, function or list : default Buffer(history=2)
-        specifies the `function <InputState.function>` for the `InputState` assigned to each item
-        specified in **predictors**.  If a single one is specified, it is used for all of those InputStates;
-        if it is a list, it must have the same length as **predictors**, and each item is assigned to the corresponding
-        item in **preditors**.
+    predictor_function : Function or function : default None)
+        specifies the `function <InputState.function>` for the `InputState` assigned to each `predictor
+        <LVOCControlMechanism_Predictors>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
@@ -447,7 +451,7 @@ class LVOCControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)),
-                 predictor_functions:tc.optional(tc.any())=Buffer(history=2),
+                 predictor_function:tc.optional(tc.any(is_function_type))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
@@ -461,7 +465,10 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        predictors = self._parse_predictor_specs(predictors, predictor_functions)
+        # FIX: assign predictors to input_states and predictor_function to self.predictor_function
+        # FIX: and then move call to _parse_preditor_specs to _instantiate_input_states
+        predictors = self._parse_predictor_specs(predictors, predictor_function)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=predictors,
                                                   convergence_criterion=convergence_criterion,
@@ -496,22 +503,12 @@ class LVOCControlMechanism(ControlMechanism):
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
 
-        The input_states are specified in the **predictor** argument of the LVOCControlMechanism's constructor.
-
-        input_states can be any legal InputState specification (allowing the output of any Mechanism in the Composition
-        to be used as a predictor).
-        input_states can also include a dict with an entry that has the keyword *SHADOW_EXTERNAL_INPUTS* as its key,
-            and a list of `ORIGIN` Mechanisms and/or their InputStates as its value.  This creates
-            one or more InputStates on the LVOCControlMechanism, each of which "shadows" -- that is, receives a
-            Projection from the same source as — the InputState(s) specified in the value of the entry;
-            for Mechanisms that are specified, this applies to all of their InputStates.
-            The dict can also contain an entry using the keyword *FUNCTION* as its key and a Function as its value;
-            that Function will be used as the function of all of the InputStates created for the LVOCControlMechanism.
-
-        An InputState is also created for the Projection from the LVOCControlMechanism's objective_mechanism;  this is
-              inserted as the first (primary) InputState in input_states.
-
+        Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
+        InputState specifications generated in _parse_predictor_specs from the **predictors** and
+        **predictor_function** arguments of the LVOCControlMechanism constructor.
         """
+
+        # FIX: addd call to _parse_predictor_specs here and assign results to self.input_states
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
         self.input_states.insert(0, {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}),
@@ -535,7 +532,7 @@ class LVOCControlMechanism(ControlMechanism):
         self.add_states(InputState, predictors)
 
     @tc.typecheck
-    def _parse_predictor_specs(self, predictors, context=None):
+    def _parse_predictor_specs(self, predictors, predictor_function, context=None):
         """Parse entries of predictors into InputState spec dictionaries
 
         For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
@@ -544,6 +541,8 @@ class LVOCControlMechanism(ControlMechanism):
         For standard InputState specs:
             - Call _parse_state_spec
             - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+
+        Assign functions specified in **predictor_function** to InputStates for all predictors
 
         Returns list of InputState specification dictionaries
         """
@@ -562,7 +561,7 @@ class LVOCControlMechanism(ControlMechanism):
                 if SHADOW_EXTERNAL_INPUTS in spec:
                     # FIX: WHY IS THIS BEING SET?  IS IT BEING USED ANYWHERE?
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
-                    spec = self._parse_shadow_input_spec(spec)
+                    spec = self._parse_shadow_inputs_spec(spec, predictor_function)
                 else:
                     raise LVOCError("Incorrect specification ({}) in predictors argument of {}."
                                     .format(spec, self.name))
@@ -570,6 +569,8 @@ class LVOCControlMechanism(ControlMechanism):
             else:
                 spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
                 spec[PARAMS][INTERNAL_ONLY] = True
+                if predictor_function:
+                    spec[PARAMS][FUNCTION] = predictor_function
                 spec = [spec]   # so that extend works below
 
             parsed_predictors.extend(spec)
@@ -577,7 +578,7 @@ class LVOCControlMechanism(ControlMechanism):
         return parsed_predictors
 
     @tc.typecheck
-    def _parse_shadow_input_spec(self, spec:dict):
+    def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
         ''' Return a list of InputState specifications for the inputs specified in value of dict
 
         For any other specification, specify an InputState with a Projection from the sender of any Projections
@@ -603,9 +604,9 @@ class LVOCControlMechanism(ControlMechanism):
                                        VARIABLE: i.variable,
                             }
                                       for i in input_states])
-        if FUNCTION in spec:
+        if fct:
             for i in input_state_specs:
-                i.update({FUNCTION:spec[FUNCTION]})
+                i.update({FUNCTION:fct})
 
         return input_state_specs
 
@@ -718,7 +719,15 @@ class LVOCControlMechanism(ControlMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         '''Update prediction_vector and return along with outcome from `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>` '''
+        <LVOCControlMechanism.objective_mechanism>`
+
+        Determines prediction_vector for current trial, and buffers this in prediction_buffer
+        Returns prediction_vector from previous trial and outcome (the value received from objective_mechanism
+            which is also a value computed on the previous trial, since projection from objective_mechanism
+            is a feedback projection, and thus provides the output of its sender from the previous trial).
+            # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
+
+        '''
 
         # This the value received from the ObjectiveMechanism:
         outcome = variable[0]
@@ -742,6 +751,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.cst = slice(self.ctl.stop, len_prediction_vector)
 
             self.prediction_vector = np.zeros(len_prediction_vector)
+            self.prediction_buffer = deque([self.prediction_vector], maxlen=2)
 
         else:
             # Populate fields (subvectors) of prediction_vector
@@ -753,7 +763,9 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_vector[self.cst] = \
                 np.array([0 if c.cost is None else c.cost for c in self.control_signals]).reshape(-1) * -1
 
-        return [self.prediction_vector, outcome]
+            self.prediction_buffer.append(self.prediction_vector)
+
+        return [self.prediction_buffer[0], outcome]
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
