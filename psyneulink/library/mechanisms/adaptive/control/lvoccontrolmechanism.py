@@ -51,13 +51,20 @@ Creating an LVOCControlMechanism
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
     It can be specified using any of the following, singly or combined in a list:
 
-        # FIX:
         * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
+          InputStates of the same shapes as those listed are created on the LVOC, and are connected to the
+          corresponding input_CIM OutputStates by projections. The external input values that are passed through the
+          input_CIM are used as the `predictors <LVOCControlMechanism.predictor>`. If a Mechanism is included in the
+          list, it refers to all of its InputStates.
+
+        COMMENT:
           the input of all items specified received from the `Composition` is used as predictors.
+        COMMENT
         |
         * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
           that resolves to an OutputState from which the InputState receives a Projection;  the `value
-          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`.
+          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`. Each of
+          these InputStates is marked as internal_only.
 
     Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
 
@@ -553,10 +560,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
-                # FIX: THIS PRECLUDES INCLUSION OF FUNCTION ENTRY
-                # if set(spec.keys()) == {SHADOW_EXTERNAL_INPUTS}:
                 if SHADOW_EXTERNAL_INPUTS in spec:
-                    # FIX: WHY IS THIS BEING SET?  IS IT BEING USED ANYWHERE?
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_inputs_spec(spec, predictor_function)
                 else:
