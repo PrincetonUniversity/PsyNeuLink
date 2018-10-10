@@ -308,7 +308,7 @@ class LVOCControlMechanism(ControlMechanism):
         with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the Composition's `ORIGIN` Mechanism(s)
         (see `LVOCControlMechanism_Creation` for details).
 
-    predictor_function : Function or function : default None)
+    predictor_function : Function or function : default None
         specifies the `function <InputState.function>` for the `InputState` assigned to each `predictor
         <LVOCControlMechanism_Predictors>`.
 
