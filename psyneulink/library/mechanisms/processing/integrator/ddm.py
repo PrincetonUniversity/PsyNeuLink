@@ -80,7 +80,7 @@ argument of the DDM's consructor, to accomodate use of the DDM with other Mechan
 and to use `Reduce` as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
 the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
 <DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
-as an array corresponding to the stimulus array (see `below <DDM_Custom_OutputStates>`).
+as an array corresponding to the input array (see `below <DDM_Custom_OutputStates>`).
 
 COMMENT:
 ADD EXAMPLE HERE
