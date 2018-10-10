@@ -29,12 +29,12 @@ d = pnl.DDM(name='Task Decision',
                            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD])
 
 c = pnl.Composition(name='Stroop XOR Model')
-c.add_c_node(sc, required_roles=pnl.CNodeRole.ORIGIN)
-c.add_c_node(sw, required_roles=pnl.CNodeRole.ORIGIN)
+c.add_c_node(sc)
+c.add_c_node(sw)
 c.add_c_node(tc, required_roles=pnl.CNodeRole.ORIGIN)
 c.add_c_node(tw, required_roles=pnl.CNodeRole.ORIGIN)
-c.add_c_node(r, required_roles=pnl.CNodeRole.ORIGIN)
-c.add_c_node(d, required_roles=pnl.CNodeRole.ORIGIN)
+c.add_c_node(r)
+c.add_c_node(d)
 c.add_projection(sender=tc, receiver=d)
 c.add_projection(sender=tw, receiver=d)
 
