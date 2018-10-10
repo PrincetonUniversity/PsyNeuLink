@@ -212,8 +212,9 @@ Specifically it executes the following steps:
 
   * Calls its `function <LVOCControlMechanism.function>` with the `prediction_vector
     <LVOCControlMechanism.prediction_vector>` and the outcome received from the
-    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to update its
-    `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, discounted by the
+    `costs <ControlSignal.cost>` associated with each of its `control_signals <LVOCControlMechanism.control_signals>`,
+    to update its `prediction_weights <LVOCControlMechanism.prediction_weights>`.
 
   * Calls its `gradient_ascent <LVOCControlMechanism.gradient_ascent>` function with `prediction_vector
     <LVOCControlMechanism.prediction_vector>` and `prediction_weights <LVOCControlMechanism.prediction_weights>`
@@ -320,8 +321,9 @@ class LVOCControlMechanism(ControlMechanism):
 
     function : LearningFunction or callable : BayesGLM
         specifies the function used to learn to predict the outcome of `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>` from the `prediction_vector
-        <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details);
+        <LVOCControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
+        `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
+        <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
     update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
@@ -389,8 +391,7 @@ class LVOCControlMechanism(ControlMechanism):
         last returned by `function <LVOCControlMechanism.function>`.
 
     function : LearningFunction or callable
-        takes `prediction_vector <LVOCControlMechanism.prediction_vector>` and outcome received from
-        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and returns an updated set of
+        takes `prediction_vector <LVOCControlMechanism.prediction_vector>` and outcome and returns an updated set of
         `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Function`
         for additional details).
 
@@ -621,15 +622,27 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Update prediction_weights to better predct outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
-        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from prediction_vector, determine
-        `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC <LVCOControlMechanism_EVC>`
-        given new prediction_weights
+        Update `prediction_weights <LVOCControlMechanism.prediction_weights>` to better predict outcome of
+        `LVOCControlMechanism's <LVOCControlMechanism>` `objective_mechanism <LVOCControlMechanism.objective_mechanism>`
+        minus the summed costs of `control_signals <LVOCControlMechanism.control_signals>` from prediction_vector, and
+        then determine `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC <LVCOControlMechanism_EVC>`
+        given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
 
-        variable should have two items:  current prediction_vector and outcome
-        Call to super._execute updates prediction_weights.
+        variable should have two items:
+          - variable[0]: current `prediction_vector <LVOCControlMechanism.prediction_vector> and
+          - variable[1]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
+            <LVOCControlMechanism.objective_mechanism>`.
+
+        Call to super._execute calculates outcome from last trial, by subtracting the `costs <ControlSignal.costs>` for
+        the `control_signal <LVOCControlMechanism.control_signals>` values used in the previous trial from the value
+        received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` (in variable[1]) reflecting
+        performance on the previous trial.  It then calls the LVOCControlMechanism's `function
+        <LVOCControlMechanism.function>` to update the `prediction_weights <LVOCControlMechanism.prediction_weights>`
+        so as to better predict the outcome.
+
         Call to `gradient_ascent` optimizes `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
-        prediction_weights.
+        `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
@@ -650,19 +663,22 @@ class LVOCControlMechanism(ControlMechanism):
         return allocation_policy.reshape((len(allocation_policy),1))
 
     def _parse_function_variable(self, variable, context=None):
-        '''Update prediction_vector and return along with outcome from `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>`
+        '''Update current prediction_vector, and return prediction vector and outcome from previous trial
 
-        Determines prediction_vector for current trial, and buffers this in prediction_buffer
-        Returns prediction_vector from previous trial and outcome (the value received from objective_mechanism
-            which is also a value computed on the previous trial, since projection from objective_mechanism
-            is a feedback projection, and thus provides the output of its sender from the previous trial).
-            # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
+        Determines prediction_vector for current trial, and buffers this in prediction_buffer;  also buffers
+            costs of control_signals used in previous trial and buffers this previous_costs.
+
+        Returns prediction_vector and outcome from previous trial.  The outcome is calculated from the value received
+        from `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and `costs <ControlSignal.cost>` of
+        `control_signals <LVOCControlMechanism.control_signals>`, both of which reflect values from previous trial
+        (since projection from objective_mechanism is a feedback projection, the value received from it corresponds
+        to the one computed on the previous trial).
+        # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
 
         '''
 
         # This the value received from the ObjectiveMechanism:
-        outcome = variable[0]
+        obj_mech_outcome = variable[0]
 
         # This is the current values of the predictors
         self.predictor_values = np.array(variable[1:]).reshape(-1)
@@ -684,6 +700,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             self.prediction_vector = np.zeros(len_prediction_vector)
             self.prediction_buffer = deque([self.prediction_vector], maxlen=2)
+            self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         else:
             # Populate fields (subvectors) of prediction_vector
@@ -696,6 +713,9 @@ class LVOCControlMechanism(ControlMechanism):
                 np.array([0 if c.cost is None else c.cost for c in self.control_signals]).reshape(-1) * -1
 
             self.prediction_buffer.append(self.prediction_vector)
+            self.previous_cost = np.sum(self.prediction_vector[self.cst])
+
+        outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
 
         return [self.prediction_buffer[0], outcome]
 
