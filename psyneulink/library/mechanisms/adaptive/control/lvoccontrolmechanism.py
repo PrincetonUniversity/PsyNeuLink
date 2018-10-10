@@ -607,64 +607,9 @@ class LVOCControlMechanism(ControlMechanism):
 
         return input_state_specs
 
-    def _instantiate_attributes_after_function(self, context=None):
-        '''Validate cost function, instantiate Projections to ObjectiveMechanism, and construct
-        control_signal_search_space.
-
-        Instantiate Projections to ObjectiveMechansm for worth and current weights
-
-        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
-            * get `allocation_samples` for each ControlSignal in `control_signals`
-            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
-              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-        '''
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        # # Validate cost function
-        # cost_Function = self.cost_function
-        # if isinstance(cost_Function, Function):
-        #     # Insure that length of the weights and/or exponents arguments for the cost_function
-        #     #    matches the number of control signals
-        #     num_control_projections = len(self.control_projections)
-        #     if cost_Function.weights is not None:
-        #         num_cost_weights = len(cost_Function.weights)
-        #         if  num_cost_weights != num_control_projections:
-        #             raise LVOCError("The length of the weights argument {} for the {} of {} "
-        #                            "must equal the number of its control signals {}".
-        #                            format(num_cost_weights,
-        #                                   COST_FUNCTION,
-        #                                   self.name,
-        #                                   num_control_projections))
-        #     if cost_Function.exponents is not None:
-        #         num_cost_exponents = len(cost_Function.exponents)
-        #         if  num_cost_exponents != num_control_projections:
-        #             raise LVOCError("The length of the exponents argument {} for the {} of {} "
-        #                            "must equal the number of its control signals {}".
-        #                            format(num_cost_exponents,
-        #                                   COST_FUNCTION,
-        #                                   self.name,
-        #                                   num_control_projections))
-        #
-        # # Construct control_signal_search_space
-        # control_signal_sample_lists = []
-        # control_signals = self.control_signals
-        # # Get allocation_samples for all ControlSignals
-        # num_control_signals = len(control_signals)
-        #
-        # for control_signal in self.control_signals:
-        #     control_signal_sample_lists.append(control_signal.allocation_samples)
-        #
-        # # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        # #                                     (one sample from the allocationSample of each ControlProjection)
-        # # Reference for implementation below:
-        # # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        # self.control_signal_search_space = \
-        #     np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
-        EVCControlMechanism requires use of at least one of the cost options
+        LVOCControlMechanism requires use of at least one of the cost options
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
@@ -676,25 +621,15 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        # OLD: -----------------------------------------------------------------------------------------------
-
-        Call self.function -- default: LearnAllocationPolicy:
-            does gradient descent based on `predictor_values <LVOCControlMechanism.predictor_values>`, and outcome
-            received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` to determine the
-            `allocation_policy <LVOCControlMechanism.allocation_policy>`.
-        Return an allocation_policy
-
-
-        # NEW: -----------------------------------------------------------------------------------------------
         Update prediction_weights to better predct outcome of `LVOCControlMechanism's <LVOCControlMechanism>`
-        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from prediction_vector, then optimize
-        `allocation_policy <LVOCControlMechanism>` given new prediction_weights.
+        `objective_mechanism <LVOCControlMechanism.objective_mechanism>` from prediction_vector, determine
+        `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC <LVCOControlMechanism_EVC>`
+        given new prediction_weights
 
         variable should have two items:  current prediction_vector and outcome
-        Call `learning_function <LearnAllocationPolicy.learning_function>` to update prediction_weights.
-        Call `gradient_ascent` to optimize `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
+        Call to super._execute updates prediction_weights.
+        Call to `gradient_ascent` optimizes `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
         prediction_weights.
-        # -----------------------------------------------------------------------------------------------
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
