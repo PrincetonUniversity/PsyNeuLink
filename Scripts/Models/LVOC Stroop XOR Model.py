@@ -7,7 +7,7 @@ def w_fct(stim, color_control):
 w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
 
-def o_fct(v):
+def objective_function(v):
     '''function used for ObjectiveMechanism of lvoc
      v[0] = output of DDM: [probability of color naming, probability of word reading]
      v[1] = reward:        [color naming rewarded, word reading rewarded]
@@ -37,17 +37,14 @@ c.add_c_node(r, required_roles=pnl.CNodeRole.ORIGIN)
 c.add_c_node(d, required_roles=pnl.CNodeRole.ORIGIN)
 c.add_projection(sender=tc, receiver=d)
 c.add_projection(sender=tw, receiver=d)
-# c._analyze_graph()
-# c.show_graph()
-
-o = pnl.ObjectiveMechanism(monitored_output_states=[d, r],
-                           function=o_fct)
 
 lvoc = pnl.LVOCControlMechanism(predictors={pnl.SHADOW_EXTERNAL_INPUTS:[sc,sw]},
                                 function=pnl.BayesGLM(mu_0=3),
-                                objective_mechanism=o,
+                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[d, r],
+                                                                           function=objective_function),
                                 terminal_objective_mechanism=True,
-                                control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, tc),('color_control', tw)]}])
+                                control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, tc),
+                                                                   ('color_control', tw)]}])
 c.add_c_node(lvoc)
 c._analyze_graph()
 
