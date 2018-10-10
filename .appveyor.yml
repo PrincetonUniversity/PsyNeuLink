@@ -28,16 +28,16 @@ environment:
 install:
   - choco upgrade graphviz.portable -y
   - pip --version
-  - pip install -U certifi pip
-  - pip install git+https://github.com/benureau/leabra.git@master
+  - pip install --user -U certifi pip
+  - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute packages over pypi. Install it directly.
-  - if not "%PYTORCH%" == "" pip install http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
+  - if not "%PYTORCH%" == "" pip install --user http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
 
   # Remove pytorch from requirements if none is available
   - if "%PYTORCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt)
 
-  - pip install -e .[dev]
+  - pip install --user -e .[dev]
 
 cache:
     - '%PYTHON%\Scripts'
