@@ -120,6 +120,15 @@ class ConditionGenerator:
 
         return builder.or_(trial, builder.or_(run, step))
 
+    def __get_node_ts(self, builder, cond_ptr, node):
+            zero = self.ctx.int32_ty(0)
+            node_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
+
+            array_ptr = builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1)])
+            node_ts_ptr = builder.gep(array_ptr, [zero, node_idx,
+                                                  self.ctx.int32_ty(1)])
+            return builder.load(node_ts_ptr)
+
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
         zero = self.ctx.int32_ty(0)
@@ -159,10 +168,8 @@ class ConditionGenerator:
             completedNruns = builder.and_(ran, divisible)
 
             # Check that we have not run yet
-            my_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
-            my_time_stamp_ptr = builder.gep(array_ptr, [zero, my_idx, self.ctx.int32_ty(1)])
-            my_time_stamp = builder.load(my_time_stamp_ptr)
-            target_time_stamp = builder.extract_value(target_status, 1)
+            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
+            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
             ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
