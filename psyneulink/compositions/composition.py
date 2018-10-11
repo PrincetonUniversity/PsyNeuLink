@@ -3159,14 +3159,14 @@ class Composition(Composition_Base):
                 cond_gen.increment_ts(builder, cond_ptr)
 
             # Increment number of iterations
-            iterations = builder.load(iter_ptr, name="iter")
-            iterations = builder.add(iterations, ctx.int32_ty(1), name="iter_incd")
-            builder.store(iterations, iter_ptr)
+            iters = builder.load(iter_ptr, name="iterw")
+            iters = builder.add(iters, ctx.int32_ty(1), name="iterw_inc")
+            builder.store(iters, iter_ptr)
 
             max_iters = len(self.scheduler_processing.consideration_queue)
-            completed_pass = builder.icmp_unsigned("==", iterations,
+            completed_pass = builder.icmp_unsigned("==", iters,
                                                    ctx.int32_ty(max_iters),
-                                                   name = "comleted_pass")
+                                                   name="completed_pass")
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
