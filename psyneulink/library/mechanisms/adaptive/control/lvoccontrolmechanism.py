@@ -273,11 +273,13 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset
 
 __all__ = [
-    'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS',
+    'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS',
 ]
 
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
+PREDICTION_TERMS = 'prediction_terms'
+
 
 class PV(Enum):
     '''PredictionVector terms'''
@@ -347,7 +349,10 @@ class LVOCControlMechanism(ControlMechanism):
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
-    prediction_terms :
+    prediction_terms : List[PV] : default [PV.P, PV.C, PV.PC]
+        specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`;
+        items must be members of the `PV` Enum.  If None is specified, the default values will automatically
+        be assigned.
 
     update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
@@ -404,6 +409,10 @@ class LVOCControlMechanism(ControlMechanism):
     monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
+
+    prediction_terms : List[PV]
+        identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+        Items are members of the `PV` Enum; the default is [PV.P, PV.C, PV.PC].
 
     prediction_vector : 1d ndarray
         current values, respectively, of `predictors <LVOCControlMechanism_Predictors>`, interaction terms for
@@ -481,6 +490,7 @@ class LVOCControlMechanism(ControlMechanism):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
+                 prediction_terms:tc.optional(list)=None,
                  update_rate=0.1,
                  convergence_criterion=0.001,
                  max_iterations=1000,
@@ -490,9 +500,12 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
+        prediction_terms = prediction_terms or [PV.P, PV.C, PV.PC]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=predictors,
                                                   predictor_function=predictor_function,
+                                                  prediction_terms=prediction_terms,
                                                   convergence_criterion=convergence_criterion,
                                                   max_iterations=max_iterations,
                                                   update_rate=update_rate,
@@ -521,6 +534,12 @@ class LVOCControlMechanism(ControlMechanism):
             raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
+
+        if PREDICTION_TERMS in request_set:
+            if not all(term in PV for term in request_set[PREDICTION_TERMS]):
+                raise LVOCError("Item in list specified for {} of {} is not a member of the {} Enum".
+                                format(PREDICTION_TERMS, self.name, PV.__class__.__name__))
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
