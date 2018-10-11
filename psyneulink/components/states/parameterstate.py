@@ -989,7 +989,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass
     # Only allow a FUNCTION_PARAMS dict
-    elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
+    elif isinstance(param_value, (ReadOnlyOrderedDict, dict)) and param_name is FUNCTION_PARAMS:
         pass
     # Allow ModulatoryProjection
     elif isinstance(param_value, Projection):

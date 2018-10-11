@@ -2001,8 +2001,18 @@ class Mechanism_Base(Mechanism):
         self.function_object._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
+        from psyneulink.components.states.parameterstate import _instantiate_parameter_state
 
         self._instantiate_output_states(context=context)
+        # instantiate parameter states from UDF custom parameters if necessary
+        try:
+            cfp = self.function_object.cust_fct_params
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+        except AttributeError:
+            pass
+
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):

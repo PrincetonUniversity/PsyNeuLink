@@ -3212,9 +3212,12 @@ class Component(object, metaclass=ComponentsMeta):
         )
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
-            self.function_object = UserDefinedFunction(default_variable=function_variable,
-                                                       custom_function=function,
-                                                       context=context)
+            self.function_object = UserDefinedFunction(
+                default_variable=function_variable,
+                custom_function=function,
+                context=context
+            )
+            self.function_params = dict(self.function_object.cust_fct_params)
         elif isinstance(function, Function):
             if not iscompatible(function.instance_defaults.variable, function_variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
