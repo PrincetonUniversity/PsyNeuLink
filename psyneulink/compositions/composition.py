@@ -3087,19 +3087,11 @@ class Composition(object):
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
-            # Time stamp (trial, run, step)
-            time_stamp_struct = ir.LiteralStructType([ctx.int32_ty, ctx.int32_ty, ctx.int32_ty])
-            structure = ir.LiteralStructType([
-                time_stamp_struct, # current time stamp
-                ir.ArrayType( # for each node
-                    ir.LiteralStructType([
-                        ctx.int32_ty, # number of executions
-                        time_stamp_struct # time stamp of last execution
-                    ]), len(self.c_nodes)
-                )
-            ])
+            # Create condition generator
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
 
             # Allocate and init condition structure
+            structure = cond_gen.get_condition_struct()
             cond_ptr = builder.alloca(structure)
             cond_init = structure(((0, 0, 0), [(0,(0, 0, 0)) for n in self.c_nodes]))
             builder.store(cond_init, cond_ptr)
@@ -3113,8 +3105,6 @@ class Composition(object):
 
             loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
-
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
 
             # Generate a while not 'end condition' loop
             builder.position_at_end(loop_condition)

@@ -71,6 +71,22 @@ class ConditionGenerator:
         self.ctx = ctx
         self.composition = composition
 
+    def get_condition_struct(self):
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
+                                                  self.ctx.int32_ty,
+                                                  self.ctx.int32_ty])
+
+        structure = ir.LiteralStructType([
+            time_stamp_struct, # current time stamp
+            ir.ArrayType( # for each node
+                ir.LiteralStructType([
+                    self.ctx.int32_ty, # number of executions
+                    time_stamp_struct # time stamp of last execution
+                ]), len(self.composition.c_nodes)
+            )
+        ])
+        return structure
+
     def ts_compare(self, builder, ts1, ts2, comp):
         assert comp == '<'
         part_eq = []
