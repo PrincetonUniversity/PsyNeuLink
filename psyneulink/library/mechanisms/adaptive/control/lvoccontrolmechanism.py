@@ -844,9 +844,9 @@ class LVOCControlMechanism(ControlMechanism):
 
             PV = self.PVTerms()
 
-            i = 0
             c = np.array([c.value for c in control_signals]).reshape(-1)
             p = np.array(predictor_values).reshape(-1)
+
             # Compute terms that are used:
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
                 for s in powerset(predictor_values):
@@ -869,6 +869,7 @@ class LVOCControlMechanism(ControlMechanism):
             if PV.PPCC in terms:
                 ppcc = np.tensordot(ppc,c,axes=0).reshape(-1)
 
+            # Assign specified terms to vector
             if PV.P in terms:
                 self.vector[self.p] = p
             if PV.C in terms:
