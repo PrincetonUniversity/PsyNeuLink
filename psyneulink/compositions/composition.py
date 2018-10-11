@@ -3119,9 +3119,6 @@ class Composition(Composition_Base):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
-            ts_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(0)],
-                                 name="timestamp_ptr")
-
             any_cond = ir.IntType(1)(0)
 
             # Calculate execution set before running the mechanisms
@@ -3173,8 +3170,11 @@ class Composition(Composition_Base):
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
-                cond_gen.increment_ts(builder, cond_ptr, (0,1,0))
-                step_ptr = builder.gep(ts_ptr, [zero, ctx.int32_ty(2)])
+                cond_gen.increment_ts(builder, cond_ptr, (0, 1, 0))
+                # TODO: Move this to ConditionGenerator
+                step_ptr = builder.gep(cond_ptr,
+                                       [zero, ctx.int32_ty(0), ctx.int32_ty(2)],
+                                       name="timestep_ptr")
                 builder.store(zero, step_ptr)
 
             builder.branch(loop_condition)
