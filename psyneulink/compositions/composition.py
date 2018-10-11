@@ -3086,13 +3086,13 @@ class Composition(Composition_Base):
 
             # Allocate and init condition structure
             structure = cond_gen.get_condition_struct()
-            cond_ptr = builder.alloca(structure)
+            cond_ptr = builder.alloca(structure, name="cond_ptr")
             cond_init = structure(((0, 0, 0), [(0,(-1, -1, -1)) for n in self.c_nodes]))
             builder.store(cond_init, cond_ptr)
 
             # Allocate run set structure
             run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
-            run_set_ptr = builder.alloca(run_set_type)
+            run_set_ptr = builder.alloca(run_set_type, name="run_set")
 
             # Allocate temporary output storage
             output_storage = builder.alloca(data.type.pointee, name="output_storage")
@@ -3108,7 +3108,7 @@ class Composition(Composition_Base):
             run_cond = cond_gen.generate_sched_condition(builder,
                             self.termination_processing[TimeScale.TRIAL],
                             cond_ptr, None)
-            run_cond = builder.not_(run_cond)
+            run_cond = builder.not_(run_cond, name="not_run_cond")
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
             exit_block = builder.append_basic_block(name="exit")
@@ -3119,25 +3119,28 @@ class Composition(Composition_Base):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
-            ts_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(0)])
-            array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
+            ts_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(0)],
+                                 name="timestamp_ptr")
 
             any_cond = ir.IntType(1)(0)
 
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
+                run_set_mech_ptr = builder.gep(run_set_ptr,
+                                               [zero, ctx.int32_ty(idx)],
+                                               name="run_cond_ptr_" + mech.name)
                 mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
                                 cond_ptr, mech)
                 ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
-                mech_cond = builder.and_(mech_cond, builder.not_(ran))
-                any_cond = builder.or_(any_cond, mech_cond)
+                mech_cond = builder.and_(mech_cond, builder.not_(ran),
+                                         name="run_cond_" + mech.name)
+                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
                 builder.store(mech_cond, run_set_mech_ptr)
 
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr)
+                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
                 with builder.if_then(mech_cond):
                     mech_name = self.__get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
@@ -3147,10 +3150,11 @@ class Composition(Composition_Base):
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr)
+                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
                 with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)])
-                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)])
+                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
+                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)],
+                                           name="data_result_" + mech.name)
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
@@ -3158,12 +3162,14 @@ class Composition(Composition_Base):
                 cond_gen.increment_ts(builder, cond_ptr)
 
             # Increment number of iterations
-            iterations = builder.load(iter_ptr, name="iterations")
-            iterations = builder.add(iterations, ctx.int32_ty(1))
+            iterations = builder.load(iter_ptr, name="iter")
+            iterations = builder.add(iterations, ctx.int32_ty(1), name="iter_incd")
             builder.store(iterations, iter_ptr)
 
+            max_iters = len(self.scheduler_processing.consideration_queue)
             completed_pass = builder.icmp_unsigned("==", iterations,
-                ctx.int32_ty(len(self.scheduler_processing.consideration_queue)))
+                                                   ctx.int32_ty(max_iters),
+                                                   name = "comleted_pass")
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
