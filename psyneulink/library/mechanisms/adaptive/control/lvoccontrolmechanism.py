@@ -728,6 +728,9 @@ class LVOCControlMechanism(ControlMechanism):
         if context is ContextFlags.INSTANTIATE:
             # FIX: REPLACE PredictionVectorStroopXOR WITH PredictorVector WHEN COMPLETE
             self.prediction_vector = self.PredictionVectorStroopXOR(self.predictor_values, self.control_signals)
+            # self.prediction_vector = self.PredictionVector(self.predictor_values,
+            #                                                self.control_signals,
+            #                                                self.prediction_terms)
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
