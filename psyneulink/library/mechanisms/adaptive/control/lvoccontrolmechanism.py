@@ -746,7 +746,7 @@ class LVOCControlMechanism(ControlMechanism):
         '''
 
         convergence_metric = self.convergence_criterion + EPSILON
-        previous_lvoc = np.finfo(np.float128).max
+        previous_lvoc = np.finfo(np.longdouble).max
 
         predictors = prediction_vector[0:self.num_predictors]
 
