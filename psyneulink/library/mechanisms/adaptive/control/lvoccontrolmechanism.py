@@ -696,7 +696,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(self.control_signals,
-                                                 self.prediction_vector.vector,
+                                                 self.prediction_vector,
                                                  self.prediction_weights)
 
         return allocation_policy.reshape((len(allocation_policy),1))
@@ -737,7 +737,7 @@ class LVOCControlMechanism(ControlMechanism):
         else:
             self.prediction_vector._update(self.predictor_values, self.control_signals)
             self.prediction_buffer.append(self.prediction_vector.vector)
-            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.cst])
+            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.cst_sl])
 
         outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
 
@@ -764,20 +764,20 @@ class LVOCControlMechanism(ControlMechanism):
             # Indices for fields of prediction_vector
             # self.pred = slice(0, self.num_predictors)
             # self.intrxn = slice(self.num_predictors, self.num_predictors+self.num_interactions)
-            self.intrxn = slice(0, self.num_interactions)
-            self.ctl = slice(self.intrxn.stop, self.intrxn.stop + self.num_control_signals)
-            self.cst = slice(self.ctl.stop, len_prediction_vector)
+            self.intrxn_sl = slice(0, self.num_interactions)
+            self.ctl_sl = slice(self.intrxn_sl.stop, self.intrxn_sl.stop + self.num_control_signals)
+            self.cst_sl = slice(self.ctl_sl.stop, len_prediction_vector)
 
             self.vector = np.zeros(len_prediction_vector)
 
         def _update(self, predictor_values, control_signals):
             # Populate fields (subvectors) of prediction_vector
             # self.vector[self.pred] = predictor_values.reshape(-1)
-            self.vector[self.ctl] = np.array([c.value for c in control_signals]).reshape(-1)
-            self.vector[self.intrxn]= \
-                np.array(predictor_values.reshape(-1) * self.vector[self.ctl].reshape(self.num_control_signals,1)
+            self.vector[self.ctl_sl] = np.array([c.value for c in control_signals]).reshape(-1)
+            self.vector[self.intrxn_sl]= \
+                np.array(predictor_values.reshape(-1) * self.vector[self.ctl_sl].reshape(self.num_control_signals,1)
                          ).reshape(-1)
-            self.vector[self.cst] = \
+            self.vector[self.cst_sl] = \
                 np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
 
@@ -941,13 +941,15 @@ class LVOCControlMechanism(ControlMechanism):
         #      AND ONLY COMPUTES DERIVATIVES FOR THOSE.  TO BE REPLACED WITH PredictionVector GENERALIZATION
 
         # pred = self.prediction_vector.pred
-        intrxn = self.prediction_vector.intrxn
-        ctl = self.prediction_vector.ctl
-        cst = self.prediction_vector.cst
-        num_pred = self.prediction_vector.num_predictors
-        num_ctl = self.prediction_vector.num_control_signals
-        num_cst = self.prediction_vector.num_costs
+        intrxn_sl = prediction_vector.intrxn_sl
+        ctl_sl = prediction_vector.ctl_sl
+        cst_sl = prediction_vector.cst_sl
+        num_pred = prediction_vector.num_predictors
+        num_ctl = prediction_vector.num_control_signals
+        num_cst = prediction_vector.num_costs
         # num_intrxn = self.prediction_vector.num_interactions
+
+        prediction_vector = prediction_vector.vector
 
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.float128).max
@@ -957,20 +959,20 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Get interaction weights and reshape so that there is one row per control_signal
         #    containing the terms for the interaction of that control_signal with each of the predictors
-        interaction_weights = prediction_weights[intrxn].reshape(num_ctl, num_pred)
+        interaction_weights = prediction_weights[intrxn_sl].reshape(num_ctl, num_pred)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
-        control_signal_values = prediction_vector[ctl]
-        control_signal_weights = prediction_weights[ctl]
+        control_signal_values = prediction_vector[ctl_sl]
+        control_signal_weights = prediction_weights[ctl_sl]
 
         gradient_constants = np.zeros(num_ctl)
         for i in range(num_ctl):
             gradient_constants[i] = control_signal_weights[i]
             gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
 
-        costs = prediction_vector[cst]
-        cost_weights = prediction_weights[cst]
+        costs = prediction_vector[cst_sl]
+        cost_weights = prediction_weights[cst_sl]
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
@@ -1000,11 +1002,12 @@ class LVOCControlMechanism(ControlMechanism):
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
             # Assign new values of interaction terms, control_signals and costs to prediction_vector
-            # prediction_vector[intrxn]= np.array(prediction_vector[pred] * prediction_vector[ctl].reshape(num_ctl,1)
+            # prediction_vector[intrxn_sl]= np.array(prediction_vector[pred] * prediction_vector[ctl].reshape(num_ctl,1)
             #                                     ).reshape(-1)
-            prediction_vector[intrxn]= np.array(predictors * prediction_vector[ctl].reshape(num_ctl,1)).reshape(-1)
-            prediction_vector[ctl] = control_signal_values
-            prediction_vector[cst] = costs
+            prediction_vector[intrxn_sl]= np.array(predictors * prediction_vector[ctl_sl].reshape(num_ctl,1)
+                                                   ).reshape(-1)
+            prediction_vector[ctl_sl] = control_signal_values
+            prediction_vector[cst_sl] = costs
 
             # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
