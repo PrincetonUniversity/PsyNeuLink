@@ -3122,6 +3122,7 @@ class Composition(object):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
+            ts_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(0)])
             array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
 
             any_cond = ir.IntType(1)(0)
@@ -3151,8 +3152,7 @@ class Composition(object):
                     # Update number of runs
                     node_runs = builder.extract_value(status, 0)
                     node_runs = builder.add(node_runs, ctx.int32_ty(1))
-                    time_stamp = builder.load(builder.gep(cond_ptr, [zero,
-                                                          ctx.int32_ty(0)]))
+                    time_stamp = builder.load(ts_ptr)
 
                     status = builder.insert_value(status, node_runs, 0)
                     status = builder.insert_value(status, time_stamp, 1)
