@@ -522,7 +522,6 @@ class LVOCControlMechanism(ControlMechanism):
                          name=name,
                          prefs=prefs)
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
 
@@ -539,7 +538,6 @@ class LVOCControlMechanism(ControlMechanism):
             if not all(term in PV for term in request_set[PREDICTION_TERMS]):
                 raise LVOCError("Item in list specified for {} of {} is not a member of the {} Enum".
                                 format(PREDICTION_TERMS, self.name, PV.__class__.__name__))
-
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
