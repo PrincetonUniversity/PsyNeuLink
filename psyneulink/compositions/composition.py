@@ -3122,7 +3122,6 @@ class Composition(object):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
-            time_stamp = builder.load(builder.gep(cond_ptr, [zero, ctx.int32_ty(0)]))
             array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
 
             any_cond = ir.IntType(1)(0)
@@ -3147,16 +3146,18 @@ class Composition(object):
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
 
                     status_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx)])
+                    status = builder.load(status_ptr)
 
                     # Update number of runs
-                    node_runs_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(0)])
-                    node_runs = builder.load(node_runs_ptr)
+                    node_runs = builder.extract_value(status, 0)
                     node_runs = builder.add(node_runs, ctx.int32_ty(1))
-                    builder.store(node_runs, node_runs_ptr)
+                    time_stamp = builder.load(builder.gep(cond_ptr, [zero,
+                                                          ctx.int32_ty(0)]))
 
-                    # Update timestamp
-                    mech_ts_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(1)])
-                    builder.store(time_stamp, mech_ts_ptr)
+                    status = builder.insert_value(status, node_runs, 0)
+                    status = builder.insert_value(status, time_stamp, 1)
+                    builder.store(status, status_ptr)
+
 
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
