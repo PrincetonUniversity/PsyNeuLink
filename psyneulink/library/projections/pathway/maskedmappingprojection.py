@@ -27,7 +27,7 @@ Creating a MaskedMappingProjection
 A MaskedMappingProjection is created in the same way as a `MappingProjection`, with the exception that its constructor
 includes **mask** and **mask_operation** arguments that can be used to configure the mask and how it is applied to the
 Projection's `matrix <MaskedMappingProjection.matrix>`.  The **mask** attribute must be an array that has the same
-shape as the the `matrix <MaskedMappingProjection.matrix>` attribute, and the **mask_operation** argument must be the
+shape as the `matrix <MaskedMappingProjection.matrix>` attribute, and the **mask_operation** argument must be the
 keyword *ADD*, *MULTIPLY*, or *EXPONENTIATE* (see `Masked_MappingProjection_Execution` below).
 
 .. _Masked_MappingProjection_Structure:
@@ -67,7 +67,7 @@ from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import DEFAULT_MATRIX, MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION
+from psyneulink.globals.keywords import DEFAULT_MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -181,7 +181,7 @@ class MaskedMappingProjection(MappingProjection):
     className = componentType
     suffix = " " + className
 
-    class ClassDefaults(MappingProjection.ClassDefaults):
+    class Params(MappingProjection.Params):
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
 
     classPreferenceLevel = PreferenceLevel.TYPE

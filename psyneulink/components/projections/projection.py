@@ -388,18 +388,19 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component
+from psyneulink.components.component import Component, Param
+from psyneulink.components.functions.function import LinearMatrix
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
 
 __all__ = [
-    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
+    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError', 'ProjectionRegistry'
 ]
 
 ProjectionRegistry = {}
@@ -578,6 +579,11 @@ class Projection_Base(Projection):
     componentCategory = kwProjectionComponentCategory
     className = componentCategory
     suffix = " " + className
+
+    class Params(Projection.Params):
+        weight = Param(None, modulable=True)
+        exponent = Param(None, modulable=True)
+        function = Param(LinearMatrix, stateful=False, loggable=False)
 
     registry = ProjectionRegistry
 
@@ -806,7 +812,17 @@ class Projection_Base(Projection):
             self.sender.efferents.append(self)
 
     def _instantiate_attributes_after_function(self, context=None):
+        from psyneulink.components.states.parameterstate import _instantiate_parameter_state
         self._instantiate_receiver(context=context)
+        # instantiate parameter states from UDF custom parameters if necessary
+        try:
+            cfp = self.function_object.cust_fct_params
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+        except AttributeError:
+            pass
+
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_receiver(self, context=None):
@@ -922,6 +938,12 @@ class Projection_Base(Projection):
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for parameter_state in self.parameter_states:
+            parameter_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     @property
     def parameter_states(self):

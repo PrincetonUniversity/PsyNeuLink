@@ -23,25 +23,33 @@ import logging as _logging
 
 import numpy as _numpy
 
-from psyneulink.compositions import composition
-from psyneulink.compositions.composition import *
 # starred imports to allow user imports from top level
+from . import llvm
 from . import components
 from . import globals
 from . import library
 from . import scheduling
+from . import compositions
+
 from ._version import get_versions
+from .llvm import *
 from .components import *
 from .globals import *
 from .library import *
 from .scheduling import *
+from .compositions import *
 
-__all__ = list(components.__all__)
-__all__.extend(composition.__all__)
+_pnl_global_names = [
+    'primary_registries',
+]
+
+__all__ = list(_pnl_global_names)
+# __all__.extend(llvm.__all__)
+__all__.extend(components.__all__)
+__all__.extend(compositions.__all__)
 __all__.extend(globals.__all__)
 __all__.extend(library.__all__)
 __all__.extend(scheduling.__all__)
-
 
 # set __version__ based on versioneer
 __version__ = get_versions()['version']
@@ -73,3 +81,16 @@ for handler in _logging.root.handlers:
         'psyneulink.scheduling.scheduler',
         'psyneulink.scheduling.condition',
     ))
+
+primary_registries = [
+    FunctionRegistry, ControlMechanismRegistry, GatingMechanismRegistry, MechanismRegistry,
+    ProjectionRegistry, StateRegistry, SystemRegistry, DeferredInitRegistry, ProcessRegistry,
+    PreferenceSetRegistry, CompositionRegistry
+]
+
+for reg in primary_registries:
+    def func(name, obj):
+        if isinstance(obj, Component):
+            obj._is_pnl_inherent = True
+
+    process_registry_object_instances(reg, func)

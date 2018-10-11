@@ -1,4 +1,5 @@
-from psyneulink.compositions.composition import Composition, CNodeRole
+from psyneulink.compositions.composition import Composition
+from psyneulink.globals.utilities import CNodeRole
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import Projection

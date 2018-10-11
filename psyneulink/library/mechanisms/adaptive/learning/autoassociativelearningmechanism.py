@@ -65,7 +65,7 @@ Execution
 ---------
 
 An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
-* 1) its execution can be enabled or disabled by setting the the `learning_enabled
+* 1) its execution can be enabled or disabled by setting the `learning_enabled
   <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
   associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is
@@ -83,7 +83,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     LearningMechanism, LearningType, LearningTiming, ACTIVATION_INPUT
@@ -285,6 +285,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     componentType = AUTOASSOCIATIVE_LEARNING_MECHANISM
     className = componentType
     suffix = " " + className
+
+    class Params(LearningMechanism.Params):
+        learning_rate = Param(None, modulable=True)
+        learning_signals = None
+        learning_signal = Param(0, read_only=True)
+        modulation = ModulationParam.ADDITIVE
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

@@ -44,18 +44,18 @@ COMMENT
 *ControlMechanisms and a System*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be assigned to `Process` and executed within one or more Systems, just like any other Mechanism.
-It also be assigned as the `controller <System.controller>` of a `System`, that has a special relation to the System:
-it is used to control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
-in that System.  A ControlMechanism can be the `controller <System.controller>` for only one System, and a System can
-have only one one `controller <System.controller>`.  The System's `controller <System.controller>` is executed after
-all of the other Components in the System have been executed, including any other ControlMechanisms that belong to it
-(see `System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System.controller>`
-for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
-as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
-<ControlMechanism.assign_as_controller>` method. A System's `controller  <System.controller>` and its
-associated Components can be displayed using the System's `show_graph <System.show_graph>` method with its
-**show_control** argument assigned as `True`.
+A ControlMechanism can be assigned to a `Process` and executed within one or more Systems, just like any other
+Mechanism. It can also be assigned as the `controller <System.controller>` of a `System`, that has a special relation
+to the System: it is used to control all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` in that System.  A ControlMechanism can be the `controller <System.controller>`
+for only one System, and a System can have only one `controller <System.controller>`.  The System's `controller
+<System.controller>` is executed after all of the other Components in the System have been executed, including any
+other ControlMechanisms that belong to it (see `System Execution <System_Execution>`).  A ControlMechanism can be
+assigned as the `controller <System.controller>` for a System by specifying it in the **controller** argument of the
+System's constructor, or by specifying the System as the **system** argument of either the ControlMechanism's
+constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>` method. A System's `controller
+<System.controller>` and its associated Components can be displayed using the System's `show_graph
+<System.show_graph>` method with its **show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -68,13 +68,13 @@ A ControlMechanism is also created automatically whenever a `System is created <
 ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's constructor
 (see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), it must be included
 in a `Process` assigned to the System.  The `OutputStates <OutputState>` monitored by its `ObjectiveMechanism` are
-specified in the *monitor_for_control** argument of its constructor, and the parameters it controls are specified in
+specified in the **monitor_for_control** argument of its constructor, and the parameters it controls are specified in
 the **control_signals** argument; an ObjectiveMechanism is automatically created that monitors and evaluates the
 specified OutputStates.  The ObjectiveMechanism can also be explicitly specified in the **objective_mechanism**
 argument of the ControlMechanism's constructor (see `below <ControlMechanism_ObjectiveMechanism>`). If the
-ControlMechanism is created automatically by a System (as its `controller <System.controller>`, then the specification
+ControlMechanism is created automatically by a System (as its `controller <System.controller>`), then the specification
 of OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components
-themselves (see `System_Control_Specification`).  In either case the Components needed to monitor the specified
+themselves (see `System_Control_Specification`).  In either case, the Components needed to monitor the specified
 OutputStates (an `ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters
 (`ControlSignals <ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created
 automatically, as described below.
@@ -336,21 +336,23 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.components.shellclasses import System_Base
+from psyneulink.components.shellclasses import System_Base, Composition_Base
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, \
-    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, \
-    MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPOSITION, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    INIT__EXECUTE__METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  \
+    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable, CNodeRole
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -387,6 +389,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
+        origin_objective_mechanism=False           \
+        terminal_objective_mechanism=False         \
         function=Linear,                           \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
@@ -449,6 +453,32 @@ class ControlMechanism(AdaptiveMechanism_Base):
         should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
+    origin_objective_mechanism : Boolean : default False
+        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `ORIGIN`
+        node of `composition <LVOCControlMechanism.composition>`.
+
+        When False, even if the `ObjectiveMechanism` is an `ORIGIN` node according to the structure of the
+        Composition's `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `ORIGIN`. If the
+        ObjectiveMechanism would be the only `ORIGIN` node, then the user must use `required_roles
+        <Composition.required_roles>` to assign another node as `ORIGIN`.
+
+        When True, if the ObjectiveMechanism is an `ORIGIN` node according to the structure of the Composition's `graph
+        <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not an `ORIGIN` node according to
+        the structure of the graph, then it takes on `ORIGIN` as a required role.
+
+    terminal_objective_mechanism : Boolean : default False
+        specifies whether the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` may be an `TERMINAL`
+        node of `composition <LVOCControlMechanism.composition>`.
+
+        When False, even if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
+        `graph <Composition.graph>`, the ObjectiveMechanism is not marked as `TERMINAL`. If the ObjectiveMechanism
+        was the only `TERMINAL` node, then the user must use `required_roles <Composition.required_roles>` to assign
+        another node as `TERMINAL` for the Composition.
+
+        When True, if the ObjectiveMechanism is a `TERMINAL` node according to the structure of the Composition's
+        `graph <Composition.graph>`, it is treated normally. If the ObjectiveMechanism is not a `TERMINAL` node
+        according to the structure of the graph, then it takes on `TERMINAL` as a required role.
+
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
@@ -485,6 +515,28 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism_Base.input_state>`.
+
+    origin_objective_mechanism : Boolean
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be an "origin" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is an origin node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as origin. If the ObjectiveMechanism was the only origin node, then the
+        user must use required_roles to assign the origin role to another node.
+
+        When True, if the ObjectiveMechanism is an origin node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not an origin node according to the structure of the graph, then it
+        takes on origin as a required role.
+
+    terminal_objective_mechanism : Boolean
+        specifies whether the ObjectiveMechanism of a ControlMechanism may be a "terminal" node of the Composition.
+
+        When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
+        ObjectiveMechanism is not marked as terminal. If the ObjectiveMechanism was the only terminal node, then the
+        user must use required_roles to assign the terminal role to another node.
+
+        When True, if the ObjectiveMechanism is a terminal node according to the structure of the graph, it is treated
+        normally. If the ObjectiveMechanism is not a terminal node according to the structure of the graph, then it
+        takes on terminal as a required role.
 
     monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
@@ -551,27 +603,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class _DefaultsAliases(AdaptiveMechanism_Base._DefaultsAliases):
-        # alias allocation_policy to value for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation_policy(self):
-            return self.value
-
-        @allocation_policy.setter
-        def allocation_policy(self, value):
-            self.value = value
-
-    class _DefaultsMeta(AdaptiveMechanism_Base._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
+    class Params(AdaptiveMechanism_Base.Params):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.atleast_2d(defaultControlAllocation)
-        value = np.array(defaultControlAllocation)
-
-    class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
-        pass
+        variable = np.array([defaultControlAllocation])
+        value = Param(np.array(defaultControlAllocation), aliases='allocation_policy')
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -582,9 +617,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 system:tc.optional(System_Base)=None,
+                 system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
+                 origin_objective_mechanism=False,
+                 terminal_objective_mechanism=False,
                  function=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -600,19 +637,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(system=system,
                                                   monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
+                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
                                                   modulation=modulation,
                                                   params=params)
 
         super(ControlMechanism, self).__init__(default_variable=default_variable,
-                                                    size=size,
-                                                    modulation=modulation,
-                                                    params=params,
-                                                    name=name,
-                                                    function=function,
-                                                    prefs=prefs,
-                                                    context=ContextFlags.CONSTRUCTOR)
+                                               size=size,
+                                               modulation=modulation,
+                                               params=params,
+                                               name=name,
+                                               function=function,
+                                               prefs=prefs,
+                                               context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -777,7 +816,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
-
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
@@ -802,12 +840,22 @@ class ControlMechanism(AdaptiveMechanism_Base):
         else:
             name = self.objective_mechanism.name + ' outcome signal'
 
-        MappingProjection(sender=self.objective_mechanism,
-                          receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX,
-                          name=name)
+        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
+                                                      receiver=self,
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      name=name)
+        for input_state in self.objective_mechanism.input_states:
+            input_state.internal_only = True
 
+        objective_roles = [CNodeRole.OBJECTIVE]
+        if self.origin_objective_mechanism:
+            objective_roles.append(CNodeRole.ORIGIN)
+        if self.terminal_objective_mechanism:
+            objective_roles.append(CNodeRole.TERMINAL)
+        self.aux_components.append((self.objective_mechanism, objective_roles))
+        self.aux_components.append((projection_from_objective, True))
         self.monitor_for_control = self.monitored_output_states
+
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
@@ -867,6 +915,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
         #    value, output_states and control_signals haven't been expanded yet to accomodate the new ControlSignal;
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
+
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
                                             variable=defaultControlAllocation,
@@ -1104,6 +1153,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if context != ContextFlags.PROPERTY:
             system._controller = self
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        self.objective_mechanism._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     @property
     def monitored_output_states(self):

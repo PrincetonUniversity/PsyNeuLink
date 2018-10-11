@@ -91,7 +91,7 @@ required to implement learning that do not already exist are also instantiated. 
 
 If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_sources**
 arguments must be specified.  The **variable** must have at leaset three items that are compatible (in number and type)
-with the `value <InputState.value>` of the the LearningMechanism's `InputStates <LearningMechanism_InputStates>`.  Each
+with the `value <InputState.value>` of the LearningMechanism's `InputStates <LearningMechanism_InputStates>`.  Each
 item in **error_sources** must be one of the following: a `ComparatorMechanism`, for `single layer learning
 <LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for `multilayer
 learning <LearningMechanism_Multilayer_Learning>`; or a `LearningMechanism`.
@@ -538,11 +538,11 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+
 from enum import Enum
 
-from psyneulink.components.component import parameter_keywords
-from psyneulink.components.functions.function import \
-    BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.component import Param, parameter_keywords
+from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -551,9 +551,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
-    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -908,8 +906,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
 
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
-        function = BackPropagation
+    class Params(AdaptiveMechanism_Base.Params):
+        function = Param(BackPropagation, stateful=False, loggable=False)
+        error_matrix = Param(None, modulable=True)
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

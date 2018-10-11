@@ -820,7 +820,7 @@ class LCControlMechanism(ControlMechanism):
 
     def _get_mech_params_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (self.scaling_factor_gain, self.base_level_gain))
+            return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
 
     def _get_mech_params_init(self):
         return (self.scaling_factor_gain, self.base_level_gain)
@@ -901,6 +901,8 @@ class LCControlMechanism(ControlMechanism):
             parameter_state = mech._parameter_states[mech.multiplicative_param]
             ControlProjection(sender=self.control_signals[0],
                               receiver=parameter_state)
+            # self.aux_components.append(ControlProjection(sender=self.control_signals[0],
+            #                                              receiver=parameter_state))
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):

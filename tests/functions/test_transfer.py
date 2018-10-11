@@ -61,6 +61,7 @@ def test_basic(func, variable, params, fail, expected, benchmark):
     assert np.allclose(res, expected)
 
 
+@pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)

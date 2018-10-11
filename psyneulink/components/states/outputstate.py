@@ -394,9 +394,10 @@ By default, an OutputState uses the first (and usually only) item of the owner M
 <Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
 any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
 <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
-using the following keywords:
+using the following:
 
-    *OWNER_VALUE* -- the entire `value <Mechanism_Base.value>` of the OutputState's `owner <OutputState.owner>`.
+    *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputState's `owner
+    <OutputState.owner>`.
 
     *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputState.owner>`\\'s `value
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
@@ -405,9 +406,9 @@ using the following keywords:
     in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
     of the named attribute for use in the OutputState's `variable <OutputState.variable>`.
 
-    *PARAMS_DICT* -- the `owner <OutputState.owner>` Mechanism's entire `params_dict <Mechanism.attributes_dict>`
-    dictionary, that contains entries for all of it accessible attributes.  The OutputState's `function
-    <OutputState.function>` must be able to parse the dictionary.
+    *PARAMS_DICT* -- keyword specifying the `owner <OutputState.owner>` Mechanism's entire `params_dict
+    <Mechanism.attributes_dict>` dictionary, that contains entries for all of it accessible attributes.  The
+    OutputState's `function <OutputState.function>` must be able to parse the dictionary.
     COMMENT
     ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
     COMMENT
@@ -962,33 +963,6 @@ class OutputState(State_Base):
                          function=function,
                          )
 
-    def _parse_function_variable(self, variable, context=None):
-        # variable is passed to OutputState by _instantiate_function for OutputState
-        if variable is not None:
-            return variable
-        # otherwise, OutputState uses specified item(s) of owner's value
-        else:
-            # variable attribute should not be used for computations!
-            fct_var = self.variable
-
-            # If variable is not specified, check if OutputState has index attribute
-            #    (for backward compatibility with INDEX and ASSIGN)
-            if fct_var is None:
-                try:
-                    # Get indexed item of owner's value
-                    fct_var = self.owner.value[self.index]
-                except IndexError:
-                    # Index is ALL, so use owner's entire value
-                    if self.index is ALL:
-                        fct_var = self.owner.value
-                    else:
-                        raise IndexError
-                except AttributeError:
-                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
-                                           format(self.name, self.owner.name))
-
-            return fct_var
-
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
 
@@ -1169,6 +1143,33 @@ class OutputState(State_Base):
                                   format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        if variable is None:
+            # fall back to specified item(s) of owner's value
+            variable = self.variable
+
+            # If variable is not specified, check if OutputState has index attribute
+            #    (for backward compatibility with INDEX and ASSIGN)
+            if variable is None:
+                try:
+                    # Get indexed item of owner's value
+                    variable = self.owner.value[self.index]
+                except IndexError:
+                    # Index is ALL, so use owner's entire value
+                    if self.index is ALL:
+                        variable = self.owner.value
+                    else:
+                        raise IndexError
+                except AttributeError:
+                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
+                                           format(self.name, self.owner.name))
+
+        return super()._execute(
+            variable=variable,
+            runtime_params=runtime_params,
+            context=context,
+        )
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):

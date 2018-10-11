@@ -75,7 +75,7 @@ A PredictionErrorMechanism has two `input_states
 **sample** and **target** arguments of its constructor. The InputStates are
 listed in the Mechanism's `input_states <ComparatorMechanism.input_states>`
 attribute and named, respectively, *SAMPLE* and *TARGET*. The OutputStates
-from which they receive their projections (specified in the the **sample** and
+from which they receive their projections (specified in the **sample** and
 **target** arguments) are listed in the Mechanism's `sample
 <ComparatorMechanism.sample>` and `target
 <ComparatorMechanism.target>` attributes as well as in its
@@ -122,7 +122,7 @@ sample with the true reward (the target). In the example below, the sample
 Mechanism is a `TransferMechanism` that uses the `Linear` function to output
 the sample values. Because the output is a vector, specifying it as the
 PredictionErrorMechanism's **sample** argument will generate a corresponding
-InputState with a vector as its value. This should match the the reward
+InputState with a vector as its value. This should match the reward
 signal specified in the PredictionErrorMechanism's **target** argument, the
 value of which is a vector of the same length as the output of sample.
 
@@ -155,6 +155,7 @@ from typing import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import PredictionErrorDeltaFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
@@ -258,8 +259,12 @@ class PredictionErrorMechanism(ComparatorMechanism):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    class ClassDefaults(ComparatorMechanism.ClassDefaults):
-        variable = None
+    class Params(ComparatorMechanism.Params):
+        variable = Param(None, read_only=True)
+        learning_rate = Param(0.3, modulable=True)
+        function = PredictionErrorDeltaFunction
+        sample = None
+        target = None
 
     paramClassDefaults = ComparatorMechanism.paramClassDefaults.copy()
     standard_output_states = ComparatorMechanism.standard_output_states.copy()

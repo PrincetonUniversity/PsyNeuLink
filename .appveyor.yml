@@ -5,34 +5,45 @@ branches:
     - appveyor
 version: '{build}'
 clone_depth: 25
+
 init:
 - cmd: ''
+
 environment:
+  PATH: '%PYTHON%\Scripts;%PATH%'
   matrix:
   - PYTHON: C:\Python35
-    PATH: C:\Python35\Scripts;%PATH%
+    EXTRA_ARGS: -m llvm
   - PYTHON: C:\Python36
-    PATH: C:\Python36\Scripts;%PATH%
+    EXTRA_ARGS: -m llvm
   - PYTHON: C:\Python37
-    PATH: C:\Python37\Scripts;%PATH%
+    EXTRA_ARGS: -m llvm
   - PYTHON: C:\Python35-x64
-    PATH: C:\Python35-x64\Scripts;%PATH%
+    PYTORCH: cp35-cp35m
   - PYTHON: C:\Python36-x64
-    PATH: C:\Python36-x64\Scripts;%PATH%
+    PYTORCH: cp36-cp36m
   - PYTHON: C:\Python37-x64
-    PATH: C:\Python37-x64\Scripts;%PATH%
+    PYTORCH: cp37-cp37m
+
 install:
-- cmd: >-
-    %PYTHON%\\python.exe -m pip install -U certifi pip
+  - choco upgrade graphviz.portable -y
+  - pip --version
+  - pip install --user -U certifi pip
+  - pip install --user git+https://github.com/benureau/leabra.git@master
 
-    %PYTHON%\\python.exe -m pip install git+https://github.com/benureau/leabra.git@master
+  # pytorch does not distribute packages over pypi. Install it directly.
+  - if not "%PYTORCH%" == "" pip install --user http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
 
-    choco upgrade graphviz.portable -y
+  # Remove pytorch from requirements if none is available
+  - if "%PYTORCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt)
 
-    %PYTHON%\\python.exe -m pip install -e .[dev]
+  - pip install --user -e .[dev]
+
 cache:
-- '%PYTHON%\Scripts'
-- '%PYTHON%\lib\site-packages'
+    - '%PYTHON%\Scripts'
+    - '%PYTHON%\lib\site-packages'
+
 build: off
+
 test_script:
-- cmd: '%PYTHON%\\python.exe -m pytest --cov=psyneulink tests/'
+- cmd: pytest tests/ %EXTRA_ARGS%

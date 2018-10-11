@@ -101,7 +101,7 @@ from uuid import UUID
 import typecheck as tc
 
 from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
-from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
+from psyneulink.globals.utilities import get_deepcopy_with_shared
 
 
 __all__ = [
@@ -402,7 +402,7 @@ class Context():
         self.execution_time = None
         self.string = string
 
-    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
+    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 
     @property
     def composition(self):
@@ -464,7 +464,12 @@ class Context():
 
     @property
     def execution_phase(self):
-        return self.flags & ContextFlags.EXECUTION_PHASE_MASK
+        v = self.flags & ContextFlags.EXECUTION_PHASE_MASK
+        if v == 0:
+            return ContextFlags.IDLE
+        else:
+            return v
+
 
     @execution_phase.setter
     def execution_phase(self, flag):
@@ -558,7 +563,7 @@ def _get_context(context:tc.any(ContextFlags, str)):
     return context_flag
 
 
-def _get_time(component, context_flags):
+def _get_time(component, context_flags, execution_id=None):
 
     """Get time from Scheduler of System in which Component is being executed.
 
@@ -607,7 +612,7 @@ def _get_time(component, context_flags):
     else:
         execution_context = component.context.string
 
-    system = ref_mech.context.composition
+    system = ref_mech.parameters.context.get().composition
 
     if system:
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK

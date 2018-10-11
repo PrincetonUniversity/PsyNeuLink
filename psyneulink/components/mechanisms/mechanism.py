@@ -304,15 +304,19 @@ Custom Functions
 
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
-Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCControlMechanism`). A user-defined function can be assigned using the Mechanism's
+Mechanism's defaults for that function.  This is also true for auxiliary functions that appear as arguments in a
+Mechanism's constructor (e.g., the `EVCControlMechanism`).  A user-defined function can be assigned using the Mechanism's
 `assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
-(for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
-auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
-Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>` of a
-`TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
-arguments in the constructor for the Mechanism, and thus changing the function could produce confusing and/or
-unpredictable effects.
+(for its primary function, its `function <Mechanism_Base.function>` attribute). When a user-defined function is
+specified, it is automatically converted to a `UserDefinedFunction`.
+
+.. note::
+   It is *strongly advised* that auxiliary functions that are inherent to a Mechanism
+   (i.e., ones that do *not* appear as an argument in the Mechanism's constructor,
+   such as the `integrator_function <TransferMechanism.integrator_function>` of a
+   `TransferMechanism`) *not* be assigned custom functions;  this is because their
+   parameters are included as arguments in the constructor for the Mechanism,
+   and thus changing the function could produce confusing and/or unpredictable effects.
 
 
 COMMENT:
@@ -938,7 +942,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type
+from psyneulink.components.component import Component, Param, function_type, method_type
 from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
@@ -964,7 +968,7 @@ from llvmlite import ir
 import psyneulink.llvm as pnlvm
 
 __all__ = [
-    'Mechanism_Base', 'MechanismError'
+    'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
 ]
 
 logger = logging.getLogger(__name__)
@@ -1306,8 +1310,9 @@ class Mechanism_Base(Mechanism):
     className = componentCategory
     suffix = " " + className
 
-    class ClassDefaults(Mechanism.ClassDefaults):
-        variable = np.array([[0]])
+    class Params(Mechanism.Params):
+        variable = Param(np.array([[0]]), read_only=True)
+        value = Param(np.array([[0]]), read_only=True)
         function = Linear
 
     registry = MechanismRegistry
@@ -1406,7 +1411,7 @@ class Mechanism_Base(Mechanism):
         self._is_finished = False
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
-
+        self.aux_components = []
         # Register with MechanismRegistry or create one
         if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
@@ -1508,8 +1513,7 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._handle_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
 
             # updated here in case it was parsed in _handle_arg_input_states
             params[INPUT_STATES] = self.input_states
@@ -2001,8 +2005,18 @@ class Mechanism_Base(Mechanism):
         self.function_object._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
+        from psyneulink.components.states.parameterstate import _instantiate_parameter_state
 
         self._instantiate_output_states(context=context)
+        # instantiate parameter states from UDF custom parameters if necessary
+        try:
+            cfp = self.function_object.cust_fct_params
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+        except AttributeError:
+            pass
+
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
@@ -2145,6 +2159,18 @@ class Mechanism_Base(Mechanism):
             return self._parameter_states[param_name].value
         except (AttributeError, TypeError):
             return getattr(self, param_name)
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for input_state in self.input_states:
+            input_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        for output_state in self.output_states:
+            output_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        for parameter_state in self.parameter_states:
+            parameter_state._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     def execute(self,
                 input=None,

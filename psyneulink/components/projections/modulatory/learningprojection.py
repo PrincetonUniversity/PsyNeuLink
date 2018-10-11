@@ -87,7 +87,7 @@ The default `function <LearningProjection.function>` of a LearningProjection is 
 If specified, it is applied multiplicatively to the output of the LearningProjection's `function
 <LearningProjection.function>`, and the result is assigned to the LearningProjection's `value
 <LearningProjection.value>` and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.  Thus,
-the LearningProjection's `learning_rate <LearningProjection.learning_rate>` parameter can be used to modulate the the
+the LearningProjection's `learning_rate <LearningProjection.learning_rate>` parameter can be used to modulate the
 `learning_signal <LearningProjection.learning_signal>` it receives, in addition to (and on top of) the effects of the
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate
@@ -165,7 +165,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -404,8 +404,11 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        function = Linear
+    class Params(ModulatoryProjection_Base.Params):
+        function = Param(Linear, stateful=False, loggable=False)
+        error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
+        learning_function = Param(BackPropagation, stateful=False, loggable=False)
+        learning_rate = Param(None, modulable=True)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,

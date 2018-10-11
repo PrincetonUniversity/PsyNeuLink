@@ -10,13 +10,15 @@
 #
 
 import re
+
 from collections import defaultdict, namedtuple
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 __all__ = [
     'RegistryError',
-    'clear_registry'
+    'clear_registry',
+    'process_registry_object_instances'
 ]
 
 # IMPLEMENTATION NOTE:
@@ -139,13 +141,6 @@ def register_category(entry,
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a modulators attribute".format(entry.__name__))
 
-
-    from psyneulink.components.component import Component
-    from psyneulink.globals.preferences.preferenceset import PreferenceSet
-    if not issubclass(base_class, (Component, PreferenceSet)):
-        raise RegistryError("base_class ({0}) for registry must be a subclass of "
-                            "Component or PreferenceSet".format(base_class))
-
     if not isinstance(registry, dict):
         raise RegistryError("Registry ({0}) for {1} must be a dict".format(registry,base_class.__name__))
 
@@ -183,7 +178,11 @@ def register_category(entry,
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
             if name is None:
-                entry.name = component_type_name + "-0"
+                try:
+                    entry.name = component_type_name + "-0"
+                except TypeError:
+                    entry.name = entry.__class__.__name__
+
             else:
                 entry.name = name
 
@@ -291,6 +290,11 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
             if component == c:
                 name = n
 
+    try:
+        clear_registry(registry_entry.instanceDict[name]._stateRegistry)
+    except AttributeError:
+        pass
+
     # Delete instance
     del registry_entry.instanceDict[name]
 
@@ -331,3 +335,9 @@ def clear_registry(registry):
         for name in instance_dict:
             remove_instance_from_registry(registry, category, name)
         registry[category].renamed_instance_counts.clear()
+
+
+def process_registry_object_instances(registry, func):
+    for category in registry:
+        for (name, obj) in registry[category].instanceDict.items():
+            func(name, obj)

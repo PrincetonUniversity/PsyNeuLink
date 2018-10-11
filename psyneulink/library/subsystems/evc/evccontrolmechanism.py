@@ -104,7 +104,7 @@ ObjectiveMechanism
 
 Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputState_Primary>`.  The ObjectiveFunction is listed in the EVCControlMechanism's `objective_mechanism
+<InputState_Primary>`.  The ObjectiveMechanism is listed in the EVCControlMechanism's `objective_mechanism
 <EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
 `LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
 this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
@@ -115,8 +115,8 @@ in a variety of ways:
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
-      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in the
-      **objective_mechanism** argument of the EVCControlMechanism's constructor;
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for them) in either the
+      **monitor_for_control** or **objective_mechanism** arguments of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
       <EVCControlMechanism.objective_mechanism>` argument of the EVCControlMechanism's constructor;
@@ -141,7 +141,7 @@ in a variety of ways:
        example under `System_Control_Examples`).
 
 The result of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` is used by
-its `function <ObjectiveMechanism.function>` to evaluate the performance of its `system <EVCControlMechanism.system>`
+its `function <EVCControlMechanism.function>` to evaluate the performance of its `System <EVCControlMechanism.system>`
 when computing the `EVC <EVCControlMechanism_EVC>`.
 
 
@@ -377,23 +377,23 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
-from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
+from psyneulink.components.component import Param, function_type
+from psyneulink.components.functions.function import Buffer, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, PARAMS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -509,8 +509,8 @@ class EVCControlMechanism(ControlMechanism):
         ..note::
             Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
             the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
-            Mechanism; this will cause an if the System has more than one `ORIGIN` Mechanism;  in that case, one of the
-            other forms of specification must be used.
+            Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that case,
+            one of the other forms of specification must be used.
         COMMENT
 
     function : function or method : ControlSignalGridSearch
@@ -741,8 +741,9 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism.ClassDefaults):
-        function = ControlSignalGridSearch
+    class Params(ControlMechanism.Params):
+        function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
+        simulation_ids = Param(list, user=False)
 
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
@@ -754,6 +755,8 @@ class EVCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 origin_objective_mechanism=False,
+                 terminal_objective_mechanism=False,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
@@ -769,6 +772,8 @@ class EVCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
+                                                  terminal_objective_mechanism=terminal_objective_mechanism,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
@@ -815,16 +820,15 @@ class EVCControlMechanism(ControlMechanism):
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
-        Mechanisms:
+        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL` Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
             - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
                 explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
 
         For each `ORIGIN` Mechanism in system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the Process to system.processes
+            - instantiate a corresponding PredictionMechanism
+            - instantiate a MappingProjection to the PredictionMechanism
+                that shadows the one from the SystemInputState to the ORIGIN Mechanism
 
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of system
@@ -977,12 +981,17 @@ class EVCControlMechanism(ControlMechanism):
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        EVCControlMechanism requires use of at least one of the cost options
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
+
+        # MODIFIED 9/18/18 OLD:
         if control_signal.cost_options is None:
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
+        # MODIFIED 9/18/18 NEW:
+            control_signal._instantiate_cost_attributes()
+        # MODIFIED 9/18/18 END
         return control_signal
-
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
@@ -1130,8 +1139,18 @@ class EVCControlMechanism(ControlMechanism):
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
         monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
 
-        for i in range(len(self.control_signals)):
-            self.control_signal_costs[i] = self.control_signals[i].cost
+        # # MODIFIED 9/18/18 OLD:
+        # for i in range(len(self.control_signals)):
+        #     self.control_signal_costs[i] = self.control_signals[i].cost
+        # # MODIFIED 9/18/18 NEW:
+        # for i in range(len(self.control_signals)):
+        #     if self.control_signal_costs[i].cost_options is not None:
+        #         self.control_signal_costs[i] = self.control_signals[i].cost
+        # MODIFIED 9/18/18 NEWER:
+        for i, c in enumerate(self.control_signals):
+            if c.cost_options is not None:
+                self.control_signal_costs[i] = c.cost
+        # MODIFIED 9/18/18 END
 
         return monitored_states
 

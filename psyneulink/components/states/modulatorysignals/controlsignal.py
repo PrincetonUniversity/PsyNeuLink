@@ -155,7 +155,7 @@ computes a different component of the cost, and a function that combines them, a
     * `adjustment_cost` - calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
       `intensity` from its last value;
     ..
-    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
+    * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the ControlSignal's
       `cost <ControlSignal.cost>`;
     ..
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
@@ -291,12 +291,13 @@ Class Reference
 
 import inspect
 import warnings
+
 from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type, method_type
+from psyneulink.components.component import Param, function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -307,10 +308,10 @@ from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.globals.utilities import get_validator_by_function, get_validator_by_type_only, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -615,26 +616,25 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
-    class _DefaultsAliases(ModulatorySignal._DefaultsAliases):
-        # alias allocation to variable for user convenience
-        # NOTE: should not be used internally for consistency
-        @property
-        def allocation(self):
-            return self.variable
+    class Params(ModulatorySignal.Params):
+        variable = Param(np.array(defaultControlAllocation), aliases='allocation')
+        allocation_samples = Param(np.arange(0.1, 1.01, 0.3), modulable=True)
+        cost_options = ControlSignalCosts.DEFAULTS
+        intensity_cost_function = Exponential
+        adjustment_cost_function = Linear
+        duration_cost_function = SimpleIntegrator
+        cost_combination_function = Reduce(operation=SUM)
+        modulation = None
 
-        @allocation.setter
-        def allocation(self, value):
-            self.variable = value
+        _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
+        _validate_intensity_cost_function = get_validator_by_function(is_function_type)
+        _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
+        _validate_duration_cost_function = get_validator_by_function(is_function_type)
 
-    class _DefaultsMeta(ModulatorySignal._DefaultsMeta, _DefaultsAliases):
-        pass
-
-    class ClassDefaults(ModulatorySignal.ClassDefaults, metaclass=_DefaultsMeta):
-        variable = defaultControlAllocation
-        allocation_samples = np.arange(0.1, 1.01, 0.3)
-
-    class InstanceDefaults(ModulatorySignal.InstanceDefaults, _DefaultsAliases):
-        pass
+        # below cannot validate because the default value is None and this is considered
+        # invalid. Is it that tc.typecheck only runs if an argument is specified at
+        # construction?
+        # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
     stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
 
@@ -673,7 +673,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=ClassDefaults.allocation_samples,
+                 allocation_samples=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
@@ -728,16 +728,19 @@ class ControlSignal(ModulatorySignal):
                          function=function,
                          )
 
-        # Default cost params
-        if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-            self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
-        else:
-            self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
-        self.adjustment_cost = 0
-        self.duration_cost = 0
-        self.last_duration_cost = self.duration_cost
-        self.cost = self.intensity_cost
-        self.last_cost = self.cost
+        # # MODIFIED 9/18/18 OLD:
+        # if self.cost_options:
+        #     # Default cost params
+        #     if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+        #         self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+        #     else:
+        #         self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+        #     self.adjustment_cost = 0
+        #     self.duration_cost = 0
+        #     self.last_duration_cost = self.duration_cost
+        #     self.cost = self.intensity_cost
+        #     self.last_cost = self.cost
+        # # MODIFIED 9/18/18 END
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -839,6 +842,30 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+        # MODIFIED 9/18/18 NEW:
+        self._instantiate_cost_attributes()
+        self._instantiate_cost_functions()
+        # MODIFIED 9/18/18 END
+
+        # Assign instance attributes
+        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
+
+    # MODIFIED 9/18/18 NEW:
+    def _instantiate_cost_attributes(self):
+        # FIX: MOVE TO ITS OWN METHOD
+        if self.cost_options:
+            # Default cost params
+            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+            else:
+                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+            self.adjustment_cost = 0
+            self.duration_cost = 0
+            self.last_duration_cost = self.duration_cost
+            self.cost = self.intensity_cost
+            self.last_cost = self.cost
+
+    def _instantiate_cost_functions(self):
         # Instantiate cost functions (if necessary) and assign to attributes
         for cost_function_name in costFunctionNames:
             cost_function = self.paramsCurrent[cost_function_name]
@@ -862,9 +889,8 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
+    # MODIFIED 9/18/18 END
 
-        # Assign instance attributes
-        self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
@@ -995,8 +1021,16 @@ class ControlSignal(ModulatorySignal):
 
         # Store current state for use in next call as last state
         self.last_intensity = intensity
-        self.last_cost = self.cost
-        self.last_duration_cost = self.duration_cost
+
+        # # MODIFIED 9/18/18 OLD:
+        # self.last_cost = self.cost
+        # self.last_duration_cost = self.duration_cost
+        # MODIFIED 9/18/18 NEW:
+        if self.cost_options:
+            self.last_cost = self.cost
+            if self.cost_options & ControlSignalCosts.DURATION_COST:
+                self.last_duration_cost = self.duration_cost
+        # MODIFIED 9/18/18 END
 
         # Report new values to stdio
         if self.prefs.verbosePref:
@@ -1194,3 +1228,17 @@ class ControlSignal(ModulatorySignal):
     @property
     def intensity(self):
         return self.value
+
+    @property
+    def cost(self):
+        try:
+            return self._cost
+        except:
+            warnings.warn("Attempt to access {} attribute for {} of {} that has not been assigned; "
+                          "check that an appropriate (set of) cost_option(s) have been assigned".
+                          format(repr('cost'), self.name, self.owner.name))
+            return None
+
+    @cost.setter
+    def cost(self, value):
+        self._cost = value

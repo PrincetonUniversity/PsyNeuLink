@@ -80,7 +80,7 @@ argument of the DDM's consructor, to accomodate use of the DDM with other Mechan
 and to use `Reduce` as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
 the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
 <DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
-as an array corresponding to the stimulus array (see `below <DDM_Custom_OutputStates>`).
+as an array corresponding to the input array (see `below <DDM_Custom_OutputStates>`).
 
 COMMENT:
 ADD EXAMPLE HERE
@@ -335,7 +335,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import method_type
+from psyneulink.components.component import Param, method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -703,14 +703,19 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        function = BogaczEtAl(
-            drift_rate=1.0,
-            starting_point=0.0,
-            threshold=1.0,
-            noise=0.5,
-            t0=.200,
+    class Params(ProcessingMechanism_Base.Params):
+        function = Param(
+            BogaczEtAl(
+                drift_rate=1.0,
+                starting_point=0.0,
+                threshold=1.0,
+                noise=0.5,
+                t0=.200,
+            ),
+            stateful=False,
+            loggable=False
         )
+        initializer = np.array([[0]])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

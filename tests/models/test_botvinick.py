@@ -18,12 +18,13 @@ import pytest
 @pytest.mark.model
 @pytest.mark.benchmark
 @pytest.mark.parametrize("reps", [1, 10, 100])
-@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+@pytest.mark.parametrize("mode", ['Python', 'LLVM', 'LLVMExec'])
 def test_botvinick_model(benchmark, mode, reps):
     if reps > 1 and not pytest.config.getoption("--stress"):
         benchmark.disabled = True
         benchmark(lambda _:0,0)
         pytest.skip("not stressed")
+        return # This should not be reached
 
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 
@@ -201,7 +202,7 @@ def test_botvinick_model(benchmark, mode, reps):
 
         return results
 
-    res = benchmark(run, mode=='LLVM')
+    res = benchmark(run, mode)
 
     if reps == 1:
         assert np.allclose(res[0][0], [0.4888244,  0.4888244])
@@ -243,7 +244,7 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[4][1], [0.94524311])
         assert np.allclose(res[5][1], [0.89963791])
 
-    if mode == 'LLVM' or reps != 10:
+    if mode[:4] == 'LLVM' or reps != 10:
         return
     r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
     energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY

@@ -377,7 +377,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type
+from psyneulink.components.component import Param, function_type
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -740,9 +740,10 @@ class Controller(ControlMechanism):
     # classPreferences = {
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
-
-    class ClassDefaults(ControlMechanism.ClassDefaults):
-        function = ControlSignalGridSearch2
+        
+    class Params(ControlMechanism.Params):
+        function = Param(ControlSignalGridSearch2, stateful=False, loggable=False)
+        # simulation_ids = Param(list, user=False)
 
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem

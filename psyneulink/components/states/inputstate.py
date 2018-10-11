@@ -460,6 +460,7 @@ import collections
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
@@ -639,7 +640,7 @@ class InputState(State_Base):
         by the InputState.
 
     value : value or ndarray
-        the output of the InputState's `function <InputState.function>`, which is the the aggregated value of the
+        the output of the InputState's `function <InputState.function>`, which is the aggregated value of the
         `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
         InputState (and listed in its `path_afferents <InputState.path_afferents>` attribute), possibly `modulated
         <ModulatorySignal_Modulation>` by any `GatingProjections <GatingProjection>` it receives (listed in its
@@ -713,8 +714,11 @@ class InputState(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    class ClassDefaults(State_Base.ClassDefaults):
-        function = LinearCombination(operation=SUM)
+    class Params(State_Base.Params):
+        function = Param(LinearCombination(operation=SUM), stateful=False, loggable=False)
+        weight = Param(None, modulable=True)
+        exponent = Param(None, modulable=True)
+        combine = None
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -968,7 +972,7 @@ class InputState(State_Base):
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
-        #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      THIS WOULD ALLOW AN ADDITIONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
         from psyneulink.components.mechanisms.mechanism import Mechanism

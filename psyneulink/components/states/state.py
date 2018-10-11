@@ -127,10 +127,10 @@ A State can be specified using any of the following:
     .. _State_Specification_Dictionary:
 
     * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
-      specific to the State's type (see documentation for each type):
+      specific to the State's type (see documentation for each State type):
 
       * *STATE_TYPE*:<State type>
-          specifies type of State to create (necessary if it cannot be determined from the
+          specifies type of State to create (necessary if it cannot be determined from
           the context of the other entries or in which it is being created).
       ..
       * *NAME*:<str>
@@ -732,24 +732,18 @@ Class Reference
 import inspect
 import numbers
 import warnings
+
 from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+from psyneulink.components.component import Component, ComponentError, DefaultsFlexibility, Param, component_keywords, function_type, method_type
 from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
     ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
-    CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
-    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING_PROJECTION_PARAMS, \
-    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
-    NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, \
-    PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, \
-    STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
-    VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1000,8 +994,8 @@ class State_Base(State):
     suffix = " " + className
     paramsType = None
 
-    class ClassDefaults(State.ClassDefaults):
-        function = Linear
+    class Params(State.Params):
+        function = Param(Linear, stateful=False, loggable=False)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -1826,7 +1820,8 @@ class State_Base(State):
             #    and assigned Projection to self.efferents
             if not projection in self.efferents:
                 self.efferents.append(projection)
-
+            if isinstance(projection, ModulatoryProjection_Base):
+                self.owner.aux_components.append(projection)
             return projection
 
     def _get_primary_state(self, mechanism):
@@ -2015,7 +2010,7 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                self._mod_proj_values[mod_meta_param].append(mod_value)
+                    self._mod_proj_values[mod_meta_param].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2079,6 +2074,12 @@ class State_Base(State):
             if np.allclose(labels_dict[key][label], self.value):
                 return label
         return self.value
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for eff in self.efferents:
+            eff._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     @property
     def owner(self):
@@ -2254,6 +2255,9 @@ def _instantiate_state_list(owner,
                                    state_spec=state_spec,
                                    # name=name,
                                    context=context)
+        # automatically generated projections (e.g. when an InputState is specified by the OutputState of another mech)
+        for proj in state.path_afferents:
+            owner.aux_components.append(proj)
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state._assign_default_state_name()
         # if default_name:
@@ -2313,7 +2317,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     Returns a State or None
     """
-
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
     from psyneulink.globals.utilities import is_numeric
@@ -2928,6 +2931,9 @@ def _parse_state_spec(state_type=None,
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
     # FIX:    OR VARIABLE MUST BE WRAPPED IN A LIST, ELSE LINEAR COMB MAY TREAT A 2D ARRAY
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
+    # KDM 6/7/18: below this can end up assigning to the state a variable of the same shape as a default function
+    #   (because when calling the function, _check_args is called and if given None, will fall back to instance or
+    #   class defaults)
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
@@ -2954,9 +2960,10 @@ def _parse_state_spec(state_type=None,
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+            state_name = state_dict[NAME] or 'unnamed'
             raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
                              'the value ({}) computed from the state_spec function ({})'.
-                             format(state_dict[VALUE], repr(state_dict[NAME]), state_type.__name__,
+                             format(state_dict[VALUE], state_name, state_type.__name__,
                                     state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):

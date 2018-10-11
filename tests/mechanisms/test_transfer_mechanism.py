@@ -8,9 +8,11 @@ from psyneulink.components.functions.function import ExponentialDist, GammaDist,
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.globals.keywords import INTEGRATOR_MODE_VALUE, INSTANTANEOUS_MODE_VALUE, REINITIALIZE
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
+from psyneulink.compositions.composition import Composition
 from psyneulink.scheduling.condition import Never
 
 VECTOR_SIZE=4
@@ -50,6 +52,7 @@ class TestTransferMechanismInputs:
         val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
@@ -152,6 +155,7 @@ class TestTransferMechanismNoise:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise")
@@ -219,6 +223,7 @@ class TestTransferMechanismNoise:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
@@ -438,7 +443,7 @@ class TestTransferMechanismFunctions:
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
-    
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_relu_fun(self):
@@ -463,6 +468,7 @@ class TestTransferMechanismFunctions:
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Logistic")
@@ -493,6 +499,7 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
@@ -523,6 +530,7 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
@@ -612,7 +620,7 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_llvm(self):
@@ -643,7 +651,7 @@ class TestTransferMechanismTimeConstant:
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
@@ -673,7 +681,7 @@ class TestTransferMechanismTimeConstant:
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
@@ -706,7 +714,7 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
-
+    @pytest.mark.llvm
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_0_8_initial_0_5_llvm(self):
@@ -1367,7 +1375,8 @@ class TestIntegratorMode:
                and "try setting the integrator_mode argument to True." in str(err_txt)
 
     def test_switch_mode(self):
-        T = TransferMechanism(integrator_mode=True)
+        T = TransferMechanism(integrator_mode=True,
+                              on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
         P = Process(pathway=[T])
         S = System(processes=[P])
         integrator_function = T.integrator_function
@@ -1383,7 +1392,6 @@ class TestIntegratorMode:
         T.integrator_mode = False
 
         assert T.integrator_mode is False
-        assert T.integrator_function is None
 
         S.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.value, [[1.0]])
@@ -1392,6 +1400,7 @@ class TestIntegratorMode:
         T.integrator_mode = True
 
         assert T.integrator_mode is True
+        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         S.run({T: [[1.0], [1.0], [1.0]]})
@@ -1428,7 +1437,86 @@ class TestIntegratorMode:
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+class TestOnResumeIntegratorMode:
+    def test_integrator_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
 
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 1.25
+        # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
+        # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
+        assert np.allclose(T.value, [[1.5625]])
+
+    def test_instantaneous_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 2.0
+        # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
+        # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
+        assert np.allclose(T.value, [[1.75]])
+
+    def test_reinitialize_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                               # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                                # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
 
 class TestClip:
     def test_clip_float(self):
