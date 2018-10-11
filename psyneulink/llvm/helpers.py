@@ -131,6 +131,22 @@ class ConditionGenerator:
                                           self.ctx.int32_ty(1)])
         return builder.load(ts_ptr)
 
+    def generate_update_after_run(self, builder, cond_ptr, node):
+        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
+        status = builder.load(status_ptr)
+
+        # Update number of runs
+        runs = builder.extract_value(status, 0)
+        runs = builder.add(runs, self.ctx.int32_ty(1))
+        status = builder.insert_value(status, runs, 0)
+
+        # Update time stamp
+        ts = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+        ts = builder.load(ts)
+        status = builder.insert_value(status, ts, 1)
+
+        builder.store(status, status_ptr)
+
     def generate_ran_this_pass(self, builder, cond_ptr, node):
         global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
                                                         self.ctx.int32_ty(0)]))

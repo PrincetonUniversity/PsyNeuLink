@@ -3142,19 +3142,7 @@ class Composition(Composition_Base):
                     mech_name = self.__get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
-
-                    status_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx)])
-                    status = builder.load(status_ptr)
-
-                    # Update number of runs
-                    node_runs = builder.extract_value(status, 0)
-                    node_runs = builder.add(node_runs, ctx.int32_ty(1))
-                    time_stamp = builder.load(ts_ptr)
-
-                    status = builder.insert_value(status, node_runs, 0)
-                    status = builder.insert_value(status, time_stamp, 1)
-                    builder.store(status, status_ptr)
-
+                    cond_gen.generate_update_after_run(builder, cond_ptr, mech)
 
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
