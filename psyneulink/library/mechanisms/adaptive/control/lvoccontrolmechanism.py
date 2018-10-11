@@ -708,7 +708,13 @@ class LVOCControlMechanism(ControlMechanism):
 
 
     class PredictionVectorStroopXOR():
-        '''Only populate with following terms: Predictor-ControlSignal interactions, control_signal values and costs'''
+        '''Only populate with following terms: Predictor-ControlSignal interactions, control_signal values and costs
+
+        IMPLEMENTS VERSION OF PREDICTION VECTOR THAT IS SPECIFIC TO STROOP XOR MODEL. WILL BE REPLACED BY
+        PredictionVector2 (THAT WILL ALSO BE APPROPRIATELY RENAMED!) ONCE THAT IS COMPLETE
+
+        '''
+
         def __init__(self, predictor_values, control_signals):
             # Numbers of terms in prediction_vector
             self.num_predictors = len(predictor_values.reshape(-1))
@@ -738,17 +744,19 @@ class LVOCControlMechanism(ControlMechanism):
                 np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
     class PredictionVector2():
-        '''Full generalization:  populate with all Predictor, control_signal values, their interactions, and costs'''
+        '''Full generalization:  allow main effect and interactio jterms to be specified for inclusion
+        STILL UNDER DEVELOPMENT
+        '''
         class PVTerms(Enum):
-            P = 'p'
-            PP = 'pp'
-            C = 'c'
-            CC = 'cc'
-            PC = 'PC'
-            PPC = 'ppc'
-            PCC = 'pcc'
-            PPCC = 'ppcc'
-            CST = 'cst'
+            P = 'p'         # Main effect of Predictors
+            C = 'c'         # Main effect of values of control_signals
+            PP = 'pp'       # Interaction among Predictor vectors
+            CC = 'cc'       # Interaction among control_signals
+            PC = 'PC'       # Interaction between Predictors and control_signals
+            PPC = 'ppc'     # Interaction between Predictor interactions and control_signals
+            PCC = 'pcc'     # Interaction between Predictors and interactions of control_signals
+            PPCC = 'ppcc'   # Interaction between Interactions of Predictors and interactions of control_signals
+            CST = 'cst'     # Main effect of costs of control_signals
 
         def __init__(self, predictor_values, control_signals, terms):
 
