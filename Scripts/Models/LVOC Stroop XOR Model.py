@@ -28,6 +28,13 @@ d = pnl.DDM(name='Task Decision',
             output_states=[pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
                            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD])
 
+lvoc = pnl.LVOCControlMechanism(predictors={pnl.SHADOW_EXTERNAL_INPUTS:[sc,sw]},
+                                function=pnl.BayesGLM(mu_0=3),
+                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[d, r],
+                                                                           function=objective_function),
+                                terminal_objective_mechanism=True,
+                                control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, tc),
+                                                                   ('color_control', tw)]}])
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(sc)
 c.add_c_node(sw)
@@ -37,17 +44,8 @@ c.add_c_node(r)
 c.add_c_node(d)
 c.add_projection(sender=tc, receiver=d)
 c.add_projection(sender=tw, receiver=d)
-
-lvoc = pnl.LVOCControlMechanism(predictors={pnl.SHADOW_EXTERNAL_INPUTS:[sc,sw]},
-                                function=pnl.BayesGLM(mu_0=3),
-                                objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[d, r],
-                                                                           function=objective_function),
-                                terminal_objective_mechanism=True,
-                                control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, tc),
-                                                                   ('color_control', tw)]}])
 c.add_c_node(lvoc)
 c._analyze_graph()
-
 
 c.show_graph()
 # input_dict = {m1:[[[1],[1]]],
