@@ -674,7 +674,7 @@ class Composition(Composition_Base):
             # system=self,
                                objective_mechanism=self._get_monitored_output_states_for_system(),
                                control_signals=self._get_control_signals_for_system(control_signals))
-        self.controller.system= self
+        self.controller.composition = self
         self.add_c_node(self.controller.objective_mechanism)
         for proj in self.controller.objective_mechanism.path_afferents:
             self.add_projection(proj)

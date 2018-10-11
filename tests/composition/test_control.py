@@ -194,7 +194,7 @@ class TestControlMechanisms:
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
 
-# KAM will reintroduce objective mechanism role tests after INPUT and OUTPUT roles are implemented 
+# KAM will reintroduce objective mechanism role tests after INPUT and OUTPUT roles are implemented
 # class TestObjectiveMechanismRoles:
 #
 #     def test_origin_objective_mechanism_false(self):

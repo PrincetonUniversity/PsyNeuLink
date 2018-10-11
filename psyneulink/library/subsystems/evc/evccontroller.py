@@ -378,7 +378,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Param, function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, ValueFunction2, \
+    ControlSignalGridSearch2
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -394,7 +395,7 @@ from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch2, ValueFunction2, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import PredictionMechanism
 
 __all__ = [
     'Controller', 'EVCError',
@@ -753,7 +754,7 @@ class EVCController(Controller):
 
     @tc.typecheck
     def __init__(self,
-                 system=None,
+                 composition=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
@@ -769,7 +770,7 @@ class EVCController(Controller):
                  prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(system=system,
+        params = self._assign_args_to_param_dicts(composition=composition,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
@@ -777,7 +778,7 @@ class EVCController(Controller):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super().__init__(system=system,
+        super().__init__(composition=composition,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
                          function=function,
@@ -868,48 +869,48 @@ class EVCController(Controller):
     #     self._instantiate_prediction_mechanisms(system=system, context=context)
     #     super().assign_as_controller(system=system, context=context)
     #
-    # def _execute(
-    #     self,
-    #     variable=None,
-    #     runtime_params=None,
-    #     context=None
-    # ):
-    #     """Determine `allocation_policy <EVCController.allocation_policy>` for next run of System
-    #
-    #     Update prediction mechanisms
-    #     Construct control_signal_search_space (from allocation_samples of each item in control_signals):
-    #         * get `allocation_samples` for each ControlSignal in `control_signals`
-    #         * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
-    #           which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-    #     Call self.function -- default is ControlSignalGridSearch2
-    #     Return an allocation_policy
-    #     """
-    #
-    #     control_signal_sample_lists = []
-    #     control_signals = self.control_signals
-    #
-    #     # Get allocation_samples for all ControlSignals
-    #     num_control_signals = len(control_signals)
-    #
-    #     for control_signal in self.control_signals:
-    #         control_signal_sample_lists.append(control_signal.allocation_samples)
-    #
-    #     # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-    #     #                                     (one sample from the allocationSample of each ControlProjection)
-    #     # Reference for implementation below:
-    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #     self.control_signal_search_space = \
-    #         np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-    #
-    #     # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-    #     allocation_policy = super(ControlMechanism, self)._execute(
-    #             controller=self,
-    #             variable=variable,
-    #             runtime_params=runtime_params,
-    #             context=context
-    #     )
-    #
-    #     return allocation_policy
+    def _execute(
+        self,
+        variable=None,
+        runtime_params=None,
+        context=None
+    ):
+        """Determine `allocation_policy <EVCController.allocation_policy>` for next run of System
+
+        Update prediction mechanisms
+        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
+            * get `allocation_samples` for each ControlSignal in `control_signals`
+            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
+              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
+        Call self.function -- default is ControlSignalGridSearch2
+        Return an allocation_policy
+        """
+
+        control_signal_sample_lists = []
+        control_signals = self.control_signals
+
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy = super(ControlMechanism, self)._execute(
+                controller=self,
+                variable=variable,
+                runtime_params=runtime_params,
+                context=context
+        )
+
+        return allocation_policy
     #
     # @property
     # def value_function(self):

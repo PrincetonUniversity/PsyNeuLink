@@ -27,7 +27,7 @@ An EVCControlMechanism is similar to a standard `ControlMechanism`, with the fol
   ..
   * it has several specialized functions that are used to search over the `allocations <ControlSignal.allocations>`\\s
     of its its `ControlSignals <ControlSignal>`, and evaluate the performance of its `system
-    <EVCControlMechanism.system>`; by default, it simulates its `system <EVCControlMechanism.system>` and evaluates
+    <EVCControlMechanism.composition>`; by default, it simulates its `system <EVCControlMechanism.composition>` and evaluates
     its performance under all combinations of ControlSignal values to find the one that optimizes the `Expected
     Value of Control <EVCControlMechanism_EVC>`, however its functions can be customized or replaced to implement
     other optimization procedures.
@@ -231,16 +231,16 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
 
   * **Implement the policy and simulate the System** - assign the `allocation <ControlSignal.allocation>` that the
     selected `allocation_policy` specifies for each ControlSignal, and then simulate the `system
-    <EVCControlMechanism.system>` using the corresponding parameter values by calling the System's `run_simulation
+    <EVCControlMechanism.composition>` using the corresponding parameter values by calling the System's `run_simulation
     <System.run_simulation>` method; this uses the `value <PredictionMechanism.value>` of eacah of the
     EVCControlMechanism's `prediction_mechanisms <EVCControlMechanism.prediction_mechanisms>` as input to the
-    corresponding `ORIGIN` Mechanisms of its `system <EVCControlMechanism.system>` (see `PredictionMechanism`).  The
+    corresponding `ORIGIN` Mechanisms of its `system <EVCControlMechanism.composition>` (see `PredictionMechanism`).  The
     values of all :ref:`stateful attributes` of 'Components` in the System are :ref:`re-initialized` to the same value
     prior to each simulation, so that the results for each `allocation_policy <EVCControlMechanism.allocation_policy>`
     are based on the same initial conditions.  Each simulation includes execution of the EVCControlMechanism's
     `objective_mechanism`, which provides the result to the EVCControlMechanism.  If `system
-    <EVCControlMechanism.system>`\\.recordSimulationPref is `True`, the results of each simulation are appended to the
-    `simulation_results <System.simulation_results>` attribute of `system <EVCControlMechanism.system>`.
+    <EVCControlMechanism.composition>`\\.recordSimulationPref is `True`, the results of each simulation are appended to the
+    `simulation_results <System.simulation_results>` attribute of `system <EVCControlMechanism.composition>`.
   |
   * **Evaluate the System's performance** - this is carried out by the EVCControlMechanism's `objective_mechanism
     <EVCControlMechanism.objective_mechanism>`, which is executed as part of the simulation of the System.  The
@@ -310,18 +310,18 @@ Execution
 ---------
 
 An EVCControlMechanism must be the `controller <System.controller>` of a System, and as a consequence it is always the
-last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <EVCControlMechanism.system>` (see `System
+last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <EVCControlMechanism.composition>` (see `System
 Control <System_Execution_Control>` and `Execution <System_Execution>`). When an EVCControlMechanism is executed,
 it updates the value of its `prediction_mechanisms` and `objective_mechanism`, and then calls its `function
 <EVCControlMechanism.function>`, which determines and implements the `allocation_policy` for the next `TRIAL` of its
-`system <EVCControlMechanism.system>`\\s execution.  The default `function <EVCControlMechanism.function>` executes
+`system <EVCControlMechanism.composition>`\\s execution.  The default `function <EVCControlMechanism.function>` executes
 the following steps (described in greater detailed `above <EVCControlMechanism_Default_Configuration>`):
 
 * Samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the
   EVCControlMechanism's ControlSignals specified by their `allocation_samples` attributes);  for each
   `allocation_policy`, it:
 
-  * Runs a simulation of the EVCControlMechanism's `system <EVCControlMechanism.system>` with the parameter values
+  * Runs a simulation of the EVCControlMechanism's `system <EVCControlMechanism.composition>` with the parameter values
     specified by that `allocation_policy`, by calling the system's  `run_simulation <System.run_simulation>` method;
     each simulation uses inputs provided by the EVCControlMechanism's `prediction_mechanisms
     <EVCControlMechanism.prediction_mechanisms>` and includes execution of its `objective_mechanism`, which provides
@@ -378,22 +378,22 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Param, function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
-from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer, ValueFunction2, \
+    ControlSignalGridSearch2
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.shellclasses import Function
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
     INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch2, ValueFunction2, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import PredictionMechanism
 
 __all__ = [
     'Controller', 'EVCError',
@@ -476,7 +476,7 @@ class Controller(ControlMechanism):
     system : System : default None
         specifies the `System` for which the EVCControlMechanism should serve as a `controller <System.controller>`;
         the EVCControlMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.composition>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
@@ -515,7 +515,7 @@ class Controller(ControlMechanism):
 
     function : function or method : ControlSignalGridSearch2
         specifies the function used to determine the `allocation_policy` for the next execution of the
-        EVCControlMechanism's `system <EVCControlMechanism.system>` (see `function <EVCControlMechanism.function>` for details).
+        EVCControlMechanism's `system <EVCControlMechanism.composition>` (see `function <EVCControlMechanism.function>` for details).
 
     value_function : function or method : value_function
         specifies the function used to calculate the `EVC <EVCControlMechanism_EVC>` for the current `allocation_policy`
@@ -554,19 +554,19 @@ class Controller(ControlMechanism):
     system : System
         the `System` for which EVCControlMechanism is the `controller <System.controller>`;
         the EVCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.composition>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     prediction_mechanisms : List[ProcessingMechanism]
         list of `predictions mechanisms <EVCControlMechanism_Prediction_Mechanisms>` generated for the
-        EVCControlMechanism's `system <EVCControlMechanism.system>` when the EVCControlMechanism is created,
-        one for each `ORIGIN` Mechanism in the `system <EVCControlMechanism.system>`.  Each prediction Mechanism is
+        EVCControlMechanism's `system <EVCControlMechanism.composition>` when the EVCControlMechanism is created,
+        one for each `ORIGIN` Mechanism in the `system <EVCControlMechanism.composition>`.  Each prediction Mechanism is
         named using the name of the ` ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with
         a name based on the same.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` added to the EVCControlMechanism's
-        `system <EVCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
+        `system <EVCControlMechanism.composition>`, one for each of its `ORIGIN` Mechanisms.  The key for each
         entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
 
     predicted_input : Dict[ProcessingMechanism, value]
@@ -577,14 +577,14 @@ class Controller(ControlMechanism):
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCControlMechanism to evaluate the performance of its `system
-        <EVCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
+        <EVCControlMechanism.composition>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
         EVCControlMechanism's constructor, they are assigned as the `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
         attribute for the `objective_mechanism <EVCControlMechanism.objective_mechanism>`.
 
     monitored_output_states : List[OutputState]
         list of the OutputStates monitored by `objective_mechanism <EVCControlMechanism.objective_mechanism>` (and listed in
         its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to evaluate the
-        performance of the EVCControlMechanism's `system <EVCControlMechanism.system>`.
+        performance of the EVCControlMechanism's `system <EVCControlMechanism.composition>`.
 
     COMMENT:
     [TBI]
@@ -714,7 +714,7 @@ class Controller(ControlMechanism):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCControlMechanism's `ControlSignals <EVCControlMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_states
+        from its `system <EVCControlMechanism.composition>` (same as the EVCControlMechanism's `output_states
         <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
         parameter it controls
 
@@ -752,14 +752,12 @@ class Controller(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system=None,
+                 composition=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  function=ControlSignalGridSearch2,
                  value_function=ValueFunction2,
-                 cost_function=LinearCombination(operation=SUM),
-                 combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -768,15 +766,13 @@ class Controller(ControlMechanism):
                  prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(system=system,
+        params = self._assign_args_to_param_dicts(composition=composition,
                                                   prediction_mechanisms=prediction_mechanisms,
                                                   value_function=value_function,
-                                                  cost_function=cost_function,
-                                                  combine_outcome_and_cost_function=combine_outcome_and_cost_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super().__init__(system=system,
+        super().__init__(system=composition,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
                          function=function,
@@ -809,8 +805,8 @@ class Controller(ControlMechanism):
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
         """
-        if self.system is not None:
-            self._instantiate_prediction_mechanisms(system=self.system, context=context)
+        if self.composition is not None:
+            self._instantiate_prediction_mechanisms(system=self.composition, context=context)
         super()._instantiate_input_states(context=context)
 
     def apply_control_signal_values(self, control_signal_values, runtime_params, context):
@@ -826,32 +822,8 @@ class Controller(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if self.system is None or not self.system.enable_controller:
+        if self.composition is None or not self.composition.enable_controller:
             return
-
-        cost_Function = self.cost_function
-        if isinstance(cost_Function, Function):
-            # Insure that length of the weights and/or exponents arguments for the cost_function
-            #    matches the number of control signals
-            num_control_projections = len(self.control_projections)
-            if cost_Function.weights is not None:
-                num_cost_weights = len(cost_Function.weights)
-                if  num_cost_weights != num_control_projections:
-                    raise EVCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_weights,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
-            if cost_Function.exponents is not None:
-                num_cost_exponents = len(cost_Function.exponents)
-                if  num_cost_exponents != num_control_projections:
-                    raise EVCError("The length of the exponents argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_exponents,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
@@ -863,14 +835,14 @@ class Controller(ControlMechanism):
 
     def run_simulations(self, allocation_policies, call_after_simulation, runtime_params=None, context=None):
 
-        predicted_input, num_trials, reinitialize_values, node_values = self.system.before_simulations()
+        predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
 
         outcome_list = []
         control_signal_list = []
 
         for allocation_policy in allocation_policies:
             self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-            execution_id = self.system._get_unique_id()
+            execution_id = self.composition._get_unique_id()
 
             allocation_policy_outcomes = []
             for i in range(num_trials):
@@ -878,26 +850,26 @@ class Controller(ControlMechanism):
                 for node in predicted_input:
                     inputs[node] = predicted_input[node][i]
 
-                self.system.context.execution_phase = ContextFlags.SIMULATION
+                self.composition.context.execution_phase = ContextFlags.SIMULATION
                 for output_state in self.output_states:
                     for proj in output_state.efferents:
                         proj.context.execution_phase = ContextFlags.PROCESSING
 
-                self.system.run(inputs=inputs,
+                self.composition.run(inputs=inputs,
                                 reinitialize_values=reinitialize_values,
                                 execution_id=execution_id,
                                 runtime_params=runtime_params,
                                 context=context)
 
-                self.system.simulation_results.append(self.system.output_CIM.output_values)
+                self.composition.simulation_results.append(self.composition.output_CIM.output_values)
                 call_after_simulation()
                 monitored_states = self.objective_mechanism.output_values
 
-                self.system.context.execution_phase = ContextFlags.PROCESSING
+                self.composition.context.execution_phase = ContextFlags.PROCESSING
                 allocation_policy_outcomes.append(monitored_states)
             outcome_list.append(allocation_policy_outcomes)
 
-        self.system.after_simulations(reinitialize_values, node_values)
+        self.composition.after_simulations(reinitialize_values, node_values)
         return outcome_list
 
 
@@ -961,19 +933,6 @@ class Controller(ControlMechanism):
             self._value_function = ValueFunction2()
         else:
             self._value_function = assignment
-
-    @property
-    def cost_function(self):
-        return self._cost_function
-
-    @cost_function.setter
-    def cost_function(self, value):
-        from psyneulink.components.functions.function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._cost_function = udf
-        else:
-            self._cost_function = value
 
     @property
     def combine_outcome_and_cost_function(self):
