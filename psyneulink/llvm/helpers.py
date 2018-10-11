@@ -87,6 +87,10 @@ class ConditionGenerator:
         ])
         return structure
 
+    def get_condition_initializer(self, trial = 0):
+        return ((trial, 0, 0),
+                tuple([(0,(-1, -1, -1)) for _ in self.composition.c_nodes]))
+
     def increment_ts(self, builder, cond_ptr, count=(0,0,1)):
         ts_ptr = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
         ts = builder.load(ts_ptr)

@@ -3087,7 +3087,7 @@ class Composition(Composition_Base):
             # Allocate and init condition structure
             structure = cond_gen.get_condition_struct()
             cond_ptr = builder.alloca(structure, name="cond_ptr")
-            cond_init = structure(((0, 0, 0), [(0,(-1, -1, -1)) for n in self.c_nodes]))
+            cond_init = structure(cond_gen.get_condition_initializer())
             builder.store(cond_init, cond_ptr)
 
             # Allocate run set structure
