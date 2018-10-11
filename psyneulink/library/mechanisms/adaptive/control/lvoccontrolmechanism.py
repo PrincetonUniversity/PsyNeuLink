@@ -764,15 +764,15 @@ class LVOCControlMechanism(ControlMechanism):
 
             # GET TERMS
 
-            # Predictors (p)
+            # Predictors
             p = predictor_values.reshape(-1)
             self.num_p = len(p)
 
-            # ControlSignals (c)
+            # ControlSignals
             c = [[c] for c in control_signals]
             self.num_c = self.num_cst = len(c)
 
-            # Predictor interations (pp)
+            # Interactions among Predictor vectors
             self.num_pp = 0
             for s in powerset(predictor_values):
                 if len(s)>1:
@@ -781,7 +781,7 @@ class LVOCControlMechanism(ControlMechanism):
                         pp = np.tensordot(pp,s[i+1],axes=0).reshape(-1)
                 self.num_pp+=len(pp)
 
-            # Control interactions (cc)
+            # Interactions among values of control_signals
             self.num_cc = 0
             for s in powerset(c):
                 if len(s)>1:
@@ -790,19 +790,19 @@ class LVOCControlMechanism(ControlMechanism):
                         cc = np.tensordot(cc,s[i+1],axes=0).reshape(-1)
                 self.num_cc+=len(cc)
 
-            # Predictor-Control interactions (pc)
+            # Predictor-Control interactions
             pc = np.tensordot(p, c, axes=0).reshape(-1)
             self.num_pc = len(pc)
 
-            # Predictor-Predictor-Control interactions (ppc)
+            # Predictor-Predictor-Control interactions
             ppc = np.tensordot(pp, c, axes=0).reshape(-1)
             self.num_ppc = len(ppc)
 
-            # Predictor-Control-Control interactions (ppc)
+            # Predictor-Control-Control interactions
             pcc = np.tensordot(p, cc, axes=0).reshape(-1)
             self.num_pcc = len(pcc)
 
-            # Predictor-Predictor-Control-Control interactions (ppc)
+            # Predictor-Predictor-Control-Control interactions
             ppcc = np.tensordot(pp, cc, axes=0).reshape(-1)
             self.num_ppcc = len(ppcc)
 
