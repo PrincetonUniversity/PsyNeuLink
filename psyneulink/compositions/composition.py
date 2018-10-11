@@ -3097,7 +3097,8 @@ class Composition(Composition_Base):
             # Allocate temporary output storage
             output_storage = builder.alloca(data.type.pointee, name="output_storage")
 
-            iterations = ctx.int32_ty(0)
+            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
+            builder.store(ctx.int32_ty(0), iter_ptr)
 
             loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
@@ -3169,12 +3170,15 @@ class Composition(Composition_Base):
                 cond_gen.increment_ts(builder, cond_ptr)
 
             # Increment number of iterations
+            iterations = builder.load(iter_ptr, name="iterations")
             iterations = builder.add(iterations, ctx.int32_ty(1))
+            builder.store(iterations, iter_ptr)
 
             completed_pass = builder.icmp_unsigned("==", iterations,
                 ctx.int32_ty(len(self.scheduler_processing.consideration_queue)))
             # Increment pass and reset time step
-            with builder.if_then(any_cond):
+            with builder.if_then(completed_pass):
+                builder.store(zero, iter_ptr)
                 cond_gen.increment_ts(builder, cond_ptr, (0,1,0))
                 step_ptr = builder.gep(ts_ptr, [zero, ctx.int32_ty(2)])
                 builder.store(zero, step_ptr)
