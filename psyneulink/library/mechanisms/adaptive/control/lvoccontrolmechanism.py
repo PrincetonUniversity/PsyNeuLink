@@ -844,15 +844,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             PV = self.PVTerms()
 
-            # FIX: OLD:
-            self.vector[self.ctl] = np.array([c.value for c in control_signals]).reshape(-1)
-            self.vector[self.intrxn]= \
-                np.array(predictor_values.reshape(-1) * self.vector[self.ctl].reshape(self.num_control_signals,1)
-                         ).reshape(-1)
-            self.vector[self.cst] = \
-                np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
-            # -----------------------------------------
-
             i = 0
             c = np.array([c.value for c in control_signals]).reshape(-1)
             p = np.array(predictor_values).reshape(-1)
