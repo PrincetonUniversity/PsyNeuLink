@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LVOCControlMechanism &mdash; PsyNeuLink 0.4.8.0+694.gf8cce9b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+694.gf8cce9b documentation" href="index.html"/>
+        <link rel="up" title="LVOC" href="LVOC.html"/>
+        <link rel="next" title="AutodiffComposition" href="AutodiffComposition.html"/>
+        <link rel="prev" title="LVOC" href="LVOC.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.8.0+694
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="LVOC.html">LVOC</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">LVOCControlMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &raquo;</li>
+        
+          <li><a href="LVOC.html">LVOC</a> &raquo;</li>
+        
+      <li>LVOCControlMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/LVOCControlMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism">
+<span id="lvoccontrolmechanism"></span><h1>LVOCControlMechanism<a class="headerlink" href="#module-psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An LVOCControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that regulates it <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> in
+order to optimize the performance of the <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> to which it belongs.  It implements a form of the Learned Value
+of Control model described in <a class="reference external" href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&amp;rev=2">Leider et al.</a>, which learns to select the value for its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
+(i.e., its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>) that maximzes its <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> based on a set of <a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">predictors</span></a>.</p>
+<div class="section" id="expected-value-of-control-evc">
+<span id="lvoccontrolmechanism-evc"></span><h3><em>Expected Value of Control (EVC)</em><a class="headerlink" href="#expected-value-of-control-evc" title="Permalink to this headline">¶</a></h3>
+<p>The <strong>expected value of control (EVC)</strong> is the outcome of executing the <a class="reference internal" href="Context.html#psyneulink.globals.context.Context.composition" title="psyneulink.globals.context.Context.composition"><code class="xref any py py-attr docutils literal"><span class="pre">composition</span></code></a>
+to which the LVOCControlMechanism belongs under a given <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>,
+as determined by its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, discounted by the <code class="xref any docutils literal"><span class="pre">cost</span></code> under that <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</p>
+<p>The LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> learns to predict the outcome of its
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> from a weighted sum of its <code class="xref any docutils literal"><span class="pre">predictors</span></code>, <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>, interactions among
+these, and the costs of the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.  This is referred to as the
+“learned value of control,” or LVOC.</p>
+</div>
+</div>
+<div class="section" id="creating-an-lvoccontrolmechanism">
+<span id="lvoccontrolmechanism-creation"></span><h2>Creating an LVOCControlMechanism<a class="headerlink" href="#creating-an-lvoccontrolmechanism" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>An LVOCControlMechanism can be created in the same was as any <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, with the exception that it cannot
+be assigned as the <code class="xref any docutils literal"><span class="pre">controller</span></code> of a Composition.  The following arguments of its
+constructor are specific to the LVOCControlMechanism:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>predictors</strong> – this takes the place of the standard <strong>input_states</strong> argument in the constructor for a
+Mechanism`, and specifies the inputs that it learns to use to determine its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> in each <a class="reference internal" href="Time.html#psyneulink.scheduling.time.Time.trial" title="psyneulink.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> of execution.
+It can be specified using any of the following, singly or combined in a list:</p>
+<blockquote>
+<div><ul class="simple">
+<li>{<em>SHADOW_EXTERNAL_INPUTS</em>: &lt;<code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanism, InputState for one, or list with either or both&gt;} –
+InputStates of the same shapes as those listed are created on the LVOC, and are connected to the
+corresponding input_CIM OutputStates by projections. The external input values that are passed through the
+input_CIM are used as the <code class="xref any docutils literal"><span class="pre">predictors</span></code>. If a Mechanism is included in the
+list, it refers to all of its InputStates.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><em>InputState specification</em> – this can be any form of <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">InputState specification</span></a>
+that resolves to an OutputState from which the InputState receives a Projection;  the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that OutputState is used as the <code class="xref any docutils literal"><span class="pre">predictor</span></code>. Each of
+these InputStates is marked as internal_only.</li>
+</ul>
+</div></blockquote>
+<p>Predictors can also be added to an existing LVOCControlMechanism using its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.add_predictors" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.add_predictors"><code class="xref any py py-meth docutils literal"><span class="pre">add_predictors</span></code></a> method.</p>
+</li>
+<li><p class="first"><strong>predictor_function</strong> specifies <a class="reference internal" href="InputState.html"><span class="doc">function</span></a> of the InputState created for each item listed in
+<strong>predictors</strong>.</p>
+</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="structure">
+<span id="lvoccontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="input">
+<span id="lvoccontrolmechanism-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<p>An LVOCControlMechanism has one <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> that receives a <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (its primary InputState &lt;InputState_Primary&gt;`), and additional ones for
+each of its predictors, as described below.</p>
+<div class="section" id="predictors">
+<span id="lvoccontrolmechanism-predictors"></span><h4>Predictors<a class="headerlink" href="#predictors" title="Permalink to this headline">¶</a></h4>
+<p>Predictors, together with the LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>,
+are used by its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to learn to predict the outcome of its
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and to determine its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</p>
+<p>Predictors can be of two types:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><em>Input Predictor</em> – this is a value received as input by an <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanism in the Composition.</dt>
+<dd>These are specified in the <strong>predictors</strong> argument of the LVOCControlMechanism’s constructor (see
+<a class="reference internal" href="#lvoccontrolmechanism-creation"><span class="std std-ref">Creating an LVOCControlMechanism</span></a>), in a dictionary containing a <em>SHADOW_EXTERNAL_INPUTS</em> entry, the value of
+which is one or more <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms and/or their InputStates to be shadowed.  For each, a Projection is
+automatically created that parallels (“shadows”) the Projection from the Composition’s <code class="xref any docutils literal"><span class="pre">InputCIM</span></code> to the <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code>
+Mechanism, projecting from the same <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the InputCIM to the the InputState of the
+LVOCControlMechanism assigned to that predictor.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>Output Predictor</em> – this is the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an OutputState of some other Mechanism in the</dt>
+<dd>Composition.  These too are specified in the <strong>predictors</strong> argument of the LVOCControlMechanism’s constructor
+(see <a class="reference internal" href="#lvoccontrolmechanism-creation"><span class="std std-ref">Creating an LVOCControlMechanism</span></a>), and each is assigned a Projection to the InputState of the
+LVOCControlMechanism for that predictor.</dd>
+</dl>
+</li>
+</ul>
+<p>The current <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the InputStates for the predictors are listed in the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values"><code class="xref any py py-attr docutils literal"><span class="pre">predictor_values</span></code></a> attribute.</p>
+</div>
+<div class="section" id="objectivemechanism">
+<span id="lvoccontrolmechanism-objectivemechanism"></span><h4>ObjectiveMechanism<a class="headerlink" href="#objectivemechanism" title="Permalink to this headline">¶</a></h4>
+<p>Like any ControlMechanism, an LVOCControlMechanism receives its input from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>,
+via a MappingProjection to its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a>. By default, the ObjectiveMechanism’s
+function is a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function with its <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.operation" title="psyneulink.components.functions.function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> attribute assigned as
+<em>PRODUCT</em>; this takes the product of the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the OutputStates that it monitors (listed
+in its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.  However, this can be
+customized in a variety of ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>by specifying a different <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the ObjectiveMechanism
+(see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">Objective Mechanism Examples</span></a> for an example);</li>
+</ul>
+<ul class="simple">
+<li>using a list to specify the OutputStates to be monitored  (and the <a class="reference internal" href="InputState.html#inputstate-tuple-specification"><span class="std std-ref">tuples format</span></a> to specify weights and/or exponents for them) in either the
+<strong>monitor_for_control</strong> or <strong>objective_mechanism</strong> arguments of the LVOCControlMechanism’s constructor;</li>
+</ul>
+<ul class="simple">
+<li>using the  <strong>monitored_output_states</strong> argument for an ObjectiveMechanism specified in the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> argument of the LVOCControlMechanism’s constructor;</li>
+</ul>
+<ul class="simple">
+<li>specifying a different <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> in the <strong>objective_mechanism</strong> argument of the LVOCControlMechanism’s
+constructor.</li>
+</ul>
+<div class="admonition note" id="lvoccontrolmechanism-objective-mechanism-function-note">
+<p class="first admonition-title">Note</p>
+<p class="last">If a constructor for an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> is used for the <strong>objective_mechanism</strong> argument of the
+LVOCControlMechanism’s constructor, then the default values of its attributes override any used by the
+LVOCControlMechanism for its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.  In particular,
+whereas an LVOCControlMechanism uses the same default <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> as an
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> (<a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>), it uses <em>PRODUCT</em> rather than <em>SUM</em> as the default value of the
+<a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.operation" title="psyneulink.components.functions.function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> attribute of the function.  As a consequence, if the constructor for
+an ObjectiveMechanism is used to specify the LVOCControlMechanism’s <strong>objective_mechanism</strong> argument,
+and the <strong>operation</strong> argument is not specified, <em>SUM</em> rather than <em>PRODUCT</em> will be used for the
+ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  To ensure that <em>PRODUCT</em> is used, it must be
+specified explicitly in the <strong>operation</strong> argument of the constructor for the ObjectiveMechanism (see 1st
+example under <a class="reference internal" href="System.html#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).</p>
+</div>
+</div></blockquote>
+<p>The LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> learns to predict the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of the <em>OUTCOME</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, as described below.</p>
+</div>
+</div>
+<div class="section" id="function">
+<span id="lvoccontrolmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an LVOCControlMechanism learns how to weight its <a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">predictors</span></a>, the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of its  <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>, the interactions between these, and the <code class="xref any docutils literal"><span class="pre">costs</span></code> of the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>, to best predict the outcome of its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.  Using those weights, and the current set of predictors, it then
+searches for and returns the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> that maximizes the <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.  By default, <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is <a class="reference internal" href="Function.html#psyneulink.components.functions.function.BayesGLM" title="psyneulink.components.functions.function.BayesGLM"><code class="xref any py py-class docutils literal"><span class="pre">BayesGLM</span></code></a>. However,
+any function can be used that accepts a 2d array, the first item of which is an array of scalar values (the prediction
+terms) and the second that is a scalar value (the outcome to be predicted), and returns an array with the same shape as
+the LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is provided the values of the <code class="xref any docutils literal"><span class="pre">predictors</span></code> and outcome of its <code class="xref any docutils literal"><span class="pre">objective_mechanism</span></code> from the <em>previous</em> trial to update the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_weights</span>
+<span class="pre">`prediction_weights</span></code></a>.  Those are then used to determine (and implement)
+the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> that is predicted to generate the greatest <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> based on the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values"><code class="xref any py py-attr docutils literal"><span class="pre">predictor_values</span></code></a> for the current
+trial.</p>
+</div>
+</div>
+<div class="section" id="controlsignals">
+<span id="lvoccontrolmechanism-controlsignals"></span><h3><em>ControlSignals</em><a class="headerlink" href="#controlsignals" title="Permalink to this headline">¶</a></h3>
+<p>The OutputStates of an LVOCControlMechanism (like any <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>) are a set of <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>, that are listed in its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute (as well as
+its <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute).  Each ControlSignal is assigned a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
+that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for a parameter controlled by the LVOCControlMechanism.  Each ControlSignal is
+assigned an item of the LVOCControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, that determines its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for a given <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.  The <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> is used by
+a ControlSignal to determine its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is then assigned as the <a class="reference internal" href="ControlProjection.html#psyneulink.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ControlSignal’s ControlProjection.   The <a class="reference internal" href="ControlProjection.html"><span class="doc">value</span></a> of the
+ControlProjection is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to modify the value of the parameter (see
+<a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">Modulation</span></a> for description of how a ControlSignal modulates the value of a parameter it controls).
+A ControlSignal also calculates a <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>, based on its <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
+and/or its time course. The <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> may be included in the evaluation carried out by the
+LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a given <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>,
+and that it uses to adapt the ControlSignal’s <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="lvoccontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When an LVOCControlMechanism is executed, it uses the values of its <a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">predictors</span></a>,
+listed in its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values"><code class="xref any py py-attr docutils literal"><span class="pre">predictor_values</span></code></a> attribute, to determines and implement the
+<a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> for the current <a class="reference internal" href="Time.html#psyneulink.scheduling.time.Time.trial" title="psyneulink.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> of execution of its <code class="xref any docutils literal"><span class="pre">composition</span></code>.
+Specifically it executes the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Updates <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_vector</span></code></a> with the current <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values"><code class="xref any py py-attr docutils literal"><span class="pre">predictors_values</span></code></a>, <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>,
+and their <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a>.</li>
+<li>Calls its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> with the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_vector</span></code></a> and the outcome received from the
+LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, discounted by the
+<a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> associated with each of its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>,
+to update its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_weights</span></code></a>.</li>
+<li>Calls its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a> function with <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_vector</span></code></a> and <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_weights</span></code></a>
+to determine the <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> that yields the greatest <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>, and returns that <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</li>
+</ul>
+</div></blockquote>
+<p>The values specified by the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> returned by the
+LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are assigned as the <code class="xref any docutils literal"><span class="pre">values</span></code>
+of its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="lvoccontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism">
+<em class="property">class </em><code class="descclassname">psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.</code><code class="descname">LVOCControlMechanism</code><span class="sig-paren">(</span><em>predictors</em>, <em>predictor_function=None</em>, <em>objective_mechanism=None</em>, <em>origin_objective_mechanism=False</em>, <em>terminal_objective_mechanism=False</em>, <em>function=BayesGLM</em>, <em>update_rate=0.1</em>, <em>convergence_criterion=.001</em>, <em>max_iterations=1000</em>, <em>control_signals=None</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that optimizes the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> for a
+<a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>predictors</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState" title="psyneulink.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><em>Projection</em><em>, </em><em>dict</em><em>, or </em><em>list containing any of these</em>) – specifies the values that the LVOCControlMechanism learns to use for determining its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.  Any <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">InputState specification</span></a>
+can be used that resolves to an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that projects to the InputState.  In addition, a dictionary
+with a <em>SHADOW_EXTERNAL_INPUTS</em> entry can be used to shadow inputs to the Composition’s <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanism(s)
+(see <a class="reference internal" href="#lvoccontrolmechanism-creation"><span class="std std-ref">Creating an LVOCControlMechanism</span></a> for details).</li>
+<li><strong>predictor_function</strong> (<em>Function</em><em> or </em><em>function : default None</em>) – specifies the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.function" title="psyneulink.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> assigned to each <a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">predictor</span></a>.</li>
+<li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em> or </em><em>List</em><em>[</em><em>OutputState specification</em><em>] </em><em>: default None</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the LVOCControlMechanism, or a list of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>s it should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">OutputState specifications</span></a> is used, a default ObjectiveMechanism is created and the list
+is passed to its <strong>monitored_output_states</strong> argument.</li>
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#psyneulink.components.functions.function.LearningFunction" title="psyneulink.components.functions.function.LearningFunction"><em>LearningFunction</em></a><em> or </em><em>callable : BayesGLM</em>) – specifies the function used to learn to predict the outcome of <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> minus the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> from the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_vector</span></code></a> (see <a class="reference internal" href="#lvoccontrolmechanism-function"><span class="std std-ref">Function</span></a> for details).</li>
+<li><strong>update_rate</strong> (<em>int</em><em> or </em><em>float : default 0.1</em>) – specifies the amount by which the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> is modified in each iteration of the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a> method.</li>
+<li><strong>convergence_criterion</strong> (<em>int</em><em> or </em><em>float : default 0.001</em>) – specifies the change in estimate of the <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> below which the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a> method should terminate and return an <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</li>
+<li><strong>max_iterations</strong> (<em>int : default 1000</em>) – specifies the maximum number of iterations <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a>
+method is allowed to execute; if exceeded, a warning is issued, and the method returns the
+last <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> evaluated.</li>
+<li><strong>control_signals</strong> (<em>ControlSignal specification</em><em> or </em><em>List</em><em>[</em><em>ControlSignal specification</em><em>, </em><em>..</em><em>]</em>) – specifies the parameters to be controlled by the LVOCControlMechanism
+(see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
+Mechanism, its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.  Values
+specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+constructor.</li>
+<li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.name" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the LVOCControlMechanism.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Mechanism.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LVOCControlMechanism; see <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prefs" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values">
+<code class="descname">predictor_values</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.predictor_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d ndarray</em> – the current <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the InputStates used by <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+to determine <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> (see
+<a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">Predictors</span></a> for details about predictors).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism">
+<code class="descname">objective_mechanism</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ObjectiveMechanism</em> – the ‘ObjectiveMechanism’ used by the LVOCControlMechanism to evaluate the performance of its <code class="xref any docutils literal"><span class="pre">system</span></code>.  If a list of OutputStates is specified in the <strong>objective_mechanism</strong> argument
+of the LVOCControlMechanism’s constructor, they are assigned as the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute for the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (see LVOCControlMechanism_ObjectiveMechanism for additional
+details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.monitored_output_states">
+<code class="descname">monitored_output_states</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.monitored_output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[OutputState]</em> – list of the OutputStates monitored by <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
+(and listed in its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute),
+and used to evaluate the performance of the LVOCControlMechanism’s <code class="xref any docutils literal"><span class="pre">system</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.monitored_output_states_weights_and_exponents">
+<code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Tuple[scalar, scalar]]</em> – a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
+<code class="xref any docutils literal"><span class="pre">monitored_outputStates</span></code>, listed in the same order as the outputStates are listed in <code class="xref any docutils literal"><span class="pre">monitored_outputStates</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector">
+<code class="descname">prediction_vector</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d ndarray</em> – current values, respectively, of <a class="reference internal" href="#lvoccontrolmechanism-predictors"><span class="std std-ref">predictors</span></a>, interaction terms for
+predictors x control_signals, <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>, and <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of control_signals.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights">
+<code class="descname">prediction_weights</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d ndarray</em> – weights assigned to each term of <code class="xref any docutils literal"><span class="pre">prediction_vector</span></code>
+last returned by <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LearningFunction or callable</em> – takes <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_vector"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_vector</span></code></a> and outcome and returns an updated set of
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prediction_weights"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_weights</span></code></a> (see <a class="reference internal" href="#lvoccontrolmechanism-function"><span class="std std-ref">Function</span></a>
+for additional details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.update_rate">
+<code class="descname">update_rate</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.update_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – determines the amount by which the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> is modified in each iteration of the
+<a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a> method.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.convergence_criterion">
+<code class="descname">convergence_criterion</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.convergence_criterion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or float</em> – determines the change in estimate of the <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> below which the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a> method should terminate and return an <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.max_iterations">
+<code class="descname">max_iterations</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.max_iterations" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – determines the maximum number of iterations <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent"><code class="xref any py py-meth docutils literal"><span class="pre">gradient_ascent</span></code></a>
+method is allowed to execute; if exceeded, a warning is issued, and the method returns the
+last <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> evaluated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy">
+<code class="descname">allocation_policy</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array : defaultControlAllocation</em> – determines the value assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.variable" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> and its
+associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.  Each item of the array must be a 1d array (usually containing a scalar)
+that specifies an <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the corresponding ControlSignal, and the number of items must equal the
+number of ControlSignals in the LVOCControlMechanism’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals">
+<code class="descname">control_signals</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[ControlSignal]</em> – list of the LVOCControlMechanism’s <a class="reference internal" href="#lvoccontrolmechanism-controlsignals"><span class="std std-ref">ControlSignals</span></a>, including any that it inherited
+from its <code class="xref any docutils literal"><span class="pre">system</span></code> (same as the LVOCControlMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the
+parameter it controls</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the LVOCControlMechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LVOCControlMechanism; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.add_predictors">
+<code class="descname">add_predictors</code><span class="sig-paren">(</span><em>predictors</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.add_predictors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add InputStates and Projections to LVOCControlMechanism for predictors used to predict outcome</p>
+<dl class="docutils">
+<dt><strong>predictors</strong> argument can use any of the forms of specification allowed for InputState(s),</dt>
+<dd>as well as a dictionary containing an entry with <em>SHADOW_EXTERNAL_INPUTS</em> as its key and a
+list of <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanisms and/or their InputStates as its value.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent">
+<code class="descname">gradient_ascent</code><span class="sig-paren">(</span><em>control_signals</em>, <em>prediction_vector</em>, <em>prediction_weights</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.gradient_ascent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> that maximizes the <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</p>
+<p>Iterate over prediction_vector; for each iteration:</p>
+<ul class="simple">
+<li>compute gradients based on current control_signal values and their costs (in prediction_vector);</li>
+<li>compute new control_signal values based on gradients;</li>
+<li>update prediction_vector with new control_signal values and the interaction terms and costs based on those;</li>
+<li>use prediction_weights and updated prediction_vector to compute new <a class="reference internal" href="#lvoccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</li>
+</ul>
+<p>Continue to iterate until difference between new and old EVC is less than <code class="xref any docutils literal"><span class="pre">convergence_criterion</span></code> or number of iterations exceeds <code class="xref any docutils literal"><span class="pre">max_iterations</span></code>.</p>
+<p>Return control_signals field of prediction_vector (used by LVOCControlMechanism as its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy" title="psyneulink.library.mechanisms.adaptive.control.lvoccontrolmechanism.LVOCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_vector</span></code></a>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="AutodiffComposition.html" class="btn btn-neutral float-right" title="AutodiffComposition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="LVOC.html" class="btn btn-neutral" title="LVOC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.4.8.0+694.gf8cce9b',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

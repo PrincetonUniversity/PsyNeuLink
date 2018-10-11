@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.4.8.0+693.g69db248 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.4.8.0+694.gf8cce9b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+693.g69db248 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+694.gf8cce9b documentation" href="index.html"/>
         <link rel="up" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/>
         <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="prev" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+693
+                0.4.8.0+694
               </div>
             
           
@@ -113,6 +113,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
@@ -226,7 +227,7 @@ argument of the DDM’s consructor, to accomodate use of the DDM with other Mech
 <em>SCALAR</em>.  However, if it is specified as <em>ARRAY</em>, the DDM’s InputState is configured to accept a 1d 2-item vector,
 and to use <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce" title="psyneulink.components.functions.function.Reduce"><code class="xref any py py-class docutils literal"><span class="pre">Reduce</span></code></a> as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
 the input to the DDM’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  If <em>ARRAY</em> is specified, two  <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> are added to the DDM, that allow the result of the decision process to be represented
-as an array corresponding to the stimulus array (see <a class="reference internal" href="#ddm-custom-outputstates"><span class="std std-ref">below</span></a>).</p>
+as an array corresponding to the input array (see <a class="reference internal" href="#ddm-custom-outputstates"><span class="std std-ref">below</span></a>).</p>
 </div>
 <div class="section" id="output">
 <span id="ddm-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
@@ -510,7 +511,7 @@ out <a class="reference internal" href="#ddm-integration-mode"><span class="std 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<a class="reference internal" href="ContrastiveHebbianMechanism.html#psyneulink.library.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<li><strong>default_variable</strong> (<a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies the <code class="xref any docutils literal"><span class="pre">default_variable</span></code> as array(s) of zeros if <strong>default_variable</strong> is not
@@ -670,7 +671,7 @@ towards a specified threshold</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+693.g69db248',
+            VERSION:'0.4.8.0+694.gf8cce9b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

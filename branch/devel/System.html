@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.8.0+693.g69db248 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.8.0+694.gf8cce9b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+693.g69db248 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+694.gf8cce9b documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+693
+                0.4.8.0+694
               </div>
             
           
@@ -95,17 +95,24 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Composition.html">Compositions</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LVOC.html">LVOC</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">System</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -614,7 +621,7 @@ each entry is a <a class="reference internal" href="Mechanism.html"><span class=
 <code class="descname">target_input_states</code><a class="headerlink" href="#psyneulink.components.system.System.target_input_states" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[SystemInputState]</em> – one item for each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism in the System (listed in its <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> attribute).  Used to represent the values specified in the <strong>targets</strong>
 argument of the System’s <a class="reference internal" href="#psyneulink.components.system.System.execute" title="psyneulink.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> and <a class="reference internal" href="#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods, and to provide
-thoese values to the the TARGET <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism during <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">execution</span></a>.</p>
+thoese values to the TARGET <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism during <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">execution</span></a>.</p>
 <blockquote>
 <div></div></blockquote>
 </dd></dl>
@@ -1085,7 +1092,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+693.g69db248',
+            VERSION:'0.4.8.0+694.gf8cce9b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.4.8.0+693.g69db248 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.4.8.0+694.gf8cce9b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+693.g69db248 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+694.gf8cce9b documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
         <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+693
+                0.4.8.0+694
               </div>
             
           
@@ -223,7 +223,7 @@ used to send ModulatoryProjections), as summarized in the table below:</p>
 <td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> constructor;
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
 <td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or
@@ -246,7 +246,7 @@ parameter value is
 <td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> constructor;
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></td>
 <td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a></td>
@@ -292,11 +292,11 @@ specified type, using a default value for the State that is determined by the co
 </ul>
 <ul id="state-specification-dictionary">
 <li><p class="first"><strong>State specification dictionary</strong> – can use the following: <em>KEY</em>:&lt;value&gt; entries, in addition to those
-specific to the State’s type (see documentation for each type):</p>
+specific to the State’s type (see documentation for each State type):</p>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><em>STATE_TYPE</em>:&lt;State type&gt;</dt>
-<dd>specifies type of State to create (necessary if it cannot be determined from the
+<dd>specifies type of State to create (necessary if it cannot be determined from
 the context of the other entries or in which it is being created).</dd>
 </dl>
 </li>
@@ -982,7 +982,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+693.g69db248',
+            VERSION:'0.4.8.0+694.gf8cce9b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

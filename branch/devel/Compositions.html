@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compositions &mdash; PsyNeuLink 0.4.8.0+693.g69db248 documentation</title>
+  <title>Compositions &mdash; PsyNeuLink 0.4.8.0+694.gf8cce9b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+693.g69db248 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+694.gf8cce9b documentation" href="index.html"/>
         <link rel="up" title="Library" href="Library.html"/>
         <link rel="next" title="AGT" href="AGT.html"/>
         <link rel="prev" title="GatingProjections" href="GatingProjections.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+693
+                0.4.8.0+694
               </div>
             
           
@@ -101,9 +101,11 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Compositions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
 <li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LVOC.html">LVOC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
@@ -174,8 +176,7 @@
             
   <div class="section" id="compositions">
 <h1>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h1>
-<p>Collections of <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> <a class="reference internal" href="Components.html"><span class="doc">Components</span></a> and/or other Compositions that implement a model of the mechanism(s) underlying a
-particular brain function and/or psychological process.</p>
+<p>Subclasses of <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> that implement specialized operations.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="AGT.html">AGT</a><ul>
@@ -188,7 +189,15 @@ particular brain function and/or psychological process.</p>
 <li class="toctree-l2"><a class="reference internal" href="EVCAuxiliary.html">EVCAuxiliary</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LVOC.html">LVOC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="LVOCControlMechanism.html">LVOCControlMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Process.html">Process</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -237,7 +246,7 @@ particular brain function and/or psychological process.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+693.g69db248',
+            VERSION:'0.4.8.0+694.gf8cce9b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
