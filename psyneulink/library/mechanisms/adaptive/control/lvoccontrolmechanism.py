@@ -303,21 +303,21 @@ class LVOCError(Exception):
 
 
 class LVOCControlMechanism(ControlMechanism):
-    """LVOCControlMechanism(                        \
-    predictors,                                     \
-    predictor_function=None,                        \
-    objective_mechanism=None,                       \
-    origin_objective_mechanism=False,               \
-    terminal_objective_mechanism=False,             \
-    function=BayesGLM,                              \
-    prediction_terms=[PV.P,PV.C,PV.PC]              \
-    update_rate=0.1,                                \
-    convergence_criterion=.001,                     \
-    max_iterations=1000,                            \
-    control_signals=None,                           \
-    modulation=ModulationParam.MULTIPLICATIVE,      \
-    params=None,                                    \
-    name=None,                                      \
+    """LVOCControlMechanism(                             \
+    predictors,                                          \
+    predictor_function=None,                             \
+    objective_mechanism=None,                            \
+    origin_objective_mechanism=False,                    \
+    terminal_objective_mechanism=False,                  \
+    function=BayesGLM,                                   \
+    prediction_terms=[PV.PRED, PV.CTL, PV.PC, PV.COST]   \
+    update_rate=0.1,                                     \
+    convergence_criterion=.001,                          \
+    max_iterations=1000,                                 \
+    control_signals=None,                                \
+    modulation=ModulationParam.MULTIPLICATIVE,           \
+    params=None,                                         \
+    name=None,                                           \
     prefs=None)
 
     Subclass of `ControlMechanism <ControlMechanism>` that optimizes the `ControlSignals <ControlSignal>` for a
@@ -349,7 +349,7 @@ class LVOCControlMechanism(ControlMechanism):
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
-    prediction_terms : List[PV] : default [PV.P, PV.C, PV.PC]
+    prediction_terms : List[PV] : default [PV.PRED,PV.CTL,PV.PC, PV.COST]
         specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`;
         items must be members of the `PV` Enum.  If None is specified, the default values will automatically
         be assigned.
@@ -412,7 +412,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     prediction_terms : List[PV]
         identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        Items are members of the `PV` Enum; the default is [PV.P, PV.C, PV.PC].
+        Items are members of the `PV` Enum; the default is [PV.PRED,PV.CTL,PV.PC, PV.COST].
 
     prediction_vector : 1d ndarray
         current values, respectively, of `predictors <LVOCControlMechanism_Predictors>`, interaction terms for
@@ -500,7 +500,7 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        prediction_terms = prediction_terms or [PV.P, PV.C, PV.PC]
+        prediction_terms = prediction_terms or [PV.PRED,PV.CTL,PV.PC, PV.COST]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=predictors,
@@ -835,10 +835,10 @@ class LVOCControlMechanism(ControlMechanism):
             # Construct prediction_vector based on specified terms
             # FIX: ??refactor as iterate through enum
             i = 0
-            if PV.P in terms:
+            if PV.PRED in terms:
                 self.p_sl = slice(i, self.num_p)
                 i += self.num_p
-            if PV.C in terms:
+            if PV.CTL in terms:
                 self.c_sl = slice(i, self.num_c)
                 i += self.num_c
             if PV.PP in terms:
@@ -859,7 +859,7 @@ class LVOCControlMechanism(ControlMechanism):
             if PV.PPCC in terms:
                 self.ppcc_sl = slice(i, self.num_ppcc)
                 i += self.num_ppcc
-            if PV.CST in terms:
+            if PV.COST in terms:
                 self.cst_sl = slice(i, self.num_cst)
                 i+= self.num_cst
 
@@ -894,9 +894,9 @@ class LVOCControlMechanism(ControlMechanism):
                 ppcc = np.tensordot(ppc,c,axes=0).reshape(-1)
 
             # Assign specified terms to vector
-            if PV.P in terms:
+            if PV.PRED in terms:
                 self.vector[self.p_sl] = p
-            if PV.C in terms:
+            if PV.CTL in terms:
                 self.vector[self.c_sl] = c
             if PV.PP in terms:
                 self.vector[self.pp_sl] = pp
@@ -910,7 +910,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.vector[self.pcc_sl] = pcc
             if PV.PPCC in terms:
                 self.vector[self.ppcc_sl] = ppcc
-            if PV.CST in terms:
+            if PV.COST in terms:
                 self.vector[self.cst_sl] = \
                     np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
@@ -962,12 +962,17 @@ class LVOCControlMechanism(ControlMechanism):
         cost_weights = prediction_weights[cst_sl]
 
 
-        # Compute gradients that are constants here
-        #    (so don't have to do it in each iteration of the while loop)
+        # COMPUTE DERIVATIVES THAT ARE CONSTANTS
+        #    Do it here so don't have to do it in each iteration of the while loop
 
-        # d(c*wt)/(dc) = wt
-        gradient_constants = np.array(control_signal_weights)
+        gradient_constants = np.zeros(num_ctl)
 
+        # Derivative for control_signals
+        if PV.CTL in self.prediction_terms:
+            # d(c*wt)/(dc) = wt
+            gradient_constants += np.array(control_signal_weights)
+
+        # Derivatives for pc and ppc interactions
         if any(term in self.prediction_terms for term in {PV.PC, PV.PPC}):
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictors
@@ -985,7 +990,6 @@ class LVOCControlMechanism(ControlMechanism):
                 ppc_weights_x_predictors = ppc_weights * predictors**2
                 for i in range(num_ctl):
                     gradient_constants[i] += np.sum(ppc_weights_x_predictors[i])
-
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
