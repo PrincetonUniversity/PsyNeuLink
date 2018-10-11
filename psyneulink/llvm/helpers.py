@@ -120,14 +120,16 @@ class ConditionGenerator:
 
         return builder.or_(trial, builder.or_(run, step))
 
-    def __get_node_ts(self, builder, cond_ptr, node):
+    def __get_node_status_ptr(self, builder, cond_ptr, node):
             zero = self.ctx.int32_ty(0)
             node_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
+            return builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1), node_idx])
 
-            array_ptr = builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1)])
-            node_ts_ptr = builder.gep(array_ptr, [zero, node_idx,
-                                                  self.ctx.int32_ty(1)])
-            return builder.load(node_ts_ptr)
+    def __get_node_ts(self, builder, cond_ptr, node):
+        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
+        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
+                                          self.ctx.int32_ty(1)])
+        return builder.load(ts_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
         global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
