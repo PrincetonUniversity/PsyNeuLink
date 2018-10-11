@@ -104,7 +104,6 @@ class ConditionGenerator:
         step = builder.and_(builder.and_(part_eq[0], part_eq[1]),
                             part_cmp[2])
 
-        return step
         return builder.or_(trial, builder.or_(run, step))
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
