@@ -940,21 +940,19 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: CURRENTLY ASSUMES ONLY TERMS IN PREDICTION VECTOR ARE THOSE USED IN STROOP XOR MODEL
         #      AND ONLY COMPUTES DERIVATIVES FOR THOSE.  TO BE REPLACED WITH PredictionVector GENERALIZATION
 
-        # pred = self.prediction_vector.pred
+        pv = prediction_vector.vector
         intrxn_sl = prediction_vector.intrxn_sl
         ctl_sl = prediction_vector.ctl_sl
         cst_sl = prediction_vector.cst_sl
         num_pred = prediction_vector.num_predictors
         num_ctl = prediction_vector.num_control_signals
         num_cst = prediction_vector.num_costs
-        # num_intrxn = self.prediction_vector.num_interactions
-
-        pv = prediction_vector.vector
+        # num_intrxn = prediction_vector.num_interactions
 
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.float128).max
 
-        # predictors = pv[0:num_pred]
+        # FIX: NEEDED FOR Stroop XOR IMPLEMENTATION SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
         predictors = self.predictor_values.reshape(-1)
 
         # Get interaction weights and reshape so that there is one row per control_signal
@@ -1004,8 +1002,7 @@ class LVOCControlMechanism(ControlMechanism):
             # Assign new values of interaction terms, control_signals and costs to pv
             # pv[intrxn_sl]= np.array(pv[pred] * pv[ctl].reshape(num_ctl,1)
             #                                     ).reshape(-1)
-            pv[intrxn_sl]= np.array(predictors * pv[ctl_sl].reshape(num_ctl,1)
-                                                   ).reshape(-1)
+            pv[intrxn_sl]= np.array(predictors * pv[ctl_sl].reshape(num_ctl,1)).reshape(-1)
             pv[ctl_sl] = control_signal_values
             pv[cst_sl] = costs
 
