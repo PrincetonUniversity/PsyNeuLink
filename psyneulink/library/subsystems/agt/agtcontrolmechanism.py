@@ -148,7 +148,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
@@ -157,11 +157,9 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX',
-    'MONITORED_OUTPUT_STATES',
+    'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX'
 ]
 
-MONITORED_OUTPUT_STATES = 'monitored_output_states'
 MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 
 ControlMechanismRegistry = {}

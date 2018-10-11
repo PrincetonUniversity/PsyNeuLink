@@ -3219,7 +3219,7 @@ class Component(object, metaclass=ComponentsMeta):
             )
             self.function_params = dict(self.function_object.cust_fct_params)
         elif isinstance(function, Function):
-            if not iscompatible(function.instance_defaults.variable, function_variable):
+            if not iscompatible(function_variable, function.instance_defaults.variable):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(
                         'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
@@ -3232,7 +3232,7 @@ class Component(object, metaclass=ComponentsMeta):
                     )
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.instance_defaults.variable])
-                    if not iscompatible(function_increased_dim, function_variable):
+                    if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(
                             'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
                             ' of the component {3} to which it is being assigned'.format(

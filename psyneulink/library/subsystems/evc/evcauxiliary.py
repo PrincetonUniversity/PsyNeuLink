@@ -17,12 +17,15 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.components.functions.function import Buffer, Function_Base, Integrator
+from psyneulink.components.functions.function import Buffer, Function_Base, Integrator, Linear
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, NOISE, PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.globals.keywords import \
+    COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, \
+    FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, \
+    kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -30,7 +33,7 @@ __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
     'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
-    'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
+    'INPUT', 'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
 ]
 
@@ -598,10 +601,11 @@ def _compute_EVC(ctlr, allocation_vector, runtime_params, context):
         return (EVC_avg)
 
 
+INPUT = 'INPUT'
 AVERAGE_INPUTS = 'AVERAGE_INPUTS'
 INPUT_SEQUENCE = 'INPUT_SEQUENCE'
 TIME_AVERAGE_INPUT = 'TIME_AVERAGE_INPUT'
-input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
+input_types = {INPUT, TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
 
 WINDOW_SIZE = 'window_size'
 FILTER_FUNCTION = 'filter_function'
@@ -663,6 +667,11 @@ class PredictionMechanism(IntegratorMechanism):
 
     In place of a function, the following keywords can be used to specify one of three standard configurations:
 
+    * *INPUT:* uses an `Linear` Function to simply pass the input it receives as its output, possibly modified by the
+      values specified in the PredictionMechanism's **rate** and **noise** arguments.  If those are specified, they
+      are assigned as the `Linear` function's `slope <Linear.slope>` and `intercept <Linear.intercept>` parameters,
+      respectively.
+
     * *TIME_AVERAGE_INPUT:* uses an `AdaptiveIntegrator` Function to compute an exponentially weighted time-average
       of the input to the PredictionMechanism; the PredictionMechanism's **rate** and **noise** arguments can be used
       to specify the corresponding `rate <AdaptiveIntegrator.rate>` and `noise <AdaptiveIntegrator.noise>` parameters
@@ -715,7 +724,8 @@ class PredictionMechanism(IntegratorMechanism):
     size : int, list or np.ndarray of ints
         see `size <Mechanism.size>`.
 
-    function : function, *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, or *INPUT_SEQUENCE* : default *TIME_AVERAGE_INPUT*
+    function : function, *INPUT*, *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, or *INPUT_SEQUENCE* : default
+    *TIME_AVERAGE_INPUT*
         specifies the function used to generate the input provided to its `origin_mechanism
         <PredictionMechanism.origin_mechanism>`; the function must take as its input a single value with the same
         format as the `variable <Mechanism.variable>` of its `origin_mechanism <PredictionMechanism.origin_mechanism>`,
@@ -783,7 +793,8 @@ class PredictionMechanism(IntegratorMechanism):
                  default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
-                 function:tc.optional(tc.enum(TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
+                 function:tc.optional(tc.enum(
+                         INPUT, TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
                  initial_value=None,
                  # rate:tc.optional(tc.any(int, float))=1.0,
                  # noise:tc.optional(tc.any(int, float, callable))=0.0,
@@ -815,7 +826,10 @@ class PredictionMechanism(IntegratorMechanism):
 
         if function in input_types:
 
-            if function is TIME_AVERAGE_INPUT:
+            if function is INPUT:
+                function = Linear(slope=rate, intercept=noise)
+
+            elif function is TIME_AVERAGE_INPUT:
                 # Use default for IntegratorMechanism: AdaptiveIntegrator
                 function = self.ClassDefaults.function
 

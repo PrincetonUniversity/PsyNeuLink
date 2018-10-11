@@ -1016,7 +1016,7 @@ def _adjust_stimulus_dict(obj, stimuli):
             if num_input_sets == -1:
                 num_input_sets = len(stimuli[mech])
             elif num_input_sets != len(stimuli[mech]):
-                raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {} "
                                "conflicts with at least one other mechanism's input specification."
                                .format(obj.name, (stimuli[mech]), mech.name))
 

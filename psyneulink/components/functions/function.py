@@ -63,9 +63,11 @@ Objective Functions:
   * `Distance`
 
 Learning Functions:
+  * `Kohonen`
   * `Hebbian`
   * `ContrastiveHebbian`
   * `Reinforcement`
+  * `BayesGLM`
   * `BackPropagation`
   * `TDLearning`
 
@@ -213,8 +215,8 @@ from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metr
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
-    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
-    'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
+    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy', 'AUTOASSOCIATIVE',
+    'BackPropagation', 'BayesGLM', 'BogaczEtAl', 'BOUNDS',
     'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
     'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
@@ -10671,7 +10673,7 @@ class WaldDist(DistributionFunction):
 
 # endregion
 
-# region **************************************   OBJECTIVE FUNCTIONS **************************************************
+# region **************************************  OBJECTIVE FUNCTIONS ***************************************************
 
 class ObjectiveFunction(Function_Base):
     """Abstract class of `Function` used for evaluating states.
@@ -11047,8 +11049,6 @@ COMMENT
 
         return self.convert_output_type(result)
 
-
-# endregion
 
 class Distance(ObjectiveFunction):
     """
@@ -11491,7 +11491,6 @@ class Distance(ObjectiveFunction):
 
         return self.convert_output_type(result)
 
-
 # endregion
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
@@ -11557,20 +11556,6 @@ class LearningFunction(Function_Base):
     class Params(Function_Base.Params):
         variable = Param(np.array([0, 0, 0]), read_only=True)
         learning_rate = Param(0.05, modulable=True)
-
-    # def __init__(self, default_variable, params, owner, prefs, context):
-    #     super().__init__(default_variable=default_variable,
-    #                      params=params,
-    #                      owner=owner,
-    #                      prefs=prefs,
-    #                      context=context)
-
-    #     self.learning_rate_dim = None
-    #     if learning_rate is not None:
-    #         self.learning_rate_dim = np.array(learning_rate).ndim
-
-    #     self.return_val = return_val(None, None)
-
 
     def _validate_learning_rate(self, learning_rate, type=None):
 
@@ -11947,8 +11932,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
@@ -12160,7 +12143,6 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -12289,8 +12271,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         return self.convert_output_type(weight_change_matrix)
 
 
-class Reinforcement(
-    LearningFunction):  # -------------------------------------------------------------------------------
+class Reinforcement(LearningFunction):  # -----------------------------------------------------------------------------
     """
     Reinforcement(                     \
         default_variable=None,         \
@@ -12322,7 +12303,7 @@ class Reinforcement(
     Arguments
     ---------
 
-    variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+    default_variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
@@ -12417,7 +12398,6 @@ class Reinforcement(
 
     def __init__(self,
                  default_variable=None,
-                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -12545,6 +12525,258 @@ class Reinforcement(
         weight_change_matrix = np.diag(error_array)
 
         return [error_array, error_array]
+
+
+class BayesGLM(LearningFunction):
+    """
+    BayesGLM(                   \
+        default_variable=None,  \
+        mu_0=0,                 \
+        sigma_0=1,              \
+        gamma_shape_0=1,        \
+        gamma_size_0=1,         \
+        params=None,            \
+        prefs=None)
+
+    Implements Bayesian linear regression that fits means and distributions of weights to predict dependent variable(s)
+    in `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
+
+    Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
+    and returns a vector of prediction weights sampled from the multivariate normal-gamma distribution.
+    [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
+    useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
+
+    Arguments
+    ---------
+
+    default_variable : 3d array : default None
+        first item of axis 0 should be a 2d array with one or more 1d arrays to use as predictor vectors;
+        second item should be a 2d array of equal length to the first item, with one or more 1d arrays each of
+        which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, the shape
+        of `variable <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`,
+        as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior
+        <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
+
+    mu_0 : int, float or 1d array : default 0
+        specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
+        the prediction weights returned by the function).  If a scalar is specified, the same value will be used
+        for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
+        the predictor array(s) in axis 0 of **default_variable**.
+
+    sigma_0 : int, float or 1d array : default 0
+        specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
+        for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
+        all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
+        predictor array(s) in axis 0 of **default_variable**.
+
+    gamma_shape_0 : int or float : default 1
+        specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
+        for `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
+
+    gamma_size_0 : int or float : default 1
+        specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
+        `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 3d array
+        samples used to update parameters of prediction weight distributions.
+        variable[0] is a 2d array of predictor vectors, all of the same length;
+        variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.
+
+    mu_0 : int, float or 2d np.array
+        determines the initial prior(s) for the means of the distributions of the prediction weights;
+        if it is a scalar, that value is assigned as the priors for all means.
+
+    mu_prior : 2d np.array
+        current priors for the means of the distributions of the predictions weights.
+
+    mu_n : 2d np.array
+        current means for the distributions of the prediction weights.
+
+    sigma_0 : int, float or 2d np.array
+        value used to determine the initial prior(s) for the variances of the distributions of the prediction
+        weights; if it is a scalar, that value is assigned as the priors for all variances.
+
+    Lambda_prior :  2d np.array
+        current priors for the variances of the distributions of the predictions weights.
+
+    Lambda_n :  2d np.array
+        current variances for the distributions of the prediction weights.
+
+    gamma_shape_0 : int or float
+        determines the initial value used for the shape parameter of the gamma distribution used to sample the
+        prediction weights.
+
+    gamma_shape_prior : int or float
+        current prior for the shape parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_shape_n : int or float
+        current value of the shape parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_size_0 : int or float
+        determines the initial value used for the size parameter of the gamma distribution used to sample the
+        prediction weights.
+
+    gamma_size_prior : int or float
+        current prior for the size parameter of the gamma distribution used to sample the prediction weights.
+
+    gamma_size_n : 2d array with single scalar value
+        current value of the size parameter of the gamma distribution used to sample the prediction weights.
+
+    function : function
+        updates mean (`mu_n <BayesGLM.mu_n>`) and variance (`Lambda_n <BayesGLM.Lambda_n>`) of weight distributions
+        to improve prediction of of dependent variable sample(s) in `variable <BayesGLM.variable>`\\[1] from
+        predictor vector(s) in `variable <BayesGLM.variable>`\\[1].  Returns a vector of weights `weights_sample
+        <BayesGLM.weights_sample>`) sampled from the weight disributions.
+
+    weights_sample : 1d np.array
+        last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
+        `function <BayesGLM.function>`.
+
+    owner : Component
+        `Mechanism <Mechanism>` to which the Function belongs.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    def __init__(self,
+                 default_variable =  None,
+                 mu_0=0,
+                 sigma_0=1,
+                 gamma_shape_0=1,
+                 gamma_size_0=1,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mu_0=mu_0,
+                                                  sigma_0=sigma_0,
+                                                  gamma_shape_0=gamma_shape_0,
+                                                  gamma_size_0=gamma_size_0,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    def initialize_priors(self):
+        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
+        to their initial (_0) values, and assign current (_n) values to the priors'''
+
+        variable = np.array(self.instance_defaults.variable)
+        if variable.dtype != object:
+            variable = np.atleast_2d(variable)
+        n = len(variable[0])
+
+        if isinstance(self.mu_0, (int, float)):
+            self.mu_prior = np.full((n, 1),self.mu_0)
+        else:
+            if len(self.mu_0) != n:
+                raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.mu_0), n))
+
+        if isinstance(self.sigma_0, (int, float)):
+            Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
+        else:
+            if len(self.sigma_0) != n:
+                raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
+                                    format(len(self.sigma_0), n))
+            Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
+        self.Lambda_prior = Lambda_0
+
+        # before we see any data, the posterior is the prior
+        self.mu_n = self.mu_prior
+        self.Lambda_n = self.Lambda_prior
+        self.gamma_shape_n = self.gamma_shape_0
+        self.gamma_size_n = self.gamma_size_0
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        '''Use predictor(s) and dependent variable(s) in `variable <BayesGLM.variable>` to update weight distribution
+        parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`,
+        and `gamma_size_n <BayesGLM.gamma_size_n>`, and return an array of weights sampled from the distributions.
+
+        Arguments
+        ---------
+
+        variable : 2d or 3d array : default ClassDefaults.variable
+           if it is a 2d array, the first item must be a 1d array of scalar predictors, and the second must
+           be a 1d array containing the dependent variable to be predicted by the predictors;
+           if it is a 3d array, the first item in the outermost dimension must be 2d array containing one or more
+           1d arrays of scalar predictors, and the second item be a 2d array containing 1d arrays each of which
+           contains a scalar dependent variable for the corresponding predictor vector.
+
+        params : Dict[param keyword: param value] : default None
+           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+           arguments of the constructor.
+
+        Returns
+        -------
+
+        sample weights : 1d np.array
+            array of weights drawn from updated weight distributions.
+
+        '''
+
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            self.initialize_priors()
+
+        # Today's prior is yesterday's posterior
+        self.Lambda_prior = self.Lambda_n
+        self.mu_prior = self.mu_n
+        self.gamma_shape_prior = self.gamma_shape_n
+        self.gamma_size_prior = self.gamma_size_n
+
+        variable = self._update_variable(
+                            self._check_args([np.atleast_2d(variable[0]),np.atleast_2d(variable[1])],params,context))
+        predictors = variable[0]
+        dependent_vars = variable[1]
+
+        # online update rules as per the given reference
+        self.Lambda_n = (predictors.T @ predictors) + self.Lambda_prior
+        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_prior @ self.mu_prior))
+        self.gamma_shape_n = self.gamma_shape_prior + dependent_vars.shape[1]
+        self.gamma_size_n = self.gamma_size_prior + (dependent_vars.T @ dependent_vars) + \
+                   (self.mu_prior.T @ self.Lambda_prior @ self.mu_prior) - \
+                   (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+
+        # self.mu_and_Lambda_values = \
+        #     [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+
+        self.weights_sample = self.sample_weights()
+        return self.weights_sample
+
+    def sample_weights(self):
+        '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
+        `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
+        <BayesGLM.gamma_size_n>`.'''
+        phi = np.random.gamma(self.gamma_shape_n / 2, self.gamma_size_n / 2)
+        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
 
 
 # Argument names:
@@ -12717,7 +12949,6 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -12968,7 +13199,6 @@ class TDLearning(Reinforcement):
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,

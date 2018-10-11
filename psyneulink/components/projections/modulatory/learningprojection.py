@@ -87,7 +87,7 @@ The default `function <LearningProjection.function>` of a LearningProjection is 
 If specified, it is applied multiplicatively to the output of the LearningProjection's `function
 <LearningProjection.function>`, and the result is assigned to the LearningProjection's `value
 <LearningProjection.value>` and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.  Thus,
-the LearningProjection's `learning_rate <LearningProjection.learning_rate>` parameter can be used to modulate the the
+the LearningProjection's `learning_rate <LearningProjection.learning_rate>` parameter can be used to modulate the
 `learning_signal <LearningProjection.learning_signal>` it receives, in addition to (and on top of) the effects of the
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate

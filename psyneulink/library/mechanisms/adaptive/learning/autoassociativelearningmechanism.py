@@ -65,7 +65,7 @@ Execution
 ---------
 
 An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
-* 1) its execution can be enabled or disabled by setting the the `learning_enabled
+* 1) its execution can be enabled or disabled by setting the `learning_enabled
   <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
   associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <System_Execution>` of the System's execution.  Note that this is

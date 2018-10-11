@@ -496,7 +496,6 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 SCHEDULER = 'scheduler'
 PROCESSES = 'processes'
 MECHANISMS = 'mechanisms'
-ORIGIN_MECHANISMS = 'origin_mechanisms'
 INPUT_ARRAY = 'input_array'
 RECURRENT_MECHANISMS = 'recurrent_mechanisms'
 RECURRENT_INIT_ARRAY = 'recurrent_init_array'
@@ -509,6 +508,7 @@ LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 LEARNING_MECHANISMS = 'learning_mechanisms'
 CONTROL_MECHANISM = 'control_mechanism'
 CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
+ORIGIN_MECHANISMS = 'ORIGIN_MECHANISMS'
 
 SystemRegistry = {}
 
@@ -789,7 +789,7 @@ class System(System_Base):
         one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
-        thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
+        thoese values to the TARGET `InputState` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
 

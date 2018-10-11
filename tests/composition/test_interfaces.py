@@ -531,6 +531,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
             comp.run(inputs={A: [[1.23]]})
         assert "External input source" in str(error_text) and "specified for C is not valid" in str(error_text)
 
+
     def test_origin_input_source_true_no_input(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')

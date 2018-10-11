@@ -59,6 +59,7 @@ import psyneulink.llvm as pnlvm
 
 from llvmlite import ir
 
+from psyneulink.components.shellclasses import Composition_Base
 from psyneulink.components.component import function_type
 from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -78,7 +79,8 @@ from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry',
+
+    'Composition', 'CompositionError', 'CompositionRegistry'
 ]
 
 logger = logging.getLogger(__name__)
@@ -327,7 +329,7 @@ class Graph(object):
 
         return list(self.comp_to_vertex[component].backward_sources)
 
-class Composition(object):
+class Composition(Composition_Base):
     '''
         Composition
 
@@ -520,10 +522,11 @@ class Composition(object):
 
     def shadow_interface_mechanism_connection(self, node_input_state, cim_rep_input_state):
         interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-        MappingProjection(sender=interface_output_state,
-                          receiver=node_input_state,
-                          name="(" + interface_output_state.name + ") to ("
-                               + node_input_state.owner.name + "-" + node_input_state.name + ")")
+        shadow_projection = MappingProjection(sender=interface_output_state,
+                                              receiver=node_input_state,
+                                              name="(" + interface_output_state.name + ") to ("
+                                                   + node_input_state.owner.name + "-" + node_input_state.name + ")")
+        self.projections.append(shadow_projection)
 
     def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
@@ -572,7 +575,7 @@ class Composition(object):
                         if isinstance(component[1], CNodeRole):
                             self.add_c_node(node=component[0], required_roles=component[1])
                         elif isinstance(component[1], list):
-                            if isinstance(component[1], CNodeRole):
+                            if isinstance(component[1][0], CNodeRole):
                                 self.add_c_node(node=component[0], required_roles=component[1])
                             else:
                                 raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
@@ -597,7 +600,6 @@ class Composition(object):
             # Add all projections to the composition
             for proj_spec in projections:
                 self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
-
         if required_roles:
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
@@ -606,18 +608,13 @@ class Composition(object):
 
         if external_input_source:
             self.external_input_sources[node] = external_input_source
+        if hasattr(node, "shadow_external_inputs"):
+            self.external_input_sources[node] = node.shadow_external_inputs
 
 
     def add_controller(self, node):
         self.controller = node
         # self.add_c_node(node)
-
-    # def add_control_mechanism(self, control_mechanism):
-    #
-    #     if not isinstance(control_mechanism, ControlMechanism):
-    #         raise CompositionError("{} is not a ControlMechanism.".format(control_mechanism.name))
-    #     for input_state in control_mechanism._objective_mechanism.input_states:
-    #         input_state.internal_only = True
 
     def add_projection(self, projection=None, sender=None, receiver=None, feedback=False):
         '''
@@ -721,10 +718,6 @@ class Composition(object):
             self.needs_update_scheduler_learning = True
             self.projections.append(projection)
 
-
-        # else:
-        #     raise CompositionError("Cannot add Projection: {}. This Projection is already in the Compositon."
-        #                            .format(projection.name))
         return projection
 
     def add_pathway(self, path):
@@ -860,21 +853,24 @@ class Composition(object):
         # Clear old information
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
+        for node_role_pair in self.required_c_node_roles:
+            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
+
         # TEMPORARY? Disallowing objective mechanisms from having ORIGIN or TERMINAL role in a composition
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[0]:
-                if not isinstance(node, ObjectiveMechanism):
+                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
-                if not isinstance(node, ObjectiveMechanism):
+                if node not in self.get_c_nodes_by_role(CNodeRole.OBJECTIVE):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Origin nodes
         for node in self.c_nodes:
             if graph.get_parents_from_component(node) == []:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.ORIGIN)
-        # Identify Terminal nodes
+            # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
                 if not isinstance(node, ObjectiveMechanism):
                     self._add_c_node_role(node, CNodeRole.TERMINAL)
@@ -910,13 +906,6 @@ class Composition(object):
                             self._add_c_node_role(child, CNodeRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
-
-        # toposorted_graph = self.scheduler_processing._call_toposort(graph)[0]
-        # if len(toposorted_graph) > 0:
-        #     for node in toposorted_graph[-1]:
-        #         self._add_c_node_role(node, CNodeRole.TERMINAL)
-        for node_role_pair in self.required_c_node_roles:
-            self._add_c_node_role(node_role_pair[0], node_role_pair[1])
 
         self._create_CIM_states()
 
@@ -984,7 +973,7 @@ class Composition(object):
             Returns
             -------
 
-            List of Compositon Nodes with `CNodeRole` `role` : List(`Mechanisms <Mechanism>` and
+            List of Composition Nodes with `CNodeRole` `role` : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
         '''
         if role not in CNodeRole:
@@ -1148,7 +1137,9 @@ class Composition(object):
         #  INPUT CIMS
         # loop over all origin nodes
         origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+
         redirected_inputs = set()
+        origin_node_pairs = {}
         for node in origin_nodes:
             if node in self.external_input_sources:
                 if self.external_input_sources[node] == True:
@@ -1180,6 +1171,9 @@ class Composition(object):
                                            "InputState), but is already borrowing input from yet another origin node."
                                            .format(self.external_input_sources[node], node.name))
 
+                elif self.external_input_sources[node] == ALL:
+                    redirected_inputs.add(node)
+                    continue
                 else:
                     raise CompositionError("External input source ({0}) specified for {1} is not valid. Must be (1) True "
                                            "[the key node is represented on the input_CIM by one or more pairs of "
@@ -2520,7 +2514,7 @@ class Composition(object):
                                                 self.__data_struct)
                     else:
                         node.context.execution_phase = ContextFlags.PROCESSING
-                        if not (CNodeRole.OBJECTIVE in self.get_roles_by_c_node(node) and not node is self.controller):
+                        if node is not self.controller:
                             node.execute(runtime_params=execution_runtime_params,
                                          context=ContextFlags.COMPOSITION)
 
@@ -3300,7 +3294,6 @@ class Composition(object):
                     else:
                         adjusted_stimuli[node].append(stim)
                 nums_input_sets.add(len(stimuli[node]))
-
         if len(nums_input_sets) > 1:
             if 1 in nums_input_sets:
                 nums_input_sets.remove(1)
@@ -3313,20 +3306,19 @@ class Composition(object):
                                        "lengths ({}). The same number of inputs must be provided for each node "
                                        "in a Composition.".format(self.name, nums_input_sets))
         num_input_sets = nums_input_sets.pop()
-
         return adjusted_stimuli, num_input_sets
 
     def _adjust_execution_stimuli(self, stimuli):
         adjusted_stimuli = {}
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
-                input_must_match = node.input_values
+                input_must_match = node.external_input_values
                 if isinstance(stimulus, dict):
                     adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
                     adjusted_stimuli[node] = adjusted_stimulus_dict
                     continue
             else:
-                input_must_match = node.instance_defaults.variable
+                input_must_match = node.default_external_input_values
 
 
             check_spec_type = self._input_matches_variable(stimulus, input_must_match)

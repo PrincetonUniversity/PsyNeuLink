@@ -501,10 +501,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         OutputStates specified in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
-        the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
+        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
         any PsyNeuLink `CombinationFunction` or a Python function that takes a 2d array with an arbitrary number of
-        items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
-        input_states), and returns a 1d array.
+        items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e., its number of
+        input_states) and returns a 1d array.
 
     role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
@@ -631,15 +631,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             these will replace any existing InputStates (including a default one)
         """
         # If call is for initialization
+
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             # Use self.input_states (containing specs from **input_states** arg of constructor) or
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
             input_states = super()._instantiate_input_states(input_states=input_states, context=context)
-
         else:
             # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
             #     (note: these will replace any existing ones, including the default one created on initialization)
+
             input_states = super()._instantiate_input_states(input_states=monitored_output_states_specs,
                                                              reference_value=reference_value,
                                                              context=context)
@@ -823,71 +824,70 @@ def _objective_mechanism_role(mech, role):
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
-@tc.typecheck
-def _instantiate_monitoring_projections(owner,
-                                        sender_list:tc.any(list, ContentAddressableList),
-                                        receiver_list:tc.any(list, ContentAddressableList),
-                                        receiver_projection_specs:tc.optional(list)=None,
-                                        context=None):
-
-    from psyneulink.components.states.outputstate import OutputState
-    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-    from psyneulink.components.projections.projection import ProjectionTuple
-
-    receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
-
-    if len(sender_list) != len(receiver_list):
-        raise ObjectiveMechanismError("PROGRAM ERROR: Number of senders ({}) does not equal number of receivers ({}) "
-                                     "in call to instantiate monitoring projections for {}".
-                                     format(len(sender_list), len(receiver_list), owner.name))
-
-    if len(receiver_projection_specs) != len(receiver_list):
-        raise ObjectiveMechanismError("PROGRAM ERROR: Number of projection specs ({}) "
-                                     "does not equal number of receivers ({}) "
-                                     "in call to instantiate monitoring projections for {}".
-                                     format(len(receiver_projection_specs), len(receiver_list), owner.name))
-
-    # Instantiate InputState with Projection from OutputState specified by sender
-    for sender, receiver, recvr_projs in zip(sender_list, receiver_list, receiver_projection_specs):
-
-        # IMPLEMENTATION NOTE:  If there is more than one Projection specified for a receiver, only the 1st is used;
-        #                           (there should only be one if a 2-item tuple was used to specify the InputState,
-        #                            however other forms of specifications could produce more)
-        if isinstance(recvr_projs,list) and len(recvr_projs) > 1 and owner.verbosePref:
-            warnings.warn("{} projections were specified for InputState ({}) of {} ;"
-                          "only the first ({}) will be used".
-                          format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].state.name))
-            projection_spec = recvr_projs[0]
-        else:
-            projection_spec = recvr_projs
-
-        if isinstance(projection_spec, ProjectionTuple):
-            projection_spec = projection_spec.projection
-
-        # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
-        #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
-        if isinstance(sender, OutputState):
-            # Projection has been specified for receiver and initialization begun, so call deferred_init()
-            if receiver.path_afferents:
-                if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
-                    raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
-                                                  "implemented and initialized ({})".
-                                                  format(receiver.name, owner.name, receiver.path_afferents[0].name))
-                # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
-                # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
-                if (projection_spec and
-                        not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
-                    raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
-                                                  "does not match matrix already assigned ({})".
-                                                  format(receiver.name,
-                                                         owner.name,
-                                                         projection_spec,
-                                                         receiver.path_afferents[0].function_params[MATRIX]))
-                receiver.path_afferents[0].init_args[SENDER] = sender
-                receiver.path_afferents[0]._deferred_init()
-            else:
-                proj = MappingProjection(sender=sender,
-                                         receiver=receiver,
-                                         matrix=projection_spec,
-                                         name=sender.name + ' monitor')
-                receiver.aux_components.append(proj)
+# KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
+# @tc.typecheck
+# def _instantiate_monitoring_projections(owner,
+#                                         sender_list:tc.any(list, ContentAddressableList),
+#                                         receiver_list:tc.any(list, ContentAddressableList),
+#                                         receiver_projection_specs:tc.optional(list)=None,
+#                                         context=None):
+#
+#     from psyneulink.components.states.outputstate import OutputState
+#     from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+#     from psyneulink.components.projections.projection import ProjectionTuple
+#
+#     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
+#
+#     if len(sender_list) != len(receiver_list):
+#         raise ObjectiveMechanismError("PROGRAM ERROR: Number of senders ({}) does not equal number of receivers ({}) "
+#                                      "in call to instantiate monitoring projections for {}".
+#                                      format(len(sender_list), len(receiver_list), owner.name))
+#
+#     if len(receiver_projection_specs) != len(receiver_list):
+#         raise ObjectiveMechanismError("PROGRAM ERROR: Number of projection specs ({}) "
+#                                      "does not equal number of receivers ({}) "
+#                                      "in call to instantiate monitoring projections for {}".
+#                                      format(len(receiver_projection_specs), len(receiver_list), owner.name))
+#
+#     # Instantiate InputState with Projection from OutputState specified by sender
+#     for sender, receiver, recvr_projs in zip(sender_list, receiver_list, receiver_projection_specs):
+#         # IMPLEMENTATION NOTE:  If there is more than one Projection specified for a receiver, only the 1st is used;
+#         #                           (there should only be one if a 2-item tuple was used to specify the InputState,
+#         #                            however other forms of specifications could produce more)
+#         if isinstance(recvr_projs,list) and len(recvr_projs) > 1 and owner.verbosePref:
+#             warnings.warn("{} projections were specified for InputState ({}) of {} ;"
+#                           "only the first ({}) will be used".
+#                           format(len(recvr_projs), receiver.name, owner.name, recvr_projs[0].state.name))
+#             projection_spec = recvr_projs[0]
+#         else:
+#             projection_spec = recvr_projs
+#
+#         if isinstance(projection_spec, ProjectionTuple):
+#             projection_spec = projection_spec.projection
+#
+#         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
+#         #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
+#         if isinstance(sender, OutputState):
+#             # Projection has been specified for receiver and initialization begun, so call deferred_init()
+#             if receiver.path_afferents:
+#                 if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
+#                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
+#                                                   "implemented and initialized ({})".
+#                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))
+#                 # FIX: 10/3/17 - IS IT OK TO IGNORE projection_spec IF IT IS None?  SHOULD IT HAVE BEEN SPECIFIED??
+#                 # FIX:           IN DEVEL, projection_spec HAS BEEN PROPERLY ASSIGNED
+#                 if (projection_spec and
+#                         not receiver.path_afferents[0].function_params[MATRIX] is projection_spec):
+#                     raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
+#                                                   "does not match matrix already assigned ({})".
+#                                                   format(receiver.name,
+#                                                          owner.name,
+#                                                          projection_spec,
+#                                                          receiver.path_afferents[0].function_params[MATRIX]))
+#                 receiver.path_afferents[0].init_args[SENDER] = sender
+#                 receiver.path_afferents[0]._deferred_init()
+#             else:
+#                 projection_spec = MappingProjection(sender=sender,
+#                                                     receiver=receiver,
+#                                                     matrix=projection_spec,
+#                                                     name=sender.name + ' monitor')
