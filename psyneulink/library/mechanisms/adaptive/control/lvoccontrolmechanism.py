@@ -273,7 +273,7 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset
 
 __all__ = [
-    'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS',
+    'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
@@ -956,22 +956,26 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
         predictors = self.predictor_values.reshape(-1)
 
-        # Get interaction weights and reshape so that there is one row per control_signal
-        #    containing the terms for the interaction of that control_signal with each of the predictors
-        interaction_weights = prediction_weights[intrxn_sl].reshape(num_ctl, num_pred)
-        # multiply interactions terms by predictors (since those don't change during the gradient ascent)
-        interaction_weights_x_predictors = interaction_weights * predictors
-
         control_signal_values = pv[ctl_sl]
         control_signal_weights = prediction_weights[ctl_sl]
-
-        gradient_constants = np.zeros(num_ctl)
-        for i in range(num_ctl):
-            gradient_constants[i] = control_signal_weights[i]
-            gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
-
         costs = pv[cst_sl]
         cost_weights = prediction_weights[cst_sl]
+
+
+        gradient_constants = np.zeros(num_ctl)
+
+        # Compute gradient constants
+        if PV.PC in self.prediction_terms:
+            # Get weights for pc interaction term and reshape so that there is one row per control_signal
+            #    containing the terms for the interaction of that control_signal with each of the predictors
+            interaction_weights = prediction_weights[intrxn_sl].reshape(num_ctl, num_pred)
+            # multiply interactions terms by predictors (since those don't change during the gradient ascent)
+            interaction_weights_x_predictors = interaction_weights * predictors
+
+            # d(pc)/d(c) = sum (p[i] * wt) over p
+            for i in range(num_ctl):
+                gradient_constants[i] = control_signal_weights[i] + np.sum(interaction_weights_x_predictors[i])
+
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
@@ -989,7 +993,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             for i, control_signal_value in enumerate(control_signal_values):
 
-                # Recompute costs and add to gradient
+                # Compute d(costs)/d(c) (since costs depend on control_signals) and add to gradient
                 cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
                 cost_gradient[i] = -(cost_function_derivative(control_signal_value) * cost_weights[i])
                 gradient[i] += cost_gradient[i]
@@ -1000,6 +1004,7 @@ class LVOCControlMechanism(ControlMechanism):
                 # Update cost based on new control_signal_value
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
+            # FIX: CALL PredictionVector.update HERE
             # Assign new values of interaction terms, control_signals and costs to pv
             # pv[intrxn_sl]= np.array(pv[pred] * pv[ctl].reshape(num_ctl,1)
             #                                     ).reshape(-1)
