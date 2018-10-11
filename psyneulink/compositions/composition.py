@@ -3081,41 +3081,34 @@ class Composition(Composition_Base):
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
-            # Time stamp (trial, run, step)
-            time_stamp_struct = ir.LiteralStructType([ctx.int32_ty, ctx.int32_ty, ctx.int32_ty])
-            structure = ir.LiteralStructType([
-                time_stamp_struct, # current time stamp
-                ir.ArrayType( # for each node
-                    ir.LiteralStructType([
-                        ctx.int32_ty, # number of executions
-                        time_stamp_struct # time stamp of last execution
-                    ]), len(self.c_nodes)
-                )
-            ])
+            # Create condition generator
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
 
             # Allocate and init condition structure
-            cond_ptr = builder.alloca(structure)
-            cond_init = structure(((0, 0, 0), [(0,(0, 0, 0)) for n in self.c_nodes]))
+            structure = cond_gen.get_condition_struct()
+            cond_ptr = builder.alloca(structure, name="cond_ptr")
+            cond_init = structure(cond_gen.get_condition_initializer())
             builder.store(cond_init, cond_ptr)
 
             # Allocate run set structure
             run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
-            run_set_ptr = builder.alloca(run_set_type)
+            run_set_ptr = builder.alloca(run_set_type, name="run_set")
 
             # Allocate temporary output storage
             output_storage = builder.alloca(data.type.pointee, name="output_storage")
 
+            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
+            builder.store(ctx.int32_ty(0), iter_ptr)
+
             loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
             builder.branch(loop_condition)
-
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
 
             # Generate a while not 'end condition' loop
             builder.position_at_end(loop_condition)
             run_cond = cond_gen.generate_sched_condition(builder,
                             self.termination_processing[TimeScale.TRIAL],
                             cond_ptr, None)
-            run_cond = builder.not_(run_cond)
+            run_cond = builder.not_(run_cond, name="not_run_cond")
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
             exit_block = builder.append_basic_block(name="exit")
@@ -3126,49 +3119,63 @@ class Composition(Composition_Base):
             builder.position_at_end(loop_body)
 
             zero = ctx.int32_ty(0)
-            time_stamp = builder.load(builder.gep(cond_ptr, [zero, ctx.int32_ty(0)]))
-            array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
+            any_cond = ir.IntType(1)(0)
+
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
+                run_set_mech_ptr = builder.gep(run_set_ptr,
+                                               [zero, ctx.int32_ty(idx)],
+                                               name="run_cond_ptr_" + mech.name)
                 mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
                                 cond_ptr, mech)
+                ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
+                mech_cond = builder.and_(mech_cond, builder.not_(ran),
+                                         name="run_cond_" + mech.name)
+                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
                 builder.store(mech_cond, run_set_mech_ptr)
 
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr)
+                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
                 with builder.if_then(mech_cond):
                     mech_name = self.__get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
-
-                    status_ptr = builder.gep(array_ptr, [zero, ctx.int32_ty(idx)])
-
-                    # Update number of runs
-                    node_runs_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(0)])
-                    node_runs = builder.load(node_runs_ptr)
-                    node_runs = builder.add(node_runs, ctx.int32_ty(1))
-                    builder.store(node_runs, node_runs_ptr)
-
-                    # Update timestamp
-                    mech_ts_ptr = builder.gep(status_ptr, [zero, ctx.int32_ty(1)])
-                    builder.store(time_stamp, mech_ts_ptr)
+                    cond_gen.generate_update_after_run(builder, cond_ptr, mech)
 
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr)
+                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
                 with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)])
-                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)])
+                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
+                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)],
+                                           name="data_result_" + mech.name)
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
-            step = builder.extract_value(time_stamp, 2)
-            step = builder.add(step, ctx.int32_ty(1))
-            builder.store(step, builder.gep(cond_ptr, [zero, ctx.int32_ty(0), ctx.int32_ty(2)]))
+            with builder.if_then(any_cond):
+                cond_gen.increment_ts(builder, cond_ptr)
+
+            # Increment number of iterations
+            iters = builder.load(iter_ptr, name="iterw")
+            iters = builder.add(iters, ctx.int32_ty(1), name="iterw_inc")
+            builder.store(iters, iter_ptr)
+
+            max_iters = len(self.scheduler_processing.consideration_queue)
+            completed_pass = builder.icmp_unsigned("==", iters,
+                                                   ctx.int32_ty(max_iters),
+                                                   name="completed_pass")
+            # Increment pass and reset time step
+            with builder.if_then(completed_pass):
+                builder.store(zero, iter_ptr)
+                cond_gen.increment_ts(builder, cond_ptr, (0, 1, 0))
+                # TODO: Move this to ConditionGenerator
+                step_ptr = builder.gep(cond_ptr,
+                                       [zero, ctx.int32_ty(0), ctx.int32_ty(2)],
+                                       name="timestep_ptr")
+                builder.store(zero, step_ptr)
 
             builder.branch(loop_condition)
 
