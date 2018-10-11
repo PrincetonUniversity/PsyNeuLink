@@ -3124,6 +3124,9 @@ class Composition(object):
             zero = ctx.int32_ty(0)
             time_stamp = builder.load(builder.gep(cond_ptr, [zero, ctx.int32_ty(0)]))
             array_ptr = builder.gep(cond_ptr, [zero, ctx.int32_ty(1)])
+
+            any_cond = ir.IntType(1)(0)
+
             # Calculate execution set before running the mechanisms
             for idx, mech in enumerate(self.c_nodes):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
@@ -3132,6 +3135,7 @@ class Composition(object):
                                 cond_ptr, mech)
                 ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
                 mech_cond = builder.and_(mech_cond, builder.not_(ran))
+                any_cond = builder.or_(any_cond, mech_cond)
                 builder.store(mech_cond, run_set_mech_ptr)
 
             for idx, mech in enumerate(self.c_nodes):
@@ -3164,8 +3168,9 @@ class Composition(object):
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
-            # FIXME: This should only happen if we executed any node
-            cond_gen.increment_ts(builder, cond_ptr)
+            with builder.if_then(any_cond):
+                cond_gen.increment_ts(builder, cond_ptr)
+
             builder.branch(loop_condition)
 
             builder.position_at_end(exit_block)
