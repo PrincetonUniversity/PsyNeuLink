@@ -799,7 +799,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.num_ppcc = len(ppcc)
 
             # Construct prediction_vector based on specified terms
-            # FIX: refactor as iterate through enum
+            # FIX: ??refactor as iterate through enum
             i = 0
             if PV.P in terms:
                 self.p = slice(i, self.num_p)
@@ -893,7 +893,6 @@ class LVOCControlMechanism(ControlMechanism):
         def _dc(self, predictor_values, control_signals, terms):
             '''Compute derivatives with respect to control_signal values for specified terms'''
             pass
-
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
