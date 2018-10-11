@@ -662,7 +662,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(self.control_signals,
-                                                 self.prediction_vector,
+                                                 self.prediction_vector.vector,
                                                  self.prediction_weights)
 
         return allocation_policy.reshape((len(allocation_policy),1))
@@ -688,43 +688,50 @@ class LVOCControlMechanism(ControlMechanism):
         obj_mech_outcome = variable[0]
 
         # This is the current values of the predictors
-        self.predictor_values = np.array(variable[1:]).reshape(-1)
+        self.predictor_values = np.array(variable[1:])
 
         # Initialize attributes
         if context is ContextFlags.INSTANTIATE:
+            self.prediction_vector = self.PredictionVector(self.predictor_values, self.control_signals)
+            self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
+            self.previous_cost = np.zeros_like(obj_mech_outcome)
+
+        else:
+            self.prediction_vector._update(self.predictor_values, self.control_signals)
+            self.prediction_buffer.append(self.prediction_vector.vector)
+            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.cst])
+
+        outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
+
+        return [self.prediction_buffer[0], outcome]
+
+
+    class PredictionVector():
+        def __init__(self, predictor_values, control_signals):
             # Numbers of terms in prediction_vector
-            self.num_predictors = len(self.predictor_values)
-            self.num_control_signals = self.num_costs = len(self.control_signals)
+            self.num_predictors = len(predictor_values)
+            self.num_control_signals = self.num_costs = len(control_signals)
             self.num_interactions = self.num_predictors * self.num_control_signals
             len_prediction_vector = \
                 self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
 
             # Indices for fields of prediction_vector
             self.pred = slice(0, self.num_predictors)
-            self.intrxn= slice(self.num_predictors, self.num_predictors+self.num_interactions)
+            self.intrxn = slice(self.num_predictors, self.num_predictors+self.num_interactions)
             self.ctl = slice(self.intrxn.stop, self.intrxn.stop + self.num_control_signals)
             self.cst = slice(self.ctl.stop, len_prediction_vector)
 
-            self.prediction_vector = np.zeros(len_prediction_vector)
-            self.prediction_buffer = deque([self.prediction_vector], maxlen=2)
-            self.previous_cost = np.zeros_like(obj_mech_outcome)
+            self.vector = np.zeros(len_prediction_vector)
 
-        else:
+        def _update(self, predictor_values, control_signals):
             # Populate fields (subvectors) of prediction_vector
-            self.prediction_vector[self.pred] = self.predictor_values
-            self.prediction_vector[self.ctl] = np.array([c.value for c in self.control_signals]).reshape(-1)
-            self.prediction_vector[self.intrxn]= \
-                np.array(self.prediction_vector[self.pred] *
-                         self.prediction_vector[self.ctl].reshape(self.num_control_signals,1)).reshape(-1)
-            self.prediction_vector[self.cst] = \
-                np.array([0 if c.cost is None else c.cost for c in self.control_signals]).reshape(-1) * -1
+            self.vector[self.pred] = predictor_values.reshape(-1)
+            self.vector[self.ctl] = np.array([c.value for c in control_signals]).reshape(-1)
+            self.vector[self.intrxn]= \
+                np.array(self.vector[self.pred] * self.vector[self.ctl].reshape(self.num_control_signals,1)).reshape(-1)
+            self.vector[self.cst] = \
+                np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
-            self.prediction_buffer.append(self.prediction_vector)
-            self.previous_cost = np.sum(self.prediction_vector[self.cst])
-
-        outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
-
-        return [self.prediction_buffer[0], outcome]
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
@@ -745,27 +752,36 @@ class LVOCControlMechanism(ControlMechanism):
 
         '''
 
+        pred = self.prediction_vector.pred
+        intrxn = self.prediction_vector.intrxn
+        ctl = self.prediction_vector.ctl
+        cst = self.prediction_vector.cst
+        num_pred = self.prediction_vector.num_predictors
+        num_ctl = self.prediction_vector.num_control_signals
+        num_cst = self.prediction_vector.num_costs
+        num_intrxn = self.prediction_vector.num_interactions
+
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.float128).max
 
-        predictors = prediction_vector[0:self.num_predictors]
+        predictors = prediction_vector[0:num_pred]
 
         # Get interaction weights and reshape so that there is one row per control_signal
         #    containing the terms for the interaction of that control_signal with each of the predictors
-        interaction_weights = prediction_weights[self.intrxn].reshape(self.num_control_signals,self.num_predictors)
+        interaction_weights = prediction_weights[intrxn].reshape(num_ctl, num_pred)
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
-        control_signal_values = prediction_vector[self.ctl]
-        control_signal_weights = prediction_weights[self.ctl]
+        control_signal_values = prediction_vector[ctl]
+        control_signal_weights = prediction_weights[ctl]
 
-        gradient_constants = np.zeros(self.num_control_signals)
-        for i in range(self.num_control_signals):
+        gradient_constants = np.zeros(num_ctl)
+        for i in range(num_ctl):
             gradient_constants[i] = control_signal_weights[i]
             gradient_constants[i] += np.sum(interaction_weights_x_predictors[i])
 
-        costs = prediction_vector[self.cst]
-        cost_weights = prediction_weights[self.cst]
+        costs = prediction_vector[cst]
+        cost_weights = prediction_weights[cst]
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
@@ -779,7 +795,7 @@ class LVOCControlMechanism(ControlMechanism):
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
             gradient = np.copy(gradient_constants)
-            cost_gradient = np.zeros(self.num_costs)
+            cost_gradient = np.zeros(num_cst)
 
             for i, control_signal_value in enumerate(control_signal_values):
 
@@ -795,11 +811,10 @@ class LVOCControlMechanism(ControlMechanism):
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
             # Assign new values of interaction terms, control_signals and costs to prediction_vector
-            prediction_vector[self.intrxn]= np.array(prediction_vector[self.pred] *
-                                                     prediction_vector[self.ctl].reshape(self.num_control_signals,1)).\
-                                                     reshape(-1)
-            prediction_vector[self.ctl] = control_signal_values
-            prediction_vector[self.cst] = costs
+            prediction_vector[intrxn]= np.array(prediction_vector[pred] * prediction_vector[ctl].reshape(num_ctl,1)
+                                                ).reshape(-1)
+            prediction_vector[ctl] = control_signal_values
+            prediction_vector[cst] = costs
 
             # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(prediction_vector, prediction_weights)
