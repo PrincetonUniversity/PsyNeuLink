@@ -87,6 +87,20 @@ class ConditionGenerator:
         ])
         return structure
 
+    def increment_ts(self, builder, cond_ptr, count=(0,0,1)):
+        ts_ptr = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+        ts = builder.load(ts_ptr)
+
+        # trial, pass, step
+        for idx in range(3):
+            el = builder.extract_value(ts, idx)
+            el = builder.add(el, self.ctx.int32_ty(count[idx]))
+            ts = builder.insert_value(ts, el, idx)
+
+        builder.store(ts, ts_ptr)
+        return builder
+
+
     def ts_compare(self, builder, ts1, ts2, comp):
         assert comp == '<'
         part_eq = []

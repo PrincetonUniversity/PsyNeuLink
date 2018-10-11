@@ -3162,10 +3162,8 @@ class Composition(object):
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
-            step = builder.extract_value(time_stamp, 2)
-            step = builder.add(step, ctx.int32_ty(1))
-            builder.store(step, builder.gep(cond_ptr, [zero, ctx.int32_ty(0), ctx.int32_ty(2)]))
-
+            # FIXME: This should only happen if we executed any node
+            cond_gen.increment_ts(builder, cond_ptr)
             builder.branch(loop_condition)
 
             builder.position_at_end(exit_block)
