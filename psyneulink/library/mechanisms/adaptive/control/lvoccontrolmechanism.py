@@ -952,7 +952,8 @@ class LVOCControlMechanism(ControlMechanism):
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.float128).max
 
-        # FIX: NEEDED FOR Stroop XOR IMPLEMENTATION SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
+        # FIX: NEEDED FOR Stroop XOR IMPLEMENTATION (TO RECOMPUTE PC INTERACTION TERM FOR EACH SAMPLE CONTROL SIGNALS)
+        # FIX: SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
         predictors = self.predictor_values.reshape(-1)
 
         # Get interaction weights and reshape so that there is one row per control_signal
@@ -979,7 +980,7 @@ class LVOCControlMechanism(ControlMechanism):
               '\nprediction_weights: ', prediction_weights)
         # TEST PRINT END:
 
-        # Perform gradient ascent until convergence criterion is reached
+        # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
         j=0
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
