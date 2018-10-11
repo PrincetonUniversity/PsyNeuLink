@@ -279,6 +279,19 @@ __all__ = [
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 
+class PV(Enum):
+    '''PredictionVector terms'''
+    P = 'p'         # Main effect of Predictors
+    C = 'c'         # Main effect of values of control_signals
+    PP = 'pp'       # Interaction among Predictor vectors
+    CC = 'cc'       # Interaction among control_signals
+    PC = 'PC'       # Interaction between Predictors and control_signals
+    PPC = 'ppc'     # Interaction between Predictor interactions and control_signals
+    PCC = 'pcc'     # Interaction between Predictors and interactions of control_signals
+    PPCC = 'ppcc'   # Interaction between Interactions of Predictors and interactions of control_signals
+    CST = 'cst'     # Main effect of costs of control_signals
+
+
 class LVOCError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -295,6 +308,7 @@ class LVOCControlMechanism(ControlMechanism):
     origin_objective_mechanism=False,               \
     terminal_objective_mechanism=False,             \
     function=BayesGLM,                              \
+    prediction_terms=[PV.P,PV.C,PV.PC]              \
     update_rate=0.1,                                \
     convergence_criterion=.001,                     \
     max_iterations=1000,                            \
@@ -332,6 +346,8 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
+
+    prediction_terms :
 
     update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
@@ -712,7 +728,7 @@ class LVOCControlMechanism(ControlMechanism):
         '''Only populate with following terms: Predictor-ControlSignal interactions, control_signal values and costs
 
         IMPLEMENTS VERSION OF PREDICTION VECTOR THAT IS SPECIFIC TO STROOP XOR MODEL. WILL BE REPLACED BY
-        PredictionVector2 (THAT WILL ALSO BE APPROPRIATELY RENAMED!) ONCE THAT IS COMPLETE
+        PredictionVector (THAT WILL ALSO BE APPROPRIATELY RENAMED!) ONCE THAT IS COMPLETE
 
         '''
 
@@ -749,20 +765,8 @@ class LVOCControlMechanism(ControlMechanism):
         '''Full generalization:  allow main effect and interactio jterms to be specified for inclusion
         STILL UNDER DEVELOPMENT
         '''
-        class PVTerms(Enum):
-            P = 'p'         # Main effect of Predictors
-            C = 'c'         # Main effect of values of control_signals
-            PP = 'pp'       # Interaction among Predictor vectors
-            CC = 'cc'       # Interaction among control_signals
-            PC = 'PC'       # Interaction between Predictors and control_signals
-            PPC = 'ppc'     # Interaction between Predictor interactions and control_signals
-            PCC = 'pcc'     # Interaction between Predictors and interactions of control_signals
-            PPCC = 'ppcc'   # Interaction between Interactions of Predictors and interactions of control_signals
-            CST = 'cst'     # Main effect of costs of control_signals
 
         def __init__(self, predictor_values, control_signals, terms):
-
-            PV = self.PVTerms()
 
             # GET TERMS
 
@@ -843,8 +847,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         def _update(self, predictor_values, control_signals, terms):
             # Populate fields (subvectors) of prediction_vector
-
-            PV = self.PVTerms()
 
             c = np.array([c.value for c in control_signals]).reshape(-1)
             p = np.array(predictor_values).reshape(-1)
