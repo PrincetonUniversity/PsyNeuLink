@@ -127,10 +127,10 @@ A State can be specified using any of the following:
     .. _State_Specification_Dictionary:
 
     * **State specification dictionary** -- can use the following: *KEY*:<value> entries, in addition to those
-      specific to the State's type (see documentation for each type):
+      specific to the State's type (see documentation for each State type):
 
       * *STATE_TYPE*:<State type>
-          specifies type of State to create (necessary if it cannot be determined from the
+          specifies type of State to create (necessary if it cannot be determined from
           the context of the other entries or in which it is being created).
       ..
       * *NAME*:<str>
@@ -2255,6 +2255,9 @@ def _instantiate_state_list(owner,
                                    state_spec=state_spec,
                                    # name=name,
                                    context=context)
+        # automatically generated projections (e.g. when an InputState is specified by the OutputState of another mech)
+        for proj in state.path_afferents:
+            owner.aux_components.append(proj)
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state._assign_default_state_name()
         # if default_name:
@@ -2957,9 +2960,10 @@ def _parse_state_spec(state_type=None,
     # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+            state_name = state_dict[NAME] or 'unnamed'
             raise StateError('state_spec value ({}) specified for {} {} of {} is not compatible with '
                              'the value ({}) computed from the state_spec function ({})'.
-                             format(state_dict[VALUE], repr(state_dict[NAME]), state_type.__name__,
+                             format(state_dict[VALUE], state_name, state_type.__name__,
                                     state_dict[OWNER].name, spec_function_value, spec_function))
 
     if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):

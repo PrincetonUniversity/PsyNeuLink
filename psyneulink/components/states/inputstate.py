@@ -640,7 +640,7 @@ class InputState(State_Base):
         by the InputState.
 
     value : value or ndarray
-        the output of the InputState's `function <InputState.function>`, which is the the aggregated value of the
+        the output of the InputState's `function <InputState.function>`, which is the aggregated value of the
         `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
         InputState (and listed in its `path_afferents <InputState.path_afferents>` attribute), possibly `modulated
         <ModulatorySignal_Modulation>` by any `GatingProjections <GatingProjection>` it receives (listed in its
@@ -972,7 +972,7 @@ class InputState(State_Base):
         #      CHANGE EXPECTATION OF *PROJECTIONS* ENTRY TO BE A SET OF TUPLES WITH THE WEIGHT AND EXPONENT FOR IT
         #      THESE CAN BE USED BY THE InputState's LinearCombination Function
         #          (AKIN TO HOW THE MECHANISM'S FUNCTION COMBINES InputState VALUES)
-        #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
+        #      THIS WOULD ALLOW AN ADDITIONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
         from psyneulink.components.mechanisms.mechanism import Mechanism

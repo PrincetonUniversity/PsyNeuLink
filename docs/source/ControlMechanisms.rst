@@ -16,3 +16,4 @@ ControlMechanisms
 * `AGTControlMechanism`
 * `LCControlMechanism`
 * `EVCControlMechanism`
+* `LVOCControlMechanism`

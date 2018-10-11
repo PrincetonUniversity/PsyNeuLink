@@ -1,11 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="py.test in tests" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
-    <module name="PsyNeuLink" />
+  <configuration default="false" factoryName="py.test" name="py.test in tests" nameIsGenerated="true" singleton="true" type="tests">
+    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python3.5" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="_new_keywords" value="&quot;&quot;" />

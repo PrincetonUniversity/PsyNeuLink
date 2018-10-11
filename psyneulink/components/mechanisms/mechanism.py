@@ -304,15 +304,19 @@ Custom Functions
 
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
-Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCControlMechanism`). A user-defined function can be assigned using the Mechanism's
+Mechanism's defaults for that function.  This is also true for auxiliary functions that appear as arguments in a
+Mechanism's constructor (e.g., the `EVCControlMechanism`).  A user-defined function can be assigned using the Mechanism's
 `assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
-(for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
-auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
-Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>` of a
-`TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
-arguments in the constructor for the Mechanism, and thus changing the function could produce confusing and/or
-unpredictable effects.
+(for its primary function, its `function <Mechanism_Base.function>` attribute). When a user-defined function is
+specified, it is automatically converted to a `UserDefinedFunction`.
+
+.. note::
+   It is *strongly advised* that auxiliary functions that are inherent to a Mechanism
+   (i.e., ones that do *not* appear as an argument in the Mechanism's constructor,
+   such as the `integrator_function <TransferMechanism.integrator_function>` of a
+   `TransferMechanism`) *not* be assigned custom functions;  this is because their
+   parameters are included as arguments in the constructor for the Mechanism,
+   and thus changing the function could produce confusing and/or unpredictable effects.
 
 
 COMMENT:
@@ -2001,8 +2005,18 @@ class Mechanism_Base(Mechanism):
         self.function_object._instantiate_value(context)
 
     def _instantiate_attributes_after_function(self, context=None):
+        from psyneulink.components.states.parameterstate import _instantiate_parameter_state
 
         self._instantiate_output_states(context=context)
+        # instantiate parameter states from UDF custom parameters if necessary
+        try:
+            cfp = self.function_object.cust_fct_params
+            udf_parameters_lacking_states = {param_name: cfp[param_name] for param_name in cfp if param_name not in self.parameter_states.names}
+
+            _instantiate_parameter_state(self, FUNCTION_PARAMS, udf_parameters_lacking_states, context=context, function=self.function_object)
+        except AttributeError:
+            pass
+
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):

@@ -178,7 +178,11 @@ def register_category(entry,
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
             if name is None:
-                entry.name = component_type_name + "-0"
+                try:
+                    entry.name = component_type_name + "-0"
+                except TypeError:
+                    entry.name = entry.__class__.__name__
+
             else:
                 entry.name = name
 

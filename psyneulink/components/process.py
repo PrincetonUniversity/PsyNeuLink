@@ -226,7 +226,7 @@ output from the last ProcessingMechanism that matches as closely as possible the
 Learning can be `specified for individual (or subsets of) MappingProjections
 <MappingProjection_Learning_Specification>`, or for the entire Process.  It is specified for the entire process by
 assigning a specification for a `LearningProjection <LearningProjection_Creation>` or `LearningSignal
-<LearningSignal_Specification>` specification, or the the keyword *ENABLED*, to the **learning** argument of the
+<LearningSignal_Specification>` specification, or the keyword *ENABLED*, to the **learning** argument of the
 Process' constructor.  Specifying learning for a Process implements it for all MappingProjections in the Process (except
 those that project from the `process_input_states` to the `origin_mechanism <Process.origin_mechanism>`), which
 are treated as a single learning sequence.  Mechanisms that receive MappingProjections for which learning has been
@@ -302,7 +302,7 @@ executed.
 ~~~~~~~~~~~~
 
 When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process.origin_mechanism>`
-(the first Mechanism in the `pathway <Process.pathway>`).  By default, the the input is presented only once.  If
+(the first Mechanism in the `pathway <Process.pathway>`).  By default, the input is presented only once.  If
 the `origin_mechanism <Process.origin_mechanism>` is executed again in the same `PASS` of execution (e.g., if it
 appears again in the pathway, or receives recurrent projections), the input is not presented again. However, the input
 can be "clamped" on using the **clamp_input** argument of `execute <Process.execute>` or `run <Process.run>`.

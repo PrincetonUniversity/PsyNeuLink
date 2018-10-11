@@ -91,7 +91,7 @@ required to implement learning that do not already exist are also instantiated. 
 
 If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_sources**
 arguments must be specified.  The **variable** must have at leaset three items that are compatible (in number and type)
-with the `value <InputState.value>` of the the LearningMechanism's `InputStates <LearningMechanism_InputStates>`.  Each
+with the `value <InputState.value>` of the LearningMechanism's `InputStates <LearningMechanism_InputStates>`.  Each
 item in **error_sources** must be one of the following: a `ComparatorMechanism`, for `single layer learning
 <LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for `multilayer
 learning <LearningMechanism_Multilayer_Learning>`; or a `LearningMechanism`.

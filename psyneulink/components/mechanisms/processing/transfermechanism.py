@@ -502,7 +502,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
-    input_states : str, list or np.ndarray
+    input_states : str, list, dict, or np.ndarray
         specifies the InputStates for the TransferMechanism; by default, a single InputState is created using the
         value of default_variable as its `variable <InputState.variable>`;  if more than one is specified, the number
         and, if specified, their values must be compatible with any specifications in **default_variable** or
