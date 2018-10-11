@@ -283,15 +283,15 @@ PREDICTION_TERMS = 'prediction_terms'
 
 class PV(Enum):
     '''PredictionVector terms'''
-    P = 'p'         # Main effect of Predictors
-    C = 'c'         # Main effect of values of control_signals
+    PRED = 'pred'   # Main effect of Predictors
+    CTL = 'ctl'     # Main effect of values of control_signals
     PP = 'pp'       # Interaction among Predictor vectors
     CC = 'cc'       # Interaction among control_signals
     PC = 'PC'       # Interaction between Predictors and control_signals
     PPC = 'ppc'     # Interaction between Predictor interactions and control_signals
     PCC = 'pcc'     # Interaction between Predictors and interactions of control_signals
     PPCC = 'ppcc'   # Interaction between Interactions of Predictors and interactions of control_signals
-    CST = 'cst'     # Main effect of costs of control_signals
+    COST = 'cst'    # Main effect of costs of control_signals
 
 
 class LVOCError(Exception):
