@@ -10,19 +10,19 @@ init:
 - cmd: ''
 
 environment:
-  PATH: '%PYTHON%\Scripts;%PATH%'
+  PATH: 'C:\%PYTHON%\Scripts;%PATH%'
   matrix:
-  - PYTHON: C:\Python35
+  - PYTHON: Python35
     EXTRA_ARGS: -m llvm
-  - PYTHON: C:\Python36
+  - PYTHON: Python36
     EXTRA_ARGS: -m llvm
-  - PYTHON: C:\Python37
+  - PYTHON: Python37
     EXTRA_ARGS: -m llvm
-  - PYTHON: C:\Python35-x64
+  - PYTHON: Python35-x64
     PYTORCH: cp35-cp35m
-  - PYTHON: C:\Python36-x64
+  - PYTHON: Python36-x64
     PYTORCH: cp36-cp36m
-  - PYTHON: C:\Python37-x64
+  - PYTHON: Python37-x64
     PYTORCH: cp37-cp37m
 
 install:
@@ -40,8 +40,8 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - '%PYTHON%\Scripts'
-    - '%PYTHON%\lib\site-packages'
+    - 'C:\%PYTHON%\Scripts'
+    - 'C:\%PYTHON%\lib\site-packages'
 
 build: off
 
