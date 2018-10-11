@@ -42,6 +42,8 @@ install:
 cache:
     - 'C:\%PYTHON%\Scripts'
     - 'C:\%PYTHON%\lib\site-packages'
+    - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
+    - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
 
 build: off
 
