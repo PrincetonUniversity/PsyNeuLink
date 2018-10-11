@@ -109,8 +109,8 @@ class ConditionGenerator:
         for element in range(3):
             a = builder.extract_value(ts1, element)
             b = builder.extract_value(ts2, element)
-            part_eq.append(builder.icmp_unsigned('==', a, b))
-            part_cmp.append(builder.icmp_unsigned(comp, a, b))
+            part_eq.append(builder.icmp_signed('==', a, b))
+            part_cmp.append(builder.icmp_signed(comp, a, b))
 
         trial = builder.and_(builder.not_(part_eq[0]), part_cmp[0])
         run = builder.and_(part_eq[0],
