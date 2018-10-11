@@ -59,6 +59,7 @@ CONTENTS
 * norm
 * sinusoid
 * scalar_distance
+* powerset
 
 
 *OTHER*
@@ -108,7 +109,7 @@ __all__ = [
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
     'object_has_single_value', 'optional_parameter_spec',
     'normpdf',
-    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
     'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
@@ -539,6 +540,11 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure is SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
+from itertools import chain, combinations
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 # OTHER ****************************************************************************************************************
 
@@ -1578,3 +1584,4 @@ def unproxy_weakproxy(proxy):
             True
     """
     return proxy.__repr__.__self__
+
