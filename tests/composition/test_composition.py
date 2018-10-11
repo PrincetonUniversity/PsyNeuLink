@@ -877,13 +877,11 @@ class TestExecutionOrder:
         assert np.allclose(output, 320)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
-    # LLVMExec mode temporarily skipped for the 3 tests below while execution order is sorted out and expected
-    # LCControlMechanism behavior is determined
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      # pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
                                       ])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
@@ -926,7 +924,7 @@ class TestExecutionOrder:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      # pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
                                       ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
@@ -969,7 +967,7 @@ class TestExecutionOrder:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
     @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      # pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
                                       ])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
