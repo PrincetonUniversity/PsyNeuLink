@@ -693,6 +693,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Initialize attributes
         if context is ContextFlags.INSTANTIATE:
+            # FIX: REPLACE PredictionVectorStroopXOR WITH PredictorVector WHEN COMPLETE
             self.prediction_vector = self.PredictionVectorStroopXOR(self.predictor_values, self.control_signals)
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
@@ -743,7 +744,8 @@ class LVOCControlMechanism(ControlMechanism):
             self.vector[self.cst] = \
                 np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
-    class PredictionVector2():
+
+    class PredictionVector():
         '''Full generalization:  allow main effect and interactio jterms to be specified for inclusion
         STILL UNDER DEVELOPMENT
         '''
@@ -912,6 +914,9 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.allocation_policy>`).
 
         '''
+
+        # FIX: CURRENTLY ASSUMES ONLY TERMS IN PREDICTION VECTOR ARE THOSE USED IN STROOP XOR MODEL
+        #      AND ONLY COMPUTES DERIVATIVES FOR THOSE.  TO BE REPLACED WITH PredictionVector GENERALIZATION
 
         # pred = self.prediction_vector.pred
         intrxn = self.prediction_vector.intrxn
