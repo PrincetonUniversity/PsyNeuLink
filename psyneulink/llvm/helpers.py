@@ -129,6 +129,16 @@ class ConditionGenerator:
                                                   self.ctx.int32_ty(1)])
             return builder.load(node_ts_ptr)
 
+    def generate_ran_this_pass(self, builder, cond_ptr, node):
+        global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
+                                                        self.ctx.int32_ty(0)]))
+        global_pass = builder.extract_value(global_ts, 1)
+
+        node_ts = self.__get_node_ts(builder, cond_ptr, node)
+        node_pass = builder.extract_value(node_ts, 1)
+        return builder.icmp_signed("==", node_pass, global_pass)
+
+
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
         zero = self.ctx.int32_ty(0)

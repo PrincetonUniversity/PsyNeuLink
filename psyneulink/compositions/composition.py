@@ -3130,6 +3130,8 @@ class Composition(object):
                 mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
                                 cond_ptr, mech)
+                ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
+                mech_cond = builder.and_(mech_cond, builder.not_(ran))
                 builder.store(mech_cond, run_set_mech_ptr)
 
             for idx, mech in enumerate(self.c_nodes):
