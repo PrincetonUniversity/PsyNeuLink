@@ -33,12 +33,9 @@ add methods of its parent class `Composition`. The only significant argument in 
 
 If set to True:
 
-* Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they
-don’t exist for the autodiff composition’s mechanisms.
+* Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they don’t exist for the autodiff composition’s mechanisms.
 
-* The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the tensor
-of the parameter object corresponding to a particular projection not only has the same dimensionality as the
-projection’s matrix, it has the same exact values.
+* The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the tensor of the parameter object corresponding to a particular projection not only has the same dimensionality as the projection’s matrix, it has the same exact values.
 
 * Pytorch functions representing mechanism functions incorporate their scalar, untrainable biases.
 
@@ -46,11 +43,9 @@ If set to False:
 
 * Both weight parameters corresponding to projections and trainable bias parameters for mechanisms are created.
 
-* Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those
-of the bias parameters - are sampled from a random distribution.
+* Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those of the bias parameters - are sampled from a random distribution.
 
-* Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar,
-untrainable biases.
+* Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar, untrainable biases.
 
 .. warning:: Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
     first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
@@ -187,7 +182,7 @@ class AutodiffComposition(Composition):
 
     Returns
     -------
-    instance of LeabraMechanism : LeabraMechanism
+    instance of AutodiffComposition : AutodiffComposition
     """
 
     # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
