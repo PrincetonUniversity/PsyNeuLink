@@ -1,32 +1,31 @@
 import functools
 import logging
+
 from timeit import timeit
 
-from itertools import product
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, Logistic, SimpleIntegrator, ModulationParam, UserDefinedFunction
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism, RECURRENT_OUTPUT
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError
-from psyneulink.globals.utilities import CNodeRole
-from psyneulink.compositions.pathwaycomposition import PathwayComposition
-from psyneulink.compositions.systemcomposition import SystemComposition
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.scheduling.condition import EveryNCalls
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import IDENTITY_MATRIX, NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP, SLOPE
+from itertools import product
+
+from psyneulink.core.components.functions.function import Linear, Logistic, ModulationParam, SimpleIntegrator, UserDefinedFunction
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
+from psyneulink.core.compositions.systemcomposition import SystemComposition
+from psyneulink.core.globals.keywords import INPUT_STATE, NAME
+from psyneulink.core.globals.utilities import CNodeRole
+from psyneulink.core.scheduling.condition import AfterNCalls
+from psyneulink.core.scheduling.condition import EveryNCalls
+from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class TestConstructor:
         ]
     )
     def test_timing_no_args(self, count):
-        t = timeit('comp = Composition()', setup='from psyneulink.compositions.composition import Composition', number=count)
+        t = timeit('comp = Composition()', setup='from psyneulink.core.compositions.composition import Composition', number=count)
         print()
         logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
@@ -89,8 +88,8 @@ class TestAddMechanism:
             'comp.add_c_node(TransferMechanism())',
             setup='''
 
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.compositions.composition import Composition
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.compositions.composition import Composition
 comp = Composition()
 ''',
             number=count
@@ -256,9 +255,9 @@ class TestAddProjection:
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
 
-from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
-from psyneulink.compositions.composition import Composition
+from psyneulink.core.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathwayprojections.mappingprojection import MappingProjection
+from psyneulink.core.compositions.composition import Composition
 
 comp = Composition()
 A = TransferMechanism(name='composition-pytests-A')
@@ -280,9 +279,9 @@ comp.add_c_node(B)
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.compositions.composition import Composition
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.compositions.composition import Composition
 comp = Composition()
 A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
@@ -880,7 +879,9 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      ])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -921,7 +922,9 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -962,7 +965,9 @@ class TestExecutionOrder:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Control composition scalar")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm)
+                                      ])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
         #   B--A
@@ -1661,7 +1666,7 @@ class TestRun:
         assert np.allclose([250], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator 
+    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
@@ -1869,7 +1874,7 @@ class TestRun:
             error_text.value)
 
     def test_LPP_wrong_component(self):
-        from psyneulink.components.states.inputstate import InputState
+        from psyneulink.core.components.states.inputstate import InputState
         comp = Composition()
         Nonsense = InputState()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))

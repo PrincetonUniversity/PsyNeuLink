@@ -12,7 +12,8 @@ def test_ddm_docs():
     # print("current dir = {}".format(os.getcwd()))
     # ALSO FIXME: ValueError cannot convert float NaN integer
     fail, total = doctest.testmod(
-            pnl.library.mechanisms.processing.integrator.ddm)
+        pnl.library.components.mechanisms.processing.integrator.ddm
+    )
 
     if fail > 0:
         pytest.fail("{} out of {} examples failed".format(fail, total),
@@ -21,8 +22,31 @@ def test_ddm_docs():
 
 def test_comparator_mechanism_docs():
     fail, total = doctest.testmod(
-            pnl.library.mechanisms.processing.objective.comparatormechanism)
+        pnl.library.components.mechanisms.processing.objective.comparatormechanism
+    )
 
     if fail > 0:
         pytest.fail("{} out of {} examples failed".format(fail, total),
+                    pytrace=False)
+
+
+def test_lc_control_mechanism_docs():
+    fail, test = doctest.testmod(
+        pnl.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism,
+        optionflags=doctest.REPORT_NDIFF
+    )
+
+    if fail > 0:
+        pytest.fail("{} out of {} examples failed".format(fail, test),
+                    pytrace=False)
+
+
+def test_evc_control_mechanism_docs():
+    fail, test = doctest.testmod(
+        pnl.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism,
+        optionflags=doctest.REPORT_NDIFF
+    )
+
+    if fail > 0:
+        pytest.fail("{} out of {} examples failed".format(fail, test),
                     pytrace=False)

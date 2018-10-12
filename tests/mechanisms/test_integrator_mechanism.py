@@ -3,17 +3,18 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
-from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, Linear, NormalDist, SimpleIntegrator
-from psyneulink.components.functions.function import FunctionError, LCAIntegrator
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.scheduling.condition import Never
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import AtTrial
+
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
+from psyneulink.core.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, Linear, NormalDist, SimpleIntegrator
+from psyneulink.core.components.functions.function import FunctionError, LCAIntegrator
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import AtTrial
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.time import TimeScale
 
 
 class TestReinitialize:

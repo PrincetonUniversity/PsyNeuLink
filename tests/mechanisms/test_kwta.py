@@ -2,16 +2,16 @@ import pytest
 
 import numpy as np
 
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import Linear, Logistic
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.library.mechanisms.processing.transfer.kwtamechanism import KWTAMechanism, KWTAError
-from psyneulink.scheduling.time import TimeScale
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.transfer.kwtamechanism import KWTAError, KWTAMechanism
 
 class TestKWTAInputs:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}

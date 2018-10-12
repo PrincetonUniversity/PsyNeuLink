@@ -2,14 +2,14 @@ import numpy as np
 import pytest
 import typecheck
 
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
 
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, ARRAY, DDMError, SELECTED_INPUT_ARRAY
-from psyneulink.scheduling.condition import WhenFinished, Never
-from psyneulink.scheduling.time import TimeScale
+from psyneulink.core.scheduling.condition import Never, WhenFinished
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY
 
 class TestReinitialize:
 

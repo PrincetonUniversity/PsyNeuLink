@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import ctypes
-import psyneulink.llvm as pnlvm
-import numpy as np
 import copy
+import ctypes
+import numpy as np
 import pytest
+
+from psyneulink.core import llvm as pnlvm
 
 ITERATIONS=100
 DIM_X=1000

@@ -1,10 +1,11 @@
-from psyneulink.components.functions.function import Buffer
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import Never
-from collections import deque
 import numpy as np
+
+from collections import deque
+from psyneulink.core.components.functions.function import Buffer
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import Never
 
 class TestBuffer():
 

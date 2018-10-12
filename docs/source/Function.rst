@@ -4,7 +4,7 @@ Functions
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: psyneulink.components.functions.function
+.. automodule:: psyneulink.core.components.functions.function
    :members: Function_Base,
              ModulationParam,
              ArgumentTherapy,

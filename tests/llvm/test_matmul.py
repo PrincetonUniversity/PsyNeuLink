@@ -2,9 +2,11 @@
 
 import ctypes
 import numpy as np
-import psyneulink.llvm as pnlvm
-import timeit
 import pytest
+import timeit
+
+from psyneulink.core import llvm as pnlvm
+
 from llvmlite import ir
 
 ITERATIONS=100
