@@ -46,16 +46,26 @@ __pass_manager_builder.populate(__cpu_pass_manager)
 #       Would cross module calls work? and for GPUs?
 __backing_mod = binding.parse_assembly("")
 
-__cpu_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
+def _cpu_mcjit_instance():
+    return binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
 
 _dumpenv = os.environ.get("PNL_LLVM_DUMP")
 
 class jit_engine:
-    def __init__(self, engine, pass_mgr, tm):
-        self._engine = engine
+    def __init__(self, engine_contructor, pass_mgr, tm):
+        self.__engine_ctr = engine_contructor
+        self.__engine = None
         self.__mod = None
         self.__pass_manager = pass_mgr
         self.__target_machine = tm
+
+    @property
+    def _engine(self):
+        if self.__engine is None:
+            self.__engine = self.__engine_ctr()
+
+        return self.__engine
+
 
     def opt_and_add_bin_module(self, module):
         self.__pass_manager.run(module)
@@ -82,5 +92,4 @@ class jit_engine:
 
         self.opt_and_add_bin_module(self.__mod)
 
-
-cpu_jit_engine = jit_engine(__cpu_engine, __cpu_pass_manager, __cpu_target_machine)
+cpu_jit_engine = jit_engine(_cpu_mcjit_instance, __cpu_pass_manager, __cpu_target_machine)
