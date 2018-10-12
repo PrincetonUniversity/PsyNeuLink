@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.8.0+715.gb7f9b89 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.4.8.0+722.g29c109a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+715.gb7f9b89 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+722.g29c109a documentation" href="index.html"/>
         <link rel="up" title="AGT" href="AGT.html"/>
         <link rel="next" title="EVC" href="EVC.html"/>
         <link rel="prev" title="AGTControlMechanism" href="AGTControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+715
+                0.4.8.0+722
               </div>
             
           
@@ -98,16 +98,18 @@
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Subystems.html">Subsystems</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="AGT.html">AGT</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="AGTControlMechanism.html">AGTControlMechanism</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">LCControlMechanism</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LVOC.html">LVOC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
 </ul>
 </li>
@@ -322,8 +324,8 @@ a <a class="reference internal" href="Function.html#psyneulink.core.components.f
 <div class="section" id="execution">
 <span id="lccontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An LCControlMechanism executes within a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> at a point specified in the Composition’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> or, if it
-is the <a class="reference internal" href="System.html"><span class="doc">controller</span></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, after all of the other Mechanisms in the Composition have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> as its input, and generates a
-response – under the influence of its <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.FHNIntegrator.mode" title="psyneulink.core.components.functions.function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is assigned as the <code class="xref any docutils literal"><span class="pre">allocation</span></code> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the Mechanisms the
+is the <a class="reference internal" href="System.html"><span class="doc">controller</span></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, after all of the other Mechanisms in the Composition have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> as its input, and generates a
+response – under the influence of its <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.FHNIntegrator.mode" title="psyneulink.core.components.functions.function.FHNIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is assigned as the <code class="xref any docutils literal"><span class="pre">allocation</span></code> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the Mechanisms the
 LCControlMechanism controls.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -686,7 +688,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+715.gb7f9b89',
+            VERSION:'0.4.8.0+722.g29c109a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
