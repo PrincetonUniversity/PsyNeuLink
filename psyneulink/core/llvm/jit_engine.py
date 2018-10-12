@@ -14,55 +14,63 @@ import os
 __all__ = ['cpu_jit_engine']
 
 # Compiler binding
-binding.initialize()
-
-# PassManagerBuilder can be shared
-__pass_manager_builder = binding.PassManagerBuilder()
-__pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
-__pass_manager_builder.loop_vectorize = True
-__pass_manager_builder.slp_vectorize = True
-__pass_manager_builder.opt_level = 3  # Most aggressive optimizations
-
-# native == currently running CPU. ASM printer includes opcode emission
-binding.initialize_native_target()
-binding.initialize_native_asmprinter()
-
-__cpu_features = binding.get_host_cpu_features().flatten()
-__cpu_name = binding.get_host_cpu_name()
-
-# Create compilation target, use default triple
-__cpu_target = binding.Target.from_default_triple()
-__cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=3)
-
-__cpu_pass_manager = binding.ModulePassManager()
-__cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
-__pass_manager_builder.populate(__cpu_pass_manager)
+__initialized = False
+def _binding_initialize():
+    global __initialized
+    if not __initialized:
+        binding.initialize()
+        __initialized = True
 
 
-# And an execution engine with an empty backing module
-# TODO: why is empty backing mod necessary?
-# TODO: It looks like backing_mod is just another compiled module.
-#       Can we use it to avoid recompiling builtins?
-#       Would cross module calls work? and for GPUs?
-__backing_mod = binding.parse_assembly("")
+def _cpu_jit_constructor():
+    _binding_initialize()    
 
-def _cpu_mcjit_instance():
-    return binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
+    # PassManagerBuilder can be shared
+    __pass_manager_builder = binding.PassManagerBuilder()
+    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
+    __pass_manager_builder.loop_vectorize = True
+    __pass_manager_builder.slp_vectorize = True
+    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+
+    # native == currently running CPU. ASM printer includes opcode emission
+    binding.initialize_native_target()
+    binding.initialize_native_asmprinter()
+
+    __cpu_features = binding.get_host_cpu_features().flatten()
+    __cpu_name = binding.get_host_cpu_name()
+
+    # Create compilation target, use default triple
+    __cpu_target = binding.Target.from_default_triple()
+    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=3)
+
+    __cpu_pass_manager = binding.ModulePassManager()
+    __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
+    __pass_manager_builder.populate(__cpu_pass_manager)
+
+
+    # And an execution engine with an empty backing module
+    # TODO: why is empty backing mod necessary?
+    # TODO: It looks like backing_mod is just another compiled module.
+    #       Can we use it to avoid recompiling builtins?
+    #       Would cross module calls work? and for GPUs?
+    __backing_mod = binding.parse_assembly("")
+    __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
+    return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
 
 _dumpenv = os.environ.get("PNL_LLVM_DUMP")
 
 class jit_engine:
-    def __init__(self, engine_contructor, pass_mgr, tm):
-        self.__engine_ctr = engine_contructor
+    def __init__(self, contructor):
+        self.__ctr = contructor
         self.__engine = None
         self.__mod = None
-        self.__pass_manager = pass_mgr
-        self.__target_machine = tm
+        self.__pass_manager = None
+        self.__target_machine = None
 
     @property
     def _engine(self):
         if self.__engine is None:
-            self.__engine = self.__engine_ctr()
+            self.__engine, self.__pass_manager, self.__target_machine = self.__ctr()
 
         return self.__engine
 
@@ -92,4 +100,4 @@ class jit_engine:
 
         self.opt_and_add_bin_module(self.__mod)
 
-cpu_jit_engine = jit_engine(_cpu_mcjit_instance, __cpu_pass_manager, __cpu_target_machine)
+cpu_jit_engine = jit_engine(_cpu_jit_constructor)
