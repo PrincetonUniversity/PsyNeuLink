@@ -548,26 +548,46 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def tensor_power(items, flat=True):
+import typecheck as tc
+@tc.typecheck
+def tensor_power(items, levels:tc.optional(range)=None, flat=True):
     '''return tensor product for all members of powerset of items
+
+    levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
+    if None, all terms will be returned
+
     if flat=True, returns 1d array of values
     if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
     '''
+
+    ps = list(powerset(items))
+    max_levels = max([len(s) for s in ps])
+    levels = levels or range(1,max_levels)
+    max_spec = max(list(levels))
+    min_spec = min(list(levels))
+    if  max_spec > max_levels:
+        raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
+                             "exceeds max for items specified ({})".
+                             format(min_spec, max_spec+1, repr('levels'), max_levels+1))
+
     pp = []
-    for s in powerset(items):
-        l = len(s)
-        if l<=1:
+    for s in ps:
+        order = len(s)
+        if not order in list(levels):
             continue
-        i = 0
-        tp = np.tensordot(s[i],s[i+1],axes=0)
-        i+=2
-        while i < l:
-            tp = np.tensordot(tp, s[i], axes=0)
-            i+=1
-        if flat is True:
-            pp.extend(tp.reshape(-1))
+        if order==1:
+            pp.append(np.array(s[0]))
         else:
-            pp.append(tp.reshape(-1))
+            i = 0
+            tp = np.tensordot(s[i],s[i+1],axes=0)
+            i+=2
+            while i < order:
+                tp = np.tensordot(tp, s[i], axes=0)
+                i+=1
+            if flat is True:
+                pp.extend(tp.reshape(-1))
+            else:
+                pp.append(tp.reshape(-1))
     return pp
 
 

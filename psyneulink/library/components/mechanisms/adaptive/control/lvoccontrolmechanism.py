@@ -1036,7 +1036,9 @@ class LVOCControlMechanism(ControlMechanism):
                     # Recompute cc interaction term if it is needed:
                     cc = tensor_power(control_signal_values)
 
-                # Derivative for control_signals interaction term - d(c^2*wts)/d(c) = 2c*wts
+                # Derivative for cc interaction term - d(cc*wts)/d(c[i])
+                #    2c[i]*wts for c[i]=c[j] and c*wts for c[i]!=c[j]
+                #    where c[i] = control_signal_value[i] and c[j] = other control signal in cc interaction term
                 if PV.CC in self.prediction_terms:
                     # FIX: NOT CORRECT FOR POWERSET:
                     # cc_weights = prediction_weights[idx.cc].reshape(num_ctl, num_pred)
@@ -1044,7 +1046,9 @@ class LVOCControlMechanism(ControlMechanism):
                     # ADD TO gradient[i]
                     pass
 
-                # Derivative for ppcc interaction term - d(p^2c^2*wts)/d(c) = p^2*c*wts
+                # Derivative for ppcc interaction term - d(ppcc*wts)/d(c[i])
+                #    p^2*2c[i]*wts for c[i]=c[j] and p^2*c^2*wts for c[i]!=c[j]
+                #    where c[i] = control_signal_value[i] and c[j] = other control signal in ppcc interaction term
                 if PV.PPCC in self.prediction_terms:
                     ppcc = np.tensordot(pv[idx.pp],cc,axes=0)
                     # FIX: NOT CORRECT FOR POWERSET:
