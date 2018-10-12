@@ -6,11 +6,8 @@ branches:
 version: '{build}'
 clone_depth: 25
 
-init:
-- cmd: ''
-
 environment:
-  PATH: 'C:\%PYTHON%\Scripts;%PATH%'
+  PATH: 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
   matrix:
   - PYTHON: Python35
     EXTRA_ARGS: -m llvm
@@ -18,17 +15,21 @@ environment:
     EXTRA_ARGS: -m llvm
   - PYTHON: Python37
     EXTRA_ARGS: -m llvm
-  - PYTHON: Python35-x64
+  - PYTHON: Python35
+    ARCH: -x64
     PYTORCH: cp35-cp35m
-  - PYTHON: Python36-x64
+  - PYTHON: Python36
+    ARCH: -x64
     PYTORCH: cp36-cp36m
-  - PYTHON: Python37-x64
+  - PYTHON: Python37
+    ARCH: -x64
     PYTORCH: cp37-cp37m
 
 install:
   - choco upgrade graphviz.portable -y
   - pip --version
   - pip install --user -U certifi pip
+  - pip --version
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute packages over pypi. Install it directly.
@@ -40,8 +41,7 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - 'C:\%PYTHON%\Scripts'
-    - 'C:\%PYTHON%\lib\site-packages'
+    - 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON% -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
 
