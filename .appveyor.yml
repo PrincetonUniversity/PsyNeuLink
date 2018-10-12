@@ -7,6 +7,7 @@ version: '{build}'
 clone_depth: 25
 
 environment:
+  PYTHONWARNINGS: ignore::DeprecationWarning
   PATH: 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
   matrix:
   - PYTHON: Python35
