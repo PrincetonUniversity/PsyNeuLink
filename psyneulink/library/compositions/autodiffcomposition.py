@@ -360,7 +360,6 @@ class AutodiffComposition(Composition):
 
 
 
-    # overriden just to provide execution id for target CIM
     def _assign_execution_ids(self, execution_id=None):
 
         exec_id = super()._assign_execution_ids(execution_id=execution_id)
