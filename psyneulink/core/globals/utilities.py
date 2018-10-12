@@ -60,6 +60,7 @@ CONTENTS
 * sinusoid
 * scalar_distance
 * powerset
+* tensor_power
 
 
 *OTHER*
@@ -111,7 +112,7 @@ __all__ = [
     'object_has_single_value', 'optional_parameter_spec',
     'normpdf',
     'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
-    'TEST_CONDTION', 'type_match',
+    'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
 
@@ -546,6 +547,30 @@ def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def tensor_power(items, flat=True):
+    '''return tensor product for all members of powerset of items
+    if flat=True, returns 1d array of values
+    if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
+    '''
+    pp = []
+    for s in powerset(items):
+        l = len(s)
+        if l<=1:
+            continue
+        i = 0
+        tp = np.tensordot(s[i],s[i+1],axes=0)
+        i+=2
+        while i < l:
+            tp = np.tensordot(tp, s[i], axes=0)
+            i+=1
+        if flat is True:
+            pp.extend(tp.reshape(-1))
+        else:
+            pp.append(tp.reshape(-1))
+    return pp
+
+
 
 # OTHER ****************************************************************************************************************
 

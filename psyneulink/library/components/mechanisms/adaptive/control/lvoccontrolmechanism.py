@@ -270,7 +270,7 @@ from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset, tensor_power
 
 __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
@@ -901,17 +901,9 @@ class LVOCControlMechanism(ControlMechanism):
 
             # Compute terms that are used:
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
-                for s in powerset(predictor_values):
-                    if len(s)>1:
-                        pp = np.tensordot(s[0],s[1],axes=0).reshape(-1)
-                        for i in range(2,len(s)):
-                            pp = np.tensordot(pp,s[i+1],axes=0).reshape(-1)
+                pp = tensor_power(predictor_values)
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
-                for s in powerset(c):
-                    if len(s)>1:
-                        cc = np.tensordot(s[0],s[1],axes=0).reshape(-1)
-                        for i in range(2,len(s)):
-                            cc = np.tensordot(cc,s[i+1],axes=0).reshape(-1)
+                cc = tensor_power(c)
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
                 pc= np.tensordot(p,c,axes=0).reshape(-1)
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
@@ -998,8 +990,8 @@ class LVOCControlMechanism(ControlMechanism):
             # d(c*wt)/(dc) = wt
             gradient_constants += np.array(control_signal_weights)
 
-        # Derivatives for pc and ppc interactions
-        if any(term in self.prediction_terms for term in {PV.PC, PV.PPC}):
+        # Derivatives for pc interactions:
+        if PV.PC in self.prediction_terms:
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictors
             pc_weights = prediction_weights[idx.pc].reshape(num_ctl, num_pred)
@@ -1008,14 +1000,21 @@ class LVOCControlMechanism(ControlMechanism):
             for i in range(num_ctl):
                 gradient_constants[i] += np.sum(pc_weights_x_predictors[i])
 
-            if PV.PPC in self.prediction_terms:
-                # Get weights for ppc interaction term and reshape so that there is one row per control_signal
-                #    containing the terms for the interaction of that control_signal with each of the predictors
-                ppc_weights = prediction_weights[idx.ppc].reshape(num_ctl, num_pred)
-                # d(ppc*wt)/d(c) = sum over p of (p[i]^2 * wt)
-                ppc_weights_x_predictors = ppc_weights * predictors**2
-                for i in range(num_ctl):
-                    gradient_constants[i] += np.sum(ppc_weights_x_predictors[i])
+        # Derivatives for pc interactions:
+        if PV.PPC in self.prediction_terms:
+            # Get weights for ppc interaction term and reshape so that there is one row per control_signal
+            #    containing the terms for the interaction of that control_signal with each of the predictor interactions
+            ppc_weights = prediction_weights[idx.ppc].reshape(num_ctl, num_pred)
+            # d(ppc*wt)/d(c) = sum over pp of (p[i]^2 * wt)
+            ppc = pv[idx.ppc]
+            ppc_weights_x_ppc_x_ppc = ppc_weights * ppc**2
+            for i in range(num_ctl):
+                gradient_constants[i] += np.sum(ppc_weights_x_ppc_x_ppc[i])
+
+        # # Recompute pp interactions if needed:
+        # #    used in while but only needs to be computed once so do it here for efficiency
+        # if PV.PP in self.prediction_terms:
+        #     pp = tensor_power(self.predictor_values)
 
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
@@ -1033,17 +1032,25 @@ class LVOCControlMechanism(ControlMechanism):
 
             for i, control_signal_value in enumerate(control_signal_values):
 
+                if (term in self.prediction_terms for term in {PV.CC, PV.PPCC}):
+                    # Recompute cc interaction term if it is needed:
+                    cc = tensor_power(control_signal_values)
+
                 # Derivative for control_signals interaction term - d(c^2*wts)/d(c) = 2c*wts
                 if PV.CC in self.prediction_terms:
-                    # cc_weights = prediction_weights[cc_sl].reshape(num_ctl, num_pred) # FIX <- ??ACCOMODATE POWERSET
-                    for s in powerset(control_signals):
-                        if len(s)>1:
-                            cc = np.tensordot(s[0],s[1],axes=0).reshape(-1)
-                            for i in range(2,len(s)):
-                                cc = np.tensordot(cc,s[i+1],axes=0).reshape(-1)
+                    # FIX: NOT CORRECT FOR POWERSET:
+                    # cc_weights = prediction_weights[idx.cc].reshape(num_ctl, num_pred)
+                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]
+                    # ADD TO gradient[i]
+                    pass
 
                 # Derivative for ppcc interaction term - d(p^2c^2*wts)/d(c) = p^2*c*wts
                 if PV.PPCC in self.prediction_terms:
+                    ppcc = np.tensordot(pv[idx.pp],cc,axes=0)
+                    # FIX: NOT CORRECT FOR POWERSET:
+                    # ppcc_weights = prediction_weights[idx.ppcc].reshape(num_ctl, num_pred)
+                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]
+                    # ADD TO gradient[i]
                     pass
 
                 # Derivative for costs -- d(costs)/d(c)
