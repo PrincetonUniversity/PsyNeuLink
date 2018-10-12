@@ -2,11 +2,13 @@
 
 import copy
 import ctypes
-import psyneulink.llvm as pnlvm
-import numpy as np
-from llvmlite import ir
-import pytest
 import functools
+import numpy as np
+import pytest
+
+from psyneulink.core import llvm as pnlvm
+
+from llvmlite import ir
 
 
 DIM_X=1000

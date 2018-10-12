@@ -1,6 +1,6 @@
 InputState
 ==========
 
-.. automodule:: psyneulink.components.states.inputstate
+.. automodule:: psyneulink.core.components.states.inputstate
    :members:
    :exclude-members: Linear, random

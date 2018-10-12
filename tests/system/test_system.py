@@ -1,17 +1,17 @@
 import numpy as np
 
-from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES
-from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import Any, AtTrial, AfterTrial
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.function import BogaczEtAl, Linear, Logistic
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES
+from psyneulink.core.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
+from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+
 
 def test_danglingControlledMech():
     #
@@ -443,7 +443,7 @@ class TestInputSpecsExternalInputStatesOnly:
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
-        # from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
 
         p1 = Process(pathway=[a])
@@ -457,7 +457,7 @@ class TestInputSpecsHeterogeneousVariables:
         s.run(inputs)
 
     def test_heterogeneous_variables(self):
-        # from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
 
         p1 = Process(pathway=[a])
@@ -690,7 +690,7 @@ class TestGraphAndInput:
 class TestConvergentLearning:
 
     def test_branch(self):
-        from psyneulink.globals.keywords import ENABLED
+        from psyneulink.core.globals.keywords import ENABLED
         mech_1 = TransferMechanism(name='M1', size=1)
         mech_2 = TransferMechanism(name='M2', size=2)
         mech_3 = TransferMechanism(name='M3', size=3)
@@ -946,8 +946,8 @@ class TestRuntimeParams:
                                        [np.array([12.])],     # Trial 4 - NOT condition 0, condition 1
                                        [np.array([2.])]])     # New run (runtime param no longer applies)
 
-from psyneulink.components.process import proc
-from psyneulink.components.system import sys
+from psyneulink.core.components.process import proc
+from psyneulink.core.components.system import sys
 class TestFactoryMethods:
 
     def test_process_factory_method(self):

@@ -1,7 +1,7 @@
 import psyneulink as pnl
 import pytest
 
-from psyneulink.globals.utilities import unproxy_weakproxy
+from psyneulink.core.globals.utilities import unproxy_weakproxy
 
 # (ancestor, child, should_override)
 ancestor_child_data = [

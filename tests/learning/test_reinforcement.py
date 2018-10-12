@@ -2,14 +2,12 @@ import functools
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import PROB
-from psyneulink.components.functions.function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.processing.transfermechanism import \
-    TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.learningprojection import \
-    LearningProjection
-from psyneulink.components.system import System
+from psyneulink.core.components.functions.function import PROB
+from psyneulink.core.components.functions.function import Reinforcement, SoftMax
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.core.components.system import System
 
 
 def test_reinforcement():

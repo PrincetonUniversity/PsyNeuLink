@@ -1,27 +1,28 @@
 import functools
 import logging
+
 from timeit import timeit
 
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import Linear, SimpleIntegrator, Identity
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError
-from psyneulink.globals.utilities import CNodeRole
-from psyneulink.compositions.pathwaycomposition import PathwayComposition
-from psyneulink.compositions.systemcomposition import SystemComposition
-from psyneulink.scheduling.condition import EveryNCalls
-from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
+from psyneulink.core.components.functions.function import Identity, Linear, SimpleIntegrator
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TRANSFER_OUTPUT, TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
+from psyneulink.core.compositions.systemcomposition import SystemComposition
+from psyneulink.core.globals.keywords import HARD_CLAMP, INPUT_STATE, NAME, NO_CLAMP, PULSE_CLAMP, SOFT_CLAMP
+from psyneulink.core.globals.utilities import CNodeRole
+from psyneulink.core.scheduling.condition import AfterNCalls, EveryNPasses
+from psyneulink.core.scheduling.condition import EveryNCalls
+from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 class TestExecuteCIM:
 
@@ -546,7 +547,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.external_input_sources = {C: True}
 
         comp.run(inputs={A: [[1.23]]})
-        
+
         assert np.allclose(A.value, [[1.23]])
         assert np.allclose(B.value, [[1.23]])
         assert np.allclose(C.value, [[4.56]])
@@ -688,7 +689,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.add_c_node(C)
 
         comp.external_input_sources = {B: [A, C]}
-        with pytest.raises(CompositionError) as error_text: 
+        with pytest.raises(CompositionError) as error_text:
             comp.run(inputs={A: [[1.23]],
                              C: [[4.0]]})
         assert "too many external input states" in str(error_text.value)
@@ -736,7 +737,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         assert np.allclose(B.input_values, [[1.23]])
 
     def test_external_input_sources_ALL(self):
-        from psyneulink.globals.keywords import ALL
+        from psyneulink.core.globals.keywords import ALL
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')

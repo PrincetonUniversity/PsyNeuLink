@@ -2,15 +2,15 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.components.functions.function import LinearCombination, Reduce
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import ProjectionError
-from psyneulink.components.states.inputstate import InputState, InputStateError
-from psyneulink.components.states.state import StateError
-from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.core.components.functions.function import LinearCombination, Reduce
+from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.projection import ProjectionError
+from psyneulink.core.components.states.inputstate import InputState, InputStateError
+from psyneulink.core.components.states.state import StateError
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
 mismatches_default_variable_format_error_text = 'is not compatible with its expected format'

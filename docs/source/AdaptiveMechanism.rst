@@ -12,6 +12,6 @@ Adaptive Mechanisms
    Control Mechanisms <ControlMechanism>
    Gating Mechanisms <GatingMechanism>
 
-.. automodule:: psyneulink.components.mechanisms.adaptive.adaptivemechanism
+.. automodule:: psyneulink.core.components.mechanisms.adaptive.adaptivemechanism
    :members:
    :exclude-members: Linear, random
