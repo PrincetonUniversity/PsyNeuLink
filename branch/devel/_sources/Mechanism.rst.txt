@@ -7,7 +7,7 @@ Mechanisms
    Processing Mechanisms <ProcessingMechanism>
    Adaptive Mechanisms <AdaptiveMechanism>
 
-.. automodule:: psyneulink.components.mechanisms.mechanism
+.. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
    :exclude-members: MechanismTuple, MechanismList, MonitoredOutputStatesOption, random
 

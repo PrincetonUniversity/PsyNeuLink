@@ -6,6 +6,6 @@ Pathway Projections
 
    MappingProjection
 
-.. automodule:: psyneulink.components.projections.pathway.pathwayprojection
+.. automodule:: psyneulink.core.components.projections.pathway.pathwayprojection
    :members:
    :exclude-members: PathwayProjection_Base, Linear, random

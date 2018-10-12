@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+714.g4e58c0c documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+715.gb7f9b89 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+714.g4e58c0c documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+715.gb7f9b89 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+714
+                0.4.8.0+715
               </div>
             
           
@@ -166,7 +166,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Preferences.html">Preferences</a></li>
 </ul>
 </div>
-<span class="target" id="module-psyneulink.globals.utilities"></span><p>Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific</p>
+<span class="target" id="module-psyneulink.core.globals.utilities"></span><p>Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>That is:</dt>
@@ -184,24 +184,24 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <p class="last">PsyNeuLink-specific typechecking functions are in the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> module</p>
 </div>
 <ul class="simple">
-<li><a class="reference internal" href="#psyneulink.globals.utilities.parameter_spec" title="psyneulink.globals.utilities.parameter_spec"><code class="xref any py py-func docutils literal"><span class="pre">parameter_spec</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.optional_parameter_spec" title="psyneulink.globals.utilities.optional_parameter_spec"><code class="xref any py py-func docutils literal"><span class="pre">optional_parameter_spec</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.parameter_spec" title="psyneulink.core.globals.utilities.parameter_spec"><code class="xref any py py-func docutils literal"><span class="pre">parameter_spec</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.optional_parameter_spec" title="psyneulink.core.globals.utilities.optional_parameter_spec"><code class="xref any py py-func docutils literal"><span class="pre">optional_parameter_spec</span></code></a></li>
 <li><a href="#id1"><span class="problematic" id="id2">`</span></a>is_matrix</li>
 <li><code class="xref any docutils literal"><span class="pre">is_matrix_spec</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric_or_none</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.iscompatible" title="psyneulink.globals.utilities.iscompatible"><code class="xref any py py-func docutils literal"><span class="pre">iscompatible</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.iscompatible" title="psyneulink.core.globals.utilities.iscompatible"><code class="xref any py py-func docutils literal"><span class="pre">iscompatible</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">is_value_spec</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_unit_interval</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.is_same_function_spec" title="psyneulink.globals.utilities.is_same_function_spec"><code class="xref any py py-func docutils literal"><span class="pre">is_same_function_spec</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.is_component" title="psyneulink.globals.utilities.is_component"><code class="xref any py py-func docutils literal"><span class="pre">is_component</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_same_function_spec" title="psyneulink.core.globals.utilities.is_same_function_spec"><code class="xref any py py-func docutils literal"><span class="pre">is_same_function_spec</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_component" title="psyneulink.core.globals.utilities.is_component"><code class="xref any py py-func docutils literal"><span class="pre">is_component</span></code></a></li>
 </ul>
 </div>
 <div class="section" id="enum">
 <h3><em>ENUM</em><a class="headerlink" href="#enum" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">Autonumber</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.Modulation" title="psyneulink.globals.utilities.Modulation"><code class="xref any py py-class docutils literal"><span class="pre">Modulation</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.Modulation" title="psyneulink.core.globals.utilities.Modulation"><code class="xref any py py-class docutils literal"><span class="pre">Modulation</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">get_modulationOperation_name</span></code></li>
 </ul>
 </div>
@@ -228,30 +228,30 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">get_args</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">recursive_update</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.merge_param_dicts" title="psyneulink.globals.utilities.merge_param_dicts"><code class="xref any py py-func docutils literal"><span class="pre">merge_param_dicts</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.multi_getattr" title="psyneulink.globals.utilities.multi_getattr"><code class="xref any py py-func docutils literal"><span class="pre">multi_getattr</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.merge_param_dicts" title="psyneulink.core.globals.utilities.merge_param_dicts"><code class="xref any py py-func docutils literal"><span class="pre">merge_param_dicts</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.multi_getattr" title="psyneulink.core.globals.utilities.multi_getattr"><code class="xref any py py-func docutils literal"><span class="pre">multi_getattr</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">np_array_less_that_2d</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.convert_to_np_array" title="psyneulink.globals.utilities.convert_to_np_array"><code class="xref any py py-func docutils literal"><span class="pre">convert_to_np_array</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_np_array" title="psyneulink.core.globals.utilities.convert_to_np_array"><code class="xref any py py-func docutils literal"><span class="pre">convert_to_np_array</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">type_match</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.get_value_from_array" title="psyneulink.globals.utilities.get_value_from_array"><code class="xref any py py-func docutils literal"><span class="pre">get_value_from_array</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.get_value_from_array" title="psyneulink.core.globals.utilities.get_value_from_array"><code class="xref any py py-func docutils literal"><span class="pre">get_value_from_array</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">is_matrix</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">underscore_to_camelCase</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">append_type_to_name</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">ReadOnlyOrderedDict</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.ContentAddressableList" title="psyneulink.globals.utilities.ContentAddressableList"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableList</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.make_readonly_property" title="psyneulink.globals.utilities.make_readonly_property"><code class="xref any py py-func docutils literal"><span class="pre">make_readonly_property</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableList</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.make_readonly_property" title="psyneulink.core.globals.utilities.make_readonly_property"><code class="xref any py py-func docutils literal"><span class="pre">make_readonly_property</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">get_class_attributes</span></code></li>
-<li><a class="reference internal" href="#psyneulink.globals.utilities.insert_list" title="psyneulink.globals.utilities.insert_list"><code class="xref any py py-func docutils literal"><span class="pre">insert_list</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.insert_list" title="psyneulink.core.globals.utilities.insert_list"><code class="xref any py py-func docutils literal"><span class="pre">insert_list</span></code></a></li>
 </ul>
 <dl class="class">
-<dt id="psyneulink.globals.utilities.Modulation">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">Modulation</code><a class="headerlink" href="#psyneulink.globals.utilities.Modulation" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.Modulation">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">Modulation</code><a class="headerlink" href="#psyneulink.core.globals.utilities.Modulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.globals.utilities.AutoNumber">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">AutoNumber</code><a class="headerlink" href="#psyneulink.globals.utilities.AutoNumber" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.AutoNumber">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">AutoNumber</code><a class="headerlink" href="#psyneulink.core.globals.utilities.AutoNumber" title="Permalink to this definition">¶</a></dt>
 <dd><p>Autonumbers IntEnum type</p>
 <p>First item in list of declarations is numbered 0;
 Others incremented by 1</p>
@@ -274,8 +274,8 @@ Notes:
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.optional_parameter_spec">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">optional_parameter_spec</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.optional_parameter_spec" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.optional_parameter_spec">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">optional_parameter_spec</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.optional_parameter_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether param is a legal PsyNeuLink parameter specification or <code class="xref any docutils literal"><span class="pre">None</span></code></p>
 <p>Calls parameter_spec if param is not <code class="xref any docutils literal"><span class="pre">None</span></code>
 Used with typecheck</p>
@@ -294,8 +294,8 @@ Used with typecheck</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.parameter_spec">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">parameter_spec</code><span class="sig-paren">(</span><em>param</em>, <em>numeric_only=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.parameter_spec" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.parameter_spec">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">parameter_spec</code><span class="sig-paren">(</span><em>param</em>, <em>numeric_only=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.parameter_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether param is a legal PsyNeuLink parameter specification</p>
 <p>Used with typecheck</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -313,8 +313,8 @@ Used with typecheck</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.iscompatible">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">iscompatible</code><span class="sig-paren">(</span><em>candidate</em>, <em>reference=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.iscompatible" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.iscompatible">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">iscompatible</code><span class="sig-paren">(</span><em>candidate</em>, <em>reference=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.iscompatible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if candidate matches reference or, if that is omitted, it matches type, length and/or numeric specification</p>
 <p>If kargs is omitted, candidate and reference must match in type and length
 If reference and kargs are omitted, candidate must be a list of numbers (of any length)
@@ -405,8 +405,8 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.merge_param_dicts">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">merge_param_dicts</code><span class="sig-paren">(</span><em>source</em>, <em>specific</em>, <em>general</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.merge_param_dicts" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.merge_param_dicts">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">merge_param_dicts</code><span class="sig-paren">(</span><em>source</em>, <em>specific</em>, <em>general</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.merge_param_dicts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search source dict for specific and general dicts, merge specific with general, and return merged</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -442,8 +442,8 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.multi_getattr">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">multi_getattr</code><span class="sig-paren">(</span><em>obj</em>, <em>attr</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.multi_getattr" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.multi_getattr">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">multi_getattr</code><span class="sig-paren">(</span><em>obj</em>, <em>attr</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.multi_getattr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a named attribute from an object; multi_getattr(x, ‘a.b.c.d’) is
 equivalent to x.a.b.c.d. When a default argument is given, it is
 returned when any attribute in the chain doesn’t exist; without
@@ -451,8 +451,8 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.convert_to_np_array">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">convert_to_np_array</code><span class="sig-paren">(</span><em>value</em>, <em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.convert_to_np_array" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.convert_to_np_array">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">convert_to_np_array</code><span class="sig-paren">(</span><em>value</em>, <em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.convert_to_np_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert value to np.array if it is not already</p>
 <p>Check whether value is already an np.ndarray and whether it has non-numeric elements</p>
 <p>Return np.array of specified dimension</p>
@@ -469,8 +469,8 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.object_has_single_value">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">object_has_single_value</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.object_has_single_value" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.object_has_single_value">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">object_has_single_value</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.object_has_single_value" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -487,16 +487,16 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.get_value_from_array">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">get_value_from_array</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.get_value_from_array" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.get_value_from_array">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">get_value_from_array</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.get_value_from_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract numeric value from array, preserving numeric type
 :param array:
 :return:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.random_matrix">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">random_matrix</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>clip=1</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.random_matrix" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.random_matrix">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">random_matrix</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>clip=1</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.random_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a random matrix</p>
 <p>Calls np.random.rand to generate a 2d np.array with random values.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -522,12 +522,12 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.globals.utilities.ContentAddressableList">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">ContentAddressableList</code><span class="sig-paren">(</span><em>component_type</em>, <em>key=None</em>, <em>list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">ContentAddressableList</code><span class="sig-paren">(</span><em>component_type</em>, <em>key=None</em>, <em>list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements dict-like list, that can be keyed by a specified attribute of the <a class="reference internal" href="Component.html"><span class="doc">Compoments</span></a> in its
 entries.</p>
 <p>The key with which it is created is also assigned as a property of the class, that returns a list
-with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute
+with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, keyed by their
 names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_states.names</span></code> returns the names of all of the Mechanism’s OutputStates:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
@@ -562,7 +562,7 @@ the component is appended to the list;</li>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>for getting lists of the names, values of the keyed attributes, and values of the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></dt>
+<dt>for getting lists of the names, values of the keyed attributes, and values of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></dt>
 <dd>attributes of components in the list.</dd>
 </dl>
 </li>
@@ -603,7 +603,7 @@ accessing by key/name less critical;</dd>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>component_type</strong> (<em>Class</em>) – specifies the class of the items in the list.</li>
 <li><strong>name</strong> (<em>str : 'ContentAddressableList'</em>) – name to use for ContentAddressableList</li>
-<li><strong>key</strong> (str : default <a class="reference internal" href="#psyneulink.globals.utilities.ContentAddressableList.name" title="psyneulink.globals.utilities.ContentAddressableList.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the attribute of <strong>component_type</strong> used to key items in the list by content;
+<li><strong>key</strong> (str : default <a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.name" title="psyneulink.core.globals.utilities.ContentAddressableList.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the attribute of <strong>component_type</strong> used to key items in the list by content;
 <strong>component_type</strong> must have this attribute or, if it is not provided, an attribute with the name ‘name’.</li>
 <li><strong>list</strong> (<em>List : default None</em>) – specifies a list used to initialize the list;
 all of the items must be of type <strong>component_type</strong> and have the <strong>key</strong> attribute.</li>
@@ -613,51 +613,51 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.component_type">
-<code class="descname">component_type</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.component_type" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.component_type">
+<code class="descname">component_type</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.component_type" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Class</em> – the class of the items in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.name" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – name if provided as arg, else name of of ContentAddressableList class</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.key">
-<code class="descname">key</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.key" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the attribute of <a class="reference internal" href="#psyneulink.globals.utilities.ContentAddressableList.component_type" title="psyneulink.globals.utilities.ContentAddressableList.component_type"><code class="xref any py py-attr docutils literal"><span class="pre">component_type</span></code></a> used to key items in the list by content;</p>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.key">
+<code class="descname">key</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.key" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the attribute of <a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.component_type" title="psyneulink.core.globals.utilities.ContentAddressableList.component_type"><code class="xref any py py-attr docutils literal"><span class="pre">component_type</span></code></a> used to key items in the list by content;</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.data">
-<code class="descname">data</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.data" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.data">
+<code class="descname">data</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.data" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List (property)</em> – the actual list of items.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.names">
-<code class="descname">names</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.names" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.names">
+<code class="descname">names</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.names" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List (property)</em> – values of the <a class="reference internal" href="Component.html"><span class="doc">name</span></a> attribute of components in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.key_values">
-<code class="descname">key_values</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.key_values" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.key_values">
+<code class="descname">key_values</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.key_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List (property)</em> – values of the keyed attribute of each component in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.values">
-<code class="descname">values</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.values" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.values">
+<code class="descname">values</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List (property)</em> – values of the <a class="reference internal" href="Component.html"><span class="doc">value</span></a> attribute of components in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">names</code></dt>
-<dd><p>Return list of <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the name attribute of components in the list.
+<dd><p>Return list of <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the name attribute of components in the list.
 :returns: <strong>names</strong> – list of the values of the <code class="xref any docutils literal"><span class="pre">name</span></code> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
@@ -665,7 +665,7 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dl class="attribute">
 <dt>
 <code class="descname">key_values</code></dt>
-<dd><p>Return list of <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the keyed attribute of components in the list.
+<dd><p>Return list of <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the keyed attribute of components in the list.
 :returns: <strong>key_values</strong> – list of the values of the <code class="xref any docutils literal"><span class="pre">keyed</span></code> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
@@ -674,43 +674,43 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dt>
 <code class="descname">values</code></dt>
 <dd><p>Return list of values of components in the list.
-:returns: <strong>values</strong> – list of the values of the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes of components in the list.
+:returns: <strong>values</strong> – list of the values of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.utilities.ContentAddressableList.values_as_lists">
-<code class="descname">values_as_lists</code><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList.values_as_lists" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.ContentAddressableList.values_as_lists">
+<code class="descname">values_as_lists</code><a class="headerlink" href="#psyneulink.core.globals.utilities.ContentAddressableList.values_as_lists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of values of components in the list, each converted to a list.
-:returns: <strong>values</strong> – list of list values of the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes of components in the list,
+:returns: <strong>values</strong> – list of list values of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes of components in the list,
 :rtype: list</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.is_same_function_spec">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">is_same_function_spec</code><span class="sig-paren">(</span><em>fct_spec_1</em>, <em>fct_spec_2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.is_same_function_spec" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.is_same_function_spec">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_same_function_spec</code><span class="sig-paren">(</span><em>fct_spec_1</em>, <em>fct_spec_2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_same_function_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compare two function specs and return True if both are for the same class of Function</p>
 <p>Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
 Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.is_component">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">is_component</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.is_component" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.is_component">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_component</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_component" title="Permalink to this definition">¶</a></dt>
 <dd><p>This allows type-checking for Component definitions where Component module can’t be imported</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.make_readonly_property">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">make_readonly_property</code><span class="sig-paren">(</span><em>val</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.make_readonly_property" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.make_readonly_property">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">make_readonly_property</code><span class="sig-paren">(</span><em>val</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.make_readonly_property" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return property that provides read-only access to its value</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.convert_all_elements_to_np_array">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">convert_all_elements_to_np_array</code><span class="sig-paren">(</span><em>arr</em>, <em>cast_from=None</em>, <em>cast_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.convert_all_elements_to_np_array" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.convert_all_elements_to_np_array">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">convert_all_elements_to_np_array</code><span class="sig-paren">(</span><em>arr</em>, <em>cast_from=None</em>, <em>cast_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.convert_all_elements_to_np_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Recursively converts all items in <strong>arr</strong> to numpy arrays, optionally casting
 items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -734,14 +734,14 @@ items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</st
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.insert_list">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.insert_list">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert list2 into list1 at position</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.safe_len">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">safe_len</code><span class="sig-paren">(</span><em>arr</em>, <em>fallback=1</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.safe_len" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.safe_len">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">safe_len</code><span class="sig-paren">(</span><em>arr</em>, <em>fallback=1</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.safe_len" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -755,8 +755,8 @@ items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</st
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.globals.utilities.CNodeRole">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">CNodeRole</code><a class="headerlink" href="#psyneulink.globals.utilities.CNodeRole" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.CNodeRole">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">CNodeRole</code><a class="headerlink" href="#psyneulink.core.globals.utilities.CNodeRole" title="Permalink to this definition">¶</a></dt>
 <dd><ul class="simple">
 <li><dl class="first docutils">
 <dt>ORIGIN</dt>
@@ -784,7 +784,7 @@ it is simply designated as such (since it will be assigned input and therefore b
 </li>
 <li><dl class="first docutils">
 <dt>INITIALIZE_CYCLE</dt>
-<dd>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a
+<dd>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a
 <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that closes a loop in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and that is not an <code class="xref any docutils literal"><span class="pre">ORIGIN</span></code> Mechanism
 (since in that case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be
 assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
@@ -828,7 +828,7 @@ from its <code class="xref any docutils literal"><span class="pre">execute</span
 Mechanism of the Process or System. The <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms of a Process or System are listed in its
 <code class="xref std std-keyword docutils literal"><span class="pre">target_nodes</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional
 details, see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>, <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a>,
-and specifying <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a>.</dd>
+and specifying <code class="xref any docutils literal"><span class="pre">target</span> <span class="pre">values</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -840,8 +840,8 @@ and specifying <a class="reference internal" href="Run.html#run-targets"><span c
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.globals.utilities.unproxy_weakproxy">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">unproxy_weakproxy</code><span class="sig-paren">(</span><em>proxy</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.unproxy_weakproxy" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.globals.utilities.unproxy_weakproxy">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">unproxy_weakproxy</code><span class="sig-paren">(</span><em>proxy</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.unproxy_weakproxy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the actual object weak-referenced by a weakproxy.proxy object
 Much like</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
@@ -890,7 +890,7 @@ Much like</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+714.g4e58c0c',
+            VERSION:'0.4.8.0+715.gb7f9b89',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

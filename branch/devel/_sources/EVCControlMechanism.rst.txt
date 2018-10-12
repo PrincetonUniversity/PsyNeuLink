@@ -1,6 +1,6 @@
 EVCControlMechanism
 ===================
 
-.. automodule:: psyneulink.library.subsystems.evc.evccontrolmechanism
+.. automodule:: psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism
    :members:
    :exclude-members: random, LinearCombination, Linear
