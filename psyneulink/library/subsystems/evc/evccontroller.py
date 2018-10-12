@@ -787,6 +787,12 @@ class EVCController(Controller):
                          params=params,
                          name=name,
                          prefs=prefs)
+
+    def record_costs(self):
+        current_costs = []
+        for signal in self.control_signals:
+            current_costs.append(signal.cost)
+        return current_costs
     #
     # def _validate_params(self, request_set, target_set=None, context=None):
     #     '''Validate prediction_mechanisms'''

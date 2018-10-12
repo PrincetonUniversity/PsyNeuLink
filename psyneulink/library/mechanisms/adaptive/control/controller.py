@@ -833,7 +833,9 @@ class Controller(ControlMechanism):
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
         return control_signal
 
-    def run_simulations(self, allocation_policies, call_after_simulation, runtime_params=None, context=None):
+    costs = []
+
+    def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
 
         predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
 
@@ -856,13 +858,18 @@ class Controller(ControlMechanism):
                         proj.context.execution_phase = ContextFlags.PROCESSING
 
                 self.composition.run(inputs=inputs,
-                                reinitialize_values=reinitialize_values,
-                                execution_id=execution_id,
-                                runtime_params=runtime_params,
-                                context=context)
+                                     reinitialize_values=reinitialize_values,
+                                     execution_id=execution_id,
+                                     runtime_params=runtime_params,
+                                     context=context)
 
                 self.composition.simulation_results.append(self.composition.output_CIM.output_values)
-                call_after_simulation()
+
+                call_after_simulation_data = None
+
+                if call_after_simulation:
+                    call_after_simulation_data = call_after_simulation()
+
                 monitored_states = self.objective_mechanism.output_values
 
                 self.composition.context.execution_phase = ContextFlags.PROCESSING
@@ -870,13 +877,29 @@ class Controller(ControlMechanism):
             outcome_list.append(allocation_policy_outcomes)
 
         self.composition.after_simulations(reinitialize_values, node_values)
-        return outcome_list
+        return outcome_list, call_after_simulation_data
 
 
     @tc.typecheck
     def assign_as_controller(self, system, context=ContextFlags.COMMAND_LINE):
         self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
+
+    def get_allocation_policies(self):
+        control_signal_sample_lists = []
+        control_signals = self.control_signals
+
+        # Get allocation_samples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        return np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
     def _execute(
         self,
@@ -895,29 +918,61 @@ class Controller(ControlMechanism):
         Return an allocation_policy
         """
 
-        control_signal_sample_lists = []
-        control_signals = self.control_signals
+        # Get all allocation policies to try
+        self.control_signal_search_space = self.get_allocation_policies()
 
-        # Get allocation_samples for all ControlSignals
-        num_control_signals = len(control_signals)
-
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
-
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        # for each allocation policy:
+        # (1) apply allocation policy, (2) get a new execution id, (3) run simulation, (4) store results
+        outcomes, call_after_simulation_data = self.run_simulations(allocation_policies=self.control_signal_search_space,
+                                                                    runtime_params=runtime_params,
+                                                                    context=context)
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy = super(ControlMechanism, self)._execute(
-                controller=self,
-                variable=variable,
-                runtime_params=runtime_params,
-                context=context
-        )
+        # allocation_policy = super(ControlMechanism, self)._execute(
+        #         controller=self,
+        #         variable=variable,
+        #         runtime_params=runtime_params,
+        #         context=context
+        # )
+
+        for i in range(len(outcomes)):
+            allocation_policy_outcomes = outcomes[i]
+            allocation_policy = self.control_signal_search_space[i]
+            allocation_policy_evc_list = []
+            num_trials = len(allocation_policy_outcomes)
+            for j in range(num_trials):
+                outcome = allocation_policy_outcomes[0][j]
+                value = self.paramsCurrent[VALUE_FUNCTION].function(self=self,
+                                                                          outcome=outcome,
+                                                                          costs=costs[i],
+                                                                          context=context)
+                allocation_policy_evc_list.append(value)
+                EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
+                EVC, outcome, cost = EVC_avg
+
+                EVC_max = max(EVC, EVC_max)
+                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                    EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    # Save policy associated with EVC for each process, as order of chunks
+                    #     might not correspond to order of policies in control_signal_search_space
+                    if len(EVC_policies[0]) == 0:
+                        EVC_policies = np.atleast_2d(allocation_policy)
+                    else:
+                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_policy), axis=0)
+                if EVC == EVC_max:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    # EVC_max_state_values = self.input_value.copy()
+                    # EVC_max_policy = allocation_vector.copy()
+                    EVC_max_state_values = self.input_values
+                    EVC_max_policy = allocation_policy
+                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                self.EVC_max = EVC_max
+                self.EVC_max_state_values = EVC_max_state_values
+                self.EVC_max_policy = EVC_max_policy
+                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                    self.EVC_values = EVC_values
+                    self.EVC_policies = EVC_policies
 
         return allocation_policy
 
