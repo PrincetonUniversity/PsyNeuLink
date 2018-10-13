@@ -698,10 +698,10 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
 
             # Indices for fields of prediction_vector
-            self.pred = slice(0, self.num_predictors)
+            self.p = slice(0, self.num_predictors)
             self.intrxn= slice(self.num_predictors, self.num_predictors+self.num_interactions)
             self.ctl = slice(self.intrxn.stop, self.intrxn.stop + self.num_control_signals)
-            self.cst = slice(self.ctl.stop, len_prediction_vector)
+            self.cst = slice(self.c.stop, len_prediction_vector)
 
             self.prediction_vector = np.zeros(len_prediction_vector)
             self.prediction_buffer = deque([self.prediction_vector], maxlen=2)
@@ -709,11 +709,11 @@ class LVOCControlMechanism(ControlMechanism):
 
         else:
             # Populate fields (subvectors) of prediction_vector
-            self.prediction_vector[self.pred] = self.predictor_values
-            self.prediction_vector[self.ctl] = np.array([c.value for c in self.control_signals]).reshape(-1)
+            self.prediction_vector[self.p] = self.predictor_values
+            self.prediction_vector[self.c] = np.array([c.value for c in self.control_signals]).reshape(-1)
             self.prediction_vector[self.intrxn]= \
-                np.array(self.prediction_vector[self.pred] *
-                         self.prediction_vector[self.ctl].reshape(self.num_control_signals,1)).reshape(-1)
+                np.array(self.prediction_vector[self.p] *
+                         self.prediction_vector[self.c].reshape(self.num_control_signals,1)).reshape(-1)
             self.prediction_vector[self.cst] = \
                 np.array([0 if c.cost is None else c.cost for c in self.control_signals]).reshape(-1) * -1
 
@@ -754,8 +754,8 @@ class LVOCControlMechanism(ControlMechanism):
         # multiply interactions terms by predictors (since those don't change during the gradient ascent)
         interaction_weights_x_predictors = interaction_weights * predictors
 
-        control_signal_values = prediction_vector[self.ctl]
-        control_signal_weights = prediction_weights[self.ctl]
+        control_signal_values = prediction_vector[self.c]
+        control_signal_weights = prediction_weights[self.c]
 
         gradient_constants = np.zeros(self.num_control_signals)
         for i in range(self.num_control_signals):
@@ -793,10 +793,10 @@ class LVOCControlMechanism(ControlMechanism):
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
             # Assign new values of interaction terms, control_signals and costs to prediction_vector
-            prediction_vector[self.intrxn]= np.array(prediction_vector[self.pred] *
-                                                     prediction_vector[self.ctl].reshape(self.num_control_signals,1)).\
+            prediction_vector[self.intrxn]= np.array(prediction_vector[self.p] *
+                                                     prediction_vector[self.c].reshape(self.num_control_signals,1)).\
                                                      reshape(-1)
-            prediction_vector[self.ctl] = control_signal_values
+            prediction_vector[self.c] = control_signal_values
             prediction_vector[self.cst] = costs
 
             # Compute current LVOC using current features, weights and new control signals

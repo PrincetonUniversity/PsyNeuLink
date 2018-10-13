@@ -54,7 +54,7 @@ Creating an LVOCControlMechanism
         * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
           InputStates of the same shapes as those listed are created on the LVOC, and are connected to the
           corresponding input_CIM OutputStates by projections. The external input values that are passed through the
-          input_CIM are used as the `predictors <LVOCControlMechanism.predictor>`. If a Mechanism is included in the
+          input_CIM are used as the `predictors <LVOCControlMechanism_Predictor>`. If a Mechanism is included in the
           list, it refers to all of its InputStates.
 
         COMMENT:
@@ -283,16 +283,44 @@ PREDICTION_TERMS = 'prediction_terms'
 
 
 class PV(Enum):
-    '''PredictionVector terms'''
-    PRED = 'pred'   # Main effect of Predictors
-    CTL = 'ctl'     # Main effect of values of control_signals
-    PP = 'pp'       # Interaction among Predictor vectors
-    CC = 'cc'       # Interaction among control_signals
-    PC = 'PC'       # Interaction between Predictors and control_signals
-    PPC = 'ppc'     # Interaction between Predictor interactions and control_signals
-    PCC = 'pcc'     # Interaction between Predictors and interactions of control_signals
-    PPCC = 'ppcc'   # Interaction between Interactions of Predictors and interactions of control_signals
-    COST = 'cst'    # Main effect of costs of control_signals
+    '''Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+
+    Attributes
+    ----------
+
+    P
+        Main effect of `predictors <LVOCControlMechanism_Predictors>`.
+    C
+        Main effect of `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    PP
+        Interaction among `predictors <LVOCControlMechanism_Predictors>`.
+    CC
+        Interaction among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    PC
+        Interaction between `predictors <LVOCControlMechanism_Predictors>` and
+        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    PPC
+        Interaction between interactions of `predictors <LVOCControlMechanism_Predictors>` and
+        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    PCC
+        Interaction between `predictors <LVOCControlMechanism_Predictors>` and interactions among
+        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    PPCC
+        Interaction between interactions of `predictors <LVOCControlMechanism_Predictors>` and
+        interactions among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
+    COST
+        Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
+
+    '''
+    P = 'p'
+    C = 'c'
+    PP = 'pp'
+    CC = 'cc'
+    PC = 'pc'
+    PPC = 'ppc'
+    PCC = 'pcc'
+    PPCC = 'ppcc'
+    COST = 'cst'
 
 
 class LVOCError(Exception):
@@ -311,7 +339,7 @@ class LVOCControlMechanism(ControlMechanism):
     origin_objective_mechanism=False,                    \
     terminal_objective_mechanism=False,                  \
     function=BayesGLM,                                   \
-    prediction_terms=[PV.PRED, PV.CTL, PV.PC, PV.COST]   \
+    prediction_terms=[PV.P, PV.C, PV.PC, PV.COST]        \
     update_rate=0.1,                                     \
     convergence_criterion=.001,                          \
     max_iterations=1000,                                 \
@@ -350,10 +378,10 @@ class LVOCControlMechanism(ControlMechanism):
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
-    prediction_terms : List[PV] : default [PV.PRED,PV.CTL,PV.PC, PV.COST]
+    prediction_terms : List[PV] : default [PV.P, PV.C, PV.PC, PV.COST]
         specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        items must be members of the `PV` Enum.  If the keyword *ALL* is used, then all of the terms are used;
-        if None is specified, the default values will automatically be assigned.
+        items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
+        if `None` is specified, the default values will automatically be assigned.
 
     update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
@@ -413,7 +441,8 @@ class LVOCControlMechanism(ControlMechanism):
 
     prediction_terms : List[PV]
         identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        Items are members of the `PV` Enum; the default is [PV.PRED,PV.CTL,PV.PC, PV.COST].
+        Items are members of the `PV` enum; the default is [`P <PredictionVector.P>`, `C <PredictionVector.C>`
+        `PC <PredictionVector.PC>`, `COST <PredictionVector.COST>`].
 
     prediction_vector : 1d ndarray
         current values, respectively, of `predictors <LVOCControlMechanism_Predictors>`, interaction terms for
@@ -501,7 +530,7 @@ class LVOCControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        prediction_terms = prediction_terms or [PV.PRED,PV.CTL,PV.PC, PV.COST]
+        prediction_terms = prediction_terms or [PV.P,PV.C,PV.PC, PV.COST]
         if ALL in prediction_terms:
             prediction_terms = list(PV.__members__.values())
 
@@ -791,7 +820,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         def _update(self, predictor_values, control_signals):
             # Populate fields (subvectors) of prediction_vector
-            # self.vector[self.pred] = predictor_values.reshape(-1)
             idx = self.idx
             self.vector[idx.c] = np.array([c.value for c in control_signals]).reshape(-1)
             self.vector[idx.pc]= \
@@ -894,10 +922,10 @@ class LVOCControlMechanism(ControlMechanism):
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
-            if PV.PRED in terms:
+            if PV.P in terms:
                 idx.p = slice(i, i+self.num_p)
                 i += self.num_p
-            if PV.CTL in terms:
+            if PV.C in terms:
                 idx.c = slice(i, i+self.num_c)
                 i += self.num_c
             if PV.PP in terms:
@@ -946,9 +974,9 @@ class LVOCControlMechanism(ControlMechanism):
                 self.ppcc = np.tensordot(self.pp,self.cc,axes=0)
 
             # Assign specified terms to flattened vector
-            if PV.PRED in terms:
+            if PV.P in terms:
                 self.vector[idx.p] = self.p.reshape(-1)
-            if PV.CTL in terms:
+            if PV.C in terms:
                 self.vector[idx.c] = self.c.reshape(-1)
             if PV.PP in terms:
                 self.vector[idx.pp] = self.pp.reshape(-1)
@@ -1043,7 +1071,7 @@ class LVOCControlMechanism(ControlMechanism):
         gradient_constants = np.zeros(num_c)
 
         # Derivative for control_signals
-        if PV.CTL in self.prediction_terms:
+        if PV.C in self.prediction_terms:
             # d(c*wt)/(dc) = wt
             gradient_constants += np.array(control_signal_weights)
 
