@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Bustamante_LVOC_Stroo_XOR_Model ****************************************
+# ********************************************* Bustamante_Stroop_XOR_LVOC_Model ***************************************
 
 '''
 Implements a model of the `Stroop XOR task
@@ -47,8 +47,8 @@ task_decision = pnl.DDM(name='Task Decision',
                            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD])
 
 lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
-                                predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim,word_stim]},
-                                function=pnl.BayesGLM(mu_0=3),
+                                predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
+                                function=pnl.BayesGLM(),
                                 objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
                                                                            monitored_output_states=[task_decision,
                                                                                                     reward],
