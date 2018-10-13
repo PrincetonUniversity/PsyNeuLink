@@ -964,22 +964,28 @@ class LVOCControlMechanism(ControlMechanism):
                 self.vector[idx.cst] = \
                     np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
-        def _partial_derivative(self, term_label, pv, pw, ctl_idx):
+        def _partial_derivative(self, term_label, pw, ctl_idx, ctl_val):
             '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
             with respect to control_signal i'''
 
+
+            # Get label and value of control signal with respect to which the derivative is being taken
             ctl_label = self.labels.c[ctl_idx]
-            labels = getattr(self.labels, term_label.value)
+
+            # Get labels and values of terms, and weights
+            t_labels = getattr(self.labels, term_label.value)
             terms = getattr(self, term_label.value)
-            idx = getattr(self.idx, term_label.value)
-            weights = pw[idx].reshape(np.array(terms).shape)
+            wts_idx = getattr(self.idx, term_label.value)
+            # Reshape weights to match termss
+            weights = pw[wts_idx].reshape(np.array(terms).shape)
 
             gradient = 0
-            # Remove any items in pv and pw corresponding to labels that don't contain ctl_label
-            for label, term, wts in zip(labels,terms,weights):
-                if ctl_label in label:
-                    # FIX -- MORE HERE
-                    gradient+=np.sum(term)
+
+            # Compute derivative for terms that contain control signal
+            for t_label, term, wts in zip(t_labels,terms,weights):
+                if ctl_label in t_label:
+                    gradient += np.sum((term/ctl_val)*wts)
+
             return gradient
 
 
@@ -1036,6 +1042,7 @@ class LVOCControlMechanism(ControlMechanism):
             # d(c*wt)/(dc) = wt
             gradient_constants += np.array(control_signal_weights)
 
+        # FIX: CHECK THAT THESE COMPUTE SAME VALUES AS _partial_derivative
         # Derivatives for pc interactions:
         if PV.PC in self.prediction_terms:
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
@@ -1082,25 +1089,13 @@ class LVOCControlMechanism(ControlMechanism):
                     # Recompute cc interaction term if it is needed:
                     cc = tensor_power(control_signal_values, range(2,num_ctl+1))
 
-                # #FIX: TEMP
-                # self.temp_pv._partial_derivative(PV.CC, pv[idx.cc], prediction_weights[idx.cc], i)
-                # #FIX: -----
-
-                # Derivative for cc interaction term - d(cc*wts)/d(c[i])
+                # Derivative of cc interaction term with respect to current control_signal_value
                 if PV.CC in self.prediction_terms:
-                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]  = product of other ctl sigs in term
-                    gradient[i] += self.temp_pv._partial_derivative(PV.CC, pv[idx.cc], prediction_weights, i)
+                    gradient[i] += self.temp_pv._partial_derivative(PV.CC, prediction_weights, i, control_signal_value)
 
-                # Derivative for ppcc interaction term - d(ppcc*wts)/d(c[i])
-                #    p^2*2c[i]*wts for c[i]=c[j] and p^2*c^2*wts for c[i]!=c[j]
-                #    where c[i] = control_signal_value[i] and c[j] = other control signal in ppcc interaction term
+                # Derivative of ppcc interaction term with respect to current control_signal_value
                 if PV.PPCC in self.prediction_terms:
-                    ppcc = np.tensordot(pv[idx.pp],cc,axes=0)
-                    # FIX: NOT CORRECT FOR POWERSET:
-                    # ppcc_weights = prediction_weights[idx.ppcc].reshape(num_ctl, num_pred)
-                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]
-                    # ADD TO gradient[i]
-                    pass
+                    gradient[i] += self.temp_pv._partial_derivative(PV.PPCC, prediction_weights, i, control_signal_value)
 
                 # Derivative for costs -- d(costs)/d(c)
                 #    (since costs depend on control_signals)
