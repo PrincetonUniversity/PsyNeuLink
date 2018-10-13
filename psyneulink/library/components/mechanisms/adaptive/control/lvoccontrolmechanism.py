@@ -729,6 +729,7 @@ class LVOCControlMechanism(ControlMechanism):
         if context is ContextFlags.INSTANTIATE:
             # FIX: REPLACE PredictionVectorStroopXOR WITH PredictorVector WHEN COMPLETE
             self.prediction_vector = self.PredictionVectorStroopXOR(self.predictor_values, self.control_signals)
+            # temp = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
             # self.prediction_vector = self.PredictionVector(self.predictor_values,
             #                                                self.control_signals,
             #                                                self.prediction_terms)
@@ -736,7 +737,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         else:
-            temp = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
+            self.temp_pv = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
             self.prediction_vector._update(self.predictor_values, self.control_signals)
             self.prediction_buffer.append(self.prediction_vector.vector)
             self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx.cst])
@@ -828,10 +829,10 @@ class LVOCControlMechanism(ControlMechanism):
 
         def __init__(self, predictor_values, control_signals, terms):
 
-            # GET TERMS
+            # ASSIGN TERMS
 
+            # Used for computing partial derivatives
             labels = self.labels
-
             def get_intrxn_labels(x):
                 # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
                 return list([s for s in powerset(x) if len(s)>1])
@@ -839,15 +840,15 @@ class LVOCControlMechanism(ControlMechanism):
             # MAIN EFFECT TERMS
 
             # Predictors
-            p = predictor_values
-            self.num_p = len(p.reshape(-1))  # predictors are arrays; num_p is the total number of all elements
+            self.p = predictor_values
+            self.num_p = len(self.p.reshape(-1))  # predictors are arrays; num_p is the total number of all elements
             labels.p = ['p'+str(i) for i in range(0,self.num_p)]
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
             # c = control_signals
-            c = [[c.value] for c in control_signals]
-            self.num_c = self.num_cst = len(c)
-            labels.c = ['c'+str(i) for i in range(0,self.num_c)]
+            self.c = [c.value for c in control_signals]
+            self.num_c = self.num_cst = len(self.c)
+            labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
 
             # Costs
             # cst = [[0] if c.cost is None else [c.cost] for c in control_signals]
@@ -857,115 +858,130 @@ class LVOCControlMechanism(ControlMechanism):
             # INTERACTION TERMS
 
             # Interactions among Predictor vectors
-            pp = tensor_power(p, levels=range(2,self.num_p+1))
-            self.num_pp = len(pp)
+            self.pp = tensor_power(self.p, levels=range(2,self.num_p+1))
+            self.num_pp = len(self.pp)
             labels.pp= get_intrxn_labels(labels.p)
 
             # Interactions among values of control_signals
-            cc = tensor_power(c, levels=range(2,self.num_c+1))
-            self.num_cc=len(cc)
+            self.cc = tensor_power(self.c, levels=range(2,self.num_c+1))
+            self.num_cc=len(self.cc)
             labels.cc = get_intrxn_labels(labels.c)
 
             # Predictor-Control interactions
-            pc = np.tensordot(predictor_values, c, axes=0).reshape(-1)
-            self.num_pc = len(pc)
+            self.pc = np.tensordot(predictor_values, self.c, axes=0).reshape(-1)
+            self.num_pc = len(self.pc)
             labels.pc = list(product(labels.p, labels.c))
 
             # Predictor-Predictor-Control interactions
-            ppc = np.tensordot(pp, c, axes=0).reshape(-1)
-            self.num_ppc = len(ppc)
+            self.ppc = np.tensordot(self.pp, self.c, axes=0).reshape(-1)
+            self.num_ppc = len(self.ppc)
             labels.ppc = list(product(labels.pp, labels.c))
 
             # Predictor-Control-Control interactions
-            pcc = np.tensordot(p, cc, axes=0).reshape(-1)
-            self.num_pcc = len(pcc)
+            self.pcc = np.tensordot(self.p, self.cc, axes=0).reshape(-1)
+            self.num_pcc = len(self.pcc)
             labels.pcc = list(product(labels.p, labels.cc))
 
             # Predictor-Predictor-Control-Control interactions
-            ppcc = np.tensordot(pp, cc, axes=0).reshape(-1)
-            self.num_ppcc = len(ppcc)
+            self.ppcc = np.tensordot(self.pp, self.cc, axes=0).reshape(-1)
+            self.num_ppcc = len(self.ppcc)
             labels.ppcc = list(product(labels.pp, labels.cc))
 
             # Construct prediction_vector based on specified terms and assign indices (as slices)
-            #    and assign indices for each set of terms, and levels for items in those terms
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
             if PV.PRED in terms:
-                idx.p = slice(i, self.num_p)
+                idx.p = slice(i, i+self.num_p)
                 i += self.num_p
             if PV.CTL in terms:
-                idx.c = slice(i, self.num_c)
+                idx.c = slice(i, i+self.num_c)
                 i += self.num_c
             if PV.PP in terms:
-                idx.pp = slice(i, self.num_pp)
+                idx.pp = slice(i, i+self.num_pp)
                 i += self.num_pp
             if PV.CC in terms:
-                idx.cc = slice(i, self.num_cc)
+                idx.cc = slice(i, i+self.num_cc)
                 i += self.num_cc
             if PV.PC in terms:
-                idx.pc = slice(i, self.num_pc)
+                idx.pc = slice(i, i+self.num_pc)
                 i += self.num_pc
             if PV.PPC in terms:
-                idx.ppc = slice(i, self.num_ppc)
+                idx.ppc = slice(i, i+self.num_ppc)
                 i += self.num_ppc
             if PV.PCC in terms:
-                idx.pcc = slice(i, self.num_pcc)
+                idx.pcc = slice(i, i+self.num_pcc)
                 i += self.num_pcc
             if PV.PPCC in terms:
-                idx.ppcc = slice(i, self.num_ppcc)
+                idx.ppcc = slice(i, i+self.num_ppcc)
                 i += self.num_ppcc
             if PV.COST in terms:
-                idx.cst = slice(i, self.num_cst)
+                idx.cst = slice(i, i+self.num_cst)
                 i+= self.num_cst
 
             self.vector = np.zeros(i)
 
-        def _update(self, predictor_values, control_signals, terms):
+        def _update(self, predictor_values, control_signals, terms, weights):
             # Populate fields (subvectors) of prediction_vector
 
             idx = self.idx
-            p = np.array(predictor_values)
-            c = np.array([[c.value] for c in control_signals]).reshape(-1)
+            self.p = np.array(predictor_values)
+            self.c = np.array([[c.value] for c in control_signals]).reshape(-1)
 
             # Compute terms that are used:
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
-                pp = tensor_power(predictor_values)
+                self.pp = tensor_power(predictor_values, range(2,self.num_pp+1), flat=False)
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
-                cc = tensor_power(c)
+                self.cc = tensor_power(self.c, range(2,self.num_cc+1), flat=False)
+                self.pp_wts = weights[idx.pp].reshape(self.pp.shape)
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
-                pc= np.tensordot(p,c,axes=0).reshape(-1)
+                self.pc= np.tensordot(self.p, self.c,axes=0).reshape(-1)
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
-                ppc = np.tensordot(pp,c,axes=0).reshape(-1)
+                self.ppc = np.tensordot(self.pp,self.c,axes=0).reshape(-1)
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
-                pcc = np.tensordot(pc,c,axes=0).reshape(-1)
+                self.pcc = np.tensordot(self.pc,self.c,axes=0).reshape(-1)
             if PV.PPCC in terms:
-                ppcc = np.tensordot(ppc,c,axes=0).reshape(-1)
+                ppcc = np.tensordot(self.ppc,self.c,axes=0).reshape(-1)
 
             # Assign specified terms to vector
             if PV.PRED in terms:
-                self.vector[idx.p] = p.reshape(-1)
+                self.vector[idx.p] = self.p.reshape(-1)
             if PV.CTL in terms:
-                self.vector[idx.c] = c.reshape(-1)
+                self.vector[idx.c] = self.c.reshape(-1)
             if PV.PP in terms:
-                self.vector[idx.pp] = pp
+                self.vector[idx.pp] = self.pp.reshape(-1)
             if PV.CC in terms:
-                self.vector[idx.cc] = cc
+                self.vector[idx.cc] = self.cc.reshape(-1)
             if PV.PC in terms:
-                self.vector[idx.pc] = pc
+                self.vector[idx.pc] = self.pc.reshape(-1)
             if PV.PPC in terms:
-                self.vector[idx.ppc] = ppc
+                self.vector[idx.ppc] = self.ppc.reshape(-1)
             if PV.PCC in terms:
-                self.vector[idx.pcc] = pcc
+                self.vector[idx.pcc] = self.pcc.reshape(-1)
             if PV.PPCC in terms:
-                self.vector[idx.ppcc] = ppcc
+                self.vector[idx.ppcc] = self.ppcc.reshape(-1)
             if PV.COST in terms:
                 self.vector[idx.cst] = \
                     np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
-        def _dc(self, predictor_values, control_signals, terms):
-            '''Compute derivatives with respect to control_signal values for specified terms'''
-            pass
+        def _partial_derivative(self, term_label, pv, pw, ctl_idx):
+            '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
+            with respect to control_signal i'''
+
+            ctl_label = self.labels.c[ctl_idx]
+            labels = getattr(self.labels, term_label.value)
+            terms = getattr(self, term_label.value)
+            idx = getattr(self.idx, term_label.value)
+            weights = pw[idx].reshape(np.array(terms).shape)
+
+            gradient = 0
+            # Remove any items in pv and pw corresponding to labels that don't contain ctl_label
+            for label, term, wts in zip(labels,terms,weights):
+                if ctl_label in label:
+                    # FIX -- MORE HERE
+                    gradient+=np.sum(term)
+            return gradient
+
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
@@ -991,6 +1007,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         pv = prediction_vector.vector
         idx = prediction_vector.idx
+        # labels = prediction_vector.labels
         num_pred = prediction_vector.num_predictors
         num_ctl = prediction_vector.num_control_signals
         num_cst = prediction_vector.num_costs
@@ -1063,17 +1080,16 @@ class LVOCControlMechanism(ControlMechanism):
 
                 if (term in self.prediction_terms for term in {PV.CC, PV.PPCC}):
                     # Recompute cc interaction term if it is needed:
-                    cc = tensor_power(control_signal_values)
+                    cc = tensor_power(control_signal_values, range(2,num_ctl+1))
+
+                # #FIX: TEMP
+                # self.temp_pv._partial_derivative(PV.CC, pv[idx.cc], prediction_weights[idx.cc], i)
+                # #FIX: -----
 
                 # Derivative for cc interaction term - d(cc*wts)/d(c[i])
-                #    2c[i]*wts for c[i]=c[j] and c*wts for c[i]!=c[j]
-                #    where c[i] = control_signal_value[i] and c[j] = other control signal in cc interaction term
                 if PV.CC in self.prediction_terms:
-                    # FIX: NOT CORRECT FOR POWERSET:
-                    # cc_weights = prediction_weights[idx.cc].reshape(num_ctl, num_pred)
-                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]
-                    # ADD TO gradient[i]
-                    pass
+                    # COMPUTE DERIVATIVE WITH RESPECT TO control_signal_values[i]  = product of other ctl sigs in term
+                    gradient[i] += self.temp_pv._partial_derivative(PV.CC, pv[idx.cc], prediction_weights, i)
 
                 # Derivative for ppcc interaction term - d(ppcc*wts)/d(c[i])
                 #    p^2*2c[i]*wts for c[i]=c[j] and p^2*c^2*wts for c[i]!=c[j]
