@@ -16,4 +16,4 @@ illustrate principles of neural and/or psychological function.
 
 • `BotvinickConflictMonitoringModel`
 
-• `LVOCModel`
+• `BustamanteStroopXORLVOCModel`
