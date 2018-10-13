@@ -247,6 +247,7 @@ Class Reference
 """
 import warnings
 from collections import Iterable, deque
+from itertools import product
 
 import numpy as np
 import typecheck as tc
@@ -735,6 +736,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         else:
+            temp = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
             self.prediction_vector._update(self.predictor_values, self.control_signals)
             self.prediction_buffer.append(self.prediction_vector.vector)
             self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx.cst])
@@ -800,7 +802,19 @@ class LVOCControlMechanism(ControlMechanism):
         '''
 
         class idx():
-            '''Indices into PredictionVector.vector -- assigned __init__'''
+            '''Indices into PredictionVector.vector -- assigned in __init__'''
+            p = None
+            c = None
+            pc = None
+            pp = None
+            cc = None
+            ppc = None
+            pcc = None
+            ppcc = None
+            cst = None
+
+        class labels():
+            '''labels indivual items in each set of terms of PredictionVector.vector -- assigned in __init__'''
             p = None
             c = None
             pc = None
@@ -816,49 +830,64 @@ class LVOCControlMechanism(ControlMechanism):
 
             # GET TERMS
 
+            labels = self.labels
+
+            def get_intrxn_labels(x):
+                # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
+                return list([s for s in powerset(x) if len(s)>1])
+
+            # MAIN EFFECT TERMS
+
             # Predictors
             p = predictor_values
-            self.num_p = len(p.reshape(-1))
+            self.num_p = len(p.reshape(-1))  # predictors are arrays; num_p is the total number of all elements
+            labels.p = ['p'+str(i) for i in range(0,self.num_p)]
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
+            # c = control_signals
             c = [[c.value] for c in control_signals]
-            self.num_c = self.num_cst = len(control_signals)
+            self.num_c = self.num_cst = len(c)
+            labels.c = ['c'+str(i) for i in range(0,self.num_c)]
+
+            # Costs
+            # cst = [[0] if c.cost is None else [c.cost] for c in control_signals]
+            self.num_cst = self.num_c
+            labels.cst = ['cst'+str(i) for i in range(0,self.num_cst)]
+
+            # INTERACTION TERMS
 
             # Interactions among Predictor vectors
-            self.num_pp = 0
-            for s in powerset(predictor_values): # Use predictor_values as these are appropriately 1d arrays
-                if len(s)>1:
-                    pp = np.tensordot(s[0],s[1],axes=0).reshape(-1)
-                    for i in range(2,len(s)):
-                        pp = np.tensordot(pp,s[i+1],axes=0).reshape(-1)
-                self.num_pp+=len(pp)
+            pp = tensor_power(p, levels=range(2,self.num_p+1))
+            self.num_pp = len(pp)
+            labels.pp= get_intrxn_labels(labels.p)
 
             # Interactions among values of control_signals
-            self.num_cc = 0
-            for s in powerset(c):
-                if len(s)>1:
-                    cc = np.tensordot(s[0],s[1],axes=0).reshape(-1)
-                    for i in range(2,len(s)):
-                        cc = np.tensordot(cc,s[i+1],axes=0).reshape(-1)
-                self.num_cc+=len(cc)
+            cc = tensor_power(c, levels=range(2,self.num_c+1))
+            self.num_cc=len(cc)
+            labels.cc = get_intrxn_labels(labels.c)
 
             # Predictor-Control interactions
             pc = np.tensordot(predictor_values, c, axes=0).reshape(-1)
             self.num_pc = len(pc)
+            labels.pc = list(product(labels.p, labels.c))
 
             # Predictor-Predictor-Control interactions
             ppc = np.tensordot(pp, c, axes=0).reshape(-1)
             self.num_ppc = len(ppc)
+            labels.ppc = list(product(labels.pp, labels.c))
 
             # Predictor-Control-Control interactions
-            pcc = np.tensordot(predictor_values, cc, axes=0).reshape(-1)
+            pcc = np.tensordot(p, cc, axes=0).reshape(-1)
             self.num_pcc = len(pcc)
+            labels.pcc = list(product(labels.p, labels.cc))
 
             # Predictor-Predictor-Control-Control interactions
             ppcc = np.tensordot(pp, cc, axes=0).reshape(-1)
             self.num_ppcc = len(ppcc)
+            labels.ppcc = list(product(labels.pp, labels.cc))
 
             # Construct prediction_vector based on specified terms and assign indices (as slices)
+            #    and assign indices for each set of terms, and levels for items in those terms
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
