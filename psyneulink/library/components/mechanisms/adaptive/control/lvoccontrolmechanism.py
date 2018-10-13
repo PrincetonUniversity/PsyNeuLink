@@ -267,7 +267,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -351,9 +351,9 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
     prediction_terms : List[PV] : default [PV.PRED,PV.CTL,PV.PC, PV.COST]
-        specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`;
-        items must be members of the `PV` Enum.  If None is specified, the default values will automatically
-        be assigned.
+        specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+        items must be members of the `PV` Enum.  If the keyword *ALL* is used, then all of the terms are used;
+        if None is specified, the default values will automatically be assigned.
 
     update_rate : int or float : default 0.1
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
@@ -502,6 +502,8 @@ class LVOCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None):
 
         prediction_terms = prediction_terms or [PV.PRED,PV.CTL,PV.PC, PV.COST]
+        if ALL in prediction_terms:
+            prediction_terms = list(PV.__members__.values())
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=predictors,
@@ -705,17 +707,17 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Update current prediction_vector, and return prediction vector and outcome from previous trial
 
-        Determines prediction_vector for current trial, and buffers this in prediction_buffer;  also buffers
-        costs of control_signals used in previous trial and buffers this in previous_costs.
+        Determines prediction_vector for current trial, and buffers this in prediction_buffer;
+        also buffers costs of control_signals used in previous trial ]in previous_costs.
 
         Computes outcome for previous trial by subtracting costs of control_signals from outcome received
-        from objective_mechanism, both of which reflect values assigned in previous trial (since Projection from
-        objective_mechanism is a feedback Projection, the value received from it corresponds to the one computed on
-        the previous trial).
+        from objective_mechanism, both of which reflect values assigned in previous trial
+        (since Projection from objective_mechanism is a feedback Projection, the value received from it corresponds
+        to the one computed on the previous trial).
         # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
 
-        Returns prediction_vector and outcome from previous trial, to be used by function to update prediction_weights
-        that will be used to predict the EVC for the current trial.
+        Returns prediction_vector and outcome from previous trial,
+        used by function to update prediction_weights that will be used to predict the EVC for the current trial.
 
         '''
 
@@ -727,18 +729,24 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Initialize attributes
         if context is ContextFlags.INSTANTIATE:
-            # FIX: REPLACE PredictionVectorStroopXOR WITH PredictorVector WHEN COMPLETE
-            self.prediction_vector = self.PredictionVectorStroopXOR(self.predictor_values, self.control_signals)
-            # temp = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
-            # self.prediction_vector = self.PredictionVector(self.predictor_values,
-            #                                                self.control_signals,
-            #                                                self.prediction_terms)
+            # # MODIFIED 10/13/18 OLD:
+            # self.prediction_vector = self.PredictionVectorStroopXOR(self.predictor_values,
+            #                                                self.control_signals)
+            # MODIFIED 10/13/18 NEW:
+            self.prediction_vector = self.PredictionVector(self.predictor_values,
+                                                           self.control_signals,
+                                                           self.prediction_terms)
+            # MODIFIED 10/13/18 END
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         else:
-            self.temp_pv = self.PredictionVector(self.predictor_values, self.control_signals, self.prediction_terms)
-            self.prediction_vector._update(self.predictor_values, self.control_signals)
+            # # MODIFIED 10/13/18 OLD:
+            # self.prediction_vector._update(self.predictor_values, self.control_signals)
+            # MODIFIED 10/13/18 NEW:
+            self.prediction_vector._update(self.predictor_values, self.control_signals, self.prediction_terms)
+            # MODIFIED 10/13/18 END
+
             self.prediction_buffer.append(self.prediction_vector.vector)
             self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx.cst])
 
@@ -768,19 +776,15 @@ class LVOCControlMechanism(ControlMechanism):
 
         def __init__(self, predictor_values, control_signals):
             # Numbers of terms in prediction_vector
-            self.num_predictors = len(predictor_values.reshape(-1))
-            self.num_control_signals = self.num_costs = len(control_signals)
-            self.num_interactions = self.num_predictors * self.num_control_signals
-            # len_prediction_vector = \
-            #     self.num_predictors + self.num_interactions + self.num_control_signals + self.num_costs
-            len_prediction_vector = self.num_interactions + self.num_control_signals + self.num_costs
+            self.num_p = len(predictor_values.reshape(-1))
+            self.num_c = self.num_cst = len(control_signals)
+            self.num_interactions = self.num_p * self.num_c
+            len_prediction_vector = self.num_interactions + self.num_c + self.num_cst
 
             # Indices for fields of prediction_vector
-            # self.pred = slice(0, self.num_predictors)
-            # self.intrxn = slice(self.num_predictors, self.num_predictors+self.num_interactions)
             idx = self.idx
             idx.pc = slice(0, self.num_interactions)
-            idx.c = slice(idx.pc.stop, idx.pc.stop + self.num_control_signals)
+            idx.c = slice(idx.pc.stop, idx.pc.stop + self.num_c)
             idx.cst = slice(idx.c.stop, len_prediction_vector)
 
             self.vector = np.zeros(len_prediction_vector)
@@ -791,7 +795,7 @@ class LVOCControlMechanism(ControlMechanism):
             idx = self.idx
             self.vector[idx.c] = np.array([c.value for c in control_signals]).reshape(-1)
             self.vector[idx.pc]= \
-                np.array(predictor_values.reshape(-1) * self.vector[idx.c].reshape(self.num_control_signals,1)
+                np.array(predictor_values.reshape(-1) * self.vector[idx.c].reshape(self.num_c,1)
                          ).reshape(-1)
             self.vector[idx.cst] = \
                 np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
@@ -837,7 +841,7 @@ class LVOCControlMechanism(ControlMechanism):
                 # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
                 return list([s for s in powerset(x) if len(s)>1])
 
-            # MAIN EFFECT TERMS
+            # MAIN EFFECT TERMS (unflattened)
 
             # Predictors
             self.p = predictor_values
@@ -846,7 +850,8 @@ class LVOCControlMechanism(ControlMechanism):
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
             # c = control_signals
-            self.c = [c.value for c in control_signals]
+            # self.c = [c.value for c in control_signals]
+            self.c = [[0]] * len(control_signals) # Placemarker until control_signals are instantiated
             self.num_c = self.num_cst = len(self.c)
             labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
 
@@ -855,7 +860,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.num_cst = self.num_c
             labels.cst = ['cst'+str(i) for i in range(0,self.num_cst)]
 
-            # INTERACTION TERMS
+            # INTERACTION TERMS (unflattened)
 
             # Interactions among Predictor vectors
             self.pp = tensor_power(self.p, levels=range(2,self.num_p+1))
@@ -868,26 +873,26 @@ class LVOCControlMechanism(ControlMechanism):
             labels.cc = get_intrxn_labels(labels.c)
 
             # Predictor-Control interactions
-            self.pc = np.tensordot(predictor_values, self.c, axes=0).reshape(-1)
-            self.num_pc = len(self.pc)
+            self.pc = np.tensordot(predictor_values, self.c, axes=0)
+            self.num_pc = len(self.pc.reshape(-1))
             labels.pc = list(product(labels.p, labels.c))
 
             # Predictor-Predictor-Control interactions
-            self.ppc = np.tensordot(self.pp, self.c, axes=0).reshape(-1)
-            self.num_ppc = len(self.ppc)
+            self.ppc = np.tensordot(self.pp, self.c, axes=0)
+            self.num_ppc = len(self.ppc.reshape(-1))
             labels.ppc = list(product(labels.pp, labels.c))
 
             # Predictor-Control-Control interactions
-            self.pcc = np.tensordot(self.p, self.cc, axes=0).reshape(-1)
-            self.num_pcc = len(self.pcc)
+            self.pcc = np.tensordot(self.p, self.cc, axes=0)
+            self.num_pcc = len(self.pcc.reshape(-1))
             labels.pcc = list(product(labels.p, labels.cc))
 
             # Predictor-Predictor-Control-Control interactions
-            self.ppcc = np.tensordot(self.pp, self.cc, axes=0).reshape(-1)
-            self.num_ppcc = len(self.ppcc)
+            self.ppcc = np.tensordot(self.pp, self.cc, axes=0)
+            self.num_ppcc = len(self.ppcc.reshape(-1))
             labels.ppcc = list(product(labels.pp, labels.cc))
 
-            # Construct prediction_vector based on specified terms and assign indices (as slices)
+            # Construct "flattened" prediction_vector based on specified terms and assign indices (as slices)
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
@@ -921,35 +926,40 @@ class LVOCControlMechanism(ControlMechanism):
 
             self.vector = np.zeros(i)
 
-        def _update(self, predictor_values, control_signals, terms, weights):
+        def _update(self, predictor_values, control_signals, terms):
             # Populate fields (subvectors) of prediction_vector
 
             idx = self.idx
             self.p = np.array(predictor_values)
-            self.c = np.array([[c.value] for c in control_signals]).reshape(-1)
+            self.c = np.array([c.value for c in control_signals])
 
             # Compute terms that are used:
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
-                self.pp = tensor_power(predictor_values, range(2,self.num_pp+1), flat=False)
+                self.pp = np.array(tensor_power(self.p, range(2,self.num_p+1)))
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
-                self.cc = tensor_power(self.c, range(2,self.num_cc+1), flat=False)
-                self.pp_wts = weights[idx.pp].reshape(self.pp.shape)
+                self.cc = np.array(tensor_power(self.c, range(2,self.num_c+1)))
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
-                self.pc= np.tensordot(self.p, self.c,axes=0).reshape(-1)
+                # self.pc= np.tensordot(self.p, self.c,axes=0).reshape(-1)
+                self.pc= np.tensordot(self.p, self.c,axes=0)
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
-                self.ppc = np.tensordot(self.pp,self.c,axes=0).reshape(-1)
+                # self.ppc = np.tensordot(self.pp,self.c,axes=0).reshape(-1)
+                self.ppc = np.tensordot(self.pp,self.c,axes=0)
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
-                self.pcc = np.tensordot(self.pc,self.c,axes=0).reshape(-1)
+                # self.pcc = np.tensordot(self.pc,self.c,axes=0).reshape(-1)
+                self.pcc = np.tensordot(self.p,self.cc,axes=0)
             if PV.PPCC in terms:
-                ppcc = np.tensordot(self.ppc,self.c,axes=0).reshape(-1)
+                # self.ppcc = np.tensordot(self.ppc,self.c,axes=0).reshape(-1)
+                self.ppcc = np.tensordot(self.pp,self.cc,axes=0)
 
-            # Assign specified terms to vector
+            # Assign specified terms to flattened vector
             if PV.PRED in terms:
                 self.vector[idx.p] = self.p.reshape(-1)
             if PV.CTL in terms:
                 self.vector[idx.c] = self.c.reshape(-1)
             if PV.PP in terms:
                 self.vector[idx.pp] = self.pp.reshape(-1)
+            # if PV.CC in terms:
+            #     self.vector[idx.cc] = self.cc.reshape(-1)
             if PV.CC in terms:
                 self.vector[idx.cc] = self.cc.reshape(-1)
             if PV.PC in terms:
@@ -1008,15 +1018,12 @@ class LVOCControlMechanism(ControlMechanism):
 
         '''
 
-        # FIX: CURRENTLY ASSUMES ONLY TERMS IN PREDICTION VECTOR ARE THOSE USED IN STROOP XOR MODEL
-        #      AND ONLY COMPUTES DERIVATIVES FOR THOSE.  TO BE REPLACED WITH PredictionVector GENERALIZATION
-
         pv = prediction_vector.vector
         idx = prediction_vector.idx
         # labels = prediction_vector.labels
-        num_pred = prediction_vector.num_predictors
-        num_ctl = prediction_vector.num_control_signals
-        num_cst = prediction_vector.num_costs
+        num_pred = prediction_vector.num_p
+        num_ctl = prediction_vector.num_c
+        num_cst = prediction_vector.num_cst
         # num_intrxn = prediction_vector.num_interactions
 
         convergence_metric = self.convergence_criterion + EPSILON
@@ -1085,17 +1092,17 @@ class LVOCControlMechanism(ControlMechanism):
 
             for i, control_signal_value in enumerate(control_signal_values):
 
-                if (term in self.prediction_terms for term in {PV.CC, PV.PPCC}):
-                    # Recompute cc interaction term if it is needed:
-                    cc = tensor_power(control_signal_values, range(2,num_ctl+1))
+                # # Recompute cc interaction term if it is needed:
+                # if (term in self.prediction_terms for term in {PV.CC, PV.PPCC}):
+                #     cc = tensor_power(control_signal_values, range(2,num_ctl+1))
 
                 # Derivative of cc interaction term with respect to current control_signal_value
                 if PV.CC in self.prediction_terms:
-                    gradient[i] += self.temp_pv._partial_derivative(PV.CC, prediction_weights, i, control_signal_value)
+                    gradient[i] += pv._partial_derivative(PV.CC, prediction_weights, i, control_signal_value)
 
                 # Derivative of ppcc interaction term with respect to current control_signal_value
                 if PV.PPCC in self.prediction_terms:
-                    gradient[i] += self.temp_pv._partial_derivative(PV.PPCC, prediction_weights, i, control_signal_value)
+                    gradient[i] += pv._partial_derivative(PV.PPCC, prediction_weights, i, control_signal_value)
 
                 # Derivative for costs -- d(costs)/d(c)
                 #    (since costs depend on control_signals)
@@ -1109,7 +1116,7 @@ class LVOCControlMechanism(ControlMechanism):
                 # Update cost based on new control_signal_value
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
-            # FIX: CALL PredictionVector.update HERE
+            # FIX: REPLACE BELOW WITH CALL TO pv._update
             # Assign new values of interaction terms, control_signals and costs to pv
             # pv[pc_sl]= np.array(pv[pred] * pv[ctl].reshape(num_ctl,1)
             #                                     ).reshape(-1)

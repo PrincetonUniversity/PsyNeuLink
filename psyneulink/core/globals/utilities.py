@@ -550,14 +550,14 @@ def powerset(iterable):
 
 import typecheck as tc
 @tc.typecheck
-def tensor_power(items, levels:tc.optional(range)=None, flat=True):
+def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     '''return tensor product for all members of powerset of items
 
     levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
     if None, all terms will be returned
 
-    if flat=True, returns 1d array of values
     if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
+    if flat=True, returns 1d array of values
     '''
 
     ps = list(powerset(items))
