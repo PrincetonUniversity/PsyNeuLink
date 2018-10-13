@@ -869,16 +869,23 @@ class LVOCControlMechanism(ControlMechanism):
                 # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
                 return list([s for s in powerset(x) if len(s)>1])
 
+            def error_for_too_few_terms(term):
+                spec_type = {'PP':'predictdors', 'CC':'control_signals'}
+                raise LVOCError("Specification of {} for {} arg of {} requires at least two {} be specified".
+                                format('PV.'+terms, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+
             # MAIN EFFECT TERMS (unflattened)
 
             # Predictors
             self.p = predictor_values
-            self.num_p = len(self.p.reshape(-1))  # predictors are arrays; num_p is the total number of all elements
+            self.num_p = len(self.p)  # predictors are arrays; num_p is the number of arrays
+            self.num_p_elems = len(self.p.reshape(-1)) # number of total elements assigned to prediction_vector.vector
             labels.p = ['p'+str(i) for i in range(0,self.num_p)]
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
-            self.c = [[0]] * len(control_signals) # Placemarker until control_signals are instantiated
-            self.num_c = self.num_cst = len(self.c)
+            self.c = np.array([[0]] * len(control_signals)) # Placemarker until control_signals are instantiated
+            self.num_c = len(self.c)
+            self.num_c_elems = len(self.c.reshape(-1))
             labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
 
             # Costs
@@ -888,62 +895,86 @@ class LVOCControlMechanism(ControlMechanism):
             # INTERACTION TERMS (unflattened)
 
             # Interactions among Predictor vectors
-            self.pp = tensor_power(self.p, levels=range(2,self.num_p+1))
-            self.num_pp = len(self.pp)
-            labels.pp= get_intrxn_labels(labels.p)
+            if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
+                if self.num_p < 2:
+                    self.error_for_too_few_terms('PP')
+                self.pp = np.array(tensor_power(self.p, levels=range(2,self.num_p+1)))
+                self.num_pp = len(self.pp)
+                self.num_pp_elems = len(self.pp.reshape(-1))
+                labels.pp= get_intrxn_labels(labels.p)
 
             # Interactions among values of control_signals
-            self.cc = tensor_power(self.c, levels=range(2,self.num_c+1))
-            self.num_cc=len(self.cc)
-            labels.cc = get_intrxn_labels(labels.c)
+            if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
+                if self.num_c < 2:
+                    self.error_for_too_few_terms('CC')
+                self.cc = np.array(tensor_power(self.c, levels=range(2,self.num_c+1)))
+                self.num_cc=len(self.cc)
+                self.num_cc_elems = len(self.cc.reshape(-1))
+                labels.cc = get_intrxn_labels(labels.c)
 
             # Predictor-Control interactions
-            self.pc = np.tensordot(predictor_values, self.c, axes=0)
-            self.num_pc = len(self.pc.reshape(-1))
-            labels.pc = list(product(labels.p, labels.c))
+            if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
+                self.pc = np.tensordot(predictor_values, self.c, axes=0)
+                self.num_pc = len(self.pc.reshape(-1))
+                self.num_pc_elems = len(self.pc.reshape(-1))
+                labels.pc = list(product(labels.p, labels.c))
 
             # Predictor-Predictor-Control interactions
-            self.ppc = np.tensordot(self.pp, self.c, axes=0)
-            self.num_ppc = len(self.ppc.reshape(-1))
-            labels.ppc = list(product(labels.pp, labels.c))
+            if any(term in terms for term in [PV.PPC, PV.PPCC]):
+                if self.num_p < 2:
+                    self.error_for_too_few_terms('PP')
+                self.ppc = np.tensordot(self.pp, self.c, axes=0)
+                self.num_ppc = len(self.ppc.reshape(-1))
+                self.num_ppc_elems = len(self.ppc.reshape(-1))
+                labels.ppc = list(product(labels.pp, labels.c))
 
             # Predictor-Control-Control interactions
-            self.pcc = np.tensordot(self.p, self.cc, axes=0)
-            self.num_pcc = len(self.pcc.reshape(-1))
-            labels.pcc = list(product(labels.p, labels.cc))
+            if any(term in terms for term in [PV.PCC, PV.PPCC]):
+                if self.num_c < 2:
+                    self.error_for_too_few_terms('CC')
+                self.pcc = np.tensordot(self.p, self.cc, axes=0)
+                self.num_pcc = len(self.pcc.reshape(-1))
+                self.num_pcc_elems = len(self.pcc.reshape(-1))
+                labels.pcc = list(product(labels.p, labels.cc))
 
             # Predictor-Predictor-Control-Control interactions
-            self.ppcc = np.tensordot(self.pp, self.cc, axes=0)
-            self.num_ppcc = len(self.ppcc.reshape(-1))
-            labels.ppcc = list(product(labels.pp, labels.cc))
+            if PV.PPCC in terms:
+                if self.num_p < 2:
+                    self.error_for_too_few_terms('PP')
+                if self.num_c < 2:
+                    self.error_for_too_few_terms('CC')
+                self.ppcc = np.tensordot(self.pp, self.cc, axes=0)
+                self.num_ppcc = len(self.ppcc.reshape(-1))
+                self.num_ppcc_elems = len(self.ppcc.reshape(-1))
+                labels.ppcc = list(product(labels.pp, labels.cc))
 
             # Construct "flattened" prediction_vector based on specified terms and assign indices (as slices)
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
             if PV.P in terms:
-                idx.p = slice(i, i+self.num_p)
+                idx.p = slice(i, i+self.num_p_elems)
                 i += self.num_p
             if PV.C in terms:
-                idx.c = slice(i, i+self.num_c)
+                idx.c = slice(i, i+self.num_c_elems)
                 i += self.num_c
             if PV.PP in terms:
-                idx.pp = slice(i, i+self.num_pp)
+                idx.pp = slice(i, i+self.num_pp_elems)
                 i += self.num_pp
             if PV.CC in terms:
-                idx.cc = slice(i, i+self.num_cc)
+                idx.cc = slice(i, i+self.num_cc_elems)
                 i += self.num_cc
             if PV.PC in terms:
-                idx.pc = slice(i, i+self.num_pc)
+                idx.pc = slice(i, i+self.num_pc_elems)
                 i += self.num_pc
             if PV.PPC in terms:
-                idx.ppc = slice(i, i+self.num_ppc)
+                idx.ppc = slice(i, i+self.num_ppc_elems)
                 i += self.num_ppc
             if PV.PCC in terms:
-                idx.pcc = slice(i, i+self.num_pcc)
+                idx.pcc = slice(i, i+self.num_pcc_elems)
                 i += self.num_pcc
             if PV.PPCC in terms:
-                idx.ppcc = slice(i, i+self.num_ppcc)
+                idx.ppcc = slice(i, i+self.num_ppcc_elems)
                 i += self.num_ppcc
             if PV.COST in terms:
                 idx.cst = slice(i, i+self.num_cst)
