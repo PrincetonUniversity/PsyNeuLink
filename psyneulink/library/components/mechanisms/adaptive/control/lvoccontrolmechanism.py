@@ -1021,8 +1021,14 @@ class LVOCControlMechanism(ControlMechanism):
         pv = prediction_vector.vector
         idx = prediction_vector.idx
         # labels = prediction_vector.labels
-        num_pred = prediction_vector.num_p
-        num_ctl = prediction_vector.num_c
+        num_p = prediction_vector.num_p
+        num_c = prediction_vector.num_c
+        num_pp = prediction_vector.num_pp
+        num_cc = prediction_vector.num_cc
+        num_pc = prediction_vector.num_pc
+        num_ppc = prediction_vector.num_ppc
+        num_pcc = prediction_vector.num_pcc
+        num_ppcc = prediction_vector.num_ppcc
         num_cst = prediction_vector.num_cst
         # num_intrxn = prediction_vector.num_interactions
 
@@ -1042,7 +1048,7 @@ class LVOCControlMechanism(ControlMechanism):
         # COMPUTE DERIVATIVES THAT ARE CONSTANTS
         #    Do it here so don't have to do it in each iteration of the while loop
 
-        gradient_constants = np.zeros(num_ctl)
+        gradient_constants = np.zeros(num_c)
 
         # Derivative for control_signals
         if PV.CTL in self.prediction_terms:
@@ -1054,22 +1060,19 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.PC in self.prediction_terms:
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictors
-            pc_weights = prediction_weights[idx.pc].reshape(num_ctl, num_pred)
-            # d(pc*wt)/d(c) = sum over p of (p[i] * wt)
+            pc_weights = prediction_weights[idx.pc].reshape(num_c, num_p)
             pc_weights_x_predictors = pc_weights * predictors
-            for i in range(num_ctl):
+            for i in range(num_c):
                 gradient_constants[i] += np.sum(pc_weights_x_predictors[i])
 
-        # Derivatives for pc interactions:
+        # Derivatives for ppc interactions:
         if PV.PPC in self.prediction_terms:
             # Get weights for ppc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictor interactions
-            ppc_weights = prediction_weights[idx.ppc].reshape(num_ctl, num_pred)
-            # d(ppc*wt)/d(c) = sum over pp of (p[i]^2 * wt)
-            ppc = pv[idx.ppc]
-            ppc_weights_x_ppc_x_ppc = ppc_weights * ppc**2
-            for i in range(num_ctl):
-                gradient_constants[i] += np.sum(ppc_weights_x_ppc_x_ppc[i])
+            ppc_weights = prediction_weights[idx.ppc].reshape(num_c, num_pp)
+            ppc_weights_x_pp = ppc_weights * prediction_vector.pp.reshape(-1)
+            for i in range(num_c):
+                gradient_constants[i] += np.sum(ppc_weights_x_pp[i])
 
         # # Recompute pp interactions if needed:
         # #    used in while but only needs to be computed once so do it here for efficiency
@@ -1098,11 +1101,13 @@ class LVOCControlMechanism(ControlMechanism):
 
                 # Derivative of cc interaction term with respect to current control_signal_value
                 if PV.CC in self.prediction_terms:
-                    gradient[i] += pv._partial_derivative(PV.CC, prediction_weights, i, control_signal_value)
+                    gradient[i] += prediction_vector._partial_derivative(PV.CC, prediction_weights, i,
+                                                                         control_signal_value)
 
                 # Derivative of ppcc interaction term with respect to current control_signal_value
                 if PV.PPCC in self.prediction_terms:
-                    gradient[i] += pv._partial_derivative(PV.PPCC, prediction_weights, i, control_signal_value)
+                    gradient[i] += prediction_vector._partial_derivative(PV.PPCC, prediction_weights, i,
+                                                                         control_signal_value)
 
                 # Derivative for costs -- d(costs)/d(c)
                 #    (since costs depend on control_signals)
@@ -1120,7 +1125,7 @@ class LVOCControlMechanism(ControlMechanism):
             # Assign new values of interaction terms, control_signals and costs to pv
             # pv[pc_sl]= np.array(pv[pred] * pv[ctl].reshape(num_ctl,1)
             #                                     ).reshape(-1)
-            pv[idx.pc]= np.array(predictors * pv[idx.c].reshape(num_ctl,1)).reshape(-1)
+            pv[idx.pc]= np.array(predictors * pv[idx.c].reshape(num_c,1)).reshape(-1)
             pv[idx.c] = control_signal_values
             pv[idx.cst] = costs
 
