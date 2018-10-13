@@ -818,6 +818,7 @@ class LVOCControlMechanism(ControlMechanism):
             ppcc = None
             cst = None
 
+
         class labels():
             '''labels indivual items in each set of terms of PredictionVector.vector -- assigned in __init__'''
             p = None
@@ -849,14 +850,11 @@ class LVOCControlMechanism(ControlMechanism):
             labels.p = ['p'+str(i) for i in range(0,self.num_p)]
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
-            # c = control_signals
-            # self.c = [c.value for c in control_signals]
             self.c = [[0]] * len(control_signals) # Placemarker until control_signals are instantiated
             self.num_c = self.num_cst = len(self.c)
             labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
 
             # Costs
-            # cst = [[0] if c.cost is None else [c.cost] for c in control_signals]
             self.num_cst = self.num_c
             labels.cst = ['cst'+str(i) for i in range(0,self.num_cst)]
 
@@ -939,16 +937,12 @@ class LVOCControlMechanism(ControlMechanism):
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
                 self.cc = np.array(tensor_power(self.c, range(2,self.num_c+1)))
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
-                # self.pc= np.tensordot(self.p, self.c,axes=0).reshape(-1)
                 self.pc= np.tensordot(self.p, self.c,axes=0)
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
-                # self.ppc = np.tensordot(self.pp,self.c,axes=0).reshape(-1)
                 self.ppc = np.tensordot(self.pp,self.c,axes=0)
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
-                # self.pcc = np.tensordot(self.pc,self.c,axes=0).reshape(-1)
                 self.pcc = np.tensordot(self.p,self.cc,axes=0)
             if PV.PPCC in terms:
-                # self.ppcc = np.tensordot(self.ppc,self.c,axes=0).reshape(-1)
                 self.ppcc = np.tensordot(self.pp,self.cc,axes=0)
 
             # Assign specified terms to flattened vector
@@ -958,8 +952,6 @@ class LVOCControlMechanism(ControlMechanism):
                 self.vector[idx.c] = self.c.reshape(-1)
             if PV.PP in terms:
                 self.vector[idx.pp] = self.pp.reshape(-1)
-            # if PV.CC in terms:
-            #     self.vector[idx.cc] = self.cc.reshape(-1)
             if PV.CC in terms:
                 self.vector[idx.cc] = self.cc.reshape(-1)
             if PV.PC in terms:
@@ -1074,11 +1066,6 @@ class LVOCControlMechanism(ControlMechanism):
             for i in range(num_c):
                 gradient_constants[i] += np.sum(ppc_weights_x_pp[i])
 
-        # # Recompute pp interactions if needed:
-        # #    used in while but only needs to be computed once so do it here for efficiency
-        # if PV.PP in self.prediction_terms:
-        #     pp = tensor_power(self.predictor_values)
-
         # TEST PRINT:
         print('\n\npredictors: ', predictors,
               '\ncontrol_signals: ', control_signal_values,
@@ -1123,8 +1110,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             # FIX: REPLACE BELOW WITH CALL TO pv._update
             # Assign new values of interaction terms, control_signals and costs to pv
-            # pv[pc_sl]= np.array(pv[pred] * pv[ctl].reshape(num_ctl,1)
-            #                                     ).reshape(-1)
             pv[idx.pc]= np.array(predictors * pv[idx.c].reshape(num_c,1)).reshape(-1)
             pv[idx.c] = control_signal_values
             pv[idx.cst] = costs
