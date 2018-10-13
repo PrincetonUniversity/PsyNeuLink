@@ -13,12 +13,13 @@
 Overview
 --------
 
-An LVOCControlMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in
-order to optimize the performance of the `Composition` to which it belongs.  It implements a form of the Learned Value
-of Control model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi
-.1006043&rev=2>`_, which learns to select the value for its `control_signals <LVOCControlMechanism.control_signals>`
-(i.e., its `allocation_policy  <LVOCControlMechanism.allocation_policy>`) that maximzes its `EVC
-<LVOCControlMechanism_EVC>` based on a set of `predictors <LVOCControlMechanism_Predictors>`.
+An LVOCControlMechanism is a `ControlMechanism <ControlMechanism>` that learns to regulate its `ControlSignals
+<ControlSignal>` in order to optimize the performance of the `Composition` to which it belongs.  It implements a form
+of the Learned Value of Control model described in `Leider et al.
+<https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_, which learns to select the
+value for its `control_signals <LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy
+<LVOCControlMechanism.allocation_policy>`) that maximzes its `EVC <LVOCControlMechanism_EVC>` based on a set of
+`predictors <LVOCControlMechanism_Predictors>`.
 
 .. _LVOCControlMechanism_EVC:
 
@@ -176,8 +177,8 @@ the LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_p
 
 .. note::
   The LVOCControlMechanism's `function <LVOCControlMechanism.function>` is provided the values of the `predictors
-  <LVOCControlMechanmism.predictors>` and outcome of its `objective_mechanism
-  <LVOCControlMechanmism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
+  <LVOCControlMechanism_Predictors>` and outcome of its `objective_mechanism
+  <LVOCControlMechanism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
   `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to determine (and implement)
   the `allocation_policy <LVOCControlMechanism.allocation_policy>` that is predicted to generate the greatest `EVC
   <LVOCControlMechanism_EVC>` based on the `predictor_values <LVOCControlMechanism.predictor_values>` for the current
@@ -283,7 +284,8 @@ PREDICTION_TERMS = 'prediction_terms'
 
 
 class PV(Enum):
-    '''Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+    '''PV()
+    Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
 
     Attributes
     ----------
@@ -310,7 +312,6 @@ class PV(Enum):
         interactions among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
-
     '''
     P = 'p'
     C = 'c'
@@ -349,8 +350,7 @@ class LVOCControlMechanism(ControlMechanism):
     name=None,                                           \
     prefs=None)
 
-    Subclass of `ControlMechanism <ControlMechanism>` that optimizes the `ControlSignals <ControlSignal>` for a
-    `Composition`.
+    Subclass of `ControlMechanism <ControlMechanism>` that learns to optimize its `ControlSignals <ControlSignal>`.
 
     Arguments
     ---------
@@ -441,8 +441,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     prediction_terms : List[PV]
         identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        Items are members of the `PV` enum; the default is [`P <PredictionVector.P>`, `C <PredictionVector.C>`
-        `PC <PredictionVector.PC>`, `COST <PredictionVector.COST>`].
+        Items are members of the `PV` enum; the default is [`P <PV.P>`, `C <PV.C>` `PC <PV.PC>`, `COST <PV.COST>`].
 
     prediction_vector : 1d ndarray
         current values, respectively, of `predictors <LVOCControlMechanism_Predictors>`, interaction terms for
