@@ -1109,9 +1109,9 @@ class LVOCControlMechanism(ControlMechanism):
         # # MODIFIED 10/14/18 NEW:
         # control_signal_values = [np.array(c.value) for c in self.control_signals]
         # costs = [np.array(c.cost) for c in self.control_signals]
-
-        if PV.COST in self.prediction_terms:
-            cost_weights = prediction_weights[idx.cst]
+        #
+        # if PV.COST in self.prediction_terms:
+        #     cost_weights = prediction_weights[idx.cst]
         # MODIFIED 10/14/18 END
 
         # COMPUTE DERIVATIVES THAT ARE CONSTANTS
@@ -1122,12 +1122,7 @@ class LVOCControlMechanism(ControlMechanism):
         # Derivative for control_signals
         if PV.C in self.prediction_terms:
             # d(c*wt)/(dc) = wt
-            # FIX PROBLEM
-            # MODIFIED 10/14/18 OLD:
-            gradient_constants += np.array(control_signal_weights)
-            # # MODIFIED 10/14/18 NEW:
-            # gradient_constants += np.array(prediction_weights[idx.c])
-            # MODIFIED 10/14/18 END
+            gradient_constants += np.array(prediction_weights[idx.c])
 
         # FIX: CHECK THAT THESE COMPUTE SAME VALUES AS _partial_derivative
         # Derivatives for pc interactions:
