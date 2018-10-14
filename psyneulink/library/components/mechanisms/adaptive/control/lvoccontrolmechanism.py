@@ -1186,7 +1186,7 @@ class LVOCControlMechanism(ControlMechanism):
             # pv[idx.cst] = costs
             # MODIFIED 10/14/18 NEW:
             # Only updatre terms with control_signal in them
-            terms = [t for t in self.prediction_terms if 'c' in t.value]
+            terms = [term for term in self.prediction_terms if 'c' in term.value]
             prediction_vector._update(self.predictor_values, control_signal_values, costs, terms)
             # MODIFIED 10/14/18 END
 
