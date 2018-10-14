@@ -1,16 +1,19 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
-from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
-from psyneulink.globals.utilities import UtilitiesError
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, ReLU, Reduce, Reinforcement, SoftMax, UserDefinedFunction
+from psyneulink.core.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, UniformToNormalDist, WaldDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE
+from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.scheduling.condition import Never
 
 VECTOR_SIZE=4
 
@@ -47,6 +50,21 @@ class TestTransferMechanismInputs:
         )
         T.reinitialize_when = Never()
         val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism")
+    def test_transfer_mech_inputs_list_of_floats_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)], bin_execute=True)
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     #@pytest.mark.mechanism
@@ -137,6 +155,23 @@ class TestTransferMechanismNoise:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear noise")
+    def test_transfer_mech_array_var_float_noise_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            noise=5.0,
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_array_var_normal_len_1_noise(self):
@@ -185,6 +220,23 @@ class TestTransferMechanismNoise:
             integrator_mode=True
         )
         T.reinitialize_when = Never()
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
+    def test_transfer_mech_array_var_normal_array_noise2_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            noise=[5.0 for i in range(VECTOR_SIZE)],
+            integration_rate=1.0,
+            integrator_mode=True
+        )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
@@ -391,7 +443,7 @@ class TestTransferMechanismFunctions:
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
-    
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_relu_fun(self):
@@ -416,6 +468,22 @@ class TestTransferMechanismFunctions:
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Logistic")
+    def test_transfer_mech_logistic_fun_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Logistic(),
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
@@ -431,6 +499,22 @@ class TestTransferMechanismFunctions:
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Exponential")
+    def test_transfer_mech_exponential_fun_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Exponential(),
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism SoftMax")
@@ -444,6 +528,22 @@ class TestTransferMechanismFunctions:
             integrator_mode=True
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
+
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism SoftMax")
+    def test_transfer_mech_softmax_fun_llvm(self, benchmark):
+
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=SoftMax(),
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)], bin_execute=True)
         assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
@@ -520,6 +620,22 @@ class TestTransferMechanismTimeConstant:
         val = T.execute([1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    def test_transfer_mech_integration_rate_0_8_llvm(self):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            integration_rate=0.8,
+            integrator_mode=True
+        )
+        val = T.execute([1 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[0.8 for i in range(VECTOR_SIZE)]])
+        val = T.execute([1 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -535,6 +651,21 @@ class TestTransferMechanismTimeConstant:
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
+    def test_transfer_mech_integration_rate_1_0_llvm(self, benchmark):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            integration_rate=1.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -548,6 +679,21 @@ class TestTransferMechanismTimeConstant:
             integrator_mode=True
         )
         val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
+
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
+    def test_transfer_mech_integration_rate_0_0_llvm(self, benchmark):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(),
+            integration_rate=0.0,
+            integrator_mode=True
+        )
+        val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)], bin_execute=True)
         assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
 
@@ -567,6 +713,24 @@ class TestTransferMechanismTimeConstant:
         T.noise = 10
         val = T.execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
+
+    @pytest.mark.llvm
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    def test_transfer_mech_integration_rate_0_8_initial_0_5_llvm(self):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            integration_rate=0.8,
+            initial_value=np.array([[.5, .5, .5, .5]]),
+            integrator_mode=True
+        )
+        val = T.execute([1, 1, 1, 1], bin_execute=True)
+        assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
+        T.noise = 10
+        val = T.execute([1, 2, -3, 0], bin_execute=True)
+        assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]])  # testing noise changes to an integrator
 
 
     @pytest.mark.mechanism
@@ -919,8 +1083,8 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_transfer_mech_2d_variable(self):
-        from psyneulink.globals.keywords import MEAN
+    def test_transfer_mech_2d_variable_mean(self):
+        from psyneulink.core.globals.keywords import MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
@@ -928,6 +1092,19 @@ class TestTransferMechanismMultipleInputStates:
             output_states=[MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_transfer_mech_2d_variable(self, mode):
+        T = TransferMechanism(
+            name='T',
+            function=Linear(slope=2.0, intercept=1.0),
+            default_variable=[[0.0, 0.0], [0.0, 0.0]],
+        )
+        val = T.execute([[1.0, 2.0], [3.0, 4.0]], bin_execute=(mode=='LLVM'))
+        assert np.allclose(val, [[3., 5.], [7., 9.]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -943,9 +1120,11 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_multiple_output_states_for_multiple_input_states(self):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.benchmark(group="MIMO")
+    def test_multiple_output_states_for_multiple_input_states(self, benchmark, mode):
         T = TransferMechanism(input_states=['a','b','c'])
-        val = T.execute([[1],[2],[3]])
+        val = benchmark(T.execute, [[1],[2],[3]], bin_execute=(mode=='LLVM'))
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
         assert len(T.output_states)==3
@@ -955,7 +1134,7 @@ class TestTransferMechanismMultipleInputStates:
     # @pytest.mark.transfer_mechanism
     # @pytest.mark.mimo
     # def test_OWNER_VALUE_standard_output_state(self):
-    #     from psyneulink.globals.keywords import OWNER_VALUE
+    #     from psyneulink.core.globals.keywords import OWNER_VALUE
     #     T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
     #                               output_states=OWNER_VALUE)
     #     print(T.value)
@@ -1196,7 +1375,8 @@ class TestIntegratorMode:
                and "try setting the integrator_mode argument to True." in str(err_txt)
 
     def test_switch_mode(self):
-        T = TransferMechanism(integrator_mode=True)
+        T = TransferMechanism(integrator_mode=True,
+                              on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
         P = Process(pathway=[T])
         S = System(processes=[P])
         integrator_function = T.integrator_function
@@ -1212,7 +1392,6 @@ class TestIntegratorMode:
         T.integrator_mode = False
 
         assert T.integrator_mode is False
-        assert T.integrator_function is None
 
         S.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.value, [[1.0]])
@@ -1221,6 +1400,7 @@ class TestIntegratorMode:
         T.integrator_mode = True
 
         assert T.integrator_mode is True
+        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         S.run({T: [[1.0], [1.0], [1.0]]})
@@ -1257,7 +1437,86 @@ class TestIntegratorMode:
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
 
+class TestOnResumeIntegratorMode:
+    def test_integrator_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
 
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 1.25
+        # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
+        # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
+        assert np.allclose(T.value, [[1.5625]])
+
+    def test_instantaneous_mode_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
+                              integration_rate=0.5,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                           # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                            # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 2.0
+        # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
+        # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
+        assert np.allclose(T.value, [[1.75]])
+
+    def test_reinitialize_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
+                              integrator_mode=True)
+        C = Composition()
+        C.add_c_node(T)
+
+        C = Composition()
+        C.add_c_node(T)
+
+        C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
+
+        T.integrator_mode = False                               # Switch to "instantaneous mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
+        # Trial 0: 1.0 * 1.0 = 1.0
+        # Trial 1: 1.0 * 2.0 = 2.0
+        assert np.allclose(T.value, [[2.0]])
+
+        T.integrator_mode = True                                # Switch back to "integrator mode"
+
+        C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
+        # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
+        # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
+        assert np.allclose(T.value, [[1.25]])
 
 class TestClip:
     def test_clip_float(self):
@@ -1276,3 +1535,39 @@ class TestClip:
         assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+
+class TestOutputStates:
+    def test_output_states_match_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        assert len(T.input_states) == 3
+        assert len(T.output_states) == 3
+
+        T.execute(input=[[1.0], [2.0], [3.0]])
+
+        assert np.allclose(T.value, [[1.0], [2.0], [3.0]])
+        assert np.allclose(T.output_states[0].value, [1.0])
+        assert np.allclose(T.output_states[1].value, [2.0])
+        assert np.allclose(T.output_states[2].value, [3.0])
+
+    def test_add_input_states(self):
+        T = TransferMechanism(default_variable=[[0], [0], [0]])
+        I = InputState(owner=T,
+                       variable=[4.0],
+                       reference_value=[4.0],
+                       name="extra input state")
+        T.add_states([I])
+        print("Number of input states: ", len(T.input_states))
+        print(T.input_states, "\n\n")
+        print("Number of output states: ", len(T.output_states))
+        print(T.output_states)
+
+        # assert len(T.input_states) == 4
+        # assert len(T.output_states) == 4
+        #
+        # T.execute(input=[[1.0], [2.0], [3.0], [4.0]])
+        #
+        # assert np.allclose(T.value, [[1.0], [2.0], [3.0], [4.0]])
+        # assert np.allclose(T.output_states[0].value, [1.0])
+        # assert np.allclose(T.output_states[1].value, [2.0])
+        # assert np.allclose(T.output_states[2].value, [3.0])
+        # assert np.allclose(T.output_states[3].value, [4.0])

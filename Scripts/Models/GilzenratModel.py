@@ -57,7 +57,7 @@ input_layer = pnl.TransferMechanism(
 
 # Create Decision Layer  --- [ Target, Distractor ]
 
-decision_layer = pnl.LCA(
+decision_layer = pnl.LCAMechanism(
     size=2,
     time_step_size=dt,
     leak=-1.0,
@@ -73,7 +73,7 @@ decision_layer = pnl.LCA(
 
 # Create Response Layer  --- [ Target ]
 
-response_layer = pnl.LCA(
+response_layer = pnl.LCAMechanism(
     size=1,
     time_step_size=dt,
     leak=-1.0,

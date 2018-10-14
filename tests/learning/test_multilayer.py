@@ -1,13 +1,13 @@
 import numpy as np
 
-from psyneulink.components.functions.function import Logistic
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import SOFT_CLAMP, EXECUTION, PROCESSING, LEARNING, VALUE
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
+from psyneulink.core.components.functions.function import Logistic
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import EXECUTION, LEARNING, PROCESSING, SOFT_CLAMP, VALUE
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
 
 
 def test_multilayer():
@@ -290,10 +290,10 @@ def test_multilayer():
     log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
     expected_log_val = np.array(
                 [
-                    [[1], [1], [1], [1], [1]],
-                    [[1], [3], [5], [7], [9]],
-                    [[0], [0], [0], [0], [0]],
-                    [[3], [3], [3], [3], [3]],
+                    [[1], [1], [1], [1], [1]],  # RUN
+                    [[0], [1], [2], [3], [4]],  # TRIAL
+                    [[1], [1], [1], [1], [1]],  # PASS
+                    [[1], [1], [1], [1], [1]],  # TIME_STEP
                     [  [[0.09925812411381937, 0.1079522130303428, 0.12252820028789306, 0.14345816973727732],
                         [0.30131473371328343, 0.30827285172236585, 0.3213609999139731, 0.3410707131678078],
                         [0.5032924245149345, 0.5085833053183328, 0.5202423523987703, 0.5387798509126243],

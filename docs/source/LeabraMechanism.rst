@@ -1,6 +1,6 @@
 LeabraMechanism
 ===============
 
-.. automodule:: psyneulink.library.mechanisms.processing.leabramechanism
+.. automodule:: psyneulink.library.components.mechanisms.processing.leabramechanism
    :members:
    :exclude-members: random

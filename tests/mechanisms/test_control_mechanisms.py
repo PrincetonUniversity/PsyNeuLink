@@ -75,16 +75,22 @@ class TestLCControlMechanism:
     @pytest.mark.mechanism
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Basic")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
     def test_lc_control_mech_basic(self, benchmark, mode):
 
         LC = pnl.LCControlMechanism(
             base_level_gain=3.0,
-            scaling_factor_gain=0.5
+            scaling_factor_gain=0.5,
+            default_variable = 10.0
         )
-        val = LC.execute([[10.0]])
-        assert np.allclose(np.asfarray(val).flatten(), [3.00139776,  0.512152259, .00279552477, 0.05000])
-        val = benchmark(LC.execute, [[10.0]])
+        val = LC.execute([10.0], bin_execute=(mode=='LLVM'))
+        # LLVM returns combination of all output states so let's do that for
+        # Python as well
+        if mode == 'Python':
+            val = [s.value for s in LC.output_states]
+        assert np.allclose(val, [3.00139776, 3.00139776, 3.00139776, 3.00139776])
+        val = benchmark(LC.execute, [[10.0]], bin_execute=(mode=='LLVM'))
+
 
     def test_lc_control_modulated_mechanisms_all(self):
 
@@ -95,6 +101,7 @@ class TestLCControlMechanism:
                                     modulated_mechanisms=pnl.ALL
                                     )
         S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
+
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
         assert T_1.parameter_states[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
@@ -114,6 +121,8 @@ class TestLCControlMechanism:
         P1=pnl.Process(pathway=[Tx,Tz])
         P2=pnl.Process(pathway=[Ty, C])
         S=pnl.System(processes=[P1, P2])
+        from pprint import pprint
+        pprint(S.execution_graph)
 
         assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})

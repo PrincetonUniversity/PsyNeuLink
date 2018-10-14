@@ -1,6 +1,6 @@
 MappingProjection
 =================
 
-.. automodule:: psyneulink.components.projections.pathway.mappingprojection
+.. automodule:: psyneulink.core.components.projections.pathway.mappingprojection
    :members:
    :exclude-members: random, execute

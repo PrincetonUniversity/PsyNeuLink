@@ -1,6 +1,6 @@
 AutoAssociativeProjection
 =========================
 
-.. automodule:: psyneulink.library.projections.pathway.autoassociativeprojection
+.. automodule:: psyneulink.library.components.projections.pathway.autoassociativeprojection
    :members:
    :exclude-members: random, execute

@@ -1,0 +1,52 @@
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
+version: '{build}'
+clone_depth: 25
+
+environment:
+  PYTHONWARNINGS: ignore::DeprecationWarning
+  PATH: 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
+  matrix:
+  - PYTHON: Python35
+    EXTRA_ARGS: -m llvm
+  - PYTHON: Python36
+    EXTRA_ARGS: -m llvm
+  - PYTHON: Python37
+    EXTRA_ARGS: -m llvm
+  - PYTHON: Python35
+    ARCH: -x64
+    PYTORCH: cp35-cp35m
+  - PYTHON: Python36
+    ARCH: -x64
+    PYTORCH: cp36-cp36m
+  - PYTHON: Python37
+    ARCH: -x64
+    PYTORCH: cp37-cp37m
+
+install:
+  - choco upgrade graphviz.portable -y
+  - pip --version
+  - pip install --user -U certifi pip
+  - pip --version
+  - pip install --user git+https://github.com/benureau/leabra.git@master
+
+  # pytorch does not distribute packages over pypi. Install it directly.
+  - if not "%PYTORCH%" == "" pip install --user http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
+
+  # Remove pytorch from requirements if none is available
+  - if "%PYTORCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt)
+
+  - pip install --user -e .[dev]
+
+cache:
+    - 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON% -> .appveyor.yml'
+    - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
+    - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
+
+build: off
+
+test_script:
+- cmd: pytest tests/ %EXTRA_ARGS%

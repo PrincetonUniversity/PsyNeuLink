@@ -1,6 +1,6 @@
 System
 ======
 
-.. automodule:: psyneulink.components.system
+.. automodule:: psyneulink.core.components.system
    :members:
    :exclude-members: random, MonitoredOutputStateTuple

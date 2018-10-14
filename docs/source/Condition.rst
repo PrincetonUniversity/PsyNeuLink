@@ -1,6 +1,6 @@
 Condition
 =========
 
-.. automodule:: psyneulink.scheduling.condition
+.. automodule:: psyneulink.core.scheduling.condition
    :members:
    :exclude-members: random
