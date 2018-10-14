@@ -1181,8 +1181,8 @@ class LVOCControlMechanism(ControlMechanism):
             # FIX PROBLEM
             # # MODIFIED 10/14/18 OLD:
             # # Assign new values of interaction terms, control_signals and costs to pv
+            # pv[idx.c] = control_signal_values  # FIX <- NOT NEEDED, AS control_signal_values = pv[idx.c]
             # pv[idx.pc]= np.array(predictors * pv[idx.c].reshape(num_c,1)).reshape(-1)
-            # pv[idx.c] = control_signal_values
             # pv[idx.cst] = costs
             # MODIFIED 10/14/18 NEW:
             # Only updatre terms with control_signal in them
