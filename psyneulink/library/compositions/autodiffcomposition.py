@@ -28,7 +28,7 @@ Creating an AutodiffComposition
 -------------------------------
 
 An AutodiffComposition can be created by calling the constructor, and then adding `Components <Component>` using the
-add methods of its parent class `Composition`. The only significant argument in initialization is
+add methods of its parent class `Composition`. The most significant argument in initialization is
 **param_init_from_pnl**, which controls how parameters are set up for the internal PyTorch representation of the model.
 
 If set to True:
@@ -49,6 +49,11 @@ If set to False:
 
 .. warning:: Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
     first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
+
+Another initialization argument is **patience**. **patience** allows the model to stop training early, if training stops
+reducing loss. The model tracks how many consecutive epochs of training have failed to reduce the model's loss. When
+this number exceeds **patience**, the model stops training early. By default, **patience** is ``None``, and the model
+will train for the number of specified epochs and will not stop training early.
 
 .. _AutodiffComposition_Structure:
 
@@ -145,6 +150,7 @@ class AutodiffComposition(Composition):
     """
     AutodiffComposition(            \
     param_init_from_pnl=True,       \
+    patience=None,                  \
     name="autodiff_composition")
 
     Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
@@ -155,6 +161,12 @@ class AutodiffComposition(Composition):
     param_init_from_pnl : boolean : default True
         a Boolean specifying how parameters are initialized. (See
         `Creating an AutodiffComposition <AutodiffComposition_Creation>` for details)
+
+    patience : int or None : default None
+        **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
+        consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
+        the model stops training early. If **patience** is ``None``, the model will train for the number
+        of specified epochs and will not stop training early.
 
     Attributes
     ----------
@@ -168,17 +180,17 @@ class AutodiffComposition(Composition):
     losses : list of floats
         tracks the average loss for each training epoch
 
+    patience : int or None : default None
+        **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
+        consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
+        the model stops training early. If **patience** is ``None``, the model will train for the number
+        of specified epochs and will not stop training early.
+
     name : str : default LeabraMechanism-<index>
         the name of the Mechanism.
         Specified in the **name** argument of the constructor for the Projection;
         if not specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
 
     Returns
     -------
@@ -186,11 +198,14 @@ class AutodiffComposition(Composition):
     """
 
     # TODO (CW 9/28): add compositions to registry so default arg for name is no longer needed
-    def __init__(self, param_init_from_pnl=True, name="autodiff_composition"):
+    def __init__(self,
+                 param_init_from_pnl=True,
+                 patience=None,
+                 name="autodiff_composition"):
 
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-                    '`pip install torch` or `pip3 install torch`')
+                                           '`pip install torch` or `pip3 install torch`')
 
         self.name = name
 
@@ -220,6 +235,10 @@ class AutodiffComposition(Composition):
 
         # ordered execution sets for the pytorch model
         self.ordered_execution_sets = None
+
+        # patience is the "bad" epochs (with no progress in average loss) the model tolerates in one training session
+        # before ending training
+        self.patience = patience
 
 
     # TODO (CW 9/28): this mirrors _create_CIM_states() in Composition but doesn't call super().
@@ -475,8 +494,12 @@ class AutodiffComposition(Composition):
     # performs learning/training on all input-target pairs it recieves for given number of epochs
     def autodiff_training(self, inputs, targets, epochs, randomize):
 
+        if self.patience is not None:
+            # set up object for early stopping
+            early_stopper = EarlyStopping(patience=self.patience)
+
         # if training over trial sets in random order, set up array for mapping random order back to original order
-        if randomize == True:
+        if randomize:
             rand_train_order_reverse = np.zeros(len(inputs))
 
         # get total number of output neurons from the dimensionality of targets on the first trial
@@ -488,25 +511,23 @@ class AutodiffComposition(Composition):
         # iterate over epochs
         for epoch in range(epochs):
 
-            # if training in random order, generate random order
-            if randomize == True:
+            # if training in random order, generate random order and set up mapping
+            # from random order back to original order
+            if randomize:
                 rand_train_order = np.random.permutation(len(inputs))
+                rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
 
             # set up array to keep track of losses on epoch
             curr_losses = np.zeros(len(inputs))
 
-            # if we're on final epoch, set up temporary list to keep track of outputs,
-            # and if training in random order, set up mapping from random order back to original order
-            if epoch == epochs-1:
-                outputs = []
-                if randomize == True:
-                    rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
+            # reset temporary list to keep track of most recent outputs
+            outputs = []
 
             # iterate over inputs, targets
             for t in range(len(inputs)):
 
                 # get current inputs, targets
-                if randomize == True:
+                if randomize:
                     curr_tensor_inputs = inputs[rand_train_order[t]]
                     curr_tensor_targets = targets[rand_train_order[t]]
                 else:
@@ -531,24 +552,34 @@ class AutodiffComposition(Composition):
                 self.optimizer.step()
 
                 # save outputs of model if this is final epoch
-                if epoch == epochs-1:
-                    curr_output_list = []
-                    for i in range(len(curr_tensor_outputs)):
-                        curr_output_list.append(curr_tensor_outputs[i].detach().numpy().copy())
-                    outputs.append(curr_output_list)
+                curr_output_list = []
+                for i in range(len(curr_tensor_outputs)):
+                    curr_output_list.append(curr_tensor_outputs[i].detach().numpy().copy())
+                outputs.append(curr_output_list)
 
             # save average loss on the current epoch
-            self.losses.append(np.mean(curr_losses))
+            average_loss = np.mean(curr_losses)
+            self.losses.append(average_loss)
 
-        # save outputs in a list in correct order, return them
-        outputs_list = []
-        for i in range(len(outputs)):
-            if randomize == True:
-                outputs_list.append(outputs[int(rand_train_order_reverse[i])])
-            else:
-                outputs_list.append(outputs[i])
+            # update early stopper
+            if self.patience is not None:
+                should_stop = early_stopper.step(average_loss)
+                if should_stop:
+                    if randomize:
+                        outputs_list = [None] * len(outputs)
+                        for i in range(len(outputs)):
+                            outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
+                        return outputs_list
+                    else:
+                        return outputs
 
-        return outputs_list
+        if randomize:  # save outputs in a list in correct order, return them
+            outputs_list = [None] * len(outputs)
+            for i in range(len(outputs)):
+                outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
+            return outputs_list
+        else:
+            return outputs
 
 
 
@@ -680,7 +711,7 @@ class AutodiffComposition(Composition):
                     self.loss = nn.CrossEntropyLoss(reduction='sum')
 
         # allow user to refresh the list tracking loss on every epoch in the autodiff composition's training history
-        if refresh_losses == True:
+        if refresh_losses:
             self.losses = []
 
         # get node roles, set up CIM's
@@ -1030,6 +1061,45 @@ class AutodiffComposition(Composition):
         biases = self.pytorch_representation.get_biases_for_mechanisms()
 
         return weights, biases
+
+class EarlyStopping(object):
+    def __init__(self, mode='min', patience=10):
+        self.mode = mode
+        self.patience = patience
+        self.best = None
+        self.num_bad_epochs = 0
+        self.is_better = None
+        self._init_is_better(mode)
+
+        if patience == 0:
+            self.is_better = lambda a, b: True
+
+    def step(self, metrics):
+        if self.best is None:
+            self.best = metrics
+            return False
+
+        if np.isnan(metrics):
+            return True
+
+        if self.is_better(metrics, self.best):
+            self.num_bad_epochs = 0
+            self.best = metrics
+        else:
+            self.num_bad_epochs += 1
+
+        if self.num_bad_epochs >= self.patience:
+            return True
+
+        return False
+
+    def _init_is_better(self, mode):
+        if mode not in {'min', 'max'}:
+            raise ValueError('mode ' + mode + ' is unknown!')
+        if mode == 'min':
+            self.is_better = lambda a, best: a < best
+        if mode == 'max':
+            self.is_better = lambda a, best: a > best
 
 
 
