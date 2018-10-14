@@ -1145,7 +1145,7 @@ class LVOCControlMechanism(ControlMechanism):
                 control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
 
                 # Update cost based on new control_signal_value
-                costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
+                costs[i] = control_signals[i].intensity_cost_function(control_signal_value)
 
             # Only updatre terms with control_signal in them
             terms = [term for term in self.prediction_terms if 'c' in term.value]
