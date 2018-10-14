@@ -12698,6 +12698,7 @@ class BayesGLM(LearningFunction):
             if len(self.mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
                                     format(len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
 
         if isinstance(self.sigma_0, (int, float)):
             Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
