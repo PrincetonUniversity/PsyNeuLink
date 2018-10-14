@@ -492,7 +492,6 @@ class LVOCControlMechanism(ControlMechanism):
         the `PreferenceSet` for the LVOCControlMechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
     """
 
     componentType = LVOCCONTROLMECHANISM
@@ -742,7 +741,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         Returns prediction_vector and outcome from previous trial,
         used by function to update prediction_weights that will be used to predict the EVC for the current trial.
-
         '''
 
         # This is the value received from the objective_mechanism's OUTCOME OutputState:
@@ -1057,7 +1055,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
         <LVOCControlMechanism.allocation_policy>`).
-
         '''
 
         pv = prediction_vector.vector
