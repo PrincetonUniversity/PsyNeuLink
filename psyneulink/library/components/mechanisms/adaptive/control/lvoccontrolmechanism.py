@@ -668,10 +668,12 @@ class LVOCControlMechanism(ControlMechanism):
                 # Place in a list for consistency of handling below
                 input_states = [item]
             # Shadow all of the Projections to each specified InputState
-            input_state_specs.extend([{#NAME:i.name + ' of ' + i.owner.name,
-                                       VARIABLE: i.variable,
-                            }
-                                      for i in input_states])
+            input_state_specs.extend([
+                {
+                    #NAME:i.name + ' of ' + i.owner.name,
+                    VARIABLE: i.variable}
+                for i in input_states
+            ])
         if fct:
             for i in input_state_specs:
                 i.update({FUNCTION:fct})
