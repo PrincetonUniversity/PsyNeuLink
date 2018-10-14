@@ -1159,7 +1159,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # TEST PRINT:
             print(
-                    '\niteration ', j,
+                    '\niteration {}-{}'.format(self.current_execution_count-1, j),
                     '\nprevious_lvoc: ', previous_lvoc,
                     '\ncurrent_lvoc: ',current_lvoc ,
                     '\nconvergence_metric: ',convergence_metric,
