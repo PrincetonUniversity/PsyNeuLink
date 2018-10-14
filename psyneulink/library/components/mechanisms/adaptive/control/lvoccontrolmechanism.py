@@ -753,11 +753,7 @@ class LVOCControlMechanism(ControlMechanism):
         obj_mech_outcome = variable[0]
 
         # This is the current values of the predictors
-        # MODIFIED 10/14/18 OLD:
-        self.predictor_values = np.array(variable[1:])
-        # # MODIFIED 10/14/18 NEW:
-        # self.predictor_values = np.array(np.array(variable[1:]).tolist())
-        # MODIFIED 10/14/18 END
+        self.predictor_values = np.array(np.array(variable[1:]).tolist())
 
         # Initialize attributes
         if context is ContextFlags.INSTANTIATE:
@@ -773,11 +769,9 @@ class LVOCControlMechanism(ControlMechanism):
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         else:
-            # # MODIFIED 10/14/18 OLD:
-            # self.prediction_vector._update(self.predictor_values, self.control_signals)
-            # MODIFIED 10/14/18 NEW:
+            # MODIFIED 10/14/18 OLD:
             self.prediction_vector._update(self.predictor_values, self.control_signals, self.prediction_terms)
-            # # MODIFIED 10/14/18 NEWER:
+            # # MODIFIED 10/14/18 NEW:
             # control_signal_values = [c.value for c in self.control_signals]
             # control_signal_costs = [0 if c.cost is None else c.cost for c in self.control_signals]
             # self.prediction_vector._update(self.predictor_values,
@@ -1106,6 +1100,7 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
         predictors = self.predictor_values.reshape(-1)
 
+        # FIX PROBLEM
         # MODIFIED 10/14/18 OLD:
         control_signal_values = pv[idx.c]
         control_signal_weights = prediction_weights[idx.c]
@@ -1114,9 +1109,9 @@ class LVOCControlMechanism(ControlMechanism):
         # # MODIFIED 10/14/18 NEW:
         # control_signal_values = [np.array(c.value) for c in self.control_signals]
         # costs = [np.array(c.cost) for c in self.control_signals]
-        #
-        # if PV.COST in self.prediction_terms:
-        #     cost_weights = prediction_weights[idx.cst]
+
+        if PV.COST in self.prediction_terms:
+            cost_weights = prediction_weights[idx.cst]
         # MODIFIED 10/14/18 END
 
         # COMPUTE DERIVATIVES THAT ARE CONSTANTS
@@ -1127,6 +1122,7 @@ class LVOCControlMechanism(ControlMechanism):
         # Derivative for control_signals
         if PV.C in self.prediction_terms:
             # d(c*wt)/(dc) = wt
+            # FIX PROBLEM
             # MODIFIED 10/14/18 OLD:
             gradient_constants += np.array(control_signal_weights)
             # # MODIFIED 10/14/18 NEW:
@@ -1138,11 +1134,7 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.PC in self.prediction_terms:
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictors
-            # MODIFIED 10/14/18 OLD:
-            pc_weights = prediction_weights[idx.pc].reshape(num_c, prediction_vector.num_p)
-            # # MODIFIED 10/14/18 NEW:
-            # pc_weights = prediction_weights[idx.pc].reshape(num_c, prediction_vector.num_p_elems)
-            # MODIFIED 10/14/18 END
+            pc_weights = prediction_weights[idx.pc].reshape(num_c, prediction_vector.num_p_elems)
             pc_weights_x_predictors = pc_weights * predictors
             for i in range(num_c):
                 gradient_constants[i] += np.sum(pc_weights_x_predictors[i])
@@ -1151,11 +1143,7 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.PPC in self.prediction_terms:
             # Get weights for ppc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the predictor interactions
-            # MODIFIED 10/14/18 OLD:
-            ppc_weights = prediction_weights[idx.ppc].reshape(num_c, prediction_vector.num_pp)
-            # # MODIFIED 10/14/18 NEW:
-            # ppc_weights = prediction_weights[idx.ppc].reshape(num_c, prediction_vector.num_pp_elems)
-            # MODIFIED 10/14/18 END
+            ppc_weights = prediction_weights[idx.ppc].reshape(num_c, prediction_vector.num_pp_elems)
             ppc_weights_x_pp = ppc_weights * prediction_vector.pp.reshape(-1)
             for i in range(num_c):
                 gradient_constants[i] += np.sum(ppc_weights_x_pp[i])
@@ -1192,16 +1180,10 @@ class LVOCControlMechanism(ControlMechanism):
 
                 # Derivative for costs -- d(costs)/d(c)
                 #    (since costs depend on control_signals)
-                # MODIFIED 10/14/18 OLD:
-                cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
-                cost_gradient[i] = -(cost_function_derivative(control_signal_value) * cost_weights[i])
-                gradient[i] += cost_gradient[i]
-                # # MODIFIED 10/14/18 NEW:
-                # if PV.COST in self.prediction_terms:
-                #     cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
-                #     cost_gradient[i] = -np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
-                #     gradient[i] += cost_gradient[i]
-                # MODIFIED 10/14/18 END
+                if PV.COST in self.prediction_terms:
+                    cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
+                    cost_gradient[i] = -np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
+                    gradient[i] += cost_gradient[i]
 
                 # Update control_signal_value with gradient
                 control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
@@ -1209,7 +1191,7 @@ class LVOCControlMechanism(ControlMechanism):
                 # Update cost based on new control_signal_value
                 costs[i] = -(control_signals[i].intensity_cost_function(control_signal_value))
 
-            # FIX: REPLACE BELOW WITH CALL TO pv._update
+            # FIX PROBLEM
             # MODIFIED 10/14/18 OLD:
             # Assign new values of interaction terms, control_signals and costs to pv
             pv[idx.pc]= np.array(predictors * pv[idx.c].reshape(num_c,1)).reshape(-1)
