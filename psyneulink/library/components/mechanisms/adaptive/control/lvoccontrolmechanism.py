@@ -706,7 +706,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         Call to `gradient_ascent` determines `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC
         <LVCOControlMechanism_EVC>` given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
-
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
