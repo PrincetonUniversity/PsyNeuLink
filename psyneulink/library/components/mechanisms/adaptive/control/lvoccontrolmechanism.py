@@ -1068,8 +1068,6 @@ class LVOCControlMechanism(ControlMechanism):
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
 
-        # FIX: NEEDED FOR Stroop XOR IMPLEMENTATION (TO RECOMPUTE PC INTERACTION TERM FOR EACH SAMPLE CONTROL SIGNALS)
-        # FIX: SINCE PREDICTORS ARE NOT INLUCDED IN PREDICTION VECTOR
         predictors = self.predictor_values.reshape(-1)
 
         control_signal_values = [np.array(c.value) for c in self.control_signals]
