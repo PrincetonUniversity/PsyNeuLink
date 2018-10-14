@@ -1110,11 +1110,8 @@ class LVOCControlMechanism(ControlMechanism):
         # TEST PRINT:
         print(
                 '\nprediction_weights: ', prediction_weights,
-                # '\n\npredictors: ', predictors,
-                # '\ncontrol_costs: ', costs,
-                # '\ncontrol_signal_values: ', control_signal_values,
-                self.test_print(prediction_vector)
               )
+        self.test_print(prediction_vector)
         # TEST PRINT END:
 
         # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
@@ -1169,10 +1166,6 @@ class LVOCControlMechanism(ControlMechanism):
                     '\nprevious_lvoc: ', previous_lvoc,
                     '\ncurrent_lvoc: ',current_lvoc ,
                     '\nconvergence_metric: ',convergence_metric,
-                    # '\npredictor_values: ', predictors,
-                    # '\ninteractions: ', pc_weights_x_predictors,
-                    # '\ncosts: ', costs,
-                    # '\ncontrol_signal_values: ', control_signal_values,
             )
             self.test_print(prediction_vector)
             # TEST PRINT END
@@ -1189,6 +1182,7 @@ class LVOCControlMechanism(ControlMechanism):
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
 
+    # TEST PRINT:
     def test_print(self, pv):
         terms = self.prediction_terms
         vector = pv.vector
