@@ -692,16 +692,10 @@ class LVOCControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
-        Update `prediction_weights <LVOCControlMechanism.prediction_weights>` to better predict outcome of
-        `LVOCControlMechanism's <LVOCControlMechanism>` `objective_mechanism <LVOCControlMechanism.objective_mechanism>`
-        minus the summed costs of `control_signals <LVOCControlMechanism.control_signals>` from prediction_vector, and
-        then determine `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC <LVCOControlMechanism_EVC>`
-        given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
-
-        variable should have two items:
-          - variable[0]: current `prediction_vector <LVOCControlMechanism.prediction_vector> and
-          - variable[1]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
+        Items of variable should be:
+          - variable[0]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
             <LVOCControlMechanism.objective_mechanism>`.
+          - variable[n]: current value of `predictor <LVOCControlMechanism_Predictors>`\\[n]
 
         Call to super._execute calculates outcome from last trial, by subtracting the `costs <ControlSignal.costs>` for
         the `control_signal <LVOCControlMechanism.control_signals>` values used in the previous trial from the value
@@ -710,8 +704,8 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism.function>` to update the `prediction_weights <LVOCControlMechanism.prediction_weights>`
         so as to better predict the outcome.
 
-        Call to `gradient_ascent` optimizes `allocation_policy <LVOCControlMechahism.allocation_policy>` given new
-        `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+        Call to `gradient_ascent` determines `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC
+        <LVCOControlMechanism_EVC>` given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
 
         """
 
@@ -730,7 +724,8 @@ class LVOCControlMechanism(ControlMechanism):
                                                  self.prediction_vector,
                                                  self.prediction_weights)
 
-        return allocation_policy.reshape((len(allocation_policy),1))
+        # return allocation_policy.reshape((len(allocation_policy),1))
+        return allocation_policy
 
     def _parse_function_variable(self, variable, context=None):
         '''Update current prediction_vector, and return prediction vector and outcome from previous trial
@@ -1114,10 +1109,13 @@ class LVOCControlMechanism(ControlMechanism):
                 gradient_constants[i] += np.sum(ppc_weights_x_pp[i])
 
         # TEST PRINT:
-        print('\n\npredictors: ', predictors,
-              '\ncontrol_signals: ', control_signal_values,
-              '\ncontrol_costs: ', costs,
-              '\nprediction_weights: ', prediction_weights)
+        print(
+                '\nprediction_weights: ', prediction_weights,
+                # '\n\npredictors: ', predictors,
+                # '\ncontrol_costs: ', costs,
+                # '\ncontrol_signal_values: ', control_signal_values,
+                self.test_print(prediction_vector)
+              )
         # TEST PRINT END:
 
         # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
@@ -1167,14 +1165,17 @@ class LVOCControlMechanism(ControlMechanism):
             convergence_metric = np.abs(current_lvoc - previous_lvoc)
 
             # TEST PRINT:
-            print('\niteration ', j,
-                  '\nprevious_lvoc: ', previous_lvoc,
-                  '\ncurrent_lvoc: ',current_lvoc ,
-                  '\nconvergence_metric: ',convergence_metric,
-                  '\npredictors: ', predictors,
-                  '\ncontrol_signal_values: ', control_signal_values,
-                  '\ninteractions: ', pc_weights_x_predictors,
-                  '\ncosts: ', costs)
+            print(
+                    '\niteration ', j,
+                    '\nprevious_lvoc: ', previous_lvoc,
+                    '\ncurrent_lvoc: ',current_lvoc ,
+                    '\nconvergence_metric: ',convergence_metric,
+                    # '\npredictor_values: ', predictors,
+                    # '\ninteractions: ', pc_weights_x_predictors,
+                    # '\ncosts: ', costs,
+                    # '\ncontrol_signal_values: ', control_signal_values,
+            )
+            self.test_print(prediction_vector)
             # TEST PRINT END
 
             j+=1
@@ -1188,3 +1189,27 @@ class LVOCControlMechanism(ControlMechanism):
 
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
+
+    def test_print(self, pv):
+        terms = self.prediction_terms
+        vector = pv.vector
+        idx = pv.idx
+
+        if PV.P in terms:
+            print('predictor_values: ', vector[idx.p])
+        if PV.PP in terms:
+            print('pp: ', vector[idx.pp])
+        if PV.CC in terms:
+            print('cc: ', vector[idx.cc])
+        if PV.PC in terms:
+            print('pc: ', vector[idx.pc])
+        if PV.PPC in terms:
+            print('ppc: ', vector[idx.ppc])
+        if PV.PCC in terms:
+            print('pcc: ', vector[idx.pcc])
+        if PV.PPCC in terms:
+            print('ppcc: ', vector[idx.ppcc])
+        if PV.COST in terms:
+            print('cst: ', vector[idx.cst])
+        print('control_signal_values: ', vector[idx.c])
+
