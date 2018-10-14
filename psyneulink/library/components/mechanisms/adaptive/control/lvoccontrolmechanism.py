@@ -268,7 +268,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -718,6 +718,12 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          runtime_params=runtime_params,
                                                                          context=context
                                                                          )
+
+        # MODIFIED 10/14/18 NEW:
+        if self.current_execution_count == 1:
+            self.prediction_weights[self.prediction_vector.idx.cst] = \
+                abs(self.prediction_weights[self.prediction_vector.idx.cst])
+        # MODIFIED 10/14/18 END
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(self.control_signals,
@@ -1202,4 +1208,3 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.COST in terms:
             print('cst: ', vector[idx.cst])
         print('control_signal_values: ', vector[idx.c])
-
