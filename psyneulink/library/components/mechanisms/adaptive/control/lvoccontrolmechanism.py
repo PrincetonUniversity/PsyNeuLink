@@ -719,7 +719,7 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          context=context
                                                                          )
 
-        # MODIFIED 10/14/18 NEW:
+        # MODIFIED 10/14/18 NEW:  FIX:  HACK TO CHECK FOR CONVERGENCE
         if self.current_execution_count == 1:
             self.prediction_weights[self.prediction_vector.idx.cst] = \
                 abs(self.prediction_weights[self.prediction_vector.idx.cst])
