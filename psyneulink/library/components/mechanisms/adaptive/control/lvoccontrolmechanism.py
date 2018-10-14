@@ -699,12 +699,12 @@ class LVOCControlMechanism(ControlMechanism):
             <LVOCControlMechanism.objective_mechanism>`.
           - variable[n]: current value of `predictor <LVOCControlMechanism_Predictors>`\\[n]
 
-        Call to super._execute calculates outcome from last trial, by subtracting the `costs <ControlSignal.costs>` for
-        the `control_signal <LVOCControlMechanism.control_signals>` values used in the previous trial from the value
-        received from the `objective_mechanism <LVOCControlMechanism.objective_mechanism>` (in variable[1]) reflecting
-        performance on the previous trial.  It then calls the LVOCControlMechanism's `function
-        <LVOCControlMechanism.function>` to update the `prediction_weights <LVOCControlMechanism.prediction_weights>`
-        so as to better predict the outcome.
+        Call to super._execute updates the prediction_vector, and calculates outcome from last trial, by subtracting
+        the `costs <ControlSignal.costs>` for the `control_signal <LVOCControlMechanism.control_signals>` values used
+        in the previous trial from the value received from the `objective_mechanism
+        <LVOCControlMechanism.objective_mechanism>` (in variable[0]) reflecting performance on the previous trial.
+        It then calls the LVOCControlMechanism's `function <LVOCControlMechanism.function>` to update the
+        `prediction_weights <LVOCControlMechanism.prediction_weights>` so as to better predict the outcome.
 
         Call to `gradient_ascent` determines `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC
         <LVCOControlMechanism_EVC>` given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
@@ -731,7 +731,7 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Update current prediction_vector, and return prediction vector and outcome from previous trial
 
-        Determines prediction_vector for current trial, and buffers this in prediction_buffer;
+        Updates prediction_vector for current trial, and buffers this in prediction_buffer;
         also buffers costs of control_signals used in previous trial ]in previous_costs.
 
         Computes outcome for previous trial by subtracting costs of control_signals from outcome received
@@ -772,7 +772,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
 
-        return [self.prediction_buffer[0], outcome]
+        return [self.prediction_buffer.popleft(), outcome]
 
 
     class PredictionVectorStroopXOR():
