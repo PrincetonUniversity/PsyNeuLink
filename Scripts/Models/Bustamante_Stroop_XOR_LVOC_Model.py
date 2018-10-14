@@ -68,11 +68,12 @@ c.add_projection(sender=color_task, receiver=task_decision)
 c.add_projection(sender=word_task, receiver=task_decision)
 c.add_c_node(lvoc)
 
-c.show_graph()
+# c.show_graph()
 
-# input_dict = {m1:[[[1],[1]]],
-#               m2:[[1]]}
-# input_dict = {m1:[[[1],[1]],[[1],[1]]],
-#               m2:[[1],[1]]}
-# c.run(inputs=input_dict)
+input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
+              word_stim: [[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
+              color_task:[[1], [1]],
+              word_task: [[-1], [-1]],
+              reward:    [[1,0], [1,0]]}
+c.run(inputs=input_dict)
 
