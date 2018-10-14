@@ -50,10 +50,14 @@ If set to False:
 .. warning:: Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
     first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
 
-Another initialization argument is **patience**. **patience** allows the model to stop training early, if training stops
-reducing loss. The model tracks how many consecutive epochs of training have failed to reduce the model's loss. When
-this number exceeds **patience**, the model stops training early. By default, **patience** is ``None``, and the model
+Two other initialization arguments are **patience** and **min_delta**, allow the model to halt training early. The
+model tracks how many consecutive 'bad' epochs of training have failed to significantly reduce the model's loss. Once
+this number exceeds **patience**, the model stops training. By default, **patience** is ``None``, and the model
 will train for the number of specified epochs and will not stop training early.
+
+**min_delta** defines what threshold counts as a significant reduction in model loss. By default it is zero, in which
+case any reduction in loss counts as a significant reduction. If **min_delta** is large and positive, the model tends to
+stop earlier because it views fewer epochs as 'good'.
 
 .. _AutodiffComposition_Structure:
 
@@ -151,6 +155,7 @@ class AutodiffComposition(Composition):
     AutodiffComposition(            \
     param_init_from_pnl=True,       \
     patience=None,                  \
+    min_delta=0,
     name="autodiff_composition")
 
     Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
@@ -168,6 +173,10 @@ class AutodiffComposition(Composition):
         the model stops training early. If **patience** is ``None``, the model will train for the number
         of specified epochs and will not stop training early.
 
+    min_delta : float : default 0
+        the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
+        Used for early stopping of training, in combination with **patience**.
+
     Attributes
     ----------
 
@@ -181,10 +190,14 @@ class AutodiffComposition(Composition):
         tracks the average loss for each training epoch
 
     patience : int or None : default None
-        **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
+        allows the model to stop training early, if training stops reducing loss. The model tracks how many
         consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
         the model stops training early. If **patience** is ``None``, the model will train for the number
         of specified epochs and will not stop training early.
+
+    min_delta : float : default 0
+        the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
+        Used for early stopping of training, in combination with **patience**.
 
     name : str : default LeabraMechanism-<index>
         the name of the Mechanism.
@@ -201,6 +214,7 @@ class AutodiffComposition(Composition):
     def __init__(self,
                  param_init_from_pnl=True,
                  patience=None,
+                 min_delta=0,
                  name="autodiff_composition"):
 
         if not torch_available:
@@ -239,6 +253,8 @@ class AutodiffComposition(Composition):
         # patience is the "bad" epochs (with no progress in average loss) the model tolerates in one training session
         # before ending training
         self.patience = patience
+
+        self.min_delta = min_delta
 
 
     # TODO (CW 9/28): this mirrors _create_CIM_states() in Composition but doesn't call super().
@@ -496,7 +512,7 @@ class AutodiffComposition(Composition):
 
         if self.patience is not None:
             # set up object for early stopping
-            early_stopper = EarlyStopping(patience=self.patience)
+            early_stopper = EarlyStopping(patience=self.patience, min_delta=self.min_delta)
 
         # if training over trial sets in random order, set up array for mapping random order back to original order
         if randomize:
@@ -1063,13 +1079,14 @@ class AutodiffComposition(Composition):
         return weights, biases
 
 class EarlyStopping(object):
-    def __init__(self, mode='min', patience=10):
+    def __init__(self, mode='min', min_delta=0, patience=10):
         self.mode = mode
+        self.min_delta = min_delta
         self.patience = patience
         self.best = None
         self.num_bad_epochs = 0
         self.is_better = None
-        self._init_is_better(mode)
+        self._init_is_better(mode, min_delta)
 
         if patience == 0:
             self.is_better = lambda a, b: True
@@ -1093,13 +1110,12 @@ class EarlyStopping(object):
 
         return False
 
-    def _init_is_better(self, mode):
+    def _init_is_better(self, mode, min_delta):
         if mode not in {'min', 'max'}:
             raise ValueError('mode ' + mode + ' is unknown!')
         if mode == 'min':
-            self.is_better = lambda a, best: a < best
+            self.is_better = lambda a, best: a < best - min_delta
         if mode == 'max':
-            self.is_better = lambda a, best: a > best
-
+            self.is_better = lambda a, best: a > best + min_delta
 
 
