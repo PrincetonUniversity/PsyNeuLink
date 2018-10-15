@@ -281,6 +281,7 @@ __all__ = [
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 PREDICTION_TERMS = 'prediction_terms'
+PREDICTION_PRIORS = 'prediction_priors'
 
 
 class PV(Enum):
@@ -519,6 +520,7 @@ class LVOCControlMechanism(ControlMechanism):
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
+                 prediction_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.1,
                  convergence_criterion=0.001,
                  max_iterations=1000,
@@ -536,6 +538,7 @@ class LVOCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(input_states=predictors,
                                                   predictor_function=predictor_function,
                                                   prediction_terms=prediction_terms,
+                                                  prediction_priors=prediction_priors,
                                                   convergence_criterion=convergence_criterion,
                                                   max_iterations=max_iterations,
                                                   update_rate=update_rate,
@@ -566,8 +569,15 @@ class LVOCControlMechanism(ControlMechanism):
 
         if PREDICTION_TERMS in request_set:
             if not all(term in PV for term in request_set[PREDICTION_TERMS]):
-                raise LVOCError("Item in list specified for {} of {} is not a member of the {} Enum".
-                                format(PREDICTION_TERMS, self.name, PV.__class__.__name__))
+                raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
+                                format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
+
+        if PREDICTION_PRIORS in request_set and request_set[PREDICTION_PRIORS]:
+            priors = request_set[PREDICTION_PRIORS]
+            if (isinstance(priors, dict)
+                    and not all(key in PV for key in request_set[PREDICTION_PRIORS.keys()])):
+                raise LVOCError("One or more key useds in dict specifed for {} arg of {} is not a member of {} enum".
+                                format(repr(PREDICTION_PRIORS), self.name, PV.__class__.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
