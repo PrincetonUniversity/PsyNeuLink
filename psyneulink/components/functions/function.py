@@ -13333,9 +13333,9 @@ class ValueFunction2(EVCAuxiliaryFunction):
 
     def function(
         self,
-        controller=None,
-        outcome=None,
-        costs=None,
+        simulation_data,
+        cost_function,
+        combine_function,
         variable=None,
         params=None,
         context=None
@@ -13383,22 +13383,22 @@ class ValueFunction2(EVCAuxiliaryFunction):
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
-        cost_function = controller.paramsCurrent[COST_FUNCTION]
-        combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
-
-        # Aggregate costs
+        outcomes = simulation_data["outcomes"]
+        costs = simulation_data["data"]["costs"]
+        print(costs)
         if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function._execute(controller=controller, costs=costs)
+            cost = cost_function._execute(costs=costs)
         else:
             cost = cost_function._execute(variable=costs, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost)
+            value = combine_function._execute(outcome=outcome, cost=cost)
         else:
             value = combine_function._execute(variable=[outcome, -cost])
 
-        return (value, outcome, cost)
+        # return (value, outcome, cost)
+        return 1.0
 
 
 class ControlSignalGridSearch2(EVCAuxiliaryFunction):
@@ -13478,7 +13478,6 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
 
     def function(
         self,
-        controller=None,
         variable=None,
         runtime_params=None,
         params=None,
@@ -13507,12 +13506,6 @@ class ControlSignalGridSearch2(EVCAuxiliaryFunction):
         if (self.context.initialization_status == ContextFlags.INITIALIZING or
                 self.owner.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
-
-        # Get value of, or set default for standard args
-        if controller is None:
-            raise EVCAuxiliaryError("Call to ControlSignalGridSearch() missing controller argument")
-
-        #region RUN SIMULATION
 
         controller.EVC_max = None
         controller.EVC_values = []
