@@ -342,7 +342,7 @@ class LVOCControlMechanism(ControlMechanism):
     terminal_objective_mechanism=False,                  \
     function=BayesGLM,                                   \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]        \
-    update_rate=0.1,                                     \
+    update_rate=0.01,                                    \
     convergence_criterion=.001,                          \
     max_iterations=1000,                                 \
     control_signals=None,                                \
@@ -384,7 +384,7 @@ class LVOCControlMechanism(ControlMechanism):
         items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
         if `None` is specified, the default values will automatically be assigned.
 
-    update_rate : int or float : default 0.1
+    update_rate : int or float : default 0.01
         specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
@@ -521,7 +521,7 @@ class LVOCControlMechanism(ControlMechanism):
                  function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
                  prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
-                 update_rate=0.1,
+                 update_rate=0.01,
                  convergence_criterion=0.001,
                  max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
@@ -990,7 +990,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.f = np.array(feature_values)
             self.c = np.array(control_signal_values)
 
-            # Compute terms that are used:
+            # Compute terms that are used (preserving their structure):
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 self.ff = np.array(tensor_power(self.f, range(2,self.num_f+1)))
             if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
@@ -1138,7 +1138,7 @@ class LVOCControlMechanism(ControlMechanism):
                     gradient[i] += prediction_vector._partial_derivative(PV.FFCC, prediction_weights, i,
                                                                          control_signal_value)
 
-                # Derivative for costs) (since costs depend on control_signals)
+                # Derivative for costs (since costs depend on control_signals)
                 if PV.COST in self.prediction_terms:
                     cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
                     gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
