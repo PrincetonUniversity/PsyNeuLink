@@ -719,10 +719,10 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          context=context
                                                                          )
 
-        # MODIFIED 10/14/18 NEW:  FIX:  HACK TO CHECK FOR CONVERGENCE
-        if self.current_execution_count == 1:
-            self.prediction_weights[self.prediction_vector.idx.cst] = \
-                abs(self.prediction_weights[self.prediction_vector.idx.cst])
+        # # MODIFIED 10/14/18 NEW:  FIX:  HACK TO CHECK FOR CONVERGENCE
+        # if self.current_execution_count == 1:
+        #     self.prediction_weights[self.prediction_vector.idx.cst] = \
+        #         abs(self.prediction_weights[self.prediction_vector.idx.cst])
         # MODIFIED 10/14/18 END
 
         # Compute allocation_policy using gradient_ascent
@@ -1145,7 +1145,7 @@ class LVOCControlMechanism(ControlMechanism):
                 if PV.COST in self.prediction_terms:
                     cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
                     cost_gradient[i] = -np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
-                    gradient[i] += cost_gradient[i]
+                    gradient[i] -= cost_gradient[i]
 
                 # Update control_signal_value with gradient
                 control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
