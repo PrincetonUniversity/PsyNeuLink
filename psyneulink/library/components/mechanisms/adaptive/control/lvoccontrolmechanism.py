@@ -281,7 +281,7 @@ __all__ = [
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 PREDICTION_TERMS = 'prediction_terms'
-PREDICTION_PRIORS = 'prediction_priors'
+PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 
 
 class PV(Enum):
@@ -520,7 +520,7 @@ class LVOCControlMechanism(ControlMechanism):
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
-                 prediction_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
+                 prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.1,
                  convergence_criterion=0.001,
                  max_iterations=1000,
@@ -538,7 +538,7 @@ class LVOCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(input_states=predictors,
                                                   predictor_function=predictor_function,
                                                   prediction_terms=prediction_terms,
-                                                  prediction_priors=prediction_priors,
+                                                  prediction_weight_priors=prediction_weight_priors,
                                                   convergence_criterion=convergence_criterion,
                                                   max_iterations=max_iterations,
                                                   update_rate=update_rate,
@@ -572,12 +572,12 @@ class LVOCControlMechanism(ControlMechanism):
                 raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
                                 format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
 
-        if PREDICTION_PRIORS in request_set and request_set[PREDICTION_PRIORS]:
-            priors = request_set[PREDICTION_PRIORS]
+        if PREDICTION_WEIGHT_PRIORS in request_set and request_set[PREDICTION_WEIGHT_PRIORS]:
+            priors = request_set[PREDICTION_WEIGHT_PRIORS]
             if (isinstance(priors, dict)
-                    and not all(key in PV for key in request_set[PREDICTION_PRIORS.keys()])):
+                    and not all(key in PV for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()])):
                 raise LVOCError("One or more key useds in dict specifed for {} arg of {} is not a member of {} enum".
-                                format(repr(PREDICTION_PRIORS), self.name, PV.__class__.__name__))
+                                format(repr(PREDICTION_WEIGHT_PRIORS), self.name, PV.__class__.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from predictors and objective_mechanism.
@@ -699,6 +699,25 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
             control_signal._instantiate_cost_attributes()
         return control_signal
+
+    def _instantiate_attributes_after_function(self, context=None):
+        super()._instantiate_attributes_after_function(context=context)
+        # FIX: ??SHOULD THIS ASSIGNMENT BE TO self.parameters_states['mu_0'] INSTEAD:
+        if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
+            mu_0 = self.function_object.params['mu_0']
+            if isinstance(self.prediction_weights_priors, (int, float)):
+                mu_0 = np.full((len(mu_0),1), mu_0)
+            elif isinstance(self.prediction_weights_priors, (list, np.ndarray)):
+                if len(mu_0) != len(self.prediction_weights_priors):
+                    raise LVOCError("Length of array specified for {} arg of {} ({}) does not match one expected ({})".
+                                    format(repr('mu_0'), repr(PREDICTION_WEIGHT_PRIORS), self.name,
+                                           len(self.prediction_weight_priors), len(mu_0)))
+            elif isinstance(self.prediction_weight_priors, dict):
+                for k, v in self.prediction_weight_priors:
+                    mu_0[getattr(self.prediction_vector.idx, k.value)] = v
+            else:
+                raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
+                                format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
