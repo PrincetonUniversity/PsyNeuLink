@@ -19,7 +19,7 @@ of the Learned Value of Control model described in `Leider et al.
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_, which learns to select the
 value for its `control_signals <LVOCControlMechanism.control_signals>` (i.e., its `allocation_policy
 <LVOCControlMechanism.allocation_policy>`) that maximzes its `EVC <LVOCControlMechanism_EVC>` based on a set of
-`predictors <LVOCControlMechanism_Predictors>`.
+`features <LVOCControlMechanism_Features>`.
 
 .. _LVOCControlMechanism_EVC:
 
@@ -33,8 +33,8 @@ as determined by its `objective_mechanism <LVOCControlMechanism.objective_mechan
 <LVOCControlMechanism.allocation_policy>`.
 
 The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the outcome of its
-`objective_mechanism <LVOCControlMechanism.objective_mechanism>` from a weighted sum of its `predictors
-<LVOCControlMechanism.predictors>`, `control_signals <LVOCControlMechanism.control_signals>`, interactions among
+`objective_mechanism <LVOCControlMechanism.objective_mechanism>` from a weighted sum of its `features
+<LVOCControlMechanism.features>`, `control_signals <LVOCControlMechanism.control_signals>`, interactions among
 these, and the costs of the `control_signals <LVOCControlMechanism.control_signals>`.  This is referred to as the
 "learned value of control," or LVOC.
 
@@ -47,7 +47,7 @@ Creating an LVOCControlMechanism
  be assigned as the `controller <Composition.controller>` of a Composition.  The following arguments of its
  constructor are specific to the LVOCControlMechanism:
 
-  * **predictors** -- this takes the place of the standard **input_states** argument in the constructor for a
+  * **features** -- this takes the place of the standard **input_states** argument in the constructor for a
     Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
     It can be specified using any of the following, singly or combined in a list:
@@ -55,22 +55,22 @@ Creating an LVOCControlMechanism
         * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
           InputStates of the same shapes as those listed are created on the LVOC, and are connected to the
           corresponding input_CIM OutputStates by projections. The external input values that are passed through the
-          input_CIM are used as the `predictors <LVOCControlMechanism_Predictor>`. If a Mechanism is included in the
+          input_CIM are used as the `features <LVOCControlMechanism_Feature>`. If a Mechanism is included in the
           list, it refers to all of its InputStates.
 
         COMMENT:
-          the input of all items specified received from the `Composition` is used as predictors.
+          the input of all items specified received from the `Composition` is used as features.
         COMMENT
         |
         * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
           that resolves to an OutputState from which the InputState receives a Projection;  the `value
-          <OutputState.value>` of that OutputState is used as the `predictor <LVOCControlMechanism.predictor>`. Each of
+          <OutputState.value>` of that OutputState is used as the `feature <LVOCControlMechanism.feature>`. Each of
           these InputStates is marked as internal_only.
 
-    Predictors can also be added to an existing LVOCControlMechanism using its `add_predictors` method.
+    Features can also be added to an existing LVOCControlMechanism using its `add_features` method.
 
-  * **predictor_function** specifies `function <InputState>` of the InputState created for each item listed in
-    **predictors**.
+  * **feature_function** specifies `function <InputState>` of the InputState created for each item listed in
+    **features**.
 
 .. _LVOCControlMechanism_Structure:
 
@@ -84,35 +84,35 @@ Structure
 
 An LVOCControlMechanism has one `InputState` that receives a `Projection` from its `objective_mechanism
 <LVOCControlMechanism.objective_mechanism>` (its primary InputState <InputState_Primary>`), and additional ones for
-each of its predictors, as described below.
+each of its features, as described below.
 
-.. _LVOCControlMechanism_Predictors:
+.. _LVOCControlMechanism_Features:
 
-Predictors
+Features
 ^^^^^^^^^^
 
-Predictors, together with the LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>`,
+Features, together with the LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>`,
 are used by its `function <LVOCControlMechanism.function>` to learn to predict the outcome of its
 `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and to determine its `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
-Predictors can be of two types:
+Features can be of two types:
 
-* *Input Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the Composition.
-    These are specified in the **predictors** argument of the LVOCControlMechanism's constructor (see
+* *Input Feature* -- this is a value received as input by an `ORIGIN` Mechanism in the Composition.
+    These are specified in the **features** argument of the LVOCControlMechanism's constructor (see
     `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
     which is one or more `ORIGIN` Mechanisms and/or their InputStates to be shadowed.  For each, a Projection is
     automatically created that parallels ("shadows") the Projection from the Composition's `InputCIM` to the `ORIGIN`
     Mechanism, projecting from the same `OutputState` of the InputCIM to the the InputState of the
-    LVOCControlMechanism assigned to that predictor.
+    LVOCControlMechanism assigned to that feature.
 
-* *Output Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism in the
-    Composition.  These too are specified in the **predictors** argument of the LVOCControlMechanism's constructor
+* *Output Feature* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism in the
+    Composition.  These too are specified in the **features** argument of the LVOCControlMechanism's constructor
     (see `LVOCControlMechanism_Creation`), and each is assigned a Projection to the InputState of the
-    LVOCControlMechanism for that predictor.
+    LVOCControlMechanism for that feature.
 
-The current `values <InputState.value>` of the InputStates for the predictors are listed in the `predictor_values
-<LVOCControlMechanism.predictor_values>` attribute.
+The current `values <InputState.value>` of the InputStates for the features are listed in the `feature_values
+<LVOCControlMechanism.feature_values>` attribute.
 
 .. _LVOCControlMechanism_ObjectiveMechanism:
 
@@ -164,11 +164,11 @@ of the *OUTCOME* `OutputState` of the LVOCControlMechanism's `objective_mechanis
 *Function*
 ~~~~~~~~~~
 
-The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism learns how to weight its `predictors
-<LVOCControlMechanism_Predictors>`, the `values <ControlSignal.value>` of its  `control_signals
+The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism learns how to weight its `features
+<LVOCControlMechanism_Features>`, the `values <ControlSignal.value>` of its  `control_signals
 <LVOCControlMechanism.control_signals>`, the interactions between these, and the `costs <ControlSignal.costs>` of the
 `control_signals <LVOCControlMechanism.control_signals>`, to best predict the outcome of its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>`.  Using those weights, and the current set of predictors, it then
+<LVOCControlMechanism.objective_mechanism>`.  Using those weights, and the current set of features, it then
 searches for and returns the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
 <LVOCControlMechanism_EVC>`.  By default, `function <LVOCControlMechanism.function>` is `BayesGLM`. However,
 any function can be used that accepts a 2d array, the first item of which is an array of scalar values (the prediction
@@ -176,12 +176,12 @@ terms) and the second that is a scalar value (the outcome to be predicted), and 
 the LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
 .. note::
-  The LVOCControlMechanism's `function <LVOCControlMechanism.function>` is provided the values of the `predictors
-  <LVOCControlMechanism_Predictors>` and outcome of its `objective_mechanism
+  The LVOCControlMechanism's `function <LVOCControlMechanism.function>` is provided the values of the `features
+  <LVOCControlMechanism_Features>` and outcome of its `objective_mechanism
   <LVOCControlMechanism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
   `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to determine (and implement)
   the `allocation_policy <LVOCControlMechanism.allocation_policy>` that is predicted to generate the greatest `EVC
-  <LVOCControlMechanism_EVC>` based on the `predictor_values <LVOCControlMechanism.predictor_values>` for the current
+  <LVOCControlMechanism_EVC>` based on the `feature_values <LVOCControlMechanism.feature_values>` for the current
   trial.
 
 .. _LVOCControlMechanism_ControlSignals:
@@ -209,13 +209,13 @@ and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocat
 Execution
 ---------
 
-When an LVOCControlMechanism is executed, it uses the values of its `predictors <LVOCControlMechanism_Predictors>`,
-listed in its `predictor_values <LVOCControlMechanism.predictor_values>` attribute, to determines and implement the
+When an LVOCControlMechanism is executed, it uses the values of its `features <LVOCControlMechanism_Features>`,
+listed in its `feature_values <LVOCControlMechanism.feature_values>` attribute, to determines and implement the
 `allocation_policy` for the current `trial` of execution of its `composition <LVOCControlMechanism.composition>`.
 Specifically it executes the following steps:
 
-  * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `predictors_values
-    <LVOCControlMechanism.predictor_values>`, `control_signals <LVOCControlMechanism.control_signals>`,
+  * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
+    <LVOCControlMechanism.feature_values>`, `control_signals <LVOCControlMechanism.control_signals>`,
     and their `costs <ControlSignal.cost>`.
 
   * Calls its `function <LVOCControlMechanism.function>` with the `prediction_vector
@@ -278,6 +278,7 @@ __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
+FEATURES = 'features'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 PREDICTION_TERMS = 'prediction_terms'
@@ -292,24 +293,24 @@ class PV(Enum):
     ----------
 
     P
-        Main effect of `predictors <LVOCControlMechanism_Predictors>`.
+        Main effect of `features <LVOCControlMechanism_Features>`.
     C
         Main effect of `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     PP
-        Interaction among `predictors <LVOCControlMechanism_Predictors>`.
+        Interaction among `features <LVOCControlMechanism_Features>`.
     CC
         Interaction among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     PC
-        Interaction between `predictors <LVOCControlMechanism_Predictors>` and
+        Interaction between `features <LVOCControlMechanism_Features>` and
         `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     PPC
-        Interaction between interactions of `predictors <LVOCControlMechanism_Predictors>` and
+        Interaction between interactions of `features <LVOCControlMechanism_Features>` and
         `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     PCC
-        Interaction between `predictors <LVOCControlMechanism_Predictors>` and interactions among
+        Interaction between `features <LVOCControlMechanism_Features>` and interactions among
         `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     PPCC
-        Interaction between interactions of `predictors <LVOCControlMechanism_Predictors>` and
+        Interaction between interactions of `features <LVOCControlMechanism_Features>` and
         interactions among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
@@ -335,8 +336,8 @@ class LVOCError(Exception):
 
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                             \
-    predictors,                                          \
-    predictor_function=None,                             \
+    features,                                            \
+    feature_function=None,                               \
     objective_mechanism=None,                            \
     origin_objective_mechanism=False,                    \
     terminal_objective_mechanism=False,                  \
@@ -356,16 +357,16 @@ class LVOCControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    predictors : Mechanism, OutputState, Projection, dict, or list containing any of these
+    features : Mechanism, OutputState, Projection, dict, or list containing any of these
         specifies the values that the LVOCControlMechanism learns to use for determining its `allocation_policy
         <LVOCControlMechanism.allocation_policy>`.  Any `InputState specification <InputState_Specification>`
         can be used that resolves to an `OutputState` that projects to the InputState.  In addition, a dictionary
         with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the Composition's `ORIGIN` Mechanism(s)
         (see `LVOCControlMechanism_Creation` for details).
 
-    predictor_function : Function or function : default None
-        specifies the `function <InputState.function>` for the `InputState` assigned to each `predictor
-        <LVOCControlMechanism_Predictors>`.
+    feature_function : Function or function : default None
+        specifies the `function <InputState.function>` for the `InputState` assigned to each `feature
+        <LVOCControlMechanism_Features>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
@@ -418,10 +419,10 @@ class LVOCControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    predictor_values : 1d ndarray
+    feature_values : 1d ndarray
         the current `values <InputState.value>` of the InputStates used by `function <LVOCControlMechanism.function>`
         to determine `allocation_policy <LVOCControlMechanism.allocation_policy>` (see
-        `LVOCControlMechanism_Predictors` for details about predictors).
+        `LVOCControlMechanism_Features` for details about features).
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the LVOCControlMechanism to evaluate the performance of its `system
@@ -445,8 +446,8 @@ class LVOCControlMechanism(ControlMechanism):
         Items are members of the `PV` enum; the default is [`P <PV.P>`, `C <PV.C>` `PC <PV.PC>`, `COST <PV.COST>`].
 
     prediction_vector : 1d ndarray
-        current values, respectively, of `predictors <LVOCControlMechanism_Predictors>`, interaction terms for
-        predictors x control_signals, `control_signals <LVOCControlMechanism.control_signals>`, and `costs
+        current values, respectively, of `features <LVOCControlMechanism_Features>`, interaction terms for
+        features x control_signals, `control_signals <LVOCControlMechanism.control_signals>`, and `costs
         <ControlSignal.cost>` of control_signals.
 
     prediction_weights : 1d ndarray
@@ -513,8 +514,8 @@ class LVOCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)),
-                 predictor_function:tc.optional(tc.any(is_function_type))=None,
+                 features:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
+                 feature_function:tc.optional(tc.any(is_function_type))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
@@ -528,15 +529,29 @@ class LVOCControlMechanism(ControlMechanism):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
 
         prediction_terms = prediction_terms or [PV.P,PV.C,PV.PC, PV.COST]
         if ALL in prediction_terms:
             prediction_terms = list(PV.__members__.values())
 
+        if features is None:
+            # Included for backward compatibility
+            if 'predictors' in kwargs:
+                features = kwargs['predictors']
+                del(kwargs['predictors'])
+            else:
+                raise LVOCError("{} arg for {} must be specified".format(repr(FEATURES), self.name))
+        if kwargs:
+                for i in kwargs.keys():
+                    raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
+                                                                                        repr(i)))
+
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(input_states=predictors,
-                                                  predictor_function=predictor_function,
+        params = self._assign_args_to_param_dicts(input_states=features,
+                                                  feature_function=feature_function,
                                                   prediction_terms=prediction_terms,
                                                   prediction_weight_priors=prediction_weight_priors,
                                                   convergence_criterion=convergence_criterion,
@@ -574,20 +589,26 @@ class LVOCControlMechanism(ControlMechanism):
 
         if PREDICTION_WEIGHT_PRIORS in request_set and request_set[PREDICTION_WEIGHT_PRIORS]:
             priors = request_set[PREDICTION_WEIGHT_PRIORS]
-            if (isinstance(priors, dict)
-                    and not all(key in PV for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()])):
-                raise LVOCError("One or more key useds in dict specifed for {} arg of {} is not a member of {} enum".
-                                format(repr(PREDICTION_WEIGHT_PRIORS), self.name, PV.__class__.__name__))
+            if isinstance(priors, dict):
+                if not all(key in PV for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
+                    raise LVOCError("One or more keys in dict specifed for {} arg of {} is not a member of the {} enum".
+                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name, PV.__class__.__name__))
+                if not all(key in self.prediction_terms for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
+                    raise LVOCError("One or more keys in dict specifed for {} arg of {} "
+                                    "is for a prediction term not specified in {} arg".
+                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name, 
+                                           PV.__class__.__name__, repr(PREDICTION_TERMS)))
+                
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate input_states for Projections from predictors and objective_mechanism.
+        """Instantiate input_states for Projections from features and objective_mechanism.
 
         Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
-        InputState specifications generated in _parse_predictor_specs from the **predictors** and
-        **predictor_function** arguments of the LVOCControlMechanism constructor.
+        InputState specifications generated in _parse_feature_specs from the **features** and
+        **feature_function** arguments of the LVOCControlMechanism constructor.
         """
 
-        self.input_states = self._parse_predictor_specs(self.input_states, self.predictor_function)
+        self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
 
         # Insert primary InputState for outcome from ObjectiveMechanism; assumes this will be a single scalar value
         self.input_states.insert(0, {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}),
@@ -598,21 +619,21 @@ class LVOCControlMechanism(ControlMechanism):
         super()._instantiate_input_states(context=context)
 
     tc.typecheck
-    def add_predictors(self, predictors):
-        '''Add InputStates and Projections to LVOCControlMechanism for predictors used to predict outcome
+    def add_features(self, features):
+        '''Add InputStates and Projections to LVOCControlMechanism for features used to predict outcome
 
-        **predictors** argument can use any of the forms of specification allowed for InputState(s),
+        **features** argument can use any of the forms of specification allowed for InputState(s),
             as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
             list of `ORIGIN` Mechanisms and/or their InputStates as its value.
         '''
 
-        predictors = self._parse_predictor_specs(predictors=predictors,
+        features = self._parse_feature_specs(features=features,
                                                  context=ContextFlags.COMMAND_LINE)
-        self.add_states(InputState, predictors)
+        self.add_states(InputState, features)
 
     @tc.typecheck
-    def _parse_predictor_specs(self, predictors, predictor_function, context=None):
-        """Parse entries of predictors into InputState spec dictionaries
+    def _parse_feature_specs(self, features, feature_function, context=None):
+        """Parse entries of features into InputState spec dictionaries
 
         For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
             - Call _parse_shadow_input_spec
@@ -621,38 +642,38 @@ class LVOCControlMechanism(ControlMechanism):
             - Call _parse_state_spec
             - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
 
-        Assign functions specified in **predictor_function** to InputStates for all predictors
+        Assign functions specified in **feature_function** to InputStates for all features
 
         Returns list of InputState specification dictionaries
         """
 
-        parsed_predictors = []
+        parsed_features = []
 
-        if not isinstance(predictors, list):
-            predictors = [predictors]
+        if not isinstance(features, list):
+            features = [features]
 
-        for spec in predictors:
+        for spec in features:
 
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
                 if SHADOW_EXTERNAL_INPUTS in spec:
                     #  composition looks for node.shadow_external_inputs and uses it to set external_origin_sources
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
-                    spec = self._parse_shadow_inputs_spec(spec, predictor_function)
+                    spec = self._parse_shadow_inputs_spec(spec, feature_function)
                 else:
-                    raise LVOCError("Incorrect specification ({}) in predictors argument of {}."
+                    raise LVOCError("Incorrect specification ({}) in features argument of {}."
                                     .format(spec, self.name))
             # e.g. Mechanism, OutputState
             else:
                 spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
                 spec[PARAMS][INTERNAL_ONLY] = True
-                if predictor_function:
-                    spec[PARAMS][FUNCTION] = predictor_function
+                if feature_function:
+                    spec[PARAMS][FUNCTION] = feature_function
                 spec = [spec]   # so that extend works below
 
-            parsed_predictors.extend(spec)
+            parsed_features.extend(spec)
 
-        return parsed_predictors
+        return parsed_features
 
     @tc.typecheck
     def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
@@ -725,7 +746,7 @@ class LVOCControlMechanism(ControlMechanism):
         Items of variable should be:
           - variable[0]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
             <LVOCControlMechanism.objective_mechanism>`.
-          - variable[n]: current value of `predictor <LVOCControlMechanism_Predictors>`\\[n]
+          - variable[n]: current value of `feature <LVOCControlMechanism_Features>`\\[n]
 
         Call to super._execute updates the prediction_vector, and calculates outcome from last trial, by subtracting
         the `costs <ControlSignal.costs>` for the `control_signal <LVOCControlMechanism.control_signals>` values used
@@ -781,12 +802,12 @@ class LVOCControlMechanism(ControlMechanism):
         # This is the value received from the objective_mechanism's OUTCOME OutputState:
         obj_mech_outcome = variable[0]
 
-        # This is the current values of the predictors
-        self.predictor_values = np.array(np.array(variable[1:]).tolist())
+        # This is the current values of the features
+        self.feature_values = np.array(np.array(variable[1:]).tolist())
 
         # Initialize attributes
         if context is ContextFlags.INSTANTIATE:
-            self.prediction_vector = self.PredictionVector(self.predictor_values,
+            self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signals,
                                                            self.prediction_terms)
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
@@ -795,7 +816,7 @@ class LVOCControlMechanism(ControlMechanism):
         else:
             control_signal_values = [c.value for c in self.control_signals]
             control_signal_costs = [0 if c.cost is None else c.cost for c in self.control_signals]
-            self.prediction_vector._update(self.predictor_values,
+            self.prediction_vector._update(self.feature_values,
                                            control_signal_values,
                                            control_signal_costs,
                                            self.prediction_terms)
@@ -839,7 +860,7 @@ class LVOCControlMechanism(ControlMechanism):
             cst = None
 
 
-        def __init__(self, predictor_values, control_signals, terms):
+        def __init__(self, feature_values, control_signals, terms):
 
             # ASSIGN TERMS
 
@@ -856,9 +877,9 @@ class LVOCControlMechanism(ControlMechanism):
 
             # MAIN EFFECT TERMS (unflattened)
 
-            # Predictors
-            self.p = predictor_values
-            self.num_p = len(self.p)  # predictors are arrays; num_p is the number of arrays
+            # Features
+            self.p = feature_values
+            self.num_p = len(self.p)  # features are arrays; num_p is the number of arrays
             self.num_p_elems = len(self.p.reshape(-1)) # number of total elements assigned to prediction_vector.vector
             labels.p = ['p'+str(i) for i in range(0,self.num_p)]
 
@@ -874,7 +895,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # INTERACTION TERMS (unflattened)
 
-            # Interactions among Predictor vectors
+            # Interactions among Feature vectors
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
                 if self.num_p < 2:
                     self.error_for_too_few_terms('PP')
@@ -892,14 +913,14 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_cc_elems = len(self.cc.reshape(-1))
                 labels.cc = get_intrxn_labels(labels.c)
 
-            # Predictor-Control interactions
+            # Feature-Control interactions
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
-                self.pc = np.tensordot(predictor_values, self.c, axes=0)
+                self.pc = np.tensordot(feature_values, self.c, axes=0)
                 self.num_pc = len(self.pc.reshape(-1))
                 self.num_pc_elems = len(self.pc.reshape(-1))
                 labels.pc = list(product(labels.p, labels.c))
 
-            # Predictor-Predictor-Control interactions
+            # Feature-Feature-Control interactions
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
                 if self.num_p < 2:
                     self.error_for_too_few_terms('PP')
@@ -908,7 +929,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_ppc_elems = len(self.ppc.reshape(-1))
                 labels.ppc = list(product(labels.pp, labels.c))
 
-            # Predictor-Control-Control interactions
+            # Feature-Control-Control interactions
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
                 if self.num_c < 2:
                     self.error_for_too_few_terms('CC')
@@ -917,7 +938,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_pcc_elems = len(self.pcc.reshape(-1))
                 labels.pcc = list(product(labels.p, labels.cc))
 
-            # Predictor-Predictor-Control-Control interactions
+            # Feature-Feature-Control-Control interactions
             if PV.PPCC in terms:
                 if self.num_p < 2:
                     self.error_for_too_few_terms('PP')
@@ -962,12 +983,12 @@ class LVOCControlMechanism(ControlMechanism):
 
             self.vector = np.zeros(i)
 
-        def _update(self, predictor_values, control_signal_values, control_signal_costs, terms):
+        def _update(self, feature_values, control_signal_values, control_signal_costs, terms):
 
             # Populate fields (subvectors) of prediction_vector
 
             idx = self.idx
-            self.p = np.array(predictor_values)
+            self.p = np.array(feature_values)
             self.c = np.array(control_signal_values)
 
             # Compute terms that are used:
@@ -1056,7 +1077,7 @@ class LVOCControlMechanism(ControlMechanism):
         convergence_metric = self.convergence_criterion + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
 
-        predictors = self.predictor_values.reshape(-1)
+        features = self.feature_values.reshape(-1)
 
         control_signal_values = [np.array(c.value) for c in self.control_signals]
 
@@ -1078,16 +1099,16 @@ class LVOCControlMechanism(ControlMechanism):
         # Derivatives for pc interactions:
         if PV.PC in self.prediction_terms:
             # Get weights for pc interaction term and reshape so that there is one row per control_signal
-            #    containing the terms for the interaction of that control_signal with each of the predictors
+            #    containing the terms for the interaction of that control_signal with each of the features
             pc_weights = prediction_weights[idx.pc].reshape(num_c, prediction_vector.num_p_elems)
-            pc_weights_x_predictors = pc_weights * predictors
+            pc_weights_x_features = pc_weights * features
             for i in range(num_c):
-                gradient_constants[i] += np.sum(pc_weights_x_predictors[i])
+                gradient_constants[i] += np.sum(pc_weights_x_features[i])
 
         # Derivatives for ppc interactions:
         if PV.PPC in self.prediction_terms:
             # Get weights for ppc interaction term and reshape so that there is one row per control_signal
-            #    containing the terms for the interaction of that control_signal with each of the predictor interactions
+            #    containing the terms for the interaction of that control_signal with each of the feature interactions
             ppc_weights = prediction_weights[idx.ppc].reshape(num_c, prediction_vector.num_pp_elems)
             ppc_weights_x_pp = ppc_weights * prediction_vector.pp.reshape(-1)
             for i in range(num_c):
@@ -1131,7 +1152,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # Only updatre terms with control_signal in them
             terms = [term for term in self.prediction_terms if 'c' in term.value]
-            prediction_vector._update(self.predictor_values, control_signal_values, costs, terms)
+            prediction_vector._update(self.feature_values, control_signal_values, costs, terms)
 
             # Compute current LVOC using current features, weights and new control signals
             current_lvoc = self.compute_lvoc(pv, prediction_weights)
@@ -1168,7 +1189,7 @@ class LVOCControlMechanism(ControlMechanism):
         idx = pv.idx
 
         if PV.P in terms:
-            print('predictor_values: ', vector[idx.p])
+            print('feature_values: ', vector[idx.p])
         if PV.PP in terms:
             print('pp: ', vector[idx.pp])
         if PV.CC in terms:
