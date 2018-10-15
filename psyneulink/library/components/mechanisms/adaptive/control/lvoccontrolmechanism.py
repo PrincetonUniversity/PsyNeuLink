@@ -729,10 +729,10 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          context=context
                                                                          )
 
-        # MODIFIED 10/14/18 NEW:  FIX:  HACK TO INSURE CONVERGENCE - SHOULD BE HANDLED WITH PRIORS
-        if self.current_execution_count == 1:
-            self.prediction_weights[self.prediction_vector.idx.cst] = \
-                abs(self.prediction_weights[self.prediction_vector.idx.cst])
+        # # MODIFIED 10/14/18 NEW:  FIX:  HACK TO INSURE CONVERGENCE - SHOULD BE HANDLED WITH PRIORS
+        # if self.current_execution_count == 1:
+        #     self.prediction_weights[self.prediction_vector.idx.cst] = \
+        #         abs(self.prediction_weights[self.prediction_vector.idx.cst])
         # MODIFIED 10/14/18 END
 
         # Compute allocation_policy using gradient_ascent
@@ -1086,13 +1086,8 @@ class LVOCControlMechanism(ControlMechanism):
         while convergence_metric > self.convergence_criterion:
             # initialize gradient arrray (one gradient for each control signal)
             gradient = np.copy(gradient_constants)
-            cost_gradient = np.zeros(num_cst)
 
             for i, control_signal_value in enumerate(control_signal_values):
-
-                # # Recompute cc interaction term if it is needed:
-                # if (term in self.prediction_terms for term in {PV.CC, PV.PPCC}):
-                #     cc = tensor_power(control_signal_values, range(2,num_ctl+1))
 
                 # Derivative of cc interaction term with respect to current control_signal_value
                 if PV.CC in self.prediction_terms:
@@ -1104,12 +1099,10 @@ class LVOCControlMechanism(ControlMechanism):
                     gradient[i] += prediction_vector._partial_derivative(PV.PPCC, prediction_weights, i,
                                                                          control_signal_value)
 
-                # Derivative for costs -- d(costs)/d(c)
-                #    (since costs depend on control_signals)
+                # Derivative for costs) (since costs depend on control_signals)
                 if PV.COST in self.prediction_terms:
                     cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
-                    cost_gradient[i] = -np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
-                    gradient[i] += cost_gradient[i]
+                    gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
 
                 # Update control_signal_value with gradient
                 control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
