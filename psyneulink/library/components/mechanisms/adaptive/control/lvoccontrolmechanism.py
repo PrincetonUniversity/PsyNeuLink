@@ -291,7 +291,7 @@ class PV(Enum):
     Attributes
     ----------
 
-    P
+    F
         Main effect of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`.
     C
         Main effect of `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
@@ -314,7 +314,7 @@ class PV(Enum):
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
     '''
-    P = 'p'
+    F = 'f'
     C = 'c'
     PP = 'pp'
     CC = 'cc'
@@ -341,7 +341,7 @@ class LVOCControlMechanism(ControlMechanism):
     origin_objective_mechanism=False,                    \
     terminal_objective_mechanism=False,                  \
     function=BayesGLM,                                   \
-    prediction_terms=[PV.P, PV.C, PV.PC, PV.COST]        \
+    prediction_terms=[PV.F, PV.C, PV.PC, PV.COST]        \
     update_rate=0.1,                                     \
     convergence_criterion=.001,                          \
     max_iterations=1000,                                 \
@@ -379,7 +379,7 @@ class LVOCControlMechanism(ControlMechanism):
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
 
-    prediction_terms : List[PV] : default [PV.P, PV.C, PV.PC, PV.COST]
+    prediction_terms : List[PV] : default [PV.F, PV.C, PV.PC, PV.COST]
         specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
         items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
         if `None` is specified, the default values will automatically be assigned.
@@ -442,7 +442,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     prediction_terms : List[PV]
         identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        Items are members of the `PV` enum; the default is [`P <PV.P>`, `C <PV.C>` `PC <PV.PC>`, `COST <PV.COST>`].
+        Items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `PC <PV.PC>`, `COST <PV.COST>`].
 
     prediction_vector : 1d ndarray
         current values, respectively, of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`,
@@ -531,7 +531,7 @@ class LVOCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        prediction_terms = prediction_terms or [PV.P,PV.C,PV.PC, PV.COST]
+        prediction_terms = prediction_terms or [PV.F,PV.C,PV.PC, PV.COST]
         if ALL in prediction_terms:
             prediction_terms = list(PV.__members__.values())
 
@@ -836,7 +836,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         class idx():
             '''Indices into PredictionVector.vector -- assigned in __init__'''
-            p = None
+            f = None
             c = None
             pc = None
             pp = None
@@ -849,7 +849,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         class labels():
             '''labels indivual items in each set of terms of PredictionVector.vector -- assigned in __init__'''
-            p = None
+            f = None
             c = None
             pc = None
             pp = None
@@ -878,10 +878,10 @@ class LVOCControlMechanism(ControlMechanism):
             # MAIN EFFECT TERMS (unflattened)
 
             # Feature_predictors
-            self.p = feature_values
-            self.num_p = len(self.p)  # feature_predictors are arrays; num_p is the number of arrays
-            self.num_p_elems = len(self.p.reshape(-1)) # number of total elements assigned to prediction_vector.vector
-            labels.p = ['p'+str(i) for i in range(0,self.num_p)]
+            self.f = feature_values
+            self.num_p = len(self.f)  # feature_predictors are arrays; num_p is the number of arrays
+            self.num_p_elems = len(self.f.reshape(-1)) # number of total elements assigned to prediction_vector.vector
+            labels.f = ['f'+str(i) for i in range(0,self.num_p)]
 
             # ControlSignals - place value of each in a 1d array (for computing tensor products)
             self.c = np.array([[0]] * len(control_signals)) # Placemarker until control_signals are instantiated
@@ -895,14 +895,14 @@ class LVOCControlMechanism(ControlMechanism):
 
             # INTERACTION TERMS (unflattened)
 
-            # Interactions among Feature vectors
+            # Interactions among feature_predictor vectors
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
                 if self.num_p < 2:
                     self.error_for_too_few_terms('PP')
-                self.pp = np.array(tensor_power(self.p, levels=range(2,self.num_p+1)))
+                self.pp = np.array(tensor_power(self.f, levels=range(2,self.num_p+1)))
                 self.num_pp = len(self.pp)
                 self.num_pp_elems = len(self.pp.reshape(-1))
-                labels.pp= get_intrxn_labels(labels.p)
+                labels.pp= get_intrxn_labels(labels.f)
 
             # Interactions among values of control_signals
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
@@ -918,7 +918,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.pc = np.tensordot(feature_values, self.c, axes=0)
                 self.num_pc = len(self.pc.reshape(-1))
                 self.num_pc_elems = len(self.pc.reshape(-1))
-                labels.pc = list(product(labels.p, labels.c))
+                labels.pc = list(product(labels.f, labels.c))
 
             # Feature-Feature-Control interactions
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
@@ -933,10 +933,10 @@ class LVOCControlMechanism(ControlMechanism):
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
                 if self.num_c < 2:
                     self.error_for_too_few_terms('CC')
-                self.pcc = np.tensordot(self.p, self.cc, axes=0)
+                self.pcc = np.tensordot(self.f, self.cc, axes=0)
                 self.num_pcc = len(self.pcc.reshape(-1))
                 self.num_pcc_elems = len(self.pcc.reshape(-1))
-                labels.pcc = list(product(labels.p, labels.cc))
+                labels.pcc = list(product(labels.f, labels.cc))
 
             # Feature-Feature-Control-Control interactions
             if PV.PPCC in terms:
@@ -953,8 +953,8 @@ class LVOCControlMechanism(ControlMechanism):
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             i = 0
-            if PV.P in terms:
-                idx.p = slice(i, i+self.num_p_elems)
+            if PV.F in terms:
+                idx.f = slice(i, i+self.num_p_elems)
                 i += self.num_p
             if PV.C in terms:
                 idx.c = slice(i, i+self.num_c_elems)
@@ -988,26 +988,26 @@ class LVOCControlMechanism(ControlMechanism):
             # Populate fields (subvectors) of prediction_vector
 
             idx = self.idx
-            self.p = np.array(feature_values)
+            self.f = np.array(feature_values)
             self.c = np.array(control_signal_values)
 
             # Compute terms that are used:
             if any(term in terms for term in [PV.PP, PV.PPC, PV.PPCC]):
-                self.pp = np.array(tensor_power(self.p, range(2,self.num_p+1)))
+                self.pp = np.array(tensor_power(self.f, range(2,self.num_p+1)))
             if any(term in terms for term in [PV.CC, PV.PCC, PV.PPCC]):
                 self.cc = np.array(tensor_power(self.c, range(2,self.num_c+1)))
             if any(term in terms for term in [PV.PC, PV.PCC, PV.PPCC]):
-                self.pc= np.tensordot(self.p, self.c,axes=0)
+                self.pc= np.tensordot(self.f, self.c,axes=0)
             if any(term in terms for term in [PV.PPC, PV.PPCC]):
                 self.ppc = np.tensordot(self.pp,self.c,axes=0)
             if any(term in terms for term in [PV.PCC, PV.PPCC]):
-                self.pcc = np.tensordot(self.p,self.cc,axes=0)
+                self.pcc = np.tensordot(self.f,self.cc,axes=0)
             if PV.PPCC in terms:
                 self.ppcc = np.tensordot(self.pp,self.cc,axes=0)
 
             # Assign specified terms to flattened vector
-            if PV.P in terms:
-                self.vector[idx.p] = self.p.reshape(-1)
+            if PV.F in terms:
+                self.vector[idx.f] = self.f.reshape(-1)
             if PV.C in terms:
                 self.vector[idx.c] = self.c.reshape(-1)
             if PV.PP in terms:
@@ -1188,8 +1188,8 @@ class LVOCControlMechanism(ControlMechanism):
         vector = pv.vector
         idx = pv.idx
 
-        if PV.P in terms:
-            print('feature_values: ', vector[idx.p])
+        if PV.F in terms:
+            print('feature_values: ', vector[idx.f])
         if PV.PP in terms:
             print('pp: ', vector[idx.pp])
         if PV.CC in terms:
