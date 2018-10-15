@@ -267,7 +267,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNAL
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -277,6 +277,7 @@ __all__ = [
     'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
+LVOC = 'LVOC'
 FEATURE_PREDICTORS = 'feature_predictors'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
@@ -335,7 +336,7 @@ class LVOCError(Exception):
 
 class LVOCControlMechanism(ControlMechanism):
     """LVOCControlMechanism(                             \
-    feature_predictors,                                            \
+    feature_predictors,                                  \
     feature_function=None,                               \
     objective_mechanism=None,                            \
     origin_objective_mechanism=False,                    \
@@ -343,7 +344,8 @@ class LVOCControlMechanism(ControlMechanism):
     function=BayesGLM,                                   \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]        \
     update_rate=0.01,                                    \
-    convergence_criterion=.001,                          \
+    convergence_criterion=LVOC                           \
+    convergence_threshold=.001,                          \
     max_iterations=1000,                                 \
     control_signals=None,                                \
     modulation=ModulationParam.MULTIPLICATIVE,           \
@@ -389,9 +391,13 @@ class LVOCControlMechanism(ControlMechanism):
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
-    convergence_criterion : int or float : default 0.001
-        specifies the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
-        <LVOCControlMechanism.gradient_ascent>` method should terminate and return an `allocation_policy
+    convergence_criterion : LVOC or CONTROL_SIGNAL : default LVOC
+        specifies the measure used to determine when to terminate execution of the `gradient_ascent
+        <LVOCControlMechanism.gradient_ascent>` method.
+
+    convergence_threshold : int or float : default 0.001
+        specifies the change in value of the `convergence_criterion` below which the `gradient_ascent
+        <LVOCControlMechanism.gradient_ascent>` method is terminated and returns an `allocation_policy
         <LVOCControlMechanism.allocation_policy>`.
 
     max_iterations : int : default 1000
@@ -463,10 +469,16 @@ class LVOCControlMechanism(ControlMechanism):
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
-    convergence_criterion : int or float
-        determines the change in estimate of the `EVC <LVOCControlMechanism_EVC>` below which the `gradient_ascent
-        <LVOCControlMechanism.gradient_ascent>` method should terminate and return an `allocation_policy
-        <LVOCControlMechanism.allocation_policy>`.
+    convergence_criterion : LVOC or CONTROL_SIGNAL
+        determines the measure used to terminate execution of the `gradient_ascent
+        <LVOCControlMechanism.gradient_ascent>` method;  when the change in its value from one iteration of the
+        method to the next falls below `convergence_threshold <LVOCControlMechanism.convergence_threshold>`,
+        the method is terminated and an `allocation_policy <LVOCControlMechanism.allocation_policy>` is returned.
+
+    convergence_threshold : int or float : default 0.001
+        determines the threhsold of change in the value of the `convergence_criterion` across iterations of
+        `gradient_ascent <LVOCControlMechanism.gradient_ascent>`, below which the method is terminated and an
+        `allocation_policy <LVOCControlMechanism.allocation_policy>` is returned.
 
     max_iterations : int
         determines the maximum number of iterations `gradient_ascent <LVOCControlMechanism.gradient_ascent>`
@@ -522,7 +534,8 @@ class LVOCControlMechanism(ControlMechanism):
                  prediction_terms:tc.optional(list)=None,
                  prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.01,
-                 convergence_criterion=0.001,
+                 convergence_criterion:tc.enum(LVOC, CONTROL_SIGNAL)=LVOC,
+                 convergence_threshold=0.001,
                  max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -555,6 +568,7 @@ class LVOCControlMechanism(ControlMechanism):
                                                   prediction_terms=prediction_terms,
                                                   prediction_weight_priors=prediction_weight_priors,
                                                   convergence_criterion=convergence_criterion,
+                                                  convergence_threshold=convergence_threshold,
                                                   max_iterations=max_iterations,
                                                   update_rate=update_rate,
                                                   origin_objective_mechanism=origin_objective_mechanism,
@@ -1058,8 +1072,8 @@ class LVOCControlMechanism(ControlMechanism):
         - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
         - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
 
-        Continue to iterate until difference between new and old EVC is less than `convergence_criterion
-        <LearnAllocationPolicy.convergence_criterion>` or number of iterations exceeds `max_iterations
+        Continue to iterate until difference between new and old EVC is less than `convergence_threshold
+        <LearnAllocationPolicy.convergence_threshold>` or number of iterations exceeds `max_iterations
         <LearnAllocationPolicy.max_iterations>`.
 
         Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
@@ -1073,8 +1087,9 @@ class LVOCControlMechanism(ControlMechanism):
         num_cst = prediction_vector.num_cst
         # num_intrxn = prediction_vector.num_interactions
 
-        convergence_metric = self.convergence_criterion + EPSILON
+        convergence_metric = self.convergence_threshold + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
+        prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
 
         feature_predictors = self.feature_values.reshape(-1)
 
@@ -1122,7 +1137,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
         j=0
-        while convergence_metric > self.convergence_criterion:
+        while convergence_metric > self.convergence_threshold:
             # initialize gradient arrray (one gradient for each control signal)
             gradient = np.copy(gradient_constants)
 
@@ -1156,8 +1171,11 @@ class LVOCControlMechanism(ControlMechanism):
             # Compute current LVOC using current feature_predictors, weights and new control signals
             current_lvoc = self.compute_lvoc(pv, prediction_weights)
 
-            # Compute convergence metric with updated control signals
-            convergence_metric = np.abs(current_lvoc - previous_lvoc)
+            if self.convergence_criterion == LVOC:
+                # Compute convergence metric with updated control signals
+                convergence_metric = np.abs(current_lvoc - previous_lvoc)
+            else:
+                convergence_metric = np.max(np.abs(control_signal_values - prev_control_signal_values))
 
             # TEST PRINT:
             print(
@@ -1175,6 +1193,7 @@ class LVOCControlMechanism(ControlMechanism):
                 break
 
             previous_lvoc = current_lvoc
+            prev_control_signal_values = control_signal_values
 
         return control_signal_values
 
