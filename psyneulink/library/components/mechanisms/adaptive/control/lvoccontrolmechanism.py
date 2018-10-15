@@ -803,7 +803,7 @@ class LVOCControlMechanism(ControlMechanism):
         # This is the current values of the feature_predictors
         self.feature_values = np.array(np.array(variable[1:]).tolist())
 
-        # Initialize attributes
+        # Instantiate PredictionVector and related attributes
         if context is ContextFlags.INSTANTIATE:
             self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signals,
@@ -811,6 +811,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
+        # Update values
         else:
             control_signal_values = [c.value for c in self.control_signals]
             control_signal_costs = [0 if c.cost is None else c.cost for c in self.control_signals]
