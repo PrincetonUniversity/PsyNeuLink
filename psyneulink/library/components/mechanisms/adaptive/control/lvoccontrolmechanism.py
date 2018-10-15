@@ -267,7 +267,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNAL
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -391,7 +391,7 @@ class LVOCControlMechanism(ControlMechanism):
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
-    convergence_criterion : LVOC or CONTROL_SIGNAL : default LVOC
+    convergence_criterion : LVOC or CONTROL_SIGNALS : default LVOC
         specifies the measure used to determine when to terminate execution of the `gradient_ascent
         <LVOCControlMechanism.gradient_ascent>` method.
 
@@ -469,7 +469,7 @@ class LVOCControlMechanism(ControlMechanism):
         `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
         `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
-    convergence_criterion : LVOC or CONTROL_SIGNAL
+    convergence_criterion : LVOC or CONTROL_SIGNALS
         determines the measure used to terminate execution of the `gradient_ascent
         <LVOCControlMechanism.gradient_ascent>` method;  when the change in its value from one iteration of the
         method to the next falls below `convergence_threshold <LVOCControlMechanism.convergence_threshold>`,
@@ -534,7 +534,7 @@ class LVOCControlMechanism(ControlMechanism):
                  prediction_terms:tc.optional(list)=None,
                  prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.01,
-                 convergence_criterion:tc.enum(LVOC, CONTROL_SIGNAL)=LVOC,
+                 convergence_criterion:tc.enum(LVOC, CONTROL_SIGNALS)=LVOC,
                  convergence_threshold=0.001,
                  max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
@@ -1061,6 +1061,15 @@ class LVOCControlMechanism(ControlMechanism):
                     gradient += np.sum((term/ctl_val)*wts)
 
             return gradient
+
+    def grad(self):
+        pass
+        # >>> def tanh(x):                 # Define a function
+        # ...     y = np.exp(-2.0 * x)
+        # ...     return (1.0 - y) / (1.0 + y)
+        # ...
+        # >>> grad_tanh = grad(tanh)       # Obtain its gradient function
+        # >>> grad_tanh(1.0)               # Evaluate the gradient at x = 1.0
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
