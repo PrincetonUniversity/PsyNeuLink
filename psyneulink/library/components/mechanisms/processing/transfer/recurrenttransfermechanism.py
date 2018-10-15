@@ -947,30 +947,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                format(MATRIX, self.name, rows, self.recurrent_size))
                 raise RecurrentTransferError(err_msg)
 
-        # Validate combination_function
-        if COMBINATION_FUNCTION in target_set:
-            comb_fct = target_set[COMBINATION_FUNCTION]
-            if not (isinstance(comb_fct, LinearCombination) or
-                    (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination)) or
-                    (isinstance(comb_fct, MethodType) and comb_fct.__self__==self)):
-                if isinstance(comb_fct, type):
-                    comb_fct = comb_fct()
-                elif isinstance(comb_fct, (function_type, method_type)):
-                    comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
-                try:
-                    cust_fct_result = comb_fct.execute(self.defaults.variable)
-                except:
-                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
-                                                 "take an array with two items ({})".
-                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.defaults.variable))
-                try:
-                    assert len(cust_fct_result) == len(self.defaults.variable[0])
-                except:
-                    raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
-                                                 "a result that is the same shape as the input to {} ({})".
-                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct,
-                                                        self.name, self.defaults.variable[0]))
-
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:
         #
@@ -1040,6 +1016,42 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.has_recurrent_input_state:
             comb_fct = self.combination_function
+            if (
+                not (
+                    isinstance(comb_fct, LinearCombination)
+                    or (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination))
+                    or (isinstance(comb_fct, MethodType) and comb_fct.__self__ == self)
+                )
+            ):
+                if isinstance(comb_fct, type):
+                    comb_fct = comb_fct()
+                elif isinstance(comb_fct, (function_type, method_type)):
+                    comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
+                try:
+                    cust_fct_result = comb_fct.execute(self.defaults.variable)
+                except AssertionError:
+                    raise RecurrentTransferError(
+                        "Function specified for {} argument of {} ({}) does not take an array with two items ({})".format(
+                            repr(COMBINATION_FUNCTION),
+                            self.name,
+                            comb_fct,
+                            self.defaults.variable
+                        )
+                    )
+                try:
+                    assert len(cust_fct_result) == len(self.defaults.variable[0])
+                except AssertionError:
+                    raise RecurrentTransferError(
+                        "Function specified for {} argument of {} ({}) did not return a result that is"
+                        " the same shape as the input to {} ({})".format(
+                            repr(COMBINATION_FUNCTION),
+                            self.name,
+                            comb_fct,
+                            self.name,
+                            self.defaults.variable[0]
+                        )
+                    )
+
             # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
@@ -1049,6 +1061,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                 else:
                     self._combination_function = UserDefinedFunction(custom_function=comb_fct,
                                                                      default_variable=self.instance_defaults.variable)
+            else:
+                self._combination_function = comb_fct
+
+        else:
+            self._combination_function = None
 
         if self.auto is None and self.hetero is None:
             self.matrix = specified_matrix
