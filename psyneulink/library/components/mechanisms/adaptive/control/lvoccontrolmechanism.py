@@ -1184,7 +1184,8 @@ class LVOCControlMechanism(ControlMechanism):
                 # Compute convergence metric with updated control signals
                 convergence_metric = np.abs(current_lvoc - previous_lvoc)
             else:
-                convergence_metric = np.max(np.abs(control_signal_values - prev_control_signal_values))
+                convergence_metric = np.max(np.abs(np.array(control_signal_values) -
+                                                   np.array(prev_control_signal_values)))
 
             # TEST PRINT:
             print(
