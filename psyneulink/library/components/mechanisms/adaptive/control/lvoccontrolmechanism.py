@@ -729,7 +729,7 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          context=context
                                                                          )
 
-        # MODIFIED 10/14/18 NEW:  FIX:  HACK TO CHECK FOR CONVERGENCE
+        # MODIFIED 10/14/18 NEW:  FIX:  HACK TO INSURE CONVERGENCE - SHOULD BE HANDLED WITH PRIORS
         if self.current_execution_count == 1:
             self.prediction_weights[self.prediction_vector.idx.cst] = \
                 abs(self.prediction_weights[self.prediction_vector.idx.cst])
@@ -787,51 +787,6 @@ class LVOCControlMechanism(ControlMechanism):
         outcome = obj_mech_outcome + self.previous_cost # costs are assigned as negative above, so add them here
 
         return [self.prediction_buffer.popleft(), outcome]
-
-
-    class PredictionVectorStroopXOR():
-        '''Only populate with following terms: Predictor-ControlSignal interactions, control_signal values and costs
-
-        IMPLEMENTS VERSION OF PREDICTION VECTOR THAT IS SPECIFIC TO STROOP XOR MODEL. WILL BE REPLACED BY
-        PredictionVector (THAT WILL ALSO BE APPROPRIATELY RENAMED!) ONCE THAT IS COMPLETE
-
-        '''
-        class idx():
-            '''Indices into PredictionVector.vector -- assigned __init__'''
-            p = None
-            c = None
-            pc = None
-            pp = None
-            cc = None
-            ppc = None
-            pcc = None
-            ppcc = None
-            cst = None
-
-        def __init__(self, predictor_values, control_signals):
-            # Numbers of terms in prediction_vector
-            self.num_p = len(predictor_values.reshape(-1))
-            self.num_c = self.num_cst = len(control_signals)
-            self.num_interactions = self.num_p * self.num_c
-            len_prediction_vector = self.num_interactions + self.num_c + self.num_cst
-
-            # Indices for fields of prediction_vector
-            idx = self.idx
-            idx.pc = slice(0, self.num_interactions)
-            idx.c = slice(idx.pc.stop, idx.pc.stop + self.num_c)
-            idx.cst = slice(idx.c.stop, len_prediction_vector)
-
-            self.vector = np.zeros(len_prediction_vector)
-
-        def _update(self, predictor_values, control_signals):
-            # Populate fields (subvectors) of prediction_vector
-            idx = self.idx
-            self.vector[idx.c] = np.array([c.value for c in control_signals]).reshape(-1)
-            self.vector[idx.pc]= \
-                np.array(predictor_values.reshape(-1) * self.vector[idx.c].reshape(self.num_c,1)
-                         ).reshape(-1)
-            self.vector[idx.cst] = \
-                np.array([0 if c.cost is None else c.cost for c in control_signals]).reshape(-1) * -1
 
 
     class PredictionVector():
@@ -1053,7 +1008,6 @@ class LVOCControlMechanism(ControlMechanism):
                     gradient += np.sum((term/ctl_val)*wts)
 
             return gradient
-
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
