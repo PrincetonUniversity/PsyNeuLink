@@ -724,6 +724,7 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
+    # FIX: ??MOVE THIS TO _instantiate_attributes_before_function AND USE IN CONSTRUCTION OF FUNCTION??
     def _instantiate_attributes_after_function(self, context=None):
         super()._instantiate_attributes_after_function(context=context)
         # FIX: ??SHOULD THIS ASSIGNMENT BE TO self.parameters_states['mu_0'] INSTEAD:
@@ -771,12 +772,6 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          runtime_params=runtime_params,
                                                                          context=context
                                                                          )
-
-        # # MODIFIED 10/14/18 NEW:  FIX:  HACK TO INSURE CONVERGENCE - SHOULD BE HANDLED WITH PRIORS
-        # if self.current_execution_count == 1:
-        #     self.prediction_weights[self.prediction_vector.idx.cst] = \
-        #         abs(self.prediction_weights[self.prediction_vector.idx.cst])
-        # MODIFIED 10/14/18 END
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(self.control_signals,
@@ -1113,9 +1108,9 @@ class LVOCControlMechanism(ControlMechanism):
             # Get weights for ffc interaction term and reshape so that there is one row per control_signal
             #    containing the terms for the interaction of that control_signal with each of the feature interactions
             ffc_weights = prediction_weights[idx.ffc].reshape(num_c, prediction_vector.num_ff_elems)
-            ffc_weights_x_pp = ffc_weights * prediction_vector.ff.reshape(-1)
+            ffc_weights_x_ff = ffc_weights * prediction_vector.ff.reshape(-1)
             for i in range(num_c):
-                gradient_constants[i] += np.sum(ffc_weights_x_pp[i])
+                gradient_constants[i] += np.sum(ffc_weights_x_ff[i])
 
         # TEST PRINT:
         print(
