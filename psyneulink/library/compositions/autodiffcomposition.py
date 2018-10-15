@@ -577,7 +577,7 @@ class AutodiffComposition(Composition):
             average_loss = np.mean(curr_losses)
             self.losses.append(average_loss)
 
-            # update early stopper
+            # update early stopper with most recent average loss
             if self.patience is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
