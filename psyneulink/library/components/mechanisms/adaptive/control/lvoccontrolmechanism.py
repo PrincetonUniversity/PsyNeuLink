@@ -536,7 +536,7 @@ class LVOCControlMechanism(ControlMechanism):
                  prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.01,
                  convergence_criterion:tc.enum(LVOC, CONTROL_SIGNALS)=LVOC,
-                 convergence_threshold=0.001,
+                 convergence_threshold=0.01,
                  max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -1291,6 +1291,9 @@ class LVOCControlMechanism(ControlMechanism):
             i+=1
         if PV.FFCC in terms:
             lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ffcc])
+            i+=1
+        if PV.COST in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.cst])
 
         return lvoc
 
@@ -1319,7 +1322,7 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.FFCC in terms:
             ffcc = np.tensordot(ff,cc,axes=0)
         if PV.COST in terms:
-            cst = np.exp(c)
+            cst = -np.exp(c)
 
         opv = self.prediction_vector.vector
         # Construct list with computed terms (for use by autograd) and update prediction_vector
@@ -1329,10 +1332,10 @@ class LVOCControlMechanism(ControlMechanism):
             # self.prediction_vector.vector[idx.f] = np.array(f).reshape(-1)
         if PV.C in terms:
             computed_terms += [c]
-            # if isinstance(c, np.ndarray):
-            #     self.prediction_vector.vector[idx.c] = np.array(c).reshape(-1)
-            # else:
-            #     self.prediction_vector.vector[idx.c] = np.array(c._value).reshape(-1)
+            if isinstance(c, (np.ndarray, list)):
+                self.prediction_vector.vector[idx.c] = np.array(c).reshape(-1)
+            else:
+                self.prediction_vector.vector[idx.c] = np.array(c._value).reshape(-1)
         if PV.FF in terms:
             computed_terms += [ff]
             # self.prediction_vector.vector[idx.ff] = ff.reshape(-1)
@@ -1351,6 +1354,12 @@ class LVOCControlMechanism(ControlMechanism):
         if PV.FFCC in terms:
             computed_terms += [ffcc]
             # self.prediction_vector.vector[idx.ffcc] = ffcc.reshape(-1)
+        if PV.COST in terms:
+            computed_terms += [cst]
+            if isinstance(cst, (np.ndarray, list)):
+                self.prediction_vector.vector[idx.cst] = np.array(cst).reshape(-1)
+            else:
+                self.prediction_vector.vector[idx.cst] = np.array(cst._value).reshape(-1)
 
         # Update actual prediction_vector
         return computed_terms
