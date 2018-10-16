@@ -47,13 +47,13 @@ task_decision = pnl.DDM(name='Task Decision',
                            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD])
 
 lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
-                                predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
+                                feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
                                 function=pnl.BayesGLM(),
                                 objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
                                                                            monitored_output_states=[task_decision,
                                                                                                     reward],
                                                                            function=objective_function),
-                                prediction_terms=[pnl.PV.PC],
+                                prediction_terms=[pnl.PV.FC],
                                 terminal_objective_mechanism=True,
                                 control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                                                    ('color_control', word_task)]}])
@@ -68,7 +68,7 @@ c.add_projection(sender=color_task, receiver=task_decision)
 c.add_projection(sender=word_task, receiver=task_decision)
 c.add_c_node(lvoc)
 
-# c.show_graph()
+c.show_graph()
 
 input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
               word_stim: [[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
