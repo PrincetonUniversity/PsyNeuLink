@@ -248,10 +248,11 @@ Class Reference
 import warnings
 from collections import Iterable, deque
 from itertools import product
-
-import numpy as np
 import typecheck as tc
 from aenum import Enum
+
+import autograd.numpy as np
+from autograd import grad
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type
@@ -757,6 +758,8 @@ class LVOCControlMechanism(ControlMechanism):
             else:
                 raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
                                 format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
+        self.cost_functions = [c.intensity_cost_function for c in self.control_signals]
+
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -788,7 +791,11 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          )
 
         # Compute allocation_policy using gradient_ascent
-        allocation_policy = self.gradient_ascent(self.control_signals,
+        # allocation_policy = self.gradient_ascent(self.control_signals,
+        #                                          self.prediction_vector,
+        #                                          self.prediction_weights)
+
+        allocation_policy = self.autograd_ascent(self.control_signals,
                                                  self.prediction_vector,
                                                  self.prediction_weights)
 
@@ -1062,15 +1069,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             return gradient
 
-    def grad(self):
-        pass
-        # >>> def tanh(x):                 # Define a function
-        # ...     y = np.exp(-2.0 * x)
-        # ...     return (1.0 - y) / (1.0 + y)
-        # ...
-        # >>> grad_tanh = grad(tanh)       # Obtain its gradient function
-        # >>> grad_tanh(1.0)               # Evaluate the gradient at x = 1.0
-
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
         <LVOCControlMechanism_EVC>`.
@@ -1209,6 +1207,31 @@ class LVOCControlMechanism(ControlMechanism):
 
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
+
+
+    def autograd_ascent(self, control_signals, prediction_vector, prediction_weights):
+        control_signal_values = [c.value for c in control_signals]
+        grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
+        gradients = grad_of_lvoc_wrt_control_signals(control_signal_values)
+        assert True
+
+    def compute_lvoc_from_control_signals(self, control_signal_values):
+
+        c = control_signal_values
+        f = np.array(self.feature_values).reshape(-1)
+        fc = np.tensordot(f, c, axes=0).reshape(-1)
+        ff = np.array(tensor_power(f, range(2,self.prediction_vector.num_f+1))).reshape(-1)
+        ffc = np.tensordot(ff, c, axes=0).reshape(-1)
+        cc = np.array(tensor_power(c, range(2,self.prediction_vector.num_c+1))).reshape(-1)
+        fcc = np.tensordot(f,cc,axes=0).reshape(-1)
+        ffcc = np.tensordot(ff,cc,axes=0).reshape(-1)
+        cst = np.exp(c)
+
+        v = f + c + fc + ff + ffc + cc + fcc + ffcc + cst
+        w=self.prediction_weights
+
+        return np.sum(v*w)
+
 
     # TEST PRINT:
     def test_print(self, pv):
