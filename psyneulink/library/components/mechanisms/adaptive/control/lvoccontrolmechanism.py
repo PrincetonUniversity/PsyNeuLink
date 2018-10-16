@@ -791,13 +791,14 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          )
 
         # Compute allocation_policy using gradient_ascent
+        allocation_policy = self.autograd_ascent(self.control_signals,
+                                                 self.prediction_vector,
+                                                 self.prediction_weights)
+
         # allocation_policy = self.gradient_ascent(self.control_signals,
         #                                          self.prediction_vector,
         #                                          self.prediction_weights)
 
-        allocation_policy = self.autograd_ascent(self.control_signals,
-                                                 self.prediction_vector,
-                                                 self.prediction_weights)
 
         # return allocation_policy.reshape((len(allocation_policy),1))
         return allocation_policy
@@ -1208,29 +1209,95 @@ class LVOCControlMechanism(ControlMechanism):
     def compute_lvoc(self, v, w):
         return np.sum(v * w)
 
-
     def autograd_ascent(self, control_signals, prediction_vector, prediction_weights):
+
+        convergence_metric = self.convergence_threshold + EPSILON
+        previous_lvoc = np.finfo(np.longdouble).max
+        num_f = len(self.feature_values)
+        num_c = len(self.control_signals)
+        prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
         control_signal_values = [c.value for c in control_signals]
         grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
-        gradients = grad_of_lvoc_wrt_control_signals(control_signal_values)
-        assert True
+
+        iteration=0
+        while convergence_metric > self.convergence_threshold:
+
+            # FIX: put in _instantiate_attributes_after_function
+            current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
+            # grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
+
+            gradients = grad_of_lvoc_wrt_control_signals(control_signal_values)
+            # control_signal_values = control_signal_values + self.update_rate * gradients
+            control_signal_values = (np.array(control_signal_values) + self.update_rate * np.array(gradients)).tolist()
+
+            if self.convergence_criterion == LVOC:
+                # Compute convergence metric with updated control signals
+                convergence_metric = np.abs(current_lvoc - previous_lvoc)
+            else:
+                convergence_metric = np.max(np.abs(np.array(control_signal_values) -
+                                                   np.array(prev_control_signal_values)))
+
+            # TEST PRINT:
+            print(
+                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
+                    '\nprevious_lvoc: ', previous_lvoc,
+                    '\ncurrent_lvoc: ',current_lvoc ,
+                    '\nconvergence_metric: ',convergence_metric,
+            )
+            self.test_print(prediction_vector)
+            # TEST PRINT END
+
+            iteration+=1
+            if iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            self.lvoc = current_lvoc
+            previous_lvoc = current_lvoc
+            prev_control_signal_values = control_signal_values
+
+        return control_signal_values
+
 
     def compute_lvoc_from_control_signals(self, control_signal_values):
 
-        c = control_signal_values
-        f = np.array(self.feature_values).reshape(-1)
-        fc = np.tensordot(f, c, axes=0).reshape(-1)
-        ff = np.array(tensor_power(f, range(2,self.prediction_vector.num_f+1))).reshape(-1)
-        ffc = np.tensordot(ff, c, axes=0).reshape(-1)
-        cc = np.array(tensor_power(c, range(2,self.prediction_vector.num_c+1))).reshape(-1)
-        fcc = np.tensordot(f,cc,axes=0).reshape(-1)
-        ffcc = np.tensordot(ff,cc,axes=0).reshape(-1)
-        cst = np.exp(c)
-
-        v = f + c + fc + ff + ffc + cc + fcc + ffcc + cst
-        w=self.prediction_weights
-
+        v = self._update_prediction_vector(control_signal_values)
+        w = self.prediction_weights
         return np.sum(v*w)
+        # return np.sum(np.array(v).reshape(-1)*w)
+
+    def _update_prediction_vector(self, control_signal_values):
+
+        num_f = len(self.feature_values)
+        num_c = len(self.control_signals)
+        terms = self.prediction_terms
+
+        # Compute terms that are used
+        f = np.array(self.feature_values)
+        c = control_signal_values
+        if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
+            ff = np.array(tensor_power(f, range(2, num_f+1))).reshape(-1)
+        if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
+            cc = np.array(tensor_power(c, range(2, num_c+1))).reshape(-1)
+        if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
+            fc = np.tensordot(f, c, axes=0).reshape(-1)
+        if any(term in terms for term in [PV.FFC, PV.FFCC]):
+            ffc = np.tensordot(ff, c, axes=0).reshape(-1)
+        if any(term in terms for term in [PV.FCC, PV.FFCC]):
+            fcc = np.tensordot(f,cc,axes=0).reshape(-1)
+        if PV.FFCC in terms:
+            ffcc = np.tensordot(ff,cc,axes=0).reshape(-1)
+        if PV.COST in terms:
+            cst = np.exp(c)
+
+        pv = np.array(f.reshape(-1).tolist() + np.array(c).reshape(-1).tolist() + fc.tolist() + ff.tolist() + \
+             ffc.tolist() + cc.tolist() + fcc.tolist() + ffcc.tolist() + cst.tolist())
+
+        # self.pv = np.array(pv).reshape(-1)
+        # self.cst = cst
+
+        return pv
+
 
 
     # TEST PRINT:
