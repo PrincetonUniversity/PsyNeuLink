@@ -1625,7 +1625,10 @@ class UserDefinedFunction(Function_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        super()._instantiate_attributes_before_function(function=function, context=context)
         # create transient Params objects for custom function params
+        # done here because they need to be present before _instantiate_value which calls self.function
         for param_name in self.cust_fct_params:
             setattr(self.parameters, param_name, Param(self.cust_fct_params[param_name], modulable=True))
 
