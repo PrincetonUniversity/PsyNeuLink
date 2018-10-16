@@ -1338,10 +1338,16 @@ class LVOCControlMechanism(ControlMechanism):
                 self.prediction_vector.vector[idx.c] = np.array(c._value).reshape(-1)
         if PV.FF in terms:
             computed_terms += [ff]
-            # self.prediction_vector.vector[idx.ff] = ff.reshape(-1)
+            if isinstance(ff, (np.ndarray, list)):
+                self.prediction_vector.vector[idx.ff] = np.array(ff).reshape(-1)
+            else:
+                self.prediction_vector.vector[idx.ff] = np.array(ff._value).reshape(-1)
         if PV.CC in terms:
             computed_terms += [cc]
-            # self.prediction_vector.vector[idx.cc] = cc.reshape(-1)
+            if isinstance(cc, (np.ndarray, list)):
+                self.prediction_vector.vector[idx.cc] = np.array(cc).reshape(-1)
+            else:
+                self.prediction_vector.vector[idx.cc] = np.array(cc._value).reshape(-1)
         if PV.FC in terms:
             computed_terms += [fc]
             # self.prediction_vector.vector[idx.fc] = fc.reshape(-1)
