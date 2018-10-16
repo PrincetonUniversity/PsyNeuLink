@@ -1216,7 +1216,7 @@ class LVOCControlMechanism(ControlMechanism):
         num_f = len(self.feature_values)
         num_c = len(self.control_signals)
         prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
-        control_signal_values = [c.value for c in control_signals]
+        control_signal_values = np.array([c.value for c in control_signals])
         grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
         iteration=0
@@ -1261,42 +1261,99 @@ class LVOCControlMechanism(ControlMechanism):
 
     def compute_lvoc_from_control_signals(self, control_signal_values):
 
+        idx = self.prediction_vector.idx
+        terms = self.prediction_terms
         v = self._update_prediction_vector(control_signal_values)
         w = self.prediction_weights
-        return np.sum(v*w)
-        # return np.sum(np.array(v).reshape(-1)*w)
+
+        lvoc = 0
+        i = 0
+        if PV.F in terms:
+            lvoc += np.sum(np.array(v[i]).reshape(-1) * self.prediction_weights[idx.f])
+            i+=1
+        if PV.C in terms:
+            lvoc += np.sum(np.array(control_signal_values).reshape(-1) * self.prediction_weights[idx.c])
+            i+=1
+        if PV.FF in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ff])
+            i+=1
+        if PV.CC in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.cc])
+            i+=1
+        if PV.FC in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.fc])
+            i+=1
+        if PV.FFC in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ffc])
+            i+=1
+        if PV.FCC in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.fcc])
+            i+=1
+        if PV.FFCC in terms:
+            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ffcc])
+
+        return lvoc
+
+        # return np.sum(v*w)
 
     def _update_prediction_vector(self, control_signal_values):
 
+        terms = self.prediction_terms
         num_f = len(self.feature_values)
         num_c = len(self.control_signals)
-        terms = self.prediction_terms
+        idx = self.prediction_vector.idx
 
         # Compute terms that are used
         f = np.array(self.feature_values)
         c = control_signal_values
         if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-            ff = np.array(tensor_power(f, range(2, num_f+1))).reshape(-1)
+            ff = np.array(tensor_power(f, range(2, num_f+1)))
         if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-            cc = np.array(tensor_power(c, range(2, num_c+1))).reshape(-1)
+            cc = np.array(tensor_power(c, range(2, num_c+1)))
         if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
-            fc = np.tensordot(f, c, axes=0).reshape(-1)
+            fc = np.tensordot(f, c, axes=0)
         if any(term in terms for term in [PV.FFC, PV.FFCC]):
-            ffc = np.tensordot(ff, c, axes=0).reshape(-1)
+            ffc = np.tensordot(ff, c, axes=0)
         if any(term in terms for term in [PV.FCC, PV.FFCC]):
-            fcc = np.tensordot(f,cc,axes=0).reshape(-1)
+            fcc = np.tensordot(f,cc,axes=0)
         if PV.FFCC in terms:
-            ffcc = np.tensordot(ff,cc,axes=0).reshape(-1)
+            ffcc = np.tensordot(ff,cc,axes=0)
         if PV.COST in terms:
             cst = np.exp(c)
 
-        pv = np.array(f.reshape(-1).tolist() + np.array(c).reshape(-1).tolist() + fc.tolist() + ff.tolist() + \
-             ffc.tolist() + cc.tolist() + fcc.tolist() + ffcc.tolist() + cst.tolist())
+        opv = self.prediction_vector.vector
+        # Construct list with computed terms (for use by autograd) and update prediction_vector
+        computed_terms = []
+        if PV.F in terms:
+            computed_terms += [f]
+            # self.prediction_vector.vector[idx.f] = np.array(f).reshape(-1)
+        if PV.C in terms:
+            computed_terms += [c]
+            # if isinstance(c, np.ndarray):
+            #     self.prediction_vector.vector[idx.c] = np.array(c).reshape(-1)
+            # else:
+            #     self.prediction_vector.vector[idx.c] = np.array(c._value).reshape(-1)
+        if PV.FF in terms:
+            computed_terms += [ff]
+            # self.prediction_vector.vector[idx.ff] = ff.reshape(-1)
+        if PV.CC in terms:
+            computed_terms += [cc]
+            # self.prediction_vector.vector[idx.cc] = cc.reshape(-1)
+        if PV.FC in terms:
+            computed_terms += [fc]
+            # self.prediction_vector.vector[idx.fc] = fc.reshape(-1)
+        if PV.FFC in terms:
+            computed_terms += [ffc]
+            # self.prediction_vector.vector[idx.ffc] = ffc.reshape(-1)
+        if PV.FCC in terms:
+            computed_terms += [fcc]
+            # self.prediction_vector.vector[idx.fcc] = fcc.reshape(-1)
+        if PV.FFCC in terms:
+            computed_terms += [ffcc]
+            # self.prediction_vector.vector[idx.ffcc] = ffcc.reshape(-1)
 
-        # self.pv = np.array(pv).reshape(-1)
-        # self.cst = cst
-
-        return pv
+        # Update actual prediction_vector
+        return computed_terms
 
 
 
