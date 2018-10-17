@@ -1300,3 +1300,26 @@ class LVOCControlMechanism(ControlMechanism):
             prev_control_signal_values = control_signal_values
 
         return control_signal_values
+
+    def _partial_derivative(self, term_label, pw, ctl_idx, ctl_val):
+        '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
+        with respect to control_signal i'''
+
+        # Get label and value of control signal with respect to which the derivative is being taken
+        ctl_label = self.prediction_vector.labels.c[ctl_idx]
+
+        # Get labels and values of terms, and weights
+        t_labels = getattr(self.prediction_vector.labels, term_label.value)
+        terms = getattr(self.prediction_vector, term_label.value)
+        wts_idx = getattr(self.prediction_vector.idx, term_label.value)
+        # Reshape weights to match termss
+        weights = pw[wts_idx].reshape(np.array(terms).shape)
+
+        gradient = 0
+
+        # Compute derivative for terms that contain control signal
+        for t_label, term, wts in zip(t_labels,terms,weights):
+            if ctl_label in t_label:
+                gradient += np.sum((term/ctl_val)*wts)
+
+        return gradient
