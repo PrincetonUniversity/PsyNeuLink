@@ -1056,6 +1056,22 @@ class LVOCControlMechanism(ControlMechanism):
             return computed_terms
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
+        '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
+        <LVOCControlMechanism_EVC>`.
+
+        Iterate over prediction_vector; for each iteration: \n
+        - compute gradients based on current control_signal values and their costs (in prediction_vector);
+        - compute new control_signal values based on gradients;
+        - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
+        - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
+
+        Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
+        `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
+        `max_iterations <LearnAllocationPolicy.max_iterations>`.
+
+        Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
+        <LVOCControlMechanism.allocation_policy>`).
+        '''
 
         convergence_metric = self.convergence_threshold + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
