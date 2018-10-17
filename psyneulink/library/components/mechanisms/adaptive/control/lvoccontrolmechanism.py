@@ -1055,8 +1055,8 @@ class LVOCControlMechanism(ControlMechanism):
                 computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
                 # FIX: THIS SHOULD USE control_signal.cost_functions(c)
-                # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 computed_terms[PV.COST] = -(np.exp(c))
+                # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
 
             return computed_terms
 
