@@ -743,6 +743,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     # FIX: ??MOVE THIS TO _instantiate_attributes_before_function AND USE IN CONSTRUCTION OF FUNCTION??
     def _instantiate_attributes_after_function(self, context=None):
+
         super()._instantiate_attributes_after_function(context=context)
         # FIX: ??SHOULD THIS ASSIGNMENT BE TO self.parameters_states['mu_0'] INSTEAD:
         if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
@@ -760,6 +761,7 @@ class LVOCControlMechanism(ControlMechanism):
             else:
                 raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
                                 format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
+
         self.cost_functions = [c.intensity_cost_function for c in self.control_signals]
 
         self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
