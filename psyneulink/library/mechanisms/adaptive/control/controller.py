@@ -877,7 +877,7 @@ class Controller(ControlMechanism):
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
             allocation_policy_outcomes.append(monitored_states)
-            other_simulation_data.append(other_simulation_data)
+            other_simulation_data.append(call_after_simulation_data)
 
         return allocation_policy_outcomes, other_simulation_data
 
