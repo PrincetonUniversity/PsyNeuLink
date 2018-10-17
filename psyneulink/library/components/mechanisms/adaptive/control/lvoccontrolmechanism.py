@@ -741,11 +741,9 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    # FIX: ??MOVE THIS TO _instantiate_attributes_before_function AND USE IN CONSTRUCTION OF FUNCTION??
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
-        # FIX: ??SHOULD THIS ASSIGNMENT BE TO self.parameters_states['mu_0'] INSTEAD:
         if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
             mu_0 = self.function_object.params['mu_0']
             if isinstance(self.prediction_weights_priors, (int, float)):
@@ -1208,7 +1206,7 @@ class LVOCControlMechanism(ControlMechanism):
     #         # d(c*wt)/(dc) = wt
     #         gradient_constants += np.array(prediction_weights[idx.c])
     #
-    #     # FIX: CHECK THAT THESE COMPUTE SAME VALUES AS _partial_derivative
+    #     # FIX: NEEDS TO BE CHECKED THAT THESE COMPUTE SAME VALUES AS _partial_derivative
     #     # Derivatives for fc interactions:
     #     if PV.FC in self.prediction_terms:
     #         # Get weights for fc interaction term and reshape so that there is one row per control_signal
