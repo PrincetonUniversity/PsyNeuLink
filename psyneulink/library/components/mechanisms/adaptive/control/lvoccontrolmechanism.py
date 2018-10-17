@@ -1060,7 +1060,6 @@ class LVOCControlMechanism(ControlMechanism):
                 # FIX: THIS SHOULD BE control_signal.cost_function(c)
                 computed_terms[PV.COST] = -np.exp(c)
 
-
             # Update actual prediction_vector
             return computed_terms
 
@@ -1139,9 +1138,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         return lvoc
 
-        # return np.sum(v*w)
-
-
     # TEST PRINT:
     def test_print(self, pv):
         terms = self.prediction_terms
@@ -1166,7 +1162,8 @@ class LVOCControlMechanism(ControlMechanism):
             print('cst: ', vector[idx.cst])
         print('control_signal_values: ', vector[idx.c])
 
-# OLD
+
+# OLD ******************************************************************************************************************
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
