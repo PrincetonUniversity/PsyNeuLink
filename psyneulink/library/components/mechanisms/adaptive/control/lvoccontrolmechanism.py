@@ -1086,7 +1086,6 @@ class LVOCControlMechanism(ControlMechanism):
         # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
         self.prediction_vector.control_signal_change = [c.intensity_change for c in control_signals]
 
-
         iteration=0
         while convergence_metric > self.convergence_threshold:
 
