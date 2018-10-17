@@ -1025,11 +1025,12 @@ class LVOCControlMechanism(ControlMechanism):
                     self.vector[getattr(idx, term.value)] = computed_terms[term].reshape(-1)
 
         def compute_terms(self, control_signal_values):
+            '''Calculate and update interaction terms in vector.
+            '''
 
             terms = self.terms
             num_f = self.num_f
             num_c = self.num_c
-            # IS THIS CORRECT:
             f = self.f
             c = control_signal_values
 
@@ -1052,7 +1053,6 @@ class LVOCControlMechanism(ControlMechanism):
                 # FIX: THIS SHOULD BE control_signal.cost_function(c)
                 computed_terms[PV.COST] = -np.exp(c)
 
-            # Update actual prediction_vector
             return computed_terms
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
@@ -1101,7 +1101,9 @@ class LVOCControlMechanism(ControlMechanism):
 
 
     def compute_lvoc_from_control_signals(self, control_signal_values):
-        '''This is the function over which autograd differentiates'''
+        '''Update interaction terms and then multiply by prediction_weights
+        This is the function (including its call to PredictionVector.compute_terms) over which autograd differentiates.
+        '''
 
         idx = self.prediction_vector.idx
         terms = self.prediction_terms
