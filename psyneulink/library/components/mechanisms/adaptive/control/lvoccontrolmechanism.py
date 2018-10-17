@@ -1056,7 +1056,7 @@ class LVOCControlMechanism(ControlMechanism):
             # Update actual prediction_vector
             return computed_terms
 
-    def autograd_ascent(self, control_signals, prediction_vector, prediction_weights):
+    def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
 
         convergence_metric = self.convergence_threshold + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
