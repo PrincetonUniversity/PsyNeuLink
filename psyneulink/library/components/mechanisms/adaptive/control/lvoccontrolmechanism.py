@@ -762,6 +762,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         self.cost_functions = [c.intensity_cost_function for c in self.control_signals]
 
+        # Use compute_lvoc_from_control_signals() to compute gradients of prediction_vector w.r.t. control_signals
         self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
@@ -1100,6 +1101,7 @@ class LVOCControlMechanism(ControlMechanism):
 
 
     def compute_lvoc_from_control_signals(self, control_signal_values):
+        '''This is the function over which autograd differentiates'''
 
         idx = self.prediction_vector.idx
         terms = self.prediction_terms
