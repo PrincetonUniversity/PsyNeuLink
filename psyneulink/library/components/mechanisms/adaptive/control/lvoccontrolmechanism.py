@@ -316,6 +316,8 @@ class PV(Enum):
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
     '''
+
+    # FIX: MAKE THIS NUMERICAL ENUM AND THEN CHANGE compute_terms TO USE AS INDICES INTO LIST
     F = 'f'
     C = 'c'
     FF = 'ff'
@@ -760,6 +762,9 @@ class LVOCControlMechanism(ControlMechanism):
                                 format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
         self.cost_functions = [c.intensity_cost_function for c in self.control_signals]
 
+        self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
+
+
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -837,10 +842,12 @@ class LVOCControlMechanism(ControlMechanism):
         else:
             control_signal_values = [c.value for c in self.control_signals]
             control_signal_costs = [0 if c.cost is None else c.cost for c in self.control_signals]
-            self.prediction_vector._update(self.feature_values,
-                                           control_signal_values,
-                                           control_signal_costs,
-                                           self.prediction_terms)
+            # self.prediction_vector._update(self.feature_values,
+            #                                control_signal_values,
+            #                                control_signal_costs,
+            #                                self.prediction_terms)
+            self.prediction_vector.update_vector(self.feature_values,
+                                                 control_signal_values)
 
             self.prediction_buffer.append(self.prediction_vector.vector)
             self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx.cst])
@@ -895,6 +902,9 @@ class LVOCControlMechanism(ControlMechanism):
                 spec_type = {'FF':'feature_predictors', 'CC':'control_signals'}
                 raise LVOCError("Specification of {} for {} arg of {} requires at least two {} be specified".
                                 format('PV.'+terms, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+
+            self.terms = terms
+
 
             # MAIN EFFECT TERMS (unflattened)
 
@@ -1004,71 +1014,159 @@ class LVOCControlMechanism(ControlMechanism):
 
             self.vector = np.zeros(i)
 
-        def _update(self, feature_values, control_signal_values, control_signal_costs, terms):
+        def update_vector(self, feature_values, control_signal_values):
 
-            # Populate fields (subvectors) of prediction_vector
-
+            terms = self.terms
             idx = self.idx
             self.f = np.array(feature_values)
-            self.c = np.array(control_signal_values)
 
-            # Compute terms that are used (preserving their structure):
-            if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-                self.ff = np.array(tensor_power(self.f, range(2,self.num_f+1)))
-            if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-                self.cc = np.array(tensor_power(self.c, range(2,self.num_c+1)))
-            if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
-                self.fc= np.tensordot(self.f, self.c,axes=0)
-            if any(term in terms for term in [PV.FFC, PV.FFCC]):
-                self.ffc = np.tensordot(self.ff,self.c,axes=0)
-            if any(term in terms for term in [PV.FCC, PV.FFCC]):
-                self.fcc = np.tensordot(self.f,self.cc,axes=0)
-            if PV.FFCC in terms:
-                self.ffcc = np.tensordot(self.ff,self.cc,axes=0)
+            computed_terms = self.compute_terms(control_signal_values)
 
             # Assign specified terms to flattened vector
             if PV.F in terms:
-                self.vector[idx.f] = self.f.reshape(-1)
+                self.vector[idx.f] = np.array(feature_values).reshape(-1)
             if PV.C in terms:
-                self.vector[idx.c] = self.c.reshape(-1)
-            if PV.FF in terms:
-                self.vector[idx.ff] = self.ff.reshape(-1)
-            if PV.CC in terms:
-                self.vector[idx.cc] = self.cc.reshape(-1)
-            if PV.FC in terms:
-                self.vector[idx.fc] = self.fc.reshape(-1)
-            if PV.FFC in terms:
-                self.vector[idx.ffc] = self.ffc.reshape(-1)
-            if PV.FCC in terms:
-                self.vector[idx.fcc] = self.fcc.reshape(-1)
+                self.vector[idx.c] = np.array(control_signal_values).reshape(-1)
+
+            for term in terms:
+                if term in computed_terms:
+                    self.vector[getattr(idx, term.value)] = computed_terms[term].reshape(-1)
+
+        def compute_terms(self, control_signal_values):
+
+            terms = self.terms
+            num_f = self.num_f
+            num_c = self.num_c
+            # IS THIS CORRECT:
+            f = self.f
+            c = control_signal_values
+
+            # FIX: WHEN PV IS CHANGED TO NUMERICAL ENUM,CHANGE THIS TO USE AS INDICES INTO LIST
+            # Compute terms that are used
+            computed_terms = {}
+            if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
+                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, num_f+1)))
+            if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
+                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, num_c+1)))
+            if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
+                computed_terms[PV.FC] = np.tensordot(f, c, axes=0)
+            if any(term in terms for term in [PV.FFC, PV.FFCC]):
+                computed_terms[PV.FFC] = np.tensordot(ff, c, axes=0)
+            if any(term in terms for term in [PV.FCC, PV.FFCC]):
+                computed_terms[PV.FCC] = np.tensordot(f,cc,axes=0)
             if PV.FFCC in terms:
-                self.vector[idx.ffcc] = self.ffcc.reshape(-1)
+                computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
-                self.vector[idx.cst] = np.array(control_signal_costs).reshape(-1) * -1
-
-        def _partial_derivative(self, term_label, pw, ctl_idx, ctl_val):
-            '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
-            with respect to control_signal i'''
+                # FIX: THIS SHOULD BE control_signal.cost_function(c)
+                computed_terms[PV.COST] = -np.exp(c)
 
 
-            # Get label and value of control signal with respect to which the derivative is being taken
-            ctl_label = self.labels.c[ctl_idx]
+            # Update actual prediction_vector
+            return computed_terms
 
-            # Get labels and values of terms, and weights
-            t_labels = getattr(self.labels, term_label.value)
-            terms = getattr(self, term_label.value)
-            wts_idx = getattr(self.idx, term_label.value)
-            # Reshape weights to match termss
-            weights = pw[wts_idx].reshape(np.array(terms).shape)
+    def autograd_ascent(self, control_signals, prediction_vector, prediction_weights):
 
-            gradient = 0
+        convergence_metric = self.convergence_threshold + EPSILON
+        previous_lvoc = np.finfo(np.longdouble).max
+        num_c = len(self.control_signals)
+        prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
+        control_signal_values = np.array([c.value for c in control_signals])
 
-            # Compute derivative for terms that contain control signal
-            for t_label, term, wts in zip(t_labels,terms,weights):
-                if ctl_label in t_label:
-                    gradient += np.sum((term/ctl_val)*wts)
+        iteration=0
+        while convergence_metric > self.convergence_threshold:
 
-            return gradient
+            current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
+            gradients = self.grad_of_lvoc_wrt_control_signals(control_signal_values)
+            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients)).tolist()
+
+            if self.convergence_criterion == LVOC:
+                convergence_metric = np.abs(current_lvoc - previous_lvoc)
+            else:
+                convergence_metric = np.max(np.abs(np.array(control_signal_values) -
+                                                   np.array(prev_control_signal_values)))
+
+            self.prediction_vector.update_vector(self.feature_values, control_signal_values)
+
+            # TEST PRINT:
+            print(
+                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
+                    '\nprevious_lvoc: ', previous_lvoc,
+                    '\ncurrent_lvoc: ',current_lvoc ,
+                    '\nconvergence_metric: ',convergence_metric,
+            )
+            self.test_print(prediction_vector)
+            # TEST PRINT END
+
+            iteration+=1
+            if iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            self.lvoc = current_lvoc
+            previous_lvoc = current_lvoc
+            prev_control_signal_values = control_signal_values
+
+        return control_signal_values
+
+
+    def compute_lvoc_from_control_signals(self, control_signal_values):
+
+        idx = self.prediction_vector.idx
+        terms = self.prediction_terms
+        v = self.prediction_vector.compute_terms(control_signal_values)
+        w = self.prediction_weights
+
+        lvoc = 0
+        if PV.F in terms:
+            # lvoc += np.sum(np.array(v[PV.F]).reshape(-1) * self.prediction_weights[idx.f])
+            lvoc += np.sum(np.array(self.feature_values.reshape(-1) * self.prediction_weights[idx.f]))
+        if PV.C in terms:
+            lvoc += np.sum(np.array(control_signal_values).reshape(-1) * self.prediction_weights[idx.c])
+        if PV.FF in terms:
+            lvoc += np.sum(v[PV.FF].reshape(-1) * self.prediction_weights[idx.ff])
+        if PV.CC in terms:
+            lvoc += np.sum(v[PV.CC].reshape(-1) * self.prediction_weights[idx.cc])
+        if PV.FC in terms:
+            lvoc += np.sum(v[PV.FC].reshape(-1) * self.prediction_weights[idx.fc])
+        if PV.FFC in terms:
+            lvoc += np.sum(v[PV.FFC].reshape(-1) * self.prediction_weights[idx.ffc])
+        if PV.FCC in terms:
+            lvoc += np.sum(v[PV.FCC].reshape(-1) * self.prediction_weights[idx.fcc])
+        if PV.FFCC in terms:
+            lvoc += np.sum(v[PV.FFCC].reshape(-1) * self.prediction_weights[idx.ffcc])
+        if PV.COST in terms:
+            lvoc += np.sum(v[PV.COST].reshape(-1) * self.prediction_weights[idx.cst])
+
+        return lvoc
+
+        # return np.sum(v*w)
+
+
+    # TEST PRINT:
+    def test_print(self, pv):
+        terms = self.prediction_terms
+        vector = pv.vector
+        idx = pv.idx
+
+        if PV.F in terms:
+            print('feature_values: ', vector[idx.f])
+        if PV.FF in terms:
+            print('ff: ', vector[idx.ff])
+        if PV.CC in terms:
+            print('cc: ', vector[idx.cc])
+        if PV.FC in terms:
+            print('fc: ', vector[idx.fc])
+        if PV.FFC in terms:
+            print('ffc: ', vector[idx.ffc])
+        if PV.FCC in terms:
+            print('fcc: ', vector[idx.fcc])
+        if PV.FFCC in terms:
+            print('ffcc: ', vector[idx.ffcc])
+        if PV.COST in terms:
+            print('cst: ', vector[idx.cst])
+        print('control_signal_values: ', vector[idx.c])
+
+# OLD
 
     def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
@@ -1205,176 +1303,3 @@ class LVOCControlMechanism(ControlMechanism):
             prev_control_signal_values = control_signal_values
 
         return control_signal_values
-
-    def compute_lvoc(self, v, w):
-        return np.sum(v * w)
-
-    def autograd_ascent(self, control_signals, prediction_vector, prediction_weights):
-
-        convergence_metric = self.convergence_threshold + EPSILON
-        previous_lvoc = np.finfo(np.longdouble).max
-        num_c = len(self.control_signals)
-        prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
-        control_signal_values = np.array([c.value for c in control_signals])
-        # FIX: MOVE TO PredictionVector
-        grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
-
-        iteration=0
-        while convergence_metric > self.convergence_threshold:
-
-            # FIX: put in _instantiate_attributes_after_function
-            current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
-            # grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
-
-            gradients = grad_of_lvoc_wrt_control_signals(control_signal_values)
-            # control_signal_values = control_signal_values + self.update_rate * gradients
-            control_signal_values = (np.array(control_signal_values) + self.update_rate * np.array(gradients)).tolist()
-
-            if self.convergence_criterion == LVOC:
-                # Compute convergence metric with updated control signals
-                convergence_metric = np.abs(current_lvoc - previous_lvoc)
-            else:
-                convergence_metric = np.max(np.abs(np.array(control_signal_values) -
-                                                   np.array(prev_control_signal_values)))
-
-            # TEST PRINT:
-            print(
-                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
-                    '\nprevious_lvoc: ', previous_lvoc,
-                    '\ncurrent_lvoc: ',current_lvoc ,
-                    '\nconvergence_metric: ',convergence_metric,
-            )
-            self.test_print(prediction_vector)
-            # TEST PRINT END
-
-            iteration+=1
-            if iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
-
-            self.lvoc = current_lvoc
-            previous_lvoc = current_lvoc
-            prev_control_signal_values = control_signal_values
-
-        return control_signal_values
-
-
-    def compute_lvoc_from_control_signals(self, control_signal_values):
-
-        idx = self.prediction_vector.idx
-        terms = self.prediction_terms
-        v = self._compute_terms(control_signal_values)
-        w = self.prediction_weights
-
-        lvoc = 0
-        i = 0
-        if PV.F in terms:
-            lvoc += np.sum(np.array(v[i]).reshape(-1) * self.prediction_weights[idx.f])
-            i+=1
-        if PV.C in terms:
-            lvoc += np.sum(np.array(control_signal_values).reshape(-1) * self.prediction_weights[idx.c])
-            i+=1
-        if PV.FF in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ff])
-            i+=1
-        if PV.CC in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.cc])
-            i+=1
-        if PV.FC in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.fc])
-            i+=1
-        if PV.FFC in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ffc])
-            i+=1
-        if PV.FCC in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.fcc])
-            i+=1
-        if PV.FFCC in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.ffcc])
-            i+=1
-        if PV.COST in terms:
-            lvoc += np.sum(v[i].reshape(-1) * self.prediction_weights[idx.cst])
-
-        return lvoc
-
-        # return np.sum(v*w)
-
-    def _compute_terms(self, control_signal_values):
-
-        terms = self.prediction_terms
-        num_f = len(self.feature_values)
-        num_c = len(self.control_signals)
-        idx = self.prediction_vector.idx
-
-        # Compute terms that are used
-        f = np.array(self.feature_values)
-        c = control_signal_values
-        if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-            ff = np.array(tensor_power(f, range(2, num_f+1)))
-        if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-            cc = np.array(tensor_power(c, range(2, num_c+1)))
-        if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
-            fc = np.tensordot(f, c, axes=0)
-        if any(term in terms for term in [PV.FFC, PV.FFCC]):
-            ffc = np.tensordot(ff, c, axes=0)
-        if any(term in terms for term in [PV.FCC, PV.FFCC]):
-            fcc = np.tensordot(f,cc,axes=0)
-        if PV.FFCC in terms:
-            ffcc = np.tensordot(ff,cc,axes=0)
-        if PV.COST in terms:
-            cst = -np.exp(c)
-
-        opv = self.prediction_vector.vector
-        # Construct list with computed terms (for use by autograd) and update prediction_vector
-        computed_terms = []
-        if PV.F in terms:
-            computed_terms += [f]
-        if PV.C in terms:
-            computed_terms += [c]
-        if PV.FF in terms:
-            computed_terms += [ff]
-        if PV.CC in terms:
-            computed_terms += [cc]
-        if PV.FC in terms:
-            computed_terms += [fc]
-        if PV.FFC in terms:
-            computed_terms += [ffc]
-        if PV.FCC in terms:
-            computed_terms += [fcc]
-        if PV.FFCC in terms:
-            computed_terms += [ffcc]
-        if PV.COST in terms:
-            computed_terms += [cst]
-            if isinstance(cst, (np.ndarray, list)):
-                self.prediction_vector.vector[idx.cst] = np.array(cst).reshape(-1)
-            else:
-                self.prediction_vector.vector[idx.cst] = np.array(cst._value).reshape(-1)
-
-        # Update actual prediction_vector
-        return computed_terms
-
-
-
-    # TEST PRINT:
-    def test_print(self, pv):
-        terms = self.prediction_terms
-        vector = pv.vector
-        idx = pv.idx
-
-        if PV.F in terms:
-            print('feature_values: ', vector[idx.f])
-        if PV.FF in terms:
-            print('ff: ', vector[idx.ff])
-        if PV.CC in terms:
-            print('cc: ', vector[idx.cc])
-        if PV.FC in terms:
-            print('fc: ', vector[idx.fc])
-        if PV.FFC in terms:
-            print('ffc: ', vector[idx.ffc])
-        if PV.FCC in terms:
-            print('fcc: ', vector[idx.fcc])
-        if PV.FFCC in terms:
-            print('ffcc: ', vector[idx.ffcc])
-        if PV.COST in terms:
-            print('cst: ', vector[idx.cst])
-        print('control_signal_values: ', vector[idx.c])
