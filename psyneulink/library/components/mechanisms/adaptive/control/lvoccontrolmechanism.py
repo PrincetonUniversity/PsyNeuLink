@@ -1012,14 +1012,15 @@ class LVOCControlMechanism(ControlMechanism):
             terms = self.terms
             idx = self.idx
             self.f = np.array(feature_values)
+            self.c = np.array(control_signal_values)
 
-            computed_terms = self.compute_terms(control_signal_values)
+            computed_terms = self.compute_terms(self.c)
 
             # Assign specified terms to flattened vector
             if PV.F in terms:
                 self.vector[idx.f] = np.array(feature_values).reshape(-1)
             if PV.C in terms:
-                self.vector[idx.c] = np.array(control_signal_values).reshape(-1)
+                self.vector[idx.c] = np.array(self.c).reshape(-1)
 
             for term in terms:
                 if term in computed_terms:
@@ -1085,7 +1086,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
             gradients = self.grad_of_lvoc_wrt_control_signals(control_signal_values)
-            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients)).tolist()
+            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients))
 
             if self.convergence_criterion == LVOC:
                 convergence_metric = np.abs(current_lvoc - previous_lvoc)
