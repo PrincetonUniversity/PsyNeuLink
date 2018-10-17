@@ -987,7 +987,7 @@ class ControlSignal(ModulatorySignal):
         try:
             self.intensity_change = intensity-self.last_intensity
         except AttributeError:
-            self.intensity_change = 0
+            self.intensity_change = [0]
 
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
