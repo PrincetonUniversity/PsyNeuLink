@@ -841,7 +841,7 @@ class Controller(ControlMechanism):
                        predicted_input=None,
                        call_after_simulation=None,
                        runtime_params=None,
-                       context=None, ):
+                       context=None):
 
         if allocation_policy:
             self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
@@ -849,6 +849,7 @@ class Controller(ControlMechanism):
         execution_id = self.composition._get_unique_id()
 
         allocation_policy_outcomes = []
+        other_simulation_data = []
         for i in range(num_trials):
             inputs = {}
             for node in predicted_input:
@@ -876,23 +877,30 @@ class Controller(ControlMechanism):
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
             allocation_policy_outcomes.append(monitored_states)
-        return allocation_policy_outcomes
+            other_simulation_data.append(other_simulation_data)
+
+        return allocation_policy_outcomes, other_simulation_data
+
     def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
 
         predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
 
         outcome_list = []
-        control_signal_list = []
 
         for allocation_policy in allocation_policies:
-            allocation_policy_outcomes = self.run_simulation(allocation_policy)
-            outcome_list.append(allocation_policy_outcomes)
+            allocation_policy_outcomes, simulation_data = self.run_simulation(allocation_policy=allocation_policy,
+                                                                              num_trials=num_trials,
+                                                                              reinitialize_values=reinitialize_values,
+                                                                              predicted_input=predicted_input,
+                                                                              call_after_simulation=call_after_simulation,
+                                                                              runtime_params=runtime_params,
+                                                                              context=context)
+
+            outcome_list.append((allocation_policy, allocation_policy_outcomes, simulation_data))
 
         self.composition.after_simulations(reinitialize_values, node_values)
-        simulation_data = {"outcomes": outcome_list,
-                           }
-                           # "data": call_after_simulation_data}
-        return simulation_data
+
+        return outcome_list
 
 
     @tc.typecheck
