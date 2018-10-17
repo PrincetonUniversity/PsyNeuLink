@@ -8,7 +8,7 @@ import pytest
 
 from itertools import product
 
-from psyneulink.core.components.functions.function import Linear, Logistic, ModulationParam, SimpleIntegrator, UserDefinedFunction
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, Linear, Logistic, ModulationParam, SimpleIntegrator, UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -3283,6 +3283,16 @@ class TestSystemComposition:
 #
 
 class TestNestedCompositions:
+    def test_transfer_mechanism_composition(self):
+        A = ProcessingMechanism(name="A",
+                                function=Logistic)
+        B = ProcessingMechanism(name="B",
+                                function=AdaptiveIntegrator)
+        comp1 = Composition(name="comp1")
+
+        comp1.add_linear_processing_pathway([A, B])
+
+    
     def test_combine_two_disjunct_trees(self):
         # Goal:
 
