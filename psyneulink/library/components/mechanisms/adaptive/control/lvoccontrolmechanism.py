@@ -912,6 +912,8 @@ class LVOCControlMechanism(ControlMechanism):
             self.num_c = len(self.c)
             self.num_c_elems = len(self.c.reshape(-1))
             labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
+            # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
+            self.control_signal_change = np.zeros_like(self.c)
 
             # Costs
             self.num_cst = self.num_c
@@ -1052,8 +1054,9 @@ class LVOCControlMechanism(ControlMechanism):
             if PV.FFCC in terms:
                 computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
-                # FIX: THIS SHOULD BE control_signal.cost_function(c)
-                computed_terms[PV.COST] = -np.exp(c)
+                # FIX: THIS SHOULD USE control_signal.cost_functions(c)
+                computed_terms[PV.COST] = -(np.exp(c))
+                # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
 
             return computed_terms
 
@@ -1080,6 +1083,9 @@ class LVOCControlMechanism(ControlMechanism):
         num_c = len(self.control_signals)
         prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
         control_signal_values = np.array([c.value for c in control_signals])
+        # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
+        self.prediction_vector.control_signal_change = [c.intensity_change for c in control_signals]
+
 
         iteration=0
         while convergence_metric > self.convergence_threshold:
