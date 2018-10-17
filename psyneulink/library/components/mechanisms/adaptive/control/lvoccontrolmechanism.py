@@ -796,14 +796,9 @@ class LVOCControlMechanism(ControlMechanism):
                                                                          )
 
         # Compute allocation_policy using gradient_ascent
-        allocation_policy = self.autograd_ascent(self.control_signals,
+        allocation_policy = self.gradient_ascent(self.control_signals,
                                                  self.prediction_vector,
                                                  self.prediction_weights)
-
-        # allocation_policy = self.gradient_ascent(self.control_signals,
-        #                                          self.prediction_vector,
-        #                                          self.prediction_weights)
-
 
         # return allocation_policy.reshape((len(allocation_policy),1))
         return allocation_policy
@@ -1164,162 +1159,163 @@ class LVOCControlMechanism(ControlMechanism):
 
 
 # OLD ******************************************************************************************************************
+# Manual computation of derivatives
 
-    def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
-        '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
-        <LVOCControlMechanism_EVC>`.
-
-        Iterate over prediction_vector; for each iteration: \n
-        - compute gradients based on current control_signal values and their costs (in prediction_vector);
-        - compute new control_signal values based on gradients;
-        - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
-        - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
-
-        Continue to iterate until difference between new and old EVC is less than `convergence_threshold
-        <LearnAllocationPolicy.convergence_threshold>` or number of iterations exceeds `max_iterations
-        <LearnAllocationPolicy.max_iterations>`.
-
-        Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
-        <LVOCControlMechanism.allocation_policy>`).
-        '''
-
-        pv = prediction_vector.vector
-        idx = prediction_vector.idx
-        # labels = prediction_vector.labels
-        num_c = prediction_vector.num_c
-        num_cst = prediction_vector.num_cst
-        # num_intrxn = prediction_vector.num_interactions
-
-        convergence_metric = self.convergence_threshold + EPSILON
-        previous_lvoc = np.finfo(np.longdouble).max
-        prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
-
-        feature_predictors = self.feature_values.reshape(-1)
-
-        control_signal_values = [np.array(c.value) for c in self.control_signals]
-
-        costs = [np.array(c.cost) for c in self.control_signals]
-        if PV.COST in self.prediction_terms:
-            cost_weights = prediction_weights[idx.cst]
-
-        # COMPUTE DERIVATIVES THAT ARE CONSTANTS
-        #    Do it here so don't have to do it in each iteration of the while loop
-
-        gradient_constants = np.zeros(num_c)
-
-        # Derivative for control_signals
-        if PV.C in self.prediction_terms:
-            # d(c*wt)/(dc) = wt
-            gradient_constants += np.array(prediction_weights[idx.c])
-
-        # FIX: CHECK THAT THESE COMPUTE SAME VALUES AS _partial_derivative
-        # Derivatives for fc interactions:
-        if PV.FC in self.prediction_terms:
-            # Get weights for fc interaction term and reshape so that there is one row per control_signal
-            #    containing the terms for the interaction of that control_signal with each of the feature_predictors
-            fc_weights = prediction_weights[idx.fc].reshape(num_c, prediction_vector.num_f_elems)
-            fc_weights_x_features = fc_weights * feature_predictors
-            for i in range(num_c):
-                gradient_constants[i] += np.sum(fc_weights_x_features[i])
-
-        # Derivatives for ffc interactions:
-        if PV.FFC in self.prediction_terms:
-            # Get weights for ffc interaction term and reshape so that there is one row per control_signal
-            #    containing the terms for the interaction of that control_signal with each of the feature interactions
-            ffc_weights = prediction_weights[idx.ffc].reshape(num_c, prediction_vector.num_ff_elems)
-            ffc_weights_x_ff = ffc_weights * prediction_vector.ff.reshape(-1)
-            for i in range(num_c):
-                gradient_constants[i] += np.sum(ffc_weights_x_ff[i])
-
-        # TEST PRINT:
-        print(
-                '\nprediction_weights: ', prediction_weights,
-              )
-        self.test_print(prediction_vector)
-        # TEST PRINT END:
-
-        # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
-        j=0
-        while convergence_metric > self.convergence_threshold:
-            # initialize gradient arrray (one gradient for each control signal)
-            gradient = np.copy(gradient_constants)
-
-            for i, control_signal_value in enumerate(control_signal_values):
-
-                # Derivative of cc interaction term with respect to current control_signal_value
-                if PV.CC in self.prediction_terms:
-                    gradient[i] += prediction_vector._partial_derivative(PV.CC, prediction_weights, i,
-                                                                         control_signal_value)
-
-                # Derivative of ffcc interaction term with respect to current control_signal_value
-                if PV.FFCC in self.prediction_terms:
-                    gradient[i] += prediction_vector._partial_derivative(PV.FFCC, prediction_weights, i,
-                                                                         control_signal_value)
-
-                # Derivative for costs (since costs depend on control_signals)
-                if PV.COST in self.prediction_terms:
-                    cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
-                    gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
-
-                # Update control_signal_value with gradient
-                control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
-
-                # Update cost based on new control_signal_value
-                costs[i] = control_signals[i].intensity_cost_function(control_signal_value)
-
-            # Only updatre terms with control_signal in them
-            terms = [term for term in self.prediction_terms if 'c' in term.value]
-            prediction_vector._update(self.feature_values, control_signal_values, costs, terms)
-
-            # Compute current LVOC using current feature_predictors, weights and new control signals
-            current_lvoc = self.compute_lvoc(pv, prediction_weights)
-
-            if self.convergence_criterion == LVOC:
-                # Compute convergence metric with updated control signals
-                convergence_metric = np.abs(current_lvoc - previous_lvoc)
-            else:
-                convergence_metric = np.max(np.abs(np.array(control_signal_values) -
-                                                   np.array(prev_control_signal_values)))
-
-            # TEST PRINT:
-            print(
-                    '\niteration {}-{}'.format(self.current_execution_count-1, j),
-                    '\nprevious_lvoc: ', previous_lvoc,
-                    '\ncurrent_lvoc: ',current_lvoc ,
-                    '\nconvergence_metric: ',convergence_metric,
-            )
-            self.test_print(prediction_vector)
-            # TEST PRINT END
-
-            j+=1
-            if j > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
-
-            previous_lvoc = current_lvoc
-            prev_control_signal_values = control_signal_values
-
-        return control_signal_values
-
-    def _partial_derivative(self, term_label, pw, ctl_idx, ctl_val):
-        '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
-        with respect to control_signal i'''
-
-        # Get label and value of control signal with respect to which the derivative is being taken
-        ctl_label = self.prediction_vector.labels.c[ctl_idx]
-
-        # Get labels and values of terms, and weights
-        t_labels = getattr(self.prediction_vector.labels, term_label.value)
-        terms = getattr(self.prediction_vector, term_label.value)
-        wts_idx = getattr(self.prediction_vector.idx, term_label.value)
-        # Reshape weights to match termss
-        weights = pw[wts_idx].reshape(np.array(terms).shape)
-
-        gradient = 0
-
-        # Compute derivative for terms that contain control signal
-        for t_label, term, wts in zip(t_labels,terms,weights):
-            if ctl_label in t_label:
-                gradient += np.sum((term/ctl_val)*wts)
-
-        return gradient
+    # def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
+    #     '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
+    #     <LVOCControlMechanism_EVC>`.
+    #
+    #     Iterate over prediction_vector; for each iteration: \n
+    #     - compute gradients based on current control_signal values and their costs (in prediction_vector);
+    #     - compute new control_signal values based on gradients;
+    #     - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
+    #     - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
+    #
+    #     Continue to iterate until difference between new and old EVC is less than `convergence_threshold
+    #     <LearnAllocationPolicy.convergence_threshold>` or number of iterations exceeds `max_iterations
+    #     <LearnAllocationPolicy.max_iterations>`.
+    #
+    #     Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
+    #     <LVOCControlMechanism.allocation_policy>`).
+    #     '''
+    #
+    #     pv = prediction_vector.vector
+    #     idx = prediction_vector.idx
+    #     # labels = prediction_vector.labels
+    #     num_c = prediction_vector.num_c
+    #     num_cst = prediction_vector.num_cst
+    #     # num_intrxn = prediction_vector.num_interactions
+    #
+    #     convergence_metric = self.convergence_threshold + EPSILON
+    #     previous_lvoc = np.finfo(np.longdouble).max
+    #     prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
+    #
+    #     feature_predictors = self.feature_values.reshape(-1)
+    #
+    #     control_signal_values = [np.array(c.value) for c in self.control_signals]
+    #
+    #     costs = [np.array(c.cost) for c in self.control_signals]
+    #     if PV.COST in self.prediction_terms:
+    #         cost_weights = prediction_weights[idx.cst]
+    #
+    #     # COMPUTE DERIVATIVES THAT ARE CONSTANTS
+    #     #    Do it here so don't have to do it in each iteration of the while loop
+    #
+    #     gradient_constants = np.zeros(num_c)
+    #
+    #     # Derivative for control_signals
+    #     if PV.C in self.prediction_terms:
+    #         # d(c*wt)/(dc) = wt
+    #         gradient_constants += np.array(prediction_weights[idx.c])
+    #
+    #     # FIX: CHECK THAT THESE COMPUTE SAME VALUES AS _partial_derivative
+    #     # Derivatives for fc interactions:
+    #     if PV.FC in self.prediction_terms:
+    #         # Get weights for fc interaction term and reshape so that there is one row per control_signal
+    #         #    containing the terms for the interaction of that control_signal with each of the feature_predictors
+    #         fc_weights = prediction_weights[idx.fc].reshape(num_c, prediction_vector.num_f_elems)
+    #         fc_weights_x_features = fc_weights * feature_predictors
+    #         for i in range(num_c):
+    #             gradient_constants[i] += np.sum(fc_weights_x_features[i])
+    #
+    #     # Derivatives for ffc interactions:
+    #     if PV.FFC in self.prediction_terms:
+    #         # Get weights for ffc interaction term and reshape so that there is one row per control_signal
+    #         #    containing the terms for the interaction of that control_signal with each of the feature interactions
+    #         ffc_weights = prediction_weights[idx.ffc].reshape(num_c, prediction_vector.num_ff_elems)
+    #         ffc_weights_x_ff = ffc_weights * prediction_vector.ff.reshape(-1)
+    #         for i in range(num_c):
+    #             gradient_constants[i] += np.sum(ffc_weights_x_ff[i])
+    #
+    #     # TEST PRINT:
+    #     print(
+    #             '\nprediction_weights: ', prediction_weights,
+    #           )
+    #     self.test_print(prediction_vector)
+    #     # TEST PRINT END:
+    #
+    #     # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
+    #     j=0
+    #     while convergence_metric > self.convergence_threshold:
+    #         # initialize gradient arrray (one gradient for each control signal)
+    #         gradient = np.copy(gradient_constants)
+    #
+    #         for i, control_signal_value in enumerate(control_signal_values):
+    #
+    #             # Derivative of cc interaction term with respect to current control_signal_value
+    #             if PV.CC in self.prediction_terms:
+    #                 gradient[i] += prediction_vector._partial_derivative(PV.CC, prediction_weights, i,
+    #                                                                      control_signal_value)
+    #
+    #             # Derivative of ffcc interaction term with respect to current control_signal_value
+    #             if PV.FFCC in self.prediction_terms:
+    #                 gradient[i] += prediction_vector._partial_derivative(PV.FFCC, prediction_weights, i,
+    #                                                                      control_signal_value)
+    #
+    #             # Derivative for costs (since costs depend on control_signals)
+    #             if PV.COST in self.prediction_terms:
+    #                 cost_function_derivative = control_signals[i].intensity_cost_function.__self__.derivative
+    #                 gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
+    #
+    #             # Update control_signal_value with gradient
+    #             control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
+    #
+    #             # Update cost based on new control_signal_value
+    #             costs[i] = control_signals[i].intensity_cost_function(control_signal_value)
+    #
+    #         # Only updatre terms with control_signal in them
+    #         terms = [term for term in self.prediction_terms if 'c' in term.value]
+    #         prediction_vector._update(self.feature_values, control_signal_values, costs, terms)
+    #
+    #         # Compute current LVOC using current feature_predictors, weights and new control signals
+    #         current_lvoc = self.compute_lvoc(pv, prediction_weights)
+    #
+    #         if self.convergence_criterion == LVOC:
+    #             # Compute convergence metric with updated control signals
+    #             convergence_metric = np.abs(current_lvoc - previous_lvoc)
+    #         else:
+    #             convergence_metric = np.max(np.abs(np.array(control_signal_values) -
+    #                                                np.array(prev_control_signal_values)))
+    #
+    #         # TEST PRINT:
+    #         print(
+    #                 '\niteration {}-{}'.format(self.current_execution_count-1, j),
+    #                 '\nprevious_lvoc: ', previous_lvoc,
+    #                 '\ncurrent_lvoc: ',current_lvoc ,
+    #                 '\nconvergence_metric: ',convergence_metric,
+    #         )
+    #         self.test_print(prediction_vector)
+    #         # TEST PRINT END
+    #
+    #         j+=1
+    #         if j > self.max_iterations:
+    #             warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+    #             break
+    #
+    #         previous_lvoc = current_lvoc
+    #         prev_control_signal_values = control_signal_values
+    #
+    #     return control_signal_values
+    #
+    # def _partial_derivative(self, term_label, pw, ctl_idx, ctl_val):
+    #     '''Compute derivative of interaction (term) for prediction vector (pv) and prediction_weights (pw)
+    #     with respect to control_signal i'''
+    #
+    #     # Get label and value of control signal with respect to which the derivative is being taken
+    #     ctl_label = self.prediction_vector.labels.c[ctl_idx]
+    #
+    #     # Get labels and values of terms, and weights
+    #     t_labels = getattr(self.prediction_vector.labels, term_label.value)
+    #     terms = getattr(self.prediction_vector, term_label.value)
+    #     wts_idx = getattr(self.prediction_vector.idx, term_label.value)
+    #     # Reshape weights to match termss
+    #     weights = pw[wts_idx].reshape(np.array(terms).shape)
+    #
+    #     gradient = 0
+    #
+    #     # Compute derivative for terms that contain control signal
+    #     for t_label, term, wts in zip(t_labels,terms,weights):
+    #         if ctl_label in t_label:
+    #             gradient += np.sum((term/ctl_val)*wts)
+    #
+    #     return gradient
