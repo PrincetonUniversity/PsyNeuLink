@@ -798,7 +798,6 @@ class LVOCControlMechanism(ControlMechanism):
                                                  self.prediction_vector,
                                                  self.prediction_weights)
 
-        # return allocation_policy.reshape((len(allocation_policy),1))
         return allocation_policy
 
     def _parse_function_variable(self, variable, context=None):
