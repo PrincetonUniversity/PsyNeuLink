@@ -1512,9 +1512,31 @@ class Component(object, metaclass=ComponentsMeta):
 
         self.context.initialization_status = ContextFlags.INITIALIZING
 
-        defaults = self.ClassDefaults.values().copy()
+        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+
+        # assign defaults based on pass in params and class defaults
+        defaults = self.ClassDefaults.values(show_all=True).copy()
+        try:
+            function_params = param_defaults[FUNCTION_PARAMS]
+        except KeyError:
+            function_params = None
+
         if param_defaults is not None:
-            defaults.update(param_defaults)
+            # Exclude any function_params from the items to set on this Component
+            # because these should just be pointers to the parameters of the same
+            # name on this Component's function_object
+            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
+            d = {
+                k: v for (k, v) in param_defaults.items()
+                if (
+                    k not in defaults
+                    or (
+                        (function_params is None or k not in function_params)
+                        and v is not None
+                    )
+                )
+            }
+            defaults.update(d)
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
@@ -1523,7 +1545,6 @@ class Component(object, metaclass=ComponentsMeta):
             default_variable = v
             defaults[VARIABLE] = default_variable
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, **defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
@@ -1612,10 +1633,6 @@ class Component(object, metaclass=ComponentsMeta):
                 except AttributeError:
                     # assume function is a method on self
                     pass
-        try:
-            function_params = param_defaults[FUNCTION_PARAMS]
-        except KeyError:
-            function_params = None
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
