@@ -13385,7 +13385,7 @@ class ValueFunction2(EVCAuxiliaryFunction):
 
         outcomes = simulation_data["outcomes"]
         costs = simulation_data["data"]["costs"]
-        print(costs)
+
         if isinstance(cost_function, UserDefinedFunction):
             cost = cost_function._execute(costs=costs)
         else:

@@ -834,7 +834,49 @@ class Controller(ControlMechanism):
         return control_signal
 
     costs = []
+    def run_simulation(self,
+                       allocation_policy=None,
+                       num_trials=1,
+                       reinitialize_values=None,
+                       predicted_input=None,
+                       call_after_simulation=None,
+                       runtime_params=None,
+                       context=None, ):
 
+        if allocation_policy:
+            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+
+        execution_id = self.composition._get_unique_id()
+
+        allocation_policy_outcomes = []
+        for i in range(num_trials):
+            inputs = {}
+            for node in predicted_input:
+                inputs[node] = predicted_input[node][i]
+
+            self.composition.context.execution_phase = ContextFlags.SIMULATION
+            for output_state in self.output_states:
+                for proj in output_state.efferents:
+                    proj.context.execution_phase = ContextFlags.PROCESSING
+
+            self.composition.run(inputs=inputs,
+                                 reinitialize_values=reinitialize_values,
+                                 execution_id=execution_id,
+                                 runtime_params=runtime_params,
+                                 context=context)
+
+            self.composition.simulation_results.append(self.composition.output_CIM.output_values)
+
+            call_after_simulation_data = None
+
+            if call_after_simulation:
+                call_after_simulation_data = call_after_simulation()
+
+            monitored_states = self.objective_mechanism.output_values
+
+            self.composition.context.execution_phase = ContextFlags.PROCESSING
+            allocation_policy_outcomes.append(monitored_states)
+        return allocation_policy_outcomes
     def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
 
         predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
@@ -843,42 +885,13 @@ class Controller(ControlMechanism):
         control_signal_list = []
 
         for allocation_policy in allocation_policies:
-            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-            execution_id = self.composition._get_unique_id()
-
-            allocation_policy_outcomes = []
-            for i in range(num_trials):
-                inputs = {}
-                for node in predicted_input:
-                    inputs[node] = predicted_input[node][i]
-
-                self.composition.context.execution_phase = ContextFlags.SIMULATION
-                for output_state in self.output_states:
-                    for proj in output_state.efferents:
-                        proj.context.execution_phase = ContextFlags.PROCESSING
-
-                self.composition.run(inputs=inputs,
-                                     reinitialize_values=reinitialize_values,
-                                     execution_id=execution_id,
-                                     runtime_params=runtime_params,
-                                     context=context)
-
-                self.composition.simulation_results.append(self.composition.output_CIM.output_values)
-
-                call_after_simulation_data = None
-
-                if call_after_simulation:
-                    call_after_simulation_data = call_after_simulation()
-
-                monitored_states = self.objective_mechanism.output_values
-
-                self.composition.context.execution_phase = ContextFlags.PROCESSING
-                allocation_policy_outcomes.append(monitored_states)
+            allocation_policy_outcomes = self.run_simulation(allocation_policy)
             outcome_list.append(allocation_policy_outcomes)
 
         self.composition.after_simulations(reinitialize_values, node_values)
         simulation_data = {"outcomes": outcome_list,
-                           "data": call_after_simulation_data}
+                           }
+                           # "data": call_after_simulation_data}
         return simulation_data
 
 
