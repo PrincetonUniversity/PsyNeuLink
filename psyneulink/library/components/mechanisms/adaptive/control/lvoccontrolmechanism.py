@@ -764,8 +764,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
-
-
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
 
