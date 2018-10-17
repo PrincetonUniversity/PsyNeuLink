@@ -275,7 +275,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset, tensor_power
 
 __all__ = [
-    'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
 LVOC = 'LVOC'
@@ -1213,10 +1213,10 @@ class LVOCControlMechanism(ControlMechanism):
 
         convergence_metric = self.convergence_threshold + EPSILON
         previous_lvoc = np.finfo(np.longdouble).max
-        num_f = len(self.feature_values)
         num_c = len(self.control_signals)
         prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
         control_signal_values = np.array([c.value for c in control_signals])
+        # FIX: MOVE TO PredictionVector
         grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
         iteration=0
@@ -1263,7 +1263,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         idx = self.prediction_vector.idx
         terms = self.prediction_terms
-        v = self._update_prediction_vector(control_signal_values)
+        v = self._compute_terms(control_signal_values)
         w = self.prediction_weights
 
         lvoc = 0
@@ -1299,7 +1299,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         # return np.sum(v*w)
 
-    def _update_prediction_vector(self, control_signal_values):
+    def _compute_terms(self, control_signal_values):
 
         terms = self.prediction_terms
         num_f = len(self.feature_values)
@@ -1329,38 +1329,20 @@ class LVOCControlMechanism(ControlMechanism):
         computed_terms = []
         if PV.F in terms:
             computed_terms += [f]
-            # self.prediction_vector.vector[idx.f] = np.array(f).reshape(-1)
         if PV.C in terms:
             computed_terms += [c]
-            if isinstance(c, (np.ndarray, list)):
-                self.prediction_vector.vector[idx.c] = np.array(c).reshape(-1)
-            else:
-                self.prediction_vector.vector[idx.c] = np.array(c._value).reshape(-1)
         if PV.FF in terms:
             computed_terms += [ff]
-            if isinstance(ff, (np.ndarray, list)):
-                self.prediction_vector.vector[idx.ff] = np.array(ff).reshape(-1)
-            else:
-                self.prediction_vector.vector[idx.ff] = np.array(ff._value).reshape(-1)
         if PV.CC in terms:
             computed_terms += [cc]
-            if isinstance(cc, (np.ndarray, list)):
-                self.prediction_vector.vector[idx.cc] = np.array(cc).reshape(-1)
-            else:
-                self.prediction_vector.vector[idx.cc] = np.array(cc._value).reshape(-1)
-
         if PV.FC in terms:
             computed_terms += [fc]
-            # self.prediction_vector.vector[idx.fc] = fc.reshape(-1)
         if PV.FFC in terms:
             computed_terms += [ffc]
-            # self.prediction_vector.vector[idx.ffc] = ffc.reshape(-1)
         if PV.FCC in terms:
             computed_terms += [fcc]
-            # self.prediction_vector.vector[idx.fcc] = fcc.reshape(-1)
         if PV.FFCC in terms:
             computed_terms += [ffcc]
-            # self.prediction_vector.vector[idx.ffcc] = ffcc.reshape(-1)
         if PV.COST in terms:
             computed_terms += [cst]
             if isinstance(cst, (np.ndarray, list)):
