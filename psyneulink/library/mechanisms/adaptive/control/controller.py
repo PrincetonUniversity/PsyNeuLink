@@ -954,44 +954,6 @@ class Controller(ControlMechanism):
         allocation_policy = self.function(self=self,
                                           simulation_data=simulation_data,
                                           context=context)
-        # for i in range(len(outcomes)):
-        #     allocation_policy_outcomes = outcomes[i]
-        #     allocation_policy = self.control_signal_search_space[i]
-        #     allocation_policy_evc_list = []
-        #     num_trials = len(allocation_policy_outcomes)
-        #
-        #     for j in range(num_trials):
-        #         outcome = allocation_policy_outcomes[0][j]
-        #         value = self.function(self=self,
-        #                               outcome=outcome,
-        #                               context=context)
-        #         allocation_policy_evc_list.append(value)
-        #         EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
-        #         EVC, outcome, cost = EVC_avg
-        #
-        #         EVC_max = max(EVC, EVC_max)
-        #         if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-        #             # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
-        #             EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
-        #             # Save policy associated with EVC for each process, as order of chunks
-        #             #     might not correspond to order of policies in control_signal_search_space
-        #             if len(EVC_policies[0]) == 0:
-        #                 EVC_policies = np.atleast_2d(allocation_policy)
-        #             else:
-        #                 EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_policy), axis=0)
-        #         if EVC == EVC_max:
-        #             # Keep track of state values and allocation policy associated with EVC max
-        #             # EVC_max_state_values = self.input_value.copy()
-        #             # EVC_max_policy = allocation_vector.copy()
-        #             EVC_max_state_values = self.input_values
-        #             EVC_max_policy = allocation_policy
-        #             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-        #         self.EVC_max = EVC_max
-        #         self.EVC_max_state_values = EVC_max_state_values
-        #         self.EVC_max_policy = EVC_max_policy
-        #         if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-        #             self.EVC_values = EVC_values
-        #             self.EVC_policies = EVC_policies
 
         return allocation_policy
 

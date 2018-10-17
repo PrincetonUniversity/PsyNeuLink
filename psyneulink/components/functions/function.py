@@ -13383,22 +13383,55 @@ class ValueFunction2(EVCAuxiliaryFunction):
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
-        outcomes = simulation_data["outcomes"]
-        costs = simulation_data["data"]["costs"]
+        for sim in simulation_data:
+            allocation_policy = sim[0]
+            allocation_policy_outcomes = sim[1]
+            sim_data = sim[2]
+            allocation_policy_evc_list = []
+            num_trials = len(allocation_policy_outcomes)
 
-        if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function._execute(costs=costs)
-        else:
-            cost = cost_function._execute(variable=costs, context=context)
+            for j in range(num_trials):
+                outcome = allocation_policy_outcomes[0][j]
+                if isinstance(cost_function, UserDefinedFunction):
+                    cost = cost_function._execute(costs=sim_data)
+                else:
+                    cost = cost_function._execute(variable=sim_data, context=context)
 
-        # Combine outcome and cost to determine value
-        if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function._execute(outcome=outcome, cost=cost)
-        else:
-            value = combine_function._execute(variable=[outcome, -cost])
+                # Combine outcome and cost to determine value
+                if isinstance(combine_function, UserDefinedFunction):
+                    value = combine_function._execute(outcome=outcome, cost=cost)
+                else:
+                    value = combine_function._execute(variable=[outcome, -cost])
 
-        # return (value, outcome, cost)
-        return 1.0
+                allocation_policy_evc_list.append((value, outcome, cost))
+                EVC_avg = list(map(lambda x: (sum(x)) / num_trials, zip(*allocation_policy_evc_list)))
+                EVC, outcome, cost = EVC_avg
+
+                EVC_max = max(EVC, EVC_max)
+                # if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                #     # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                #     EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                #     # Save policy associated with EVC for each process, as order of chunks
+                #     #     might not correspond to order of policies in control_signal_search_space
+                #     if len(EVC_policies[0]) == 0:
+                #         EVC_policies = np.atleast_2d(allocation_policy)
+                #     else:
+                #         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_policy), axis=0)
+                if EVC == EVC_max:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    # EVC_max_state_values = self.input_value.copy()
+                    # EVC_max_policy = allocation_vector.copy()
+                    EVC_max_state_values = self.input_values
+                    EVC_max_policy = allocation_policy
+                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                self.EVC_max = EVC_max
+                self.EVC_max_state_values = EVC_max_state_values
+                self.EVC_max_policy = EVC_max_policy
+                # if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                #     self.EVC_values = EVC_values
+                #     self.EVC_policies = EVC_policies
+
+        return EVC_max_policy
 
 
 class ControlSignalGridSearch2(EVCAuxiliaryFunction):
