@@ -912,6 +912,8 @@ class LVOCControlMechanism(ControlMechanism):
             self.num_c = len(self.c)
             self.num_c_elems = len(self.c.reshape(-1))
             labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
+            # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
+            self.control_signal_change = np.zeros_like(self.c)
 
             # Costs
             self.num_cst = self.num_c
@@ -1012,14 +1014,15 @@ class LVOCControlMechanism(ControlMechanism):
             terms = self.terms
             idx = self.idx
             self.f = np.array(feature_values)
+            self.c = np.array(control_signal_values)
 
-            computed_terms = self.compute_terms(control_signal_values)
+            computed_terms = self.compute_terms(self.c)
 
             # Assign specified terms to flattened vector
             if PV.F in terms:
                 self.vector[idx.f] = np.array(feature_values).reshape(-1)
             if PV.C in terms:
-                self.vector[idx.c] = np.array(control_signal_values).reshape(-1)
+                self.vector[idx.c] = np.array(self.c).reshape(-1)
 
             for term in terms:
                 if term in computed_terms:
@@ -1051,8 +1054,9 @@ class LVOCControlMechanism(ControlMechanism):
             if PV.FFCC in terms:
                 computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
-                # FIX: THIS SHOULD BE control_signal.cost_function(c)
-                computed_terms[PV.COST] = -np.exp(c)
+                # FIX: THIS SHOULD USE control_signal.cost_functions(c)
+                # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
+                computed_terms[PV.COST] = -(np.exp(c))
 
             return computed_terms
 
@@ -1079,13 +1083,16 @@ class LVOCControlMechanism(ControlMechanism):
         num_c = len(self.control_signals)
         prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
         control_signal_values = np.array([c.value for c in control_signals])
+        # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
+        self.prediction_vector.control_signal_change = [c.intensity_change for c in control_signals]
+
 
         iteration=0
         while convergence_metric > self.convergence_threshold:
 
             current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
             gradients = self.grad_of_lvoc_wrt_control_signals(control_signal_values)
-            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients)).tolist()
+            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients))
 
             if self.convergence_criterion == LVOC:
                 convergence_metric = np.abs(current_lvoc - previous_lvoc)

@@ -889,6 +889,8 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
+            self.intensity_change = [0]
+
     # MODIFIED 9/18/18 END
 
 
@@ -983,16 +985,16 @@ class ControlSignal(ModulatorySignal):
         intensity = self.value
 
         try:
-            intensity_change = intensity-self.last_intensity
+            self.intensity_change = intensity-self.last_intensity
         except AttributeError:
-            intensity_change = 0
+            self.intensity_change = 0
 
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
-            if intensity_change < 0:
-                intensity_change_string = "-" + str(intensity_change)
-            elif intensity_change > 0:
-                intensity_change_string = "+" + str(intensity_change)
+            if self.intensity_change < 0:
+                intensity_change_string = "-" + str(self.intensity_change)
+            elif self.intensity_change > 0:
+                intensity_change_string = "+" + str(self.intensity_change)
             if self.prefs.verbosePref:
                 warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
 
@@ -1005,7 +1007,7 @@ class ControlSignal(ModulatorySignal):
                 print("++ Used intensity cost")
 
         if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
-            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
+            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
