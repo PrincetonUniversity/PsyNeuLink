@@ -790,8 +790,7 @@ class LVOCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         self.prediction_weights = super(ControlMechanism, self)._execute(variable=variable,
                                                                          runtime_params=runtime_params,
-                                                                         context=context
-                                                                         )
+                                                                         context=context)
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(self.control_signals,
