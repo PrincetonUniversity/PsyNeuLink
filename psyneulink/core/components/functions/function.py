@@ -3719,6 +3719,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
          rate=1.0,         \
          bias=0.0,         \
          scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -3745,6 +3746,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
+    offset : float : default 0.0
+        specifies value to add to the exponentiated value of `variable <Exponential.variable>`
+        after multiplying by `scale <Exponentinal.scale>`.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3766,14 +3771,18 @@ class Exponential(TransferFunction):  # ----------------------------------------
         contains value to be transformed.
 
     rate : float
-        value by which `variable <Exponential.variable>` is multiplied before exponentiation.
+        value by which `variable <Exponential.variable>` is multiplied before exponentiation;
+        assigned as *MULTILICATIVE_PARAM* of the Exponential Function.
 
     bias : float
         value added to `variable <Exponential.variable>` after multiplying by `rate <Exponential.rate>`
-        and before exponentiation.
+        and before exponentiation;  assigned as *ADDITIVE_PARAM* of the Exponential Function.
 
     scale : float
         value by which the exponentiated value is multiplied.
+
+    offset : float
+        value added to exponentiated value after multiplying by `scale <Exponentinal.scale>`.
 
     bounds : (0, None)
 
@@ -3794,7 +3803,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     bounds = (0, None)
     multiplicative_param = RATE
-    additive_param = SCALE
+    additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -3802,6 +3811,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Param(1.0, modulable=True)
+        offset = Param(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -3809,13 +3819,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  scale=scale,
                                                   bias=bias,
+                                                  scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3825,7 +3837,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_ids(self):
-        return RATE, SCALE
+        return RATE, BIAS, SCALE, OFFSET
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3834,10 +3846,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate_ptr, builder = self.get_param_ptr(ctx, builder, params, RATE)
         bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
         scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -3845,6 +3859,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
         val = builder.fmul(val, scale)
+        val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -3879,10 +3894,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate = self.get_current_function_param(RATE)
         bias = self.get_current_function_param(BIAS)
         scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
 
         # result = scale * np.exp(rate * variable)
         from math import e
-        result = scale * e**(rate * variable + bias)
+        result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
     def derivative(self, input, output=None):
@@ -3895,10 +3911,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         -------
 
         derivative :  number
-            `rate <Exponential.rate>` * input.
+            `rate <Exponential.rate>` * input + `bias <Exponential.bias>`.
 
         """
-        return self.get_current_function_param(RATE) * input
+        return self.get_current_function_param(RATE) * input + self.get_current_function_param(BIAS)
 
 
 class Logistic(
@@ -3963,6 +3979,10 @@ class Logistic(
     bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
+
+    offset : float : default 0.0
+        value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
+        but before logistic transformation.
 
     bounds : (0,1)
 
