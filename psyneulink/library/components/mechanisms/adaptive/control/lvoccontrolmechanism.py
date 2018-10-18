@@ -760,11 +760,17 @@ class LVOCControlMechanism(ControlMechanism):
                 raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
                                 format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
 
-        self.cost_functions = [c.intensity_cost_function for c in self.control_signals]
+        # # MODIFIED 10/17/18 NEW:
+        # self.prediction_vector = self.PredictionVector(self.feature_values,
+        #                                                self.control_signals,
+        #                                                self.prediction_terms)
+        # # MODIFIED 10/17/18 END
+        self.prediction_vector.cost_functions = [c.intensity_cost_function for c in self.control_signals]
 
         # Use compute_lvoc_from_control_signals() to compute gradients
         #    of prediction_vector w.r.t. control_signals in gradient_ascent()
         self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
+
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -825,9 +831,11 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Instantiate PredictionVector and related attributes
         if context is ContextFlags.INSTANTIATE:
+            # MODIFIED 10/17/18 OLD:
             self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signals,
                                                            self.prediction_terms)
+            # MODIFIED 10/17/18 END
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
@@ -1055,8 +1063,12 @@ class LVOCControlMechanism(ControlMechanism):
                 computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
                 # FIX: THIS SHOULD USE control_signal.cost_functions(c)
-                # computed_terms[PV.COST] = -(np.exp(c))
-                computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
+                computed_terms[PV.COST] = -(np.exp(0.25*c-3))
+                # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
+                # costs = [None] * len(c)
+                # for i, v in enumerate(c):
+                #     costs[i] = -(self.cost_functions[i](v))
+                # computed_terms[PV.COST] = np.array(costs)
 
             return computed_terms
 

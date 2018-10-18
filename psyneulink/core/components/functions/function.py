@@ -3716,8 +3716,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
     """
     Exponential(           \
          default_variable, \
-         scale=1.0,        \
          rate=1.0,         \
+         bias=0.0,         \
+         scale=1.0,        \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -3736,6 +3737,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     rate : float : default 1.0
         specifies a value by which to multiply `variable <Exponential.variable>` before exponentiation.
+
+    bias : float : default 0.0
+        specifies a value to add to `variable <Exponential.variable>` after multplying by `rate <Exponential.rate>`
+        and before exponentiation.
 
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
@@ -3762,6 +3767,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     rate : float
         value by which `variable <Exponential.variable>` is multiplied before exponentiation.
+
+    bias : float
+        value added to `variable <Exponential.variable>` after multiplying by `rate <Exponential.rate>`
+        and before exponentiation.
 
     scale : float
         value by which the exponentiated value is multiplied.
@@ -3791,19 +3800,22 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     class Params(TransferFunction.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        scale = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   scale=scale,
+                                                  bias=bias,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3820,14 +3832,17 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         rate_ptr, builder = self.get_param_ptr(ctx, builder, params, RATE)
+        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
         scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
         val = builder.fmul(val, rate)
+        val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
         val = builder.fmul(val, scale)
 
@@ -3838,8 +3853,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `scale <Exponential.scale>`
-        :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable <Linear.variable>`).
+        Return: `scale <Exponential.scale>` :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable
+        <Exponential.variable>` + `bias <Exponential.bias>`).
 
         Arguments
         ---------
@@ -3862,9 +3877,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         rate = self.get_current_function_param(RATE)
+        bias = self.get_current_function_param(BIAS)
         scale = self.get_current_function_param(SCALE)
 
-        result = scale * np.exp(rate * variable)
+        # result = scale * np.exp(rate * variable)
+        from math import e
+        result = scale * e**(rate * variable + bias)
         return self.convert_output_type(result)
 
     def derivative(self, input, output=None):
