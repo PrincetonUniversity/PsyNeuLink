@@ -1100,11 +1100,12 @@ class LVOCControlMechanism(ControlMechanism):
         self.prediction_vector.control_signal_change = [c.intensity_change for c in control_signals]
 
         iteration=0
+        update_rate = self.update_rate
         while convergence_metric > self.convergence_threshold:
 
             current_lvoc = self.compute_lvoc_from_control_signals(control_signal_values)
             gradients = self.grad_of_lvoc_wrt_control_signals(control_signal_values)
-            control_signal_values = (control_signal_values + self.update_rate * np.array(gradients))
+            control_signal_values = (control_signal_values + update_rate * np.array(gradients))
 
             if self.convergence_criterion == LVOC:
                 convergence_metric = np.abs(current_lvoc - previous_lvoc)
@@ -1132,9 +1133,14 @@ class LVOCControlMechanism(ControlMechanism):
             self.lvoc = current_lvoc
             previous_lvoc = current_lvoc
             prev_control_signal_values = control_signal_values
+            if self.annealing_function:
+                update_rate = self.annealing_function(iteration, update_rate)
 
         return control_signal_values
 
+    def annealing_function(self, iteration, update_rate):
+        # Default (currently hardwired function):
+        return self.update_rate * 1/np.sqrt(iteration)
 
     def compute_lvoc_from_control_signals(self, control_signal_values):
         '''Update interaction terms and then multiply by prediction_weights
