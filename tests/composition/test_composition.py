@@ -3284,15 +3284,60 @@ class TestSystemComposition:
 
 class TestNestedCompositions:
     def test_transfer_mechanism_composition(self):
-        A = ProcessingMechanism(name="A",
-                                function=Logistic)
-        B = ProcessingMechanism(name="B",
-                                function=AdaptiveIntegrator)
-        comp1 = Composition(name="comp1")
 
+        # mechanisms
+        A = ProcessingMechanism(name="A",
+                                function=AdaptiveIntegrator(rate=0.1))
+        B = ProcessingMechanism(name="B",
+                                function=Logistic)
+        C = TransferMechanism(name="C",
+                              function=Logistic,
+                              integration_rate=0.1,
+                              integrator_mode=True)
+
+        # comp1 separates Integrator fn and Logistic fn into mech A and mech B
+        comp1 = Composition(name="comp1")
         comp1.add_linear_processing_pathway([A, B])
 
-    
+        # comp2 uses a TransferMechanism in integrator mode
+        comp2 = Composition(name="comp2")
+        comp2.add_c_node(C)
+
+        # pass same 3 trials of input to comp1 and comp2
+        comp1.run(inputs={A: [1.0, 2.0, 3.0]})
+        comp2.run(inputs={C: [1.0, 2.0, 3.0]})
+
+        assert np.allclose(comp1.results, comp2.results)
+
+    # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
+    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version 
+    # def test_recurrent_transfer_mechanism_composition(self):
+    #
+    #     # mechanisms
+    #     A = ProcessingMechanism(name="A",
+    #                             function=AdaptiveIntegrator(rate=0.1))
+    #     B = ProcessingMechanism(name="B",
+    #                             function=Logistic)
+    #     C = RecurrentTransferMechanism(name="C",
+    #                                    function=Logistic,
+    #                                    integration_rate=0.1,
+    #                                    integrator_mode=True)
+    #
+    #     # comp1 separates Integrator fn and Logistic fn into mech A and mech B and uses a "feedback" proj for recurrence
+    #     comp1 = Composition(name="comp1")
+    #     comp1.add_linear_processing_pathway([A, B])
+    #     comp1.add_linear_processing_pathway([B, A], feedback=True)
+    #
+    #     # comp2 uses a RecurrentTransferMechanism in integrator mode
+    #     comp2 = Composition(name="comp2")
+    #     comp2.add_c_node(C)
+    #
+    #     # pass same 3 trials of input to comp1 and comp2
+    #     comp1.run(inputs={A: [1.0, 2.0, 3.0]})
+    #     comp2.run(inputs={C: [1.0, 2.0, 3.0]})
+    #
+    #     # assert np.allclose(comp1.results, comp2.results)
+
     def test_combine_two_disjunct_trees(self):
         # Goal:
 
