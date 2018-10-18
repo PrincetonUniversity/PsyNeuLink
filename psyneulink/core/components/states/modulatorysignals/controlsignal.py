@@ -644,7 +644,12 @@ class ControlSignal(ModulatorySignal):
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
-    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
+    stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES,
+                                                          COST_OPTIONS,
+                                                          INTENSITY_COST_FUNCTION,
+                                                          ADJUSTMENT_COST_FUNCTION,
+                                                          DURATION_COST_FUNCTION,
+                                                          COST_COMBINATION_FUNCTION}
 
     connectsWith = [PARAMETER_STATE]
     connectsWithAttribute = [PARAMETER_STATES]
