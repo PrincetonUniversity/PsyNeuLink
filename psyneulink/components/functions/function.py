@@ -9692,7 +9692,6 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         # starting_point = float(self.starting_point)
         # noise = float(self.noise)
         # t0 = float(self.t0)
-
         self.bias = bias = (starting_point + threshold) / (2 * threshold)
 
         # Prevents div by 0 issue below:
@@ -13301,7 +13300,7 @@ class EVCAuxiliaryFunction(Function_Base):
                          )
 
 
-class ValueFunction2(EVCAuxiliaryFunction):
+class ValueFunction2(Function_Base):
     """Calculate the `EVC <EVCControlMechanism_EVC>` for a given performance outcome and set of costs.
 
     ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
@@ -13326,17 +13325,28 @@ class ValueFunction2(EVCAuxiliaryFunction):
 
     componentName = kwValueFunction
 
-    def __init__(self, function=None):
-        function = function or self.function
-        super().__init__(function=function,
+    def __init__(self,
+                 default_variable=None,
+                 simulation_data=None,
+                 cost_function=None,
+                 combine_function=None,
+                 variable=None,
+                 params=None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(default_variable=default_variable,
+                                                  simulation_data=simulation_data,
+                                                  cost_function=cost_function,
+                                                  combine_function=combine_function,
+                                                  params=params)
+
+        super().__init__(default_variable=None,
+            params=params,
                          context=ContextFlags.CONSTRUCTOR)
+
 
     def function(
         self,
-        simulation_data,
-        cost_function,
-        combine_function,
-        variable=None,
+            variable = None,
         params=None,
         context=None
     ):
@@ -13382,20 +13392,24 @@ class ValueFunction2(EVCAuxiliaryFunction):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
-
+        simulation_data, auxiliary_functions = variable
+        cost_function, combine_function = auxiliary_functions
+        EVC_max = float('-Infinity')
         for sim in simulation_data:
             allocation_policy = sim[0]
             allocation_policy_outcomes = sim[1]
-            sim_data = sim[2]
+            other_data = sim[2]
+            costs = other_data[0]["costs"]
+
             allocation_policy_evc_list = []
             num_trials = len(allocation_policy_outcomes)
 
             for j in range(num_trials):
                 outcome = allocation_policy_outcomes[0][j]
                 if isinstance(cost_function, UserDefinedFunction):
-                    cost = cost_function._execute(costs=sim_data)
+                    cost = cost_function._execute(costs=costs)
                 else:
-                    cost = cost_function._execute(variable=sim_data, context=context)
+                    cost = cost_function._execute(variable=costs, context=context)
 
                 # Combine outcome and cost to determine value
                 if isinstance(combine_function, UserDefinedFunction):
@@ -13421,11 +13435,11 @@ class ValueFunction2(EVCAuxiliaryFunction):
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = self.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = self.input_values
+                    # EVC_max_state_values = self.owner.input_values
                     EVC_max_policy = allocation_policy
-                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+                    # max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
                 self.EVC_max = EVC_max
-                self.EVC_max_state_values = EVC_max_state_values
+                # self.EVC_max_state_values = EVC_max_state_values
                 self.EVC_max_policy = EVC_max_policy
                 # if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                 #     self.EVC_values = EVC_values

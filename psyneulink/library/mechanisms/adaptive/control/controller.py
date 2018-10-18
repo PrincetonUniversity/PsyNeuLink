@@ -843,7 +843,7 @@ class Controller(ControlMechanism):
                        runtime_params=None,
                        context=None):
 
-        if allocation_policy:
+        if allocation_policy is not None:
             self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
 
         execution_id = self.composition._get_unique_id()
@@ -878,7 +878,6 @@ class Controller(ControlMechanism):
             self.composition.context.execution_phase = ContextFlags.PROCESSING
             allocation_policy_outcomes.append(monitored_states)
             other_simulation_data.append(call_after_simulation_data)
-
         return allocation_policy_outcomes, other_simulation_data
 
     def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
