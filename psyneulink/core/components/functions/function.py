@@ -14285,10 +14285,10 @@ class BayesGLM(LearningFunction):
         # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
-        self.Lambda_prior = self.Lambda_n
-        self.mu_prior = self.mu_n
-        self.gamma_shape_prior = self.gamma_shape_n
-        self.gamma_size_prior = self.gamma_size_n
+        Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
+        mu_prior = self.get_current_function_param('mu_n', execution_id)
+        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
+        gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
 
         variable = self._check_args(
             [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
@@ -14300,24 +14300,31 @@ class BayesGLM(LearningFunction):
         dependent_vars = variable[1]
 
         # online update rules as per the given reference
-        self.Lambda_n = (predictors.T @ predictors) + self.Lambda_prior
-        self.mu_n = np.linalg.inv(self.Lambda_n) @ ((predictors.T @ dependent_vars) + (self.Lambda_prior @ self.mu_prior))
-        self.gamma_shape_n = self.gamma_shape_prior + dependent_vars.shape[1]
-        self.gamma_size_n = self.gamma_size_prior + (dependent_vars.T @ dependent_vars) + \
-                   (self.mu_prior.T @ self.Lambda_prior @ self.mu_prior) - \
-                   (self.mu_n.T @ self.Lambda_n @ self.mu_n)
+        Lambda_n = (predictors.T @ predictors) + Lambda_prior
+        mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
+        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
+        gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
+            + (mu_prior.T @ Lambda_prior @ mu_prior) \
+            - (mu_n.T @ Lambda_n @ mu_n)
 
-        # self.mu_and_Lambda_values = \
-        #     [self.mu_n.reshape(-1,), np.array([self.Lambda_n[i][i] for i in range(len(self.Lambda_n))])]
+        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
+        self.parameters.mu_prior.set(mu_prior, execution_id)
+        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
+        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
 
-        return self.sample_weights()
+        self.parameters.Lambda_n.set(Lambda_n, execution_id)
+        self.parameters.mu_n.set(mu_n, execution_id)
+        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
+        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
 
-    def sample_weights(self):
+        return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
+
+    def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
         '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
         <BayesGLM.gamma_size_n>`.'''
-        phi = np.random.gamma(self.gamma_shape_n / 2, self.gamma_size_n / 2)
-        return np.random.multivariate_normal(self.mu_n.reshape(-1,), phi * np.linalg.inv(self.Lambda_n))
+        phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
+        return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
 
 # Argument names:
