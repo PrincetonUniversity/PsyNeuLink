@@ -486,7 +486,12 @@ def iscompatible(candidate, reference=None, **kargs):
                             return True
                 else:
                     if not isinstance(value, numbers.Number):
-                        return False
+                        try:
+                            # True for autograd ArrayBox (and maybe other types?)
+                            if isinstance(value._value, numbers.Number):
+                                return True
+                        except:
+                            return False
                     else:
                         return True
             # Test copy since may need to convert matrix to array (see above)

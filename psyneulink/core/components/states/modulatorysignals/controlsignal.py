@@ -30,7 +30,7 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>` or a `System <System_Control_Specification>`.  Although
-a ControlSignal can be created directly using its constructor (or any of the other ways for `creating an OutputState
+a ControlSignal can be created on its own using its constructor (or any of the other ways for `creating an OutputState
 <OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a ControlSignal has dedicated
 components and requirements for configuration that must be met for it to function properly.
 
@@ -40,9 +40,14 @@ components and requirements for configuration that must be met for it to functio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
-<ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
+<ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
+need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
+ConrolSignal can be used, and the parameters specified in its the **projections** argument.  The specification(s) can
+take any of the forms listed below.  For convenience, the parameters can also be specified on their own in the
+**control_signals** argument of a ControlMechanism's constructor, in which case a default ControlSignal will be
+created for each.  In either case, any of the following can be use to specify parameters to be controlled:
 
-  * **ParameterState** -- of the Mechanism to which the parameter belongs;
+  * **ParameterState** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
   ..
   * **specification dictionary** -- can take either of the following two forms:
 
@@ -856,9 +861,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function.function(self.instance_defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+                self.intensity_cost = self.intensity_cost_function.function(self.ClassDefaults.allocation)
             self.adjustment_cost = 0
             self.duration_cost = 0
             self.last_duration_cost = self.duration_cost
@@ -977,12 +982,10 @@ class ControlSignal(ModulatorySignal):
     def update(self, params=None, context=None):
         super().update(params=params, context=context)
         if self.cost_options:
-            self._compute_costs()
+            self._compute_costs(self.value)
 
-    def _compute_costs(self):
-        """Compute costs based on self.value."""
-
-        intensity = self.value
+    def _compute_costs(self, intensity):
+        """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
         try:
             self.intensity_change = intensity-self.last_intensity
@@ -999,27 +1002,42 @@ class ControlSignal(ModulatorySignal):
                 warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
 
         # compute cost(s)
-        intensity_cost = adjustment_cost = duration_cost = 0
+        intensity_cost = adjustment_cost = duration_cost = 0.0
 
-        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
+        # # MODIFIED 10/17/18 OLD:
+        # if self.cost_options & ControlSignalCosts.INTENSITY_COST:
+        # MODIFIED 10/17/18 NEW:
+        if ControlSignalCosts.INTENSITY_COST in self.cost_options:
+        # MODIFIED 10/17/18 END
             intensity_cost = self.intensity_cost = self.intensity_cost_function(intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
-        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+        # # MODIFIED 10/17/18 OLD:
+        # if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+        # MODIFIED 10/17/18 NEW:
+        if ControlSignalCosts.ADJUSTMENT_COST in self.cost_options:
+        # MODIFIED 10/17/18 END
+
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
         # FIX: 12/23/17 - THIS NEEDS TO HAVE BEEN INITIALIZED
-        if self.cost_options & ControlSignalCosts.DURATION_COST:
+        # # MODIFIED 10/17/18 OLD:
+        # if self.cost_options & ControlSignalCosts.DURATION_COST:
+        # MODIFIED 10/17/18 NEW:
+        if ControlSignalCosts.DURATION_COST in self.cost_options:
+        # MODIFIED 10/17/18 END
             duration_cost = self.duration_cost = self.duration_cost_function(self.cost)
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
 
-        self.cost = max(0.0, self.cost_combination_function([float(intensity_cost),
-                                                             adjustment_cost,
-                                                             duration_cost]))
+        # MODIFIED 10/17/18 OLD:
+        # self.cost = max(0.0, self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost]))
+        # MODIFIED 10/17/18 NEW:
+        self.cost = max(0.0, self.cost_combination_function([intensity_cost, adjustment_cost, duration_cost]))
+        # MODIFIED 10/17/18 END
 
         # Store current state for use in next call as last state
         self.last_intensity = intensity
@@ -1030,7 +1048,11 @@ class ControlSignal(ModulatorySignal):
         # MODIFIED 9/18/18 NEW:
         if self.cost_options:
             self.last_cost = self.cost
-            if self.cost_options & ControlSignalCosts.DURATION_COST:
+            # # MODIFIED 10/17/18 OLD:
+            # if self.cost_options & ControlSignalCosts.DURATION_COST:
+            # MODIFIED 10/17/18 NEW:
+            if ControlSignalCosts.DURATION_COST in self.cost_options:
+            # MODIFIED 10/17/18 END
                 self.last_duration_cost = self.duration_cost
         # MODIFIED 9/18/18 END
 
@@ -1046,6 +1068,9 @@ class ControlSignal(ModulatorySignal):
             elif cost_change > 0:
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
+
+        # For "outside" users
+        return self.cost
 
     @property
     def allocation_samples(self):
