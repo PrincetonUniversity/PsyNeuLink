@@ -372,15 +372,15 @@ class ControlSignalCosts(IntEnum):
     NONE
         ControlSignal's `cost` is not computed.
 
-    INTENSITY_COST
+    INTENSITY
         `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
         <ControlSignal.cost>` based its current `intensity` value.
 
-    ADJUSTMENT_COST
+    ADJUSTMENT
         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
         `intensity` from its last value.
 
-    DURATION_COST
+    DURATION
         `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
         ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
 
@@ -389,15 +389,15 @@ class ControlSignalCosts(IntEnum):
         `cost <ControlSignal.cost>`.
 
     DEFAULTS
-        assign default set of `cost functions <ControlSignal_Costs>` (currently set to `INTENSITY_COST`).
+        assign default set of `cost functions <ControlSignal_Costs>` as `INTENSITY`).
 
     """
-    NONE               = 0
-    INTENSITY_COST     = 1 << 1
-    ADJUSTMENT_COST    = 1 << 2
-    DURATION_COST      = 1 << 3
-    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
-    DEFAULTS           = INTENSITY_COST
+    NONE          = 0
+    INTENSITY     = 1 << 1
+    ADJUSTMENT    = 1 << 2
+    DURATION      = 1 << 3
+    ALL           = INTENSITY | ADJUSTMENT | DURATION
+    DEFAULTS      = INTENSITY
 
 
 class ControlSignalError(Exception):
@@ -989,7 +989,7 @@ class ControlSignal(ModulatorySignal):
         self.last_intensity = self.intensity
         if self.cost_options:
             self.last_cost = self.cost
-            if ControlSignalCosts.DURATION_COST in self.cost_options:
+            if ControlSignalCosts.DURATION in self.cost_options:
                 self.last_duration_cost = self.duration_cost
 
     def _compute_costs(self, intensity):
@@ -1002,13 +1002,13 @@ class ControlSignal(ModulatorySignal):
 
         # COMPUTE COST(S)
 
-        if ControlSignalCosts.INTENSITY_COST in self.cost_options:
+        if ControlSignalCosts.INTENSITY in self.cost_options:
             self.intensity_cost = self.intensity_cost_function(intensity)
 
-        if ControlSignalCosts.ADJUSTMENT_COST in self.cost_options:
+        if ControlSignalCosts.ADJUSTMENT in self.cost_options:
             self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
 
-        if ControlSignalCosts.DURATION_COST in self.cost_options:
+        if ControlSignalCosts.DURATION in self.cost_options:
             self.duration_cost = self.duration_cost_function(self.cost)
 
         return max(0.0, self.cost_combination_function([self.intensity_cost,
@@ -1119,11 +1119,11 @@ class ControlSignal(ModulatorySignal):
 
     def get_cost_options(self):
         options = []
-        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
+        if self.cost_options & ControlSignalCosts.INTENSITY:
             options.append(INTENSITY_COST)
-        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+        if self.cost_options & ControlSignalCosts.ADJUSTMENT:
             options.append(ADJUSTMENT_COST)
-        if self.cost_options & ControlSignalCosts.DURATION_COST:
+        if self.cost_options & ControlSignalCosts.DURATION:
             options.append(DURATION_COST)
         return
 
@@ -1133,11 +1133,11 @@ class ControlSignal(ModulatorySignal):
         ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
         """
         if cost_function_name == INTENSITY_COST_FUNCTION:
-            cost_option = ControlSignalCosts.INTENSITY_COST
+            cost_option = ControlSignalCosts.INTENSITY
         elif cost_function_name == DURATION_COST_FUNCTION:
-            cost_option = ControlSignalCosts.DURATION_COST
+            cost_option = ControlSignalCosts.DURATION
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
-            cost_option = ControlSignalCosts.ADJUSTMENT_COST
+            cost_option = ControlSignalCosts.ADJUSTMENT
         elif cost_function_name == COST_COMBINATION_FUNCTION:
             raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
         else:
@@ -1151,24 +1151,6 @@ class ControlSignal(ModulatorySignal):
         else:
             self.cost_options &= ~cost_option
 
-    # def set_intensity_cost(self, assignment=ON):
-    #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCosts.INTENSITY_COST
-    #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCosts.INTENSITY_COST
-    #
-    # def set_adjustment_cost(self, assignment=ON):
-    #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCosts.ADJUSTMENT_COST
-    #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCosts.ADJUSTMENT_COST
-    #
-    # def set_duration_cost(self, assignment=ON):
-    #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCosts.DURATION_COST
-    #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCosts.DURATION_COST
-    #
     def get_costs(self):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
         """
