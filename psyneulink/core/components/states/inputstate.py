@@ -929,7 +929,7 @@ class InputState(State_Base):
         else:
             path_proj_values = []
             for pa in self.path_afferents:
-                if self.afferents_info[pa].is_active_in_composition(self.parameters.context.get().composition):
+                if self.afferents_info[pa].is_active_in_composition(self.parameters.context.get(execution_id).composition):
                     path_proj_values.append(pa.parameters.value.get(execution_id))
 
             if len(path_proj_values) > 0:

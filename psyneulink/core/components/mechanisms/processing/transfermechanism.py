@@ -1416,15 +1416,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         if (
             self.convergence_criterion is not None
             and self.parameters.previous_value.get(execution_id) is not None
-            and self.context.initialization_status != ContextFlags.INITIALIZING
+            and self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING
         ):
             if self.delta(value, execution_id) <= self.convergence_criterion:
                 return True
-            elif self.current_execution_time.pass_ >= self.max_passes:
+            elif self.get_current_execution_time(execution_id).pass_ >= self.max_passes:
                 raise TransferError("Maximum number of executions ({}) has occurred before reaching "
                                     "convergence_criterion ({}) for {} in trial {} of run {}".
                                     format(self.max_passes, self.convergence_criterion, self.name,
-                                           self.current_execution_time.trial, self.current_execution_time.run))
+                                           self.get_current_execution_time(execution_id).trial, self.get_current_execution_time(execution_id).run))
             else:
                 return False
         # Otherwise just return True

@@ -1031,7 +1031,7 @@ class DDM(ProcessingMechanism_Base):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
-            if self.context.initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])

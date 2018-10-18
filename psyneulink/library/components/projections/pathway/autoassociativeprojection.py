@@ -292,7 +292,7 @@ class AutoAssociativeProjection(MappingProjection):
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
         if context==ContextFlags.LEARNING:
-            self.context.execution_phase = ContextFlags.LEARNING
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
         super()._update_parameter_states(execution_id, runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech

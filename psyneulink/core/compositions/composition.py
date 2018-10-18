@@ -2438,8 +2438,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not nested:
             self._initialize_from_context(execution_id, base_execution_id, override=False)
 
+        self._assign_context_values(execution_id, composition=self)
+
         if nested:
-            self.input_CIM.context.execution_phase = ContextFlags.PROCESSING
+            self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         else:
@@ -2547,12 +2549,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                 execution_id=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
-                    node.context.execution_phase = ContextFlags.PROCESSING
+                    node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
                     if bin_execute:
                         self.__execution.execute_node(node)
+                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
-                        node.context.execution_phase = ContextFlags.PROCESSING
                         if node is not self.controller:
                             node.execute(
                                 execution_id=execution_id,
@@ -2573,7 +2575,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     execution_id
                                 )
                         node.function_object._runtime_params_reset[execution_id] = {}
-                        node.context.execution_phase = ContextFlags.IDLE
+                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
                     if bin_execute:
@@ -2586,7 +2588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for i, v in enumerate(data):
                                 #This sets frozen values
                                 src_node.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
-
+                    node._assign_context_values(execution_id, composition=node)
                     ret = node.execute(execution_id=execution_id, bin_execute=bin_execute)
                     if bin_execute:
                         # Update result in binary data structure
@@ -2624,7 +2626,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return self.__execution.extract_node_output(self.output_CIM)
 
-        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
+        self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         output_values = []
@@ -2793,6 +2795,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute == 'LLVMRun':
             # initialize from base context but don't overwrite any values already set for this execution_id
             self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._assign_context_values(execution_id, composition=self)
 
             self.__bin_initialize()
             results += self.__execution.run(inputs, num_trials, num_inputs_sets)
@@ -3540,10 +3543,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             comp._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        context_param = self.parameters.context.get()
+        context_param = self.parameters.context.get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
-            context_param = self.parameters.context.get()
+            context_param = self.parameters.context.get(execution_id)
             context_param.execution_id = execution_id
 
         for context_item, value in kwargs.items():

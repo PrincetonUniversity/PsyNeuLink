@@ -925,7 +925,7 @@ class Param(types.SimpleNamespace):
         if context is ContextFlags.COMMAND_LINE:
             try:
                 # attempt to infer the time via this Params object's context if it exists
-                owner_context = self._owner.context.get()
+                owner_context = self._owner.context.get(execution_id)
                 time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
             except AttributeError:
                 time = None
@@ -940,7 +940,7 @@ class Param(types.SimpleNamespace):
 
             if context is None:
                 try:
-                    context = self._owner.context.get()
+                    context = self._owner.context.get(execution_id)
                 except AttributeError:
                     logger.warning('Attempted to log {0} but has no context attribute'.format(self))
 
@@ -2352,10 +2352,10 @@ class Component(object, metaclass=ComponentsMeta):
         # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
             try:
-                self.parameters.context.get().add_to_string(FUNCTION_CHECK_ARGS)
+                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
             except AttributeError:
                 self._assign_context_values(execution_id)
-                self.parameters.context.get().add_to_string(FUNCTION_CHECK_ARGS)
+                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
 
             variable = self._validate_variable(variable, context=context)
 
@@ -2806,10 +2806,10 @@ class Component(object, metaclass=ComponentsMeta):
             param._initialize_from_context(execution_context, base_execution_context, override)
 
     def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        context_param = self.parameters.context.get()
+        context_param = self.parameters.context.get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
-            context_param = self.parameters.context.get()
+            context_param = self.parameters.context.get(execution_id)
             context_param.execution_id = execution_id
 
         for context_item, value in kwargs.items():
@@ -3459,27 +3459,27 @@ class Component(object, metaclass=ComponentsMeta):
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.parameters.context.get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context, execution_id=execution_id)
 
         # If Component has a Function (function_object), assign Component's execution_phase to its context
         try:
-            fct_context_attrib = self.function_object.context
-            # curr_context = self.context.execution_phase
-            curr_context = self.context.flags
+            fct_context_attrib = self.function_object.parameters.context.get(execution_id)
+            # curr_context = self.parameters.context.get(execution_id).execution_phase
+            curr_context = self.parameters.context.get(execution_id).flags
         except AttributeError:
             # Otherwise if Component *is* a Function, assign its owner's execution_phase to its context
             try:
-                fct_context_attrib = self.context
-                # curr_context = self.owner.context.execution_phase
-                curr_context = self.owner.context.flags
+                fct_context_attrib = self.parameters.context.get(execution_id)
+                # curr_context = self.owner.parameters.context.get(execution_id).execution_phase
+                curr_context = self.owner.parameters.context.get(execution_id).flags
             except AttributeError:
                 # Otherwise assign ContextFlags.PROCESSING as its execution_phase context
-                fct_context_attrib = self.context
+                fct_context_attrib = self.parameters.context.get(execution_id)
                 # curr_context = ContextFlags.PROCESSING
                 fct_context_attrib.execution_phase = ContextFlags.PROCESSING
-                curr_context = self.context.flags
+                curr_context = self.parameters.context.get(execution_id).flags
         # fct_context_attrib.execution_phase = curr_context
         fct_context_attrib.flags = curr_context
 

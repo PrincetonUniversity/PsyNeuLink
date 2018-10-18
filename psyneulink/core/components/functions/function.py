@@ -1953,7 +1953,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -2355,7 +2355,7 @@ class LinearCombination(
 
         weights = self.get_current_function_param(WEIGHTS, execution_id)
         exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        # if self.context.initialization_status == ContextFlags.INITIALIZED:
+        # if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
@@ -2386,7 +2386,7 @@ class LinearCombination(
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -2912,7 +2912,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if (self.context.initialization_status == ContextFlags.INITIALIZING and
+            if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING and
                     any(not any(i) and j < 0 for i, j in zip(variable, exponents))):
                 means = np.ones_like(means)
             else:
@@ -6464,7 +6464,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -6697,7 +6697,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -6947,7 +6947,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         previous_value = self.get_previous_value(execution_id)
@@ -7331,7 +7331,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -7608,7 +7608,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -7867,7 +7867,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         adjusted_value = value + offset
 
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -8711,7 +8711,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_v = approximate_values[0]
             previous_w = approximate_values[1]
             previous_time = previous_time + time_step_size
@@ -9236,7 +9236,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(value, execution_id, override=True)
 
         return self.convert_output_type(value)
@@ -9452,7 +9452,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -9818,7 +9818,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         value = self.combine_utilities(short_term_utility, long_term_utility, execution_id=execution_id)
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_short_term_utility.set(short_term_utility, execution_id)
             self.parameters.previous_long_term_utility.set(long_term_utility, execution_id)
 
@@ -11902,7 +11902,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if self.context.initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 v1 = np.where(v1 == 0, EPSILON, v1)
                 v2 = np.where(v2 == 0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
@@ -12231,7 +12231,7 @@ class OptimizationFunction(Function_Base):
             for all the samples in the order they were evaluated; otherwise it is empty.
         '''
 
-        if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
+        if self._unspecified_args and self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
@@ -14273,7 +14273,7 @@ class BayesGLM(LearningFunction):
 
         '''
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
         # # MODIFIED 10/26/18 OLD:
@@ -14687,7 +14687,7 @@ class BackPropagation(LearningFunction):
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if error_matrix is None:
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 error_matrix = np.zeros(
                     (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
                 )

@@ -625,8 +625,8 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.context.initialization_status
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.parameters.context.get(execution_id).initialization_status
 
         if variable is not None:
             learning_signal = variable
@@ -671,7 +671,7 @@ class LearningProjection(ModulatoryProjection_Base):
         if learning_rate is not None:
             value *= learning_rate
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value

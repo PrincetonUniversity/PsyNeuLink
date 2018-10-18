@@ -175,7 +175,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -306,8 +306,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.context.initialization_status == ContextFlags.INITIALIZING or
-                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING or
+                self.owner.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         # Get value of, or set default for standard args
@@ -322,8 +322,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.context.execution_phase = ContextFlags.SIMULATION
-        controller.context.string = "{0} EXECUTING {1} of {2}".format(controller.name,
+        controller.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
         # Print progress bar
@@ -882,7 +882,7 @@ class PredictionMechanism(IntegratorMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Update predicted value on "real" but not simulation runs '''
 
-        if self.parameters.context.get().execution_phase == ContextFlags.SIMULATION:
+        if self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
             # Just return current value for simulation runs
             value = self.parameters.value.get(execution_id)
         else:

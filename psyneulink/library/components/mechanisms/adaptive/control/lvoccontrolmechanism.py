@@ -705,7 +705,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         - return allocation_policy
         """
 
-        if (self.context.initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         if not self.current_execution_count:

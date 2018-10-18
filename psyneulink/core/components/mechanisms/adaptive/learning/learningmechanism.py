@@ -979,7 +979,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.parameters.context.get(execution_id).initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
@@ -1266,7 +1266,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         return [summed_learning_signal, summed_error_signal]

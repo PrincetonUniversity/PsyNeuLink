@@ -1090,7 +1090,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  runtime_params=None,
                  context=None):
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             # Set minus_phase activity, plus_phase, current_activity and initial_value
             #    all  to zeros with size of Mechanism's array
             self._initial_value = self.current_activity = self.minus_phase_activity = self.plus_phase_activity = \

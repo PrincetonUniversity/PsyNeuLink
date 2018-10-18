@@ -795,9 +795,9 @@ def run(obj,
                     projection.function_obj.learning_rate = obj.learning_rate
 
     # Class-specific validation:
-    if not obj.context.flags:
-        obj.context.initialization_status = ContextFlags.VALIDATING
-        obj.context.string = RUN + "validating " + obj.name
+    if not obj.parameters.context.get(execution_id).flags:
+        obj.parameters.context.get(execution_id).initialization_status = ContextFlags.VALIDATING
+        obj.parameters.context.get(execution_id).string = RUN + "validating " + obj.name
 
     # INITIALIZATION
     if initialize:
@@ -853,9 +853,9 @@ def run(obj,
                         obj.current_targets = execution_targets
 
             # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.context.execution_phase == ContextFlags.SIMULATION:
-                obj.context.execution_phase = ContextFlags.PROCESSING
-                obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
+            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING)
+                obj.parameters.context.get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
             result = obj.execute(
                 input=execution_inputs,
@@ -869,7 +869,7 @@ def run(obj,
             if call_after_time_step:
                 call_after_time_step()
 
-        if obj.context.execution_phase != ContextFlags.SIMULATION:
+        if obj.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:

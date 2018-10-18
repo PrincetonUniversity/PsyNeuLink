@@ -2689,8 +2689,11 @@ class System(System_Base):
 
         if not context:
             context = ContextFlags.COMPOSITION
-            self.context.execution_phase = ContextFlags.PROCESSING
-            self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
+            self._assign_context_values(
+                execution_id,
+                execution_phase=ContextFlags.PROCESSING,
+                string=EXECUTING + " " + SYSTEM + " " + self.name,
+            )
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
@@ -2709,7 +2712,7 @@ class System(System_Base):
                         projection.sender.owner._assign_context_values(execution_id, composition=self)
 
         self._report_system_output = (self.prefs.reportOutputPref and
-                                      self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
+                                      self.parameters.context.get(execution_id).execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -2720,8 +2723,8 @@ class System(System_Base):
         num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
-            if (self.prefs.verbosePref and not (self.context.source == ContextFlags.COMMAND_LINE or
-                                                self.context.initialization_status == ContextFlags.INITIALIZING)):
+            if (self.prefs.verbosePref and not (self.parameters.context.get(execution_id).source == ContextFlags.COMMAND_LINE or
+                                                self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
@@ -2795,30 +2798,35 @@ class System(System_Base):
         )
         outcome = self.terminal_mechanisms.get_output_state_values(execution_id)
 
-        if self.recordSimulationPref and self.context.execution_phase == ContextFlags.SIMULATION:
+        if self.recordSimulationPref and self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
             self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
-        if self.context.execution_phase != ContextFlags.SIMULATION and self.learning:
-            self.context.execution_phase = ContextFlags.LEARNING
-            self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+        if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION and self.learning:
+            self._assign_context_values(
+                execution_id,
+                execution_phase=ContextFlags.LEARNING,
+                string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
+            )
 
             self._execute_learning(execution_id=execution_id, context=context)
 
-            self.context.execution_phase = ContextFlags.IDLE
-            self.context.string = self.context.string.replace(LEARNING, EXECUTING)
-
+            self._assign_context_values(
+                execution_id,
+                execution_phase=ContextFlags.IDLE,
+                string=self.parameters.context.get(execution_id).string.replace(LEARNING, EXECUTING)
+            )
 
         # EXECUTE CONTROLLER
         # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
         # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
-            self.context.execution_phase = ContextFlags.CONTROL
-            self.controller.context.execution_phase = ContextFlags.PROCESSING
+        if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.CONTROL
+            self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
                     execution_id=execution_id,
@@ -2834,11 +2842,11 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if self.context.initialization_status != ContextFlags.INITIALIZING:
+                if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                     error_msg.args += ("PROGRAM ERROR: Problem executing controller ({}) for {}".format(self.controller.name, self.name),)
                     raise
 
-            self.context.execution_phase = ContextFlags.IDLE
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2871,8 +2879,11 @@ class System(System_Base):
                 process_names = list(p.name for p in process_keys_sorted)
 
                 context = ContextFlags.COMPOSITION
-                mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
-                mechanism.context.composition = self
+                mechanism._assign_context_values(
+                    execution_id,
+                    string="Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]",
+                    composition=self
+                )
 
                 # Set up runtime params and context
                 execution_runtime_params = {}
@@ -2880,12 +2891,13 @@ class System(System_Base):
                     for param in runtime_params[mechanism]:
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, execution_id=execution_id):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
-                mechanism.context.execution_phase = self.context.execution_phase
+
+                mechanism.parameters.context.get(execution_id).execution_phase = self.parameters.context.get(execution_id).execution_phase
 
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if (isinstance(mechanism, LearningMechanism) and
                         mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
-                    mechanism.context.execution_phase = ContextFlags.LEARNING
+                    mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
 
                 # Execute
                 # # TEST PRINT:
@@ -2907,7 +2919,7 @@ class System(System_Base):
                         mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[execution_id][key], execution_id)
                 mechanism.function_object._runtime_params_reset[execution_id] = {}
 
-                mechanism.context.execution_phase = ContextFlags.IDLE
+                mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -2980,8 +2992,8 @@ class System(System_Base):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                component.context.composition = self
-                component.context.execution_phase = ContextFlags.LEARNING
+                component.parameters.context.get(execution_id).composition = self
+                component.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
 
                 if isinstance(component, Mechanism):
                     params = None
@@ -2999,18 +3011,18 @@ class System(System_Base):
                                              component_type,
                                              component.name,
                                              re.sub(r'[\[,\],\n]','',str(process_names))))
-                    component.context.string = context_str
+                    component.parameters.context.get(execution_id).string = context_str
 
                     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                     component.execute(execution_id=execution_id, runtime_params=params, context=context)
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component.context.string = "Updating {} for {} in {}".format(ParameterState.__name__,
+                    component.parameters.context.get(execution_id).string = "Updating {} for {} in {}".format(ParameterState.__name__,
                                                                                  component.name, self.name)
                     component._parameter_states[MATRIX].update(execution_id=execution_id, context=ContextFlags.COMPOSITION)
 
-                component.context.execution_phase = ContextFlags.IDLE
+                component.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
@@ -3019,14 +3031,14 @@ class System(System_Base):
 
                 self._component_execution_count += 1
 
-                component.context.execution_phase = ContextFlags.IDLE
+                component.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
                 # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
-                #        format(component.name, component.context.flags_string))
+                #        format(component.name, component.parameters.context.get(execution_id).flags_string))
                 # print(component._parameter_states[MATRIX].value)
 
         # FINALLY report outputs
@@ -3197,8 +3209,9 @@ class System(System_Base):
         if execution_id is None:
             execution_id = self.default_execution_id
 
+        self._assign_context_values(execution_id)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if not (ContextFlags.SIMULATION & self.parameters.context.get().flags):
+        if not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         for mechanism in reinitialize_values:

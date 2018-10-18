@@ -634,8 +634,8 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.context.execution_phase = ContextFlags.PROCESSING
-        self.context.string = context
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context.get(execution_id).string = context
 
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 

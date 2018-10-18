@@ -617,7 +617,7 @@ def _get_time(component, context_flags, execution_id=None):
     else:
         execution_context = component.context.string
 
-    system = ref_mech.parameters.context.get().composition
+    system = ref_mech.parameters.context.get(execution_id).composition
 
     if system and hasattr(system, 'scheduler_processing'):
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK

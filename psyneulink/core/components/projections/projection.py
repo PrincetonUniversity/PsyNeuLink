@@ -910,8 +910,8 @@ class Projection_Base(Projection):
         if variable is None:
             variable = self.sender.parameters.value.get(execution_id)
 
-        self.context.execution_phase = ContextFlags.PROCESSING
-        self.context.string = context
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context.get(execution_id).string = context
 
         value = super()._execute(
             variable=variable,
@@ -919,7 +919,7 @@ class Projection_Base(Projection):
             runtime_params=runtime_params,
             context=context
         )
-        self.context.execution_phase = ContextFlags.IDLE
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):
