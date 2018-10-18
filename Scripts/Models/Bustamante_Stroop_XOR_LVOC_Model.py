@@ -18,6 +18,7 @@ using a version of the `Learned Value of Control Model
 import psyneulink as pnl
 import numpy as np
 
+np.random.seed(0)
 
 def w_fct(stim, color_control):
     '''function for word_task, to modulate strength of word reading based on 1-strength of color_naming ControlSignal'''
@@ -55,8 +56,25 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC],
                                 terminal_objective_mechanism=True,
-                                control_signals=[{'COLOR CONTROL':[(pnl.SLOPE, color_task),
-                                                                   ('color_control', word_task)]}])
+                                # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
+                                #                                    ('color_control', word_task)]}
+                                # control_signals={pnl.NAME:'COLOR CONTROL',
+                                #                  pnl.PROJECTIONS:[(pnl.SLOPE, color_task),
+                                #                                   ('color_control', word_task)],
+                                #                  pnl.COST_OPTIONS:[pnl.ControlSignalCosts.INTENSITY,
+                                #                                    pnl.ControlSignalCosts.ADJUSTMENT],
+                                #                  pnl.INTENSITY_COST_FUNCTION:pnl.Exponential(rate=0.25, bias=-3),
+                                #                  pnl.ADJUSTMENT_COST_FUNCTION:pnl.Exponential(rate=0.25,bias=-3)}
+                                control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
+                                                                               ('color_control', word_task)],
+                                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY,
+                                                                                pnl.ControlSignalCosts.ADJUSTMENT],
+                                                                  intensity_cost_function=pnl.Exponential(rate=0.25,
+                                                                                                          bias=-3),
+                                                                  adjustment_cost_function=pnl.Exponential(rate=0.25,
+                                                                                                           bias=-3)
+                                                                  )
+                                )
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(color_stim)
 c.add_c_node(word_stim)
@@ -68,7 +86,7 @@ c.add_projection(sender=color_task, receiver=task_decision)
 c.add_projection(sender=word_task, receiver=task_decision)
 c.add_c_node(lvoc)
 
-c.show_graph()
+# c.show_graph()
 
 input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
               word_stim: [[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],

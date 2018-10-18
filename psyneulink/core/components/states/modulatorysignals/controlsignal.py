@@ -42,14 +42,22 @@ components and requirements for configuration that must be met for it to functio
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ConrolSignal can be used, and the parameters specified in its the **projections** argument.  The specification(s) can
-take any of the forms listed below.  For convenience, the parameters can also be specified on their own in the
-**control_signals** argument of a ControlMechanism's constructor, in which case a default ControlSignal will be
-created for each.  In either case, any of the following can be use to specify parameters to be controlled:
+ConrolSignal can be used or a `state specification dictionary <State_Specification>`, in which the parameter(s) to be
+controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
+For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
+ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
+of the following can be use to specify the parameter(s) to be controlled:
 
   * **ParameterState** (or list of them) -- for the Mechanism(s) to which the parameter(s) belong;
   ..
-  * **specification dictionary** -- can take either of the following two forms:
+  * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
+    parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
+    convenience format, that is simpler to use than a specification dictionary (see above), but precludes
+    specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+
+  * **specification dictionary** -- this is an abbreviated form of `state specification dictionary
+    <State_Specification>`, in which the parameter(s) to be controlled can be specified in either of the two
+    following ways:
 
     * for controlling a single parameter, the dictionary can have the following two entries:
 
@@ -65,11 +73,6 @@ created for each.  In either case, any of the following can be use to specify pa
             the string used as the key specifies the name to be used for the ControlSignal,
             and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
-  ..
-  * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
-    parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
-    convenience format, that is simpler to use than a specification dictionary (see above), but precludes
-    specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
 
 .. _ControlSignal_Structure:
@@ -697,7 +700,7 @@ class ControlSignal(ModulatorySignal):
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
 
-        # Note: assign is not currently used by GatingSignal;
+        # Note: assign is not currently used by ControlSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
 
         # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
@@ -732,20 +735,6 @@ class ControlSignal(ModulatorySignal):
                          context=context,
                          function=function,
                          )
-
-        # # MODIFIED 9/18/18 OLD:
-        # if self.cost_options:
-        #     # Default cost params
-        #     if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-        #         self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
-        #     else:
-        #         self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
-        #     self.adjustment_cost = 0
-        #     self.duration_cost = 0
-        #     self.last_duration_cost = self.duration_cost
-        #     self.cost = self.intensity_cost
-        #     self.last_cost = self.cost
-        # # MODIFIED 9/18/18 END
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -847,31 +836,16 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        # MODIFIED 9/18/18 NEW:
-        self._instantiate_cost_attributes()
         self._instantiate_cost_functions()
-        # MODIFIED 9/18/18 END
+        self._initialize_cost_attributes()
 
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
-    # MODIFIED 9/18/18 NEW:
-    def _instantiate_cost_attributes(self):
-        # FIX: MOVE TO ITS OWN METHOD
-        if self.cost_options:
-            # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function.function(self.instance_defaults.allocation)
-            else:
-                self.intensity_cost = self.intensity_cost_function.function(self.ClassDefaults.allocation)
-            self.adjustment_cost = 0
-            self.duration_cost = 0
-            self.last_duration_cost = self.duration_cost
-            self.cost = self.intensity_cost
-            self.last_cost = self.cost
-
     def _instantiate_cost_functions(self):
         # Instantiate cost functions (if necessary) and assign to attributes
+        if self.cost_options:
+            self.assign_costs(self.cost_options)
         for cost_function_name in costFunctionNames:
             cost_function = self.paramsCurrent[cost_function_name]
             # cost function assigned None
@@ -896,8 +870,19 @@ class ControlSignal(ModulatorySignal):
             self.paramsCurrent[cost_function_name] = cost_function
             self.intensity_change = [0]
 
-    # MODIFIED 9/18/18 END
-
+    def _initialize_cost_attributes(self):
+        # FIX: MOVE TO ITS OWN METHOD
+        if self.cost_options:
+            # Default cost params
+            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+            else:
+                self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+            self.adjustment_cost = 0
+            self.duration_cost = 0
+            self.last_duration_cost = self.duration_cost
+            self.cost = self.intensity_cost
+            self.last_cost = self.cost
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
@@ -989,7 +974,7 @@ class ControlSignal(ModulatorySignal):
         self.last_intensity = self.intensity
         if self.cost_options:
             self.last_cost = self.cost
-            if ControlSignalCosts.DURATION in self.cost_options:
+            if ControlSignalCosts.DURATION & self.cost_options:
                 self.last_duration_cost = self.duration_cost
 
     def _compute_costs(self, intensity):
@@ -1002,13 +987,13 @@ class ControlSignal(ModulatorySignal):
 
         # COMPUTE COST(S)
 
-        if ControlSignalCosts.INTENSITY in self.cost_options:
+        if ControlSignalCosts.INTENSITY & self.cost_options:
             self.intensity_cost = self.intensity_cost_function(intensity)
 
-        if ControlSignalCosts.ADJUSTMENT in self.cost_options:
+        if ControlSignalCosts.ADJUSTMENT & self.cost_options:
             self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
 
-        if ControlSignalCosts.DURATION in self.cost_options:
+        if ControlSignalCosts.DURATION & self.cost_options:
             self.duration_cost = self.duration_cost_function(self.cost)
 
         return max(0.0, self.cost_combination_function([self.intensity_cost,
@@ -1155,14 +1140,6 @@ class ControlSignal(ModulatorySignal):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
         """
         return [self.intensity_cost, self.adjustment_cost, self.duration_cost]
-
-    # @property
-    # def variable(self):
-    #     return self.allocation
-    #
-    # @variable.setter
-    # def variable(self, assignment):
-    #     self.allocation = assignment
 
     @property
     def value(self):

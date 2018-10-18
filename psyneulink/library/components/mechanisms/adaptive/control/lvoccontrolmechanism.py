@@ -264,7 +264,7 @@ from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
@@ -540,7 +540,7 @@ class LVOCControlMechanism(ControlMechanism):
                  convergence_criterion:tc.enum(LVOC, CONTROL_SIGNALS)=LVOC,
                  convergence_threshold=0.01,
                  max_iterations=1000,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
