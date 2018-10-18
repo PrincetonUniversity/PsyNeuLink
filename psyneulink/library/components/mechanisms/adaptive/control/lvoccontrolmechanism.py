@@ -766,7 +766,7 @@ class LVOCControlMechanism(ControlMechanism):
         #                                                self.prediction_terms)
         # # MODIFIED 10/17/18 END
         # self.prediction_vector.cost_functions = [c.intensity_cost_function for c in self.control_signals]
-        self.prediction_vector.cost_functions = [c._compute_costs for c in self.control_signals]
+        self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
 
         # Use compute_lvoc_from_control_signals() to compute gradients
         #    of prediction_vector w.r.t. control_signals in gradient_ascent()
@@ -1032,7 +1032,8 @@ class LVOCControlMechanism(ControlMechanism):
                 self.vector[idx.f] = np.array(feature_values).reshape(-1)
             if PV.C in terms:
                 self.vector[idx.c] = np.array(self.c).reshape(-1)
-
+            if PV.COST in terms:
+                self.vector[idx.c] = np.array(self.c).reshape(-1)
             for term in terms:
                 if term in computed_terms:
                     self.vector[getattr(idx, term.value)] = computed_terms[term].reshape(-1)
@@ -1063,12 +1064,11 @@ class LVOCControlMechanism(ControlMechanism):
             if PV.FFCC in terms:
                 computed_terms[PV.FFCC] = np.tensordot(ff,cc,axes=0)
             if PV.COST in terms:
-                # FIX: THIS SHOULD USE control_signal.cost_functions(c)
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3))
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 costs = [None] * len(c)
-                for i, v in enumerate(c):
-                    costs[i] = -(self.cost_functions[i](v))
+                for i, val in enumerate(c):
+                    costs[i] = -(self.compute_costs[i](val))
                 computed_terms[PV.COST] = np.array(costs)
 
             return computed_terms

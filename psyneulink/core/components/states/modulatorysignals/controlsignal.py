@@ -980,9 +980,17 @@ class ControlSignal(ModulatorySignal):
         return state_spec, params_dict
 
     def update(self, params=None, context=None):
+        '''Update value (intensity) and costs
+        '''
         super().update(params=params, context=context)
         if self.cost_options:
-            self._compute_costs(self.value)
+            self.cost = self._compute_costs(self.intensity)
+        # Store current intensity and costs for use in next call as last state
+        self.last_intensity = self.intensity
+        if self.cost_options:
+            self.last_cost = self.cost
+            if ControlSignalCosts.DURATION_COST in self.cost_options:
+                self.last_duration_cost = self.duration_cost
 
     def _compute_costs(self, intensity):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
@@ -992,85 +1000,20 @@ class ControlSignal(ModulatorySignal):
         except AttributeError:
             self.intensity_change = [0]
 
-        if self.prefs.verbosePref:
-            intensity_change_string = "no change"
-            if self.intensity_change < 0:
-                intensity_change_string = "-" + str(self.intensity_change)
-            elif self.intensity_change > 0:
-                intensity_change_string = "+" + str(self.intensity_change)
-            if self.prefs.verbosePref:
-                warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
+        # COMPUTE COST(S)
 
-        # compute cost(s)
-        intensity_cost = adjustment_cost = duration_cost = 0.0
-
-        # # MODIFIED 10/17/18 OLD:
-        # if self.cost_options & ControlSignalCosts.INTENSITY_COST:
-        # MODIFIED 10/17/18 NEW:
         if ControlSignalCosts.INTENSITY_COST in self.cost_options:
-        # MODIFIED 10/17/18 END
-            intensity_cost = self.intensity_cost = self.intensity_cost_function(intensity)
-            if self.prefs.verbosePref:
-                print("++ Used intensity cost")
+            self.intensity_cost = self.intensity_cost_function(intensity)
 
-        # # MODIFIED 10/17/18 OLD:
-        # if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
-        # MODIFIED 10/17/18 NEW:
         if ControlSignalCosts.ADJUSTMENT_COST in self.cost_options:
-        # MODIFIED 10/17/18 END
+            self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
 
-            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
-            if self.prefs.verbosePref:
-                print("++ Used adjustment cost")
-
-        # FIX: 12/23/17 - THIS NEEDS TO HAVE BEEN INITIALIZED
-        # # MODIFIED 10/17/18 OLD:
-        # if self.cost_options & ControlSignalCosts.DURATION_COST:
-        # MODIFIED 10/17/18 NEW:
         if ControlSignalCosts.DURATION_COST in self.cost_options:
-        # MODIFIED 10/17/18 END
-            duration_cost = self.duration_cost = self.duration_cost_function(self.cost)
-            if self.prefs.verbosePref:
-                print("++ Used duration cost")
+            self.duration_cost = self.duration_cost_function(self.cost)
 
-        # MODIFIED 10/17/18 OLD:
-        # self.cost = max(0.0, self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost]))
-        # MODIFIED 10/17/18 NEW:
-        self.cost = max(0.0, self.cost_combination_function([intensity_cost, adjustment_cost, duration_cost]))
-        # MODIFIED 10/17/18 END
-
-        # Store current state for use in next call as last state
-        self.last_intensity = intensity
-
-        # # MODIFIED 9/18/18 OLD:
-        # self.last_cost = self.cost
-        # self.last_duration_cost = self.duration_cost
-        # MODIFIED 9/18/18 NEW:
-        if self.cost_options:
-            self.last_cost = self.cost
-            # # MODIFIED 10/17/18 OLD:
-            # if self.cost_options & ControlSignalCosts.DURATION_COST:
-            # MODIFIED 10/17/18 NEW:
-            if ControlSignalCosts.DURATION_COST in self.cost_options:
-            # MODIFIED 10/17/18 END
-                self.last_duration_cost = self.duration_cost
-        # MODIFIED 9/18/18 END
-
-        # Report new values to stdio
-        if self.prefs.verbosePref:
-            try:
-                cost_change = self.cost - self.last_cost
-            except AttributeError:
-                cost_change = 0
-            cost_change_string = "no change"
-            if cost_change < 0:
-                cost_change_string = str(cost_change)
-            elif cost_change > 0:
-                cost_change_string = "+" + str(cost_change)
-            print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
-
-        # For "outside" users
-        return self.cost
+        return max(0.0, self.cost_combination_function([self.intensity_cost,
+                                                             self.adjustment_cost,
+                                                             self.duration_cost]))
 
     @property
     def allocation_samples(self):
