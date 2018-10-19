@@ -3896,7 +3896,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
 
-        # result = scale * np.exp(rate * variable)
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        # result = scale * np.exp(rate * variable + bias) + offset
         from math import e
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
@@ -4095,7 +4096,11 @@ class Logistic(
         bias = self.get_current_function_param(BIAS)
         offset = self.get_current_function_param(OFFSET)
 
-        result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        # result = scale * np.exp(rate * variable + bias) + offset
+        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        from math import e
+        result = 1. / (1 + e**(-gain * (variable - bias) + offset))
 
         return self.convert_output_type(result)
 
