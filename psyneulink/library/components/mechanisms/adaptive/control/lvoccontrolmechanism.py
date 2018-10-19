@@ -917,7 +917,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # INTERACTION TERMS (unflattened)
 
-            # Interactions among feature_predictor vectors
+            # Interactions among feature vectors
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
