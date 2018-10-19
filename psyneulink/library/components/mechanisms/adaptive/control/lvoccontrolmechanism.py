@@ -857,18 +857,63 @@ class LVOCControlMechanism(ControlMechanism):
 
 
     class PredictionVector():
-        '''Full generalization:  allow main effect and interaction terms to be specified for inclusion
-        STILL UNDER DEVELOPMENT
+        '''Maintain lists and vector of prediction terms.
+
+        Lists are indexed by the `PV` Enum, and vector fields are indexed by slices listed in the `idx
+        <PredicitionVector.idx>` attribute.
+
+        Arguments
+        ---------
+
+        feature_values
+
+        control_signals
+
+        specified_terms
+
+
+        Attributes
+        ----------
+
+        specified_terms : List[PV]
+            terms included as predictors, as specified in the `specified_terms
+            <LVOCControlMechanism.specified_terms>` attribute of the LVOCControlMechahism.
+
+        terms : List[ndarray]
+            current value of ndarray terms, some of which are used to compute other terms. Only entries for terms in
+            `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
+
+        num : List[int]
+            number of arrays in outer dimension (axis 0) of each ndarray in `terms <PredictionVector.terms>`.
+            Only entries for terms in `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values;
+            others are assigned `None`.
+
+        num_elems : List[int]
+            number of elements in flattened array for each ndarray in `terms <PredictionVector.terms>`.
+            Only entries for terms in `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values;
+            others are assigned `None`.
+
+        self.labels : List[str]
+            label of each item in `terms <PredictionVector.terms>`. Only entries for terms in `specified_terms
+            <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
+
+        vector : ndarray
+            contains the flattened array for all ndarrays in `terms <PredictionVector.terms>`.  Contains only
+            the terms specified in `specified_terms <LVOCControlMechanism.specified_terms>`.  Indices for the
+            fields corresponding to each term are listed in `idx <PredictionVector.idx>`.
+
+        idx : List[slice]
+            indices of `vector <PredictionVector.vector>` for the flattened version of each nd term in
+            `terms <PredictionVector.terms>`. Only entries for terms in `specified_terms
+            <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
+
+        XXX ADD METHODS HERE
+
         '''
 
         def __init__(self, feature_values, control_signals, specified_terms):
 
-            # ASSIGN TERMS
-
-            # Used for computing partial derivatives
-            # labels = self.labels
             def get_intrxn_labels(x):
-                # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
                 return list([s for s in powerset(x) if len(s)>1])
 
             def error_for_too_few_terms(term):
