@@ -251,7 +251,7 @@ import warnings
 from collections import Iterable, deque
 from itertools import product
 import typecheck as tc
-from aenum import Enum
+from aenum import AutoNumberEnum, auto
 
 import autograd.numpy as np
 from autograd import grad
@@ -288,7 +288,7 @@ PREDICTION_TERMS = 'prediction_terms'
 PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 
 
-class PV(Enum):
+class PV(AutoNumberEnum):
     '''PV()
     Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
 
@@ -320,15 +320,24 @@ class PV(Enum):
     '''
 
     # FIX: MAKE THIS NUMERICAL ENUM AND THEN CHANGE compute_terms TO USE AS INDICES INTO LIST
-    F = 'f'
-    C = 'c'
-    FF = 'ff'
-    CC = 'cc'
-    FC = 'fc'
-    FFC = 'ffc'
-    FCC = 'fcc'
-    FFCC = 'ffcc'
-    COST = 'cst'
+    # F = 'f'
+    # C = 'c'
+    # FF = 'ff'
+    # CC = 'cc'
+    # FC = 'fc'
+    # FFC = 'ffc'
+    # FCC = 'fcc'
+    # FFCC = 'ffcc'
+    # COST = 'cst'
+    F =    auto()
+    C =    auto()
+    FF =   auto()
+    CC =   auto()
+    FC =   auto()
+    FFC =  auto()
+    FCC =  auto()
+    FFCC = auto()
+    COST = auto()
 
 
 class LVOCError(Exception):
@@ -857,35 +866,9 @@ class LVOCControlMechanism(ControlMechanism):
 
 
     class PredictionVector():
-        '''Full generalization:  allow main effect and interactio jterms to be specified for inclusion
+        '''Full generalization:  allow main effect and interaction terms to be specified for inclusion
         STILL UNDER DEVELOPMENT
         '''
-
-        class idx():
-            '''Indices into PredictionVector.vector -- assigned in __init__'''
-            f = None
-            c = None
-            fc = None
-            ff = None
-            cc = None
-            ffc = None
-            fcc = None
-            ffcc = None
-            cst = None
-
-
-        class labels():
-            '''labels indivual items in each set of terms of PredictionVector.vector -- assigned in __init__'''
-            f = None
-            c = None
-            fc = None
-            ff = None
-            cc = None
-            ffc = None
-            fcc = None
-            ffcc = None
-            cst = None
-
 
         def __init__(self, feature_values, control_signals, terms):
 
@@ -902,47 +885,54 @@ class LVOCControlMechanism(ControlMechanism):
                 raise LVOCError("Specification of {} for {} arg of {} requires at least two {} be specified".
                                 format('PV.'+terms, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
-            self.terms = terms
-
+            # RENAME THIS AS SPECIFIED_TERMS
+            self.specified_terms = terms
+            self.terms = [None] * len(PV)
+            self.idx =  [None] * len(PV)
+            self.num =  [None] * len(PV)
+            self.num_elems =  [None] * len(PV)
+            self.labels = [None] * len(PV)
 
             # MAIN EFFECT TERMS (unflattened)
 
             # Feature_predictors
-            self.f = feature_values
-            self.num_f = len(self.f)  # feature_predictors are arrays; num_f is the number of arrays
-            self.num_f_elems = len(self.f.reshape(-1)) # number of total elements assigned to prediction_vector.vector
-            labels.f = ['f'+str(i) for i in range(0,self.num_f)]
+            self.terms[PV.F] = f = feature_values
+            self.num[PV.F] = len(f)  # feature_predictors are arrays; num_f is the number of arrays
+            self.num_elems[PV.F] = len(self.f.reshape(-1)) # num of total elements assigned to prediction_vector.vector
+            self.labels[PV.F] = ['f'+str(i) for i in range(0,self.num_f)]
 
-            # ControlSignals - place value of each in a 1d array (for computing tensor products)
-            self.c = np.array([[0]] * len(control_signals)) # Placemarker until control_signals are instantiated
-            self.num_c = len(self.c)
-            self.num_c_elems = len(self.c.reshape(-1))
-            labels.c = ['c'+str(i) for i in range(0,len(control_signals))]
-            # # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
-            # self.control_signal_change = np.zeros_like(self.c)
+            # Placemarker until control_signals are instantiated
+            self.terms[PV.C] = c = np.array([[0]] * len(control_signals))
+            self.num[PV.C] = len(c)
+            self.num_elems[PV.C] = len(c.reshape(-1))
+            self.labels[PV.C] = ['c'+str(i) for i in range(0,len(control_signals))]
 
             # Costs
-            self.num_cst = self.num_c
-            labels.cst = ['cst'+str(i) for i in range(0,self.num_cst)]
+            # Placemarker until control_signals are instantiated
+            # MODIFIED 11/19/18 NEW:
+            self.terms[PV.COST] = np.array([[0]] * len(control_signals))
+            # MODIFIED 11/19/18 END
+            self.num[PV.COST] = self.num[PV.C]
+            self.labels[PV.COST] = ['cst'+str(i) for i in range(0,self.num[PV.COST])]
 
             # INTERACTION TERMS (unflattened)
 
             # Interactions among feature_predictor vectors
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-                if self.num_f < 2:
+                if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                self.ff = np.array(tensor_power(self.f, levels=range(2,self.num_f+1)))
-                self.num_ff = len(self.ff)
-                self.num_ff_elems = len(self.ff.reshape(-1))
-                labels.ff= get_intrxn_labels(labels.f)
+                self.terms[PV.FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
+                self.num[PV.FF] = len(ff)
+                self.num_elems[PV.FF] = len(ff.reshape(-1))
+                self.labels[PV.FF]= get_intrxn_labels(self.labels[PV.F])
 
             # Interactions among values of control_signals
             if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-                if self.num_c < 2:
+                if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.cc = np.array(tensor_power(self.c, levels=range(2,self.num_c+1)))
-                self.num_cc=len(self.cc)
-                self.num_cc_elems = len(self.cc.reshape(-1))
+                self.terms[PV.CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
+                self.num[PV.CC]=len(self.terms[PV.CC])
+                self.num_elems[PV.CC] = len(self.terms[PV.CC].reshape(-1))
                 labels.cc = get_intrxn_labels(labels.c)
 
             # Feature-Control interactions
@@ -984,6 +974,9 @@ class LVOCControlMechanism(ControlMechanism):
             # Construct "flattened" prediction_vector based on specified terms and assign indices (as slices)
             idx = self.idx
             # FIX: ??refactor as iterate through enum
+            for i in range(len(PV)):
+                if PV.i in terms:
+                    self.idx[i] = slice(i, i+self.num_x_elems)
             i = 0
             if PV.F in terms:
                 idx.f = slice(i, i+self.num_f_elems)
