@@ -856,7 +856,7 @@ class LVOCControlMechanism(ControlMechanism):
         else:
             self.prediction_vector.update_vector(self.feature_values, self.control_signal_variables)
             self.prediction_buffer.append(self.prediction_vector.vector)
-            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx.cst])
+            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
 
         # costs are assigned as negative in prediction_vector.update, so add them here
         outcome = obj_mech_outcome + self.previous_cost
@@ -885,7 +885,7 @@ class LVOCControlMechanism(ControlMechanism):
                                 format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
-            C = PV.F.value
+            C = PV.C.value
             FF = PV.FF.value
             CC = PV.CC.value
             FC = PV.FC.value
@@ -919,15 +919,16 @@ class LVOCControlMechanism(ControlMechanism):
             # Costs
             # Placemarker until control_signals are instantiated
             # MODIFIED 11/19/18 NEW:
-            self.terms[COST] = np.array([[0]] * len(control_signals))
+            self.terms[COST] = cst = np.array([[0]] * len(control_signals))
             # MODIFIED 11/19/18 END
             self.num[COST] = self.num[C]
+            self.num_elems[COST] = len(cst.reshape(-1))
             self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
 
             # INTERACTION TERMS (unflattened)
 
             # Interactions among feature vectors
-            if any(term in specified_terms for term in [FF, FFC, FFCC]):
+            if any(term in specified_terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
                 self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
@@ -936,7 +937,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[FF]= get_intrxn_labels(self.labels[F])
 
             # Interactions among values of control_signals
-            if any(term in specified_terms for term in [CC, FCC, FFCC]):
+            if any(term in specified_terms for term in [PV.CC, PV.FCC, PV.FFCC]):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
                 self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
@@ -945,7 +946,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[CC] = get_intrxn_labels(self.labels[C])
 
             # feature-control interactions
-            if any(term in specified_terms for term in [FC, FCC, FFCC]):
+            if any(term in specified_terms for term in [PV.FC, PV.FCC, PV.FFCC]):
                 # # MODIFIED 11/19/18 OLD:
                 # self.terms[FC] = np.tensordot(feature_values, c, axes=0)
                 # MODIFIED 11/19/18 NEW:
@@ -956,7 +957,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[FC] = list(product(self.labels[F], self.labels[C]))
 
             # feature-feature-control interactions
-            if any(term in specified_terms for term in [FFC, FFCC]):
+            if any(term in specified_terms for term in [PV.FFC, PV.FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
                 self.terms[FFC] = ffc = np.tensordot(ff, c, axes=0)
@@ -965,7 +966,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[FFC] = list(product(self.labels[FF], self.labels[C]))
 
             # feature-control-control interactions
-            if any(term in specified_terms for term in [FCC, FFCC]):
+            if any(term in specified_terms for term in [PV.FCC, PV.FFCC]):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
                 self.terms[FCC] = fcc = np.tensordot(f, cc, axes=0)
@@ -974,7 +975,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[FCC] = list(product(self.labels[F], self.labels[CC]))
 
             # feature-feature-control-control interactions
-            if FFCC in specified_terms:
+            if PV.FFCC in specified_terms:
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
                 if len(c) < 2:
@@ -985,45 +986,17 @@ class LVOCControlMechanism(ControlMechanism):
                 self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
 
             # Construct "flattened" prediction_vector based on specified terms, and assign indices (as slices)
-            idx = self.idx
-            # FIX: ??refactor as iterate through enum
-            for i in range(len(PV)):
-                if i in [t.value for t in specified_terms]:
-                    self.idx[i] = slice(i, i+self.num_elems[i])
-            # i = 0
-            # if PV.F in terms:
-            #     idx.f = slice(i, i+self.num_f_elems)
-            #     i += self.num_f
-            # if PV.C in terms:
-            #     idx.c = slice(i, i+self.num_c_elems)
-            #     i += self.num_c
-            # if PV.FF in terms:
-            #     idx.ff = slice(i, i+self.num_ff_elems)
-            #     i += self.num_ff
-            # if PV.CC in terms:
-            #     idx.cc = slice(i, i+self.num_cc_elems)
-            #     i += self.num_cc
-            # if PV.FC in terms:
-            #     idx.fc = slice(i, i+self.num_fc_elems)
-            #     i += self.num_fc
-            # if PV.FFC in terms:
-            #     idx.ffc = slice(i, i+self.num_ffc_elems)
-            #     i += self.num_ffc
-            # if PV.FCC in terms:
-            #     idx.fcc = slice(i, i+self.num_fcc_elems)
-            #     i += self.num_fcc
-            # if PV.FFCC in terms:
-            #     idx.ffcc = slice(i, i+self.num_ffcc_elems)
-            #     i += self.num_ffcc
-            # if PV.COST in terms:
-            #     idx.cst = slice(i, i+self.num_cst)
-            #     i+= self.num_cst
+            i=0
+            for t in range(len(PV)):
+                if t in [t.value for t in specified_terms]:
+                    self.idx[t] = slice(i, i + self.num_elems[t])
+                    i += self.num_elems[t]
 
             self.vector = np.zeros(i)
 
         def update_vector(self, feature_values, control_signal_variables):
 
-            terms = self.terms
+            terms = self.specified_terms
             idx = self.idx
             self.f = np.array(feature_values)
             self.c = np.array(control_signal_variables)
@@ -1031,9 +1004,8 @@ class LVOCControlMechanism(ControlMechanism):
             computed_terms = self.compute_terms(self.c)
 
             # Assign flattened versions of specified terms to vector
-            for term in terms:
-                if term in computed_terms:
-                    self.vector[getattr(idx, term.value)] = computed_terms[term].reshape(-1)
+            for k, v in computed_terms.items():
+                self.vector[self.idx[k.value]] = v.reshape(-1)
 
         def compute_terms(self, control_signal_variables):
             '''Calculate and update interaction terms in vector.
@@ -1041,7 +1013,7 @@ class LVOCControlMechanism(ControlMechanism):
             # FIX: WHEN PV IS CHANGED TO NUMERICAL ENUM,
             # FIX:    CHANGE computed_terms TO USE THOSE AS NUMERICAL INDICES OF A LIST
 
-            terms = self.terms
+            terms = self.specified_terms
             computed_terms = {}
 
             computed_terms[PV.F] = f = self.f
@@ -1062,9 +1034,9 @@ class LVOCControlMechanism(ControlMechanism):
 
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num_f+1)))
+                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num[PV.F.value]+1)))
             if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num_c+1)))
+                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num[PV.C.value]+1)))
             if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
                 computed_terms[PV.FC] = np.tensordot(f, c, axes=0)
             if any(term in terms for term in [PV.FFC, PV.FFCC]):
@@ -1159,31 +1131,36 @@ class LVOCControlMechanism(ControlMechanism):
         This is the function (including its call to PredictionVector.compute_terms) over which autograd differentiates.
         '''
 
-        idx = self.prediction_vector.idx
         terms = self.prediction_terms
-        v = self.prediction_vector.compute_terms(control_signal_variables)
-        w = self.prediction_weights
-
+        vector = self.prediction_vector.compute_terms(control_signal_variables)
+        weights = self.prediction_weights
         lvoc = 0
-        if PV.F in terms:
-            # lvoc += np.sum(np.array(v[PV.F]).reshape(-1) * self.prediction_weights[idx.f])
-            lvoc += np.sum(np.array(self.feature_values.reshape(-1) * self.prediction_weights[idx.f]))
-        if PV.C in terms:
-            lvoc += np.sum(v[PV.C].reshape(-1) * self.prediction_weights[idx.c])
-        if PV.FF in terms:
-            lvoc += np.sum(v[PV.FF].reshape(-1) * self.prediction_weights[idx.ff])
-        if PV.CC in terms:
-            lvoc += np.sum(v[PV.CC].reshape(-1) * self.prediction_weights[idx.cc])
-        if PV.FC in terms:
-            lvoc += np.sum(v[PV.FC].reshape(-1) * self.prediction_weights[idx.fc])
-        if PV.FFC in terms:
-            lvoc += np.sum(v[PV.FFC].reshape(-1) * self.prediction_weights[idx.ffc])
-        if PV.FCC in terms:
-            lvoc += np.sum(v[PV.FCC].reshape(-1) * self.prediction_weights[idx.fcc])
-        if PV.FFCC in terms:
-            lvoc += np.sum(v[PV.FFCC].reshape(-1) * self.prediction_weights[idx.ffcc])
-        if PV.COST in terms:
-            lvoc += np.sum(v[PV.COST].reshape(-1) * self.prediction_weights[idx.cst])
+
+        for k, v in vector.items():
+            if k in terms:
+                idx = self.prediction_vector.idx[k.value]
+                lvoc += np.sum(v.reshape(-1) * weights[idx])
+
+        # if PV.F in terms:
+        #     # lvoc += np.sum(np.array(v[PV.F]).reshape(-1) * self.prediction_weights[idx.f])
+        #     # lvoc += np.sum(np.array(self.feature_values.reshape(-1) * self.prediction_weights[self.prediction_vector.idx[PV.F.value]]))
+        #     lvoc += np.sum(v[PV.F].reshape(-1) * self.prediction_weights[self.prediction_vector.idx[PV.F.value]])
+        # if PV.C in terms:
+        #     lvoc += np.sum(v[PV.C].reshape(-1) * self.prediction_weights[idx.c])
+        # if PV.FF in terms:
+        #     lvoc += np.sum(v[PV.FF].reshape(-1) * self.prediction_weights[idx.ff])
+        # if PV.CC in terms:
+        #     lvoc += np.sum(v[PV.CC].reshape(-1) * self.prediction_weights[idx.cc])
+        # if PV.FC in terms:
+        #     lvoc += np.sum(v[PV.FC].reshape(-1) * self.prediction_weights[idx.fc])
+        # if PV.FFC in terms:
+        #     lvoc += np.sum(v[PV.FFC].reshape(-1) * self.prediction_weights[idx.ffc])
+        # if PV.FCC in terms:
+        #     lvoc += np.sum(v[PV.FCC].reshape(-1) * self.prediction_weights[idx.fcc])
+        # if PV.FFCC in terms:
+        #     lvoc += np.sum(v[PV.FFCC].reshape(-1) * self.prediction_weights[idx.ffcc])
+        # if PV.COST in terms:
+        #     lvoc += np.sum(v[PV.COST].reshape(-1) * self.prediction_weights[idx.cst])
 
         return lvoc
 
@@ -1193,23 +1170,33 @@ class LVOCControlMechanism(ControlMechanism):
         vector = pv.vector
         idx = pv.idx
 
+
         if PV.F in terms:
-            print('feature_values: ', vector[idx.f])
-        if PV.FF in terms:
-            print('ff: ', vector[idx.ff])
-        if PV.CC in terms:
-            print('cc: ', vector[idx.cc])
-        if PV.FC in terms:
-            print('fc: ', vector[idx.fc])
-        if PV.FFC in terms:
-            print('ffc: ', vector[idx.ffc])
-        if PV.FCC in terms:
-            print('fcc: ', vector[idx.fcc])
-        if PV.FFCC in terms:
-            print('ffcc: ', vector[idx.ffcc])
-        if PV.COST in terms:
-            print('cst: ', vector[idx.cst])
-        print('control_signal_values: ', vector[idx.c])
+            print('feature_values: ', vector[idx[PV.F.value]])
+
+        for t in PV:
+            if t in terms and t is not PV.C:
+                print('{}: {}'.format(t.name, vector[idx[t.value]]))
+
+        print('control_signal_values: ', vector[idx[PV.C.value]])
+
+        # if PV.F in terms:
+        #     print('feature_values: ', vector[idx.f])
+        # if PV.FF in terms:
+        #     print('ff: ', vector[idx.ff])
+        # if PV.CC in terms:
+        #     print('cc: ', vector[idx.cc])
+        # if PV.FC in terms:
+        #     print('fc: ', vector[idx.fc])
+        # if PV.FFC in terms:
+        #     print('ffc: ', vector[idx.ffc])
+        # if PV.FCC in terms:
+        #     print('fcc: ', vector[idx.fcc])
+        # if PV.FFCC in terms:
+        #     print('ffcc: ', vector[idx.ffcc])
+        # if PV.COST in terms:
+        #     print('cst: ', vector[idx.cst])
+        # print('control_signal_values: ', vector[idx.c])
 
 
 # OLD ******************************************************************************************************************
