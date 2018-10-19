@@ -65,6 +65,10 @@ class TestACConstructor:
         assert comp.output_CIM.reportOutputPref == False
         assert comp.target_CIM.reportOutputPref == False
 
+    def test_patience(self):
+        comp = AutodiffComposition(patience=10)
+        assert comp.patience == 10
+
 
 @pytest.mark.skipif(
     not torch_available,
