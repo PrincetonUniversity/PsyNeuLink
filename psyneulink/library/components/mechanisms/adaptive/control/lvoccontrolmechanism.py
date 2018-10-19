@@ -931,18 +931,22 @@ class LVOCControlMechanism(ControlMechanism):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
                 self.terms[PV.CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
-                self.num[PV.CC]=len(self.terms[PV.CC])
-                self.num_elems[PV.CC] = len(self.terms[PV.CC].reshape(-1))
-                labels.cc = get_intrxn_labels(labels.c)
+                self.num[PV.CC]=len(cc)
+                self.num_elems[PV.CC] = len(cc.reshape(-1))
+                self.labels[PV.CC] = get_intrxn_labels(self.labels[PV.C])
 
-            # Feature-Control interactions
+            # feature-control interactions
             if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
-                self.fc = np.tensordot(feature_values, self.c, axes=0)
-                self.num_fc = len(self.fc.reshape(-1))
-                self.num_fc_elems = len(self.fc.reshape(-1))
-                labels.fc = list(product(labels.f, labels.c))
+                # # MODIFIED 11/19/18 OLD:
+                # self.terms[PV.FC] = np.tensordot(feature_values, c, axes=0)
+                # MODIFIED 11/19/18 NEW:
+                self.terms[PV.FC] = fc = np.tensordot(f, c, axes=0)
+                # MODIFIED 11/19/18 END
+                self.num[PV.FC] = len(fc.reshape(-1))
+                self.num_elems[PV.FC] = len(fc.reshape(-1))
+                self.labels[PV.FC] = list(product(self.labels[PV.F], self.labels[PV.C]))
 
-            # Feature-Feature-Control interactions
+            # feature-feature-control interactions
             if any(term in terms for term in [PV.FFC, PV.FFCC]):
                 if self.num_f < 2:
                     self.error_for_too_few_terms('FF')
@@ -951,7 +955,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_ffc_elems = len(self.ffc.reshape(-1))
                 labels.ffc = list(product(labels.ff, labels.c))
 
-            # Feature-Control-Control interactions
+            # feature-control-control interactions
             if any(term in terms for term in [PV.FCC, PV.FFCC]):
                 if self.num_c < 2:
                     self.error_for_too_few_terms('CC')
@@ -960,7 +964,7 @@ class LVOCControlMechanism(ControlMechanism):
                 self.num_fcc_elems = len(self.fcc.reshape(-1))
                 labels.fcc = list(product(labels.f, labels.cc))
 
-            # Feature-Feature-Control-Control interactions
+            # feature-feature-control-control interactions
             if PV.FFCC in terms:
                 if self.num_f < 2:
                     self.error_for_too_few_terms('FF')
