@@ -54,36 +54,28 @@ def _cpu_jit_constructor():
     #       Can we use it to avoid recompiling builtins?
     #       Would cross module calls work? and for GPUs?
     __backing_mod = binding.parse_assembly("")
+
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
 
 _dumpenv = os.environ.get("PNL_LLVM_DUMP")
 
 class jit_engine:
-    def __init__(self, contructor):
-        self.__ctr = contructor
-        self.__engine = None
+    def __init__(self):
+        self._jit_engine = None
+        self._jit_pass_manager = None
+        self._target_machine = None
         self.__mod = None
-        self.__pass_manager = None
-        self.__target_machine = None
-
-    @property
-    def _engine(self):
-        if self.__engine is None:
-            self.__engine, self.__pass_manager, self.__target_machine = self.__ctr()
-
-        return self.__engine
-
 
     def opt_and_add_bin_module(self, module):
-        self.__pass_manager.run(module)
+        self._pass_manager.run(module)
         if _dumpenv is not None and _dumpenv.find("opt") != -1:
             print(module)
 
         # This prints generated x86 assembly
         if _dumpenv is not None and _dumpenv.find("isa") != -1:
             print("ISA assembly:")
-            print(self.__target_machine.emit_assembly(self.__mod))
+            print(self._target_machine.emit_assembly(self.__mod))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -100,4 +92,32 @@ class jit_engine:
 
         self.opt_and_add_bin_module(self.__mod)
 
-cpu_jit_engine = jit_engine(_cpu_jit_constructor)
+    @property
+    def _engine(self):
+        if self._jit_engine is None:
+            self._init()
+
+        return self._jit_engine
+
+    @property
+    def _pass_manager(self):
+        if self._jit_pass_manager is None:
+            self._init()
+
+        return self._jit_pass_manager
+
+
+class cpu_jit_engine(jit_engine):
+
+    def __init__(self, object_cache = None):
+        super().__init__()
+        self._object_cache = object_cache
+
+    def _init(self):
+        assert self._jit_engine is None
+        assert self._jit_pass_manager is None
+        assert self._target_machine is None
+
+        self._jit_engine, self._jit_pass_manager, self._target_machine = _cpu_jit_constructor()
+        if self._object_cache is not None:
+             self._jit_engine.set_object_cache(self._object_cache)
