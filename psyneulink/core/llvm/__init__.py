@@ -65,7 +65,6 @@ def _llvm_build():
 
 
 _binaries = {}
-_cpu_engine = cpu_jit_engine
 
 class LLVMBinaryFunction:
     def __init__(self, name):
@@ -147,7 +146,7 @@ def _updateNativeBinaries(module, buffer):
     for d in to_delete:
         del _binaries[d]
 
-_cpu_engine._engine.set_object_cache(_updateNativeBinaries)
+_cpu_engine = cpu_jit_engine(_updateNativeBinaries)
 
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):

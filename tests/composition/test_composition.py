@@ -3283,7 +3283,11 @@ class TestSystemComposition:
 #
 
 class TestNestedCompositions:
-    def test_transfer_mechanism_composition(self):
+
+    @pytest.mark.this
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    def test_transfer_mechanism_composition(self, mode):
 
         # mechanisms
         A = ProcessingMechanism(name="A",
@@ -3304,8 +3308,8 @@ class TestNestedCompositions:
         comp2.add_c_node(C)
 
         # pass same 3 trials of input to comp1 and comp2
-        comp1.run(inputs={A: [1.0, 2.0, 3.0]})
-        comp2.run(inputs={C: [1.0, 2.0, 3.0]})
+        comp1.run(inputs={A: [1.0, 2.0, 3.0]}, bin_execute=mode)
+        comp2.run(inputs={C: [1.0, 2.0, 3.0]}, bin_execute=mode)
 
         assert np.allclose(comp1.results, comp2.results)
 
