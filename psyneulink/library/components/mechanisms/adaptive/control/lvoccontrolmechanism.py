@@ -770,17 +770,11 @@ class LVOCControlMechanism(ControlMechanism):
                 raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
                                 format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
 
-        # # MODIFIED 10/17/18 NEW:
-        # self.prediction_vector = self.PredictionVector(self.feature_values,
-        #                                                self.control_signals,
-        #                                                self.prediction_terms)
-        # # MODIFIED 10/17/18 END
-        # self.prediction_vector.cost_functions = [c.intensity_cost_function for c in self.control_signals]
         self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
 
         # Use compute_lvoc_from_control_signals() to compute gradients
-        #    of prediction_vector w.r.t. control_signals in gradient_ascent()
+        #    of prediction_vector w.r.t. control_signal variables in gradient_ascent()
         self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
 
@@ -843,12 +837,10 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Instantiate PredictionVector and related attributes
         if context is ContextFlags.INSTANTIATE:
-            # MODIFIED 10/17/18 OLD:
             self.control_signal_variables = [c.instance_defaults.variable for c in self.control_signals]
             self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signal_variables,
                                                            self.prediction_terms)
-            # MODIFIED 10/17/18 END
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
@@ -918,9 +910,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # Costs
             # Placemarker until control_signals are instantiated
-            # MODIFIED 11/19/18 NEW:
             self.terms[COST] = cst = np.array([[0]] * len(control_signals))
-            # MODIFIED 11/19/18 END
             self.num[COST] = self.num[C]
             self.num_elems[COST] = len(cst.reshape(-1))
             self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
@@ -947,11 +937,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             # feature-control interactions
             if any(term in specified_terms for term in [PV.FC, PV.FCC, PV.FFCC]):
-                # # MODIFIED 11/19/18 OLD:
-                # self.terms[FC] = np.tensordot(feature_values, c, axes=0)
-                # MODIFIED 11/19/18 NEW:
                 self.terms[FC] = fc = np.tensordot(f, c, axes=0)
-                # MODIFIED 11/19/18 END
                 self.num[FC] = len(fc.reshape(-1))
                 self.num_elems[FC] = len(fc.reshape(-1))
                 self.labels[FC] = list(product(self.labels[F], self.labels[C]))
@@ -996,27 +982,21 @@ class LVOCControlMechanism(ControlMechanism):
 
         def update_vector(self, feature_values, control_signal_variables):
 
-            terms = self.specified_terms
-            idx = self.idx
-            self.f = np.array(feature_values)
-            self.c = np.array(control_signal_variables)
-
-            computed_terms = self.compute_terms(self.c)
+            self.terms[PV.F.value] = np.array(feature_values)
+            computed_terms = self.compute_terms(np.array(control_signal_variables))
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 self.vector[self.idx[k.value]] = v.reshape(-1)
 
         def compute_terms(self, control_signal_variables):
-            '''Calculate and update interaction terms in vector.
-            '''
-            # FIX: WHEN PV IS CHANGED TO NUMERICAL ENUM,
-            # FIX:    CHANGE computed_terms TO USE THOSE AS NUMERICAL INDICES OF A LIST
+            '''Calculate and update interaction terms in vector.'''
 
             terms = self.specified_terms
             computed_terms = {}
 
-            computed_terms[PV.F] = f = self.f
+            # No need to calculate features, so just get values
+            computed_terms[PV.F] = f = self.terms[PV.F.value]
 
             # Compute value of each control_signal from its variable
             c = [None] * len(control_signal_variables)
@@ -1024,6 +1004,7 @@ class LVOCControlMechanism(ControlMechanism):
                 c[i] = self.control_signal_functions[i](var)
             computed_terms[PV.C] = c = np.array(c)
 
+            # Compute costs for new control_signal values
             if PV.COST in terms:
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3))
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
@@ -1071,8 +1052,6 @@ class LVOCControlMechanism(ControlMechanism):
         control_signal_variables = np.array([c.variable if c.variable is not None
                                              else c.instance_defaults.variable
                                              for c in control_signals])
-        # # FIX: USE UNTIL AUTOGRAD DEBUGGED TO USE CONTROL SIGNAL COST FUNCTIONS
-        # self.prediction_vector.control_signal_change = [c.intensity_change for c in control_signals]
 
         # Initialize variables used in while loop
         prev_control_signal_variables = np.full_like(control_signal_variables, np.finfo(np.longdouble).max)
@@ -1086,8 +1065,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             current_lvoc = self.compute_lvoc_from_control_signals(control_signal_variables)
             gradients = self.grad_of_lvoc_wrt_control_signals(control_signal_variables)
-            # # FIX: REPLACE THIS WITH USE OF CONTROLSIGNAL VARIABLE AND FUNCTION
-            # control_signal_values = np.maximum(0, (control_signal_values + update_rate * np.array(gradients)))
             control_signal_variables = control_signal_variables + update_rate * np.array(gradients)
 
             if self.convergence_criterion == LVOC:
@@ -1148,7 +1125,6 @@ class LVOCControlMechanism(ControlMechanism):
         terms = self.prediction_terms
         vector = pv.vector
         idx = pv.idx
-
 
         if PV.F in terms:
             print('feature_values: ', vector[idx[PV.F.value]])
