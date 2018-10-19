@@ -1141,27 +1141,6 @@ class LVOCControlMechanism(ControlMechanism):
                 idx = self.prediction_vector.idx[k.value]
                 lvoc += np.sum(v.reshape(-1) * weights[idx])
 
-        # if PV.F in terms:
-        #     # lvoc += np.sum(np.array(v[PV.F]).reshape(-1) * self.prediction_weights[idx.f])
-        #     # lvoc += np.sum(np.array(self.feature_values.reshape(-1) * self.prediction_weights[self.prediction_vector.idx[PV.F.value]]))
-        #     lvoc += np.sum(v[PV.F].reshape(-1) * self.prediction_weights[self.prediction_vector.idx[PV.F.value]])
-        # if PV.C in terms:
-        #     lvoc += np.sum(v[PV.C].reshape(-1) * self.prediction_weights[idx.c])
-        # if PV.FF in terms:
-        #     lvoc += np.sum(v[PV.FF].reshape(-1) * self.prediction_weights[idx.ff])
-        # if PV.CC in terms:
-        #     lvoc += np.sum(v[PV.CC].reshape(-1) * self.prediction_weights[idx.cc])
-        # if PV.FC in terms:
-        #     lvoc += np.sum(v[PV.FC].reshape(-1) * self.prediction_weights[idx.fc])
-        # if PV.FFC in terms:
-        #     lvoc += np.sum(v[PV.FFC].reshape(-1) * self.prediction_weights[idx.ffc])
-        # if PV.FCC in terms:
-        #     lvoc += np.sum(v[PV.FCC].reshape(-1) * self.prediction_weights[idx.fcc])
-        # if PV.FFCC in terms:
-        #     lvoc += np.sum(v[PV.FFCC].reshape(-1) * self.prediction_weights[idx.ffcc])
-        # if PV.COST in terms:
-        #     lvoc += np.sum(v[PV.COST].reshape(-1) * self.prediction_weights[idx.cst])
-
         return lvoc
 
     # TEST PRINT:
@@ -1179,24 +1158,6 @@ class LVOCControlMechanism(ControlMechanism):
                 print('{}: {}'.format(t.name, vector[idx[t.value]]))
 
         print('control_signal_values: ', vector[idx[PV.C.value]])
-
-        # if PV.F in terms:
-        #     print('feature_values: ', vector[idx.f])
-        # if PV.FF in terms:
-        #     print('ff: ', vector[idx.ff])
-        # if PV.CC in terms:
-        #     print('cc: ', vector[idx.cc])
-        # if PV.FC in terms:
-        #     print('fc: ', vector[idx.fc])
-        # if PV.FFC in terms:
-        #     print('ffc: ', vector[idx.ffc])
-        # if PV.FCC in terms:
-        #     print('fcc: ', vector[idx.fcc])
-        # if PV.FFCC in terms:
-        #     print('ffcc: ', vector[idx.ffcc])
-        # if PV.COST in terms:
-        #     print('cst: ', vector[idx.cst])
-        # print('control_signal_values: ', vector[idx.c])
 
 
 # OLD ******************************************************************************************************************
