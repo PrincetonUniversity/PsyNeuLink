@@ -201,6 +201,7 @@ from collections import deque, namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
+# import autograd.numpy as np
 import numpy as np
 import typecheck as tc
 
@@ -4096,8 +4097,8 @@ class Logistic(
         bias = self.get_current_function_param(BIAS)
         offset = self.get_current_function_param(OFFSET)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         from math import e
         result = 1. / (1 + e**(-gain * (variable - bias) + offset))

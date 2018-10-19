@@ -161,7 +161,7 @@ of the *OUTCOME* `OutputState` of the LVOCControlMechanism's `objective_mechanis
 ~~~~~~~~~~
 
 The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism learns how to weight its `feature_predictors
-<LVOCControlMechanism_Feature_Predictors>`, the `values <ControlSignal.value>` of its  `control_signals
+<LVOCControlMechanism_Feature_Predictors>`, the `values <ControlSignal.values>` of its  `control_signals
 <LVOCControlMechanism.control_signals>`, the interactions between these, and the `costs <ControlSignal.costs>` of the
 `control_signals <LVOCControlMechanism.control_signals>`, to best predict the outcome of its `objective_mechanism
 <LVOCControlMechanism.objective_mechanism>`.  Using those weights, and the current set of feature_predictors, it then
@@ -207,15 +207,16 @@ Execution
 
 When an LVOCControlMechanism is executed, it uses the values of its `feature_predictors
 <LVOCControlMechanism_Feature_Predictors>` (listed in its `feature_values <LVOCControlMechanism.feature_values>`
-attribute), together with the `values <ControlSignals.value>` of its `control_signals
+attribute), together with the `values <ControlSignals.values>` of its `control_signals
 <LVOCControlMechanism.control_signals>` and their `costs <ControlSignal.cost>` to update its prediction of the
-outcome measure provided by its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, and then determines
-the `allocation_policy` that maximizes `EVC <LVOCControlMechanism_EVC>` for the current `trial` of execution.
-Specifically it executes the following steps:
+outcome measure provided by its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`,
+and then determines the `allocation_policy` that maximizes `EVC <LVOCControlMechanism_EVC>` for the current `trial`
+of execution. Specifically it executes the following steps:
 
   * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
-    <LVOCControlMechanism.feature_values>`, `values <ControlSignal.value>` of its  `control_signals
-    <LVOCControlMechanism.control_signals>`, and their `costs <ControlSignal.cost>`.
+    <LVOCControlMechanism.feature_values>`, `values <ControlSignal.values>` of its `control_signals
+    <LVOCControlMechanism.control_signals>`  (computed using their `functions <ControlSignal.function>`),
+    and their `costs <ControlSignal.cost>` (computed using their `cost_functions <ControlSignal.cost_functions>`).
 
   * Calls its `function <LVOCControlMechanism.function>` with the `prediction_vector
     <LVOCControlMechanism.prediction_vector>` and the outcome received from the
@@ -229,8 +230,9 @@ Specifically it executes the following steps:
     <LVOCControlMechanism_EVC>`, and returns that `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
 The values specified by the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by the
-LVOCControlMechanism's `function <LVOCControlMechanism.function>` are assigned as the `values <ControlSignal.values>`
-of its `control_signals <LVOCControlMechanism.control_signals>`.
+LVOCControlMechanism's `function <LVOCControlMechanism.function>` are assigned as the `variables
+<ControlSignal.variables>` of its `control_signals <LVOCControlMechanism.control_signals>`, from which they compute
+their `values <ControlSignal.value>`.
 
 COMMENT:
 .. _LVOCControlMechanism_Examples:
@@ -390,9 +392,8 @@ class LVOCControlMechanism(ControlMechanism):
         if `None` is specified, the default values will automatically be assigned.
 
     update_rate : int or float : default 0.01
-        specifies the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
-        `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
-        `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
+        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
+        each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
     convergence_criterion : LVOC or CONTROL_SIGNALS : default LVOC
         specifies the measure used to determine when to terminate execution of the `gradient_ascent
@@ -468,9 +469,8 @@ class LVOCControlMechanism(ControlMechanism):
         for additional details).
 
     update_rate : int or float
-        determines the amount by which the `value <ControlSignal.value>` of each `ControlSignal` in the
-        `allocation_policy <LVOCControlMechanism.allocation_policy>` is modified in each iteration of the
-        `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
+        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified
+        in each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
     convergence_criterion : LVOC or CONTROL_SIGNALS
         determines the measure used to terminate execution of the `gradient_ascent
@@ -489,9 +489,9 @@ class LVOCControlMechanism(ControlMechanism):
         last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
     allocation_policy : 2d np.array : defaultControlAllocation
-        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` that
+        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal`, that
         is then converted by the ControlSignal's `function <ControlSignal.function>` to its `value
-        ControlSignal.value` used by its associated `ControlProjection(s) <ControlProjection>`.  Each item of the
+        ControlSignal.value` and used by its associated `ControlProjection(s) <ControlProjection>`.  Each item of the
         array is a 1d array (usually containing a scalar) that specifies an `allocation` for the corresponding
         ControlSignal, and the number of items equals the number of ControlSignals in the LVOCControlMechanism's
         `control_signals` attribute.
@@ -1024,13 +1024,7 @@ class LVOCControlMechanism(ControlMechanism):
 
             computed_terms = self.compute_terms(self.c)
 
-            # Assign specified terms to flattened vector
-            if PV.F in terms:
-                self.vector[idx.f] = np.array(feature_values).reshape(-1)
-            if PV.C in terms:
-                self.vector[idx.c] = np.array(self.c).reshape(-1)
-            # if PV.COST in terms:
-            #     self.vector[idx.c] = np.array(self.c).reshape(-1)
+            # Assign flattened versions of specified terms to vector
             for term in terms:
                 if term in computed_terms:
                     self.vector[getattr(idx, term.value)] = computed_terms[term].reshape(-1)
@@ -1038,17 +1032,19 @@ class LVOCControlMechanism(ControlMechanism):
         def compute_terms(self, control_signal_variables):
             '''Calculate and update interaction terms in vector.
             '''
+            # FIX: WHEN PV IS CHANGED TO NUMERICAL ENUM,
+            # FIX:    CHANGE computed_terms TO USE THOSE AS NUMERICAL INDICES OF A LIST
 
             terms = self.terms
             computed_terms = {}
 
-            f = self.f
+            computed_terms[PV.F] = f = self.f
 
             # Compute value of each control_signal from its variable
             c = [None] * len(control_signal_variables)
             for i, var in enumerate(control_signal_variables):
                 c[i] = self.control_signal_functions[i](var)
-            c = computed_terms[PV.C] = np.array(c)
+            computed_terms[PV.C] = c = np.array(c)
 
             if PV.COST in terms:
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3))
@@ -1058,7 +1054,6 @@ class LVOCControlMechanism(ControlMechanism):
                     costs[i] = -(self.compute_costs[i](val))
                 computed_terms[PV.COST] = np.array(costs)
 
-            # FIX: WHEN PV IS CHANGED TO NUMERICAL ENUM,CHANGE THIS TO USE AS INDICES INTO LIST
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num_f+1)))
@@ -1080,9 +1075,10 @@ class LVOCControlMechanism(ControlMechanism):
         <LVOCControlMechanism_EVC>`.
 
         Iterate over prediction_vector; for each iteration: \n
-        - compute gradients based on current control_signal values and their costs (in prediction_vector);
-        - compute new control_signal values based on gradients;
-        - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
+        - compute gradients in lvoc with respect to the `variable <ControlSignal.variable>` of the ControlSignals
+          and their costs (in prediction_vector);
+        - compute new control_signal variables based on gradients;
+        - update prediction_vector with new control_signal varia and the interaction terms and costs based on those;
         - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
 
         Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
