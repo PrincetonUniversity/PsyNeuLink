@@ -3926,6 +3926,7 @@ class Logistic(
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         scale=1.0,        \
          offset=0.0,       \
          params=None,      \
          owner=None,       \
@@ -3933,7 +3934,7 @@ class Logistic(
          prefs=None        \
          )
 
-    .. _Logistic:
+    .. _fu:
 
     Logistically transform variable.
 
