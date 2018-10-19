@@ -251,7 +251,8 @@ import warnings
 from collections import Iterable, deque
 from itertools import product
 import typecheck as tc
-from aenum import AutoNumberEnum, auto
+# from aenum import AutoNumberEnum, auto
+from enum import Enum
 
 import autograd.numpy as np
 from autograd import grad
@@ -288,7 +289,8 @@ PREDICTION_TERMS = 'prediction_terms'
 PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 
 
-class PV(AutoNumberEnum):
+class PV(Enum):
+# class PV(AutoNumberEnum):
     '''PV()
     Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
 
@@ -318,27 +320,24 @@ class PV(AutoNumberEnum):
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
     '''
-
-    # FIX: MAKE THIS NUMERICAL ENUM AND THEN CHANGE compute_terms TO USE AS INDICES INTO LIST
-    # F = 'f'
-    # C = 'c'
-    # FF = 'ff'
-    # CC = 'cc'
-    # FC = 'fc'
-    # FFC = 'ffc'
-    # FCC = 'fcc'
-    # FFCC = 'ffcc'
-    # COST = 'cst'
-    F =    auto()
-    C =    auto()
-    FF =   auto()
-    CC =   auto()
-    FC =   auto()
-    FFC =  auto()
-    FCC =  auto()
-    FFCC = auto()
-    COST = auto()
-
+    # F =    auto()
+    # C =    auto()
+    # FF =   auto()
+    # CC =   auto()
+    # FC =   auto()
+    # FFC =  auto()
+    # FCC =  auto()
+    # FFCC = auto()
+    # COST = auto()
+    F =    0
+    C =    1
+    FF =   2
+    CC =   3
+    FC =   4
+    FFC =  5
+    FCC =  6
+    FFCC = 7
+    COST = 8
 
 class LVOCError(Exception):
     def __init__(self, error_value):
@@ -870,12 +869,12 @@ class LVOCControlMechanism(ControlMechanism):
         STILL UNDER DEVELOPMENT
         '''
 
-        def __init__(self, feature_values, control_signals, terms):
+        def __init__(self, feature_values, control_signals, specified_terms):
 
             # ASSIGN TERMS
 
             # Used for computing partial derivatives
-            labels = self.labels
+            # labels = self.labels
             def get_intrxn_labels(x):
                 # return list([s for s in powerset([str(i) for i in range(0,n)]) if len(s)>1])
                 return list([s for s in powerset(x) if len(s)>1])
@@ -883,10 +882,20 @@ class LVOCControlMechanism(ControlMechanism):
             def error_for_too_few_terms(term):
                 spec_type = {'FF':'feature_predictors', 'CC':'control_signals'}
                 raise LVOCError("Specification of {} for {} arg of {} requires at least two {} be specified".
-                                format('PV.'+terms, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                                format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+
+            F = PV.F.value
+            C = PV.F.value
+            FF = PV.FF.value
+            CC = PV.CC.value
+            FC = PV.FC.value
+            FFC = PV.FFC.value
+            FCC = PV.FCC.value
+            FFCC = PV.FFCC.value
+            COST = PV.COST.value
 
             # RENAME THIS AS SPECIFIED_TERMS
-            self.specified_terms = terms
+            self.specified_terms = specified_terms
             self.terms = [None] * len(PV)
             self.idx =  [None] * len(PV)
             self.num =  [None] * len(PV)
@@ -896,119 +905,119 @@ class LVOCControlMechanism(ControlMechanism):
             # MAIN EFFECT TERMS (unflattened)
 
             # Feature_predictors
-            self.terms[PV.F] = f = feature_values
-            self.num[PV.F] = len(f)  # feature_predictors are arrays; num_f is the number of arrays
-            self.num_elems[PV.F] = len(self.f.reshape(-1)) # num of total elements assigned to prediction_vector.vector
-            self.labels[PV.F] = ['f'+str(i) for i in range(0,self.num_f)]
+            self.terms[F] = f = feature_values
+            self.num[F] = len(f)  # feature_predictors are arrays
+            self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to prediction_vector.vector
+            self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
 
             # Placemarker until control_signals are instantiated
-            self.terms[PV.C] = c = np.array([[0]] * len(control_signals))
-            self.num[PV.C] = len(c)
-            self.num_elems[PV.C] = len(c.reshape(-1))
-            self.labels[PV.C] = ['c'+str(i) for i in range(0,len(control_signals))]
+            self.terms[C] = c = np.array([[0]] * len(control_signals))
+            self.num[C] = len(c)
+            self.num_elems[C] = len(c.reshape(-1))
+            self.labels[C] = ['c'+str(i) for i in range(0,len(control_signals))]
 
             # Costs
             # Placemarker until control_signals are instantiated
             # MODIFIED 11/19/18 NEW:
-            self.terms[PV.COST] = np.array([[0]] * len(control_signals))
+            self.terms[COST] = np.array([[0]] * len(control_signals))
             # MODIFIED 11/19/18 END
-            self.num[PV.COST] = self.num[PV.C]
-            self.labels[PV.COST] = ['cst'+str(i) for i in range(0,self.num[PV.COST])]
+            self.num[COST] = self.num[C]
+            self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
 
             # INTERACTION TERMS (unflattened)
 
             # Interactions among feature vectors
-            if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
+            if any(term in specified_terms for term in [FF, FFC, FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                self.terms[PV.FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
-                self.num[PV.FF] = len(ff)
-                self.num_elems[PV.FF] = len(ff.reshape(-1))
-                self.labels[PV.FF]= get_intrxn_labels(self.labels[PV.F])
+                self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
+                self.num[FF] = len(ff)
+                self.num_elems[FF] = len(ff.reshape(-1))
+                self.labels[FF]= get_intrxn_labels(self.labels[F])
 
             # Interactions among values of control_signals
-            if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
+            if any(term in specified_terms for term in [CC, FCC, FFCC]):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.terms[PV.CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
-                self.num[PV.CC]=len(cc)
-                self.num_elems[PV.CC] = len(cc.reshape(-1))
-                self.labels[PV.CC] = get_intrxn_labels(self.labels[PV.C])
+                self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
+                self.num[CC]=len(cc)
+                self.num_elems[CC] = len(cc.reshape(-1))
+                self.labels[CC] = get_intrxn_labels(self.labels[C])
 
             # feature-control interactions
-            if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
+            if any(term in specified_terms for term in [FC, FCC, FFCC]):
                 # # MODIFIED 11/19/18 OLD:
-                # self.terms[PV.FC] = np.tensordot(feature_values, c, axes=0)
+                # self.terms[FC] = np.tensordot(feature_values, c, axes=0)
                 # MODIFIED 11/19/18 NEW:
-                self.terms[PV.FC] = fc = np.tensordot(f, c, axes=0)
+                self.terms[FC] = fc = np.tensordot(f, c, axes=0)
                 # MODIFIED 11/19/18 END
-                self.num[PV.FC] = len(fc.reshape(-1))
-                self.num_elems[PV.FC] = len(fc.reshape(-1))
-                self.labels[PV.FC] = list(product(self.labels[PV.F], self.labels[PV.C]))
+                self.num[FC] = len(fc.reshape(-1))
+                self.num_elems[FC] = len(fc.reshape(-1))
+                self.labels[FC] = list(product(self.labels[F], self.labels[C]))
 
             # feature-feature-control interactions
-            if any(term in terms for term in [PV.FFC, PV.FFCC]):
-                if self.num_f < 2:
+            if any(term in specified_terms for term in [FFC, FFCC]):
+                if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                self.ffc = np.tensordot(self.ff, self.c, axes=0)
-                self.num_ffc = len(self.ffc.reshape(-1))
-                self.num_ffc_elems = len(self.ffc.reshape(-1))
-                labels.ffc = list(product(labels.ff, labels.c))
+                self.terms[FFC] = ffc = np.tensordot(ff, c, axes=0)
+                self.num[FFC] = len(ffc.reshape(-1))
+                self.num_elems[FFC] = len(ffc.reshape(-1))
+                self.labels[FFC] = list(product(self.labels[FF], self.labels[C]))
 
             # feature-control-control interactions
-            if any(term in terms for term in [PV.FCC, PV.FFCC]):
-                if self.num_c < 2:
+            if any(term in specified_terms for term in [FCC, FFCC]):
+                if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.fcc = np.tensordot(self.f, self.cc, axes=0)
-                self.num_fcc = len(self.fcc.reshape(-1))
-                self.num_fcc_elems = len(self.fcc.reshape(-1))
-                labels.fcc = list(product(labels.f, labels.cc))
+                self.terms[FCC] = fcc = np.tensordot(f, cc, axes=0)
+                self.num[FCC] = len(fcc.reshape(-1))
+                self.num_elems[FCC] = len(fcc.reshape(-1))
+                self.labels[FCC] = list(product(self.labels[F], self.labels[CC]))
 
             # feature-feature-control-control interactions
-            if PV.FFCC in terms:
-                if self.num_f < 2:
+            if FFCC in specified_terms:
+                if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                if self.num_c < 2:
+                if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.ffcc = np.tensordot(self.ff, self.cc, axes=0)
-                self.num_ffcc = len(self.ffcc.reshape(-1))
-                self.num_ffcc_elems = len(self.ffcc.reshape(-1))
-                labels.ffcc = list(product(labels.ff, labels.cc))
+                self.terms[FFCC] = ffcc = np.tensordot(ff, cc, axes=0)
+                self.num[FFCC] = len(ffcc.reshape(-1))
+                self.num_elems[FFCC] = len(ffcc.reshape(-1))
+                self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
 
-            # Construct "flattened" prediction_vector based on specified terms and assign indices (as slices)
+            # Construct "flattened" prediction_vector based on specified terms, and assign indices (as slices)
             idx = self.idx
             # FIX: ??refactor as iterate through enum
             for i in range(len(PV)):
-                if PV.i in terms:
-                    self.idx[i] = slice(i, i+self.num_x_elems)
-            i = 0
-            if PV.F in terms:
-                idx.f = slice(i, i+self.num_f_elems)
-                i += self.num_f
-            if PV.C in terms:
-                idx.c = slice(i, i+self.num_c_elems)
-                i += self.num_c
-            if PV.FF in terms:
-                idx.ff = slice(i, i+self.num_ff_elems)
-                i += self.num_ff
-            if PV.CC in terms:
-                idx.cc = slice(i, i+self.num_cc_elems)
-                i += self.num_cc
-            if PV.FC in terms:
-                idx.fc = slice(i, i+self.num_fc_elems)
-                i += self.num_fc
-            if PV.FFC in terms:
-                idx.ffc = slice(i, i+self.num_ffc_elems)
-                i += self.num_ffc
-            if PV.FCC in terms:
-                idx.fcc = slice(i, i+self.num_fcc_elems)
-                i += self.num_fcc
-            if PV.FFCC in terms:
-                idx.ffcc = slice(i, i+self.num_ffcc_elems)
-                i += self.num_ffcc
-            if PV.COST in terms:
-                idx.cst = slice(i, i+self.num_cst)
-                i+= self.num_cst
+                if i in [t.value for t in specified_terms]:
+                    self.idx[i] = slice(i, i+self.num_elems[i])
+            # i = 0
+            # if PV.F in terms:
+            #     idx.f = slice(i, i+self.num_f_elems)
+            #     i += self.num_f
+            # if PV.C in terms:
+            #     idx.c = slice(i, i+self.num_c_elems)
+            #     i += self.num_c
+            # if PV.FF in terms:
+            #     idx.ff = slice(i, i+self.num_ff_elems)
+            #     i += self.num_ff
+            # if PV.CC in terms:
+            #     idx.cc = slice(i, i+self.num_cc_elems)
+            #     i += self.num_cc
+            # if PV.FC in terms:
+            #     idx.fc = slice(i, i+self.num_fc_elems)
+            #     i += self.num_fc
+            # if PV.FFC in terms:
+            #     idx.ffc = slice(i, i+self.num_ffc_elems)
+            #     i += self.num_ffc
+            # if PV.FCC in terms:
+            #     idx.fcc = slice(i, i+self.num_fcc_elems)
+            #     i += self.num_fcc
+            # if PV.FFCC in terms:
+            #     idx.ffcc = slice(i, i+self.num_ffcc_elems)
+            #     i += self.num_ffcc
+            # if PV.COST in terms:
+            #     idx.cst = slice(i, i+self.num_cst)
+            #     i+= self.num_cst
 
             self.vector = np.zeros(i)
 
