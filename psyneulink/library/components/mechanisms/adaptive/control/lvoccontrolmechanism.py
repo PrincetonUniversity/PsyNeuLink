@@ -536,6 +536,11 @@ class LVOCControlMechanism(ControlMechanism):
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
+    # FIX:
+    # - move relevant params to BayesGLM (prediction_weight_priors)
+    # - move relveant params to allocation_optimization_function
+    #     (update_rate, convergence_criterion, convergence_threshold, max_iterations)
+
     @tc.typecheck
     def __init__(self,
                  feature_predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
@@ -781,6 +786,9 @@ class LVOCControlMechanism(ControlMechanism):
         # #    of prediction_vector w.r.t. control_signal variables in gradient_ascent()
         # self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
+        # FIX: SOLVE PROBLEM OF SPECFYING PARAMS BASED ONES SPECIFIC TO LVOCCONTROLMECHANISM
+        #      SO THAT IT CAN BE SPECIFIED IN THE CONSTRUCTOR
+        #      (VIZ: objective_function, update_function())
         # Assign default allocation_optimization_function:
         if self.allocation_optimization_function is GradientOptimization:
             self.allocation_optimization_function = GradientOptimization(

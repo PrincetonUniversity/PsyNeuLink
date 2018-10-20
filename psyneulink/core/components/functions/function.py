@@ -11610,6 +11610,11 @@ from autograd import grad
 
 class GradientOptimization(OptimizationFunction):
 
+    # FIX:
+    # - implement ascent vs. descent
+    # - add validate_params and/or _instantiate_attributes_before_function method(s)
+    # - add Params() declaration
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -11661,7 +11666,6 @@ class GradientOptimization(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-
     def function(self,
                  variable=None,
                  params=None,
@@ -11690,12 +11694,14 @@ class GradientOptimization(OptimizationFunction):
         current_variable = variable
         current_value = self.objective_function(current_variable)
 
-        # Perform gradient ascent
+        # Perform gradient movement
         while convergence_metric > self.convergence_threshold:
+
             # Compute gradients with respect to current variable
             gradients = self.gradient_function(current_variable)
-            # Update control_signal_variables based on them
+            # Update variable based on new gradients
             new_variable = current_variable + update_rate * np.array(gradients)
+            # Compute new value based on updated variable
             new_value = self.objective_function(new_variable)
             # Evaluate for convergence
             if self.convergence_criterion == VALUE:
@@ -11703,14 +11709,14 @@ class GradientOptimization(OptimizationFunction):
             else:
                 convergence_metric = np.max(np.abs(np.array(new_variable) -
                                                    np.array(current_variable)))
-            # Update prediction vector based on new control_signal values
+            # Update expression containing variable
             self.update_function(new_variable)
 
             # TEST PRINT:
             print(
                     '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-                    '\nprevious_value: ', new_value,
-                    '\ncurrent_value: ',new_value ,
+                    '\ncurrent_value: ', current_value,
+                    '\nnew_value: ', new_value,
                     '\nconvergence_metric: ',convergence_metric,
             )
             self.update_function.__self__.test_print()
@@ -11721,7 +11727,6 @@ class GradientOptimization(OptimizationFunction):
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
-            # self.lvoc = new_value
             current_variable = new_variable
             current_value = new_value
             # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
