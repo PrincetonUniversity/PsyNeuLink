@@ -2835,9 +2835,9 @@ class System(System_Base):
 
             except AttributeError as error_msg:
                 if self.context.initialization_status != ContextFlags.INITIALIZING:
-                    raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
-                                      "attribute (\'{}\') encountered for it or one of the methods it calls."
-                                      .format(self.controller.name, self.name, error_msg.args[0]))
+                    error_msg.args += ("PROGRAM ERROR: Problem executing controller ({}) for {}".format(self.controller.name, self.name),)
+                    raise
+
             self.context.execution_phase = ContextFlags.IDLE
 
         # Report completion of system execution and value of designated outputs
@@ -2897,12 +2897,16 @@ class System(System_Base):
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
-                for key in mechanism._runtime_params_reset:
-                    mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key], execution_id)
-                mechanism._runtime_params_reset = {}
-                for key in mechanism.function_object._runtime_params_reset:
-                    mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[key], execution_id)
-                mechanism.function_object._runtime_params_reset = {}
+                if execution_id in mechanism._runtime_params_reset:
+                    for key in mechanism._runtime_params_reset[execution_id]:
+                        mechanism._set_parameter_value(key, mechanism._runtime_params_reset[execution_id][key], execution_id)
+                mechanism._runtime_params_reset[execution_id] = {}
+
+                if execution_id in mechanism.function_object._runtime_params_reset:
+                    for key in mechanism.function_object._runtime_params_reset[execution_id]:
+                        mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[execution_id][key], execution_id)
+                mechanism.function_object._runtime_params_reset[execution_id] = {}
+
                 mechanism.context.execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
@@ -5002,7 +5006,6 @@ class SystemInputState(OutputState):
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)
-        self.recording = False
         self.efferents = []
         self.owner = owner
 

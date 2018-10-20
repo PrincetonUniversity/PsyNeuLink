@@ -1368,7 +1368,6 @@ class Component(object, metaclass=ComponentsMeta):
         # + parameter_validation
         + user_params
         +._runtime_params_reset
-        + recording
 
     Instance methods:
         + function (implementation is optional; aliased to params[FUNCTION] by default)
@@ -1585,7 +1584,6 @@ class Component(object, metaclass=ComponentsMeta):
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
         self.log = Log(owner=self)
-        self.recording = False
         # Used by run to store return value of execute
         self.results = []
 
@@ -2302,16 +2300,18 @@ class Component(object, metaclass=ComponentsMeta):
                 setattr(self, arg_name, arg_value)
 
     def _set_parameter_value(self, param, val, execution_id=None):
-        setattr(self, param, val)
+        getattr(self.parameters, param).set(val, execution_id, override=True)
         if hasattr(self, "parameter_states"):
             if param in self.parameter_states:
-                new_state_value = self.parameter_states[param].execute(context=ContextFlags.EXECUTING)
+                new_state_value = self.parameter_states[param].execute(execution_id=execution_id, context=ContextFlags.EXECUTING)
                 self.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_states"):
                 if param in self.owner.parameter_states:
                     new_state_value = self.owner.parameter_states[param].execute(
-                        context=ContextFlags.EXECUTING)
+                        execution_id=execution_id,
+                        context=ContextFlags.EXECUTING
+                    )
                     self.owner.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
 
     def _check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
@@ -2373,9 +2373,10 @@ class Component(object, metaclass=ComponentsMeta):
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
         # reset any runtime params that were leftover from a direct call to .execute (atypical)
-        for key in self._runtime_params_reset:
-            self._set_parameter_value(key, self._runtime_params_reset[key], execution_id)
-        self._runtime_params_reset = {}
+        if execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[execution_id]:
+                self._set_parameter_value(key, self._runtime_params_reset[execution_id][key], execution_id)
+        self._runtime_params_reset[execution_id] = {}
 
         # If params have been passed, treat as runtime params
         runtime_params = params
@@ -2387,7 +2388,9 @@ class Component(object, metaclass=ComponentsMeta):
                 if hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
-                    self._runtime_params_reset[param_name] = getattr(self, param_name)
+                    if execution_id not in self._runtime_params_reset:
+                        self._runtime_params_reset[execution_id] = {}
+                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
                     self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
         elif runtime_params:    # not None
             raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
@@ -3922,7 +3925,14 @@ def make_property(name):
         return getattr(self, backing_field)
 
     def setter(self, val):
-        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+        if (
+            hasattr(self, '_prefs')
+            and self.paramValidationPref
+            and hasattr(self, PARAMS_CURRENT)
+            and hasattr(self, 'user_params_for_instantiation')
+            and hasattr(self, 'user_params')
+            and hasattr(self, 'paramInstanceDefaults')
+        ):
             self._assign_params(request_set={name:val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, backing_field, val)
@@ -3934,7 +3944,7 @@ def make_property(name):
         # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
         from psyneulink.core.components.functions.function import Function_Base
-        if isinstance(self, Function_Base) and self.owner:
+        if isinstance(self, Function_Base) and hasattr(self, 'owner') and self.owner is not None:
             param_state_owner = self.owner
             # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a

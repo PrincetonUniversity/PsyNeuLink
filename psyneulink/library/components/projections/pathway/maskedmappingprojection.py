@@ -60,7 +60,7 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.component import Param, parameter_keywords
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
@@ -183,6 +183,18 @@ class MaskedMappingProjection(MappingProjection):
 
     class Params(MappingProjection.Params):
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
+        matrix = Param(DEFAULT_MATRIX, modulable=True)
+        mask = None
+        mask_operation = MULTIPLY
+
+        def _validate_mask_operation(self, mode):
+            options = {ADD, MULTIPLY, EXPONENTIATE}
+            if mode in options:
+                # returns None indicating no error message (this is a valid assignment)
+                return None
+            else:
+                # returns error message
+                return 'not one of {0}'.format(options)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -242,11 +254,16 @@ class MaskedMappingProjection(MappingProjection):
         #  and that it is applied to the updated matrix param
         super()._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
+        mask = self.parameters.mask.get(execution_id)
+        mask_operation = self.parameters.mask_operation.get(execution_id)
+        matrix = self.parameters.matrix.get(execution_id)
         # Apply mask to matrix using mask_operation
-        if self.mask:
-            if self.mask_operation is ADD:
-                self.matrix += self.mask
-            elif self.mask_operation is MULTIPLY:
-                self.matrix *= self.mask
-            elif self.mask_operation is EXPONENTIATE:
-                self.matrix **= self.mask
+        if mask is not None:
+            if mask_operation is ADD:
+                matrix += mask
+            elif mask_operation is MULTIPLY:
+                matrix *= mask
+            elif mask_operation is EXPONENTIATE:
+                matrix **= mask
+
+        self.parameters.matrix.set(matrix, execution_id)

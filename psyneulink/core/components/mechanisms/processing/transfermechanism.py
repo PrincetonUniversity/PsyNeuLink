@@ -811,7 +811,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = Param(False, setter=_integrator_mode_setter)
         integrator_function_value = Param([[0]], read_only=True)
         has_integrated = Param(False, user=False)
-        has_initializers = False
 
         max_passes = Param(1000, stateful=False)
         on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)

@@ -838,6 +838,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params,
                                                   )
 
+        # KDM 10/24/18: below is here because of the complex properties that set matrix and auto/hetero
+        # after assignment, auto and hetero would sometimes be None when the matrix is set and valid, and
+        # these values are needed to get the stateful value for matrix
+        # If we can simplify the non-stateful properties of matrix, auto, hetero, we should try to remove this
+        # piece as well
+        try:
+            if auto is None and hetero is None:
+                if isinstance(self.matrix, list):
+                    self._matrix = np.asarray(self.matrix)
+                temp_matrix = self.matrix.copy()
+                self._auto = np.diag(temp_matrix).copy()
+                np.fill_diagonal(temp_matrix, 0)
+                self._hetero = temp_matrix
+
+                params['auto'] = self._auto
+                params['hetero'] = self._hetero
+        except (AttributeError, ValueError):
+            pass
+
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
@@ -879,28 +898,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if AUTO in target_set:
-            auto_param = target_set[AUTO]
-            if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
-                raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
-                                             "number, None, or a 1D numeric array".format(auto_param, self))
-            if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
-                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
-                                             "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
-
-        if HETERO in target_set:
-            hetero_param = target_set[HETERO]
-            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
-                raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
-                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
-            hetero_shape = np.array(hetero_param).shape
-            if hetero_shape != (1,) and hetero_shape != (1, 1):
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
-                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
-                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
-                    raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
-
+        # KDM 10/24/18: rearranged matrix and auto/hetero validation to correspond with comment/code in __init__
+        # on this same date.
         # Validate MATRIX
         if MATRIX in target_set:
 
@@ -946,6 +945,29 @@ class RecurrentTransferMechanism(TransferMechanism):
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, self.recurrent_size))
                 raise RecurrentTransferError(err_msg)
+
+
+        if AUTO in target_set:
+            auto_param = target_set[AUTO]
+            if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
+                raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
+                                             "number, None, or a 1D numeric array".format(auto_param, self))
+            if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
+                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
+                                             "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
+
+        if HETERO in target_set:
+            hetero_param = target_set[HETERO]
+            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+                raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
+                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
+            hetero_shape = np.array(hetero_param).shape
+            if hetero_shape != (1,) and hetero_shape != (1, 1):
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
+                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
+                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
+                    raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:

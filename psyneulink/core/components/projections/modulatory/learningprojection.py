@@ -667,13 +667,13 @@ class LearningProjection(ModulatoryProjection_Base):
             context=context
         )
 
-        if self.learning_rate is not None:
-            value *= self.learning_rate
+        learning_rate = self.parameters.learning_rate.get(execution_id)
+        if learning_rate is not None:
+            value *= learning_rate
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
-        self.weight_change_matrix = value
         return value
 
     @property

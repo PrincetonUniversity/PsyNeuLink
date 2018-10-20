@@ -1066,6 +1066,8 @@ class InputState(State_Base):
                         try:
                             sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
+                            # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
+                            # attr so these should be ok
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
                                 continue
@@ -1086,6 +1088,7 @@ class InputState(State_Base):
                         elif isinstance(projection, Projection):
                             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                 continue
+                            # possible needs to be projection.defaults.matrix?
                             matrix = projection.matrix
                         else:
                             raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
@@ -1347,4 +1350,3 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             )
 
     return state_list
-

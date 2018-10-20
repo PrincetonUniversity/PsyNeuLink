@@ -1130,9 +1130,13 @@ class DDM(ProcessingMechanism_Base):
             abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
             and isinstance(self.function.__self__, Integrator)
         ):
-            logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
-                                                                   self.function_object.get_current_function_param(
-                                                                       THRESHOLD)))
+            logger.info(
+                '{0} {1} has reached threshold {2}'.format(
+                    type(self).__name__,
+                    self.name,
+                    self.function_object.get_current_function_param(THRESHOLD)
+                )
+            )
             return True
 
         return False

@@ -646,12 +646,27 @@ ERROR_SOURCES = 'error_sources'
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
+
 class LearningMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _learning_signal_getter(owning_component=None, execution_id=None):
+    try:
+        return owning_component.parameters.value.get(execution_id)[0]
+    except (TypeError, IndexError):
+        return None
+
+
+def _error_signal_getter(owning_component=None, execution_id=None):
+    try:
+        return owning_component.parameters.value.get(execution_id)[1]
+    except (TypeError, IndexError):
+        return None
 
 
 class LearningMechanism(AdaptiveMechanism_Base):
@@ -909,6 +924,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         function = Param(BackPropagation, stateful=False, loggable=False)
         error_matrix = Param(None, modulable=True)
 
+        learning_signal = Param(None, read_only=True, getter=_learning_signal_getter)
+        error_signal = Param(None, read_only=True, getter=_error_signal_getter)
+
         learning_enabled = True
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
@@ -1162,7 +1180,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
-                                                 reference_value=self.learning_signal,
+                                                 reference_value=self.parameters.learning_signal.get(),
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
                                                  state_spec=learning_signal,
@@ -1248,11 +1266,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        self.learning_signal = summed_learning_signal
-        self.error_signal = summed_error_signal
-
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         return [summed_learning_signal, summed_error_signal]
 

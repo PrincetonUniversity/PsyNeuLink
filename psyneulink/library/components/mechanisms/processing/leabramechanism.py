@@ -516,7 +516,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
         execution_id=None,
         runtime_params=None,
         time_scale=TimeScale.TRIAL,
-        # ignore_execution_id=False,
         context=None
     ):
 
@@ -529,7 +528,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
-            # ignore_execution_id=ignore_execution_id,
             context=context
         )
 

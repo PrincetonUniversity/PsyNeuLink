@@ -1106,7 +1106,6 @@ class State_Base(State):
         self.path_afferents = []
         self.mod_afferents = []
         self.efferents = []
-        self._stateful = False
 
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
@@ -1817,6 +1816,7 @@ class State_Base(State):
                     elif isinstance(projection, ModulatoryProjection_Base):
                         function_param_value = _get_modulated_param(receiver, projection).function_param_val
                         # Match the projection's value with the value of the function parameter
+                        # should be defaults.value?
                         mod_proj_spec_value = type_match(projection.value, type(function_param_value))
                         if (function_param_value is not None
                             and not iscompatible(function_param_value, mod_proj_spec_value)):

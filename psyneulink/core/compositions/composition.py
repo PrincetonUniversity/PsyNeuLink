@@ -2560,17 +2560,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 context=ContextFlags.COMPOSITION
                             )
 
-                        for key in node._runtime_params_reset:
-                            node._set_parameter_value(key, node._runtime_params_reset[key], execution_id)
-                        node._runtime_params_reset = {}
+                        if execution_id in node._runtime_params_reset:
+                            for key in node._runtime_params_reset[execution_id]:
+                                node._set_parameter_value(key, node._runtime_params_reset[execution_id][key], execution_id)
+                        node._runtime_params_reset[execution_id] = {}
 
-                        for key in node.function_object._runtime_params_reset:
-                            node.function_object._set_parameter_value(
-                                key,
-                                node.function_object._runtime_params_reset[key],
-                                execution_id
-                            )
-                        node.function_object._runtime_params_reset = {}
+                        if execution_id in node.function_object._runtime_params_reset:
+                            for key in node.function_object._runtime_params_reset[execution_id]:
+                                node.function_object._set_parameter_value(
+                                    key,
+                                    node.function_object._runtime_params_reset[execution_id][key],
+                                    execution_id
+                                )
+                        node.function_object._runtime_params_reset[execution_id] = {}
                         node.context.execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):

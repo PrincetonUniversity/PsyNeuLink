@@ -400,7 +400,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         value = np.array([learning_signal])
-        self.learning_signal = learning_signal
+
         self.parameters.value.set(value, execution_id, override=True)
 
         return value

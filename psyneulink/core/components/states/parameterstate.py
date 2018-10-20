@@ -748,6 +748,7 @@ class ParameterState(State_Base):
                             # FIX:     USING _get_state_for_socket
                             # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
+                            # defaults.value?
                             mod_signal_value = projection_spec.state.value \
                                 if isinstance(projection_spec.state, State_Base) else None
 
@@ -829,7 +830,7 @@ class ParameterState(State_Base):
         if variable is not None:
             return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         else:
-            variable = getattr(self.source, '_' + self.name)
+            variable = getattr(self.source.parameters, self.name).get(execution_id)
             return super()._execute(
                 variable=variable,
                 execution_id=execution_id,
@@ -1114,6 +1115,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
             if state:
                 owner._parameter_states[function_param_name] = state
                 # will be parsed on assignment of function
+                # FIX: if the function_object is manually changed after assignment,
+                # the source will remain pointing to the original Function
                 state.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):
