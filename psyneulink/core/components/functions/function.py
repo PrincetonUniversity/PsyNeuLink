@@ -63,7 +63,7 @@ Objective Functions:
   * `Distance`
 
 Optimization Function:
-  * `gradient`
+  * `GradientOptimization`
 
 Learning Functions:
   * `Kohonen`
@@ -249,11 +249,10 @@ __all__ = [
     'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
-    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
-    'FunctionRegistry', 'GammaDist', 'get_matrix', 'get_param_value_for_function',
-    'get_param_value_for_keyword', 'Hebbian', 'Integrator',
-    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl',
-    'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
+    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'GradientOptimization',
+    'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
+    'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
     'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
     'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
@@ -11603,24 +11602,70 @@ class OptimizationFunction(Function_Base):
 
 ASCENT = 'ascent'
 DESCENT = 'descent'
+OBJECTIVE_FUNCTION = 'objective_function'
+UPDATE_FUNCTION = 'update_function'
+
+import autograd.numpy as np
+from autograd import grad
 
 class GradientOptimization(OptimizationFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable,
-                 function:is_function_type,
-                 gradient_function:is_function_type,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 update_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  update_rate:tc.optional(tc.any(int, float))=1.0,
                  # annealing_function:tc.optional(is_function_type)=lambda iteration, rate : rate/np.sqrt(iteration),
                  annealing_function:tc.optional(is_function_type)=lambda x: x,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
-                 context=None):
-        pass
+                 max_iterations:tc.optional(int)=1000,
+                 params=None,
+                 owner=None,
+                 prefs=None):
 
-    def function(self, variable, prediction_vector):
+        # FIX: MOVE TO VALIDATE PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        if objective_function is None:
+            raise FunctionError("{} arg must be specified for {} Function".
+                                format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
+        else:
+            self.objective_function = objective_function
+        try:
+            self.gradient_function = grad(objective_function)
+        except:
+            raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
+                                format(repr(OBJECTIVE_FUNCTION),
+                                       self.objective_function.__name__, self.__class__.__name__))
+
+        if update_function is None:
+            raise FunctionError("{} arg must be specified for {} Function".
+                                format(repr(UPDATE_FUNCTION), self.__class__.__name__))
+        else:
+            self.update_function = update_function
+
+        self.direction = direction
+        self.annealing_function = annealing_function
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(update_rate=update_rate,
+                                                  convergence_criterion=convergence_criterion,
+                                                  convergence_threshold=convergence_threshold,
+                                                  max_iterations=max_iterations,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
         '''Determine the variables that maximizes function of prediction_vector.
 
         Get value of function for initial variable
@@ -11636,12 +11681,14 @@ class GradientOptimization(OptimizationFunction):
         Return new variable.
         '''
 
+        variable = self._update_variable(self._check_args(variable, params, context))
+
         # Initialize variables used in while loop
         iteration=0
         convergence_metric = self.convergence_threshold + EPSILON
         update_rate = self.update_rate
         current_variable = variable
-        current_value = function(current_variable)
+        current_value = self.objective_function(current_variable)
 
         # Perform gradient ascent
         while convergence_metric > self.convergence_threshold:
@@ -11649,7 +11696,7 @@ class GradientOptimization(OptimizationFunction):
             gradients = self.gradient_function(current_variable)
             # Update control_signal_variables based on them
             new_variable = current_variable + update_rate * np.array(gradients)
-            new_value = function(new_variable)
+            new_value = self.objective_function(new_variable)
             # Evaluate for convergence
             if self.convergence_criterion == VALUE:
                 convergence_metric = np.abs(new_value - current_value)
@@ -11657,16 +11704,16 @@ class GradientOptimization(OptimizationFunction):
                 convergence_metric = np.max(np.abs(np.array(new_variable) -
                                                    np.array(current_variable)))
             # Update prediction vector based on new control_signal values
-            self.prediction_vector.update_vector(self.feature_values, new_variable)
+            self.update_function(new_variable)
 
             # TEST PRINT:
             print(
-                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
+                    '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
                     '\nprevious_value: ', new_value,
                     '\ncurrent_value: ',new_value ,
                     '\nconvergence_metric: ',convergence_metric,
             )
-            self.test_print(prediction_vector)
+            self.update_function.__self__.test_print()
             # TEST PRINT END
 
             iteration+=1
@@ -11682,6 +11729,7 @@ class GradientOptimization(OptimizationFunction):
                 update_rate = self.annealing_function(iteration, update_rate)
 
         return new_variable
+
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************

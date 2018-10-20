@@ -258,7 +258,7 @@ import autograd.numpy as np
 from autograd import grad
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type
+    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -271,7 +271,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -545,6 +545,7 @@ class LVOCControlMechanism(ControlMechanism):
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
+                 allocation_optimization_function=GradientOptimization,
                  prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  update_rate=0.01,
                  convergence_criterion:tc.enum(LVOC, CONTROL_SIGNALS)=LVOC,
@@ -557,6 +558,7 @@ class LVOCControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None,
                  **kwargs):
 
+        # Avoid mutable default:
         prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
         if ALL in prediction_terms:
             prediction_terms = list(PV.__members__.values())
@@ -574,6 +576,7 @@ class LVOCControlMechanism(ControlMechanism):
                     raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
                                                                                         repr(i)))
 
+        self.allocation_optimization_function = allocation_optimization_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
@@ -772,11 +775,25 @@ class LVOCControlMechanism(ControlMechanism):
 
         self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
+        self.prediction_weights = np.zeros_like(self.function_object.value)
 
-        # Use compute_lvoc_from_control_signals() to compute gradients
-        #    of prediction_vector w.r.t. control_signal variables in gradient_ascent()
-        self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
+        # # Use compute_lvoc_from_control_signals() to compute gradients
+        # #    of prediction_vector w.r.t. control_signal variables in gradient_ascent()
+        # self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
 
+        # Assign default allocation_optimization_function:
+        if self.allocation_optimization_function is GradientOptimization:
+            self.allocation_optimization_function = GradientOptimization(
+                    default_variable=self.control_signal_variables,
+                    objective_function=self.compute_lvoc_from_control_signals,
+                    update_function=self.prediction_vector.update_vector,
+                    update_rate=self.update_rate,
+                    convergence_criterion=VALUE if self.convergence_criterion is LVOC else VARIABLE,
+                    convergence_threshold=self.convergence_threshold,
+                    annealing_function=lambda update_rate,iteration: update_rate/np.sqrt(iteration),
+                    max_iterations=self.max_iterations,
+                    owner=self
+            )
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -812,11 +829,11 @@ class LVOCControlMechanism(ControlMechanism):
                                              for c in self.control_signals])
 
         # Compute allocation_policy using gradient_ascent
-        allocation_policy = self.gradient_ascent(control_signal_variables,
-                                                 self.prediction_vector,
-                                                 self.compute_lvoc_from_control_signals,
-                                                 self.grad_of_lvoc_wrt_control_signals)
-
+        # allocation_policy = self.gradient_ascent(control_signal_variables,
+        #                                          self.prediction_vector,
+        #                                          self.compute_lvoc_from_control_signals,
+        #                                          self.grad_of_lvoc_wrt_control_signals)
+        allocation_policy = self.allocation_optimization_function.function(variable=control_signal_variables)
         return allocation_policy
 
     def _parse_function_variable(self, variable, context=None):
@@ -847,13 +864,12 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signal_variables,
                                                            self.prediction_terms)
-            # MODIFIED 10/19/18 END
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
         # Update values
         else:
-            self.prediction_vector.update_vector(self.feature_values, self.control_signal_variables)
+            self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
             self.prediction_buffer.append(self.prediction_vector.vector)
             self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
 
@@ -1032,11 +1048,12 @@ class LVOCControlMechanism(ControlMechanism):
 
             self.vector = np.zeros(i)
 
-        def update_vector(self, feature_values, control_signal_variables):
+        def update_vector(self, control_signal_variables, feature_values=None):
             '''Update vector with flattend arrays of values returned from `compute_terms
             <PredictionVector.compute_terms>.'''
 
-            self.terms[PV.F.value] = np.array(feature_values)
+            if feature_values is not None:
+                self.terms[PV.F.value] = np.array(feature_values)
             computed_terms = self.compute_terms(np.array(control_signal_variables))
 
             # Assign flattened versions of specified terms to vector
@@ -1089,6 +1106,22 @@ class LVOCControlMechanism(ControlMechanism):
 
             return computed_terms
 
+        # TEST PRINT:
+        def test_print(self):
+            terms = self.specified_terms
+            vector = self.vector
+            idx = self.idx
+
+            if PV.F in terms:
+                print('feature_values: ', vector[idx[PV.F.value]])
+
+            for t in PV:
+                if t in terms and t is not PV.C:
+                    print('{}: {}'.format(t.name, vector[idx[t.value]]))
+
+            print('control_signal_values: ', vector[idx[PV.C.value]])
+
+
     def annealing_function(self, iteration, update_rate):
         # Default (currently hardwired function):
         return self.update_rate/np.sqrt(iteration)
@@ -1109,21 +1142,6 @@ class LVOCControlMechanism(ControlMechanism):
                 lvoc += np.sum(v.reshape(-1) * weights[idx])
 
         return lvoc
-
-    # TEST PRINT:
-    def test_print(self, pv):
-        terms = self.prediction_terms
-        vector = pv.vector
-        idx = pv.idx
-
-        if PV.F in terms:
-            print('feature_values: ', vector[idx[PV.F.value]])
-
-        for t in PV:
-            if t in terms and t is not PV.C:
-                print('{}: {}'.format(t.name, vector[idx[t.value]]))
-
-        print('control_signal_values: ', vector[idx[PV.C.value]])
 
 
 # OLD ******************************************************************************************************************
