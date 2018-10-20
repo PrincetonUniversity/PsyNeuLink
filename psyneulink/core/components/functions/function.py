@@ -11718,6 +11718,7 @@ class GradientOptimization(OptimizationFunction):
                     '\ncurrent_value: ', current_value,
                     '\nnew_value: ', new_value,
                     '\ngradients: ', gradients,
+                    '\nupdate_rate: ', update_rate,
                     '\nconvergence_metric: ',convergence_metric,
             )
             self.update_function.__self__.test_print()
