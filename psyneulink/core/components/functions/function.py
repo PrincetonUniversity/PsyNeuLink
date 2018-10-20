@@ -11733,7 +11733,7 @@ class GradientOptimization(OptimizationFunction):
             current_value = new_value
             # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
             if self.annealing_function:
-                update_rate = self.annealing_function(iteration, update_rate)
+                update_rate = self.annealing_function(update_rate, iteration)
 
         return new_variable
 
