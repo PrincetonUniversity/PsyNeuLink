@@ -1080,16 +1080,19 @@ class LVOCControlMechanism(ControlMechanism):
 
             return computed_terms
 
-    def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
+    def gradient_ascent(self, control_signals, prediction_vector):
         '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
         <LVOCControlMechanism_EVC>`.
 
-        Iterate over prediction_vector; for each iteration: \n
+        Iterate over prediction_vector; for each iteration:
         - compute gradients in lvoc with respect to the `variable <ControlSignal.variable>` of the ControlSignals
           and their costs (in prediction_vector);
         - compute new control_signal variables based on gradients;
-        - update prediction_vector with new control_signal varia and the interaction terms and costs based on those;
-        - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
+        - update prediction_vector with new control_signal variables and the interaction terms and costs based on those;
+
+        - call compute_lvoc_from_control_signals to get new `EVC <LVOCControlMechanism_EVC>`.
+        - call grad_of_lvoc_wrt_control_signals to compute gradients
+        - update control_signal_variables
 
         Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
         `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
@@ -1111,7 +1114,7 @@ class LVOCControlMechanism(ControlMechanism):
         iteration=0
         update_rate = self.update_rate
 
-        # Perform gradience ascent
+        # Perform gradient ascent
         while convergence_metric > self.convergence_threshold:
 
             current_lvoc = self.compute_lvoc_from_control_signals(control_signal_variables)
