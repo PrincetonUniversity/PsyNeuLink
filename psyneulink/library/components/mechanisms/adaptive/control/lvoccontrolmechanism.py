@@ -841,6 +841,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_vector = self.PredictionVector(self.feature_values,
                                                            self.control_signal_variables,
                                                            self.prediction_terms)
+            # MODIFIED 10/19/18 END
             self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self.previous_cost = np.zeros_like(obj_mech_outcome)
 
@@ -865,53 +866,53 @@ class LVOCControlMechanism(ControlMechanism):
         Arguments
         ---------
 
-        feature_values
+        feature_values : 2d nparray
+            arrays of features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
-        control_signals
+        control_signal_variables : List[ControlSignal.variable]
+            list containing `variables <ControlSignal.variable>` of `ControlSignals <ControlSignal>`;
+            assigned as the `PV.C` term of `terms <PredictionVector.terms>`.
 
-        specified_terms
-
+        specified_terms : List[PV]
+            terms to include in `vector <PredictionVector.vector>;  entries must be members of the `PV` Enum.
 
         Attributes
         ----------
 
         specified_terms : List[PV]
-            terms included as predictors, as specified in the `specified_terms
-            <LVOCControlMechanism.specified_terms>` attribute of the LVOCControlMechahism.
+            terms included as predictors, specified using members of the `PV` Enum.
 
         terms : List[ndarray]
             current value of ndarray terms, some of which are used to compute other terms. Only entries for terms in
-            `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
+            `specified_terms <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
 
         num : List[int]
             number of arrays in outer dimension (axis 0) of each ndarray in `terms <PredictionVector.terms>`.
-            Only entries for terms in `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values;
+            Only entries for terms in `specified_terms <PredictionVector.specified_terms>` are assigned values;
             others are assigned `None`.
 
         num_elems : List[int]
             number of elements in flattened array for each ndarray in `terms <PredictionVector.terms>`.
-            Only entries for terms in `specified_terms <LVOCControlMechanism.specified_terms>` are assigned values;
+            Only entries for terms in `specified_terms <PredictionVector.specified_terms>` are assigned values;
             others are assigned `None`.
 
         self.labels : List[str]
-            label of each item in `terms <PredictionVector.terms>`. Only entries for terms in `specified_terms
-            <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
+            label of each item in `terms <PredictionVector.terms>`. Only entries for terms in  `specified_terms
+            <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
 
         vector : ndarray
             contains the flattened array for all ndarrays in `terms <PredictionVector.terms>`.  Contains only
-            the terms specified in `specified_terms <LVOCControlMechanism.specified_terms>`.  Indices for the
-            fields corresponding to each term are listed in `idx <PredictionVector.idx>`.
+            the terms specified in `specified_terms <PredictionVector.specified_terms>`.  Indices for the fields
+            corresponding to each term are listed in `idx <PredictionVector.idx>`.
 
         idx : List[slice]
             indices of `vector <PredictionVector.vector>` for the flattened version of each nd term in
             `terms <PredictionVector.terms>`. Only entries for terms in `specified_terms
-            <LVOCControlMechanism.specified_terms>` are assigned values; others are assigned `None`.
-
-        XXX ADD METHODS HERE
+            <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
 
         '''
 
-        def __init__(self, feature_values, control_signals, specified_terms):
+        def __init__(self, feature_values, control_signal_variables, specified_terms):
 
             def get_intrxn_labels(x):
                 return list([s for s in powerset(x) if len(s)>1])
@@ -948,14 +949,14 @@ class LVOCControlMechanism(ControlMechanism):
             self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
 
             # Placemarker until control_signals are instantiated
-            self.terms[C] = c = np.array([[0]] * len(control_signals))
+            self.terms[C] = c = np.array([[0]] * len(control_signal_variables))
             self.num[C] = len(c)
             self.num_elems[C] = len(c.reshape(-1))
-            self.labels[C] = ['c'+str(i) for i in range(0,len(control_signals))]
+            self.labels[C] = ['c'+str(i) for i in range(0,len(control_signal_variables))]
 
             # Costs
             # Placemarker until control_signals are instantiated
-            self.terms[COST] = cst = np.array([[0]] * len(control_signals))
+            self.terms[COST] = cst = np.array([[0]] * len(control_signal_variables))
             self.num[COST] = self.num[C]
             self.num_elems[COST] = len(cst.reshape(-1))
             self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
@@ -1026,6 +1027,8 @@ class LVOCControlMechanism(ControlMechanism):
             self.vector = np.zeros(i)
 
         def update_vector(self, feature_values, control_signal_variables):
+            '''Update vector with flattend arrays of values returned from `compute_terms
+            <PredictionVector.compute_terms>.'''
 
             self.terms[PV.F.value] = np.array(feature_values)
             computed_terms = self.compute_terms(np.array(control_signal_variables))
@@ -1035,7 +1038,10 @@ class LVOCControlMechanism(ControlMechanism):
                 self.vector[self.idx[k.value]] = v.reshape(-1)
 
         def compute_terms(self, control_signal_variables):
-            '''Calculate and update interaction terms in vector.'''
+            '''Calculate interaction terms.
+            Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
+            Values of entries are nd arrays.
+            '''
 
             terms = self.specified_terms
             computed_terms = {}
