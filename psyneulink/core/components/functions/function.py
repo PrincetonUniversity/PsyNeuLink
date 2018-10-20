@@ -11622,7 +11622,6 @@ class GradientOptimization(OptimizationFunction):
                  update_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  update_rate:tc.optional(tc.any(int, float))=1.0,
-                 # annealing_function:tc.optional(is_function_type)=lambda iteration, rate : rate/np.sqrt(iteration),
                  annealing_function:tc.optional(is_function_type)=lambda x: x,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
@@ -11731,7 +11730,6 @@ class GradientOptimization(OptimizationFunction):
 
             current_variable = new_variable
             current_value = new_value
-            # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
             if self.annealing_function:
                 update_rate = self.annealing_function(update_rate, iteration)
 
