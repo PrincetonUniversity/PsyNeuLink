@@ -782,11 +782,7 @@ class LVOCControlMechanism(ControlMechanism):
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
         self.prediction_weights = np.zeros_like(self.function_object.value)
 
-        # # Use compute_lvoc_from_control_signals() to compute gradients
-        # #    of prediction_vector w.r.t. control_signal variables in gradient_ascent()
-        # self.grad_of_lvoc_wrt_control_signals = grad(self.compute_lvoc_from_control_signals)
-
-        # FIX: SOLVE PROBLEM OF SPECFYING PARAMS BASED ONES SPECIFIC TO LVOCCONTROLMECHANISM
+        # FIX: SOLVE PROBLEM OF SPECFYING PARAMS BASED ON ONES SPECIFIC TO LVOCCONTROLMECHANISM
         #      SO THAT IT CAN BE SPECIFIED IN THE CONSTRUCTOR
         #      (VIZ: objective_function, update_function())
         # Assign default allocation_optimization_function:

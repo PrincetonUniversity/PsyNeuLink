@@ -11717,6 +11717,7 @@ class GradientOptimization(OptimizationFunction):
                     '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
                     '\ncurrent_value: ', current_value,
                     '\nnew_value: ', new_value,
+                    '\ngradients: ', gradients,
                     '\nconvergence_metric: ',convergence_metric,
             )
             self.update_function.__self__.test_print()
