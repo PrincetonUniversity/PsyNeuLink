@@ -1089,69 +1089,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             return computed_terms
 
-    def gradient_ascent(self, variable, prediction_vector, function, d_function_d_variable):
-        '''Determine the variables that maximizes function of prediction_vector.
-
-        Get value of function for initial variable
-        Iterate over prediction_vector, in each iteration:
-        - compute d(value=function(prediction_vector))/d(variable)
-        - adjust variable based on gradients;
-        - update prediction_vector based on new variable
-
-        Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
-        `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
-        `max_iterations <LearnAllocationPolicy.max_iterations>`.
-
-        Return new variable.
-        '''
-
-        # Initialize variables used in while loop
-        iteration=0
-        convergence_metric = self.convergence_threshold + EPSILON
-        update_rate = self.update_rate
-        current_variable = variable
-        current_value = function(current_variable)
-
-        # Perform gradient ascent
-        while convergence_metric > self.convergence_threshold:
-            # Compute gradients with respect to current variable
-            gradients = d_function_d_variable(current_variable)
-            # Update control_signal_variables based on them
-            new_variable = current_variable + update_rate * np.array(gradients)
-            new_value = function(new_variable)
-            # Evaluate for convergence
-            if self.convergence_criterion == LVOC:
-                convergence_metric = np.abs(new_value - current_value)
-            else:
-                convergence_metric = np.max(np.abs(np.array(new_variable) -
-                                                   np.array(current_variable)))
-            # Update prediction vector based on new control_signal values
-            self.prediction_vector.update_vector(self.feature_values, new_variable)
-
-            # TEST PRINT:
-            print(
-                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
-                    '\nprevious_value: ', new_value,
-                    '\ncurrent_value: ',new_value ,
-                    '\nconvergence_metric: ',convergence_metric,
-            )
-            self.test_print(prediction_vector)
-            # TEST PRINT END
-
-            iteration+=1
-            if iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
-
-            # self.lvoc = new_value
-            current_variable = new_variable
-            current_value = new_value
-            # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
-            if self.annealing_function:
-                update_rate = self.annealing_function(iteration, update_rate)
-
-        return new_variable
-
     def annealing_function(self, iteration, update_rate):
         # Default (currently hardwired function):
         return self.update_rate/np.sqrt(iteration)

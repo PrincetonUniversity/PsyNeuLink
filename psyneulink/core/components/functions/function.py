@@ -62,6 +62,9 @@ Objective Functions:
   * `Stability`
   * `Distance`
 
+Optimization Function:
+  * `gradient`
+
 Learning Functions:
   * `Kohonen`
   * `Hebbian`
@@ -208,7 +211,31 @@ import typecheck as tc
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, \
+    BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
+    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
+    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
+    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
+    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
+    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
+    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
+    NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
+    OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
+    SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
+    STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
+    TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
+    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -11540,6 +11567,123 @@ class Distance(ObjectiveFunction):
 
 # endregion
 
+
+
+
+
+
+
+
+
+
+
+
+# region **************************************   OPTIMIZATION FUNCTIONS ***********************************************
+
+class OptimizationFunction(Function_Base):
+    """Abstract class of `Function <Function>` used for optimization of a variable.
+
+    Attributes
+    ----------
+
+    variable : scalar, list or np.array
+        value to be optimized.
+
+    Returns
+    -------
+
+    Optimized value of `variable <OptimiziationFunction.variable>`.
+
+    """
+
+    componentType = OPTIMIZATION_FUNCTION_TYPE
+
+    class Params(Function_Base.Params):
+        variable = Param(np.array([0, 0, 0]), read_only=True)
+
+ASCENT = 'ascent'
+DESCENT = 'descent'
+
+class GradientOptimization(OptimizationFunction):
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable,
+                 function:is_function_type,
+                 gradient_function:is_function_type,
+                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
+                 update_rate:tc.optional(tc.any(int, float))=1.0,
+                 # annealing_function:tc.optional(is_function_type)=lambda iteration, rate : rate/np.sqrt(iteration),
+                 annealing_function:tc.optional(is_function_type)=lambda x: x,
+                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
+                 convergence_threshold:tc.optional(tc.any(int, float))=.001,
+                 context=None):
+        pass
+
+    def function(self, variable, prediction_vector):
+        '''Determine the variables that maximizes function of prediction_vector.
+
+        Get value of function for initial variable
+        Iterate over prediction_vector, in each iteration:
+        - compute d(value=function(prediction_vector))/d(variable)
+        - adjust variable based on gradients;
+        - update prediction_vector based on new variable
+
+        Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
+        `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
+        `max_iterations <LearnAllocationPolicy.max_iterations>`.
+
+        Return new variable.
+        '''
+
+        # Initialize variables used in while loop
+        iteration=0
+        convergence_metric = self.convergence_threshold + EPSILON
+        update_rate = self.update_rate
+        current_variable = variable
+        current_value = function(current_variable)
+
+        # Perform gradient ascent
+        while convergence_metric > self.convergence_threshold:
+            # Compute gradients with respect to current variable
+            gradients = self.gradient_function(current_variable)
+            # Update control_signal_variables based on them
+            new_variable = current_variable + update_rate * np.array(gradients)
+            new_value = function(new_variable)
+            # Evaluate for convergence
+            if self.convergence_criterion == VALUE:
+                convergence_metric = np.abs(new_value - current_value)
+            else:
+                convergence_metric = np.max(np.abs(np.array(new_variable) -
+                                                   np.array(current_variable)))
+            # Update prediction vector based on new control_signal values
+            self.prediction_vector.update_vector(self.feature_values, new_variable)
+
+            # TEST PRINT:
+            print(
+                    '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
+                    '\nprevious_value: ', new_value,
+                    '\ncurrent_value: ',new_value ,
+                    '\nconvergence_metric: ',convergence_metric,
+            )
+            self.test_print(prediction_vector)
+            # TEST PRINT END
+
+            iteration+=1
+            if iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            # self.lvoc = new_value
+            current_variable = new_variable
+            current_value = new_value
+            # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
+            if self.annealing_function:
+                update_rate = self.annealing_function(iteration, update_rate)
+
+        return new_variable
+
+
 # region **************************************   LEARNING FUNCTIONS ***************************************************
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
@@ -11562,6 +11706,7 @@ class LearningFunction(Function_Base):
        the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
        (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
        are validated against paramClassDefaults which will not recognize params specific to another Function.
+    COMMENT
 
     Attributes
     ----------
