@@ -814,7 +814,8 @@ class LVOCControlMechanism(ControlMechanism):
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.gradient_ascent(control_signal_variables,
                                                  self.prediction_vector,
-                                                 self.compute_lvoc_from_control_signals)
+                                                 self.compute_lvoc_from_control_signals,
+                                                 self.grad_of_lvoc_wrt_control_signals)
 
         return allocation_policy
 
@@ -1043,6 +1044,8 @@ class LVOCControlMechanism(ControlMechanism):
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
+            assert True
+
         def compute_terms(self, control_signal_variables):
             '''Calculate interaction terms.
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -1086,65 +1089,50 @@ class LVOCControlMechanism(ControlMechanism):
 
             return computed_terms
 
-    def gradient_ascent(self, variables, prediction_vector, function):
+    def gradient_ascent(self, variable, prediction_vector, function, d_function_d_variable):
         '''Determine the variables that maximizes function of prediction_vector.
 
-        Iterate over prediction_vector; for each iteration:
-        - get current lvoc by computing terms in prediction_vector using current ControlSignal `variables
-          <ControlSignal.variable>`;
-        - compute gradients in lvoc with respect to those `variables <ControlSignal.variable>`;
-        - modify ControlSignal `variables <ControlSignal.variable>` variables based on the new gradients;
-        - update prediction_vector with new terms based on new ControlSignal `variables <ControlSignal.variable>`
+        Get value of function for initial variable
+        Iterate over prediction_vector, in each iteration:
+        - compute d(value=function(prediction_vector))/d(variable)
+        - adjust variable based on gradients;
+        - update prediction_vector based on new variable
 
         Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
         `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
         `max_iterations <LearnAllocationPolicy.max_iterations>`.
 
-        Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
-        <LVOCControlMechanism.allocation_policy>`).
+        Return new variable.
         '''
 
         # Initialize variables used in while loop
-        previous_variables = np.full_like(variables, np.finfo(np.longdouble).max)
-        convergence_metric = self.convergence_threshold + EPSILON
-        # MODIFIED 10/20/18 OLD:
-        previous_lvoc = np.finfo(np.longdouble).max
-        # # MODIFIED 10/20/18 NEW:
-        # previous_lvoc = function(variables)
-        # MODIFIED 10/20/18 END
         iteration=0
+        convergence_metric = self.convergence_threshold + EPSILON
         update_rate = self.update_rate
+        current_variable = variable
+        current_value = function(current_variable)
 
         # Perform gradient ascent
         while convergence_metric > self.convergence_threshold:
-
-            # Get current lvoc by computing terms in prediction_vector based on current variables
-            # MODIFIED 10/20/18 OLD:
-            current_lvoc = function(variables)
-            # # MODIFIED 10/20/18 NEW:
-            # previous_lvoc = function(variables)
-            # MODIFIED 10/20/18 END
-            # Compute new gradients
-            gradients = self.grad_of_lvoc_wrt_control_signals(variables)
+            # Compute gradients with respect to current variable
+            gradients = d_function_d_variable(current_variable)
             # Update control_signal_variables based on them
-            variables = variables + update_rate * np.array(gradients)
-            # MODIFIED 10/20/18 NEW:
-            current_lvoc = function(variables)
-            # MODIFIED 10/20/18 END
+            new_variable = current_variable + update_rate * np.array(gradients)
+            new_value = function(new_variable)
             # Evaluate for convergence
             if self.convergence_criterion == LVOC:
-                convergence_metric = np.abs(current_lvoc - previous_lvoc)
+                convergence_metric = np.abs(new_value - current_value)
             else:
-                convergence_metric = np.max(np.abs(np.array(variables) -
-                                                   np.array(previous_variables)))
+                convergence_metric = np.max(np.abs(np.array(new_variable) -
+                                                   np.array(current_variable)))
             # Update prediction vector based on new control_signal values
-            self.prediction_vector.update_vector(self.feature_values, variables)
+            self.prediction_vector.update_vector(self.feature_values, new_variable)
 
             # TEST PRINT:
             print(
                     '\niteration {}-{}'.format(self.current_execution_count-1, iteration),
-                    '\nprevious_lvoc: ', previous_lvoc,
-                    '\ncurrent_lvoc: ',current_lvoc ,
+                    '\nprevious_value: ', new_value,
+                    '\ncurrent_value: ',new_value ,
                     '\nconvergence_metric: ',convergence_metric,
             )
             self.test_print(prediction_vector)
@@ -1155,14 +1143,14 @@ class LVOCControlMechanism(ControlMechanism):
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
-            self.lvoc = current_lvoc
-            previous_lvoc = current_lvoc
-            previous_variables = variables
+            # self.lvoc = new_value
+            current_variable = new_variable
+            current_value = new_value
             # FIX: ADD THIS AS OPTION IN CONSTRUCTOR
             if self.annealing_function:
                 update_rate = self.annealing_function(iteration, update_rate)
 
-        return variables
+        return new_variable
 
     def annealing_function(self, iteration, update_rate):
         # Default (currently hardwired function):
@@ -1230,7 +1218,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     # num_intrxn = prediction_vector.num_interactions
     #
     #     convergence_metric = self.convergence_threshold + EPSILON
-    #     previous_lvoc = np.finfo(np.longdouble).max
+    #     previous_value = np.finfo(np.longdouble).max
     #     prev_control_signal_values = np.full(num_c, np.finfo(np.longdouble).max)
     #
     #     feature_predictors = self.feature_values.reshape(-1)
@@ -1315,7 +1303,7 @@ class LVOCControlMechanism(ControlMechanism):
     #
     #         if self.convergence_criterion == LVOC:
     #             # Compute convergence metric with updated control signals
-    #             convergence_metric = np.abs(current_lvoc - previous_lvoc)
+    #             convergence_metric = np.abs(current_lvoc - previous_value)
     #         else:
     #             convergence_metric = np.max(np.abs(np.array(control_signal_values) -
     #                                                np.array(prev_control_signal_values)))
@@ -1323,7 +1311,7 @@ class LVOCControlMechanism(ControlMechanism):
     #         # TEST PRINT:
     #         print(
     #                 '\niteration {}-{}'.format(self.current_execution_count-1, j),
-    #                 '\nprevious_lvoc: ', previous_lvoc,
+    #                 '\nprevious_value: ', previous_value,
     #                 '\ncurrent_lvoc: ',current_lvoc ,
     #                 '\nconvergence_metric: ',convergence_metric,
     #         )
@@ -1335,7 +1323,7 @@ class LVOCControlMechanism(ControlMechanism):
     #             warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
     #             break
     #
-    #         previous_lvoc = current_lvoc
+    #         previous_value = current_lvoc
     #         prev_control_signal_values = control_signal_values
     #
     #     return control_signal_values
