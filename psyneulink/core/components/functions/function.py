@@ -11671,11 +11671,14 @@ class GradientOptimization(OptimizationFunction):
                  context=None):
         '''Determine the variables that maximizes function of prediction_vector.
 
-        Get value of function for initial variable
-        Iterate over prediction_vector, in each iteration:
-        - compute d(value=function(prediction_vector))/d(variable)
+        Get value of objective_function for initial variable
+        Iterate over objective_function, in each iteration:
+        - compute d(value=objective_function(variable))/d(variable)
         - adjust variable based on gradients;
-        - update prediction_vector based on new variable
+        - compute new value of objective_function
+        - call update_function to update parameters of objective_function
+        - adjust update_rate using annealing_function if specified
+        - evaluate convergence_criterion;
 
         Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
         `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
