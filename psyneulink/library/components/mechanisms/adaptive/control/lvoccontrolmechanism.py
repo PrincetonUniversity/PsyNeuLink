@@ -833,11 +833,8 @@ class LVOCControlMechanism(ControlMechanism):
                                              for c in self.control_signals])
 
         # Compute allocation_policy using gradient_ascent
-        # allocation_policy = self.gradient_ascent(control_signal_variables,
-        #                                          self.prediction_vector,
-        #                                          self.compute_lvoc_from_control_signals,
-        #                                          self.grad_of_lvoc_wrt_control_signals)
-        allocation_policy = self.allocation_optimization_function.function(variable=control_signal_variables)
+        allocation_policy = self.allocation_optimization_function.function(control_signal_variables)
+
         return allocation_policy
 
     def _parse_function_variable(self, variable, context=None):
