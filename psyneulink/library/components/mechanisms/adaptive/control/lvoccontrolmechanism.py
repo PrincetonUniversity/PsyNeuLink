@@ -1089,7 +1089,7 @@ class LVOCControlMechanism(ControlMechanism):
           <ControlSignal.variable>`;
         - compute gradients in lvoc with respect to those `variables <ControlSignal.variable>`;
         - modify ControlSignal `variables <ControlSignal.variable>` variables based on the new gradients;
-        - update prediction_vector with new ControlSignal `variables <ControlSignal.variable>`
+        - update prediction_vector with new terms based on new ControlSignal `variables <ControlSignal.variable>`
 
         Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
         `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
