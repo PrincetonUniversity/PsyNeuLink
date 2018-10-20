@@ -11669,11 +11669,11 @@ class GradientOptimization(OptimizationFunction):
                  variable=None,
                  params=None,
                  context=None):
-        '''Determine the variables that maximizes function of prediction_vector.
+        '''Determine the variable that maximizes the value of the objective_function
 
         Get value of objective_function for initial variable
         Iterate over objective_function, in each iteration:
-        - compute d(value=objective_function(variable))/d(variable)
+        - compute gradient = d(value=objective_function(variable))/d(variable)
         - adjust variable based on gradients;
         - compute new value of objective_function
         - call update_function to update parameters of objective_function
@@ -11696,15 +11696,18 @@ class GradientOptimization(OptimizationFunction):
         current_variable = variable
         current_value = self.objective_function(current_variable)
 
-        # Perform gradient movement
+        # Follow gradient trajectory
         while convergence_metric > self.convergence_threshold:
 
             # Compute gradients with respect to current variable
             gradients = self.gradient_function(current_variable)
+
             # Update variable based on new gradients
             new_variable = current_variable + update_rate * np.array(gradients)
+
             # Compute new value based on updated variable
             new_value = self.objective_function(new_variable)
+
             # Evaluate for convergence
             if self.convergence_criterion == VALUE:
                 convergence_metric = np.abs(new_value - current_value)

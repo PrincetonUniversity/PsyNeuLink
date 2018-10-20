@@ -254,8 +254,7 @@ import typecheck as tc
 # from aenum import AutoNumberEnum, auto
 from enum import Enum
 
-import autograd.numpy as np
-from autograd import grad
+import numpy as np
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization
