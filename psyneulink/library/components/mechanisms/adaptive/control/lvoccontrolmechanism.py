@@ -1034,8 +1034,8 @@ class LVOCControlMechanism(ControlMechanism):
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
-                self.vector[self.idx[k.value]] = v.reshape(-1)
-            assert True
+                if k in self.specified_terms:
+                    self.vector[self.idx[k.value]] = v.reshape(-1)
 
         def compute_terms(self, control_signal_variables):
             '''Calculate interaction terms.
