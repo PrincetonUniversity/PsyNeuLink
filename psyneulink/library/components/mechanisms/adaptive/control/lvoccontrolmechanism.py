@@ -385,11 +385,7 @@ class LVOCControlMechanism(ControlMechanism):
     terminal_objective_mechanism=False,                    \
     function=BayesGLM,                                     \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
-    update_rate=0.01,                                      \
     allocation_optimization_function=GradientOptimization, \
-    convergence_criterion=LVOC                             \
-    convergence_threshold=.001,                            \
-    max_iterations=1000,                                   \
     control_signals=None,                                  \
     modulation=ModulationParam.MULTIPLICATIVE,             \
     params=None,                                           \
@@ -434,24 +430,6 @@ class LVOCControlMechanism(ControlMechanism):
         with the same shape as `allocation_policy <LVOCControlMechanism.allocation_policy>`, and return a similar
         array (see `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>` for
         additional details).
-
-    update_rate : int or float : default 0.01
-        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
-        each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
-
-    convergence_criterion : LVOC or CONTROL_SIGNALS : default LVOC
-        specifies the measure used to determine when to terminate execution of the `gradient_ascent
-        <LVOCControlMechanism.gradient_ascent>` method.
-
-    convergence_threshold : int or float : default 0.001
-        specifies the change in value of the `convergence_criterion` below which the `gradient_ascent
-        <LVOCControlMechanism.gradient_ascent>` method is terminated and returns an `allocation_policy
-        <LVOCControlMechanism.allocation_policy>`.
-
-    max_iterations : int : default 1000
-        specifies the maximum number of iterations `gradient_ascent <LVOCControlMechanism.gradient_ascent>`
-        method is allowed to execute; if exceeded, a warning is issued, and the method returns the
-        last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
 
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the LVOCControlMechanism
@@ -603,12 +581,7 @@ class LVOCControlMechanism(ControlMechanism):
                  terminal_objective_mechanism=False,
                  function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
-                 prediction_weight_priors:tc.optional(tc.any(list, np.ndarray, dict))=None,
                  allocation_optimization_function=GradientOptimization,
-                 update_rate=0.01,
-                 convergence_criterion:tc.enum(LVOC, CONTROL_SIGNALS)=LVOC,
-                 convergence_threshold=0.01,
-                 max_iterations=1000,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -640,11 +613,6 @@ class LVOCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
                                                   feature_function=feature_function,
                                                   prediction_terms=prediction_terms,
-                                                  prediction_weight_priors=prediction_weight_priors,
-                                                  convergence_criterion=convergence_criterion,
-                                                  convergence_threshold=convergence_threshold,
-                                                  max_iterations=max_iterations,
-                                                  update_rate=update_rate,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)

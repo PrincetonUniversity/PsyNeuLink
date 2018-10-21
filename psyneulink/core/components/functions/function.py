@@ -11814,20 +11814,30 @@ class GradientOptimization(OptimizationFunction):
         from autograd import grad
 
         if objective_function is None:
-            raise FunctionError("{} arg must be specified for {} Function".
-                                format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
+            # raise FunctionError("{} arg must be specified for {} Function".
+            #                     format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
+            # FIX: PUT DEFERRED_INIT HERE??
+            # Assume this is because it is being constructed inside the constructor of a Component;
+            #    warning will come later if it is executed without being assigned
+            pass
         else:
             self.objective_function = objective_function
-        try:
-            self.gradient_function = grad(objective_function)
-        except:
-            raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
-                                format(repr(OBJECTIVE_FUNCTION),
-                                       self.objective_function.__name__, self.__class__.__name__))
+
+        if objective_function:
+            try:
+                self.gradient_function = grad(objective_function)
+            except:
+                raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
+                                    format(repr(OBJECTIVE_FUNCTION),
+                                           self.objective_function.__name__, self.__class__.__name__))
 
         if update_function is None:
-            raise FunctionError("{} arg must be specified for {} Function".
-                                format(repr(UPDATE_FUNCTION), self.__class__.__name__))
+            # raise FunctionError("{} arg must be specified for {} Function".
+            #                     format(repr(UPDATE_FUNCTION), self.__class__.__name__))
+            # FIX: PUT DEFERRED_INIT HERE??
+            # Assume this is because it is being constructed inside the constructor of a Component;
+            #    warning will come later if it is executed without being assigned
+            pass
         else:
             self.update_function = update_function
 
@@ -12972,6 +12982,11 @@ class BayesGLM(LearningFunction):
     and returns a vector of prediction weights sampled from the multivariate normal-gamma distribution.
     [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
     useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
+
+    .. hint::
+       The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
+       the size of the predictors array and, correspondingly, the weights array returned by the function (see
+       **Parameters** below).
 
     Arguments
     ---------
