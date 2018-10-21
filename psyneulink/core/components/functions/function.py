@@ -10843,6 +10843,8 @@ COMMENT
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
     Attributes
     ----------
 
@@ -10874,7 +10876,8 @@ COMMENT
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).     """
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = STABILITY_FUNCTION
 
@@ -11567,17 +11570,8 @@ class Distance(ObjectiveFunction):
 # endregion
 
 
-
-
-
-
-
-
-
-
-
-
 # region **************************************   OPTIMIZATION FUNCTIONS ***********************************************
+
 
 class OptimizationFunction(Function_Base):
     """Abstract class of `Function <Function>` used for optimization of a variable.
@@ -11600,68 +11594,84 @@ class OptimizationFunction(Function_Base):
     class Params(Function_Base.Params):
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
+
 ASCENT = 'ascent'
 DESCENT = 'descent'
 OBJECTIVE_FUNCTION = 'objective_function'
 UPDATE_FUNCTION = 'update_function'
 
+
+# FIX:
+# - add validate_params and/or _instantiate_attributes_before_function method(s)
+# - add Params() declaration
+
 class GradientOptimization(OptimizationFunction):
-
-    # FIX:
-    # - add validate_params and/or _instantiate_attributes_before_function method(s)
-    # - add Params() declaration
-
-    '''
-    GradientOptimization(
-        default_variable=None,
-        objective_function=None,
-        update_function=None,
-        direction=ASCENT,
-        update_rate=1.0,
-        annealing_function=None,
-        convergence_criterion=VALUE,
-        convergence_threshold=.001,
-        max_iterations=1000,
-        params=None,
-        owner=None,
-        prefs=None)
+    """
+    GradientOptimization(            \
+        default_variable=None,       \
+        objective_function=None,     \
+        update_function=None,        \
+        direction=ASCENT,            \
+        update_rate=1.0,             \
+        annealing_function=None,     \
+        convergence_criterion=VALUE, \
+        convergence_threshold=.001,  \
+        max_iterations=1000,         \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
 
     Optimize a variable with respect to a specified `objective_function <GradientOptimization.objective_function>`.
 
-
     .. _GradientOptimization_Process:
 
-    Optimization Process
-    --------------------
+    **Optimization Process**
 
     When `function <GradientOptimization.function>` is executed, it iterates over the folowing steps:
-    - `compute gradient <GradientOptimization_Gradient_Calculation>` using the `gradient_function
-      <GradientOptimization.gradient_function>`;
-    - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified `direction
-      GradientOptimization.direction` and by an amount specified by `update_rate <GradientOptimization.update_rate>`
-      and possibly `annealing_function <GradientOptimization.annealing_function>`.
-    - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
-      `variable <GradientOptimization.variable>`.
-    - call `update_function <GradientOptimization.update_function` if it is specified, to update parameters of
-      `objective_function <GradientOptimization.objective_function>`;  this is useful for cases in which
-      they depend on the `variable <GradientOptimization.variable>`.
-    - adjust `update_rate <GradientOptimization.udpate_rate>` using `annealing_function
-      <GradientOptimization.annealing_function>`, if specified, for use in the next iteration.
-    - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
-      the `convergence_threshold <GradientOptimization.convergence_threshold>`.
 
-     Current iteration is contained in `iteration <GradientOptimization.iteration>`
+        - `compute gradient <GradientOptimization_Gradient_Calculation>` using the `gradient_function
+          <GradientOptimization.gradient_function>`;
+        ..
+        - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
+          `direction <GradientOptimization.direction>` and by an amount specified by `update_rate
+          <GradientOptimization.update_rate>` and possibly `annealing_function
+          <GradientOptimization.annealing_function>`;
+        ..
+        - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
+          `variable <GradientOptimization.variable>`;
+        ..
+        - call `update_function <GradientOptimization.update_function>` if it is specified, to update parameters of
+          `objective_function <GradientOptimization.objective_function>`(this is useful for cases in which
+          they depend on the `variable <GradientOptimization.variable>`);
+        ..
+        - adjust `update_rate <GradientOptimization.udpate_rate>` using `annealing_function
+          <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
+        ..
+        - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
+          the `convergence_threshold <GradientOptimization.convergence_threshold>`.
+
+        Iteration continues until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls
+        below `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or the number of iterations exceeds
+        `max_iterations <GradientOptimization.max_iterations>`.  The current iteration is contained in `iteration
+        <GradientOptimization.iteration>`.
 
     .. _GradientOptimization_Gradient_Calculation:
 
-    Gradient Calculation
-    --------------------
+    **Gradient Calculation**
 
-        discuss autograd here
-        = d(value=objective_function(variable))/d(variable)
+    The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
+    which is the derivative of the `objective_function <GradientOptimization.objective_function>`
+    with respect to `variable <GradientOptimization.variable>` at its current value:
 
-    Agrugments
-    ----------
+        :math:`\\frac{d}{d(variable)}(objective\\_function(variable))`
+
+    `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
+    generate `gradient_function <GradientOptimization.gradient_function>`.
+
+
+    Arguments
+    ---------
 
     objective_function : function or method
         specifies function used to evaluate `variable <GradientOptimization.variable>`
@@ -11672,7 +11682,7 @@ class GradientOptimization(OptimizationFunction):
         specifies function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
-    direction : *ASCENT* or *DESCENT* : default *ASCENT*
+    direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
@@ -11710,35 +11720,38 @@ class GradientOptimization(OptimizationFunction):
     Attributes
     ----------
 
+    variable : array
+        value to optimize.
+
     objective_function : function or method
         function used to evaluate `variable <GradientOptimization.variable>`
         in each `iteration <GradientOptimization_Process>` of the optimization process;
         it must be specified and it must return a scalar value.
 
     gradient_function : function
-        function, returned by call to `autograd's <autograd>` `grad <autograd.grad>` method, used
-        to compute the `gradients <GradientOptimization_Gradients>`.
+        function used to compute the gradient in each `iteration <GradientOptimization_Process>` of the optimization
+        process (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for details).
 
     update_function : function or method
         function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
-    direction : *ASCENT* or *DESCENT* : default *ASCENT*
+    direction : ASCENT or DESCENT
         direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    update_rate : int or float : default 1.0
+    update_rate : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
         <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
         `update_rate <GradientOptimization.update_rate>`.
 
-    update_rate : int or float : default 0.01
+    update_rate : int or float
         determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
         each `iteration <GradientOptimization_Process>` of the optimization process.
 
-    annealing_function : function or method : default None
+    annealing_function : function or method
         function used to adapt `update_rate <GradientOptimization.update_rate>` in each
         `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
         and the same `update_rate <GradientOptimization.update_rate>` is used in each `iteration
@@ -11747,18 +11760,27 @@ class GradientOptimization(OptimizationFunction):
     iteration : int
         the currention iteration of the optiimzaton process.
 
-    convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
+    convergence_criterion : VARIABLE or VALUE
         determines the measure used to terminate `iterations <GradientOptimization_Process>`
         of the optimization process.
 
-    convergence_threshold : int or float : default 0.001
+    convergence_threshold : int or float
         determines the change in value of the `convergence_criterion` below which the optimization process
         is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
 
-    max_iterations : int : default 1000
+    max_iterations : int
         determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
         warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
-    '''
+
+    Returns
+    -------
+
+    optimized value of variable : np.array
+         value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+         `objective_function <GradientOptimization.objective_function>`, depending on whether `direction
+         <GradientOptimization.direction>` is, respectively, *ASCENT* or *DESCENT*.
+
+    """
 
     @tc.typecheck
     def __init__(self,
@@ -11821,13 +11843,11 @@ class GradientOptimization(OptimizationFunction):
                  variable=None,
                  params=None,
                  context=None):
-        '''Determine the variable that maximizes the value of the objective_function
+        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
+        `objective_function <GradientOptimization.objective_function>`.
 
-        See `GradientOptimization_Process` for details.
-
-        GradientOptimization_Process
-
-        Return:  optimized value of variable.
+        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
+        <GradientOptimization_Gradient_Calculation>` for details.
         '''
 
         variable = self._update_variable(self._check_args(variable, params, context))
