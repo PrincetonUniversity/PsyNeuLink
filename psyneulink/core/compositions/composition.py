@@ -2878,12 +2878,6 @@ class Composition(Composition_Base):
 
         return self.__compiled_execution
 
-    def __extract_mech_output(self, mechanism):
-        mech_index = self.__get_mech_index(mechanism)
-        field = self.__data_struct._fields_[mech_index][0]
-        res_struct = getattr(self.__data_struct, field)
-        return pnlvm._convert_ctype_to_python(res_struct)
-
     def reinitialize(self):
         self.__execution = None
 
