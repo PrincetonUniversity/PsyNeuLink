@@ -236,7 +236,7 @@ from psyneulink.core.globals.keywords import \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
     VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, \
-    GRADIENT_OPTIMIZATION_FUNCTION
+    GRADIENT_OPTIMIZATION_FUNCTION, NAME
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -750,6 +750,13 @@ class Function_Base(Function):
 
         if context != ContextFlags.CONSTRUCTOR:
             raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
+
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            self._assign_deferred_init_name(name, context)
+            self.init_args = locals().copy()
+            self.init_args[NAME] = name
+            return
+
 
         self._output_type = None
         self.enable_output_type_conversion = False
@@ -11819,7 +11826,7 @@ class GradientOptimization(OptimizationFunction):
             # FIX: PUT DEFERRED_INIT HERE??
             # Assume this is because it is being constructed inside the constructor of a Component;
             #    warning will come later if it is executed without being assigned
-            pass
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.objective_function = objective_function
 
@@ -11837,7 +11844,7 @@ class GradientOptimization(OptimizationFunction):
             # FIX: PUT DEFERRED_INIT HERE??
             # Assume this is because it is being constructed inside the constructor of a Component;
             #    warning will come later if it is executed without being assigned
-            pass
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.update_function = update_function
 
