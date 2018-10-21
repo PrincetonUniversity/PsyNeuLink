@@ -220,10 +220,13 @@ class CompExecution:
                            inputs, self.__frozen_vals, self.__data_struct)
 
     def execute(self, inputs):
-        inputs = self._get_input_struct(inputs)
         bin_exec = self._composition._get_bin_execution()
+        inputs = self._get_input_struct(inputs)
+        gen = helpers.ConditionGenerator(None, self._composition)
+        conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
+
         bin_exec.wrap_call(self.__context_struct, self.__param_struct,
-                           inputs, self.__data_struct)
+                           inputs, self.__data_struct, conds)
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:

@@ -71,7 +71,7 @@ class ConditionGenerator:
         self.ctx = ctx
         self.composition = composition
 
-    def get_condition_struct(self):
+    def get_condition_struct_type(self):
         time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
                                                   self.ctx.int32_ty,
                                                   self.ctx.int32_ty])

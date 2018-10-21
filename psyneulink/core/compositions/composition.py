@@ -3010,15 +3010,19 @@ class Composition(Composition_Base):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
+            # Create condition generator
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+
             func_name = ctx.get_unique_name('exec_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
                 self.get_input_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer()))
+                self.get_data_struct_type().as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data = llvm_func.args
+            context, params, comp_in, data, cond = llvm_func.args
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3031,15 +3035,6 @@ class Composition(Composition_Base):
             input_cim_name = self._get_bin_mechanism(self.input_CIM).name;
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
-
-            # Create condition generator
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-
-            # Allocate and init condition structure
-            structure = cond_gen.get_condition_struct()
-            cond_ptr = builder.alloca(structure, name="cond_ptr")
-            cond_init = structure(cond_gen.get_condition_initializer())
-            builder.store(cond_init, cond_ptr)
 
             # Allocate run set structure
             run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
@@ -3058,7 +3053,7 @@ class Composition(Composition_Base):
             builder.position_at_end(loop_condition)
             run_cond = cond_gen.generate_sched_condition(builder,
                             self.termination_processing[TimeScale.TRIAL],
-                            cond_ptr, None)
+                            cond, None)
             run_cond = builder.not_(run_cond, name="not_run_cond")
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -3079,8 +3074,8 @@ class Composition(Composition_Base):
                                                name="run_cond_ptr_" + mech.name)
                 mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
-                                cond_ptr, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
+                                cond, mech)
+                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
                 mech_cond = builder.and_(mech_cond, builder.not_(ran),
                                          name="run_cond_" + mech.name)
                 any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
@@ -3093,7 +3088,7 @@ class Composition(Composition_Base):
                     mech_name = self._get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
-                    cond_gen.generate_update_after_run(builder, cond_ptr, mech)
+                    cond_gen.generate_update_after_run(builder, cond, mech)
 
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
@@ -3107,7 +3102,7 @@ class Composition(Composition_Base):
 
             # Update step counter
             with builder.if_then(any_cond):
-                cond_gen.increment_ts(builder, cond_ptr)
+                cond_gen.increment_ts(builder, cond)
 
             # Increment number of iterations
             iters = builder.load(iter_ptr, name="iterw")
@@ -3121,9 +3116,10 @@ class Composition(Composition_Base):
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
-                cond_gen.increment_ts(builder, cond_ptr, (0, 1, 0))
+                cond_gen.increment_ts(builder, cond, (0, 1, 0))
+                # Zero the step counter
                 # TODO: Move this to ConditionGenerator
-                step_ptr = builder.gep(cond_ptr,
+                step_ptr = builder.gep(cond,
                                        [zero, ctx.int32_ty(0), ctx.int32_ty(2)],
                                        name="timestep_ptr")
                 builder.store(zero, step_ptr)
