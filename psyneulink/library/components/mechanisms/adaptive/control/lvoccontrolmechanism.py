@@ -209,6 +209,15 @@ the `GradientOptimization` Function.  A custom function can be used, however it 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
 
+COMMENT:
+Note to Developers:
+A custom function for allocation_optimization_function should implement deferred_init, allowing its
+**objective_function** and **update_function** arguments to be `None` when it is first constructed
+(see GradientOptimization.__init__ for an example) This is so that it can be declared in the
+LVOCControlMechanism's constructor, before its functions are available for assignment.  LVOCControlMechanism
+assigns the functions and calls for completiion of initialization of allocation_optimization_function in
+its __instantiate_attribute_after_function method.
+COMMENT
 
 .. _LVOCControlMechanism_ControlSignals:
 
@@ -569,11 +578,6 @@ class LVOCControlMechanism(ControlMechanism):
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
-    # FIX:
-    # - move relevant params to BayesGLM (prediction_weight_priors)
-    # - move relveant params to allocation_optimization_function
-    #     (update_rate, convergence_criterion, convergence_threshold, max_iterations)
-
     @tc.typecheck
     def __init__(self,
                  feature_predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
@@ -785,28 +789,12 @@ class LVOCControlMechanism(ControlMechanism):
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
-        # FIX: MOVED TO BayesGLM
-        # if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
-        #     mu_0 = self.function_object.params['mu_0']
-        #     if isinstance(self.prediction_weights_priors, (int, float)):
-        #         mu_0 = np.full((len(mu_0),1), mu_0)
-        #     elif isinstance(self.prediction_weights_priors, (list, np.ndarray)):
-        #         if len(mu_0) != len(self.prediction_weights_priors):
-        #             raise LVOCError("Length of array specified for {} arg of {} ({}) does not match one expected ({})".
-        #                             format(repr('mu_0'), repr(PREDICTION_WEIGHT_PRIORS), self.name,
-        #                                    len(self.prediction_weight_priors), len(mu_0)))
-        #     elif isinstance(self.prediction_weight_priors, dict):
-        #         for k, v in self.prediction_weight_priors:
-        #             mu_0[getattr(self.prediction_vector.idx, k.value)] = v
-        #     else:
-        #         raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
-        #                         format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
 
         self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
         self.prediction_weights = np.zeros_like(self.function_object.value)
 
-        # Assign allocation_optimization_function parameters that rely on LVOCControlMechanism
+        # Assign parameters to allocation_optimization_function that rely on LVOCControlMechanism
         alloc_opt_fct = self.allocation_optimization_function
         if self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
