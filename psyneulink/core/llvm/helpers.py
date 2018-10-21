@@ -155,10 +155,15 @@ class ConditionGenerator:
         global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
                                                         self.ctx.int32_ty(0)]))
         global_pass = builder.extract_value(global_ts, 1)
+        global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
         node_pass = builder.extract_value(node_ts, 1)
-        return builder.icmp_signed("==", node_pass, global_pass)
+        node_run = builder.extract_value(node_ts, 0)
+
+        pass_eq = builder.icmp_signed("==", node_pass, global_pass)
+        run_eq = builder.icmp_signed("==", node_run, global_run)
+        return builder.and_(pass_eq, run_eq)
 
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
