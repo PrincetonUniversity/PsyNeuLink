@@ -287,7 +287,8 @@ from enum import Enum
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization
+    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
+    OBJECTIVE_FUNCTION, UPDATE_FUNCTION
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -300,7 +301,8 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Composition_Base, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS, VALUE
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS, VALUE, DEFAULT_VARIABLE, \
+    OWNER
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -783,42 +785,35 @@ class LVOCControlMechanism(ControlMechanism):
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
-        if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
-            mu_0 = self.function_object.params['mu_0']
-            if isinstance(self.prediction_weights_priors, (int, float)):
-                mu_0 = np.full((len(mu_0),1), mu_0)
-            elif isinstance(self.prediction_weights_priors, (list, np.ndarray)):
-                if len(mu_0) != len(self.prediction_weights_priors):
-                    raise LVOCError("Length of array specified for {} arg of {} ({}) does not match one expected ({})".
-                                    format(repr('mu_0'), repr(PREDICTION_WEIGHT_PRIORS), self.name,
-                                           len(self.prediction_weight_priors), len(mu_0)))
-            elif isinstance(self.prediction_weight_priors, dict):
-                for k, v in self.prediction_weight_priors:
-                    mu_0[getattr(self.prediction_vector.idx, k.value)] = v
-            else:
-                raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
-                                format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
+        # FIX: MOVED TO BayesGLM
+        # if self.prediction_weight_priors and 'mu_0' in self.function_object.params:
+        #     mu_0 = self.function_object.params['mu_0']
+        #     if isinstance(self.prediction_weights_priors, (int, float)):
+        #         mu_0 = np.full((len(mu_0),1), mu_0)
+        #     elif isinstance(self.prediction_weights_priors, (list, np.ndarray)):
+        #         if len(mu_0) != len(self.prediction_weights_priors):
+        #             raise LVOCError("Length of array specified for {} arg of {} ({}) does not match one expected ({})".
+        #                             format(repr('mu_0'), repr(PREDICTION_WEIGHT_PRIORS), self.name,
+        #                                    len(self.prediction_weight_priors), len(mu_0)))
+        #     elif isinstance(self.prediction_weight_priors, dict):
+        #         for k, v in self.prediction_weight_priors:
+        #             mu_0[getattr(self.prediction_vector.idx, k.value)] = v
+        #     else:
+        #         raise LVOCError("Unrecognized specification ({}) for {} arg of {}.".
+        #                         format(repr(self.prediction_weight_priors), repr(PREDICTION_WEIGHT_PRIORS), self.name))
 
         self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
         self.prediction_weights = np.zeros_like(self.function_object.value)
 
-        # FIX: SOLVE PROBLEM OF SPECFYING PARAMS BASED ON ONES SPECIFIC TO LVOCCONTROLMECHANISM
-        #      SO THAT IT CAN BE SPECIFIED IN THE CONSTRUCTOR
-        #      (VIZ: objective_function, update_function())
-        # Assign default allocation_optimization_function:
-        if self.allocation_optimization_function is GradientOptimization:
-            self.allocation_optimization_function = GradientOptimization(
-                    default_variable=self.control_signal_variables,
-                    objective_function=self.compute_lvoc_from_control_signals,
-                    update_function=self.prediction_vector.update_vector,
-                    update_rate=self.update_rate,
-                    convergence_criterion=VALUE if self.convergence_criterion is LVOC else VARIABLE,
-                    convergence_threshold=self.convergence_threshold,
-                    annealing_function=lambda update_rate,iteration: update_rate/np.sqrt(iteration),
-                    max_iterations=self.max_iterations,
-                    owner=self
-            )
+        # Assign allocation_optimization_function parameters that rely on LVOCControlMechanism
+        alloc_opt_fct = self.allocation_optimization_function
+        if self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
+            alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
+            alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector
+            alloc_opt_fct.init_args[OWNER] = self
+            alloc_opt_fct._deferred_init()
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition

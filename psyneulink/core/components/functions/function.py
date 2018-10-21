@@ -753,7 +753,6 @@ class Function_Base(Function):
 
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
-            self.init_args = locals().copy()
             self.init_args[NAME] = name
             return
 
@@ -11817,6 +11816,12 @@ class GradientOptimization(OptimizationFunction):
                  owner=None,
                  prefs=None):
 
+
+        if None in {objective_function, update_function}:
+            self.init_args = locals().copy()
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            return
+
         # FIX: MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
         from autograd import grad
 
@@ -11826,6 +11831,7 @@ class GradientOptimization(OptimizationFunction):
             # FIX: PUT DEFERRED_INIT HERE??
             # Assume this is because it is being constructed inside the constructor of a Component;
             #    warning will come later if it is executed without being assigned
+            self.objective_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.objective_function = objective_function
@@ -11844,6 +11850,7 @@ class GradientOptimization(OptimizationFunction):
             # FIX: PUT DEFERRED_INIT HERE??
             # Assume this is because it is being constructed inside the constructor of a Component;
             #    warning will come later if it is executed without being assigned
+            self.update_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.update_function = update_function
@@ -11862,6 +11869,12 @@ class GradientOptimization(OptimizationFunction):
                                                   convergence_threshold=convergence_threshold,
                                                   max_iterations=max_iterations,
                                                   params=params)
+
+
+        # if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        #     self.init_args = locals().copy()
+        #     del self.init_args['grad']
+        #     assert True
 
         super().__init__(default_variable=default_variable,
                          params=params,

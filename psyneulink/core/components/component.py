@@ -1876,7 +1876,10 @@ class Component(object, metaclass=ComponentsMeta):
                 pass
 
             # Complete initialization
-            super(self.__class__,self).__init__(**self.init_args)
+            try:
+                super(self.__class__,self).__init__(**self.init_args)
+            except:
+                self.__class__,self.__init__(**self.init_args)
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:
