@@ -41,7 +41,7 @@ the "learned value of control," or LVOC.
 .. _LVOCControlMechanism_Creation:
 
 Creating an LVOCControlMechanism
-------------------------
+--------------------------------
 
  An LVOCControlMechanism can be created in the same was as any `ControlMechanism`, with the exception that it cannot
  be assigned as the `controller <Composition.controller>` of a Composition.  The following arguments of its
@@ -84,7 +84,7 @@ each of its feature_predictors, as described below.
 
 .. _LVOCControlMechanism_Feature_Predictors:
 
-Feature_Predictors
+Feature Predictors
 ^^^^^^^^^^^^^^^^^^
 
 Features_Predictors, together with the LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>`,
@@ -188,12 +188,12 @@ with the same shape as the LVOCControlMechanism's `allocation_policy <LVOCContro
 
 The `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` of an
 LVOCControlMechanism uses the `prediction_weights <LVOCControlMechanism.prediction_weights>` returned by its
-`function <LVOCControlMechanism>`, together with the current `feature_values <LVOCControlMechanism.feature_values>`
-and its `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method,
-to determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
-<LVOCControlMechanism_EVC>`.
+`function <LVOCControlMechanism.function>`, together with the current `feature_values
+<LVOCControlMechanism.feature_values>` and its `compute_lvoc_from_control_signals
+<LVOCControlMechanism.compute_lvoc_from_control_signals>` method, to determine the `allocation_policy
+<LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
-The default for `<allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` is
+The default for `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` is
 the `GradientOptimization` Function.  A custom function can be used, however it must meet several requirements:
 
     - It must accept as its first argument an array with the same shape as the
@@ -203,8 +203,8 @@ the `GradientOptimization` Function.  A custom function can be used, however it 
       `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method.
 
     - It must accept a keyword argument **update_function**, that is passed the LVOCControlMechanism's
-      `prediction_vector <LVOCControlMechanism.prediction_vector>`\\`s `update_vector <PredictionVector.update_vector>`
-      method.
+      `prediction_vector <LVOCControlMechanism.prediction_vector>`\\`s `update_vector
+      <LVOCControlMechanism.PredictionVector.update_vector>` method.
 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
@@ -495,13 +495,21 @@ class LVOCControlMechanism(ControlMechanism):
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     prediction_terms : List[PV]
-        identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+        identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector.vector>`.
         Items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
 
-    prediction_vector : 1d ndarray
+    prediction_vector : PredictionVector
+        object with `vector <PredictionVector.vector>` containing current values of `feature_predictors
+        <LVOCControlMechanism_Feature_Predictors>` `control_signals <LVOCControlMechanism.control_signals>`,
+        their interactions, and `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`
+        as specified in `prediction_terms <LVOCControlMechanism.prediction_terms>`, as well as an `update_vector`
+        <PredictionVector.update_vector>` method used to update their values, and attributes for accessing their values.
+
+        COMMENT:
         current values, respectively, of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`,
         interaction terms for feature_predictors x control_signals, `control_signals
         <LVOCControlMechanism.control_signals>`, and `costs <ControlSignal.cost>` of control_signals.
+        COMMENT
 
     prediction_weights : 1d ndarray
         weights assigned to each term of `prediction_vector <LVOCControlMechanism.prediction_vectdor>`
@@ -941,7 +949,8 @@ class LVOCControlMechanism(ControlMechanism):
             assigned as the `PV.C` term of `terms <PredictionVector.terms>`.
 
         specified_terms : List[PV]
-            terms to include in `vector <PredictionVector.vector>;  entries must be members of the `PV` Enum.
+            terms to include in `vector <PredictionVector.vector>`;
+            entries must be members of the `PV` Enum.
 
         Attributes
         ----------
@@ -951,7 +960,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         terms : List[ndarray]
             current value of ndarray terms, some of which are used to compute other terms. Only entries for terms in
-            `specified_terms <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
+            `specified_terms <specified_terms>` are assigned values; others are assigned `None`.
 
         num : List[int]
             number of arrays in outer dimension (axis 0) of each ndarray in `terms <PredictionVector.terms>`.
@@ -1095,7 +1104,7 @@ class LVOCControlMechanism(ControlMechanism):
 
         def update_vector(self, variable, feature_values=None):
             '''Update vector with flattened arrays of values returned from `compute_terms
-            <PredictionVector.compute_terms>.
+            <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
             Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `prediction_vector
             <LVOCControlMechanism.prediction_vector>`, with current values of `feature_values
@@ -1182,9 +1191,10 @@ class LVOCControlMechanism(ControlMechanism):
         Uses the current values of `prediction_weights <LVOCControlMechanism.prediction_weights>`
         and `feature_values <LVOCControlMechanism.feature_values>`, together with the variable
         (provided in its call by `allocation_policy <LVOCControlMechanism.allocation_policy>`)
-        to evaluate the `EVC <LVOCControlMechanism_EVC`.
+        to evaluate the `EVC <LVOCControlMechanism_EVC>`.
 
-        This function (including its call to PredictionVector.compute_terms() is differentiated by autograd.grad()
+        This function (including its call to `PredictionVector.compute_terms` is differentiated by
+        `autograd <https://github.com/HIPS/autograd>`_\\.grad()
         in `allocation_policy <LVOCControlMechanism.allocation_policy>`.
         '''
 
