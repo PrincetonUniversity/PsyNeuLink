@@ -11605,15 +11605,160 @@ DESCENT = 'descent'
 OBJECTIVE_FUNCTION = 'objective_function'
 UPDATE_FUNCTION = 'update_function'
 
-import autograd.numpy as np
-from autograd import grad
-
 class GradientOptimization(OptimizationFunction):
 
     # FIX:
-    # - implement ascent vs. descent
     # - add validate_params and/or _instantiate_attributes_before_function method(s)
     # - add Params() declaration
+
+    '''
+    GradientOptimization(
+        default_variable=None,
+        objective_function=None,
+        update_function=None,
+        direction=ASCENT,
+        update_rate=1.0,
+        annealing_function=None,
+        convergence_criterion=VALUE,
+        convergence_threshold=.001,
+        max_iterations=1000,
+        params=None,
+        owner=None,
+        prefs=None)
+
+    Optimize a variable with respect to a specified `objective_function <GradientOptimization.objective_function>`.
+
+
+    .. _GradientOptimization_Process:
+
+    Optimization Process
+    --------------------
+
+    When `function <GradientOptimization.function>` is executed, it iterates over the folowing steps:
+    - `compute gradient <GradientOptimization_Gradient_Calculation>` using the `gradient_function
+      <GradientOptimization.gradient_function>`;
+    - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified `direction
+      GradientOptimization.direction` and by an amount specified by `update_rate <GradientOptimization.update_rate>`
+      and possibly `annealing_function <GradientOptimization.annealing_function>`.
+    - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
+      `variable <GradientOptimization.variable>`.
+    - call `update_function <GradientOptimization.update_function` if it is specified, to update parameters of
+      `objective_function <GradientOptimization.objective_function>`;  this is useful for cases in which
+      they depend on the `variable <GradientOptimization.variable>`.
+    - adjust `update_rate <GradientOptimization.udpate_rate>` using `annealing_function
+      <GradientOptimization.annealing_function>`, if specified, for use in the next iteration.
+    - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
+      the `convergence_threshold <GradientOptimization.convergence_threshold>`.
+
+     Current iteration is contained in `iteration <GradientOptimization.iteration>`
+
+    .. _GradientOptimization_Gradient_Calculation:
+
+    Gradient Calculation
+    --------------------
+
+        discuss autograd here
+        = d(value=objective_function(variable))/d(variable)
+
+    Agrugments
+    ----------
+
+    objective_function : function or method
+        specifies function used to evaluate `variable <GradientOptimization.variable>`
+        in each `iteration <GradientOptimization_Process>` of the optimization process;
+        it must be specified and it must return a scalar value.
+
+    update_function : function or method : default None
+        specifies function called to update parameters of `objective_function <GradientOptimization.objective_function>`
+        in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
+
+    direction : *ASCENT* or *DESCENT* : default *ASCENT*
+        specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
+        the gradient).
+
+    update_rate : int or float : default 1.0
+        specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
+        `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
+        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
+        `update_rate <GradientOptimization.update_rate>`.
+
+    update_rate : int or float : default 0.01
+        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
+        each `iteration <GradientOptimization_Process>` of the optimization process.
+
+    annealing_function : function or method : default None
+        specifies function used to adapt `update_rate <GradientOptimization.update_rate>` in each
+        `iteration <GradientOptimization_Process>` of the optimization process;  must take accept two parameters —
+        `update_rate <GradientOptimization.update_rate>` and `iteration <GradientOptimization_Process>`, in that
+        order — and return a scalar value, that is used for the next iteration of optimization.
+
+    convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
+        specifies the measure used to determine when to terminate `iterations <GradientOptimization_Process>`
+        of the optimization process.
+
+    convergence_threshold : int or float : default 0.001
+        specifies the change in value of the `convergence_criterion` below which the optimization process
+        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the optimization process is allowed to `iterate
+        <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
+        returns the last value of `variable <GradientOptimization.variable>`.
+
+
+    Attributes
+    ----------
+
+    objective_function : function or method
+        function used to evaluate `variable <GradientOptimization.variable>`
+        in each `iteration <GradientOptimization_Process>` of the optimization process;
+        it must be specified and it must return a scalar value.
+
+    gradient_function : function
+        function, returned by call to `autograd's <autograd>` `grad <autograd.grad>` method, used
+        to compute the `gradients <GradientOptimization_Gradients>`.
+
+    update_function : function or method
+        function called to update parameters of `objective_function <GradientOptimization.objective_function>`
+        in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
+
+    direction : *ASCENT* or *DESCENT* : default *ASCENT*
+        direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
+        the gradient).
+
+    update_rate : int or float : default 1.0
+        determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
+        `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
+        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
+        `update_rate <GradientOptimization.update_rate>`.
+
+    update_rate : int or float : default 0.01
+        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
+        each `iteration <GradientOptimization_Process>` of the optimization process.
+
+    annealing_function : function or method : default None
+        function used to adapt `update_rate <GradientOptimization.update_rate>` in each
+        `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
+        and the same `update_rate <GradientOptimization.update_rate>` is used in each `iteration
+        <GradientOptimization_Process>`.
+
+    iteration : int
+        the currention iteration of the optiimzaton process.
+
+    convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
+        determines the measure used to terminate `iterations <GradientOptimization_Process>`
+        of the optimization process.
+
+    convergence_threshold : int or float : default 0.001
+        determines the change in value of the `convergence_criterion` below which the optimization process
+        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+
+    max_iterations : int : default 1000
+        determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
+        warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
+    '''
 
     @tc.typecheck
     def __init__(self,
@@ -11631,6 +11776,8 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None):
 
         # FIX: MOVE TO VALIDATE PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        from autograd import grad
+
         if objective_function is None:
             raise FunctionError("{} arg must be specified for {} Function".
                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
@@ -11649,8 +11796,13 @@ class GradientOptimization(OptimizationFunction):
         else:
             self.update_function = update_function
 
-        self.direction = direction
+        if direction is ASCENT:
+            self.direction = 1
+        else:
+            self.direction = -1
+
         self.annealing_function = annealing_function
+        # FIX: END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(update_rate=update_rate,
@@ -11671,20 +11823,11 @@ class GradientOptimization(OptimizationFunction):
                  context=None):
         '''Determine the variable that maximizes the value of the objective_function
 
-        Get value of objective_function for initial variable
-        Iterate over objective_function, in each iteration:
-        - compute gradient = d(value=objective_function(variable))/d(variable)
-        - adjust variable based on gradients;
-        - compute new value of objective_function
-        - call update_function to update parameters of objective_function
-        - adjust update_rate using annealing_function if specified
-        - evaluate convergence_criterion;
+        See `GradientOptimization_Process` for details.
 
-        Continue to iterate until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls below
-        `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or number of iterations exceeds
-        `max_iterations <LearnAllocationPolicy.max_iterations>`.
+        GradientOptimization_Process
 
-        Return new variable.
+        Return:  optimized value of variable.
         '''
 
         variable = self._update_variable(self._check_args(variable, params, context))
@@ -11703,7 +11846,7 @@ class GradientOptimization(OptimizationFunction):
             gradients = self.gradient_function(current_variable)
 
             # Update variable based on new gradients
-            new_variable = current_variable + update_rate * np.array(gradients)
+            new_variable = current_variable + self.direction * update_rate * np.array(gradients)
 
             # Compute new value based on updated variable
             new_value = self.objective_function(new_variable)
