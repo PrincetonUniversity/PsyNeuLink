@@ -449,6 +449,7 @@ class Composition(Composition_Base):
         # Compiled resources
         self.__compiled_mech = {}
         self.__compiled_execution = None
+        self.__compiled_run = None
         self.__execution = None
 
     def __repr__(self):
@@ -2703,6 +2704,19 @@ class Composition(Composition_Base):
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         result = None
+        if bin_execute == 'LLVMRun':
+            self.__bin_initialize()
+            # precompile execution FIXME: Remove this
+            node = self.input_CIM
+            self._get_bin_mechanism(self.input_CIM)
+            node = self.output_CIM
+            self._get_bin_mechanism(self.output_CIM)
+            for node in self.c_nodes:
+                self._get_bin_mechanism(node)
+            self._get_bin_execution()
+            # We only support single input, unwrap the structure
+            uwinputs = {k:v[0] for k, v in inputs.items()}
+            return self.__execution.run(uwinputs, num_trials)
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
@@ -2822,6 +2836,9 @@ class Composition(Composition_Base):
     def get_input_struct_type(self):
         return self.input_CIM.get_input_struct_type()
 
+    def get_output_struct_type(self):
+        return self.output_CIM.get_output_struct_type()
+
     def get_data_struct_type(self):
         output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
         output_type_list.append(self.input_CIM.get_output_struct_type())
@@ -2877,6 +2894,14 @@ class Composition(Composition_Base):
             self.__compiled_execution = bin_f
 
         return self.__compiled_execution
+
+    def _get_bin_run(self):
+        if self.__compiled_run is None:
+            wrapper = self.__gen_run_wrapper()
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_run = bin_f
+
+        return self.__compiled_run
 
     def reinitialize(self):
         self.__execution = None
@@ -3122,6 +3147,86 @@ class Composition(Composition_Base):
             builder.call(output_cim_f, [context, params, comp_in, data, data])
 
             builder.ret_void()
+        return func_name
+
+    def __gen_run_wrapper(self):
+        func_name = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.get_unique_name('run_wrap_' + self.name)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_context_struct_type().as_pointer(),
+                self.get_param_struct_type().as_pointer(),
+                self.get_data_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                self.get_output_struct_type().as_pointer(),
+                ctx.int32_ty.as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            context, params, data, data_in, data_out, runs_ptr = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            entry_block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(entry_block)
+
+            # Allocate and initialize condition structure
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+            cond_type = cond_gen.get_condition_struct_type()
+            cond = builder.alloca(cond_type)
+            cond_init = cond_type(cond_gen.get_condition_initializer())
+            builder.store(cond_init, cond)
+
+            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
+            builder.store(ctx.int32_ty(0), iter_ptr)
+
+            loop_condition = builder.append_basic_block(name="run_loop_condition")
+            builder.branch(loop_condition)
+
+            # Generate a while not 'end condition' loop
+            builder.position_at_end(loop_condition)
+            count = builder.load(iter_ptr)
+            runs = builder.load(runs_ptr)
+            run_cond = builder.icmp_unsigned('<', count, runs)
+
+            loop_body = builder.append_basic_block(name="run_loop_body")
+            exit_block = builder.append_basic_block(name="exit")
+            builder.cbranch(run_cond, loop_body, exit_block)
+
+            # Generate loop body
+            builder.position_at_end(loop_body)
+
+
+            # Call execution
+            exec_f_name = self._get_bin_execution().name
+            exec_f = ctx.get_llvm_function(exec_f_name)
+            builder.call(exec_f, [context, params, data_in, data, cond])
+
+            # Current iteration
+            iters = builder.load(iter_ptr);
+
+            # Extract output_CIM result
+            idx = self.__get_mech_index(self.output_CIM)
+            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            output_ptr = builder.gep(data_out, [iters])
+            result = builder.load(result_ptr)
+            builder.store(result, output_ptr)
+
+            # Bump run counter
+            cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+            # increment counter
+            iters = builder.add(iters, ctx.int32_ty(1))
+            builder.store(iters, iter_ptr)
+            builder.branch(loop_condition)
+
+            builder.position_at_end(exit_block)
+
+            builder.store(builder.load(iter_ptr), runs_ptr)
+
+            builder.ret_void()
+
         return func_name
 
     def run_simulation(self):

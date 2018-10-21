@@ -228,6 +228,15 @@ class CompExecution:
         bin_exec.wrap_call(self.__context_struct, self.__param_struct,
                            inputs, self.__data_struct, conds)
 
+    def run(self, inputs, runs):
+        bin_run = self._composition._get_bin_run()
+        inputs = self._get_input_struct(inputs)
+        outputs = (bin_run.byref_arg_types[4] * runs)()
+        runs_count = ctypes.c_int(runs)
+        bin_run.wrap_call(self.__context_struct, self.__param_struct,
+                          self.__data_struct, inputs, outputs, runs_count)
+        return _convert_ctype_to_python(outputs)
+
 # Initialize builtins
 with LLVMBuilderContext() as ctx:
     builtins.setup_vxm(ctx)
