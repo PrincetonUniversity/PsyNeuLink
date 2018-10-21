@@ -2417,7 +2417,7 @@ class Composition(Composition_Base):
                 for node in self.c_nodes:
                     self._get_bin_mechanism(node)
 
-                self.__bin_initialize(inputs)
+                self.__bin_initialize()
                 if bin_execute == 'LLVMExec':
                     self.__execution.execute(inputs)
                     return self.__execution.extract_node_output(self.output_CIM)
@@ -2881,7 +2881,7 @@ class Composition(Composition_Base):
     def reinitialize(self):
         self.__execution = None
 
-    def __bin_initialize(self, inputs):
+    def __bin_initialize(self):
         if self.__execution is None:
             self.__execution = pnlvm.CompExecution(self)
 
