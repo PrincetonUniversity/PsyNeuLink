@@ -154,7 +154,7 @@ def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
         return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
     if isinstance(x, ctypes.Array):
-        return [num for num in x]
+        return [_convert_ctype_to_python(num) for num in x]
     if isinstance(x, ctypes.c_double):
         return x.value
     if isinstance(x, float):
