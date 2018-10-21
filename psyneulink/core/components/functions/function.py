@@ -12977,24 +12977,29 @@ class BayesGLM(LearningFunction):
     ---------
 
     default_variable : 3d array : default None
-        first item of axis 0 should be a 2d array with one or more 1d arrays to use as predictor vectors;
-        second item should be a 2d array of equal length to the first item, with one or more 1d arrays each of
-        which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, the shape
-        of `variable <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`,
-        as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior
-        <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
+        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors;
+        second item must be a 2d array of equal length to the first item, with one or more 1d arrays each of
+        which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, but either
+        **mu_0** or **sigma_0 is specified, then the they are used to determine the shape of `variable
+        <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified, then the shape of `variable
+        <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`, as are `mu_prior
+        <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and
+        `gamma_size_prior <BayesGLM.gamma_size_prior>`.
 
     mu_0 : int, float or 1d array : default 0
         specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
         the prediction weights returned by the function).  If a scalar is specified, the same value will be used
         for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
-        the predictor array(s) in axis 0 of **default_variable**.
+        the predictor array(s) in axis 0 of **default_variable**.  If **default_variable** is not specified, the
+        specification for **mu_0** is used to determine the shape of `variable <BayesGLM.variable>` and
+        `sigma_prior <BayesGLM.sigma_prior>`.
 
     sigma_0 : int, float or 1d array : default 0
         specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
         for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
         all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
-        predictor array(s) in axis 0 of **default_variable**.
+        predictor array(s) in axis 0 of **default_variable**.  If neither **default_variable** nor **mu_0** is
+        specified, the specification for **sigma_0** is used to determine their shapes.
 
     gamma_shape_0 : int or float : default 1
         specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
