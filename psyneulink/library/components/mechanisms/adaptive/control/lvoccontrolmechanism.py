@@ -582,6 +582,7 @@ class LVOCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
         function = BayesGLM
 

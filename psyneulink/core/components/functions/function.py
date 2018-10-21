@@ -235,7 +235,8 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, \
+    GRADIENT_OPTIMIZATION_FUNCTION
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -11601,10 +11602,6 @@ OBJECTIVE_FUNCTION = 'objective_function'
 UPDATE_FUNCTION = 'update_function'
 
 
-# FIX:
-# - add validate_params and/or _instantiate_attributes_before_function method(s)
-# - add Params() declaration
-
 class GradientOptimization(OptimizationFunction):
     """
     GradientOptimization(            \
@@ -11782,6 +11779,22 @@ class GradientOptimization(OptimizationFunction):
 
     """
 
+    componentName = GRADIENT_OPTIMIZATION_FUNCTION
+
+    class Params(Function_Base.Params):
+        variable = Param([[0], [0]], read_only=True)
+        objective_function = None
+        update_function = None
+        direction = ASCENT
+        update_rate = Param(1.0, modulable=True)
+        annealing_function = None
+        convergence_criterion = VALUE,
+        convergence_threshold = Param(.001, modulable=True)
+        max_iterations = Param(1000, modulable=True)
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -11789,7 +11802,7 @@ class GradientOptimization(OptimizationFunction):
                  update_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  update_rate:tc.optional(tc.any(int, float))=1.0,
-                 annealing_function:tc.optional(is_function_type)=lambda x: x,
+                 annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
                  max_iterations:tc.optional(int)=1000,
@@ -11797,7 +11810,7 @@ class GradientOptimization(OptimizationFunction):
                  owner=None,
                  prefs=None):
 
-        # FIX: MOVE TO VALIDATE PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        # FIX: MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
         from autograd import grad
 
         if objective_function is None:
@@ -13071,7 +13084,7 @@ class BayesGLM(LearningFunction):
     """
 
     def __init__(self,
-                 default_variable =  None,
+                 default_variable = None,
                  mu_0=0,
                  sigma_0=1,
                  gamma_shape_0=1,
@@ -13079,6 +13092,8 @@ class BayesGLM(LearningFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        self.user_specified_default_variable = default_variable
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mu_0=mu_0,
@@ -13093,7 +13108,28 @@ class BayesGLM(LearningFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    def _handle_default_variable(self, default_variable=None, size=None):
+
+        # If default_variable was not specified by user...
+        if default_variable is None and size in {None, NotImplemented}:
+            #  but mu_0 and/or sigma_0 was specified as an array...
+            if isinstance(self.mu_0, (list, np.ndarray)) or isinstance(self.sigma_0, (list, np.ndarray)):
+                # if both are specified, make sure they are the same size
+                if (isinstance(self.mu_0, (list, np.ndarray))
+                        and isinstance(self.sigma_0, (list, np.ndarray))
+                        and len(self.mu_0) != len(self.self.sigma_0)):
+                    raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
+                                        format(repr('mu_0'), len(self.mu_0),
+                                                    repr('sigma_0'), len(self.self.sigma_0),
+                                                         self.__class.__.__name__))
+                # allow their size to determine the size of variable
+                if isinstance(self.mu_0, (list, np.ndarray)):
+                    default_variable = [np.zeros_like(self.mu_0), np.zeros((1,1))]
+                else:
+                    default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
+
+        return super()._handle_default_variable(default_variable=default_variable, size=size)
+
     def initialize_priors(self):
         '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
@@ -13102,6 +13138,7 @@ class BayesGLM(LearningFunction):
         variable = np.array(self.instance_defaults.variable)
         if variable.dtype != object:
             variable = np.atleast_2d(variable)
+
         n = len(variable[0])
 
         if isinstance(self.mu_0, (int, float)):
