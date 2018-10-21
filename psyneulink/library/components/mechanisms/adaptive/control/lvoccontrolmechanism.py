@@ -263,13 +263,13 @@ of execution. Specifically it executes the following steps:
     `costs <ControlSignal.cost>` associated with each of its `control_signals <LVOCControlMechanism.control_signals>`,
     to update its `prediction_weights <LVOCControlMechanism.prediction_weights>`.
 
-  * Calls `<allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`, which uses
+  * Calls `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`, which uses
     the current `feature_values <LVOCControlMechanism.feature_values>` and `prediction_weights
     <LVOCControlMechanism.prediction_weights>` to determine the `allocation_policy
     <LVOCControlMechanism.alocation_policy>` that yields the greatest `EVC <LVOCControlMechanism_EVC>`.
 
 The values in the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by
-`<allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` are assigned as the
+`allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` are assigned as the
 `variables <ControlSignal.variables>` of its `control_signals  <LVOCControlMechanism.control_signals>`, from which
 they compute their `values <ControlSignal.value>`.
 

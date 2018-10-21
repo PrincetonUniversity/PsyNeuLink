@@ -11923,17 +11923,17 @@ class GradientOptimization(OptimizationFunction):
             # Update expression containing variable
             self.update_function(new_variable)
 
-            # TEST PRINT:
-            print(
-                    '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-                    '\ncurrent_value: ', current_value,
-                    '\nnew_value: ', new_value,
-                    '\ngradients: ', gradients,
-                    '\nupdate_rate: ', update_rate,
-                    '\nconvergence_metric: ',convergence_metric,
-            )
-            self.update_function.__self__.test_print()
-            # TEST PRINT END
+            # # TEST PRINT:
+            # print(
+            #         '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
+            #         '\ncurrent_value: ', current_value,
+            #         '\nnew_value: ', new_value,
+            #         '\ngradients: ', gradients,
+            #         '\nupdate_rate: ', update_rate,
+            #         '\nconvergence_metric: ',convergence_metric,
+            # )
+            # self.update_function.__self__.test_print()
+            # # TEST PRINT END
 
             iteration+=1
             if iteration > self.max_iterations:
