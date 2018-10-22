@@ -24,32 +24,20 @@ import logging as _logging
 import numpy as _numpy
 
 # starred imports to allow user imports from top level
-from . import llvm
-from . import components
-from . import globals
+from . import core
 from . import library
-from . import scheduling
-from . import compositions
 
 from ._version import get_versions
-from .llvm import *
-from .components import *
-from .globals import *
+from .core import *
 from .library import *
-from .scheduling import *
-from .compositions import *
 
 _pnl_global_names = [
     'primary_registries',
 ]
 
 __all__ = list(_pnl_global_names)
-# __all__.extend(llvm.__all__)
-__all__.extend(components.__all__)
-__all__.extend(compositions.__all__)
-__all__.extend(globals.__all__)
+__all__.extend(core.__all__)
 __all__.extend(library.__all__)
-__all__.extend(scheduling.__all__)
 
 # set __version__ based on versioneer
 __version__ = get_versions()['version']
@@ -57,6 +45,7 @@ del get_versions
 
 # suppress numpy overflow and underflow errors
 _numpy.seterr(over='ignore', under='ignore')
+
 
 # https://stackoverflow.com/a/17276457/3131666
 class _Whitelist(_logging.Filter):
@@ -78,8 +67,8 @@ _logging.basicConfig(
 )
 for handler in _logging.root.handlers:
     handler.addFilter(_Blacklist(
-        'psyneulink.scheduling.scheduler',
-        'psyneulink.scheduling.condition',
+        'psyneulink.core.scheduling.scheduler',
+        'psyneulink.core.scheduling.condition',
     ))
 
 primary_registries = [

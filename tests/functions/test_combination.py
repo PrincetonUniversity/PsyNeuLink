@@ -1,7 +1,7 @@
-import psyneulink as pnl
-import psyneulink.components.functions.function as Function
-import psyneulink.globals.keywords as kw
 import numpy as np
+import psyneulink as pnl
+import psyneulink.core.components.functions.function as Function
+import psyneulink.core.globals.keywords as kw
 import pytest
 
 from itertools import product

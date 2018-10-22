@@ -1,13 +1,13 @@
 import numpy as np
 
-from psyneulink.components.functions.function import ConstantIntegrator, Logistic
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
-from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.components.functions.function import ConstantIntegrator, Logistic
+from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
+from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 
 def test_gating():

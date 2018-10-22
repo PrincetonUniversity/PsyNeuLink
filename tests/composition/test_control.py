@@ -1,16 +1,14 @@
-import psyneulink as pnl
 import numpy as np
-
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.globals.keywords import RESULT, MEAN, VARIANCE, ALLOCATION_SAMPLES, IDENTITY_MATRIX
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME, \
-    PROBABILITY_UPPER_THRESHOLD
-from psyneulink.components.functions.function import BogaczEtAl, Linear
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.library.subsystems.evc.evccontroller import EVCController
-from psyneulink.library.mechanisms.adaptive.control.controller import Controller
-from psyneulink.compositions.composition import Composition
-
+# from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+# from psyneulink.globals.keywords import RESULT, MEAN, VARIANCE, ALLOCATION_SAMPLES, IDENTITY_MATRIX
+# from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, RESPONSE_TIME, \
+#     PROBABILITY_UPPER_THRESHOLD
+# from psyneulink.components.functions.function import BogaczEtAl, Linear
+# from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+# from psyneulink.library.subsystems.evc.evccontroller import EVCController
+# from psyneulink.library.mechanisms.adaptive.control.controller import Controller
+# from psyneulink.compositions.composition import Composition
+import psyneulink as pnl
 
 class TestControlMechanisms:
 
@@ -308,30 +306,30 @@ class TestControllers:
 
     def test_evc(self):
         # Mechanisms
-        Input = TransferMechanism(
+        Input = pnl.TransferMechanism(
             name='Input',
         )
-        Reward = TransferMechanism(
-            output_states=[RESULT, MEAN, VARIANCE],
+        Reward = pnl.TransferMechanism(
+            output_states=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
             name='Reward'
         )
-        Decision = DDM(
-            function=BogaczEtAl(
+        Decision = pnl.DDM(
+            function=pnl.BogaczEtAl(
                 drift_rate=(
                     1.0,
-                    ControlProjection(
-                        function=Linear,
+                    pnl.ControlProjection(
+                        function=pnl.Linear,
                         control_signal_params={
-                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                            pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                         },
                     ),
                 ),
                 threshold=(
                     1.0,
-                    ControlProjection(
-                        function=Linear,
+                    pnl.ControlProjection(
+                        function=pnl.Linear,
                         control_signal_params={
-                            ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                            pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                         },
                     ),
                 ),
@@ -340,20 +338,20 @@ class TestControllers:
                 t0=0.45
             ),
             output_states=[
-                DECISION_VARIABLE,
-                RESPONSE_TIME,
-                PROBABILITY_UPPER_THRESHOLD
+                pnl.DECISION_VARIABLE,
+                pnl.RESPONSE_TIME,
+                pnl.PROBABILITY_UPPER_THRESHOLD
             ],
             name='Decision',
         )
 
-        comp = Composition(name="evc")
+        comp = pnl.Composition(name="evc")
 
         comp.add_c_node(Reward)
-        task_execution_pathway = [Input, IDENTITY_MATRIX, Decision]
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_controller(type=EVCController,
+        comp.add_controller(type=pnl.EVCController,
                             control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                             monitor_for_control=[Reward,
                                                  Decision.PROBABILITY_UPPER_THRESHOLD,

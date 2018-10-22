@@ -1,8 +1,8 @@
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
 import pytest
 
-import psyneulink.globals.utilities
+import psyneulink.core.globals.utilities
 
 
 class TestModels:
@@ -219,7 +219,7 @@ class TestModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_c_node_role(response_layer, psyneulink.globals.utilities.CNodeRole.TERMINAL)
+        bidirectional_stroop.add_required_c_node_role(response_layer, psyneulink.core.globals.utilities.CNodeRole.TERMINAL)
         bidirectional_stroop._analyze_graph()
 
         input_dict = {colors_input_layer: [0, 0, 0],

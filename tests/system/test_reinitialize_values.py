@@ -1,12 +1,12 @@
 import numpy as np
 
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.scheduling.condition import AtTrial, Never
-from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.functions.function import AdaptiveIntegrator, DriftDiffusionIntegrator, Integrator
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, DriftDiffusionIntegrator, Integrator
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.system import System
+from psyneulink.core.scheduling.condition import AtTrial, Never
 
 class TestReinitializeValues:
 

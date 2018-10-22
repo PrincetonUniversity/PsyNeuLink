@@ -1,6 +1,6 @@
 Process
 =======
 
-.. automodule:: psyneulink.components.process
+.. automodule:: psyneulink.core.components.process
    :members:
    :exclude-members: ProcessTuple, ProcessList, random
