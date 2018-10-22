@@ -799,7 +799,13 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Assign parameters to allocation_optimization_function that rely on LVOCControlMechanism
         alloc_opt_fct = self.allocation_optimization_function
-        if self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if isinstance(self.allocation_optimization_function, type):
+            self.allocation_optimization_function = self.allocation_optimization_function(
+                                                            default_variable = self.control_signal_variables,
+                                                            objective_function = self.compute_lvoc_from_control_signals,
+                                                            update_function = self.prediction_vector.update_vector,
+                                                            owner = self)
+        elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
             alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
             alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector

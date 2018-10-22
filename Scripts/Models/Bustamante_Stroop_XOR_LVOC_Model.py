@@ -55,7 +55,6 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                                                     reward],
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
-                                update_rate=1.0,
                                 terminal_objective_mechanism=True,
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}
