@@ -385,6 +385,8 @@ class Composition(Composition_Base):
         COMMENT
 
     '''
+    # Composition now inherits from Component, so registry inherits name None
+    componentType = 'Composition'
 
     def __init__(self,
                  name=None,

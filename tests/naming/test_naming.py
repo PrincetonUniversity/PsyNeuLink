@@ -211,3 +211,12 @@ class TestNaming:
                                    input_states=[T3.output_states[pnl.RESULTS],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
                                    output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
+
+    def test_composition_names(self):
+        C1 = pnl.Composition()
+        C2 = pnl.Composition()
+        C3 = pnl.Composition()
+
+        assert C1.name == 'Composition-0'
+        assert C2.name == 'Composition-1'
+        assert C3.name == 'Composition-2'
