@@ -2341,9 +2341,6 @@ class Mechanism_Base(Mechanism):
                 # return converted_to_2d
                 value = converted_to_2d
 
-        # Set status based on whether self.value has changed
-        self.status = value
-
         self.parameters.value.set(value, execution_context=execution_id, override=True)
 
         # UPDATE OUTPUT STATE(S)
@@ -3377,23 +3374,6 @@ class Mechanism_Base(Mechanism):
             return self._get_state_value_labels(OutputState, execution_context)
         else:
             return self.get_output_values(execution_context)
-
-    @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, current_value):
-        # if current_value != self._old_value:
-        try:
-            if np.array_equal(current_value, self._old_value):
-                self._status = UNCHANGED
-            else:
-                self._status = CHANGED
-                self._old_value = current_value
-        # FIX:  CATCHES ELEMENTWISE COMPARISON DEPRECATION WARNING/ERROR -- NEEDS TO BE FIXED AT SOME POINT
-        except:
-            self._status = CHANGED
 
     @property
     def states(self):
