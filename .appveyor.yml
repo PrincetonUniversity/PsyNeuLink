@@ -8,7 +8,7 @@ clone_depth: 25
 
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
-  PATH: 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
+  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
   matrix:
   - PYTHON: Python35
     EXTRA_ARGS: -m llvm
@@ -42,11 +42,15 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - 'C:\Users\appveyor\AppData\Roaming\Python\%PYTHON% -> .appveyor.yml'
+    - '%APPDATA%\Python\%PYTHON% -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
     - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
 
 build: off
 
 test_script:
-- cmd: pytest tests/ %EXTRA_ARGS%
+  - pytest --junit-xml=tests_out.xml tests/ %EXTRA_ARGS%
+
+on_finish:
+  # Upload tests to appveyor overview
+  - curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/%APPVEYOR_JOB_ID%

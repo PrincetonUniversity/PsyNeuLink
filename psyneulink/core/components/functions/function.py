@@ -1644,6 +1644,9 @@ class UserDefinedFunction(Function_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+        # create transient Params objects for custom function params
+        for param_name in self.cust_fct_params:
+            setattr(self.parameters, param_name, Param(self.cust_fct_params[param_name], modulable=True))
 
     def function(self, **kwargs):
 

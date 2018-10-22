@@ -148,8 +148,12 @@ out_map = pnl.MappingProjection(name='hidden_to_output',
                             sender=xor_hid,
                             receiver=xor_out)
 
-# initialize an empty AutodiffComposition
-xor_autodiff = AutodiffComposition(param_init_from_pnl=True)
+# initialize an empty AutodiffComposition with patience and min_delta
+pat = 10
+min_delt = .00001
+print('AutodiffComposition has patience = ', pat)
+print('AutodiffComposition has min_delta = ', min_delt)
+xor_autodiff = AutodiffComposition(param_init_from_pnl=True, patience=pat, min_delta=min_delt)
 
 # add the mechanisms (add_c_node) and projections (add_projection) to AutodiffComposition
 xor_autodiff.add_c_node(xor_in)
@@ -167,7 +171,7 @@ result = xor_autodiff.run(inputs={xor_in: xor_inputs},
                  optimizer='sgd')  # the default optimizer in System is sgd, so we use sgd here as well
 autodiff_total_time = time.time() - autodiff_start_time
 
-print('Output of AutodiffComposition after', num_epochs,
+print('Output of AutodiffComposition after at most', num_epochs,
       'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
 print(result[0])
 print('Initializing and training AutodiffComposition took ', autodiff_total_time, ' seconds.')

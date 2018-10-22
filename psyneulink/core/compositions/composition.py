@@ -465,8 +465,7 @@ class Composition(Composition_Base):
             The Composition's processing graph (contains only `Mechanisms <Mechanism>`, excluding those
             used in learning).
 
-            :getter: Returns the processing graph, and builds the graph if it needs updating
-            since the last access.
+            :getter: Returns the processing graph, and builds the graph if it needs updating since the last access.
         '''
         if self.needs_update_graph_processing or self._graph_processing is None:
             self._update_processing_graph()
