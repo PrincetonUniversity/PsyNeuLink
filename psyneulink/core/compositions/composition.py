@@ -447,13 +447,10 @@ class Composition(Composition_Base):
         self.sched = Scheduler(composition=self)
 
         # Compiled resources
-        self.__params_struct = None
-        self.__context_struct = None
-        self.__data_struct = None
-        self.__input_struct = None
-
         self.__compiled_mech = {}
         self.__compiled_execution = None
+        self.__compiled_run = None
+        self.__execution = None
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -2415,20 +2412,17 @@ class Composition(Composition_Base):
         if bin_execute:
             try:
                 node = self.input_CIM
-                self.__get_bin_mechanism(self.input_CIM)
+                self._get_bin_mechanism(self.input_CIM)
                 node = self.output_CIM
-                self.__get_bin_mechanism(self.output_CIM)
+                self._get_bin_mechanism(self.output_CIM)
                 for node in self.c_nodes:
-                    self.__get_bin_mechanism(node)
+                    self._get_bin_mechanism(node)
 
+                self.__bin_initialize()
                 if bin_execute == 'LLVMExec':
-                    bin_f = self.__get_bin_execution()
-                    self.__bin_initialize(inputs)
-                    bin_f.wrap_call(self.__context_struct,
-                                    self.__params_struct,
-                                    self.__input_struct,
-                                    self.__data_struct)
-                    return self.__extract_mech_output(self.output_CIM)
+                    self.__execution.execute(inputs)
+                    return self.__execution.extract_node_output(self.output_CIM)
+
                 bin_execute = True
             except Exception as e:
                 if bin_execute[:4] == 'LLVM':
@@ -2439,13 +2433,7 @@ class Composition(Composition_Base):
                 bin_execute = False
 
         if bin_execute:
-            self.__bin_initialize(inputs)
-            bin_mechanism = self.__get_bin_mechanism(self.input_CIM)
-            bin_mechanism.wrap_call(self.__context_struct,
-                                    self.__params_struct,
-                                    self.__input_struct,
-                                    self.__data_struct,
-                                    self.__data_struct)
+            self.__execution.execute_node(self.input_CIM, inputs)
 
         if call_before_pass:
             call_before_pass()
@@ -2469,8 +2457,7 @@ class Composition(Composition_Base):
             frozen_values = {}
             new_values = {}
             if bin_execute:
-                import copy
-                frozen_vals = copy.deepcopy(self.__data_struct)
+                self.__execution.freeze_values()
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
@@ -2506,12 +2493,7 @@ class Composition(Composition_Base):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     if bin_execute:
-                        bin_mechanism = self.__get_bin_mechanism(node)
-                        bin_mechanism.wrap_call(self.__context_struct,
-                                                self.__params_struct,
-                                                self.__input_struct,
-                                                frozen_vals,
-                                                self.__data_struct)
+                        self.__execution.execute_node(node)
                     else:
                         node.context.execution_phase = ContextFlags.PROCESSING
                         if node is not self.controller:
@@ -2555,14 +2537,10 @@ class Composition(Composition_Base):
 
         # extract result here
         if bin_execute:
-            bin_mechanism = self.__get_bin_mechanism(self.output_CIM)
-            bin_mechanism.wrap_call(self.__context_struct,
-                                    self.__params_struct,
-                                    self.__input_struct,
-                                    self.__data_struct,
-                                    self.__data_struct)
+            self.__execution.freeze_values()
+            self.__execution.execute_node(self.output_CIM)
 
-            return self.__extract_mech_output(self.output_CIM)
+            return self.__execution.extract_node_output(self.output_CIM)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
@@ -2726,6 +2704,19 @@ class Composition(Composition_Base):
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         result = None
+        if bin_execute == 'LLVMRun':
+            self.__bin_initialize()
+            # precompile execution FIXME: Remove this
+            node = self.input_CIM
+            self._get_bin_mechanism(self.input_CIM)
+            node = self.output_CIM
+            self._get_bin_mechanism(self.output_CIM)
+            for node in self.c_nodes:
+                self._get_bin_mechanism(node)
+            self._get_bin_execution()
+            # We only support single input, unwrap the structure
+            uwinputs = {k:v[0] for k, v in inputs.items()}
+            return self.__execution.run(uwinputs, num_trials)
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
@@ -2845,6 +2836,9 @@ class Composition(Composition_Base):
     def get_input_struct_type(self):
         return self.input_CIM.get_input_struct_type()
 
+    def get_output_struct_type(self):
+        return self.output_CIM.get_output_struct_type()
+
     def get_data_struct_type(self):
         output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
         output_type_list.append(self.input_CIM.get_output_struct_type())
@@ -2884,7 +2878,7 @@ class Composition(Composition_Base):
         else:
             return self.c_nodes.index(mechanism)
 
-    def __get_bin_mechanism(self, mechanism):
+    def _get_bin_mechanism(self, mechanism):
         if mechanism not in self.__compiled_mech:
             wrapper = self.__gen_mech_wrapper(mechanism)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
@@ -2893,7 +2887,7 @@ class Composition(Composition_Base):
 
         return self.__compiled_mech[mechanism]
 
-    def __get_bin_execution(self):
+    def _get_bin_execution(self):
         if self.__compiled_execution is None:
             wrapper = self.__gen_exec_wrapper()
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
@@ -2901,44 +2895,20 @@ class Composition(Composition_Base):
 
         return self.__compiled_execution
 
-    def __extract_mech_output(self, mechanism):
-        mech_index = self.__get_mech_index(mechanism)
-        field = self.__data_struct._fields_[mech_index][0]
-        res_struct = getattr(self.__data_struct, field)
-        return pnlvm._convert_ctype_to_python(res_struct)
+    def _get_bin_run(self):
+        if self.__compiled_run is None:
+            wrapper = self.__gen_run_wrapper()
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_run = bin_f
+
+        return self.__compiled_run
 
     def reinitialize(self):
-        self.__data_struct = None
-        self.__params_struct = None
-        self.__context_struct = None
+        self.__execution = None
 
-    def __bin_initialize(self, inputs):
-        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        # Read provided input and split apart each input state
-        input_data = [[x] for m in origin_mechanisms for x in inputs[m]]
-
-        c_input = pnlvm._convert_llvm_ir_to_ctype(self.get_input_struct_type())
-        def tupleize(x):
-            if hasattr(x, "__len__"):
-                return tuple([tupleize(y) for y in x])
-            return x
-
-        self.__input_struct = c_input(*tupleize(input_data))
-
-        if self.__data_struct is None:
-            c_output = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
-            output = self.get_data_initializer()
-            self.__data_struct = c_output(*output)
-
-        if self.__params_struct is None:
-            c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
-            params = self.get_param_initializer()
-            self.__params_struct = c_params(*params)
-
-        if self.__context_struct is None:
-            c_contexts = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())
-            contexts = self.get_context_initializer()
-            self.__context_struct = c_contexts(*contexts)
+    def __bin_initialize(self):
+        if self.__execution is None:
+            self.__execution = pnlvm.CompExecution(self)
 
     def __gen_mech_wrapper(self, mech):
 
@@ -3059,15 +3029,19 @@ class Composition(Composition_Base):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
+            # Create condition generator
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+
             func_name = ctx.get_unique_name('exec_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
                 self.get_input_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer()))
+                self.get_data_struct_type().as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data = llvm_func.args
+            context, params, comp_in, data, cond = llvm_func.args
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3077,18 +3051,9 @@ class Composition(Composition_Base):
             builder = ir.IRBuilder(entry_block)
 
             # Call input CIM
-            input_cim_name = self.__get_bin_mechanism(self.input_CIM).name;
+            input_cim_name = self._get_bin_mechanism(self.input_CIM).name;
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
-
-            # Create condition generator
-            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-
-            # Allocate and init condition structure
-            structure = cond_gen.get_condition_struct()
-            cond_ptr = builder.alloca(structure, name="cond_ptr")
-            cond_init = structure(cond_gen.get_condition_initializer())
-            builder.store(cond_init, cond_ptr)
 
             # Allocate run set structure
             run_set_type = ir.ArrayType(ir.IntType(1), len(self.c_nodes))
@@ -3107,7 +3072,7 @@ class Composition(Composition_Base):
             builder.position_at_end(loop_condition)
             run_cond = cond_gen.generate_sched_condition(builder,
                             self.termination_processing[TimeScale.TRIAL],
-                            cond_ptr, None)
+                            cond, None)
             run_cond = builder.not_(run_cond, name="not_run_cond")
 
             loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -3128,8 +3093,8 @@ class Composition(Composition_Base):
                                                name="run_cond_ptr_" + mech.name)
                 mech_cond = cond_gen.generate_sched_condition(builder,
                                 self.__get_processing_condition_set(mech),
-                                cond_ptr, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond_ptr, mech)
+                                cond, mech)
+                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
                 mech_cond = builder.and_(mech_cond, builder.not_(ran),
                                          name="run_cond_" + mech.name)
                 any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
@@ -3139,10 +3104,10 @@ class Composition(Composition_Base):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
                 with builder.if_then(mech_cond):
-                    mech_name = self.__get_bin_mechanism(mech).name;
+                    mech_name = self._get_bin_mechanism(mech).name;
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
-                    cond_gen.generate_update_after_run(builder, cond_ptr, mech)
+                    cond_gen.generate_update_after_run(builder, cond, mech)
 
             # Writeback results
             for idx, mech in enumerate(self.c_nodes):
@@ -3156,7 +3121,7 @@ class Composition(Composition_Base):
 
             # Update step counter
             with builder.if_then(any_cond):
-                cond_gen.increment_ts(builder, cond_ptr)
+                cond_gen.bump_ts(builder, cond)
 
             # Increment number of iterations
             iters = builder.load(iter_ptr, name="iterw")
@@ -3170,22 +3135,98 @@ class Composition(Composition_Base):
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
-                cond_gen.increment_ts(builder, cond_ptr, (0, 1, 0))
-                # TODO: Move this to ConditionGenerator
-                step_ptr = builder.gep(cond_ptr,
-                                       [zero, ctx.int32_ty(0), ctx.int32_ty(2)],
-                                       name="timestep_ptr")
-                builder.store(zero, step_ptr)
+                # Bumping automatically zeros lower elements
+                cond_gen.bump_ts(builder, cond, (0, 1, 0))
 
             builder.branch(loop_condition)
 
             builder.position_at_end(exit_block)
             # Call output CIM
-            output_cim_name = self.__get_bin_mechanism(self.output_CIM).name;
+            output_cim_name = self._get_bin_mechanism(self.output_CIM).name;
             output_cim_f = ctx.get_llvm_function(output_cim_name)
             builder.call(output_cim_f, [context, params, comp_in, data, data])
 
             builder.ret_void()
+        return func_name
+
+    def __gen_run_wrapper(self):
+        func_name = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.get_unique_name('run_wrap_' + self.name)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_context_struct_type().as_pointer(),
+                self.get_param_struct_type().as_pointer(),
+                self.get_data_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                self.get_output_struct_type().as_pointer(),
+                ctx.int32_ty.as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            context, params, data, data_in, data_out, runs_ptr = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            entry_block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(entry_block)
+
+            # Allocate and initialize condition structure
+            cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+            cond_type = cond_gen.get_condition_struct_type()
+            cond = builder.alloca(cond_type)
+            cond_init = cond_type(cond_gen.get_condition_initializer())
+            builder.store(cond_init, cond)
+
+            iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
+            builder.store(ctx.int32_ty(0), iter_ptr)
+
+            loop_condition = builder.append_basic_block(name="run_loop_condition")
+            builder.branch(loop_condition)
+
+            # Generate a while not 'end condition' loop
+            builder.position_at_end(loop_condition)
+            count = builder.load(iter_ptr)
+            runs = builder.load(runs_ptr)
+            run_cond = builder.icmp_unsigned('<', count, runs)
+
+            loop_body = builder.append_basic_block(name="run_loop_body")
+            exit_block = builder.append_basic_block(name="exit")
+            builder.cbranch(run_cond, loop_body, exit_block)
+
+            # Generate loop body
+            builder.position_at_end(loop_body)
+
+
+            # Call execution
+            exec_f_name = self._get_bin_execution().name
+            exec_f = ctx.get_llvm_function(exec_f_name)
+            builder.call(exec_f, [context, params, data_in, data, cond])
+
+            # Current iteration
+            iters = builder.load(iter_ptr);
+
+            # Extract output_CIM result
+            idx = self.__get_mech_index(self.output_CIM)
+            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            output_ptr = builder.gep(data_out, [iters])
+            result = builder.load(result_ptr)
+            builder.store(result, output_ptr)
+
+            # Bump run counter
+            cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+            # increment counter
+            iters = builder.add(iters, ctx.int32_ty(1))
+            builder.store(iters, iter_ptr)
+            builder.branch(loop_condition)
+
+            builder.position_at_end(exit_block)
+
+            builder.store(builder.load(iter_ptr), runs_ptr)
+
+            builder.ret_void()
+
         return func_name
 
     def run_simulation(self):
