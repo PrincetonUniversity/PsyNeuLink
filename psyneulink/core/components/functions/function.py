@@ -236,18 +236,18 @@ from psyneulink.core.globals.keywords import \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
     VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, \
-    GRADIENT_OPTIMIZATION_FUNCTION, NAME
+    GRADIENT_OPTIMIZATION_FUNCTION, NAME, GRID_SEARCH_FUNCTION
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
 
 __all__ = [
-    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'ASCENT',
     'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy', 'AUTOASSOCIATIVE',
     'BackPropagation', 'BayesGLM', 'BogaczEtAl', 'BOUNDS',
-    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
-    'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian',
+    'DESCENT', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
@@ -255,8 +255,8 @@ __all__ = [
     'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
     'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
-    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
-    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
+    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic',
+    'MAXIMIZE', 'max_vs_avg', 'max_vs_next', 'MINIMIZE', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
@@ -11826,11 +11826,7 @@ class GradientOptimization(OptimizationFunction):
         from autograd import grad
 
         if objective_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
+            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
             self.objective_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
@@ -11845,11 +11841,7 @@ class GradientOptimization(OptimizationFunction):
                                            self.objective_function.__name__, self.__class__.__name__))
 
         if update_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(UPDATE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
+            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
             self.update_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
@@ -11885,7 +11877,8 @@ class GradientOptimization(OptimizationFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
         `objective_function <GradientOptimization.objective_function>`.
 
@@ -11947,6 +11940,9 @@ class GradientOptimization(OptimizationFunction):
 
         return new_variable
 
+
+MAXIMIZE = 'maximize'
+MINIMIZE = 'minimize'
 
 class GridSearch(OptimizationFunction):
     """
@@ -12124,11 +12120,10 @@ class GridSearch(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  update_function:tc.optional(is_function_type)=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=ASCENT,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  params=None,
                  owner=None,
                  prefs=None):
-
 
         if None in {objective_function, update_function}:
             self.init_args = locals().copy()
@@ -12136,55 +12131,27 @@ class GridSearch(OptimizationFunction):
             return
 
         if objective_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
+            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
             self.objective_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.objective_function = objective_function
 
-        if objective_function:
-            try:
-                self.gradient_function = grad(objective_function)
-            except:
-                raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
-                                    format(repr(OBJECTIVE_FUNCTION),
-                                           self.objective_function.__name__, self.__class__.__name__))
 
         if update_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(UPDATE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
+            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
             self.update_function = None
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
         else:
             self.update_function = update_function
 
-        if direction is ASCENT:
+        if direction is MAXIMIZE:
             self.direction = 1
         else:
             self.direction = -1
 
-        self.annealing_function = annealing_function
-        # FIX: END
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(update_rate=update_rate,
-                                                  convergence_criterion=convergence_criterion,
-                                                  convergence_threshold=convergence_threshold,
-                                                  max_iterations=max_iterations,
-                                                  params=params)
-
-
-        # if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-        #     self.init_args = locals().copy()
-        #     del self.init_args['grad']
-        #     assert True
+        params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -12195,7 +12162,8 @@ class GridSearch(OptimizationFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
         `objective_function <GradientOptimization.objective_function>`.
 
@@ -12206,68 +12174,35 @@ class GridSearch(OptimizationFunction):
         variable = self._update_variable(self._check_args(variable, params, context))
 
         # Initialize variables used in while loop
-        iteration=0
-        convergence_metric = self.convergence_threshold + EPSILON
-        update_rate = self.update_rate
         current_variable = variable
         current_value = self.objective_function(current_variable)
 
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+
         # Follow gradient trajectory
-        while convergence_metric > self.convergence_threshold:
-
-            # Compute gradients with respect to current variable
-            gradients = self.gradient_function(current_variable)
-
-            # Update variable based on new gradients
-            new_variable = current_variable + self.direction * update_rate * np.array(gradients)
+        while XXXX
 
             # Compute new value based on updated variable
             new_value = self.objective_function(new_variable)
 
-            # Evaluate for convergence
-            if self.convergence_criterion == VALUE:
-                convergence_metric = np.abs(new_value - current_value)
-            else:
-                convergence_metric = np.max(np.abs(np.array(new_variable) -
-                                                   np.array(current_variable)))
             # Update expression containing variable
             self.update_function(new_variable)
 
-            # # TEST PRINT:
-            # print(
-            #         '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            #         '\ngradients: ', gradients,
-            #         '\nupdate_rate: ', update_rate,
-            #         '\nconvergence_metric: ',convergence_metric,
-            # )
-            # self.update_function.__self__.test_print()
-            # # TEST PRINT END
-
             iteration+=1
-            if iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
 
             current_variable = new_variable
             current_value = new_value
-            if self.annealing_function:
-                update_rate = self.annealing_function(update_rate, iteration)
 
         return new_variable
-
-
-        # for control_signal in self.control_signals:
-        #     control_signal_sample_lists.append(control_signal.allocation_samples)
-        #
-        # # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        # #                                     (one sample from the allocationSample of each ControlProjection)
-        # # Reference for implementation below:
-        # # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        # self.control_signal_search_space = \
-        #     np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
