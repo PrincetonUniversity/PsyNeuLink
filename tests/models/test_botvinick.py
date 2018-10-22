@@ -199,6 +199,7 @@ def test_botvinick_model(benchmark, mode, reps):
             response_layer.reinitialize([[0,0]])
             task_layer.reinitialize([[0,0]])
             comp.reinitialize()
+            comp.results = []
 
         return results
 
