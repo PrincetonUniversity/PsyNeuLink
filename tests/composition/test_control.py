@@ -451,12 +451,7 @@ class TestControllers:
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
             [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
-        for node in comp.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL):
-            for state in node.output_states:
-                print(node.name, " ", state.name)
 
-        print("\n\nEXPECTED RESULTS - - - - - - - - - - - - - - - ")
         for trial in range(len(expected_results_array)):
-            print("[", trial, "] ", comp.results[trial], " == ", expected_results_array[trial], " ? ")
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
 

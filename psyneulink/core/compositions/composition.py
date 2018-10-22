@@ -3068,7 +3068,9 @@ class Composition(Composition_Base):
                 and self.enable_controller:
             if self.controller:
                 self.controller.objective_mechanism.execute(context=context)
-                self.controller.execute(context=context)
+                # KAM - temporary solution for assiging control signal values
+                allocation_policy = self.controller.execute(context=context)
+                self.controller.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
