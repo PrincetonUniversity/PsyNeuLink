@@ -2716,7 +2716,8 @@ class Composition(Composition_Base):
             self._get_bin_execution()
             # We only support single input, unwrap the structure
             uwinputs = {k:v[0] for k, v in inputs.items()}
-            return self.__execution.run(uwinputs, num_trials)
+            self.results += self.__execution.run(uwinputs, num_trials)
+            return self.results
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
