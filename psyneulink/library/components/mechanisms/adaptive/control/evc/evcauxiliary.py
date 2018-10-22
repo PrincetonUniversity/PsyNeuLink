@@ -178,6 +178,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
+        # remove this in favor of attribute or parameter?
         cost_function = controller.paramsCurrent[COST_FUNCTION]
         combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
@@ -316,9 +317,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         #region RUN SIMULATION
 
-        controller.EVC_max = None
-        controller.EVC_values = []
-        controller.EVC_policies = []
+        EVC_max = None
+        EVC_values = []
+        EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
@@ -326,10 +327,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
+
+        control_signal_search_space = controller.parameters.control_signal_search_space.get(execution_id)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
-            search_space_size = len(controller.control_signal_search_space)
+            search_space_size = len(control_signal_search_space)
             progress_bar_rate = int(10 ** (np.log10(search_space_size)-2))
             if progress_bar_rate > 1:
                 progress_bar_rate_str = str(progress_bar_rate) + " "
@@ -338,8 +341,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Evaluate all combinations of control_signals (policies)
         sample = 0
-        controller.EVC_max_state_values = variable.copy()
-        controller.EVC_max_policy = controller.control_signal_search_space[0] * 0.0
+        EVC_max_state_values = variable.copy()
+        EVC_max_policy = control_signal_search_space[0] * 0.0
 
         # Parallelize using multiprocessing.Pool
         # NOTE:  currently fails on attempt to pickle lambda functions
@@ -347,7 +350,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
             results = EVC_pool.map(compute_EVC, [(controller, arg, runtime_params, context)
-                                                 for arg in controller.control_signal_search_space], execution_id=execution_id)
+                                                 for arg in control_signal_search_space], execution_id=execution_id)
 
         else:
 
@@ -357,17 +360,17 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 rank = Comm.Get_rank()
                 size = Comm.Get_size()
 
-                chunk_size = (len(controller.control_signal_search_space) + (size-1)) // size
+                chunk_size = (len(control_signal_search_space) + (size-1)) // size
                 print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
                 start = chunk_size * rank
                 end = chunk_size * (rank+1)
-                if start > len(controller.control_signal_search_space):
-                    start = len(controller.control_signal_search_space)
-                if end > len(controller.control_signal_search_space):
-                    end = len(controller.control_signal_search_space)
+                if start > len(control_signal_search_space):
+                    start = len(control_signal_search_space)
+                if end > len(control_signal_search_space):
+                    end = len(control_signal_search_space)
             else:
                 start = 0
-                end = len(controller.control_signal_search_space)
+                end = len(control_signal_search_space)
 
             if MPI_IMPLEMENTATION:
                 print("START: {0}\nEND: {1}".format(start,end))
@@ -382,8 +385,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
             result = None
             EVC_max = float('-Infinity')
-            EVC_max_policy = np.empty_like(controller.control_signal_search_space[0])
-            EVC_max_state_values = np.empty_like(controller.input_values)
+            EVC_max_policy = np.zeros_like(control_signal_search_space[0])
+            EVC_max_state_values = np.zeros_like(controller.get_input_values(execution_id))
             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
@@ -395,9 +398,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             #     inputs.append(repr(i).replace('\n', ''))
             # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
 
-            for allocation_vector in controller.control_signal_search_space[start:end,:]:
-            # for iter in range(rank, len(controller.control_signal_search_space), size):
-            #     allocation_vector = controller.control_signal_search_space[iter,:]:
+            for allocation_vector in control_signal_search_space[start:end,:]:
+            # for iter in range(rank, len(control_signal_search_space), size):
+            #     allocation_vector = control_signal_search_space[iter,:]:
 
                 if controller.prefs.reportOutputPref:
                     increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
@@ -414,7 +417,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
 
                 # Add to list of EVC values and allocation policies if save option is set
-                if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                if controller.save_all_values_and_policies:
                     # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
                     EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
                     # Save policy associated with EVC for each process, as order of chunks
@@ -433,7 +436,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = controller.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.input_values
+                    EVC_max_state_values = controller.get_input_values(execution_id)
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
@@ -450,20 +453,20 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 # get tuple with "EVC max of maxes"
                 max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
                 # get EVC_max, state values and allocation policy associated with "max of maxes"
-                controller.EVC_max = max_of_max_tuples[0]
-                controller.EVC_max_state_values = max_of_max_tuples[1]
-                controller.EVC_max_policy = max_of_max_tuples[2]
+                EVC_max = max_of_max_tuples[0]
+                EVC_max_state_values = max_of_max_tuples[1]
+                EVC_max_policy = max_of_max_tuples[2]
 
-                if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                    controller.EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
-                    controller.EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
-            else:
-                controller.EVC_max = EVC_max
-                controller.EVC_max_state_values = EVC_max_state_values
-                controller.EVC_max_policy = EVC_max_policy
-                if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                    controller.EVC_values = EVC_values
-                    controller.EVC_policies = EVC_policies
+                if controller.save_all_values_and_policies:
+                    EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
+                    EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
+
+            controller.parameters.EVC_max.set(EVC_max, execution_id, override=True)
+            controller.parameters.EVC_max_state_values.set(EVC_max_state_values, execution_id, override=True)
+            controller.parameters.EVC_max_policy.set(EVC_max_policy, execution_id, override=True)
+            if controller.save_all_values_and_policies:
+                controller.parameters.EVC_values.set(EVC_values, execution_id, override=True)
+                controller.parameters.EVC_policies.set(EVC_policies, execution_id, override=True)
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
@@ -486,7 +489,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to control_signals for optimal allocation policy:
-        EVC_maxStateValue = iter(controller.EVC_max_state_values)
+        EVC_maxStateValue = iter(EVC_max_state_values)
 
         # Assign max values for optimal allocation policy to controller.input_states (for reference only)
         for i in range(len(controller.input_states)):
@@ -495,11 +498,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Report EVC max info
         if controller.prefs.reportOutputPref:
-            print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(controller.EVC_max)))
+            print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(EVC_max)))
             print ("ControlProjection allocation(s) for maximum EVC:")
             for i in range(len(controller.control_signals)):
                 print("\t{0}: {1}".format(controller.control_signals[i].name,
-                                        controller.EVC_max_policy[i]))
+                                        EVC_max_policy[i]))
             print()
 
         #endregionj
@@ -511,7 +514,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
         #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
-        allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
+        allocation_policy = np.array(EVC_max_policy).reshape(len(EVC_max_policy), -1)
         controller.parameters.value.set(allocation_policy, execution_id, override=True)
         return allocation_policy
         #endregion
@@ -538,15 +541,16 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
     """
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
-    #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
+    #       format(allocation_vector, [mech.outputState.value for mech in predicted_input]),
     #       flush=True)
 
 
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
+    predicted_input = ctlr.parameters.predicted_input.get(execution_id)
 
-    origin_mechs = list(ctlr.predicted_input.keys())
+    origin_mechs = list(predicted_input.keys())
     # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
-    num_trials = len(ctlr.predicted_input[origin_mechs[0]])
+    num_trials = len(predicted_input[origin_mechs[0]])
     EVC_list = []
 
 
@@ -580,7 +584,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
         ctlr.system._initialize_from_context(sim_execution_id, execution_id)
 
-        inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
+        inputs = {key:value[i] for key, value in predicted_input.items()}
 
         outcome = ctlr.run_simulation(
             inputs=inputs,
@@ -591,10 +595,10 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             context=context
         )
         EVC_list.append(
-            ctlr.paramsCurrent[VALUE_FUNCTION].function(
+            ctlr.value_function.function(
                 controller=ctlr,
                 outcome=outcome,
-                costs=ctlr.control_signal_costs,
+                costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
                 execution_id=sim_execution_id,
                 context=context
             )
@@ -865,7 +869,7 @@ class PredictionMechanism(IntegratorMechanism):
                                   initializer=initial_value,
                                   rate=rate,
                                   noise=noise,
-                                  history=self.window_size)
+                                  history=window_size)
 
         params.update({FUNCTION_PARAMS:{RATE:rate,
                                         NOISE:noise}})

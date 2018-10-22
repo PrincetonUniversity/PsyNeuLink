@@ -754,9 +754,9 @@ class EVCControlMechanism(ControlMechanism):
         value_function = Param(ValueFunction, stateful=False, loggable=False)
         cost_function = Param(LinearCombination, stateful=False, loggable=False)
         combine_outcome_and_cost_function = Param(LinearCombination, stateful=False, loggable=False)
+        save_all_values_and_policies = Param(False, stateful=False, loggable=False)
 
         simulation_ids = Param(list, user=False)
-        control_signal_costs = Param(None, read_only=True)
 
         modulation = ModulationParam.MULTIPLICATIVE
 
@@ -765,6 +765,9 @@ class EVCControlMechanism(ControlMechanism):
         EVC_policies = Param([], read_only=True)
         EVC_max_state_values = Param(None, read_only=True)
         EVC_max_policy = Param(None, read_only=True)
+        control_signal_costs = Param(None, read_only=True)
+        control_signal_search_space = Param(None, read_only=True)
+        predicted_input = Param(None, read_only=True)
 
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -1057,14 +1060,17 @@ class EVCControlMechanism(ControlMechanism):
         num_control_signals = len(control_signals)
 
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        self.parameters.control_signal_search_space.set(
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals),
+            execution_id,
+            override=True
+        )
 
         # EXECUTE SEARCH
 
@@ -1105,7 +1111,7 @@ class EVCControlMechanism(ControlMechanism):
         for origin_mech in self.system.origin_mechanisms:
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value.get(execution_id)
+            self.parameters.predicted_input.get(execution_id)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value.get(execution_id)
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def run_simulation(
@@ -1181,9 +1187,11 @@ class EVCControlMechanism(ControlMechanism):
         #     if self.control_signal_costs[i].cost_options is not None:
         #         self.control_signal_costs[i] = self.control_signals[i].cost
         # MODIFIED 9/18/18 NEWER:
+        control_signal_costs = self.parameters.control_signal_costs.get(execution_id)
         for i, c in enumerate(self.control_signals):
-            if c.cost_options is not None:
-                self.control_signal_costs[i] = c.cost
+            if c.parameters.cost_options.get(execution_id) is not None:
+                control_signal_costs[i] = c.parameters.cost.get(execution_id)
+        self.parameters.control_signal_costs.set(control_signal_costs, execution_id, override=True)
         # MODIFIED 9/18/18 END
 
         return monitored_states
