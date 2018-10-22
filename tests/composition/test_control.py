@@ -415,40 +415,48 @@ class TestControllers:
         ]
         np.allclose(expected_sim_results_array, comp.simulation_results)
 
+        # Resetting to pre-simulation values changed all of these value:
         expected_output = [
             # Decision Output | Second Trial
-            (Decision.output_states[0].value, np.array(1.0)),
+            # (Decision.output_states[0].value, np.array(1.0)),
+
             # --- Decision Mechanism ---
             #    Output State Values
             #       decision variable
-            # (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
+            # (Decision.output_states[pnl.DECISION_VARIABLE].value, np.array([1.0])),
             # #       response time
-            # (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
+            # (Decision.output_states[pnl.RESPONSE_TIME].value, np.array([3.84279648])),
             # #       upper bound
-            # (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
+            # (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
+
+        # 'DDM_probability_lowerBound' output state does not exist
             #       lower bound
             # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-
             # --- Reward Mechanism ---
             #    Output State Values
             #       transfer mean
-            # (Reward.output_states[RESULT].value, np.array([15.])),
+            # (Reward.output_states[pnl.RESULT].value, np.array([15.])),
             # #       transfer_result
-            # (Reward.output_states[MEAN].value, np.array(15.0)),
+            # (Reward.output_states[pnl.MEAN].value, np.array(15.0)),
             # #       transfer variance
-            # (Reward.output_states[VARIANCE].value, np.array(0.0)),
+            # (Reward.output_states[pnl.VARIANCE].value, np.array(0.0)),
 
         ]
 
-        # for i in range(len(expected_output)):
-        #     val, expected = expected_output[i]
-        #     np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+        for i in range(len(expected_output)):
+            val, expected = expected_output[i]
+            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
         expected_results_array = [
-            [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
-            [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
+            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
+            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
+        for node in comp.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL):
+            for state in node.output_states:
+                print(node.name, " ", state.name)
 
-        # for i in range(len(expected_results_array)):
-        #     np.testing.assert_allclose(comp.results[i], expected_results_array[i], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+        print("\n\nEXPECTED RESULTS - - - - - - - - - - - - - - - ")
+        for trial in range(len(expected_results_array)):
+            print("[", trial, "] ", comp.results[trial], " == ", expected_results_array[trial], " ? ")
+            np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
 
