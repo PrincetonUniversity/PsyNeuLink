@@ -200,11 +200,14 @@ the `GradientOptimization` Function.  A custom function can be used, however it 
       LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
     - It must accept a keyword argument **objective_function**, that is passed the LVOCControlMechanism's
-      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method.
+      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method;  this is
+      the function used `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`
+      to evaluate `EVC <LVOCControlMechanism_EVC>` during its optimization process.
 
-    - It must accept a keyword argument **update_function**, that is passed the LVOCControlMechanism's
-      `prediction_vector <LVOCControlMechanism.prediction_vector>`\\`s `update_vector
-      <LVOCControlMechanism.PredictionVector.update_vector>` method.
+    - It must accept a keyword argument **update_function**, that is passed the `update_vector
+      <LVOCControlMechanism.PredictionVector.update_vector>` method of the LVOCControlMechanism's
+      `PredictionVector`; this is used to update the parameters of the `prediction_vector
+      <LVOCControlMechanism.PredictionVector.vector>` during the optimizaton process.
 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
@@ -1059,9 +1062,13 @@ class LVOCControlMechanism(ControlMechanism):
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
             Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `prediction_vector
-            <LVOCControlMechanism.prediction_vector>`, with current values of `feature_values
-            <LVOCControlMechanism.feature_values>` and current variable provided by `allocation_optimization_function
-            <LVOCControlMechanism.allocation_optimization_function>`.
+            <LVOCControlMechanism.prediction_vector>`, with current values of variable (i.e., `variable
+            <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
+            <LVOCControlMechanism.feature_values>`.
+
+            This method is passed to `allocation_optimization_function
+            <LVOCControlMechanism.allocation_optimization_function>` as its **update_function**
+            (see `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>`.
             '''
 
             if feature_values is not None:
