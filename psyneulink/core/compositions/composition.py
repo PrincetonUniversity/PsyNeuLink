@@ -3096,7 +3096,7 @@ class Composition(Composition_Base):
 
             # Update step counter
             with builder.if_then(any_cond):
-                cond_gen.increment_ts(builder, cond)
+                cond_gen.bump_ts(builder, cond)
 
             # Increment number of iterations
             iters = builder.load(iter_ptr, name="iterw")
@@ -3110,13 +3110,8 @@ class Composition(Composition_Base):
             # Increment pass and reset time step
             with builder.if_then(completed_pass):
                 builder.store(zero, iter_ptr)
-                cond_gen.increment_ts(builder, cond, (0, 1, 0))
-                # Zero the step counter
-                # TODO: Move this to ConditionGenerator
-                step_ptr = builder.gep(cond,
-                                       [zero, ctx.int32_ty(0), ctx.int32_ty(2)],
-                                       name="timestep_ptr")
-                builder.store(zero, step_ptr)
+                # Bumping automatically zeros lower elements
+                cond_gen.bump_ts(builder, cond, (0, 1, 0))
 
             builder.branch(loop_condition)
 
