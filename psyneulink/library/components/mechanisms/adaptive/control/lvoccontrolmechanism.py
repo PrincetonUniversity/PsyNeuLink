@@ -300,7 +300,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
-    OBJECTIVE_FUNCTION, UPDATE_FUNCTION
+    OBJECTIVE_FUNCTION, UPDATE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -804,11 +804,13 @@ class LVOCControlMechanism(ControlMechanism):
                                                             default_variable = self.control_signal_variables,
                                                             objective_function = self.compute_lvoc_from_control_signals,
                                                             update_function = self.prediction_vector.update_vector,
+                                                            search_space = self._get_control_signal_search_space,
                                                             owner = self)
         elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
             alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
             alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector
+            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space
             alloc_opt_fct.init_args[OWNER] = self
             alloc_opt_fct._deferred_init()
 
@@ -892,6 +894,19 @@ class LVOCControlMechanism(ControlMechanism):
 
         return [self.prediction_buffer.popleft(), outcome]
 
+    def _get_control_signal_search_space(self):
+
+        control_signal_sample_lists = []
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.

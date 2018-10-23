@@ -11580,14 +11580,42 @@ class Distance(ObjectiveFunction):
 # region **************************************   OPTIMIZATION FUNCTIONS ***********************************************
 
 
+OBJECTIVE_FUNCTION = 'objective_function'
+UPDATE_FUNCTION = 'update_function'
+SEARCH_SPACE = 'search_space'
+
 class OptimizationFunction(Function_Base):
     """Abstract class of `Function <Function>` used for optimization of a variable.
+
+    If call sublcass *must* specify objective_function and update_function or it will be placed in deferred init
+
+    Constructors should include **kwargs, to accomodate arguments required by some subclasses but not others
+    (e.g., search_space needed by GridSearch but not GradientOptimization)
+
+
+    Arguments
+    ---------
+
+    objective_function:tc.optional(is_function_type)=None,
+    update_function:tc.optional(is_function_type)=None,
+    search_function:tc.optional(is_function_type)=None,
+    search_space:tc.optional(tc.any(list,np.ndarray))=None,
+    search_termination_function:tc.optional(is_function_type)=None,
+    max_iterations:tc.optional(int)=1000,
+
 
     Attributes
     ----------
 
     variable : scalar, list or np.array
         value to be optimized.
+
+    objective_function:tc.optional(is_function_type)=None,
+    update_function:tc.optional(is_function_type)=None,
+    search_function:tc.optional(is_function_type)=None,
+    search_space:tc.optional(tc.any(list,np.ndarray))=None,
+    search_termination_function:tc.optional(is_function_type)=None,
+    max_iterations:tc.optional(int)=1000,
 
     Returns
     -------
@@ -11608,6 +11636,7 @@ class OptimizationFunction(Function_Base):
                  objective_function:tc.optional(is_function_type)=None,
                  update_function:tc.optional(is_function_type)=None,
                  search_function:tc.optional(is_function_type)=None,
+                 search_space:tc.optional(tc.any(list,np.ndarray))=None,
                  search_termination_function:tc.optional(is_function_type)=None,
                  max_iterations:tc.optional(int)=1000,
                  params=None,
@@ -11617,19 +11646,22 @@ class OptimizationFunction(Function_Base):
 
         if None in {objective_function, update_function}:
             raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
-                                "when either {} or {} has not been assigned by user".
+                                "when either {} or {} is \'None\' (i.e., has not been assigned by user)".
                                 format(self.__class__.__name, repr('objective_function'), repr('update_function')))
 
-        if None in {search_function, search_termination_function}:
-            raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, {} and {}".
+        if None in {search_function, search_termination_function} or search_space is None:
+            raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, and {}".
                                 format(self.__class__.__name__,
-                                       repr('search_function'), repr(search_termination_function)))
+                                       repr('search_function'),
+                                       repr('search_space'),
+                                       repr('search_termination_function')))
 
         # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
         self.objective_function = objective_function
         self.update_function = update_function
         self.search_function = search_function
         self.search_termination_function = search_termination_function
+        self.search_space = search_space
         # FIX: END MOVE
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -11641,7 +11673,6 @@ class OptimizationFunction(Function_Base):
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
 
     def function(self,
                  variable=None,
@@ -11714,8 +11745,6 @@ class OptimizationFunction(Function_Base):
 
 ASCENT = 'ascent'
 DESCENT = 'descent'
-OBJECTIVE_FUNCTION = 'objective_function'
-UPDATE_FUNCTION = 'update_function'
 
 
 class GradientOptimization(OptimizationFunction):
@@ -11924,7 +11953,8 @@ class GradientOptimization(OptimizationFunction):
                  max_iterations:tc.optional(int)=1000,
                  params=None,
                  owner=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
 
         if None in {objective_function, update_function}:
             self.init_args = locals().copy()
@@ -11958,16 +11988,11 @@ class GradientOptimization(OptimizationFunction):
                                                   max_iterations=max_iterations,
                                                   params=params)
 
-
-        # if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-        #     self.init_args = locals().copy()
-        #     del self.init_args['grad']
-        #     assert True
-
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
                          update_function=update_function,
                          search_function=search_function,
+                         search_space=[None],
                          search_termination_function=search_termination_function,
                          params=params,
                          owner=owner,
@@ -12125,12 +12150,14 @@ class GridSearch(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  update_function:tc.optional(is_function_type)=None,
+                 search_space:tc.optional(tc.any(list, np.ndarray))=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
                  params=None,
                  owner=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
 
-        if None in {objective_function, update_function}:
+        if None in {objective_function, update_function, search_space}:
             self.init_args = locals().copy()
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
@@ -12147,6 +12174,11 @@ class GridSearch(OptimizationFunction):
         params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         update_function=update_function,
+                         search_function=search_function,
+                         search_space=search_space,
+                         search_termination_function=search_termination_function,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -12154,10 +12186,11 @@ class GridSearch(OptimizationFunction):
 
 
     def _traverse_grid(self, variable, sample_num):
-        pass
+        return self.search_space[sample_num]
+
 
     def _grid_complete(self, variable, value, iteration):
-        pass
+        iteration != len(self.search_space)
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
