@@ -3284,9 +3284,11 @@ class TestSystemComposition:
 
 class TestNestedCompositions:
 
-    @pytest.mark.this
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_transfer_mechanism_composition(self, mode):
 
         # mechanisms
