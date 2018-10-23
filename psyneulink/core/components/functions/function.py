@@ -11742,7 +11742,7 @@ class OptimizationFunction(Function_Base):
                     '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
                     '\ncurrent_value: ', current_value,
                     '\nnew_value: ', new_value,
-                    # '\ngradients: ', self._gradients,
+                    '\ngradients: ', self._gradients,
                     # '\nupdate_rate: ', self._update_rate,
                     # '\nconvergence_metric: ',convergence_metric,
             )
@@ -12251,7 +12251,7 @@ class GridSearch(OptimizationFunction):
                          search_space=search_space,
                          search_termination_function=search_termination_function,
                          save_samples=True,
-                         save_values=save_values,
+                         save_values=True,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -12270,11 +12270,13 @@ class GridSearch(OptimizationFunction):
         <GradientOptimization_Gradient_Calculation>` for details.
         '''
         last, variables, values = super().function(variable=variable, params=params, context=context)
-        max_val = max(variables)
+        opt_variable = variables[values.index(max(values))]
+        ret_val = [opt_variable, None, None]
         if self.save_samples:
-            return max_val, variables, values
-        else:
-            return max_val, [], values
+            ret_val[1] = variables
+        if self.save_values:
+            ret_val[1] = values
+        return tuple(ret_val)
 
     def _traverse_grid(self, variable, sample_num):
         return self.search_space[sample_num]

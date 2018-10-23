@@ -49,24 +49,23 @@ task_decision = pnl.DDM(name='Task Decision',
 
 lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
-                                function=pnl.BayesGLM(),
                                 objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
                                                                            monitored_output_states=[task_decision,
                                                                                                     reward],
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
-
-                                # allocation_optimization_function=pnl.GradientOptimization(
-                                #         convergence_criterion=pnl.VALUE,
-                                #         convergence_threshold=0.001,
-                                #         update_rate=1,
-                                #         annealing_function= lambda x,y : x / np.sqrt(y),
-                                #         # direction=pnl.ASCENT
-                                # ),
-                                allocation_optimization_function=pnl.GridSearch(
-                                        direction=pnl.MAXIMIZE
+                                # function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
+                                allocation_optimization_function=pnl.GradientOptimization(
+                                        convergence_criterion=pnl.VALUE,
+                                        convergence_threshold=0.001,
+                                        update_rate=1,
+                                        annealing_function= lambda x,y : x / np.sqrt(y),
+                                        # direction=pnl.ASCENT
                                 ),
+                                # allocation_optimization_function=pnl.GridSearch(
+                                #         direction=pnl.MAXIMIZE
+                                # ),
 
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}
@@ -86,7 +85,8 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                   intensity_cost_function=pnl.Exponential(rate=0.25,
                                                                                                           bias=-3),
                                                                   adjustment_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                           bias=-3)
+                                                                                                           bias=-3),
+                                                                  allocation_samples=[i/10 for i in list(range(0,20,1))]
                                                                   )
                                 )
 c = pnl.Composition(name='Stroop XOR Model')
@@ -110,7 +110,11 @@ input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
 
 def run():
     c.run(inputs=input_dict)
-
 import timeit
 duration = timeit.timeit(run, number=1)
-print(duration)
+print('\n')
+print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
+print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
+print('features: ', lvoc.feature_values)
+print('lvoc: ', lvoc.compute_lvoc_from_control_signals([c.variable for c in lvoc.control_signals]))
+print('time: ', duration)

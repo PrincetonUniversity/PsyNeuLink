@@ -1103,7 +1103,6 @@ class LVOCControlMechanism(ControlMechanism):
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-
         def compute_terms(self, control_signal_variables):
             '''Calculate interaction terms.
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -1162,10 +1161,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             print('control_signal_values: ', vector[idx[PV.C.value]])
 
-
-    def annealing_function(self, iteration, update_rate):
-        # Default (currently hardwired function):
-        return self.update_rate/np.sqrt(iteration)
 
     def compute_lvoc_from_control_signals(self, variable):
         '''Update interaction terms and then multiply by prediction_weights
