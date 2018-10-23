@@ -11847,7 +11847,7 @@ class GradientOptimization(OptimizationFunction):
         else:
             self.update_function = update_function
 
-        self.sample_function = self._get_next_sample()
+        self.sample_function = self._follow_gradient
 
         if direction is ASCENT:
             self.direction = 1
@@ -11879,15 +11879,15 @@ class GradientOptimization(OptimizationFunction):
     def _follow_gradient(self, variable, sample_num):
 
         if sample_num == 0:
-            _follow_gradient.update_rate = self.update_rate
+            self._current_update_rate = self.update_rate
 
         # Compute gradients with respect to current variable
-        gradients = self.gradient_function(variable, sample_num)
+        self._gradients = self.gradient_function(variable)
 
-        new_variable = variable + self.direction * _follow_gradient.update_rate.update_rate * np.array(gradients)
+        new_variable = variable + self.direction * self._current_update_rate * np.array(self._gradients)
 
         if self.annealing_function:
-            _follow_gradient.update_rate = self.annealing_function(_follow_gradient.update_rate, sample_num)
+            self._current_update_rate = self.annealing_function(self._current_update_rate, sample_num)
 
         # Update variable based on new gradients
         return new_variable
@@ -11922,7 +11922,7 @@ class GradientOptimization(OptimizationFunction):
             # new_variable = current_variable + self.direction * update_rate * np.array(gradients)
 
             # Get next sample of variable
-            new_variable = self.new_sample(current_variable, iteration)
+            new_variable = self.sample_function(current_variable, iteration)
 
             # Compute new value based on new variable
             new_value = self.objective_function(new_variable)
@@ -11942,8 +11942,8 @@ class GradientOptimization(OptimizationFunction):
                     '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
                     '\ncurrent_value: ', current_value,
                     '\nnew_value: ', new_value,
-                    '\ngradients: ', gradients,
-                    '\nupdate_rate: ', update_rate,
+                    '\ngradients: ', self._gradients,
+                    '\nupdate_rate: ', self._update_rate,
                     '\nconvergence_metric: ',convergence_metric,
             )
             self.update_function.__self__.test_print()
