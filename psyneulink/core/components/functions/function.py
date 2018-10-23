@@ -11602,6 +11602,116 @@ class OptimizationFunction(Function_Base):
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
 
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 update_function:tc.optional(is_function_type)=None,
+                 search_function:tc.optional(is_function_type)=None,
+                 search_termination_function:tc.optional(is_function_type)=None,
+                 max_iterations:tc.optional(int)=1000,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
+
+        if None in {objective_function, update_function}:
+            raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
+                                "when either {} or {} has not been assigned by user".
+                                format(self.__class__.__name, repr('objective_function'), repr('update_function')))
+
+        if None in {search_function, search_termination_function}:
+            raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, {} and {}".
+                                format(self.__class__.__name__,
+                                       repr('search_function'), repr(search_termination_function)))
+
+        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        self.objective_function = objective_function
+        self.update_function = update_function
+        self.search_function = search_function
+        self.search_termination_function = search_termination_function
+        # FIX: END MOVE
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(max_iterations=max_iterations,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
+        `objective_function <GradientOptimization.objective_function>`.
+
+        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
+        <GradientOptimization_Gradient_Calculation>` for details.
+        '''
+
+        variable = self._update_variable(self._check_args(variable, params, context))
+
+        current_variable = variable
+        current_value = self.objective_function(current_variable)
+
+        # Initialize variables used in while loop
+        iteration=0
+
+        # Follow gradient trajectory
+        # IMPLEMENTATION NOTE:
+        #    GradientOptimization: _convergence_condition
+        #    GridSearch:  range
+        #    Sampling: n
+        while self.search_termination_function(current_variable, current_value, iteration):
+
+            # Get next sample of variable
+            # IMPLEMENTATION NOTE:
+            #    GradientOptimization: _follow_gradient (ignores allocation_samples)
+            #    GridSearch:  next grid item (based on Cartesian product of discrete values in allocation_samples)
+            #    Sampling:   sampled item (based on draw from distributions in allocation_samples)
+            new_variable = self.search_function(current_variable, iteration)
+
+            # Compute new value based on new variable
+            # IMPLEMENTATION NOTE:  Same for all optimization methods
+            #    LVOC: compute_lvoc_from_control_signals (prediction_vector * prediction_weights)
+            #    EVC:  value_function (outcome of simulation - costs)
+            new_value = self.objective_function(new_variable)
+
+            # Update expression containing variable
+            # IMPLEMENTATION NOTE:  Same for all optimization methods
+            #    LVOC:  PredictionVector.update_vector
+            #    EVC:   run_simulation
+            self.update_function(new_variable)
+
+            # TEST PRINT:
+            print(
+                    '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
+                    '\ncurrent_value: ', current_value,
+                    '\nnew_value: ', new_value,
+                    '\ngradients: ', self._gradients,
+                    '\nupdate_rate: ', self._update_rate,
+                    # '\nconvergence_metric: ',convergence_metric,
+            )
+            self.update_function.__self__.test_print()
+            # TEST PRINT END
+
+            iteration+=1
+            if iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            current_variable = new_variable
+            current_value = new_value
+
+        return new_variable
+
+
 ASCENT = 'ascent'
 DESCENT = 'descent'
 OBJECTIVE_FUNCTION = 'objective_function'
@@ -11816,21 +11926,16 @@ class GradientOptimization(OptimizationFunction):
                  owner=None,
                  prefs=None):
 
-
         if None in {objective_function, update_function}:
             self.init_args = locals().copy()
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
-        # FIX: MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
-        from autograd import grad
+        search_function = self._follow_gradient
+        search_termination_function = self._convergence_condition
 
-        if objective_function is None:
-            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
-            self.objective_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.objective_function = objective_function
+        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        from autograd import grad
 
         if objective_function:
             try:
@@ -11839,22 +11944,10 @@ class GradientOptimization(OptimizationFunction):
                 raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
                                     format(repr(OBJECTIVE_FUNCTION),
                                            self.objective_function.__name__, self.__class__.__name__))
-
-        if update_function is None:
-            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
-            self.update_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.update_function = update_function
-
-        self.search_function = self._follow_gradient
-        self.search_condition = self._convergence_condition
-
         if direction is ASCENT:
             self.direction = 1
         else:
             self.direction = -1
-
         self.annealing_function = annealing_function
         # FIX: END
 
@@ -11872,6 +11965,10 @@ class GradientOptimization(OptimizationFunction):
         #     assert True
 
         super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         update_function=update_function,
+                         search_function=search_function,
+                         search_termination_function=search_termination_function,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -11909,73 +12006,6 @@ class GradientOptimization(OptimizationFunction):
 
         return convergence_metric > self.convergence_threshold
 
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None,
-                 **kwargs):
-        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
-        `objective_function <GradientOptimization.objective_function>`.
-
-        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
-        <GradientOptimization_Gradient_Calculation>` for details.
-        '''
-
-        variable = self._update_variable(self._check_args(variable, params, context))
-
-        convergence_metric = self.convergence_threshold + EPSILON
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
-
-        # Initialize variables used in while loop
-        iteration=0
-
-        # Follow gradient trajectory
-        while self.search_condition(current_variable, current_value, iteration):
-
-            # # Compute gradients with respect to current variable
-            # gradients = self.gradient_function(current_variable)
-            #
-            # # Update variable based on new gradients
-            # new_variable = current_variable + self.direction * update_rate * np.array(gradients)
-
-            # Get next sample of variable
-            new_variable = self.search_function(current_variable, iteration)
-
-            # Compute new value based on new variable
-            new_value = self.objective_function(new_variable)
-
-            # # Evaluate for convergence
-            # if self.convergence_criterion == VALUE:
-            #     convergence_metric = np.abs(new_value - current_value)
-            # else:
-            #     convergence_metric = np.max(np.abs(np.array(new_variable) -
-            #                                        np.array(current_variable)))
-
-            # Update expression containing variable
-            self.update_function(new_variable)
-
-            # # TEST PRINT:
-            # print(
-            #         '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            #         '\ngradients: ', self._gradients,
-            #         '\nupdate_rate: ', self._update_rate,
-            #         '\nconvergence_metric: ',convergence_metric,
-            # )
-            # self.update_function.__self__.test_print()
-            # # TEST PRINT END
-
-            iteration+=1
-            if iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
-
-            current_variable = new_variable
-            current_value = new_value
-
-        return new_variable
 
 
 MAXIMIZE = 'maximize'
@@ -12041,35 +12071,6 @@ class GridSearch(OptimizationFunction):
         specifies function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
-    direction : MINIMIZE or MAXIMIZE : default MAXIMIZE
-        specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
-        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
-        the gradient).
-
-    update_rate : int or float : default 1.0
-        specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
-        `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
-        `update_rate <GradientOptimization.update_rate>`.
-
-    update_rate : int or float : default 0.01
-        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
-        each `iteration <GradientOptimization_Process>` of the optimization process.
-
-    annealing_function : function or method : default None
-        specifies function used to adapt `update_rate <GradientOptimization.update_rate>` in each
-        `iteration <GradientOptimization_Process>` of the optimization process;  must take accept two parameters —
-        `update_rate <GradientOptimization.update_rate>` and `iteration <GradientOptimization_Process>`, in that
-        order — and return a scalar value, that is used for the next iteration of optimization.
-
-    convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
-        specifies the measure used to determine when to terminate `iterations <GradientOptimization_Process>`
-        of the optimization process.
-
-    convergence_threshold : int or float : default 0.001
-        specifies the change in value of the `convergence_criterion` below which the optimization process
-        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
-
     max_iterations : int : default 1000
         specifies the maximum number of times the optimization process is allowed to `iterate
         <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
@@ -12087,45 +12088,12 @@ class GridSearch(OptimizationFunction):
         in each `iteration <GradientOptimization_Process>` of the optimization process;
         it must be specified and it must return a scalar value.
 
-    gradient_function : function
-        function used to compute the gradient in each `iteration <GradientOptimization_Process>` of the optimization
-        process (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for details).
-
     update_function : function or method
         function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
-    direction : ASCENT or DESCENT
-        direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
-        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
-        the gradient).
-
-    update_rate : int or float
-        determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
-        `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
-        `update_rate <GradientOptimization.update_rate>`.
-
-    update_rate : int or float
-        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
-        each `iteration <GradientOptimization_Process>` of the optimization process.
-
-    annealing_function : function or method
-        function used to adapt `update_rate <GradientOptimization.update_rate>` in each
-        `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
-        and the same `update_rate <GradientOptimization.update_rate>` is used in each `iteration
-        <GradientOptimization_Process>`.
-
     iteration : int
         the currention iteration of the optiimzaton process.
-
-    convergence_criterion : VARIABLE or VALUE
-        determines the measure used to terminate `iterations <GradientOptimization_Process>`
-        of the optimization process.
-
-    convergence_threshold : int or float
-        determines the change in value of the `convergence_criterion` below which the optimization process
-        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
 
     max_iterations : int
         determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
@@ -12167,20 +12135,8 @@ class GridSearch(OptimizationFunction):
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
-        if objective_function is None:
-            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
-            self.objective_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.objective_function = objective_function
-
-
-        if update_function is None:
-            # Assume this is because it is being constructed inside the constructor of a Component, so defer init
-            self.update_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.update_function = update_function
+        search_function = self._traverse_grid
+        search_termination_function = self._grid_complete
 
         if direction is MAXIMIZE:
             self.direction = 1
@@ -12196,51 +12152,12 @@ class GridSearch(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None,
-                 **kwargs):
-        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
-        `objective_function <GradientOptimization.objective_function>`.
 
-        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
-        <GradientOptimization_Gradient_Calculation>` for details.
-        '''
+    def _traverse_grid(self, variable, sample_num):
+        pass
 
-        variable = self._update_variable(self._check_args(variable, params, context))
-
-        # Initialize variables used in while loop
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
-
-
-        # FIX: NEED TO GET control_signal_sample_lists
-
-        # Get allocation_samples
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
-
-        # Construct control_signal_search_space:  set of all permutations of ControlSignal variables
-        #                                     (one sample from the allocationSample of each ControlSignal)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-
-        for allocation_policy in self.control_signal_search_space:
-
-            # Update value based on variable (FOR EVC, this should be RunSimulation)
-            value = self.update_function(new_variable)
-
-            # Compute new value based on updated variable
-            new_value = self.objective_function(allocation_policy)
-
-
-            iteration+=1
-
-
-        return new_variable
+    def _grid_complete(self, variable, value, iteration):
+        pass
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************

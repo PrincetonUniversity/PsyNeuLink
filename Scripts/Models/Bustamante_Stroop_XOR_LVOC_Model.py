@@ -107,5 +107,5 @@ def run():
     c.run(inputs=input_dict)
 
 import timeit
-duration = timeit.timeit(run, number=100)
+duration = timeit.timeit(run, number=1)
 print(duration)
