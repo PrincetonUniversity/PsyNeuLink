@@ -11847,7 +11847,8 @@ class GradientOptimization(OptimizationFunction):
         else:
             self.update_function = update_function
 
-        self.sample_function = self._follow_gradient
+        self.search_function = self._follow_gradient
+        self.search_condition = self._convergence_condition
 
         if direction is ASCENT:
             self.direction = 1
@@ -11889,6 +11890,24 @@ class GradientOptimization(OptimizationFunction):
         # Update variable based on new gradients
         return variable + self.direction * self._current_update_rate * np.array(self._gradients)
 
+    def _convergence_condition(self, variable, value, iteration):
+        if iteration is 0:
+            self._convergence_metric = self.convergence_threshold + EPSILON
+            self._previous_variable = variable
+            self._previous_value = value
+
+        # Evaluate for convergence
+        if self.convergence_criterion == VALUE:
+            convergence_metric = np.abs(value - self._previous_value)
+        else:
+            convergence_metric = np.max(np.abs(np.array(variable) -
+                                               np.array(self._previous_variable)))
+
+        self._previous_variable = variable
+        self._previous_value = value
+
+        return convergence_metric > self.convergence_threshold
+
     def function(self,
                  variable=None,
                  params=None,
@@ -11903,14 +11922,15 @@ class GradientOptimization(OptimizationFunction):
 
         variable = self._update_variable(self._check_args(variable, params, context))
 
-        # Initialize variables used in while loop
-        iteration=0
         convergence_metric = self.convergence_threshold + EPSILON
         current_variable = variable
         current_value = self.objective_function(current_variable)
 
+        # Initialize variables used in while loop
+        iteration=0
+
         # Follow gradient trajectory
-        while convergence_metric > self.convergence_threshold:
+        while self.search_condition(current_variable, current_value, iteration):
 
             # # Compute gradients with respect to current variable
             # gradients = self.gradient_function(current_variable)
@@ -11919,17 +11939,17 @@ class GradientOptimization(OptimizationFunction):
             # new_variable = current_variable + self.direction * update_rate * np.array(gradients)
 
             # Get next sample of variable
-            new_variable = self.sample_function(current_variable, iteration)
+            new_variable = self.search_function(current_variable, iteration)
 
             # Compute new value based on new variable
             new_value = self.objective_function(new_variable)
 
-            # Evaluate for convergence
-            if self.convergence_criterion == VALUE:
-                convergence_metric = np.abs(new_value - current_value)
-            else:
-                convergence_metric = np.max(np.abs(np.array(new_variable) -
-                                                   np.array(current_variable)))
+            # # Evaluate for convergence
+            # if self.convergence_criterion == VALUE:
+            #     convergence_metric = np.abs(new_value - current_value)
+            # else:
+            #     convergence_metric = np.max(np.abs(np.array(new_variable) -
+            #                                        np.array(current_variable)))
 
             # Update expression containing variable
             self.update_function(new_variable)
