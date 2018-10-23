@@ -1050,7 +1050,8 @@ class TestExecutionOrder:
     @pytest.mark.benchmark(group="Transfer")
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
-                             pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_transfer_mechanism(self, benchmark, mode):
 
         # mechanisms
@@ -1072,7 +1073,8 @@ class TestExecutionOrder:
     @pytest.mark.benchmark(group="Transfer")
     @pytest.mark.parametrize("mode", ['Python',
                              pytest.param('LLVM', marks=pytest.mark.llvm),
-                             pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_transfer_mechanism_split(self, benchmark, mode):
 
         # mechanisms
@@ -3358,6 +3360,7 @@ class TestNestedCompositions:
         comp2.run(inputs={C: [1.0, 2.0, 3.0]}, bin_execute=mode)
 
         assert np.allclose(comp1.results, comp2.results)
+        assert np.allclose(comp2.results, [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
     # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
     # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version 
