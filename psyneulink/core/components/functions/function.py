@@ -11880,17 +11880,14 @@ class GradientOptimization(OptimizationFunction):
 
         if sample_num == 0:
             self._current_update_rate = self.update_rate
+        elif self.annealing_function:
+            self._current_update_rate = self.annealing_function(self._current_update_rate, sample_num)
 
         # Compute gradients with respect to current variable
         self._gradients = self.gradient_function(variable)
 
-        new_variable = variable + self.direction * self._current_update_rate * np.array(self._gradients)
-
-        if self.annealing_function:
-            self._current_update_rate = self.annealing_function(self._current_update_rate, sample_num)
-
         # Update variable based on new gradients
-        return new_variable
+        return variable + self.direction * self._current_update_rate * np.array(self._gradients)
 
     def function(self,
                  variable=None,
