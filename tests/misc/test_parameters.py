@@ -118,3 +118,23 @@ def test_history():
     assert t.parameters.value.get_previous() == 0
     t.execute(100)
     assert t.parameters.value.get_previous() == 10
+
+
+def test_delta():
+    t = pnl.TransferMechanism()
+
+    t.execute(10)
+    assert t.parameters.value.get_delta() == 10
+    t.execute(100)
+    assert t.parameters.value.get_delta() == 90
+
+
+def test_delta_fail():
+    t = pnl.TransferMechanism()
+    t.parameters.value.set(None)
+
+    t.execute(10)
+    with pytest.raises(TypeError) as error:
+        t.parameters.value.get_delta()
+
+    assert "Parameter 'value' value mismatch between current" in str(error)

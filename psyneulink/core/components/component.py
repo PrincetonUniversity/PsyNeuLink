@@ -855,6 +855,18 @@ class Param(types.SimpleNamespace):
         except (KeyError, IndexError):
             return None
 
+    def get_delta(self, execution_context=None):
+        try:
+            return self.get(execution_context) - self.get_previous(execution_context)
+        except TypeError as e:
+            raise TypeError(
+                "Parameter '{0}' value mismatch between current ({1}) and previous ({2}) values".format(
+                    self.name,
+                    self.get(execution_context),
+                    self.get_previous(execution_context)
+                )
+            ) from e
+
     def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
         if not override and self.read_only:
             warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=2)
