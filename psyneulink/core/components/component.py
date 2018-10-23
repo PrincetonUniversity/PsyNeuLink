@@ -864,7 +864,14 @@ class Param(types.SimpleNamespace):
         execution_id = parse_execution_context(execution_context)
 
         if self.setter is not None:
-            kwargs = {**self._default_setter_kwargs, **{'execution_id': execution_id}, **kwargs}
+            kwargs = {
+                **self._default_setter_kwargs,
+                **{
+                    'execution_id': execution_id,
+                    'override': override,
+                },
+                **kwargs
+            }
             value = call_with_pruned_args(self.setter, value, **kwargs)
 
         if not self.stateful:
