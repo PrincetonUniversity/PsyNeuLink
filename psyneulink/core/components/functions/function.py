@@ -11892,9 +11892,10 @@ class GradientOptimization(OptimizationFunction):
 
     def _convergence_condition(self, variable, value, iteration):
         if iteration is 0:
-            self._convergence_metric = self.convergence_threshold + EPSILON
+            # self._convergence_metric = self.convergence_threshold + EPSILON
             self._previous_variable = variable
             self._previous_value = value
+            return True
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:

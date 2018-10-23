@@ -102,5 +102,11 @@ input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
               color_task:[[1], [1]],
               word_task: [[-1], [-1]],
               reward:    [[1,0], [1,0]]}
-c.run(inputs=input_dict)
+
+def run():
+    c.run(inputs=input_dict)
+
+import timeit
+duration = timeit.timeit(run, number=10)
+print(duration)
 
