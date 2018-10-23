@@ -109,3 +109,12 @@ def test_parameter_setter():
     f.parameters.slope.set(3)
 
     assert f.parameters.slope.get() == 9
+
+
+def test_history():
+    t = pnl.TransferMechanism()
+    assert t.parameters.value.get_previous() is None
+    t.execute(10)
+    assert t.parameters.value.get_previous() == 0
+    t.execute(100)
+    assert t.parameters.value.get_previous() == 10
