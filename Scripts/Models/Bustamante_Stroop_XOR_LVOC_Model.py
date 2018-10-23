@@ -56,13 +56,18 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
-                                allocation_optimization_function=pnl.GradientOptimization(
-                                        convergence_criterion=pnl.VALUE,
-                                        convergence_threshold=0.001,
-                                        update_rate=1,
-                                        annealing_function= lambda x,y : x / np.sqrt(y),
-                                        # direction=pnl.ASCENT
+
+                                # allocation_optimization_function=pnl.GradientOptimization(
+                                #         convergence_criterion=pnl.VALUE,
+                                #         convergence_threshold=0.001,
+                                #         update_rate=1,
+                                #         annealing_function= lambda x,y : x / np.sqrt(y),
+                                #         # direction=pnl.ASCENT
+                                # ),
+                                allocation_optimization_function=pnl.GridSearch(
+                                        direction=pnl.MAXIMIZE
                                 ),
+
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}
                                 # control_signals={pnl.NAME:'COLOR CONTROL',

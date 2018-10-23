@@ -64,6 +64,7 @@ Objective Functions:
 
 Optimization Function:
   * `GradientOptimization`
+  * `GridSearch`
 
 Learning Functions:
   * `Kohonen`
@@ -221,13 +222,14 @@ from psyneulink.core.globals.keywords import \
     ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
     EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
+    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
+    HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
     LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
     MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
-    NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
+    NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
     OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
@@ -235,8 +237,8 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, \
-    GRADIENT_OPTIMIZATION_FUNCTION, NAME, GRID_SEARCH_FUNCTION
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE
+
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -251,7 +253,8 @@ __all__ = [
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'GradientOptimization',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword',
+    'GradientOptimization', 'GridSearch',
     'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
     'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
@@ -11601,6 +11604,8 @@ class OptimizationFunction(Function_Base):
     search_function:tc.optional(is_function_type)=None,
     search_space:tc.optional(tc.any(list,np.ndarray))=None,
     search_termination_function:tc.optional(is_function_type)=None,
+    save_samples : bool : False,
+    save_values : Bool : False,
     max_iterations:tc.optional(int)=1000,
 
 
@@ -11615,12 +11620,16 @@ class OptimizationFunction(Function_Base):
     search_function:tc.optional(is_function_type)=None,
     search_space:tc.optional(tc.any(list,np.ndarray))=None,
     search_termination_function:tc.optional(is_function_type)=None,
+    save_samples : bool
+    save_values : bool
     max_iterations:tc.optional(int)=1000,
 
     Returns
     -------
 
-    Optimized value of `variable <OptimiziationFunction.variable>`.
+    Optimized value of `variable <OptimiziationFunction.variable>` and a list.  If `saved_values
+    <OptimizationFunction.saved_values>` is `True`, the list has the values for all variables
+    sampled in the order they were sampled;  if `False`, the list is empty.
 
     """
 
@@ -11636,9 +11645,12 @@ class OptimizationFunction(Function_Base):
                  objective_function:tc.optional(is_function_type)=None,
                  update_function:tc.optional(is_function_type)=None,
                  search_function:tc.optional(is_function_type)=None,
-                 search_space:tc.optional(tc.any(list,np.ndarray))=None,
+                 # search_space:tc.optional(tc.any(list,np.ndarray))=None,
+                 search_space=None,
                  search_termination_function:tc.optional(is_function_type)=None,
-                 max_iterations:tc.optional(int)=1000,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
+                 max_iterations:tc.optional(int)=None,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -11665,7 +11677,9 @@ class OptimizationFunction(Function_Base):
         # FIX: END MOVE
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(max_iterations=max_iterations,
+        params = self._assign_args_to_param_dicts(save_samples=save_samples,
+                                                  save_values=save_values,
+                                                  max_iterations=max_iterations,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -11679,7 +11693,7 @@ class OptimizationFunction(Function_Base):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
+        '''Return the last value of `variable <GradientOptimization.variable>` and all values of
         `objective_function <GradientOptimization.objective_function>`.
 
         See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
@@ -11690,6 +11704,9 @@ class OptimizationFunction(Function_Base):
 
         current_variable = variable
         current_value = self.objective_function(current_variable)
+
+        self._samples = []
+        self._values = []
 
         # Initialize variables used in while loop
         iteration=0
@@ -11725,22 +11742,27 @@ class OptimizationFunction(Function_Base):
                     '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
                     '\ncurrent_value: ', current_value,
                     '\nnew_value: ', new_value,
-                    '\ngradients: ', self._gradients,
-                    '\nupdate_rate: ', self._update_rate,
+                    # '\ngradients: ', self._gradients,
+                    # '\nupdate_rate: ', self._update_rate,
                     # '\nconvergence_metric: ',convergence_metric,
             )
             self.update_function.__self__.test_print()
             # TEST PRINT END
 
             iteration+=1
-            if iteration > self.max_iterations:
+            if self.max_iterations and iteration > self.max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
             current_variable = new_variable
             current_value = new_value
 
-        return new_variable
+            if self.save_samples:
+                self._samples.append(new_variable)
+            if self.save_values:
+                self._values.append(current_value)
+
+        return new_variable, self._samples, self._values
 
 
 ASCENT = 'ascent'
@@ -11759,6 +11781,8 @@ class GradientOptimization(OptimizationFunction):
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
         max_iterations=1000,         \
+        save_samples=False,          \
+        save_values=False,           \
         params=None,                 \
         owner=None,                  \
         prefs=None                   \
@@ -11858,6 +11882,15 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
         returns the last value of `variable <GradientOptimization.variable>`.
 
+    save_samples : bool
+        specifies whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated
 
     Attributes
     ----------
@@ -11914,14 +11947,27 @@ class GradientOptimization(OptimizationFunction):
         determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
         warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
 
+    save_samples : bool
+        determines whether or not to save and return the all of the samples of `variable
+        <GradientOptimization.variable>` used to evaluate `objective_function
+        <GradientOptimization.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
     Returns
     -------
 
-    optimized value of variable : np.array
-         value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-         `objective_function <GradientOptimization.objective_function>`, depending on whether `direction
-         <GradientOptimization.direction>` is, respectively, *ASCENT* or *DESCENT*.
-
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+        `objective_function <GradientOptimization.objective_function>`, depending on `direction
+        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
+        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
+        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
+        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
@@ -11951,6 +11997,8 @@ class GradientOptimization(OptimizationFunction):
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
                  max_iterations:tc.optional(int)=1000,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -11985,7 +12033,6 @@ class GradientOptimization(OptimizationFunction):
         params = self._assign_args_to_param_dicts(update_rate=update_rate,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
-                                                  max_iterations=max_iterations,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -11994,6 +12041,8 @@ class GradientOptimization(OptimizationFunction):
                          search_function=search_function,
                          search_space=[None],
                          search_termination_function=search_termination_function,
+                         save_samples=save_samples,
+                         save_values=save_values,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -12032,9 +12081,9 @@ class GradientOptimization(OptimizationFunction):
         return convergence_metric > self.convergence_threshold
 
 
-
 MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
+
 
 class GridSearch(OptimizationFunction):
     """
@@ -12043,6 +12092,7 @@ class GridSearch(OptimizationFunction):
         objective_function=None,     \
         update_function=None,        \
         direction=MAXIMIZE,          \
+        save_values=False,           \
         params=None,                 \
         owner=None,                  \
         prefs=None                   \
@@ -12096,11 +12146,18 @@ class GridSearch(OptimizationFunction):
         specifies function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
-    max_iterations : int : default 1000
-        specifies the maximum number of times the optimization process is allowed to `iterate
-        <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
-        returns the last value of `variable <GradientOptimization.variable>`.
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        specifies the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
 
+    save_samples : bool
+        determines whether or not to return the all of the samples of `variable <GradientOptimization.variable>`
+        used to evaluate `objective_function <GradientOptimization.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
 
     Attributes
     ----------
@@ -12117,21 +12174,34 @@ class GridSearch(OptimizationFunction):
         function called to update parameters of `objective_function <GradientOptimization.objective_function>`
         in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
 
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        determines the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
     iteration : int
         the currention iteration of the optiimzaton process.
 
-    max_iterations : int
-        determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
-        warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
+    save_samples : True
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
 
     Returns
     -------
 
-    optimized value of variable : np.array
-         value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-         `objective_function <GradientOptimization.objective_function>`, depending on whether `direction
-         <GradientOptimization.direction>` is, respectively, *ASCENT* or *DESCENT*.
-
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+        `objective_function <GradientOptimization.objective_function>`, depending on `direction
+        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
+        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
+        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
+        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRID_SEARCH_FUNCTION
@@ -12144,20 +12214,21 @@ class GridSearch(OptimizationFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  update_function:tc.optional(is_function_type)=None,
-                 search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 # search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
+                 save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
                  prefs=None,
                  **kwargs):
 
-        if None in {objective_function, update_function, search_space}:
+        if None in {objective_function, update_function} or search_space is None:
             self.init_args = locals().copy()
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
@@ -12179,18 +12250,37 @@ class GridSearch(OptimizationFunction):
                          search_function=search_function,
                          search_space=search_space,
                          search_termination_function=search_termination_function,
+                         save_samples=True,
+                         save_values=save_values,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
+        `objective_function <GradientOptimization.objective_function>`, and possibly all samples
+        evaluated and their corresponding values.
+
+        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
+        <GradientOptimization_Gradient_Calculation>` for details.
+        '''
+        last, variables, values = super().function(variable=variable, params=params, context=context)
+        max_val = max(variables)
+        if self.save_samples:
+            return max_val, variables, values
+        else:
+            return max_val, [], values
 
     def _traverse_grid(self, variable, sample_num):
         return self.search_space[sample_num]
 
-
     def _grid_complete(self, variable, value, iteration):
-        iteration != len(self.search_space)
+        return iteration != len(self.search_space)
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************

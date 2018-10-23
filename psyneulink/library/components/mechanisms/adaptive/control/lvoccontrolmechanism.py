@@ -804,13 +804,13 @@ class LVOCControlMechanism(ControlMechanism):
                                                             default_variable = self.control_signal_variables,
                                                             objective_function = self.compute_lvoc_from_control_signals,
                                                             update_function = self.prediction_vector.update_vector,
-                                                            search_space = self._get_control_signal_search_space,
+                                                            search_space = self._get_control_signal_search_space(),
                                                             owner = self)
         elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
             alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
             alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector
-            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space
+            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
             alloc_opt_fct.init_args[OWNER] = self
             alloc_opt_fct._deferred_init()
 
@@ -907,6 +907,8 @@ class LVOCControlMechanism(ControlMechanism):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
+
+        return self.control_signal_search_space
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
