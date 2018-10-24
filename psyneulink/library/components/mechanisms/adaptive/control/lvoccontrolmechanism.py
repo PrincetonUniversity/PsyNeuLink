@@ -901,15 +901,8 @@ class LVOCControlMechanism(ControlMechanism):
     def _get_control_signal_search_space(self):
 
         control_signal_sample_lists = []
-        numb_combinations = 1
         for control_signal in self.control_signals:
-            # num_samples = len(control_signal.allocation_samples)
-            # allocation_samples = np.array(control_signal.allocation_samples).reshape(num_samples,1)
-            # control_signal_sample_lists.append(allocation_samples)
-            # assert True
             control_signal_sample_lists.append(control_signal.allocation_samples)
-            numb_combinations *= len(control_signal.allocation_samples)
-            assert True
 
         # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
