@@ -11709,37 +11709,23 @@ class OptimizationFunction(Function_Base):
         # Initialize variables used in while loop
         iteration=0
 
-        # Follow gradient trajectory
-        # IMPLEMENTATION NOTE:
-        #    GradientOptimization: _convergence_condition
-        #    GridSearch:  range
-        #    Sampling: n
+        # Iterate optimization process
         while self.search_termination_function(current_variable, current_value, iteration):
 
             # Get next sample of variable
-            # IMPLEMENTATION NOTE:
-            #    GradientOptimization: _follow_gradient (ignores allocation_samples)
-            #    GridSearch:  next grid item (based on Cartesian product of discrete values in allocation_samples)
-            #    Sampling:   sampled item (based on draw from distributions in allocation_samples)
             new_variable = self.search_function(current_variable, iteration)
 
             # Compute new value based on new variable
-            # IMPLEMENTATION NOTE:  Same for all optimization methods
-            #    LVOC: compute_lvoc_from_control_signals (prediction_vector * prediction_weights)
-            #    EVC:  value_function (outcome of simulation - costs)
             new_value = self.objective_function(new_variable)
 
-            # TEST PRINT:
-            print(
-                    '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-                    '\ncurrent_value: ', current_value,
-                    '\nnew_value: ', new_value,
-                    # '\ngradients: ', self._gradients,
-                    # '\nstep_size: ', self._step_size,
-                    # '\nconvergence_metric: ',convergence_metric,
-            )
-            # self.update_function.__self__.test_print()
-            # TEST PRINT END
+            # # TEST PRINT:
+            # print(
+            #         'current_variable', new_variable,
+            #         '\ncurrent_value: ', current_value,
+            #         '\nnew_value: ', new_value,
+            # )
+            # # self.update_function.__self__.test_print()
+            # # TEST PRINT END
 
             iteration+=1
             if self.max_iterations and iteration > self.max_iterations:
@@ -11879,7 +11865,8 @@ class GradientOptimization(OptimizationFunction):
     ----------
 
     variable : array
-        value to optimize.
+        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
+        by the optimization process.
 
     objective_function : function or method
         function used to evaluate `variable <GradientOptimization.variable>`
@@ -12035,9 +12022,11 @@ class GradientOptimization(OptimizationFunction):
         # Compute gradients with respect to current variable
         self._gradients = self.gradient_function(variable)
 
-        # TEST_PRINT:
-        print('step_size: ', self._current_step_size)
-         # END TEST_PRINT
+        # # TEST_PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        # print('gradients: ', self._gradients)
+        # print('step_size: ', self._current_step_size)
+        #  # END TEST_PRINT
 
         # Update variable based on new gradients
         return variable + self.direction * self._current_step_size * np.array(self._gradients)
@@ -12079,68 +12068,65 @@ class GridSearch(OptimizationFunction):
         )
 
     Search over all combinations of values for a set of variables for the combination that optimizes the
-    `objective_function <GradientOptimization.objective_function>`.
+    `objective_function <GridSearch.objective_function>`.
 
     .. _GridSearch_Process:
 
     **Grid Search Process**
 
-    When `function <GradientOptimization.function>` is executed, it iterates over the folowing steps:
+    When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
 
-        # - `compute gradient <GradientOptimization_Gradient_Calculation>` using the `gradient_function
-        #   <GradientOptimization.gradient_function>`;
-        # ..
-        # - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
-        #   `direction <GradientOptimization.direction>` and by an amount specified by `step_size
-        #   <GradientOptimization.step_size>` and possibly `annealing_function
-        #   <GradientOptimization.annealing_function>`;
-        # ..
-        # - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
-        #   `variable <GradientOptimization.variable>`;
-        # ..
-        # - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
-        #   <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
-        # ..
-        # - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
-        #   the `convergence_threshold <GradientOptimization.convergence_threshold>`.
-        #
-        # Iteration continues until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls
-        # below `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or the number of iterations exceeds
-        # `max_iterations <GradientOptimization.max_iterations>`.  The current iteration is contained in `iteration
-        # <GradientOptimization.iteration>`.
+        - get sample of `variable <GridSearch.variable>` from `search_space <GridSearch.search_space>` using the
+          `traverse_grid <GridSearch.traverse_grid>` method.
+        ..
+        - compute value of `objective_function <GridSearch.objective_function>` using the sample;
+        ..
+        - evaluate `grid_complete <GridSearch.grid_complete>` method.
+
+        Iteration continues until all values of `search_space <GridSearch.search_space>` have been evaluated
+        (i.e., `grid_complete <GridSearch.grid_complete>` returns `True`).  The current iteration is contained in
+        `iteration <GridSearch.iteration>`.
 
 
     Arguments
     ---------
 
     objective_function : function or method
-        specifies function used to evaluate `variable <GradientOptimization.variable>`
-        in each `iteration <GradientOptimization_Process>` of the optimization process;
+        specifies function used to evaluate `variable <GridSearch.variable>`
+        in each `iteration <GridSearch_Process>` of the optimization process;
         it must be specified and it must return a scalar value.
+
+    search_space : list or array
+        specifies samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         specifies the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
         <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
 
     save_samples : bool
-        determines whether or not to return the all of the samples of `variable <GradientOptimization.variable>`
-        used to evaluate `objective_function <GradientOptimization.objective_function>` in the optimization process.
+        determines whether or not to return the all of the samples of `variable <GridSearch.variable>`
+        used to evaluate `objective_function <GridSearch.objective_function>` in the optimization process.
 
     save_values : bool
         determines whether or not to save and return the values of `objective_function
-        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
         evaluated.
 
     Attributes
     ----------
 
     variable : array
-        value to optimize.
+        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
+        by the optimization process.
 
     objective_function : function or method
-        function used to evaluate `variable <GradientOptimization.variable>`
-        in each `iteration <GradientOptimization_Process>` of the optimization process;
-        it must be specified and it must return a scalar value.
+        function used to evaluate `variable <GridSearch.variable>` in each `iteration
+        <GridSearch_Process>` of the optimization process, and the value of which is optimized.
+
+    search_space : list or array
+        contains samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
         determines the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
@@ -12151,25 +12137,25 @@ class GridSearch(OptimizationFunction):
 
     save_samples : True
         determines whether or not to save and return the values of `objective_function
-        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
         evaluated.
 
     save_values : bool
         determines whether or not to save and return the values of `objective_function
-        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
         evaluated.
 
     Returns
     -------
 
     optimized value of variable, saved_samples, saved_values : np.array, list, list
-        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-        `objective_function <GradientOptimization.objective_function>`, depending on `direction
-        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
-        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
-        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
-        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
-        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
+        value of `varaiable <GridSearch.variable>` that yields the highest or lowest value of
+        `objective_function <GridSearch.objective_function>`, depending on `direction
+        <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
+        `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GridSearch.objective_function>` for each sample of
+        `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
+        or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRID_SEARCH_FUNCTION
@@ -12199,8 +12185,8 @@ class GridSearch(OptimizationFunction):
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
-        search_function = self._traverse_grid
-        search_termination_function = self._grid_complete
+        search_function = self.traverse_grid
+        search_termination_function = self.grid_complete
 
         if direction is MAXIMIZE:
             self.direction = 1
@@ -12227,26 +12213,31 @@ class GridSearch(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
-        `objective_function <GradientOptimization.objective_function>`, and possibly all samples
-        evaluated and their corresponding values.
+        '''Return the value of `variable <GridSearch.variable>` that yields the optimal value of
+        `objective_function <GridSearch.objective_function>`, and possibly all samples
+        of `variable <GridSearch.variable>` evaluated and their corresponding values.
 
-        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
-        <GradientOptimization_Gradient_Calculation>` for details.
+        Optimal value is defined by `direction <GridSearch.direction>`:
+        - if *MAXIMIZE*, returns greatest value
+        - if *MINIMIZE*, returns least value
         '''
-        last, variables, values = super().function(variable=variable, params=params, context=context)
-        opt_variable = variables[values.index(max(values))]
+        last_variable, all_variables, all_values = super().function(variable=variable, params=params, context=context)
+
+        opt_variable = all_variables[all_values.index(max(all_values))]
         ret_val = [opt_variable, None, None]
         if self.save_samples:
-            ret_val[1] = variables
+            ret_val[1] = all_variables
         if self.save_values:
-            ret_val[1] = values
+            ret_val[1] = all_values
         return tuple(ret_val)
 
-    def _traverse_grid(self, variable, sample_num):
+    def traverse_grid(self, variable, sample_num):
+        # # TEST PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        #  # END TEST PRINT
         return self.search_space[sample_num]
 
-    def _grid_complete(self, variable, value, iteration):
+    def grid_complete(self, variable, value, iteration):
         return iteration != len(self.search_space)
 
 

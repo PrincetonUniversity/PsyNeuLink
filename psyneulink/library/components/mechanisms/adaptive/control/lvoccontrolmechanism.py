@@ -846,8 +846,17 @@ class LVOCControlMechanism(ControlMechanism):
                                              else c.instance_defaults.variable
                                              for c in self.control_signals])
 
+        # TEST PRINT
+        print ('\nOUTCOME: ', self.input_state.value)
+        # print ('prediction_weights: ', self.prediction_weights)
+        # TEST PRINT END
+
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.allocation_optimization_function.function(control_signal_variables)
+
+        # TEST PRINT
+        print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
+        # TEST PRINT END
 
         return allocation_policy
 

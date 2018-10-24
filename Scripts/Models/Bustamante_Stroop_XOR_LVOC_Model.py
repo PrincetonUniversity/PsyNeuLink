@@ -55,7 +55,9 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
+
                                 # function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
+
                                 allocation_optimization_function=pnl.GradientOptimization(
                                         convergence_criterion=pnl.VALUE,
                                         convergence_threshold=0.001,
@@ -63,6 +65,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                         annealing_function= lambda x,y : x / np.sqrt(y),
                                         # direction=pnl.ASCENT
                                 ),
+
                                 # allocation_optimization_function=pnl.GridSearch(
                                 #         direction=pnl.MAXIMIZE
                                 # ),
@@ -86,7 +89,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                                                           bias=-3),
                                                                   adjustment_cost_function=pnl.Exponential(rate=0.25,
                                                                                                            bias=-3),
-                                                                  allocation_samples=[i/10 for i in list(range(0,20,1))]
+                                                                  allocation_samples=[i/2 for i in list(range(0,50,1))]
                                                                   )
                                 )
 c = pnl.Composition(name='Stroop XOR Model')
@@ -102,14 +105,14 @@ c.add_c_node(lvoc)
 
 # c.show_graph()
 
-input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
-              word_stim: [[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
-              color_task:[[1], [1]],
-              word_task: [[-1], [-1]],
-              reward:    [[1,0], [1,0]]}
+input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
+              word_stim: [[1,0,0,0,0,0,0,0]],
+              color_task:[[1]],
+              word_task: [[-1]],
+              reward:    [[1,0]]}
 
 def run():
-    c.run(inputs=input_dict)
+    c.run(inputs=input_dict, num_trials=20)
 import timeit
 duration = timeit.timeit(run, number=1)
 print('\n')
