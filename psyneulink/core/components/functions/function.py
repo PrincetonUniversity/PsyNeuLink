@@ -64,6 +64,7 @@ Objective Functions:
 
 Optimization Function:
   * `GradientOptimization`
+  * `GridSearch`
 
 Learning Functions:
   * `Kohonen`
@@ -221,13 +222,14 @@ from psyneulink.core.globals.keywords import \
     ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
     EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
+    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
+    HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
     LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
     MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
-    NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
+    NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
     OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
@@ -235,28 +237,29 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, \
-    GRADIENT_OPTIMIZATION_FUNCTION, NAME
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE
+
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
 
 __all__ = [
-    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'ASCENT',
     'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy', 'AUTOASSOCIATIVE',
     'BackPropagation', 'BayesGLM', 'BogaczEtAl', 'BOUNDS',
-    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
-    'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian',
+    'DESCENT', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'GradientOptimization',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword',
+    'GradientOptimization', 'GridSearch',
     'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
     'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
-    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
-    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
+    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic',
+    'MAXIMIZE', 'max_vs_avg', 'max_vs_next', 'MINIMIZE', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
@@ -11583,8 +11586,30 @@ class Distance(ObjectiveFunction):
 # region **************************************   OPTIMIZATION FUNCTIONS ***********************************************
 
 
+OBJECTIVE_FUNCTION = 'objective_function'
+SEARCH_FUNCTION = 'search_function'
+SEARCH_SPACE = 'search_space'
+
 class OptimizationFunction(Function_Base):
     """Abstract class of `Function <Function>` used for optimization of a variable.
+
+    If call sublcass *must* specify objective_function or it will be placed in deferred init
+
+    Constructors should include **kwargs, to accomodate arguments required by some subclasses but not others
+    (e.g., search_space needed by GridSearch but not GradientOptimization)
+
+
+    Arguments
+    ---------
+
+    objective_function:tc.optional(is_function_type)=None,
+    search_function:tc.optional(is_function_type)=None,
+    search_space:tc.optional(tc.any(list,np.ndarray))=None,
+    search_termination_function:tc.optional(is_function_type)=None,
+    save_samples : bool : False,
+    save_values : Bool : False,
+    max_iterations:tc.optional(int)=1000,
+
 
     Attributes
     ----------
@@ -11592,10 +11617,20 @@ class OptimizationFunction(Function_Base):
     variable : scalar, list or np.array
         value to be optimized.
 
+    objective_function:tc.optional(is_function_type)=None,
+    search_function:tc.optional(is_function_type)=None,
+    search_space:tc.optional(tc.any(list,np.ndarray))=None,
+    search_termination_function:tc.optional(is_function_type)=None,
+    save_samples : bool
+    save_values : bool
+    max_iterations:tc.optional(int)=1000,
+
     Returns
     -------
 
-    Optimized value of `variable <OptimiziationFunction.variable>`.
+    Optimized value of `variable <OptimiziationFunction.variable>` and a list.  If `saved_values
+    <OptimizationFunction.saved_values>` is `True`, the list has the values for all variables
+    sampled in the order they were sampled;  if `False`, the list is empty.
 
     """
 
@@ -11605,10 +11640,114 @@ class OptimizationFunction(Function_Base):
         variable = Param(np.array([0, 0, 0]), read_only=True)
 
 
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 search_function:tc.optional(is_function_type)=None,
+                 # search_space:tc.optional(tc.any(list,np.ndarray))=None,
+                 search_space=None,
+                 search_termination_function:tc.optional(is_function_type)=None,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
+                 max_iterations:tc.optional(int)=None,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
+
+        if objective_function is None:
+            raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
+                                "when {} is \'None\' (i.e., has not been assigned by user)".
+                                format(self.__class__.__name, repr('objective_function')))
+
+        # IMPLEMENTATION NOTE:
+        # If these are not used by the sublcass, it should
+        if None in {search_function, search_termination_function} or search_space is None:
+            raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, and {}".
+                                format(self.__class__.__name__,
+                                       repr('search_function'),
+                                       repr('search_space'),
+                                       repr('search_termination_function')))
+
+        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        self.objective_function = objective_function
+        self.search_function = search_function
+        self.search_termination_function = search_termination_function
+        self.search_space = search_space
+        # FIX: END MOVE
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(save_samples=save_samples,
+                                                  save_values=save_values,
+                                                  max_iterations=max_iterations,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the last value of `variable <GradientOptimization.variable>` and all values of
+        `objective_function <GradientOptimization.objective_function>`.
+
+        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
+        <GradientOptimization_Gradient_Calculation>` for details.
+        '''
+
+        variable = self._update_variable(self._check_args(variable, params, context))
+
+        current_variable = variable
+        current_value = self.objective_function(current_variable)
+
+        self._samples = []
+        self._values = []
+
+        # Initialize variables used in while loop
+        iteration=0
+
+        # Iterate optimization process
+        while self.search_termination_function(current_variable, current_value, iteration):
+
+            # Get next sample of variable
+            new_variable = self.search_function(current_variable, iteration)
+
+            # Compute new value based on new variable
+            new_value = self.objective_function(new_variable)
+
+            # # TEST PRINT:
+            # print(
+            #         'current_variable', new_variable,
+            #         '\ncurrent_value: ', current_value,
+            #         '\nnew_value: ', new_value,
+            # )
+            # # self.update_function.__self__.test_print()
+            # # TEST PRINT END
+
+            iteration+=1
+            if self.max_iterations and iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            current_variable = new_variable
+            current_value = new_value
+
+            if self.save_samples:
+                self._samples.append(new_variable)
+            if self.save_values:
+                self._values.append(current_value)
+
+        return new_variable, self._samples, self._values
+
+
 ASCENT = 'ascent'
 DESCENT = 'descent'
-OBJECTIVE_FUNCTION = 'objective_function'
-UPDATE_FUNCTION = 'update_function'
 
 
 class GradientOptimization(OptimizationFunction):
@@ -11616,13 +11755,14 @@ class GradientOptimization(OptimizationFunction):
     GradientOptimization(            \
         default_variable=None,       \
         objective_function=None,     \
-        update_function=None,        \
         direction=ASCENT,            \
-        update_rate=1.0,             \
+        step_size=1.0,             \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
         max_iterations=1000,         \
+        save_samples=False,          \
+        save_values=False,           \
         params=None,                 \
         owner=None,                  \
         prefs=None                   \
@@ -11640,18 +11780,14 @@ class GradientOptimization(OptimizationFunction):
           <GradientOptimization.gradient_function>`;
         ..
         - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
-          `direction <GradientOptimization.direction>` and by an amount specified by `update_rate
-          <GradientOptimization.update_rate>` and possibly `annealing_function
+          `direction <GradientOptimization.direction>` and by an amount specified by `step_size
+          <GradientOptimization.step_size>` and possibly `annealing_function
           <GradientOptimization.annealing_function>`;
         ..
         - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
           `variable <GradientOptimization.variable>`;
         ..
-        - call `update_function <GradientOptimization.update_function>` if it is specified, to update parameters of
-          `objective_function <GradientOptimization.objective_function>`(this is useful for cases in which
-          they depend on the `variable <GradientOptimization.variable>`);
-        ..
-        - adjust `update_rate <GradientOptimization.udpate_rate>` using `annealing_function
+        - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
           <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
         ..
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
@@ -11684,29 +11820,25 @@ class GradientOptimization(OptimizationFunction):
         in each `iteration <GradientOptimization_Process>` of the optimization process;
         it must be specified and it must return a scalar value.
 
-    update_function : function or method : default None
-        specifies function called to update parameters of `objective_function <GradientOptimization.objective_function>`
-        in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
-
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    update_rate : int or float : default 1.0
+    step_size : int or float : default 1.0
         specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
         `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
-        `update_rate <GradientOptimization.update_rate>`.
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
 
-    update_rate : int or float : default 0.01
+    step_size : int or float : default 0.01
         specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
         each `iteration <GradientOptimization_Process>` of the optimization process.
 
     annealing_function : function or method : default None
-        specifies function used to adapt `update_rate <GradientOptimization.update_rate>` in each
+        specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
         `iteration <GradientOptimization_Process>` of the optimization process;  must take accept two parameters —
-        `update_rate <GradientOptimization.update_rate>` and `iteration <GradientOptimization_Process>`, in that
+        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Process>`, in that
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
@@ -11722,12 +11854,22 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
         returns the last value of `variable <GradientOptimization.variable>`.
 
+    save_samples : bool
+        specifies whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated
 
     Attributes
     ----------
 
     variable : array
-        value to optimize.
+        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
+        by the optimization process.
 
     objective_function : function or method
         function used to evaluate `variable <GradientOptimization.variable>`
@@ -11738,29 +11880,25 @@ class GradientOptimization(OptimizationFunction):
         function used to compute the gradient in each `iteration <GradientOptimization_Process>` of the optimization
         process (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for details).
 
-    update_function : function or method
-        function called to update parameters of `objective_function <GradientOptimization.objective_function>`
-        in each `iteration <GradientOptimization_Process>` of the optimization proces; if `None`, no call is made.
-
     direction : ASCENT or DESCENT
         direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    update_rate : int or float
+    step_size : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         `iteration <GradientOptimization_Process>` of the optimization process;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **update_rate** specifies the intial value of
-        `update_rate <GradientOptimization.update_rate>`.
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
 
-    update_rate : int or float
+    step_size : int or float
         determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
         each `iteration <GradientOptimization_Process>` of the optimization process.
 
     annealing_function : function or method
-        function used to adapt `update_rate <GradientOptimization.update_rate>` in each
+        function used to adapt `step_size <GradientOptimization.step_size>` in each
         `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
-        and the same `update_rate <GradientOptimization.update_rate>` is used in each `iteration
+        and the same `step_size <GradientOptimization.step_size>` is used in each `iteration
         <GradientOptimization_Process>`.
 
     iteration : int
@@ -11778,14 +11916,27 @@ class GradientOptimization(OptimizationFunction):
         determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
         warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
 
+    save_samples : bool
+        determines whether or not to save and return the all of the samples of `variable
+        <GradientOptimization.variable>` used to evaluate `objective_function
+        <GradientOptimization.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
     Returns
     -------
 
-    optimized value of variable : np.array
-         value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-         `objective_function <GradientOptimization.objective_function>`, depending on whether `direction
-         <GradientOptimization.direction>` is, respectively, *ASCENT* or *DESCENT*.
-
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+        `objective_function <GradientOptimization.objective_function>`, depending on `direction
+        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
+        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
+        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
+        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
@@ -11793,9 +11944,8 @@ class GradientOptimization(OptimizationFunction):
     class Params(Function_Base.Params):
         variable = Param([[0], [0]], read_only=True)
         objective_function = None
-        update_function = None
         direction = ASCENT
-        update_rate = Param(1.0, modulable=True)
+        step_size = Param(1.0, modulable=True)
         annealing_function = None
         convergence_criterion = VALUE,
         convergence_threshold = Param(.001, modulable=True)
@@ -11808,36 +11958,29 @@ class GradientOptimization(OptimizationFunction):
     def __init__(self,
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
-                 update_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
-                 update_rate:tc.optional(tc.any(int, float))=1.0,
+                 step_size:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
                  max_iterations:tc.optional(int)=1000,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
 
-
-        if None in {objective_function, update_function}:
+        if objective_function is None:
             self.init_args = locals().copy()
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
-        # FIX: MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
-        from autograd import grad
+        search_function = self._follow_gradient
+        search_termination_function = self._convergence_condition
 
-        if objective_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
-            self.objective_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.objective_function = objective_function
+        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
+        from autograd import grad
 
         if objective_function:
             try:
@@ -11846,40 +11989,223 @@ class GradientOptimization(OptimizationFunction):
                 raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
                                     format(repr(OBJECTIVE_FUNCTION),
                                            self.objective_function.__name__, self.__class__.__name__))
-
-        if update_function is None:
-            # raise FunctionError("{} arg must be specified for {} Function".
-            #                     format(repr(UPDATE_FUNCTION), self.__class__.__name__))
-            # FIX: PUT DEFERRED_INIT HERE??
-            # Assume this is because it is being constructed inside the constructor of a Component;
-            #    warning will come later if it is executed without being assigned
-            self.update_function = None
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        else:
-            self.update_function = update_function
-
         if direction is ASCENT:
             self.direction = 1
         else:
             self.direction = -1
-
         self.annealing_function = annealing_function
         # FIX: END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(update_rate=update_rate,
+        params = self._assign_args_to_param_dicts(step_size=step_size,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
-                                                  max_iterations=max_iterations,
                                                   params=params)
 
+        super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=search_function,
+                         search_space=[None],
+                         search_termination_function=search_termination_function,
+                         save_samples=save_samples,
+                         save_values=save_values,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
-        # if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-        #     self.init_args = locals().copy()
-        #     del self.init_args['grad']
-        #     assert True
+    def _follow_gradient(self, variable, sample_num):
+
+        # Update step_size
+        if sample_num == 0:
+            self._current_step_size = self.step_size
+        elif self.annealing_function:
+            self._current_step_size = self.annealing_function(self._current_step_size, sample_num)
+
+        # Compute gradients with respect to current variable
+        self._gradients = self.gradient_function(variable)
+
+        # # TEST_PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        # print('gradients: ', self._gradients)
+        # print('step_size: ', self._current_step_size)
+        #  # END TEST_PRINT
+
+        # Update variable based on new gradients
+        return variable + self.direction * self._current_step_size * np.array(self._gradients)
+
+    def _convergence_condition(self, variable, value, iteration):
+        if iteration is 0:
+            # self._convergence_metric = self.convergence_threshold + EPSILON
+            self._previous_variable = variable
+            self._previous_value = value
+            return True
+
+        # Evaluate for convergence
+        if self.convergence_criterion == VALUE:
+            convergence_metric = np.abs(value - self._previous_value)
+        else:
+            convergence_metric = np.max(np.abs(np.array(variable) -
+                                               np.array(self._previous_variable)))
+
+        self._previous_variable = variable
+        self._previous_value = value
+
+        return convergence_metric > self.convergence_threshold
+
+
+MAXIMIZE = 'maximize'
+MINIMIZE = 'minimize'
+
+
+class GridSearch(OptimizationFunction):
+    """
+    GridSearch(                      \
+        default_variable=None,       \
+        objective_function=None,     \
+        direction=MAXIMIZE,          \
+        save_values=False,           \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
+
+    Search over all combinations of values for a set of variables for the combination that optimizes the
+    `objective_function <GridSearch.objective_function>`.
+
+    .. _GridSearch_Process:
+
+    **Grid Search Process**
+
+    When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
+
+        - get sample of `variable <GridSearch.variable>` from `search_space <GridSearch.search_space>` using the
+          `traverse_grid <GridSearch.traverse_grid>` method.
+        ..
+        - compute value of `objective_function <GridSearch.objective_function>` using the sample;
+        ..
+        - evaluate `grid_complete <GridSearch.grid_complete>` method.
+
+        Iteration continues until all values of `search_space <GridSearch.search_space>` have been evaluated
+        (i.e., `grid_complete <GridSearch.grid_complete>` returns `True`).  The current iteration is contained in
+        `iteration <GridSearch.iteration>`.
+
+
+    Arguments
+    ---------
+
+    objective_function : function or method
+        specifies function used to evaluate `variable <GridSearch.variable>`
+        in each `iteration <GridSearch_Process>` of the optimization process;
+        it must be specified and it must return a scalar value.
+
+    search_space : list or array
+        specifies samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        specifies the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    save_samples : bool
+        determines whether or not to return the all of the samples of `variable <GridSearch.variable>`
+        used to evaluate `objective_function <GridSearch.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    Attributes
+    ----------
+
+    variable : array
+        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
+        by the optimization process.
+
+    objective_function : function or method
+        function used to evaluate `variable <GridSearch.variable>` in each `iteration
+        <GridSearch_Process>` of the optimization process, and the value of which is optimized.
+
+    search_space : list or array
+        contains samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        determines the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    iteration : int
+        the currention iteration of the optiimzaton process.
+
+    save_samples : True
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    Returns
+    -------
+
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GridSearch.variable>` that yields the highest or lowest value of
+        `objective_function <GridSearch.objective_function>`, depending on `direction
+        <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
+        `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GridSearch.objective_function>` for each sample of
+        `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
+        or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
+    """
+
+    componentName = GRID_SEARCH_FUNCTION
+
+    class Params(Function_Base.Params):
+        variable = Param([[0], [0]], read_only=True)
+        objective_function = None
+        direction = MAXIMIZE
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 # search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 search_space=None,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
+                 save_values:tc.optional(bool)=False,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 **kwargs):
+
+        if objective_function is None or search_space is None:
+            self.init_args = locals().copy()
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            return
+
+        search_function = self.traverse_grid
+        search_termination_function = self.grid_complete
+
+        if direction is MAXIMIZE:
+            self.direction = 1
+        else:
+            self.direction = -1
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=search_function,
+                         search_space=search_space,
+                         search_termination_function=search_termination_function,
+                         save_samples=True,
+                         save_values=True,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -11888,68 +12214,34 @@ class GradientOptimization(OptimizationFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
-        '''Return the value of `variable <GradientOptimization.variable>` that maximizes the value of
-        `objective_function <GradientOptimization.objective_function>`.
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GridSearch.variable>` that yields the optimal value of
+        `objective_function <GridSearch.objective_function>`, and possibly all samples
+        of `variable <GridSearch.variable>` evaluated and their corresponding values.
 
-        See `Optimization Process <GradientOptimization_Process>`  and `Gradient Calcuation
-        <GradientOptimization_Gradient_Calculation>` for details.
+        Optimal value is defined by `direction <GridSearch.direction>`:
+        - if *MAXIMIZE*, returns greatest value
+        - if *MINIMIZE*, returns least value
         '''
+        last_variable, all_variables, all_values = super().function(variable=variable, params=params, context=context)
 
-        variable = self._update_variable(self._check_args(variable, params, context))
+        opt_variable = all_variables[all_values.index(max(all_values))]
+        ret_val = [opt_variable, None, None]
+        if self.save_samples:
+            ret_val[1] = all_variables
+        if self.save_values:
+            ret_val[1] = all_values
+        return tuple(ret_val)
 
-        # Initialize variables used in while loop
-        iteration=0
-        convergence_metric = self.convergence_threshold + EPSILON
-        update_rate = self.update_rate
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
+    def traverse_grid(self, variable, sample_num):
+        # # TEST PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        #  # END TEST PRINT
+        return self.search_space[sample_num]
 
-        # Follow gradient trajectory
-        while convergence_metric > self.convergence_threshold:
-
-            # Compute gradients with respect to current variable
-            gradients = self.gradient_function(current_variable)
-
-            # Update variable based on new gradients
-            new_variable = current_variable + self.direction * update_rate * np.array(gradients)
-
-            # Compute new value based on updated variable
-            new_value = self.objective_function(new_variable)
-
-            # Evaluate for convergence
-            if self.convergence_criterion == VALUE:
-                convergence_metric = np.abs(new_value - current_value)
-            else:
-                convergence_metric = np.max(np.abs(np.array(new_variable) -
-                                                   np.array(current_variable)))
-            # Update expression containing variable
-            self.update_function(new_variable)
-
-            # # TEST PRINT:
-            # print(
-            #         '\niteration {}-{}'.format(self.owner.current_execution_count-1, iteration),
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            #         '\ngradients: ', gradients,
-            #         '\nupdate_rate: ', update_rate,
-            #         '\nconvergence_metric: ',convergence_metric,
-            # )
-            # self.update_function.__self__.test_print()
-            # # TEST PRINT END
-
-            iteration+=1
-            if iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
-                break
-
-            current_variable = new_variable
-            current_value = new_value
-            if self.annealing_function:
-                update_rate = self.annealing_function(update_rate, iteration)
-
-        return new_variable
-
+    def grid_complete(self, variable, value, iteration):
+        return iteration != len(self.search_space)
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************

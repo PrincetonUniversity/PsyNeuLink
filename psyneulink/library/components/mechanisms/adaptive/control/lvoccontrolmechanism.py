@@ -200,11 +200,14 @@ the `GradientOptimization` Function.  A custom function can be used, however it 
       LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
     - It must accept a keyword argument **objective_function**, that is passed the LVOCControlMechanism's
-      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method.
+      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method;  this is
+      the function used `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`
+      to evaluate `EVC <LVOCControlMechanism_EVC>` during its optimization process.
 
-    - It must accept a keyword argument **update_function**, that is passed the LVOCControlMechanism's
-      `prediction_vector <LVOCControlMechanism.prediction_vector>`\\`s `update_vector
-      <LVOCControlMechanism.PredictionVector.update_vector>` method.
+    - It must accept a keyword argument **update_function**, that is passed the `update_vector
+      <LVOCControlMechanism.PredictionVector.update_vector>` method of the LVOCControlMechanism's
+      `PredictionVector`; this is used to update the parameters of the `prediction_vector
+      <LVOCControlMechanism.PredictionVector.vector>` during the optimizaton process.
 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
@@ -297,7 +300,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
-    OBJECTIVE_FUNCTION, UPDATE_FUNCTION
+    OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -517,7 +520,7 @@ class LVOCControlMechanism(ControlMechanism):
         returns an `allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>` (see
         `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>` for additional details).
 
-    update_rate : int or float
+    step_size : int or float
         determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified
         in each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
@@ -796,10 +799,17 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Assign parameters to allocation_optimization_function that rely on LVOCControlMechanism
         alloc_opt_fct = self.allocation_optimization_function
-        if self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if isinstance(self.allocation_optimization_function, type):
+            self.allocation_optimization_function = self.allocation_optimization_function(
+                                                            default_variable = self.control_signal_variables,
+                                                            objective_function = self.compute_lvoc_from_control_signals,
+                                                            update_function = self.prediction_vector.update_vector,
+                                                            search_space = self._get_control_signal_search_space(),
+                                                            owner = self)
+        elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
             alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-            alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector
+            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
             alloc_opt_fct.init_args[OWNER] = self
             alloc_opt_fct._deferred_init()
 
@@ -836,8 +846,17 @@ class LVOCControlMechanism(ControlMechanism):
                                              else c.instance_defaults.variable
                                              for c in self.control_signals])
 
+        # TEST PRINT
+        print ('\nOUTCOME: ', self.input_state.value)
+        # print ('prediction_weights: ', self.prediction_weights)
+        # TEST PRINT END
+
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.allocation_optimization_function.function(control_signal_variables)
+
+        # TEST PRINT
+        print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
+        # TEST PRINT END
 
         return allocation_policy
 
@@ -883,6 +902,21 @@ class LVOCControlMechanism(ControlMechanism):
 
         return [self.prediction_buffer.popleft(), outcome]
 
+    def _get_control_signal_search_space(self):
+
+        control_signal_sample_lists = []
+
+        for control_signal in self.control_signals:
+            control_signal_sample_lists.append(control_signal.allocation_samples)
+
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.control_signal_search_space = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
+
+        return self.control_signal_search_space
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
@@ -1055,13 +1089,17 @@ class LVOCControlMechanism(ControlMechanism):
             self.vector = np.zeros(i)
 
         def update_vector(self, variable, feature_values=None):
-            '''Update vector with flattened arrays of values returned from `compute_terms
+            '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
             Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `prediction_vector
-            <LVOCControlMechanism.prediction_vector>`, with current values of `feature_values
-            <LVOCControlMechanism.feature_values>` and current variable provided by `allocation_optimization_function
-            <LVOCControlMechanism.allocation_optimization_function>`.
+            <LVOCControlMechanism.prediction_vector>`, with current values of variable (i.e., `variable
+            <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
+            <LVOCControlMechanism.feature_values>`.
+
+            This method is passed to `allocation_optimization_function
+            <LVOCControlMechanism.allocation_optimization_function>` as its **update_function**
+            (see `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>`.
             '''
 
             if feature_values is not None:
@@ -1072,7 +1110,6 @@ class LVOCControlMechanism(ControlMechanism):
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
-
 
         def compute_terms(self, control_signal_variables):
             '''Calculate interaction terms.
@@ -1132,10 +1169,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             print('control_signal_values: ', vector[idx[PV.C.value]])
 
-
-    def annealing_function(self, iteration, update_rate):
-        # Default (currently hardwired function):
-        return self.update_rate/np.sqrt(iteration)
 
     def compute_lvoc_from_control_signals(self, variable):
         '''Update interaction terms and then multiply by prediction_weights
@@ -1263,7 +1296,7 @@ class LVOCControlMechanism(ControlMechanism):
     #                 gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
     #
     #             # Update control_signal_value with gradient
-    #             control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
+    #             control_signal_values[i] = control_signal_value + self.step_size * gradient[i]
     #
     #             # Update cost based on new control_signal_value
     #             costs[i] = control_signals[i].intensity_cost_function(control_signal_value)

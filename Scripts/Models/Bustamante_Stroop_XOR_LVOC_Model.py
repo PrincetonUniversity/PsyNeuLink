@@ -49,14 +49,27 @@ task_decision = pnl.DDM(name='Task Decision',
 
 lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
-                                function=pnl.BayesGLM(),
                                 objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
                                                                            monitored_output_states=[task_decision,
                                                                                                     reward],
                                                                            function=objective_function),
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
-                                update_rate=1.0,
                                 terminal_objective_mechanism=True,
+
+                                # function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
+
+                                # allocation_optimization_function=pnl.GradientOptimization(
+                                #         convergence_criterion=pnl.VALUE,
+                                #         convergence_threshold=0.001,
+                                #         step_size=1,
+                                #         annealing_function= lambda x,y : x / np.sqrt(y),
+                                #         # direction=pnl.ASCENT
+                                # ),
+
+                                allocation_optimization_function=pnl.GridSearch(
+                                        direction=pnl.MAXIMIZE
+                                ),
+
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}
                                 # control_signals={pnl.NAME:'COLOR CONTROL',
@@ -75,7 +88,8 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                   intensity_cost_function=pnl.Exponential(rate=0.25,
                                                                                                           bias=-3),
                                                                   adjustment_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                           bias=-3)
+                                                                                                           bias=-3),
+                                                                  allocation_samples=[i/2 for i in list(range(0,50,1))]
                                                                   )
                                 )
 c = pnl.Composition(name='Stroop XOR Model')
@@ -91,10 +105,19 @@ c.add_c_node(lvoc)
 
 # c.show_graph()
 
-input_dict = {color_stim:[[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
-              word_stim: [[1,0,0,0,0,0,0,0], [1,0,0,0,0,0,0,0]],
-              color_task:[[1], [1]],
-              word_task: [[-1], [-1]],
-              reward:    [[1,0], [1,0]]}
-c.run(inputs=input_dict)
+input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
+              word_stim: [[1,0,0,0,0,0,0,0]],
+              color_task:[[1]],
+              word_task: [[-1]],
+              reward:    [[1,0]]}
 
+def run():
+    c.run(inputs=input_dict, num_trials=20)
+import timeit
+duration = timeit.timeit(run, number=1)
+print('\n')
+print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
+print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
+print('features: ', lvoc.feature_values)
+print('lvoc: ', lvoc.compute_lvoc_from_control_signals([c.variable for c in lvoc.control_signals]))
+print('time: ', duration)
