@@ -3367,7 +3367,7 @@ class Composition(Composition_Base):
 
     def before_simulations(self, context=None):
         predicted_input = self.update_predicted_input()
-
+        print("composition's predicted input = ", predicted_input)
         num_trials = 1
         reinitialize_values, node_values = self._save_state()
 

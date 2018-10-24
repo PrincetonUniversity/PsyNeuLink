@@ -385,6 +385,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.adaptive.control.controller import Controller
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import EVC_MECHANISM,\
     INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, SUM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -788,6 +789,111 @@ class EVCController(Controller):
             current_costs.append(signal.cost)
         return {"costs": current_costs}
 
+    def run_simulation_scipy(self, allocation_policy=None, reinitialize_values=None, predicted_input=None, num_trials=1, runtime_params=None, context=None):
+        print("allocation_policy = ", allocation_policy)
+
+        if allocation_policy is not None:
+            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+
+        execution_id = self.composition._get_unique_id()
+
+        outcomes = []
+        costs = []
+        for i in range(num_trials):
+            inputs = {}
+            for node in predicted_input:
+                inputs[node] = predicted_input[node][i]
+
+            self.composition.context.execution_phase = ContextFlags.SIMULATION
+            for output_state in self.output_states:
+                for proj in output_state.efferents:
+                    proj.context.execution_phase = ContextFlags.PROCESSING
+
+            self.composition.run(inputs=inputs,
+                                 reinitialize_values=reinitialize_values,
+                                 execution_id=execution_id,
+                                 runtime_params=runtime_params,
+                                 context=context)
+
+            self.composition.simulation_results.append(self.composition.output_CIM.output_values)
+
+            # call_after_simulation_data = None
+            #
+            # if self.call_after_simulation:
+            #     call_after_simulation_data = self.call_after_simulation()
+
+            monitored_states = self.objective_mechanism.output_values
+
+            self.composition.context.execution_phase = ContextFlags.PROCESSING
+            outcomes.append(monitored_states)
+            trial_costs = []
+            for signal in self.control_signals:
+                trial_costs.append(signal.cost[0])
+            costs.append(trial_costs)
+
+        return outcomes, costs
+
+    def evc_scipy(self, outcomes, costs, context=None):
+        print("outcomes = ", outcomes)
+        print("costs = ", costs)
+        allocation_policy_evc_list = []
+        for i in range(len(outcomes)):
+            outcome = outcomes[i]
+            # if isinstance(self.cost_function, UserDefinedFunction):
+            #     cost = self.cost_function._execute(costs=costs[0])
+            # else:
+            #     cost = self.cost_function._execute(variable=costs[0], context=context)
+            import numpy as np
+            cost = np.array([sum(costs[0])])
+            print("cost = ", cost)
+            # Combine outcome and cost to determine value
+            if isinstance(self.combine_outcome_and_cost_function, UserDefinedFunction):
+                value = self.combine_outcome_and_cost_function._execute(outcome=outcome, cost=cost)
+            else:
+                value = self.combine_outcome_and_cost_function._execute(variable=[outcome, -cost])
+            print("v = ", value, " o = ", outcome, " c = ", cost)
+            allocation_policy_evc_list.append((value, outcome, cost))
+            EVC_avg = list(map(lambda x: (sum(x)) / len(outcomes), zip(*allocation_policy_evc_list)))
+            EVC, outcome, cost = EVC_avg
+
+            # EVC_max = max(EVC, EVC_max)
+            # # if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+            # #     # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+            # #     EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+            # #     # Save policy associated with EVC for each process, as order of chunks
+            # #     #     might not correspond to order of policies in control_signal_search_space
+            # #     if len(EVC_policies[0]) == 0:
+            # #         EVC_policies = np.atleast_2d(allocation_policy)
+            # #     else:
+            # #         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_policy), axis=0)
+            # if EVC == EVC_max:
+            #     # Keep track of state values and allocation policy associated with EVC max
+            #     # EVC_max_state_values = self.input_value.copy()
+            #     # EVC_max_policy = allocation_vector.copy()
+            #     # EVC_max_state_values = self.owner.input_values
+            #     EVC_max_policy = allocation_policy
+            #     # max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+            # self.EVC_max = EVC_max
+            # # self.EVC_max_state_values = EVC_max_state_values
+            # self.EVC_max_policy = EVC_max_policy
+            # # if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+            # #     self.EVC_values = EVC_values
+            # #     self.EVC_policies = EVC_policies
+        return -1.0 * EVC
+    def objective_function(self, allocation_policy=None, *params):
+        reinitialize_values, predicted_input, num_trials, runtime_params, context = params
+        outcomes, cost = self.run_simulation_scipy(allocation_policy, reinitialize_values, predicted_input,
+                                                 num_trials, runtime_params, context)
+        return self.evc_scipy(outcomes, cost, context)
+
+    def run_simulations_scipy(self, ranges, Ns, runtime_params=None, context=None):
+        predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
+        if num_trials == None:
+            num_trials = 1
+        from scipy.optimize import brute
+        params = (reinitialize_values, predicted_input, num_trials, runtime_params, context)
+        print("brute soln = ", brute(self.objective_function, ranges=ranges, Ns=Ns, args=params))
+
     def _execute(
         self,
         variable=None,
@@ -807,7 +913,7 @@ class EVCController(Controller):
 
         # Get all allocation policies to try
         self.control_signal_search_space = self.get_allocation_policies()
-
+        self.run_simulations_scipy(ranges=((0.1, 1.0), (0.1, 1.0)), Ns=4)
         # for each allocation policy:
         # (1) apply allocation policy, (2) get a new execution id, (3) run simulation, (4) store results
         simulation_data = self.run_simulations(allocation_policies=self.control_signal_search_space,
