@@ -843,11 +843,12 @@ class LVOCControlMechanism(ControlMechanism):
 
         # TEST PRINT
         print ('\nOUTCOME: ', self.input_state.value)
-        # print ('prediction_weights: ', self.prediction_weights)
+        print ('prediction_weights: ', self.prediction_weights)
         # TEST PRINT END
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy = self.allocation_optimization_function.function(control_signal_variables)
+        # allocation_policy, all_vars, all_vals = self.allocation_optimization_function.function(control_signal_variables)
 
         # TEST PRINT
         print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
@@ -900,9 +901,15 @@ class LVOCControlMechanism(ControlMechanism):
     def _get_control_signal_search_space(self):
 
         control_signal_sample_lists = []
-
+        numb_combinations = 1
         for control_signal in self.control_signals:
+            # num_samples = len(control_signal.allocation_samples)
+            # allocation_samples = np.array(control_signal.allocation_samples).reshape(num_samples,1)
+            # control_signal_sample_lists.append(allocation_samples)
+            # assert True
             control_signal_sample_lists.append(control_signal.allocation_samples)
+            numb_combinations *= len(control_signal.allocation_samples)
+            assert True
 
         # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
@@ -911,7 +918,11 @@ class LVOCControlMechanism(ControlMechanism):
         self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
 
-        return self.control_signal_search_space
+        # Insure that ControlSignal in each sample is in its own 1d array
+        re_shape = (self.control_signal_search_space.shape[0], self.control_signal_search_space.shape[1], 1)
+
+        return self.control_signal_search_space.reshape(re_shape)
+
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
