@@ -652,7 +652,6 @@ class LVOCControlMechanism(ControlMechanism):
                                     format(repr(PREDICTION_WEIGHT_PRIORS), self.name,
                                            PV.__class__.__name__, repr(PREDICTION_TERMS)))
 
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
 
