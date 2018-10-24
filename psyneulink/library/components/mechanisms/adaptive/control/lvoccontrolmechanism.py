@@ -92,7 +92,7 @@ are used by its `function <LVOCControlMechanism.function>` to learn to predict t
 `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and to determine its `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
-Feature_Preditors can be of two types:
+Feature_Predictors can be of two types:
 
 * *Input Feature* -- this is a value received as input by an `ORIGIN` Mechanism in the Composition.
     These are specified in the **feature_predictors** argument of the LVOCControlMechanism's constructor (see
@@ -194,7 +194,8 @@ LVOCControlMechanism uses the `prediction_weights <LVOCControlMechanism.predicti
 <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
 The default for `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` is
-the `GradientOptimization` Function.  A custom function can be used, however it must meet several requirements:
+the `GradientOptimization` Function.  Any `OptimizationFunction` can be used in its place.  A custom function can
+also be used, however it must meet the following requirements:
 
     - It must accept as its first argument an array with the same shape as the
       LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
@@ -212,9 +213,10 @@ Note to Developers:
 A custom function for allocation_optimization_function should implement deferred_init, allowing its
 **objective_function** and **update_function** arguments to be `None` when it is first constructed
 (see GradientOptimization.__init__ for an example) This is so that it can be declared in the
-LVOCControlMechanism's constructor, before its functions are available for assignment.  LVOCControlMechanism
-assigns the functions and calls for completiion of initialization of allocation_optimization_function in
-its __instantiate_attribute_after_function method.
+LVOCControlMechanism's constructor, before its objective_function is available for assignment. LVOCControlMechanism
+assigns the objective_function (as well as control_signal_search_space that is used by some OptimizationFunctions,
+such as GridSearch), and then calls for completiion of initialization of the allocation_optimization_function in
+its the LVOCControlMechanism's _instantiate_attribute_after_function method.
 COMMENT
 
 .. _LVOCControlMechanism_ControlSignals:
