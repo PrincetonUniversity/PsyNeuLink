@@ -71,7 +71,7 @@ class ConditionGenerator:
         self.ctx = ctx
         self.composition = composition
 
-    def get_condition_struct(self):
+    def get_condition_struct_type(self):
         time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
                                                   self.ctx.int32_ty,
                                                   self.ctx.int32_ty])
@@ -87,23 +87,25 @@ class ConditionGenerator:
         ])
         return structure
 
-    def get_condition_initializer(self, trial = 0):
-        return ((trial, 0, 0),
+    def get_condition_initializer(self):
+        return ((0, 0, 0),
                 tuple([(0,(-1, -1, -1)) for _ in self.composition.c_nodes]))
 
-    def increment_ts(self, builder, cond_ptr, count=(0,0,1)):
+    def bump_ts(self, builder, cond_ptr, count=(0,0,1)):
         ts_ptr = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
         ts = builder.load(ts_ptr)
 
-        # trial, pass, step
+        # run, pass, step
         for idx in range(3):
-            el = builder.extract_value(ts, idx)
-            el = builder.add(el, self.ctx.int32_ty(count[idx]))
+            if idx == 0 or all(v == 0 for v in count[:idx]) == 0:
+                el = builder.extract_value(ts, idx)
+                el = builder.add(el, self.ctx.int32_ty(count[idx]))
+            else:
+                el = self.ctx.int32_ty(0)
             ts = builder.insert_value(ts, el, idx)
 
         builder.store(ts, ts_ptr)
         return builder
-
 
     def ts_compare(self, builder, ts1, ts2, comp):
         assert comp == '<'
@@ -155,11 +157,25 @@ class ConditionGenerator:
         global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
                                                         self.ctx.int32_ty(0)]))
         global_pass = builder.extract_value(global_ts, 1)
+        global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
         node_pass = builder.extract_value(node_ts, 1)
-        return builder.icmp_signed("==", node_pass, global_pass)
+        node_run = builder.extract_value(node_ts, 0)
 
+        pass_eq = builder.icmp_signed("==", node_pass, global_pass)
+        run_eq = builder.icmp_signed("==", node_run, global_run)
+        return builder.and_(pass_eq, run_eq)
+
+    def generate_ran_this_trial(self, builder, cond_ptr, node):
+        global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
+                                                        self.ctx.int32_ty(0)]))
+        global_run = builder.extract_value(global_ts, 0)
+
+        node_ts = self.__get_node_ts(builder, cond_ptr, node)
+        node_run = builder.extract_value(node_ts, 0)
+
+        return builder.icmp_signed("==", node_run, global_run)
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
@@ -176,12 +192,8 @@ class ConditionGenerator:
         elif isinstance(condition, AllHaveRun):
             run_cond = ir.IntType(1)(1)
             array_ptr = builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1)])
-            for idx, _ in enumerate(self.composition.c_nodes):
-                node_runs_ptr = builder.gep(array_ptr, [zero,
-                                            self.ctx.int32_ty(idx),
-                                            self.ctx.int32_ty(0)])
-                node_runs = builder.load(node_runs_ptr)
-                node_ran = builder.icmp_unsigned('>', node_runs, zero)
+            for node in self.composition.c_nodes:
+                node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
         elif isinstance(condition, EveryNCalls):

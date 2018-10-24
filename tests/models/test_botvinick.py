@@ -18,7 +18,7 @@ import pytest
 @pytest.mark.model
 @pytest.mark.benchmark
 @pytest.mark.parametrize("reps", [1, 10, 100])
-@pytest.mark.parametrize("mode", ['Python', 'LLVM', 'LLVMExec'])
+@pytest.mark.parametrize("mode", ['Python', 'LLVM', 'LLVMExec', 'LLVMRun'])
 def test_botvinick_model(benchmark, mode, reps):
     if reps > 1 and not pytest.config.getoption("--stress"):
         benchmark.disabled = True

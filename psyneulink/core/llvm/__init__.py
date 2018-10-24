@@ -8,8 +8,9 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import ctypes
-import os
+from psyneulink.core.globals.utilities import CNodeRole
+
+import copy, ctypes, os
 import sys as _sys
 
 from llvmlite import binding, ir
@@ -98,8 +99,9 @@ class LLVMBinaryFunction:
         return self.c_func(*args, **kwargs)
 
     def wrap_call(self, *pargs):
-        args = zip(self.byref_arg_types, pargs)
-        cargs = [ctypes.cast(ctypes.byref(p), ctypes.POINTER(t)) for t, p in args]
+        cpargs = [ctypes.byref(p) if p is not None else None for p in pargs]
+        args = zip(cpargs, self.byref_arg_types)
+        cargs = [ctypes.cast(p, ctypes.POINTER(t)) for p, t in args]
         self(*tuple(cargs))
 
     # This will be useful for non-native targets
@@ -152,7 +154,7 @@ def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
         return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
     if isinstance(x, ctypes.Array):
-        return [num for num in x]
+        return [_convert_ctype_to_python(num) for num in x]
     if isinstance(x, ctypes.c_double):
         return x.value
     if isinstance(x, float):
@@ -160,6 +162,80 @@ def _convert_ctype_to_python(x):
 
     print(x)
     assert False
+
+class CompExecution:
+
+    def __init__(self, composition):
+        self._composition = composition
+        self.__frozen_vals = None
+
+        # Data
+        c_data = _convert_llvm_ir_to_ctype(self._composition.get_data_struct_type())
+        self.__data_struct = c_data(*self._composition.get_data_initializer())
+
+        # Context
+        c_context = _convert_llvm_ir_to_ctype(self._composition.get_context_struct_type())
+        self.__context_struct = c_context(*self._composition.get_context_initializer())
+
+        # Params
+        c_param = _convert_llvm_ir_to_ctype(self._composition.get_param_struct_type())
+        self.__param_struct = c_param(*self._composition.get_param_initializer())
+    @property
+    def __all_nodes(self):
+        return self._composition.c_nodes + [self._composition.input_CIM, self._composition.output_CIM]
+
+    def extract_node_output(self, node):
+        index = self.__all_nodes.index(node)
+        field = self.__data_struct._fields_[index][0]
+        res_struct = getattr(self.__data_struct, field)
+        return _convert_ctype_to_python(res_struct)
+
+    def insert_node_output(self, node, data):
+        index = self.__all_nodes.index(node)
+        field = self.__data_struct._fields_[index][0]
+        getattr(self.__data_struct, field, data)
+
+    def _get_input_struct(self, inputs):
+        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        # Read provided input data and separate each input state
+        input_data = [[x] for m in origins for x in inputs[m]]
+        c_input = _convert_llvm_ir_to_ctype(self._composition.get_input_struct_type())
+        def tupleize(x):
+            if hasattr(x, '__len__'):
+                return tuple([tupleize(y) for y in x])
+            return x
+
+        return c_input(*tupleize(input_data))
+
+    def freeze_values(self):
+        self.__frozen_vals = copy.deepcopy(self.__data_struct)
+
+    def execute_node(self, node, inputs = None):
+        if inputs is not None:
+            inputs = self._get_input_struct(inputs)
+
+        assert node in self.__all_nodes
+        bin_node = self._composition._get_bin_mechanism(node)
+        bin_node.wrap_call(self.__context_struct, self.__param_struct,
+                           inputs, self.__frozen_vals, self.__data_struct)
+
+    def execute(self, inputs):
+        bin_exec = self._composition._get_bin_execution()
+        inputs = self._get_input_struct(inputs)
+        gen = helpers.ConditionGenerator(None, self._composition)
+        conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
+
+        bin_exec.wrap_call(self.__context_struct, self.__param_struct,
+                           inputs, self.__data_struct, conds)
+
+    def run(self, inputs, runs):
+        bin_run = self._composition._get_bin_run()
+        inputs = self._get_input_struct(inputs)
+        outputs = (bin_run.byref_arg_types[4] * runs)()
+        runs_count = ctypes.c_int(runs)
+        bin_run.wrap_call(self.__context_struct, self.__param_struct,
+                          self.__data_struct, inputs, outputs, runs_count)
+        return _convert_ctype_to_python(outputs)
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:
