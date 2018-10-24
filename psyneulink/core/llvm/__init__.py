@@ -207,6 +207,25 @@ class CompExecution:
 
         return c_input(*tupleize(input_data))
 
+    def _get_run_input_struct(self, inputs, num_input_sets):
+        origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        run_inputs = []
+        # Extract inputs for each trial
+        for i in range(num_input_sets):
+            run_inputs.append([])
+            for m in origins:
+                run_inputs[i] += [[v] for v in inputs[m][i]]
+
+        input_ty = ir.ArrayType(self._composition.get_input_struct_type(),
+                                num_input_sets)
+        c_input = _convert_llvm_ir_to_ctype(input_ty)
+        def tupleize(x):
+            if hasattr(x, '__len__'):
+                return tuple([tupleize(y) for y in x])
+            return x
+
+        return c_input(*tupleize(run_inputs))
+
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self.__data_struct)
 
@@ -228,13 +247,15 @@ class CompExecution:
         bin_exec.wrap_call(self.__context_struct, self.__param_struct,
                            inputs, self.__data_struct, conds)
 
-    def run(self, inputs, runs):
+    def run(self, inputs, runs, num_input_sets):
         bin_run = self._composition._get_bin_run()
-        inputs = self._get_input_struct(inputs)
+        inputs = self._get_run_input_struct(inputs, num_input_sets)
         outputs = (bin_run.byref_arg_types[4] * runs)()
         runs_count = ctypes.c_int(runs)
+        input_count = ctypes.c_int(num_input_sets)
         bin_run.wrap_call(self.__context_struct, self.__param_struct,
-                          self.__data_struct, inputs, outputs, runs_count)
+                          self.__data_struct, inputs, outputs, runs_count,
+                          input_count)
         return _convert_ctype_to_python(outputs)
 
 # Initialize builtins

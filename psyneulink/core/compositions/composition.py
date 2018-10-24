@@ -2716,9 +2716,8 @@ class Composition(Composition_Base):
             for node in self.c_nodes:
                 self._get_bin_mechanism(node)
             self._get_bin_execution()
-            # We only support single input, unwrap the structure
-            uwinputs = {k:v[0] for k, v in inputs.items()}
-            return self.__execution.run(uwinputs, num_trials)
+            self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
+            return self.results
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
@@ -3161,10 +3160,11 @@ class Composition(Composition_Base):
                 self.get_data_struct_type().as_pointer(),
                 self.get_input_struct_type().as_pointer(),
                 self.get_output_struct_type().as_pointer(),
+                ctx.int32_ty.as_pointer(),
                 ctx.int32_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, data, data_in, data_out, runs_ptr = llvm_func.args
+            context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3199,14 +3199,17 @@ class Composition(Composition_Base):
             # Generate loop body
             builder.position_at_end(loop_body)
 
+            # Current iteration
+            iters = builder.load(iter_ptr);
+
+            # Get the right input stimulus
+            input_idx = builder.urem(iters, builder.load(inputs_ptr))
+            data_in_ptr = builder.gep(data_in, [input_idx])
 
             # Call execution
             exec_f_name = self._get_bin_execution().name
             exec_f = ctx.get_llvm_function(exec_f_name)
-            builder.call(exec_f, [context, params, data_in, data, cond])
-
-            # Current iteration
-            iters = builder.load(iter_ptr);
+            builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
             # Extract output_CIM result
             idx = self.__get_mech_index(self.output_CIM)
