@@ -59,7 +59,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 allocation_optimization_function=pnl.GradientOptimization(
                                         convergence_criterion=pnl.VALUE,
                                         convergence_threshold=0.001,
-                                        update_rate=1,
+                                        step_size=1,
                                         annealing_function= lambda x,y : x / np.sqrt(y),
                                         # direction=pnl.ASCENT
                                 ),

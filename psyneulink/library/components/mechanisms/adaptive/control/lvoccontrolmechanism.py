@@ -300,7 +300,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
-    OBJECTIVE_FUNCTION, UPDATE_FUNCTION, SEARCH_SPACE
+    OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
@@ -520,7 +520,7 @@ class LVOCControlMechanism(ControlMechanism):
         returns an `allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>` (see
         `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>` for additional details).
 
-    update_rate : int or float
+    step_size : int or float
         determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified
         in each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
 
@@ -809,7 +809,6 @@ class LVOCControlMechanism(ControlMechanism):
         elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
             alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
             alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-            alloc_opt_fct.init_args[UPDATE_FUNCTION] = self.prediction_vector.update_vector
             alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
             alloc_opt_fct.init_args[OWNER] = self
             alloc_opt_fct._deferred_init()
@@ -1081,7 +1080,7 @@ class LVOCControlMechanism(ControlMechanism):
             self.vector = np.zeros(i)
 
         def update_vector(self, variable, feature_values=None):
-            '''Update vector with flattened arrays of values returned from `compute_terms
+            '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
             Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `prediction_vector
@@ -1288,7 +1287,7 @@ class LVOCControlMechanism(ControlMechanism):
     #                 gradient[i] += np.sum(cost_function_derivative(control_signal_value) * cost_weights[i])
     #
     #             # Update control_signal_value with gradient
-    #             control_signal_values[i] = control_signal_value + self.update_rate * gradient[i]
+    #             control_signal_values[i] = control_signal_value + self.step_size * gradient[i]
     #
     #             # Update cost based on new control_signal_value
     #             costs[i] = control_signals[i].intensity_cost_function(control_signal_value)
