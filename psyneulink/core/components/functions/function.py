@@ -12014,6 +12014,22 @@ class GradientOptimization(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GradientOptimization.variable>` that yields the optimal value of
+        `objective_function <GridSearch.objective_function>`, and possibly all samples
+        of `variable <GridSearch.variable>` evaluated and their corresponding values.
+
+        Optimal value is defined by `direction <GradientOptimization.direction>`:
+        - if *ASCENT*, returns greatest value
+        - if *DESCENT*, returns least value
+        '''
+        last_variable, all_variables, all_values = super().function(variable=variable, params=params, context=context)
+        return last_variable
+
     def _follow_gradient(self, variable, sample_num):
 
         # Update step_size
@@ -12231,8 +12247,10 @@ class GridSearch(OptimizationFunction):
         if self.save_samples:
             ret_val[1] = all_variables
         if self.save_values:
-            ret_val[1] = all_values
-        return tuple(ret_val)
+            ret_val[2] = all_values
+        # return tuple(ret_val)
+        return opt_variable
+
 
     def traverse_grid(self, variable, sample_num):
         # # TEST PRINT:
