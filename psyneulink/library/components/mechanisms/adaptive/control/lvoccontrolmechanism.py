@@ -201,13 +201,8 @@ the `GradientOptimization` Function.  A custom function can be used, however it 
 
     - It must accept a keyword argument **objective_function**, that is passed the LVOCControlMechanism's
       `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method;  this is
-      the function used `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`
+      the function used by `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`
       to evaluate `EVC <LVOCControlMechanism_EVC>` during its optimization process.
-
-    - It must accept a keyword argument **update_function**, that is passed the `update_vector
-      <LVOCControlMechanism.PredictionVector.update_vector>` method of the LVOCControlMechanism's
-      `PredictionVector`; this is used to update the parameters of the `prediction_vector
-      <LVOCControlMechanism.PredictionVector.vector>` during the optimizaton process.
 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
