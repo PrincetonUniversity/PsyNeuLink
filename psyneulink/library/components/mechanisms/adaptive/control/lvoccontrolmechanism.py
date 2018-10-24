@@ -517,26 +517,6 @@ class LVOCControlMechanism(ControlMechanism):
         returns an `allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>` (see
         `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>` for additional details).
 
-    step_size : int or float
-        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified
-        in each iteration of the `gradient_ascent <LVOCControlMechanism.gradient_ascent>` method.
-
-    convergence_criterion : LVOC or CONTROL_SIGNALS
-        determines the measure used to terminate execution of the `gradient_ascent
-        <LVOCControlMechanism.gradient_ascent>` method;  when the change in its value from one iteration of the
-        method to the next falls below `convergence_threshold <LVOCControlMechanism.convergence_threshold>`,
-        the method is terminated and an `allocation_policy <LVOCControlMechanism.allocation_policy>` is returned.
-
-    convergence_threshold : int or float : default 0.001
-        determines the threhsold of change in the value of the `convergence_criterion` across iterations of
-        `gradient_ascent <LVOCControlMechanism.gradient_ascent>`, below which the method is terminated and an
-        `allocation_policy <LVOCControlMechanism.allocation_policy>` is returned.
-
-    max_iterations : int
-        determines the maximum number of iterations `gradient_ascent <LVOCControlMechanism.gradient_ascent>`
-        method is allowed to execute; if exceeded, a warning is issued, and the method returns the
-        last `allocation_policy <LVOCControlMechanism.allocation_policy>` evaluated.
-
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal`, that
         is then converted by the ControlSignal's `function <ControlSignal.function>` to its `value
@@ -544,6 +524,17 @@ class LVOCControlMechanism(ControlMechanism):
         array is a 1d array (usually containing a scalar) that specifies an `allocation` for the corresponding
         ControlSignal, and the number of items equals the number of ControlSignals in the LVOCControlMechanism's
         `control_signals` attribute.
+
+    saved_samples : list
+        contains all values of `allocation_policy <LVOCControlMechanism.allocation_policy>` sampled by
+        `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` if its
+        `save_samples <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
+
+    saved_values : list
+        contains all values of `EVC <LVOCControlMechanism_EVC>` predicted by the corresponding samples of
+        `allocation_policy <LVOCControlMechanism.allocation_policy>` tested by `allocation_optimization_function
+        <LVOCControlMechanism.allocation_optimization_function>` if its `save_values <OptimizationFunction.save_values>`
+        parameter is `True`;  otherwise list is empty.
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the LVOCControlMechanism's `ControlSignals <LVOCControlMechanism_ControlSignals>`, including any that it inherited
@@ -849,8 +840,8 @@ class LVOCControlMechanism(ControlMechanism):
         # TEST PRINT END
 
         # Compute allocation_policy using gradient_ascent
-        allocation_policy = self.allocation_optimization_function.function(control_signal_variables)
-        # allocation_policy, all_vars, all_vals = self.allocation_optimization_function.function(control_signal_variables)
+        allocation_policy, self.saved_samples, self.saved_values = \
+            self.allocation_optimization_function.function(control_signal_variables)
 
         # TEST PRINT
         print ('\nEVC: ', allocation_policy[0],'\n---------------------------')

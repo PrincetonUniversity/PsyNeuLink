@@ -11978,6 +11978,8 @@ class GradientOptimization(OptimizationFunction):
 
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
+        self._return_samples = save_samples
+        self._return_values = save_values
 
         # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
         from autograd import grad
@@ -12027,8 +12029,14 @@ class GradientOptimization(OptimizationFunction):
         - if *ASCENT*, returns greatest value
         - if *DESCENT*, returns least value
         '''
-        last_variable, all_variables, all_values = super().function(variable=variable, params=params, context=context)
-        return last_variable
+        return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        return_all_samples = return_all_values = []
+        if self._return_samples:
+            return_all_samples = all_samples
+        if self._return_values:
+            return_all_values = all_values
+        # return last_variable
+        return return_optimal, return_all_samples, return_all_values
 
     def _follow_gradient(self, variable, sample_num):
 
@@ -12206,6 +12214,7 @@ class GridSearch(OptimizationFunction):
 
         search_function = self.traverse_grid
         search_termination_function = self.grid_complete
+        self._return_values = save_values
 
         if direction is MAXIMIZE:
             self.direction = 1
@@ -12240,17 +12249,16 @@ class GridSearch(OptimizationFunction):
         - if *MAXIMIZE*, returns greatest value
         - if *MINIMIZE*, returns least value
         '''
-        last_variable, all_variables, all_values = super().function(variable=variable, params=params, context=context)
+        last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
 
-        opt_variable = all_variables[all_values.index(max(all_values))]
-        ret_val = [opt_variable, None, None]
-        if self.save_samples:
-            ret_val[1] = all_variables
-        if self.save_values:
-            ret_val[2] = all_values
-        # return tuple(ret_val)
-        return opt_variable
+        return_optimal = all_samples[all_values.index(max(all_values))]
 
+        return_all_samples = return_all_values = []
+        # if self._return_samples:
+        #     return_all_samples = all_samples
+        if self._return_values:
+            return_all_values = all_values
+        return return_optimal, return_all_samples, return_all_values
 
     def traverse_grid(self, variable, sample_num):
         # # TEST PRINT:
