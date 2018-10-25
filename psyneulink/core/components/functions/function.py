@@ -262,7 +262,7 @@ __all__ = [
     'MAXIMIZE', 'max_vs_avg', 'max_vs_next', 'MINIMIZE', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
-    'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
+    'NormalDist', 'ObjectiveFunction', 'OptimizationFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
     'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
@@ -11745,7 +11745,7 @@ class OptimizationFunction(Function_Base):
         if objective_function is None:
             raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
                                 "when {} is \'None\' (i.e., has not been assigned by user)".
-                                format(self.__class__.__name, repr('objective_function')))
+                                format(self.__class__.__name__, repr('objective_function')))
 
         # IMPLEMENTATION NOTE:
         # If these are not used by the sublcass, it should

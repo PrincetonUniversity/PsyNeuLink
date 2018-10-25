@@ -66,7 +66,8 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 #         # direction=pnl.ASCENT
                                 # ),
 
-                                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                                # function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                                function=pnl.OptimizationFunction,
 
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}
