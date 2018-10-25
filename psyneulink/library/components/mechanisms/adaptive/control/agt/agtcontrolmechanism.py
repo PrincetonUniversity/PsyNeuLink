@@ -152,7 +152,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
+from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -286,7 +286,7 @@ class AGTControlMechanism(ControlMechanism):
 
     componentName = "AGTControlMechanism"
 
-    initMethod = INIT__EXECUTE__METHOD_ONLY
+    initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

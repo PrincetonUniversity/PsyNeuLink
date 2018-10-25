@@ -553,6 +553,8 @@ class LVOCControlMechanism(ControlMechanism):
     """
 
     componentType = LVOCCONTROLMECHANISM
+    # initMethod = INIT_FULL_EXECUTE_METHOD
+    initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -670,9 +672,9 @@ class LVOCControlMechanism(ControlMechanism):
 
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        self._instantiate_learning_function()
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #     super()._instantiate_attributes_before_function(function=function, context=context)
+    #     self._instantiate_learning_function()
 
     tc.typecheck
     def add_features(self, feature_predictors):
@@ -777,30 +779,48 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    def _instantiate_function(self, function, function_params, context=None):
+    # def _instantiate_function(self, function, function_params, context=None):
+    #     self.feature_values = [i.value for i in self.input_states[1:]]
+    #
+    #     self.prediction_vector = self.PredictionVector(self.feature_values,
+    #                                                    self.control_signals,
+    #                                                    self.prediction_terms)
+    #
+    #     # Assign parameters to function that rely on LVOCControlMechanism
+    #     if isinstance(function, type):
+    #         function = function(default_variable = self.control_signal_variables,
+    #                             objective_function = self.compute_lvoc_from_control_signals,
+    #                             update_function = self.prediction_vector.update_vector,
+    #                             search_space = self._get_control_signal_search_space(),
+    #                             owner = self)
+    #     elif function.context.initialization_status == ContextFlags.DEFERRED_INIT:
+    #         function.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
+    #         function.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
+    #         function.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
+    #         function.init_args[OWNER] = self
+    #         function._deferred_init()
+    #
+    #     super()._instantiate_function(functon=function, function_params=function_params, context=context)
+    #
+    #     self.prediction_weights = np.zeros_like(self.learning_function.value)
+
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        self.feature_values = np.array([i.value for i in self.input_states[1:]])
+        self.control_signal_variables = np.array([c.variable for c in self.control_signals])
 
         self.prediction_vector = self.PredictionVector(self.feature_values,
                                                        self.control_signals,
                                                        self.prediction_terms)
 
         # Assign parameters to function that rely on LVOCControlMechanism
-        if isinstance(function, type):
-            function = function(default_variable = self.control_signal_variables,
-                                objective_function = self.compute_lvoc_from_control_signals,
-                                update_function = self.prediction_vector.update_vector,
-                                search_space = self._get_control_signal_search_space(),
-                                owner = self)
-        elif function.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            function.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
-            function.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-            function.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
-            function.init_args[OWNER] = self
-            function._deferred_init()
+        self.function_object.instance_defaults.variable = self.control_signal_variables
+        self.function_object.objective_function = self.compute_lvoc_from_control_signals
+        self.function_object.search_space = self._get_control_signal_search_space()
 
-        super()._instantiate_function(functon=function, function_params=function_params, context=context)
-
-        self.prediction_weights = np.zeros_like(self.function_object.value)
-
+        self.prediction_weights = np.zeros_like(self.learning_function.value)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -845,7 +865,7 @@ class LVOCControlMechanism(ControlMechanism):
         self.feature_values = np.array(np.array(variable[1:]).tolist())
 
         # Instantiate PredictionVector and related attributes
-        if context is ContextFlags.INSTANTIATE:
+        if self.context.initialization_status is ContextFlags.INITIALIZING:
             self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self._previous_cost = np.zeros_like(obj_mech_outcome)
 
