@@ -56,7 +56,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
 
-                                # function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
+                                learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
 
                                 # allocation_optimization_function=pnl.GradientOptimization(
                                 #         convergence_criterion=pnl.VALUE,
@@ -66,9 +66,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 #         # direction=pnl.ASCENT
                                 # ),
 
-                                allocation_optimization_function=pnl.GridSearch(
-                                        direction=pnl.MAXIMIZE
-                                ),
+                                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
 
                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
                                 #                                    ('color_control', word_task)]}

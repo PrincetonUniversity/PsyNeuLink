@@ -564,7 +564,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
-        function = BayesGLM
+        function = GradientOptimization
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -576,9 +576,9 @@ class LVOCControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 function=BayesGLM,
+                 learning_function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
-                 allocation_optimization_function=GradientOptimization,
+                 function=GradientOptimization,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -604,7 +604,7 @@ class LVOCControlMechanism(ControlMechanism):
                     raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
                                                                                         repr(i)))
 
-        self.allocation_optimization_function = allocation_optimization_function
+        self.learning_function = learning_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
@@ -672,6 +672,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
+        self._instantiate_learning_function()
 
     tc.typecheck
     def add_features(self, feature_predictors):
@@ -776,29 +777,28 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        super()._instantiate_attributes_after_function(context=context)
+    def _instantiate_function(self, function, function_params, context=None):
 
         self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
         self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
         self.prediction_weights = np.zeros_like(self.function_object.value)
 
-        # Assign parameters to allocation_optimization_function that rely on LVOCControlMechanism
-        alloc_opt_fct = self.allocation_optimization_function
-        if isinstance(self.allocation_optimization_function, type):
-            self.allocation_optimization_function = self.allocation_optimization_function(
-                                                            default_variable = self.control_signal_variables,
-                                                            objective_function = self.compute_lvoc_from_control_signals,
-                                                            update_function = self.prediction_vector.update_vector,
-                                                            search_space = self._get_control_signal_search_space(),
-                                                            owner = self)
-        elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
-            alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
-            alloc_opt_fct.init_args[OWNER] = self
-            alloc_opt_fct._deferred_init()
+        # Assign parameters to function that rely on LVOCControlMechanism
+        if isinstance(function, type):
+            function = function(default_variable = self.control_signal_variables,
+                                objective_function = self.compute_lvoc_from_control_signals,
+                                update_function = self.prediction_vector.update_vector,
+                                search_space = self._get_control_signal_search_space(),
+                                owner = self)
+        elif function.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            function.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
+            function.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
+            function.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
+            function.init_args[OWNER] = self
+            function._deferred_init()
+
+        super()._instantiate_function(functon=function, function_params=function_params, context=context)
+
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
@@ -822,47 +822,19 @@ class LVOCControlMechanism(ControlMechanism):
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        # Get sample of weights
-        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        self.prediction_weights = super(ControlMechanism, self)._execute(variable=variable,
-                                                                         runtime_params=runtime_params,
-                                                                         context=context)
 
-        # Pass current variables of control_signals, or defaults if first trial
-        control_signal_variables = np.array([c.variable if c.variable is not None
-                                             else c.instance_defaults.variable
-                                             for c in self.control_signals])
-
-        # TEST PRINT
-        print ('\nOUTCOME: ', self.input_state.value)
-        print ('prediction_weights: ', self.prediction_weights)
-        # TEST PRINT END
-
-        # Compute allocation_policy using gradient_ascent
-        allocation_policy, self.saved_samples, self.saved_values = \
-            self.allocation_optimization_function.function(control_signal_variables)
-
-        # TEST PRINT
-        print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
-        # TEST PRINT END
-
-        return allocation_policy
-
-    def _parse_function_variable(self, variable, context=None):
-        '''Update current prediction_vector, and return prediction vector and outcome from previous trial
-
-        Updates prediction_vector for current trial, and buffers this in _prediction_buffer;
-        also buffers costs of control_signals used in previous trial ]in previous_costs.
-
-        Computes outcome for previous trial by subtracting costs of control_signals from outcome received
-        from objective_mechanism, both of which reflect values assigned in previous trial
-        (since Projection from objective_mechanism is a feedback Projection, the value received from it corresponds
-        to the one computed on the previous trial).
-        # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
-
-        Returns prediction_vector and outcome from previous trial,
-        used by function to update prediction_weights that will be used to predict the EVC for the current trial.
-        '''
+        # Updates prediction_vector for current trial, and buffers this in _prediction_buffer;
+        # also buffers costs of control_signals used in previous trial ]in previous_costs.
+        #
+        # Computes outcome for previous trial by subtracting costs of control_signals from outcome received
+        # from objective_mechanism, both of which reflect values assigned in previous trial
+        # (since Projection from objective_mechanism is a feedback Projection, the value received from it corresponds
+        # to the one computed on the previous trial).
+        # # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
+        #
+        # Returns prediction_vector and outcome from previous trial,
+        # used by function to update prediction_weights that will be used to predict the EVC for the current trial.
+        # '''
 
         # This is the value received from the objective_mechanism's OUTCOME OutputState:
         obj_mech_outcome = variable[0]
@@ -885,7 +857,38 @@ class LVOCControlMechanism(ControlMechanism):
         # costs are assigned as negative in prediction_vector.update, so add them here
         outcome = obj_mech_outcome + self._previous_cost
 
-        return [self._prediction_buffer.popleft(), outcome]
+
+        # Get sample of weights
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        self.prediction_weights = self.learning_function(self._prediction_buffer.popleft(), outcome)
+
+        # Pass current variables of control_signals, or defaults if first trial
+        control_signal_variables = np.array([c.variable if c.variable is not None
+                                             else c.instance_defaults.variable
+                                             for c in self.control_signals])
+
+        # TEST PRINT
+        print ('\nOUTCOME: ', self.input_state.value)
+        print ('prediction_weights: ', self.prediction_weights)
+        # TEST PRINT END
+
+        # Compute allocation_policy using gradient_ascent
+        allocation_policy, self.saved_samples, self.saved_values = super(ControlMechanism, self)._execute(
+                                                                                        variable=variable,
+                                                                                        runtime_params=runtime_params,
+                                                                                        context=context)
+
+        # TEST PRINT
+        print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
+        # TEST PRINT END
+
+        return allocation_policy
+
+    # def _parse_function_variable(self, variable, context=None):
+    #
+    #     (control_signal_variables)
+
+
 
     def _get_control_signal_search_space(self):
 
