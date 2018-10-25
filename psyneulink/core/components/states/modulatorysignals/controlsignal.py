@@ -847,9 +847,7 @@ class ControlSignal(ModulatorySignal):
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
-    # MODIFIED 9/18/18 NEW:
     def _instantiate_cost_attributes(self):
-        # FIX: MOVE TO ITS OWN METHOD
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -891,7 +889,6 @@ class ControlSignal(ModulatorySignal):
             self.intensity_change = [0]
 
     def _initialize_cost_attributes(self):
-        # FIX: MOVE TO ITS OWN METHOD
         if self.cost_options:
             # Default cost params
             if self.context.initialization_status != ContextFlags.DEFERRED_INIT:

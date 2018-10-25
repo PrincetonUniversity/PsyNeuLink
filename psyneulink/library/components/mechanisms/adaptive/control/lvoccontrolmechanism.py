@@ -851,7 +851,7 @@ class LVOCControlMechanism(ControlMechanism):
     def _parse_function_variable(self, variable, context=None):
         '''Update current prediction_vector, and return prediction vector and outcome from previous trial
 
-        Updates prediction_vector for current trial, and buffers this in prediction_buffer;
+        Updates prediction_vector for current trial, and buffers this in _prediction_buffer;
         also buffers costs of control_signals used in previous trial ]in previous_costs.
 
         Computes outcome for previous trial by subtracting costs of control_signals from outcome received
@@ -872,23 +872,20 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Instantiate PredictionVector and related attributes
         if context is ContextFlags.INSTANTIATE:
-            self.control_signal_variables = [c.instance_defaults.variable for c in self.control_signals]
-            self.prediction_vector = self.PredictionVector(self.feature_values,
-                                                           self.control_signal_variables,
-                                                           self.prediction_terms)
-            self.prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
-            self.previous_cost = np.zeros_like(obj_mech_outcome)
+            self._instantiate_prediction_vector()
+            self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
+            self._previous_cost = np.zeros_like(obj_mech_outcome)
 
         # Update values
         else:
             self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
-            self.prediction_buffer.append(self.prediction_vector.vector)
-            self.previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
+            self._prediction_buffer.append(self.prediction_vector.vector)
+            self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
 
         # costs are assigned as negative in prediction_vector.update, so add them here
-        outcome = obj_mech_outcome + self.previous_cost
+        outcome = obj_mech_outcome + self._previous_cost
 
-        return [self.prediction_buffer.popleft(), outcome]
+        return [self._prediction_buffer.popleft(), outcome]
 
     def _get_control_signal_search_space(self):
 
@@ -908,6 +905,31 @@ class LVOCControlMechanism(ControlMechanism):
 
         return self.control_signal_search_space.reshape(re_shape)
 
+    def _instantiate_prediction_vector(self):
+
+        # Get variable for control_signals specified in contructor
+        self.control_signal_variables = []
+        for c in self.control_signals:
+            if isinstance(c, ControlSignal):
+                try:
+                    v = c.variable
+                except:
+                    v = c.instance_defaults.variable
+            elif isinstance(c, type):
+                if issubclass(c, ControlSignal):
+                    v = c.class_defaults.variable
+                else:  # If a class other than ControlSignal was specified, typecheck should have found it
+                    raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
+                                    format(repr(CONTROL_SIGNALS), self.name, c))
+            else:
+                state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
+                v = state_spec_dict[VARIABLE]
+                v = v or ControlSignal.class_defaults.variable
+            self.control_signal_variables.append(v)
+
+        self.prediction_vector = self.PredictionVector(self.feature_values,
+                                                       self.control_signal_variables,
+                                                       self.prediction_terms)
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
