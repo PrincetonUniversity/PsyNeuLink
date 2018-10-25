@@ -824,6 +824,7 @@ class Process(Process_Base):
 
     class Params(Process_Base.Params):
         variable = None
+        input = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -2232,12 +2233,12 @@ class Process(Process_Base):
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-        self.input = self._assign_input_values(input=input, execution_id=execution_id, context=context)
+        variable = self._assign_input_values(input=input, execution_id=execution_id, context=context)
 
-        self._check_args(self.input, runtime_params)
+        self._check_args(variable, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
-        variable = self.input
+        self.parameters.input.set(variable, execution_id)
 
         # Generate header and report input
         if report_output:
@@ -2289,24 +2290,26 @@ class Process(Process_Base):
         # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
         #
         if target is not None:
-            self.target = np.atleast_2d(target)
+            target = np.atleast_2d(target)
+        else:
+            target = self.target
 
         # If targets were specified as a function in call to Run() or in System (and assigned to self.targets),
         #  call the function now (i.e., after execution of the pathways, but before learning)
         #  and assign value to self.target (that will be used below to assign values to target_input_states)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        elif isinstance(self.targets, function_type):
-            self.target = self.targets()
+        if isinstance(target, function_type):
+            target = target()
 
         # If target itself is callable, call that now
-        if callable(self.target):
-            self.target = self.target()
+        if callable(target):
+            target = target()
 
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value.set(self.target[i], execution_id, override=True)
+            target_input_state.parameters.value.set(target[i], execution_id, override=True)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
