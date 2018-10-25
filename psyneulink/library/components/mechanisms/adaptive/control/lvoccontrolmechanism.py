@@ -779,9 +779,9 @@ class LVOCControlMechanism(ControlMechanism):
 
     def _instantiate_function(self, function, function_params, context=None):
 
-        self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
-        self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
-        self.prediction_weights = np.zeros_like(self.function_object.value)
+        self.prediction_vector = self.PredictionVector(self.feature_values,
+                                                       self.control_signals,
+                                                       self.prediction_terms)
 
         # Assign parameters to function that rely on LVOCControlMechanism
         if isinstance(function, type):
@@ -798,6 +798,8 @@ class LVOCControlMechanism(ControlMechanism):
             function._deferred_init()
 
         super()._instantiate_function(functon=function, function_params=function_params, context=context)
+
+        self.prediction_weights = np.zeros_like(self.function_object.value)
 
 
     def _execute(self, variable=None, runtime_params=None, context=None):
@@ -844,7 +846,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Instantiate PredictionVector and related attributes
         if context is ContextFlags.INSTANTIATE:
-            self._instantiate_prediction_vector()
             self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
             self._previous_cost = np.zeros_like(obj_mech_outcome)
 
@@ -908,32 +909,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         return self.control_signal_search_space.reshape(re_shape)
 
-    def _instantiate_prediction_vector(self):
-
-        # Get variable for control_signals specified in contructor
-        self.control_signal_variables = []
-        for c in self.control_signals:
-            if isinstance(c, ControlSignal):
-                try:
-                    v = c.variable
-                except:
-                    v = c.instance_defaults.variable
-            elif isinstance(c, type):
-                if issubclass(c, ControlSignal):
-                    v = c.class_defaults.variable
-                else:  # If a class other than ControlSignal was specified, typecheck should have found it
-                    raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
-                                    format(repr(CONTROL_SIGNALS), self.name, c))
-            else:
-                state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
-                v = state_spec_dict[VARIABLE]
-                v = v or ControlSignal.class_defaults.variable
-            self.control_signal_variables.append(v)
-
-        self.prediction_vector = self.PredictionVector(self.feature_values,
-                                                       self.control_signal_variables,
-                                                       self.prediction_terms)
-
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
 
@@ -990,7 +965,29 @@ class LVOCControlMechanism(ControlMechanism):
 
         '''
 
-        def __init__(self, feature_values, control_signal_variables, specified_terms):
+        def __init__(self, feature_values, control_signals, specified_terms):
+
+            # Get variable for control_signals specified in contructor
+            control_signal_variables = []
+            for c in control_signals:
+                if isinstance(c, ControlSignal):
+                    try:
+                        v = c.variable
+                    except:
+                        v = c.instance_defaults.variable
+                elif isinstance(c, type):
+                    if issubclass(c, ControlSignal):
+                        v = c.class_defaults.variable
+                    else:  # If a class other than ControlSignal was specified, typecheck should have found it
+                        raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
+                                        format(repr(CONTROL_SIGNALS), self.name, c))
+                else:
+                    state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
+                    v = state_spec_dict[VARIABLE]
+                    v = v or ControlSignal.class_defaults.variable
+                control_signal_variables.append(v)
+            self.control_signal_functions = [c.function for c in control_signals]
+            self.compute_costs = [c._compute_costs for c in control_signals]
 
             def get_intrxn_labels(x):
                 return list([s for s in powerset(x) if len(s)>1])
