@@ -77,7 +77,7 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
 
         print(type(t))
-        assert(False)
+        assert False
 
 def _find_llvm_function(name, mods = _all_modules):
     f = None
