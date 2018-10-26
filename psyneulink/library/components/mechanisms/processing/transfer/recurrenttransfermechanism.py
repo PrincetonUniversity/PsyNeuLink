@@ -1334,13 +1334,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         '''
         return self.output_state
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         input_type_list = []
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
         assert len(self.input_states) == 1
         for state in self.input_states:
-            s_type = state.get_input_struct_type()
+            s_type = ctx.get_input_struct_type(state)
             if isinstance(s_type, ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
@@ -1383,7 +1383,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return tuple([transfer_init, projection_init, tuple(retval_init)])
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        real_input_type = super().get_input_struct_type()
+        real_input_type = super()._get_input_struct_type(ctx)
         real_in = builder.alloca(real_input_type, 1)
         old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
 

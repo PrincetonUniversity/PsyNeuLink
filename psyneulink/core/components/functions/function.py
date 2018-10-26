@@ -903,11 +903,6 @@ class Function_Base(Function):
             return x if x is not None else tuple()
         return tupleize(self.get_params())
 
-    def get_input_struct_type(self):
-        default_var = self.instance_defaults.variable
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_var)
-
     def get_output_struct_type(self):
         default_val = self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2416,13 +2411,12 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
         #        It should just pass through to modifiers, which matches what
         #        single element 2d array does
         default_var = np.atleast_2d(self.instance_defaults.variable)
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_var)
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_param_ids(self):
         return SCALE, OFFSET, EXPONENTS
@@ -3239,7 +3233,7 @@ class Identity(
 
         return variable
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self,ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -3249,17 +3243,17 @@ class Identity(
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
                 variable = tuple(variable)
-#        assert all(type(x) == type(t[0]) for x in t)
-            with pnlvm.LLVMBuilderContext() as ctx:
-                return ctx.convert_python_struct_to_llvm_ir(variable)
-        return super().get_input_struct_type()
+
+            return ctx.convert_python_struct_to_llvm_ir(variable)
+        return ctx.get_input_struct_type(super())
 
     def get_output_struct_type(self):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            return self.get_input_struct_type()
+            with pnlvm.LLVMBuilderContext() as ctx:
+                return ctx.get_input_struct_type(self)
         return super().get_output_struct_type()
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
@@ -3408,13 +3402,13 @@ class InterfaceStateMap(InterfaceFunction):
         # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its instance_defaults shape
+        #       does not update its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
             return self.owner.owner.function_object.get_output_struct_type()
-        return super().get_input_struct_type()
+        return super()._get_input_struct_type()
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         index = self.corresponding_input_state.position_in_mechanism

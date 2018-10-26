@@ -69,6 +69,13 @@ class LLVMBuilderContext:
             return decl_f
         return f
 
+    def get_input_struct_type(self, component):
+        if hasattr(component, '_get_input_struct_type'):
+            return component._get_input_struct_type(self)
+
+        default_var = component.instance_defaults.variable
+        return self.convert_python_struct_to_llvm_ir(default_var)
+
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             assert all(type(x) == type(t[0]) for x in t)

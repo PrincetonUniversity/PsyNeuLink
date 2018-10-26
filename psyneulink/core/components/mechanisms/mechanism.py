@@ -2573,18 +2573,16 @@ class Mechanism_Base(Mechanism):
             output_type_list.append(state.get_output_struct_type())
         return ir.LiteralStructType(output_type_list)
 
-
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         input_type_list = []
         for state in self.input_states:
-            input_type_list.append(state.get_input_struct_type())
+            input_type_list.append(ctx.get_input_struct_type(state))
         for state in self.parameter_states:
             state_input_type_list = []
             for proj in state.mod_afferents:
                 state_input_type_list.append(proj.get_output_struct_type())
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
-
 
     def get_param_initializer(self):
         input_param_init_list = []

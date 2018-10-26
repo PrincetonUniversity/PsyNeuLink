@@ -199,7 +199,7 @@ class CompExecution:
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
         # Read provided input data and separate each input state
         input_data = [[x] for m in origins for x in inputs[m]]
-        c_input = _convert_llvm_ir_to_ctype(self._composition.get_input_struct_type())
+        c_input = _convert_llvm_ir_to_ctype(ctx.get_input_struct_type(self._composition))
         def tupleize(x):
             if hasattr(x, '__len__'):
                 return tuple([tupleize(y) for y in x])
@@ -216,7 +216,7 @@ class CompExecution:
             for m in origins:
                 run_inputs[i] += [[v] for v in inputs[m][i]]
 
-        input_ty = ir.ArrayType(self._composition.get_input_struct_type(),
+        input_ty = ir.ArrayType(ctx.get_input_struct_type(self._composition),
                                 num_input_sets)
         c_input = _convert_llvm_ir_to_ctype(input_ty)
         def tupleize(x):
