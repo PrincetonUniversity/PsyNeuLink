@@ -262,7 +262,7 @@ __all__ = [
     'MAXIMIZE', 'max_vs_avg', 'max_vs_next', 'MINIMIZE', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
-    'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
+    'NormalDist', 'ObjectiveFunction', 'OptimizationFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
     'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
@@ -11729,11 +11729,15 @@ class OptimizationFunction(Function_Base):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
+                 # objective_function:tc.optional(is_function_type)=None,
                  objective_function:tc.optional(is_function_type)=None,
-                 search_function:tc.optional(is_function_type)=None,
                  # search_space:tc.optional(tc.any(list,np.ndarray))=None,
+                 # search_function:tc.optional(is_function_type)=None,
+                 search_function:is_function_type=lambda x:x,
                  search_space=None,
-                 search_termination_function:tc.optional(is_function_type)=None,
+                 # search_space:tc.optional(list, np.ndarray)=[0],
+                 # search_termination_function:tc.optional(is_function_type)=None,
+                 search_termination_function:is_function_type=lambda x,y,z:True,
                  save_samples:tc.optional(bool)=False,
                  save_values:tc.optional(bool)=False,
                  max_iterations:tc.optional(int)=None,
@@ -11742,25 +11746,42 @@ class OptimizationFunction(Function_Base):
                  prefs=None,
                  context=None):
 
-        if objective_function is None:
-            raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
-                                "when {} is \'None\' (i.e., has not been assigned by user)".
-                                format(self.__class__.__name__, repr('objective_function')))
-
-        # IMPLEMENTATION NOTE:
-        # If these are not used by the sublcass, it should
-        if None in {search_function, search_termination_function} or search_space is None:
-            raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, and {}".
-                                format(self.__class__.__name__,
-                                       repr('search_function'),
-                                       repr('search_space'),
-                                       repr('search_termination_function')))
+        # # MODIFIED 10/25/18 OLD:
+        # if objective_function is None:
+        #     raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
+        #                         "when {} is \'None\' (i.e., has not been assigned by user)".
+        #                         format(self.__class__.__name__, repr('objective_function')))
+        #
+        # # IMPLEMENTATION NOTE:
+        # # If these are not used by the sublcass, it should
+        # if None in {search_function, search_termination_function} or search_space is None:
+        #     raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, and {}".
+        #                         format(self.__class__.__name__,
+        #                                repr('search_function'),
+        #                                repr('search_space'),
+        #                                repr('search_termination_function')))
+        # MODIFIED 10/25/18 END
 
         # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
-        self.objective_function = objective_function
+        # # MODIFIED 10/25/18 OLD:
+        # self.objective_function = objective_function
+        # MODIFIED 10/25/18 NEW:
+        if objective_function is None:
+            self.objective_function = lambda x:0
+        else:
+            self.objective_function = objective_function
+
+        # MODIFIED 10/25/18 END
+
         self.search_function = search_function
         self.search_termination_function = search_termination_function
-        self.search_space = search_space
+
+        # # MODIFIED 10/25/18 NEW:
+        # self.search_space = search_space
+        # MODIFIED 10/25/18 NEW:
+        self.search_space = search_space or [0]
+        # MODIFIED 10/25/18 END
+
         # FIX: END MOVE
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -12056,10 +12077,12 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
-        if objective_function is None:
-            self.init_args = locals().copy()
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-            return
+        # # MODIFIED 10/25/18 OLD:
+        # if objective_function is None:
+        #     self.init_args = locals().copy()
+        #     self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        #     return
+        # # MODIFIED 10/25/18 END
 
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
@@ -12292,10 +12315,12 @@ class GridSearch(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
-        if objective_function is None or search_space is None:
-            self.init_args = locals().copy()
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-            return
+        # # MODIFIED 10/25/18 OLD:
+        # if objective_function is None or search_space is None:
+        #     self.init_args = locals().copy()
+        #     self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        #     return
+        # # MODIFIED 10/25/18 END
 
         search_function = self.traverse_grid
         search_termination_function = self.grid_complete
@@ -13642,6 +13667,12 @@ class BayesGLM(LearningFunction):
         '''
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
+            self.initialize_priors()
+
+        # If variable passed during execution does not match default assigned during initialization,
+        #    reassign default and re-initialize priors
+        elif np.array(variable).shape != self.instance_defaults.variable.shape:
+            self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
             self.initialize_priors()
 
         # Today's prior is yesterday's posterior

@@ -23,31 +23,36 @@ value for its `control_signals <LVOCControlMechanism.control_signals>` (i.e., it
 
 .. _LVOCControlMechanism_EVC:
 
-*Expected Value of Control (EVC)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Expected Value of Control (EVC) and Learned Value of Control (LVOC)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **expected value of control (EVC)** is the outcome of executing the `composition`
+The **expected value of control** (*EVC*) is the predicted outcome of executing the `composition`
 to which the LVOCControlMechanism belongs under a given `allocation_policy <LVOCControlMechanism.allocation_policy>`,
 as determined by its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, discounted by the `cost
 <ControlSignal.cost> of the `control_signals <LVOCControlMechanism.control_signals>` under that `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
-The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the outcome of its
-`objective_mechanism <LVOCControlMechanism.objective_mechanism>` from a weighted sum of its `feature_predictors
-<LVOCControlMechanism.feature_preditors>`, `control_signals <LVOCControlMechanism.control_signals>`, interactions 
-among these, and the costs of the `control_signals <LVOCControlMechanism.control_signals>`.  This is referred to as 
-the "learned value of control," or LVOC.
+The LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>` learns to predict the EVC 
+from a weighted sum of its `feature_predictors <LVOCControlMechanism.feature_preditors>`, `control_signals 
+<LVOCControlMechanism.control_signals>`, interactions among these, and the costs of the `control_signals 
+<LVOCControlMechanism.control_signals>`.  The `prediction_weights <LVOCControlMechanism.prediction_weights>` it learns
+are referred to as  the **learned value of control** (*LVOC*).
 
+The LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` uses the `prediction_weights 
+LVOCControlMechanism.prediction_weights` learned by its `learning_function <LVOCControlMechanism.learning_function>`
+(i.e., the LVOC) to find an `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the EVC given
+the current value of its `feature_predictors <LVOCControlMechanism.feature_preditors>`. 
+  
+  
 .. _LVOCControlMechanism_Creation:
 
 Creating an LVOCControlMechanism
 --------------------------------
 
- An LVOCControlMechanism can be created in the same was as any `ControlMechanism`, with the exception that it cannot
- be assigned as the `controller <Composition.controller>` of a Composition.  The following arguments of its
+ An LVOCControlMechanism can be created in the same was as any `ControlMechanism`.  The following arguments of its
  constructor are specific to the LVOCControlMechanism:
 
-  * **feature_predictors** -- this takes the place of the standard **input_states** argument in the constructor for a
+  * **feature_predictors** -- takes the place of the standard **input_states** argument in the constructor for a
     Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
     <LVOCControlMechanism.allocation_policy>` in each `trial` of execution.
     It can be specified using any of the following, singly or combined in a list:
@@ -65,8 +70,18 @@ Creating an LVOCControlMechanism
 
     Feature_predictors can also be added to an existing LVOCControlMechanism using its `add_features` method.
 
-  * **feature_function** specifies `function <InputState>` of the InputState created for each item listed in
+  * **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
     **feature_predictors**.
+
+  * **learning_function** -- specifies `LearningFunction` that learns to predict the outcome of the
+    `objective_mechanism <LVOCControlMechanism.objective_mechanism>` discounted by the cost of the `control_signals
+    <LVOCControlMechanism.control_signals>` for a given `allocation_policy <LVOCControlMechanism.allocation_policy>` 
+    from the terms specified in the **prediction_terms** argument.
+    
+  * **prediction_terms** -- specifies the terms used by the `learning_function <LVOCControlMechanism.learning_function>`
+    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the 
+    `allocation_policy LVOCControlMechanism.allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
+
 
 .. _LVOCControlMechanism_Structure:
 
@@ -88,27 +103,27 @@ Feature Predictors
 ^^^^^^^^^^^^^^^^^^
 
 Features_Predictors, together with the LVOCControlMechanism's `control_signals <LVOCControlMechanism.control_signals>`,
-are used by its `function <LVOCControlMechanism.function>` to learn to predict the outcome of its
+are used by its `learning_function <LVOCControlMechanism.learning_function>` to learn to predict the outcome of its
 `objective_mechanism <LVOCControlMechanism.objective_mechanism>` and to determine its `allocation_policy
 <LVOCControlMechanism.allocation_policy>`.
 
 Feature_Predictors can be of two types:
 
-* *Input Feature* -- this is a value received as input by an `ORIGIN` Mechanism in the Composition.
+* *Input Feature Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the `Composition`.
     These are specified in the **feature_predictors** argument of the LVOCControlMechanism's constructor (see
     `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
-    which is one or more `ORIGIN` Mechanisms and/or their InputStates to be shadowed.  For each, a Projection is
-    automatically created that parallels ("shadows") the Projection from the Composition's `InputCIM` to the `ORIGIN`
-    Mechanism, projecting from the same `OutputState` of the InputCIM to the the InputState of the
-    LVOCControlMechanism assigned to that feature.
+    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each, 
+    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's 
+    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState 
+    of the LVOCControlMechanism assigned to that feature_predictor.
 
-* *Output Feature* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism in the
-    Composition.  These too are specified in the **feature_predictors** argument of the LVOCControlMechanism's
-    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection to the InputState of
-    the LVOCControlMechanism for that feature.
+* *Output Feature Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism
+    in the Composition.  These too are specified in the **feature_predictors** argument of the LVOCControlMechanism's
+    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified 
+    OutputState(s) to the InputState of the LVOCControlMechanism for that feature.
 
-The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the `feature_values
-<LVOCControlMechanism.feature_values>` attribute.
+The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the 
+`feature_values <LVOCControlMechanism.feature_values>` attribute.
 
 .. _LVOCControlMechanism_ObjectiveMechanism:
 
@@ -151,29 +166,30 @@ customized in a variety of ways:
        specified explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st
        example under `System_Control_Examples`).
 
-The LVOCControlMechanism's `function <LVOCControlMechanism.function>` learns to predict the `value <OutputState.value>`
-of the *OUTCOME* `OutputState` of the LVOCControlMechanism's `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>`, as described below.
 
-.. _LVOCControlMechanism_Function:
+*Functions*
+~~~~~~~~~~~
 
-*Function*
-~~~~~~~~~~
+.. _LVOCControlMechanism_Learning_Function:
 
-The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism learns how to weight its `feature_predictors
-<LVOCControlMechanism_Feature_Predictors>`, the `values <ControlSignal.values>` of its  `control_signals
-<LVOCControlMechanism.control_signals>`, the interactions between these, and the `costs <ControlSignal.costs>` of the
-`control_signals <LVOCControlMechanism.control_signals>`, to best predict the outcome of its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>`.  Those weights, together with the current set of feature_predictors,
-are then used by `allocation_optimization_function  <LVOCControlMechanism.allocation_optimization_function>`, to find
-the `allocation_policy  <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`
-(see `below <LVOCControlMechanism_Optimization_Function>`).  By default,  `function <LVOCControlMechanism.function>` is
-`BayesGLM`. However, any function can be used that accepts a 2d array, the first item of which is an array of scalar
-values (the prediction terms) and the second that is a scalar value (the outcome to be predicted), and returns an array
-with the same shape as the LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
+Learning Function
+^^^^^^^^^^^^^^^^^
+
+The `learning_function <LVOCControlMechanism.learning_function>` of an LVOCControlMechanism learns how to weight its 
+`feature_predictors <LVOCControlMechanism_Feature_Predictors>`, the `values <ControlSignal.values>` of its  
+`control_signals <LVOCControlMechanism.control_signals>`, the interactions between these, and the `cost 
+<ControlSignal.costs>` of the `control_signals <LVOCControlMechanism.control_signals>`, to best predict the outcome 
+of its `objective_mechanism <LVOCControlMechanism.objective_mechanism>` discounted by the control_signal costs. 
+Those weights, together with the current set of feature_predictors, are used by the LVOCControlMechanism's primary 
+`function <LVOCControlMechanism.function>` to find the `allocation_policy <LVOCControlMechanism.allocation_policy>` 
+that maximizes the `EVC <LVOCControlMechanism_EVC>` (see `below <LVOCControlMechanism_Optimization_Function>`).  By 
+default, the `learning_function <LVOCControlMechanism.function>` is `BayesGLM`. However, any function can be used that 
+accepts a 2d array, the first item of which is an array of scalar values (the prediction terms) and the second that 
+is a scalar value (the outcome to be predicted), and returns an array with the same shape as the 
+LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
 .. note::
-  The LVOCControlMechanism's `function <LVOCControlMechanism.function>` is provided the values of the
+  The LVOCControlMechanism's `function <LVOCControlMechanism.learning_function>` is provided the values of the
   `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and outcome of its `objective_mechanism
   <LVOCControlMechanism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
   `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to determine (and implement)
@@ -183,41 +199,30 @@ with the same shape as the LVOCControlMechanism's `allocation_policy <LVOCContro
 
 .. _LVOCControlMechanism_Optimization_Function:
 
-*Allocation Optimization Function*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Primary Function*
+^^^^^^^^^^^^^^^^^^
 
-The `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` of an
-LVOCControlMechanism uses the `prediction_weights <LVOCControlMechanism.prediction_weights>` returned by its
-`function <LVOCControlMechanism.function>`, together with the current `feature_values
+The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism uses the `prediction_weights
+<LVOCControlMechanism.prediction_weights>` returned by its `learning_function
+<LVOCControlMechanism.learning_function>`, together with the current `feature_values
 <LVOCControlMechanism.feature_values>` and its `compute_lvoc_from_control_signals
 <LVOCControlMechanism.compute_lvoc_from_control_signals>` method, to determine the `allocation_policy
 <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
-The default for `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` is
-the `GradientOptimization` Function.  Any `OptimizationFunction` can be used in its place.  A custom function can
-also be used, however it must meet the following requirements:
+The default for `function <LVOCControlMechanism.function>` is the `GradientOptimization` Function, however any
+`OptimizationFunction` can be used in its place.  A custom function can also be used, however it must meet the
+following requirements:
 
     - It must accept as its first argument an array with the same shape as the
       LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_policy>`.
 
     - It must accept a keyword argument **objective_function**, that is passed the LVOCControlMechanism's
-      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method;  this is
-      the function used by `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`
-      to evaluate `EVC <LVOCControlMechanism_EVC>` during its optimization process.
+      `compute_lvoc_from_control_signals <LVOCControlMechanism.compute_lvoc_from_control_signals>` method;
+      this is the function used by `function <LVOCControlMechanism.function>`
+      to evaluate `EVC <LVOCControlMechanism_EVC>` during the optimization process.
 
     - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
       <LVOCControlMechanism.allocation_policy>`.
-
-COMMENT:
-Note to Developers:
-A custom function for allocation_optimization_function should implement deferred_init, allowing its
-**objective_function** and **update_function** arguments to be `None` when it is first constructed
-(see GradientOptimization.__init__ for an example) This is so that it can be declared in the
-LVOCControlMechanism's constructor, before its objective_function is available for assignment. LVOCControlMechanism
-assigns the objective_function (as well as control_signal_search_space that is used by some OptimizationFunctions,
-such as GridSearch), and then calls for completiion of initialization of the allocation_optimization_function in
-its the LVOCControlMechanism's _instantiate_attribute_after_function method.
-COMMENT
 
 .. _LVOCControlMechanism_ControlSignals:
 
@@ -236,7 +241,7 @@ ControlProjection is used by the `ParameterState` to which it projects to modify
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter it controls).
 A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>`
 and/or its time course. The `cost <ControlSignal.cost>` may be included in the evaluation carried out by the
-LVOCControlMechanism's `function <LVOCControlMechanism.function>` for a given `allocation_policy`,
+LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>` for a given `allocation_policy`,
 and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the future.
 
 .. _LVOCControlMechanism_Execution:
@@ -248,30 +253,31 @@ When an LVOCControlMechanism is executed, it uses the values of its `feature_pre
 <LVOCControlMechanism_Feature_Predictors>` (listed in its `feature_values <LVOCControlMechanism.feature_values>`
 attribute), together with the `values <ControlSignals.values>` of its `control_signals
 <LVOCControlMechanism.control_signals>` and their `costs <ControlSignal.cost>` to update its prediction of the
-outcome measure provided by its `objective_mechanism <LVOCControlMechanism.objective_mechanism>`,
-and then determines the `allocation_policy` that maximizes `EVC <LVOCControlMechanism_EVC>` for the current `trial`
-of execution. Specifically it executes the following steps:
+outcome of processing (the `value <ObjectiveMechanisms.value>` of its `objective_mechanism
+<LVOCControlMechanism.objective_mechanism>` minus the cost of its `control_signals
+<LVOCControlMechanism.control_signals>`), and then determines the `allocation_policy
+<LVOCControlMechanism.allocation_policy>` that maximizes hte `EVC <LVOCControlMechanism_EVC>` for the current `trial`
+of execution. Specifically, it executes the following steps:
 
   * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
     <LVOCControlMechanism.feature_values>`, `values <ControlSignal.values>` of its `control_signals
     <LVOCControlMechanism.control_signals>` (computed using their `functions <ControlSignal.function>`),
     and their `costs <ControlSignal.cost>` (computed using their `cost_functions <ControlSignal.cost_functions>`).
 
-  * Calls its `function <LVOCControlMechanism.function>` with the `prediction_vector
+  * Calls its `learning_function <LVOCControlMechanism.learning_function>` with the `prediction_vector
     <LVOCControlMechanism.prediction_vector>` and the outcome received from the
     LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, discounted by the
     `costs <ControlSignal.cost>` associated with each of its `control_signals <LVOCControlMechanism.control_signals>`,
     to update its `prediction_weights <LVOCControlMechanism.prediction_weights>`.
 
-  * Calls `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>`, which uses
-    the current `feature_values <LVOCControlMechanism.feature_values>` and `prediction_weights
-    <LVOCControlMechanism.prediction_weights>` to determine the `allocation_policy
-    <LVOCControlMechanism.alocation_policy>` that yields the greatest `EVC <LVOCControlMechanism_EVC>`.
+  * Calls its `function <LVOCControlMechanism.function>`, which uses the current `feature_values
+    <LVOCControlMechanism.feature_values>` and `prediction_weights <LVOCControlMechanism.prediction_weights>` to
+    determine the `allocation_policy <LVOCControlMechanism.alocation_policy>` that yields the greatest `EVC
+    <LVOCControlMechanism_EVC>`.
 
-The values in the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by
-`allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` are assigned as the
-`variables <ControlSignal.variables>` of its `control_signals  <LVOCControlMechanism.control_signals>`, from which
-they compute their `values <ControlSignal.value>`.
+The values in the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by `function
+<LVOCControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its `control_signals
+<LVOCControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
 
 COMMENT:
 .. _LVOCControlMechanism_Examples:
@@ -296,26 +302,24 @@ from enum import Enum
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE
+    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
-    MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    OUTCOME, ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Composition_Base, Function
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS, VALUE, DEFAULT_VARIABLE, \
-    OWNER
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset, tensor_power
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
 
 __all__ = [
     'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
@@ -396,7 +400,7 @@ class LVOCControlMechanism(ControlMechanism):
     terminal_objective_mechanism=False,                    \
     function=BayesGLM,                                     \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
-    allocation_optimization_function=GradientOptimization, \
+    function=GradientOptimization, \
     control_signals=None,                                  \
     modulation=ModulationParam.MULTIPLICATIVE,             \
     params=None,                                           \
@@ -425,18 +429,18 @@ class LVOCControlMechanism(ControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    function : LearningFunction or callable : BayesGLM
+    learning_function : LearningFunction, function or method : default BayesGLM
         specifies the function used to learn to predict the outcome of `objective_mechanism
         <LVOCControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
-        <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Function` for details).
+        <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Learning_Function` for details).
 
     prediction_terms : List[PV] : default [PV.F, PV.C, PV.FC, PV.COST]
         specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
         items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
         if `None` is specified, the default values will automatically be assigned.
 
-    allocation_optimization_function : OptimizationFunction, function or method : default GradientOptimization
+    function : OptimizationFunction, function or method : default GradientOptimization
         specifies the function used to optimize the `allocation_policy`;  must take as its sole argument an array
         with the same shape as `allocation_policy <LVOCControlMechanism.allocation_policy>`, and return a similar
         array (see `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>` for
@@ -448,7 +452,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `function <LVOCControlMechanism.function>`, and/or a custom function and its parameters.  Values
+        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
@@ -462,7 +466,7 @@ class LVOCControlMechanism(ControlMechanism):
     ----------
 
     feature_values : 1d ndarray
-        the current `values <InputState.value>` of the InputStates used by `function <LVOCControlMechanism.function>`
+        the current `values <InputState.value>` of the InputStates used by `learning_function <LVOCControlMechanism.learning_function>`
         to determine `allocation_policy <LVOCControlMechanism.allocation_policy>` (see
         `LVOCControlMechanism_Feature_Predictors` for details about feature_predictors).
 
@@ -502,14 +506,14 @@ class LVOCControlMechanism(ControlMechanism):
 
     prediction_weights : 1d ndarray
         weights assigned to each term of `prediction_vector <LVOCControlMechanism.prediction_vectdor>`
-        last returned by `function <LVOCControlMechanism.function>`.
+        last returned by `learning_function <LVOCControlMechanism.learning_function>`.
 
-    function : LearningFunction or callable
+    learning_function : LearningFunction, function or method
         takes `prediction_vector <LVOCControlMechanism.prediction_vector>` and outcome and returns an updated set of
-        `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Function`
+        `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Learning_Function`
         for additional details).
 
-    allocation_optimization_function : OptimizationFunction, function or method
+    function : OptimizationFunction, function or method
         takes current `variable <ControlSignal.variable>` of `controls_signals <LVOCControlMechanism.control_signals>`
         and, using the current `feature_values <LVOCControlMechanism.feature_values>`, `prediction_weights
         <LVOCControlMechanism.prediction_vector>` and `compute_lvoc_from_control_signals
@@ -527,13 +531,13 @@ class LVOCControlMechanism(ControlMechanism):
 
     saved_samples : list
         contains all values of `allocation_policy <LVOCControlMechanism.allocation_policy>` sampled by
-        `allocation_optimization_function <LVOCControlMechanism.allocation_optimization_function>` if its
+        `function <LVOCControlMechanism.function>` if its
         `save_samples <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
 
     saved_values : list
         contains all values of `EVC <LVOCControlMechanism_EVC>` predicted by the corresponding samples of
-        `allocation_policy <LVOCControlMechanism.allocation_policy>` tested by `allocation_optimization_function
-        <LVOCControlMechanism.allocation_optimization_function>` if its `save_values <OptimizationFunction.save_values>`
+        `allocation_policy <LVOCControlMechanism.allocation_policy>` tested by `function
+        <LVOCControlMechanism.function>` if its `save_values <OptimizationFunction.save_values>`
         parameter is `True`;  otherwise list is empty.
 
     control_signals : ContentAddressableList[ControlSignal]
@@ -553,6 +557,8 @@ class LVOCControlMechanism(ControlMechanism):
     """
 
     componentType = LVOCCONTROLMECHANISM
+    # initMethod = INIT_FULL_EXECUTE_METHOD
+    # initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -564,7 +570,7 @@ class LVOCControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
-        function = BayesGLM
+        function = GradientOptimization
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -576,9 +582,9 @@ class LVOCControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 function=BayesGLM,
+                 learning_function=BayesGLM,
                  prediction_terms:tc.optional(list)=None,
-                 allocation_optimization_function=GradientOptimization,
+                 function=GradientOptimization,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -604,7 +610,7 @@ class LVOCControlMechanism(ControlMechanism):
                     raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
                                                                                         repr(i)))
 
-        self.allocation_optimization_function = allocation_optimization_function
+        self.learning_function = learning_function
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
@@ -669,9 +675,6 @@ class LVOCControlMechanism(ControlMechanism):
         self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
-
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
 
     tc.typecheck
     def add_features(self, feature_predictors):
@@ -777,115 +780,95 @@ class LVOCControlMechanism(ControlMechanism):
         return control_signal
 
     def _instantiate_attributes_after_function(self, context=None):
+        '''Instantiate the following attributes:
+
+        - feature_values
+        - control_signal_variable
+        - prediction_vector
+        - prediction_weights
+        - learning_function (if it was specified as a class)
+
+        Also, assign the following attributes to primary (optimization) function:
+        - default_variable: control_signal_variables)
+        - objective_function: compute_lvoc_from_control_signals (required by all optimization functions)
+        - search_space: _get_control_signal_search_space() (for optimization functions that use this)
+        '''
 
         super()._instantiate_attributes_after_function(context=context)
 
-        self.prediction_vector.control_signal_functions = [c.function for c in self.control_signals]
-        self.prediction_vector.compute_costs = [c._compute_costs for c in self.control_signals]
-        self.prediction_weights = np.zeros_like(self.function_object.value)
+        self.feature_values = np.array(self.instance_defaults.variable[1:])
+        self.control_signal_variables = np.array([c.variable for c in self.control_signals])
 
-        # Assign parameters to allocation_optimization_function that rely on LVOCControlMechanism
-        alloc_opt_fct = self.allocation_optimization_function
-        if isinstance(self.allocation_optimization_function, type):
-            self.allocation_optimization_function = self.allocation_optimization_function(
-                                                            default_variable = self.control_signal_variables,
-                                                            objective_function = self.compute_lvoc_from_control_signals,
-                                                            update_function = self.prediction_vector.update_vector,
-                                                            search_space = self._get_control_signal_search_space(),
-                                                            owner = self)
-        elif self.allocation_optimization_function.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            alloc_opt_fct.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
-            alloc_opt_fct.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-            alloc_opt_fct.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
-            alloc_opt_fct.init_args[OWNER] = self
-            alloc_opt_fct._deferred_init()
+        self.prediction_vector = self.PredictionVector(self.feature_values,
+                                                       self.control_signals,
+                                                       self.prediction_terms)
+
+        if isinstance(self.learning_function, type):
+            self.learning_function = self.learning_function(default_variable = self.prediction_vector.vector)
+
+        # Assign parameters to function that rely on LVOCControlMechanism
+        self.function_object.instance_defaults.variable = self.control_signal_variables
+        self.function_object.objective_function = self.compute_lvoc_from_control_signals
+        self.function_object.search_space = self._get_control_signal_search_space()
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
+        """Find allocation_policy that optimizes EVC.
 
         Items of variable should be:
           - variable[0]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
             <LVOCControlMechanism.objective_mechanism>`.
           - variable[n]: current value of `feature_predictor <LVOCControlMechanism_Feature_Predictors>`\\[n]
 
-        Call to super._execute updates the prediction_vector, and calculates outcome from last trial, by subtracting
-        the `costs <ControlSignal.costs>` for the `control_signal <LVOCControlMechanism.control_signals>` values used
-        in the previous trial from the value received from the `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>` (in variable[0]) reflecting performance on the previous trial.
-        It then calls the LVOCControlMechanism's `function <LVOCControlMechanism.function>` to update the
-        `prediction_weights <LVOCControlMechanism.prediction_weights>` so as to better predict the outcome.
-
-        Call to `gradient_ascent` determines `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC
-        <LVCOControlMechanism_EVC>` given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+        Executes the following steps:
+        - calculate outcome from previous trial (value of objective_mechanism - costs of control_signals)
+        - call learning_function with outcome and prediction_vector from previous trial to update prediction_weights
+        - update prediction_vector
+        - execute primary (optimization) function to get allocation_policy that maximizes EVC
+        - return allocation_policy
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        # Get sample of weights
-        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        self.prediction_weights = super(ControlMechanism, self)._execute(variable=variable,
-                                                                         runtime_params=runtime_params,
-                                                                         context=context)
+        # This is the value received from the objective_mechanism's OUTCOME OutputState:
+        obj_mech_outcome = variable[0]
 
-        # Pass current variables of control_signals, or defaults if first trial
-        control_signal_variables = np.array([c.variable if c.variable is not None
-                                             else c.instance_defaults.variable
-                                             for c in self.control_signals])
+        if not self.current_execution_count:
+            # Initialize prediction_vector and control_signals on first trial
+            # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
+            self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 1)
+            control_signal_variables = np.array([c.instance_defaults.variable for c in self.control_signals])
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
+        else:
+            # Update prediction_weights
+            previous_cost = np.sum(self._previous_prediction_vector[self.prediction_vector.idx[PV.COST.value]])
+            # costs are assigned as negative in prediction_vector.update, so add them here
+            outcome = obj_mech_outcome + previous_cost
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, outcome])
+
+            # Update prediction_vector with current feature_values and control_signals and store for next trial
+            self.feature_values = np.array(np.array(variable[1:]).tolist())
+            control_signal_variables = np.array([c.variable for c in self.control_signals])
+            self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
+            self._previous_prediction_vector = self.prediction_vector.vector
 
         # TEST PRINT
         print ('\nOUTCOME: ', self.input_state.value)
         print ('prediction_weights: ', self.prediction_weights)
         # TEST PRINT END
 
-        # Compute allocation_policy using gradient_ascent
-        allocation_policy, self.saved_samples, self.saved_values = \
-            self.allocation_optimization_function.function(control_signal_variables)
+        # Compute allocation_policy using LVOCControlMechanism's optimization function
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy, self.saved_samples, self.saved_values = super(ControlMechanism, self)._execute(
+                                                                                    variable=control_signal_variables,
+                                                                                    runtime_params=runtime_params,
+                                                                                    context=context)
 
         # TEST PRINT
         print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
         # TEST PRINT END
 
         return allocation_policy
-
-    def _parse_function_variable(self, variable, context=None):
-        '''Update current prediction_vector, and return prediction vector and outcome from previous trial
-
-        Updates prediction_vector for current trial, and buffers this in _prediction_buffer;
-        also buffers costs of control_signals used in previous trial ]in previous_costs.
-
-        Computes outcome for previous trial by subtracting costs of control_signals from outcome received
-        from objective_mechanism, both of which reflect values assigned in previous trial
-        (since Projection from objective_mechanism is a feedback Projection, the value received from it corresponds
-        to the one computed on the previous trial).
-        # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
-
-        Returns prediction_vector and outcome from previous trial,
-        used by function to update prediction_weights that will be used to predict the EVC for the current trial.
-        '''
-
-        # This is the value received from the objective_mechanism's OUTCOME OutputState:
-        obj_mech_outcome = variable[0]
-
-        # This is the current values of the feature_predictors
-        self.feature_values = np.array(np.array(variable[1:]).tolist())
-
-        # Instantiate PredictionVector and related attributes
-        if context is ContextFlags.INSTANTIATE:
-            self._instantiate_prediction_vector()
-            self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
-            self._previous_cost = np.zeros_like(obj_mech_outcome)
-
-        # Update values
-        else:
-            self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
-            self._prediction_buffer.append(self.prediction_vector.vector)
-            self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
-
-        # costs are assigned as negative in prediction_vector.update, so add them here
-        outcome = obj_mech_outcome + self._previous_cost
-
-        return [self._prediction_buffer.popleft(), outcome]
 
     def _get_control_signal_search_space(self):
 
@@ -904,32 +887,6 @@ class LVOCControlMechanism(ControlMechanism):
         re_shape = (self.control_signal_search_space.shape[0], self.control_signal_search_space.shape[1], 1)
 
         return self.control_signal_search_space.reshape(re_shape)
-
-    def _instantiate_prediction_vector(self):
-
-        # Get variable for control_signals specified in contructor
-        self.control_signal_variables = []
-        for c in self.control_signals:
-            if isinstance(c, ControlSignal):
-                try:
-                    v = c.variable
-                except:
-                    v = c.instance_defaults.variable
-            elif isinstance(c, type):
-                if issubclass(c, ControlSignal):
-                    v = c.class_defaults.variable
-                else:  # If a class other than ControlSignal was specified, typecheck should have found it
-                    raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
-                                    format(repr(CONTROL_SIGNALS), self.name, c))
-            else:
-                state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
-                v = state_spec_dict[VARIABLE]
-                v = v or ControlSignal.class_defaults.variable
-            self.control_signal_variables.append(v)
-
-        self.prediction_vector = self.PredictionVector(self.feature_values,
-                                                       self.control_signal_variables,
-                                                       self.prediction_terms)
 
     class PredictionVector():
         '''Maintain lists and vector of prediction terms.
@@ -987,7 +944,29 @@ class LVOCControlMechanism(ControlMechanism):
 
         '''
 
-        def __init__(self, feature_values, control_signal_variables, specified_terms):
+        def __init__(self, feature_values, control_signals, specified_terms):
+
+            # Get variable for control_signals specified in contructor
+            control_signal_variables = []
+            for c in control_signals:
+                if isinstance(c, ControlSignal):
+                    try:
+                        v = c.variable
+                    except:
+                        v = c.instance_defaults.variable
+                elif isinstance(c, type):
+                    if issubclass(c, ControlSignal):
+                        v = c.class_defaults.variable
+                    else:  # If a class other than ControlSignal was specified, typecheck should have found it
+                        raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
+                                        format(repr(CONTROL_SIGNALS), self.name, c))
+                else:
+                    state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
+                    v = state_spec_dict[VARIABLE]
+                    v = v or ControlSignal.class_defaults.variable
+                control_signal_variables.append(v)
+            self.control_signal_functions = [c.function for c in control_signals]
+            self.compute_costs = [c._compute_costs for c in control_signals]
 
             def get_intrxn_labels(x):
                 return list([s for s in powerset(x) if len(s)>1])
@@ -1110,8 +1089,8 @@ class LVOCControlMechanism(ControlMechanism):
             <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
             <LVOCControlMechanism.feature_values>`.
 
-            This method is passed to `allocation_optimization_function
-            <LVOCControlMechanism.allocation_optimization_function>` as its **update_function**
+            This method is passed to `function
+            <LVOCControlMechanism.function>` as its **update_function**
             (see `Allocation Optimization Function <LVOCControlMechanism_Optimization_Function>`.
             '''
 
