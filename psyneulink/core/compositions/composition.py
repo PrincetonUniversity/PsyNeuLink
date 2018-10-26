@@ -2840,7 +2840,7 @@ class Composition(Composition_Base):
     def get_output_struct_type(self):
         return self.output_CIM.get_output_struct_type()
 
-    def get_data_struct_type(self):
+    def _get_data_struct_type(self, ctx):
         output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
         output_type_list.append(self.input_CIM.get_output_struct_type())
         output_type_list.append(self.output_CIM.get_output_struct_type())
@@ -2916,7 +2916,7 @@ class Composition(Composition_Base):
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + mech.name)
-            data_struct_ptr = self.get_data_struct_type().as_pointer()
+            data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
@@ -3038,7 +3038,7 @@ class Composition(Composition_Base):
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
-                self.get_data_struct_type().as_pointer(),
+                self._get_data_struct_type(ctx).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -3157,7 +3157,7 @@ class Composition(Composition_Base):
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
                 self.get_param_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer(),
+                self._get_data_struct_type(ctx).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 self.get_output_struct_type().as_pointer(),
                 ctx.int32_ty.as_pointer(),

@@ -169,9 +169,11 @@ class CompExecution:
         self._composition = composition
         self.__frozen_vals = None
 
-        # Data
-        c_data = _convert_llvm_ir_to_ctype(self._composition.get_data_struct_type())
-        self.__data_struct = c_data(*self._composition.get_data_initializer())
+        #TODO: This should use compiled function
+        with LLVMBuilderContext() as ctx:
+            # Data
+            c_data = _convert_llvm_ir_to_ctype(self._composition._get_data_struct_type(ctx))
+            self.__data_struct = c_data(*self._composition.get_data_initializer())
 
         # Context
         c_context = _convert_llvm_ir_to_ctype(self._composition.get_context_struct_type())
