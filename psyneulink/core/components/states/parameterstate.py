@@ -850,7 +850,7 @@ class ParameterState(State_Base):
         func_input_type = ctx.get_input_struct_type(self.function_object)
         input_types = [func_input_type]
         for mod in self.mod_afferents:
-            input_types.append(mod.get_output_struct_type())
+            input_types.append(ctx.get_output_struct_type(mod))
         return ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

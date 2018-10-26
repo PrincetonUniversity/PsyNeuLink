@@ -2837,13 +2837,13 @@ class Composition(Composition_Base):
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.input_CIM)
 
-    def get_output_struct_type(self):
-        return self.output_CIM.get_output_struct_type()
+    def _get_output_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
-        output_type_list.append(self.input_CIM.get_output_struct_type())
-        output_type_list.append(self.output_CIM.get_output_struct_type())
+        output_type_list = [ctx.get_output_struct_type(m) for m in self.c_nodes]
+        output_type_list.append(ctx.get_output_struct_type(self.input_CIM))
+        output_type_list.append(ctx.get_output_struct_type(self.output_CIM))
         return ir.LiteralStructType(output_type_list)
 
     def get_context_initializer(self):
@@ -3159,7 +3159,7 @@ class Composition(Composition_Base):
                 self.get_param_struct_type().as_pointer(),
                 self._get_data_struct_type(ctx).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
-                self.get_output_struct_type().as_pointer(),
+                ctx.get_output_struct_type(self).as_pointer(),
                 ctx.int32_ty.as_pointer(),
                 ctx.int32_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)

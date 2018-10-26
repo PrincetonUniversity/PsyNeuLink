@@ -903,11 +903,6 @@ class Function_Base(Function):
             return x if x is not None else tuple()
         return tupleize(self.get_params())
 
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_val)
-
     def bin_function(self,
                      variable=None,
                      params=None,
@@ -3247,14 +3242,13 @@ class Identity(
             return ctx.convert_python_struct_to_llvm_ir(variable)
         return ctx.get_input_struct_type(super())
 
-    def get_output_struct_type(self):
+    def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            with pnlvm.LLVMBuilderContext() as ctx:
-                return ctx.get_input_struct_type(self)
-        return super().get_output_struct_type()
+            return ctx.get_input_struct_type(self)
+        return ctx.get_output_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val = builder.load(arg_in)
@@ -3407,8 +3401,8 @@ class InterfaceStateMap(InterfaceFunction):
         #       does not update its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
-            return self.owner.owner.function_object.get_output_struct_type()
-        return super()._get_input_struct_type()
+            return ctx.get_output_struct_type(self.owner.owner.function_object)
+        return ctx.get_input_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         index = self.corresponding_input_state.position_in_mechanism
@@ -6876,7 +6870,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         return RATE, OFFSET, NOISE
 
     def get_context_struct_type(self):
-        return self.get_output_struct_type()
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ctx.get_output_struct_type(self)
 
     def get_context_initializer(self, data=None):
         if data is None:

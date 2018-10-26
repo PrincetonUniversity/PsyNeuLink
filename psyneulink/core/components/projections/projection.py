@@ -956,8 +956,8 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    def get_output_struct_type(self):
-        return self.function_object.get_output_struct_type()
+    def _get_output_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self.function_object)
 
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.function_object)

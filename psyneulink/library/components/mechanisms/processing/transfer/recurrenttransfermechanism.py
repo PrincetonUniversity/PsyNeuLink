@@ -1353,7 +1353,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         for state in self.parameter_states:
             state_input_type_list = []
             for proj in state.mod_afferents:
-                state_input_type_list.append(proj.get_output_struct_type())
+                state_input_type_list.append(ctx.get_output_struct_type(proj))
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
@@ -1363,10 +1363,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         return ir.LiteralStructType([transfer_t, projection_t])
 
     def get_context_struct_type(self):
-        transfer_t = super().get_context_struct_type()
-        projection_t = self.recurrent_projection.get_context_struct_type()
-        return_t = self.get_output_struct_type()
-        return ir.LiteralStructType([transfer_t, projection_t, return_t])
+        with pnlvm.LLVMBuilderContext() as ctx:
+            transfer_t = super().get_context_struct_type()
+            projection_t = self.recurrent_projection.get_context_struct_type()
+            return_t = ctx.get_output_struct_type(self)
+            return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
     def get_param_initializer(self):
         transfer_params = super().get_param_initializer()
