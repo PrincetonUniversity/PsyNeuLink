@@ -13526,7 +13526,7 @@ class BayesGLM(LearningFunction):
     """
 
     class Params(LearningFunction.Params):
-        variable = Param(np.array([ [[0,0], [0,0]], [[0],[0]] ]), read_only=True)
+        variable = Param([np.array([0,0,0]),np.array([0])], read_only=True)
 
     def __init__(self,
                  default_variable = None,
@@ -13582,7 +13582,7 @@ class BayesGLM(LearningFunction):
 
         variable = np.array(self.instance_defaults.variable)
         variable = self.instance_defaults.variable
-        if variable.dtype != object:
+        if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
         n = len(variable[0])
@@ -13652,12 +13652,12 @@ class BayesGLM(LearningFunction):
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
-        # MODIFIED 10/26/18 OLD:
-        # If variable passed during execution does not match default assigned during initialization,
-        #    reassign default and re-initialize priors
-        elif np.array(variable).shape != self.instance_defaults.variable.shape:
-            self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
-            self.initialize_priors()
+        # # MODIFIED 10/26/18 OLD:
+        # # If variable passed during execution does not match default assigned during initialization,
+        # #    reassign default and re-initialize priors
+        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
+        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        #     self.initialize_priors()
         # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior

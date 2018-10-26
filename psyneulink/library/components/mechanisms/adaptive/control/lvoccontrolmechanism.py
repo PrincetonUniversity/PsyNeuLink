@@ -782,40 +782,23 @@ class LVOCControlMechanism(ControlMechanism):
         return control_signal
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Instantiate the following attributes:
-
-        - feature_values
-        - control_signal_variable
-        - prediction_vector
-        - prediction_weights
-        - learning_function (if it was specified as a class)
-
-        Also, assign the following attributes to primary (optimization) function:
-        - default_variable: control_signal_variables)
-        - objective_function: compute_lvoc_from_control_signals (required by all optimization functions)
-        - search_space: _get_control_signal_search_space() (for optimization functions that use this)
-        '''
+        '''Instantiate LVOCControlMechanism attributes and assign parameters to learning_function and function'''
 
         super()._instantiate_attributes_after_function(context=context)
 
+        # Instantiate attributes for LVOCControlMechanism
         self.feature_values = np.array(self.instance_defaults.variable[1:])
         self.control_signal_variables = np.array([c.variable for c in self.control_signals])
-
         self.prediction_vector = self.PredictionVector(self.feature_values,
                                                        self.control_signals,
                                                        self.prediction_terms)
 
+        # Assign parameters to learning_function
+        learning_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
         if isinstance(self.learning_function, type):
-            # MODIFIED 10/26/18 OLD:
-            self.learning_function = self.learning_function(self.prediction_vector.vector)
-            # MODIFIED 10/26/18 NEW:
-            self.learning_function = self.learning_function(
-                    default_variable=[self.prediction_vector.vector, self.input_state.value])
-            # MODIFIED 10/26/18 END
-        # # MODIFIED 10/26/18 NEW:
-        # else:
-        #     self.learning_function.reinitialize({DEFAULT_VARIABLE: self.prediction_vector.vector})
-        # MODIFIED 10/26/18 END
+            self.learning_function = self.learning_function(default_variable=learning_function_default_variable)
+        else:
+            self.learning_function.reinitialize({DEFAULT_VARIABLE: learning_function_default_variable})
 
         # Assign parameters to function that rely on LVOCControlMechanism
         self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_signal_variables,
