@@ -8,14 +8,22 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import numpy as np
+import atexit
 import ctypes
+import numpy as np
+import os
+
 from llvmlite import ir
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
 
 _modules = set()
 _all_modules = set()
+
+@atexit.register
+def module_count():
+    if str(os.environ.get("PNL_LLVM_DUMP")).find("mod_count") != -1:
+        print("Total LLVM modules: ", len(_all_modules))
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
