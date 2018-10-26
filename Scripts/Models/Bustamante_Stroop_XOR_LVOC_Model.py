@@ -56,7 +56,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
 
-                                # function=pnl.BayesGLM(mu_0=0, sigma_0=0.01),
+                                function=pnl.BayesGLM(mu_0=0, sigma_0=0.001),
 
                                 # allocation_optimization_function=pnl.GradientOptimization(
                                 #         convergence_criterion=pnl.VALUE,
