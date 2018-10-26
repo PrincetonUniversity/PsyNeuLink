@@ -302,26 +302,24 @@ from enum import Enum
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, Buffer, Linear, BayesGLM, EPSILON, is_function_type, GradientOptimization, \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE
+    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism, \
-    MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    OUTCOME, ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Composition_Base, Function
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, INIT_FULL_EXECUTE_METHOD, CONTROL_SIGNALS, VALUE, DEFAULT_VARIABLE, \
-    OWNER, INIT_EXECUTE_METHOD_ONLY
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, is_numeric, powerset, tensor_power
+from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
 
 __all__ = [
     'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
@@ -431,7 +429,7 @@ class LVOCControlMechanism(ControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    function : LearningFunction or callable : BayesGLM
+    learning_function : LearningFunction, function or method : default BayesGLM
         specifies the function used to learn to predict the outcome of `objective_mechanism
         <LVOCControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
@@ -510,7 +508,7 @@ class LVOCControlMechanism(ControlMechanism):
         weights assigned to each term of `prediction_vector <LVOCControlMechanism.prediction_vectdor>`
         last returned by `learning_function <LVOCControlMechanism.learning_function>`.
 
-    function : LearningFunction or callable
+    learning_function : LearningFunction, function or method
         takes `prediction_vector <LVOCControlMechanism.prediction_vector>` and outcome and returns an updated set of
         `prediction_weights <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Learning_Function`
         for additional details).
@@ -678,10 +676,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         super()._instantiate_input_states(context=context)
 
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
-    #     super()._instantiate_attributes_before_function(function=function, context=context)
-    #     self._instantiate_learning_function()
-
     tc.typecheck
     def add_features(self, feature_predictors):
         '''Add InputStates and Projections to LVOCControlMechanism for feature_predictors used to predict outcome
@@ -774,13 +768,6 @@ class LVOCControlMechanism(ControlMechanism):
 
         return input_state_specs
 
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
-    #     super()._instantiate_attributes_before_function(function=function, context=context)
-    #     if isinstance(self.learning_function, type):
-    #         self.learning_function = self.learning_function()
-    #     else:
-    #         self.learning_function = self.learning_function
-
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         LVOCControlMechanism requires use of at least one of the cost options
@@ -792,32 +779,25 @@ class LVOCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    # def _instantiate_function(self, function, function_params, context=None):
-    #     self.feature_values = [i.value for i in self.input_states[1:]]
-    #
-    #     self.prediction_vector = self.PredictionVector(self.feature_values,
-    #                                                    self.control_signals,
-    #                                                    self.prediction_terms)
-    #
-    #     # Assign parameters to function that rely on LVOCControlMechanism
-    #     if isinstance(function, type):
-    #         function = function(default_variable = self.control_signal_variables,
-    #                             objective_function = self.compute_lvoc_from_control_signals,
-    #                             update_function = self.prediction_vector.update_vector,
-    #                             search_space = self._get_control_signal_search_space(),
-    #                             owner = self)
-    #     elif function.context.initialization_status == ContextFlags.DEFERRED_INIT:
-    #         function.init_args[DEFAULT_VARIABLE] = self.control_signal_variables
-    #         function.init_args[OBJECTIVE_FUNCTION] = self.compute_lvoc_from_control_signals
-    #         function.init_args[SEARCH_SPACE] = self._get_control_signal_search_space()
-    #         function.init_args[OWNER] = self
-    #         function._deferred_init()
-    #
-    #     super()._instantiate_function(functon=function, function_params=function_params, context=context)
-    #
-    #     self.prediction_weights = np.zeros_like(self.learning_function.value)
-
     def _instantiate_attributes_after_function(self, context=None):
+        '''Instantiate the following attributes:
+
+        - feature_values
+        - control_signal_variable
+        - prediction_vector
+        - prediction_weights
+        - _prediction_buffer
+        - _previous_cost
+
+        - learning_function (if it was specified as a class)
+
+        Also, assign the following attributes to function:
+
+        - default_variable: control_signal_variables)
+        - objective_function: compute_lvoc_from_control_signals
+        - search_space: _get_control_signal_search_space()
+
+        '''
 
         super()._instantiate_attributes_after_function(context=context)
 
@@ -831,29 +811,35 @@ class LVOCControlMechanism(ControlMechanism):
         if isinstance(self.learning_function, type):
             self.learning_function = self.learning_function(default_variable = self.prediction_vector.vector)
 
-        self.prediction_weights = np.zeros_like(self.prediction_vector.vector)
+        # MODIFIED 10/25/18 OLD:
+        # self.prediction_weights = np.zeros_like(self.prediction_vector.vector)
+        # MODIFIED 10/25/18 END
 
         # Assign parameters to function that rely on LVOCControlMechanism
         self.function_object.instance_defaults.variable = self.control_signal_variables
         self.function_object.objective_function = self.compute_lvoc_from_control_signals
         self.function_object.search_space = self._get_control_signal_search_space()
 
-
-        # MODIFIED 10/25/18 NEW:
-        # Instantiate PredictionVector and related attributes
-        self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
-        self._previous_cost = np.zeros_like(self.instance_defaults.variable[0])
+        # MODIFIED 10/25/18 OLD:
+        # # Instantiate PredictionVector and related attributes
+        # self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
+        # self._previous_cost = np.zeros_like(self.instance_defaults.variable[0])
         # MODIFIED 10/25/18 END
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        """Determine `allocation_policy <LVOCControlMechanism.allocation_policy>` for current run of Composition
+        """Find allocation_policy that optimizes EVC.
 
         Items of variable should be:
           - variable[0]: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
             <LVOCControlMechanism.objective_mechanism>`.
           - variable[n]: current value of `feature_predictor <LVOCControlMechanism_Feature_Predictors>`\\[n]
 
-        Call to super._execute updates the prediction_vector, and calculates outcome from last trial, by subtracting
+        Executes the following steps:
+        - updates outcome from previous trial: value of objective_mechanism minus cost of control_signals
+        - calls learning_function with outcome and prediction_vector from previous trial to update prediction_weights
+        -
+
+        Call to learning_function updates the prediction_vector, and calculates outcome from last trial, by subtracting
         the `costs <ControlSignal.costs>` for the `control_signal <LVOCControlMechanism.control_signals>` values used
         in the previous trial from the value received from the `objective_mechanism
         <LVOCControlMechanism.objective_mechanism>` (in variable[0]) reflecting performance on the previous trial.
@@ -884,38 +870,46 @@ class LVOCControlMechanism(ControlMechanism):
         # This is the value received from the objective_mechanism's OUTCOME OutputState:
         obj_mech_outcome = variable[0]
 
-        # This is the current values of the feature_predictors
-        self.feature_values = np.array(np.array(variable[1:]).tolist())
-
         # # MODIFIED 10/25/18 OLD:
-        # # Instantiate PredictionVector and related attributes
-        # if self.context.initialization_status is ContextFlags.INITIALIZING:
-        #     self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
-        #     self._previous_cost = np.zeros_like(obj_mech_outcome)
-        # # Update values
-        # else:
-        #     self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
-        #     self._prediction_buffer.append(self.prediction_vector.vector)
-        #     self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
+        # # This is the current values of the feature_predictors
+        # self.feature_values = np.array(np.array(variable[1:]).tolist())
+        #
+        # self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
+        # self._prediction_buffer.append(self.prediction_vector.vector)
+        # self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
+        #
+        # # costs are assigned as negative in prediction_vector.update, so add them here
+        # outcome = obj_mech_outcome + self._previous_cost
+        #
+        # # Get sample of weights
+        # # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        # self.prediction_weights = self.learning_function.function([self._prediction_buffer.popleft(), outcome])
+
         # MODIFIED 10/25/18 NEW:
-        self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
-        self._prediction_buffer.append(self.prediction_vector.vector)
-        self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
+        if not self.current_execution_count:
+            self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 1)
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
+            control_signal_variables = np.array([c.instance_defaults.variable for c in self.control_signals])
+        else:
+            previous_cost = np.sum(self._previous_prediction_vector[self.prediction_vector.idx[PV.COST.value]])
+            # costs are assigned as negative in prediction_vector.update, so add them here
+            outcome = obj_mech_outcome + previous_cost
+            # Update prediction_weights
+            # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, outcome])
+
+            # This is the current values of the feature_predictors
+            self.feature_values = np.array(np.array(variable[1:]).tolist())
+            # Pass current variables of control_signals, or defaults if first trial
+            # control_signal_variables = np.array([c.variable if c.variable is not None
+            #                                      else c.instance_defaults.variable
+            #                                      for c in self.control_signals])
+            control_signal_variables = np.array([c.variable for c in self.control_signals])
+            self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
+            self._previous_prediction_vector = self.prediction_vector.vector
+
         # MODIFIED 10/25/18 END
 
-
-        # costs are assigned as negative in prediction_vector.update, so add them here
-        outcome = obj_mech_outcome + self._previous_cost
-
-
-        # Get sample of weights
-        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        self.prediction_weights = self.learning_function.function([self._prediction_buffer.popleft(), outcome])
-
-        # Pass current variables of control_signals, or defaults if first trial
-        control_signal_variables = np.array([c.variable if c.variable is not None
-                                             else c.instance_defaults.variable
-                                             for c in self.control_signals])
 
         # TEST PRINT
         print ('\nOUTCOME: ', self.input_state.value)

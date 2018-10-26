@@ -12077,10 +12077,12 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
-        if objective_function is None:
-            self.init_args = locals().copy()
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
-            return
+        # # MODIFIED 10/25/18 OLD:
+        # if objective_function is None:
+        #     self.init_args = locals().copy()
+        #     self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        #     return
+        # # MODIFIED 10/25/18 END
 
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
