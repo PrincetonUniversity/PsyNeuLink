@@ -62,7 +62,7 @@ Objective Functions:
   * `Stability`
   * `Distance`
 
-Optimization Function:
+Optimization Functions:
   * `GradientOptimization`
   * `GridSearch`
 
@@ -11599,7 +11599,7 @@ class OptimizationFunction(Function_Base):
     until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
     Subclasses can override this to implement their own optimization function or call an external one.
 
-    .. _Optimization_Proxess:
+    .. _Optimization_Process:
 
     **Default Optimization Process**
 
@@ -11616,41 +11616,60 @@ class OptimizationFunction(Function_Base):
     (i.e., `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`).
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`.
 
-    Constructors of subclasses should include **kwargs, to accomodate arguments required by some subclasses but not
-    others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+    .. note:
+
+        An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
+        runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
+        meant simply to allow the  constructor of the OptimziationFunction to be used to specify some but not all of
+        its parameters when specifying the OptimizationFunction in the constructor for another Component. For
+        example, an OptimizationFunction may use as its `objective_function <OptimizationFunction.objective_function>`
+        or `search_function <OptimizationFunction.search_function>` a method of the Component to which it is being
+        assigned;  however, those methods will not yet be available, as the Component itself has not yet been
+        constructed. This can be handled by calling the OptimizationFunction's `reinitialization
+        <OptimizationFunction.reinitialization>` method, with a parameter specification dictionary with a key for
+        each entry that is the name of a parameter and its value the value to be assigned to the parameter.  This is
+        done automatically for Mechanisms that take an ObjectiveFunction as their `function <Mechanism.function>`
+        (such as the `EVCControlMechanism`, `LVOCControlMechanism` and `ParamterEstimationControlMechanism`), but
+        will require it be done explicitly for Components for which that is not the case.
+
+
+    COMMENT:
+    NOTE TO DEVELOPERS:
+    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
+    by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+    COMMENT
 
     Arguments
     ---------
 
+    default_variable : list or np.ndarray : default None
+        specifies the shape of the samples used to evaluate the `objective_function
+        <OptimizationFunctoin.objective_function>`.
+
     objective_function : function or method : default None
         specifies function used to evaluate `variable <OptimizationFunction.variable>` in each iteration
-        of the `optimization process <OptimizationFunction_Process>`; it **must be specified** before `function
-        <OptimizationFunction.function>` can be executed; if `None`, Function will be placed in `deferred_init
-        <Component_Deferred_Init>` status, and will not be executable until its `deferred_init` method called
-        with a function assigned to its `init_args[*OBJECTIVE_FUNCTION*]` attribute.
+        of the `optimization process <OptimizationFunction_Process>`; if it is not specified, a default
+        function will be used that simply returns the value passed as its `variable <OptimizationFunction.variable>`
+        parameter.
 
     search_function : function or method : default None
         specifies function used to select a sample for `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Process>`.  It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
-        (e.g., as does `GradientOptimization`).  If it is required and not specified, Function will be placed in
-        `deferred_init <Component_Deferred_Init>` status, and will not be executable until its `deferred_init`
-        method called with a function assigned to its `init_args[*SEARCH_FUNCTION*]` attribute.
+        (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
 
     search_space : list or np.ndarray : default None
         specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Process>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
-        (e.g., as does `GradientOptimization`).  If it is required and not specified, Function will be placed in
-        `deferred_init <Component_Deferred_Init>` status, and will not be executable until its `deferred_init`
-        method called with a function assigned to its `init_args[*SEARCH_SPACE*]` attribute.
+        (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
         It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
-        overridden.  If it is required and not specified, Function will be placed in `deferred_init
-        <Component_Deferred_Init>` status, and will not be executable until its `deferred_init`
-        method called with a function assigned to its `init_args[*SEARCH_TERMINATION_FUNCTION*]` attribute.
+        overridden.  If it is required and not specified, the optimization process will execute exactly once.
 
     save_samples : bool
         specifies whether or not to save and return the values of the samples used to evalute `objective_function
@@ -11772,6 +11791,10 @@ class OptimizationFunction(Function_Base):
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0]:
             self.objective_function = args[0][OBJECTIVE_FUNCTION]
+        if SEARCH_FUNCTION in args[0]:
+            self.search_function = args[0][SEARCH_FUNCTION]
+        if SEARCH_TERMINATION_FUNCTION in args[0]:
+            self.search_termination_function = args[0][SEARCH_TERMINATION_FUNCTION]
         if SEARCH_SPACE in args[0]:
             self.search_space = args[0][SEARCH_SPACE]
 
