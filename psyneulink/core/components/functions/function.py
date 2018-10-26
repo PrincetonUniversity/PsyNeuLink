@@ -11847,14 +11847,14 @@ class OptimizationFunction(Function_Base):
             # Compute new value based on new variable
             new_value = self.objective_function(new_variable)
 
-            # # TEST PRINT:
-            # print(
-            #         'current_variable', new_variable,
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            # )
-            # # self.update_function.__self__.test_print()
-            # # TEST PRINT END
+            # TEST PRINT:
+            print(
+                    'current_variable', new_variable,
+                    '\ncurrent_value: ', current_value,
+                    '\nnew_value: ', new_value,
+            )
+            # self.update_function.__self__.test_print()
+            # TEST PRINT END
 
             iteration+=1
             if self.max_iterations and iteration > self.max_iterations:
