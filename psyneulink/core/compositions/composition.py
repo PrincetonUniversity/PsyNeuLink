@@ -2415,17 +2415,18 @@ class Composition(Composition_Base):
 
         if bin_execute:
             try:
-                node = self.input_CIM
-                self._get_bin_mechanism(self.input_CIM)
-                node = self.output_CIM
-                self._get_bin_mechanism(self.output_CIM)
-                for node in self.c_nodes:
-                    self._get_bin_mechanism(node)
-
                 self.__bin_initialize()
                 if bin_execute == 'LLVMExec':
                     self.__execution.execute(inputs)
                     return self.__execution.extract_node_output(self.output_CIM)
+
+                nodes = self.c_nodes + [self.input_CIM, self.output_CIM]
+                # Generate all node wrappers
+                for node in nodes:
+                    self._get_node_wrapper(node)
+                # Compile all node wrappers
+                for node in nodes:
+                    self._get_bin_mechanism(node)
 
                 bin_execute = True
             except Exception as e:
