@@ -905,10 +905,6 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.LiteralStructType([])
-
     def get_context_initializer(self):
         return tuple([])
 
@@ -930,26 +926,12 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(self.get_params())
-
     def get_param_initializer(self):
         def tupleize(x):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
             return x if x is not None else tuple()
         return tupleize(self.get_params())
-
-    def get_input_struct_type(self):
-        default_var = self.instance_defaults.variable
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_var)
-
-    def get_output_struct_type(self):
-        default_val = self.instance_defaults.value
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_val)
 
     def bin_function(self,
                      variable=None,
@@ -2454,13 +2436,12 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
         #        It should just pass through to modifiers, which matches what
         #        single element 2d array does
         default_var = np.atleast_2d(self.instance_defaults.variable)
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(default_var)
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def get_param_ids(self):
         return SCALE, OFFSET, EXPONENTS
@@ -3277,7 +3258,7 @@ class Identity(
 
         return variable
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self,ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -3287,18 +3268,17 @@ class Identity(
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
                 variable = tuple(variable)
-#        assert all(type(x) == type(t[0]) for x in t)
-            with pnlvm.LLVMBuilderContext() as ctx:
-                return ctx.convert_python_struct_to_llvm_ir(variable)
-        return super().get_input_struct_type()
 
-    def get_output_struct_type(self):
+            return ctx.convert_python_struct_to_llvm_ir(variable)
+        return ctx.get_input_struct_type(super())
+
+    def _get_output_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            return self.get_input_struct_type()
-        return super().get_output_struct_type()
+            return ctx.get_input_struct_type(self)
+        return ctx.get_output_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         val = builder.load(arg_in)
@@ -3446,13 +3426,13 @@ class InterfaceStateMap(InterfaceFunction):
         # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its instance_defaults shape
+        #       does not update its instance_defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
-            return self.owner.owner.function_object.get_output_struct_type()
-        return super().get_input_struct_type()
+            return ctx.get_output_struct_type(self.owner.owner.function_object)
+        return ctx.get_input_struct_type(super())
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
         index = self.corresponding_input_state.position_in_mechanism
@@ -6963,8 +6943,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def get_param_ids(self):
         return RATE, OFFSET, NOISE
 
-    def get_context_struct_type(self):
-        return self.get_output_struct_type()
+    def _get_context_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self)
 
     def get_context_initializer(self, data=None):
         if data is None:
@@ -8435,10 +8415,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                 "time_constant_v", "time_constant_w", "threshold",
                 "uncorrelated_activity", "mode", TIME_STEP_SIZE)
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            context = (self.previous_v, self.previous_w, self.previous_time)
-            context_type = ctx.convert_python_struct_to_llvm_ir(context)
+    def _get_context_struct_type(self, ctx):
+        context = (self.previous_v, self.previous_w, self.previous_time)
+        context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
     def get_context_initializer(self):
@@ -11041,10 +11020,10 @@ COMMENT
     def get_param_ids(self):
         return MATRIX,
 
-    def get_param_struct_type(self):
-        my_params = super().get_param_struct_type()
-        metric_params = self._metric_fct.get_param_struct_type()
-        transfer_params = self.transfer_fct.get_param_struct_type() if self.transfer_fct is not None else ir.LiteralStructType([])
+    def _get_param_struct_type(self, ctx):
+        my_params = ctx.get_param_struct_type(super())
+        metric_params = ctx.get_param_struct_type(self._metric_fct)
+        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
     def get_param_initializer(self):

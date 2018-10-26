@@ -450,7 +450,9 @@ class Composition(Composition_Base):
         self.sched = Scheduler(composition=self)
 
         # Compiled resources
+        self.__generated_wrappers = {}
         self.__compiled_mech = {}
+        self.__generated_execution = None
         self.__compiled_execution = None
         self.__compiled_run = None
         self.__execution = None
@@ -2414,17 +2416,18 @@ class Composition(Composition_Base):
 
         if bin_execute:
             try:
-                node = self.input_CIM
-                self._get_bin_mechanism(self.input_CIM)
-                node = self.output_CIM
-                self._get_bin_mechanism(self.output_CIM)
-                for node in self.c_nodes:
-                    self._get_bin_mechanism(node)
-
                 self.__bin_initialize()
                 if bin_execute == 'LLVMExec':
                     self.__execution.execute(inputs)
                     return self.__execution.extract_node_output(self.output_CIM)
+
+                nodes = self.c_nodes + [self.input_CIM, self.output_CIM]
+                # Generate all node wrappers
+                for node in nodes:
+                    self._get_node_wrapper(node)
+                # Compile all node wrappers
+                for node in nodes:
+                    self._get_bin_mechanism(node)
 
                 bin_execute = True
             except Exception as e:
@@ -2709,14 +2712,6 @@ class Composition(Composition_Base):
         result = None
         if bin_execute == 'LLVMRun':
             self.__bin_initialize()
-            # precompile execution FIXME: Remove this
-            node = self.input_CIM
-            self._get_bin_mechanism(self.input_CIM)
-            node = self.output_CIM
-            self._get_bin_mechanism(self.output_CIM)
-            for node in self.c_nodes:
-                self._get_bin_mechanism(node)
-            self._get_bin_execution()
             self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
             return self.results
 
@@ -2817,34 +2812,34 @@ class Composition(Composition_Base):
 
         return self.results
 
-    def get_param_struct_type(self):
-        mech_param_type_list = [m.get_param_struct_type() for m in self.c_nodes]
-        mech_param_type_list.append(self.input_CIM.get_param_struct_type())
-        mech_param_type_list.append(self.output_CIM.get_param_struct_type())
-        proj_param_type_list = [p.get_param_struct_type() for p in self.projections]
+    def _get_param_struct_type(self, ctx):
+        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self.c_nodes]
+        mech_param_type_list.append(ctx.get_param_struct_type(self.input_CIM))
+        mech_param_type_list.append(ctx.get_param_struct_type(self.output_CIM))
+        proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_param_type_list),
             ir.LiteralStructType(proj_param_type_list)])
 
-    def get_context_struct_type(self):
-        mech_ctx_type_list = [m.get_context_struct_type() for m in self.c_nodes]
-        mech_ctx_type_list.append(self.input_CIM.get_context_struct_type())
-        mech_ctx_type_list.append(self.output_CIM.get_context_struct_type())
-        proj_ctx_type_list = [p.get_context_struct_type() for p in self.projections]
+    def _get_context_struct_type(self, ctx):
+        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self.c_nodes]
+        mech_ctx_type_list.append(ctx.get_context_struct_type(self.input_CIM))
+        mech_ctx_type_list.append(ctx.get_context_struct_type(self.output_CIM))
+        proj_ctx_type_list = [ctx.get_context_struct_type(p) for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_ctx_type_list),
             ir.LiteralStructType(proj_ctx_type_list)])
 
-    def get_input_struct_type(self):
-        return self.input_CIM.get_input_struct_type()
+    def _get_input_struct_type(self, ctx):
+        return ctx.get_input_struct_type(self.input_CIM)
 
-    def get_output_struct_type(self):
-        return self.output_CIM.get_output_struct_type()
+    def _get_output_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self.output_CIM)
 
-    def get_data_struct_type(self):
-        output_type_list = [m.get_output_struct_type() for m in self.c_nodes]
-        output_type_list.append(self.input_CIM.get_output_struct_type())
-        output_type_list.append(self.output_CIM.get_output_struct_type())
+    def _get_data_struct_type(self, ctx):
+        output_type_list = [ctx.get_output_struct_type(m) for m in self.c_nodes]
+        output_type_list.append(ctx.get_output_struct_type(self.input_CIM))
+        output_type_list.append(ctx.get_output_struct_type(self.output_CIM))
         return ir.LiteralStructType(output_type_list)
 
     def get_context_initializer(self):
@@ -2880,18 +2875,32 @@ class Composition(Composition_Base):
         else:
             return self.c_nodes.index(mechanism)
 
+    def _get_node_wrapper(self, node):
+        if node not in self.__generated_wrappers:
+            wrapper = self.__gen_mech_wrapper(node)
+            self.__generated_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_wrappers[node]
+
     def _get_bin_mechanism(self, mechanism):
         if mechanism not in self.__compiled_mech:
-            wrapper = self.__gen_mech_wrapper(mechanism)
+            wrapper = self._get_node_wrapper(mechanism)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_mech[mechanism] = bin_f
             return bin_f
 
         return self.__compiled_mech[mechanism]
 
+    def _get_execution_wrapper(self):
+        if self.__generated_execution is None:
+            self.__generated_execution = self.__gen_exec_wrapper()
+
+        return self.__generated_execution
+
     def _get_bin_execution(self):
         if self.__compiled_execution is None:
-            wrapper = self.__gen_exec_wrapper()
+            wrapper = self._get_execution_wrapper()
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_execution = bin_f
 
@@ -2917,11 +2926,11 @@ class Composition(Composition_Base):
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + mech.name)
-            data_struct_ptr = self.get_data_struct_type().as_pointer()
+            data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
+                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -3036,10 +3045,10 @@ class Composition(Composition_Base):
 
             func_name = ctx.get_unique_name('exec_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer(),
+                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
+                self._get_data_struct_type(ctx).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -3053,7 +3062,7 @@ class Composition(Composition_Base):
             builder = ir.IRBuilder(entry_block)
 
             # Call input CIM
-            input_cim_name = self._get_bin_mechanism(self.input_CIM).name;
+            input_cim_name = self._get_node_wrapper(self.input_CIM);
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
@@ -3106,7 +3115,7 @@ class Composition(Composition_Base):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
                 with builder.if_then(mech_cond):
-                    mech_name = self._get_bin_mechanism(mech).name;
+                    mech_name = self._get_node_wrapper(mech);
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
                     cond_gen.generate_update_after_run(builder, cond, mech)
@@ -3144,7 +3153,7 @@ class Composition(Composition_Base):
 
             builder.position_at_end(exit_block)
             # Call output CIM
-            output_cim_name = self._get_bin_mechanism(self.output_CIM).name;
+            output_cim_name = self._get_node_wrapper(self.output_CIM);
             output_cim_f = ctx.get_llvm_function(output_cim_name)
             builder.call(output_cim_f, [context, params, comp_in, data, data])
 
@@ -3156,11 +3165,11 @@ class Composition(Composition_Base):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name('run_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
-                self.get_data_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
-                self.get_output_struct_type().as_pointer(),
+                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
+                self._get_data_struct_type(ctx).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
+                ctx.get_output_struct_type(self).as_pointer(),
                 ctx.int32_ty.as_pointer(),
                 ctx.int32_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
@@ -3208,7 +3217,7 @@ class Composition(Composition_Base):
             data_in_ptr = builder.gep(data_in, [input_idx])
 
             # Call execution
-            exec_f_name = self._get_bin_execution().name
+            exec_f_name = self._get_execution_wrapper()
             exec_f = ctx.get_llvm_function(exec_f_name)
             builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 

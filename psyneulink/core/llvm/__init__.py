@@ -169,17 +169,19 @@ class CompExecution:
         self._composition = composition
         self.__frozen_vals = None
 
-        # Data
-        c_data = _convert_llvm_ir_to_ctype(self._composition.get_data_struct_type())
-        self.__data_struct = c_data(*self._composition.get_data_initializer())
+        #TODO: This should use compiled function
+        with LLVMBuilderContext() as ctx:
+            # Data
+            c_data = _convert_llvm_ir_to_ctype(self._composition._get_data_struct_type(ctx))
+            self.__data_struct = c_data(*self._composition.get_data_initializer())
 
-        # Context
-        c_context = _convert_llvm_ir_to_ctype(self._composition.get_context_struct_type())
-        self.__context_struct = c_context(*self._composition.get_context_initializer())
+            # Params
+            c_param = _convert_llvm_ir_to_ctype(ctx.get_param_struct_type(self._composition))
+            self.__param_struct = c_param(*self._composition.get_param_initializer())
+            # Context
+            c_context = _convert_llvm_ir_to_ctype(ctx.get_context_struct_type(self._composition))
+            self.__context_struct = c_context(*self._composition.get_context_initializer())
 
-        # Params
-        c_param = _convert_llvm_ir_to_ctype(self._composition.get_param_struct_type())
-        self.__param_struct = c_param(*self._composition.get_param_initializer())
     @property
     def __all_nodes(self):
         return self._composition.c_nodes + [self._composition.input_CIM, self._composition.output_CIM]
@@ -199,7 +201,7 @@ class CompExecution:
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
         # Read provided input data and separate each input state
         input_data = [[x] for m in origins for x in inputs[m]]
-        c_input = _convert_llvm_ir_to_ctype(self._composition.get_input_struct_type())
+        c_input = _convert_llvm_ir_to_ctype(ctx.get_input_struct_type(self._composition))
         def tupleize(x):
             if hasattr(x, '__len__'):
                 return tuple([tupleize(y) for y in x])
@@ -216,7 +218,7 @@ class CompExecution:
             for m in origins:
                 run_inputs[i] += [[v] for v in inputs[m][i]]
 
-        input_ty = ir.ArrayType(self._composition.get_input_struct_type(),
+        input_ty = ir.ArrayType(ctx.get_input_struct_type(self._composition),
                                 num_input_sets)
         c_input = _convert_llvm_ir_to_ctype(input_ty)
         def tupleize(x):

@@ -1334,13 +1334,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         '''
         return self.output_state
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         input_type_list = []
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
         assert len(self.input_states) == 1
         for state in self.input_states:
-            s_type = state.get_input_struct_type()
+            s_type = ctx.get_input_struct_type(state)
             if isinstance(s_type, ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
@@ -1353,19 +1353,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         for state in self.parameter_states:
             state_input_type_list = []
             for proj in state.mod_afferents:
-                state_input_type_list.append(proj.get_output_struct_type())
+                state_input_type_list.append(ctx.get_output_struct_type(proj))
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def get_param_struct_type(self):
-        transfer_t = super().get_param_struct_type()
-        projection_t = self.recurrent_projection.get_param_struct_type()
+    def _get_param_struct_type(self, ctx):
+        transfer_t = ctx.get_param_struct_type(super())
+        projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return ir.LiteralStructType([transfer_t, projection_t])
 
-    def get_context_struct_type(self):
-        transfer_t = super().get_context_struct_type()
-        projection_t = self.recurrent_projection.get_context_struct_type()
-        return_t = self.get_output_struct_type()
+    def _get_context_struct_type(self, ctx):
+        transfer_t = ctx.get_context_struct_type(super())
+        projection_t = ctx.get_context_struct_type(self.recurrent_projection)
+        return_t = ctx.get_output_struct_type(self)
         return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
     def get_param_initializer(self):
@@ -1383,7 +1383,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return tuple([transfer_init, projection_init, tuple(retval_init)])
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        real_input_type = super().get_input_struct_type()
+        real_input_type = super()._get_input_struct_type(ctx)
         real_in = builder.alloca(real_input_type, 1)
         old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
