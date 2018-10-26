@@ -786,17 +786,12 @@ class LVOCControlMechanism(ControlMechanism):
         - control_signal_variable
         - prediction_vector
         - prediction_weights
-        - _prediction_buffer
-        - _previous_cost
-
         - learning_function (if it was specified as a class)
 
-        Also, assign the following attributes to function:
-
+        Also, assign the following attributes to primary (optimization) function:
         - default_variable: control_signal_variables)
-        - objective_function: compute_lvoc_from_control_signals
-        - search_space: _get_control_signal_search_space()
-
+        - objective_function: compute_lvoc_from_control_signals (required by all optimization functions)
+        - search_space: _get_control_signal_search_space() (for optimization functions that use this)
         '''
 
         super()._instantiate_attributes_after_function(context=context)
@@ -811,20 +806,10 @@ class LVOCControlMechanism(ControlMechanism):
         if isinstance(self.learning_function, type):
             self.learning_function = self.learning_function(default_variable = self.prediction_vector.vector)
 
-        # MODIFIED 10/25/18 OLD:
-        # self.prediction_weights = np.zeros_like(self.prediction_vector.vector)
-        # MODIFIED 10/25/18 END
-
         # Assign parameters to function that rely on LVOCControlMechanism
         self.function_object.instance_defaults.variable = self.control_signal_variables
         self.function_object.objective_function = self.compute_lvoc_from_control_signals
         self.function_object.search_space = self._get_control_signal_search_space()
-
-        # MODIFIED 10/25/18 OLD:
-        # # Instantiate PredictionVector and related attributes
-        # self._prediction_buffer = deque([self.prediction_vector.vector], maxlen=2)
-        # self._previous_cost = np.zeros_like(self.instance_defaults.variable[0])
-        # MODIFIED 10/25/18 END
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Find allocation_policy that optimizes EVC.
@@ -835,88 +820,45 @@ class LVOCControlMechanism(ControlMechanism):
           - variable[n]: current value of `feature_predictor <LVOCControlMechanism_Feature_Predictors>`\\[n]
 
         Executes the following steps:
-        - updates outcome from previous trial: value of objective_mechanism minus cost of control_signals
-        - calls learning_function with outcome and prediction_vector from previous trial to update prediction_weights
-        -
-
-        Call to learning_function updates the prediction_vector, and calculates outcome from last trial, by subtracting
-        the `costs <ControlSignal.costs>` for the `control_signal <LVOCControlMechanism.control_signals>` values used
-        in the previous trial from the value received from the `objective_mechanism
-        <LVOCControlMechanism.objective_mechanism>` (in variable[0]) reflecting performance on the previous trial.
-        It then calls the LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>` to update the
-        `prediction_weights <LVOCControlMechanism.prediction_weights>` so as to better predict the outcome.
-
-        Call to `gradient_ascent` determines `allocation_policy <LVOCControlMechanism>` that yields greatest `EVC
-        <LVCOControlMechanism_EVC>` given the new `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+        - calculate outcome from previous trial (value of objective_mechanism - costs of control_signals)
+        - call learning_function with outcome and prediction_vector from previous trial to update prediction_weights
+        - update prediction_vector
+        - execute primary (optimization) function to get allocation_policy that maximizes EVC
+        - return allocation_policy
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-
-        # Updates prediction_vector for current trial, and buffers this in _prediction_buffer;
-        # also buffers costs of control_signals used in previous trial ]in previous_costs.
-        #
-        # Computes outcome for previous trial by subtracting costs of control_signals from outcome received
-        # from objective_mechanism, both of which reflect values assigned in previous trial
-        # (since Projection from objective_mechanism is a feedback Projection, the value received from it corresponds
-        # to the one computed on the previous trial).
-        # # FIX: SHOULD REFERENCE RELEVANT DOCUMENTATION ON COMPOSITION REGARDING FEEDBACK CONNECTIONS)
-        #
-        # Returns prediction_vector and outcome from previous trial,
-        # used by function to update prediction_weights that will be used to predict the EVC for the current trial.
-        # '''
-
         # This is the value received from the objective_mechanism's OUTCOME OutputState:
         obj_mech_outcome = variable[0]
 
-        # # MODIFIED 10/25/18 OLD:
-        # # This is the current values of the feature_predictors
-        # self.feature_values = np.array(np.array(variable[1:]).tolist())
-        #
-        # self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
-        # self._prediction_buffer.append(self.prediction_vector.vector)
-        # self._previous_cost = np.sum(self.prediction_vector.vector[self.prediction_vector.idx[PV.COST.value]])
-        #
-        # # costs are assigned as negative in prediction_vector.update, so add them here
-        # outcome = obj_mech_outcome + self._previous_cost
-        #
-        # # Get sample of weights
-        # # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        # self.prediction_weights = self.learning_function.function([self._prediction_buffer.popleft(), outcome])
-
-        # MODIFIED 10/25/18 NEW:
         if not self.current_execution_count:
+            # Initialize prediction_vector and control_signals on first trial
+            # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
             self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 1)
-            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
             control_signal_variables = np.array([c.instance_defaults.variable for c in self.control_signals])
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
         else:
+            # Update prediction_weights
             previous_cost = np.sum(self._previous_prediction_vector[self.prediction_vector.idx[PV.COST.value]])
             # costs are assigned as negative in prediction_vector.update, so add them here
             outcome = obj_mech_outcome + previous_cost
-            # Update prediction_weights
-            # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, outcome])
 
-            # This is the current values of the feature_predictors
+            # Update prediction_vector with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
-            # Pass current variables of control_signals, or defaults if first trial
-            # control_signal_variables = np.array([c.variable if c.variable is not None
-            #                                      else c.instance_defaults.variable
-            #                                      for c in self.control_signals])
             control_signal_variables = np.array([c.variable for c in self.control_signals])
             self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
             self._previous_prediction_vector = self.prediction_vector.vector
-
-        # MODIFIED 10/25/18 END
-
 
         # TEST PRINT
         print ('\nOUTCOME: ', self.input_state.value)
         print ('prediction_weights: ', self.prediction_weights)
         # TEST PRINT END
 
-        # Compute allocation_policy using gradient_ascent
+        # Compute allocation_policy using LVOCControlMechanism's optimization function
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy, self.saved_samples, self.saved_values = super(ControlMechanism, self)._execute(
                                                                                     variable=control_signal_variables,
                                                                                     runtime_params=runtime_params,
@@ -927,12 +869,6 @@ class LVOCControlMechanism(ControlMechanism):
         # TEST PRINT END
 
         return allocation_policy
-
-    # def _parse_function_variable(self, variable, context=None):
-    #
-    #     (control_signal_variables)
-
-
 
     def _get_control_signal_search_space(self):
 
