@@ -148,7 +148,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
@@ -305,7 +305,7 @@ class AGTControlMechanism(ControlMechanism):
     def __init__(self,
                  system:tc.optional(System_Base)=None,
                  monitored_output_states=None,
-                 function = Linear(slope=1, intercept=0),
+                 function=None,
                  # control_signals:tc.optional(list) = None,
                  control_signals= None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -318,15 +318,18 @@ class AGTControlMechanism(ControlMechanism):
                                                   control_signals=control_signals,
                                                   params=params)
 
-        super().__init__(system=system,
-                         objective_mechanism=ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                                function=AGTUtilityIntegrator),
-                         control_signals=control_signals,
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+        super().__init__(
+            system=system,
+            objective_mechanism=ObjectiveMechanism(
+                monitored_output_states=monitored_output_states,
+                function=AGTUtilityIntegrator
+            ),
+            control_signals=control_signals,
+            modulation=modulation,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
         self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
         self.objective_mechanism._role = CONTROL
@@ -439,7 +442,9 @@ class AGTControlMechanism(ControlMechanism):
     def operation(self, value):
         self._objective_mechanism.function_object.operation = value
 
-
+    @property
+    def agt_function_parameters(self):
+        return self.objective_mechanism.function_object.parameters
 
     def show(self):
         """Display the `OutputStates <OutputState>` monitored by the AGTControlMechanism's `objective_mechanism`
