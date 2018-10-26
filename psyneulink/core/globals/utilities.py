@@ -488,7 +488,9 @@ def iscompatible(candidate, reference=None, **kargs):
                     if not isinstance(value, numbers.Number):
                         try:
                             # True for autograd ArrayBox (and maybe other types?)
-                            if isinstance(value._value, numbers.Number):
+                            # if isinstance(value._value, numbers.Number):
+                            from autograd.numpy.numpy_boxes import ArrayBox
+                            if isinstance(value, ArrayBox):
                                 return True
                         except:
                             return False
