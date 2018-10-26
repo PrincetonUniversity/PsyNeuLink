@@ -962,8 +962,8 @@ class Projection_Base(Projection):
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.function_object)
 
-    def get_param_struct_type(self):
-        return self.function_object.get_param_struct_type()
+    def _get_param_struct_type(self, ctx):
+        return ctx.get_param_struct_type(self.function_object)
 
     def get_context_struct_type(self):
         return self.function_object.get_context_struct_type()

@@ -1357,9 +1357,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def get_param_struct_type(self):
-        transfer_t = super().get_param_struct_type()
-        projection_t = self.recurrent_projection.get_param_struct_type()
+    def _get_param_struct_type(self, ctx):
+        transfer_t = ctx.get_param_struct_type(super())
+        projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return ir.LiteralStructType([transfer_t, projection_t])
 
     def get_context_struct_type(self):

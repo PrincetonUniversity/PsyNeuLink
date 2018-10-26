@@ -83,6 +83,13 @@ class LLVMBuilderContext:
         default_val = component.instance_defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
+    def get_param_struct_type(self, component):
+        if hasattr(component, '_get_param_struct_type'):
+            return component._get_param_struct_type(self)
+
+        params = component.get_params()
+        return self.convert_python_struct_to_llvm_ir(params)
+
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             assert all(type(x) == type(t[0]) for x in t)

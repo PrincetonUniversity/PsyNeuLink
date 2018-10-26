@@ -892,10 +892,6 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.convert_python_struct_to_llvm_ir(self.get_params())
-
     def get_param_initializer(self):
         def tupleize(x):
             if hasattr(x, "__len__"):
@@ -10945,10 +10941,10 @@ COMMENT
     def get_param_ids(self):
         return MATRIX,
 
-    def get_param_struct_type(self):
-        my_params = super().get_param_struct_type()
-        metric_params = self._metric_fct.get_param_struct_type()
-        transfer_params = self.transfer_fct.get_param_struct_type() if self.transfer_fct is not None else ir.LiteralStructType([])
+    def _get_param_struct_type(self, ctx):
+        my_params = ctx.get_param_struct_type(super())
+        metric_params = ctx.get_param_struct_type(self._metric_fct)
+        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
     def get_param_initializer(self):

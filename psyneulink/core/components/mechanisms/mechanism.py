@@ -2516,24 +2516,24 @@ class Mechanism_Base(Mechanism):
         self._update_output_states(context="INITIAL_VALUE")
 
 
-    def get_param_struct_type(self):
+    def _get_param_struct_type(self, ctx):
         input_param_list = []
         for state in self.input_states:
-            input_param_list.append(state.get_param_struct_type())
+            input_param_list.append(ctx.get_param_struct_type(state))
         input_param_struct = ir.LiteralStructType(input_param_list)
 
         output_param_list = []
         for state in self.output_states:
-            output_param_list.append(state.get_param_struct_type())
+            output_param_list.append(ctx.get_param_struct_type(state))
         output_param_struct = ir.LiteralStructType(output_param_list)
 
         param_param_list = []
         for state in self.parameter_states:
-            param_param_list.append(state.get_param_struct_type())
+            param_param_list.append(ctx.get_param_struct_type(state))
         param_param_struct = ir.LiteralStructType(param_param_list)
 
         param_list = [input_param_struct,
-                      self.function_object.get_param_struct_type(),
+                      ctx.get_param_struct_type(self.function_object),
                       output_param_struct,
                       param_param_struct]
 

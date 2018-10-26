@@ -2816,11 +2816,11 @@ class Composition(Composition_Base):
 
         return self.results
 
-    def get_param_struct_type(self):
-        mech_param_type_list = [m.get_param_struct_type() for m in self.c_nodes]
-        mech_param_type_list.append(self.input_CIM.get_param_struct_type())
-        mech_param_type_list.append(self.output_CIM.get_param_struct_type())
-        proj_param_type_list = [p.get_param_struct_type() for p in self.projections]
+    def _get_param_struct_type(self, ctx):
+        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self.c_nodes]
+        mech_param_type_list.append(ctx.get_param_struct_type(self.input_CIM))
+        mech_param_type_list.append(ctx.get_param_struct_type(self.output_CIM))
+        proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_param_type_list),
             ir.LiteralStructType(proj_param_type_list)])
@@ -2919,7 +2919,7 @@ class Composition(Composition_Base):
             data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
@@ -3036,7 +3036,7 @@ class Composition(Composition_Base):
             func_name = ctx.get_unique_name('exec_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 self._get_data_struct_type(ctx).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
@@ -3156,7 +3156,7 @@ class Composition(Composition_Base):
             func_name = ctx.get_unique_name('run_wrap_' + self.name)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_context_struct_type().as_pointer(),
-                self.get_param_struct_type().as_pointer(),
+                ctx.get_param_struct_type(self).as_pointer(),
                 self._get_data_struct_type(ctx).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer(),

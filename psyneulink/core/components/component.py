@@ -1659,7 +1659,7 @@ class Component(object, metaclass=ComponentsMeta):
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
+                (ctx.get_param_struct_type(self).as_pointer(),
                  self.get_context_struct_type().as_pointer(),
                  ctx.get_input_struct_type(self).as_pointer(),
                  ctx.get_output_struct_type(self).as_pointer()))
