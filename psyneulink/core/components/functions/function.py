@@ -11650,7 +11650,7 @@ class OptimizationFunction(Function_Base):
 
     default_variable : list or np.ndarray : default None
         specifies the shape of the samples used to evaluate the `objective_function
-        <OptimizationFunctoin.objective_function>`.
+        <OptimizationFunction.objective_function>`.
 
     objective_function : function or method : default None
         specifies function used to evaluate `variable <OptimizationFunction.variable>` in each iteration
