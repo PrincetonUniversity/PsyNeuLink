@@ -3342,10 +3342,10 @@ class Component(object, metaclass=ComponentsMeta):
                 new_value = self.function_object.reinitialize(*args)
                 self.value = np.atleast_2d(new_value)
             else:
-                ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                                "(It does not have an accumulator to reinitialize).".format(self.name))
         else:
-            ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+            raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                            "(It does not have an accumulator to reinitialize).".format(self.name))
         assert True
 
