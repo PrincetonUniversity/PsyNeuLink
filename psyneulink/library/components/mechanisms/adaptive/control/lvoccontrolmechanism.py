@@ -768,12 +768,12 @@ class LVOCControlMechanism(ControlMechanism):
 
         return input_state_specs
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        if isinstance(self.learning_function, type):
-            self.learning_function = self.learning_function()
-        else:
-            self.learning_function = self.learning_function
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #     super()._instantiate_attributes_before_function(function=function, context=context)
+    #     if isinstance(self.learning_function, type):
+    #         self.learning_function = self.learning_function()
+    #     else:
+    #         self.learning_function = self.learning_function
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
@@ -815,14 +815,17 @@ class LVOCControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        self.prediction_weights = np.zeros_like(self.learning_function.value)
-
         self.feature_values = np.array(self.instance_defaults.variable[1:])
         self.control_signal_variables = np.array([c.variable for c in self.control_signals])
 
         self.prediction_vector = self.PredictionVector(self.feature_values,
                                                        self.control_signals,
                                                        self.prediction_terms)
+
+        if isinstance(self.learning_function, type):
+            self.learning_function = self.learning_function(default_variable = self.prediction_vector.vector)
+
+        self.prediction_weights = np.zeros_like(self.prediction_vector.vector)
 
         # Assign parameters to function that rely on LVOCControlMechanism
         self.function_object.instance_defaults.variable = self.control_signal_variables
@@ -915,9 +918,9 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Compute allocation_policy using gradient_ascent
         allocation_policy, self.saved_samples, self.saved_values = super(ControlMechanism, self)._execute(
-                                                                                        variable=variable,
-                                                                                        runtime_params=runtime_params,
-                                                                                        context=context)
+                                                                                    variable=control_signal_variables,
+                                                                                    runtime_params=runtime_params,
+                                                                                    context=context)
 
         # TEST PRINT
         print ('\nEVC: ', allocation_policy[0],'\n---------------------------')

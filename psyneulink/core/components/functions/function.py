@@ -13667,6 +13667,12 @@ class BayesGLM(LearningFunction):
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
+        # If variable passed during execution does not match default assigned during initialization,
+        #    reassign default and re-initialize priors
+        elif np.array(variable).shape != self.instance_defaults.variable.shape:
+            self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+            self.initialize_priors()
+
         # Today's prior is yesterday's posterior
         self.Lambda_prior = self.Lambda_n
         self.mu_prior = self.mu_n
