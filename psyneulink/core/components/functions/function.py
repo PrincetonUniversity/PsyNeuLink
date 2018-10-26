@@ -867,10 +867,6 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.LiteralStructType([])
-
     def get_context_initializer(self):
         return tuple([])
 
@@ -6865,9 +6861,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def get_param_ids(self):
         return RATE, OFFSET, NOISE
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ctx.get_output_struct_type(self)
+    def _get_context_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self)
 
     def get_context_initializer(self, data=None):
         if data is None:
@@ -8338,10 +8333,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                 "time_constant_v", "time_constant_w", "threshold",
                 "uncorrelated_activity", "mode", TIME_STEP_SIZE)
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            context = (self.previous_v, self.previous_w, self.previous_time)
-            context_type = ctx.convert_python_struct_to_llvm_ir(context)
+    def _get_context_struct_type(self, ctx):
+        context = (self.previous_v, self.previous_w, self.previous_time)
+        context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
     def get_context_initializer(self):

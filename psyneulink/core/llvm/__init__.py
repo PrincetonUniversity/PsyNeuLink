@@ -178,9 +178,9 @@ class CompExecution:
             # Params
             c_param = _convert_llvm_ir_to_ctype(ctx.get_param_struct_type(self._composition))
             self.__param_struct = c_param(*self._composition.get_param_initializer())
-        # Context
-        c_context = _convert_llvm_ir_to_ctype(self._composition.get_context_struct_type())
-        self.__context_struct = c_context(*self._composition.get_context_initializer())
+            # Context
+            c_context = _convert_llvm_ir_to_ctype(ctx.get_context_struct_type(self._composition))
+            self.__context_struct = c_context(*self._composition.get_context_initializer())
 
     @property
     def __all_nodes(self):

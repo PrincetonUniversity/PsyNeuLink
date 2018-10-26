@@ -2548,23 +2548,23 @@ class Mechanism_Base(Mechanism):
         pass
 
 
-    def get_context_struct_type(self):
+    def _get_context_struct_type(self, ctx):
         input_context_list = []
         for state in self.input_states:
-            input_context_list.append(state.get_context_struct_type())
+            input_context_list.append(ctx.get_context_struct_type(ctx))
         input_context_struct = ir.LiteralStructType(input_context_list)
 
         output_context_list = []
         for state in self.output_states:
-            output_context_list.append(state.get_context_struct_type())
+            output_context_list.append(ctx.get_context_struct_type(state))
         output_context_struct = ir.LiteralStructType(output_context_list)
 
         parameter_context_list = []
         for state in self.parameter_states:
-            parameter_context_list.append(state.get_context_struct_type())
+            parameter_context_list.append(ctx.get_context_struct_type(state))
         parameter_context_struct = ir.LiteralStructType(parameter_context_list)
 
-        return ir.LiteralStructType([input_context_struct, self.function_object.get_context_struct_type(), output_context_struct, parameter_context_struct])
+        return ir.LiteralStructType([input_context_struct, ctx.get_context_struct_type(self.function_object), output_context_struct, parameter_context_struct])
 
 
     def _get_output_struct_type(self, ctx):

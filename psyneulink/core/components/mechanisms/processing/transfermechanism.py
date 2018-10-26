@@ -1091,27 +1091,27 @@ class TransferMechanism(ProcessingMechanism_Base):
         return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct, param_param_struct])
 
 
-    def get_context_struct_type(self):
+    def _get_context_struct_type(self, ctx):
         input_context_list = []
         for state in self.input_states:
-            input_context_list.append(state.get_context_struct_type())
+            input_context_list.append(ctx.get_context_struct_type(state))
         input_context_struct = ir.LiteralStructType(input_context_list)
 
-        context_type_list = [self.function_object.get_context_struct_type()]
+        context_type_list = [ctx.get_context_struct_type(self.function_object)]
         if self.integrator_mode:
            assert self.integrator_function is not None
-           context_type_list.append(self.integrator_function.get_context_struct_type())
+           context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
 
         function_context_struct = ir.LiteralStructType(context_type_list)
 
         output_context_list = []
         for state in self.output_states:
-            output_context_list.append(state.get_context_struct_type())
+            output_context_list.append(ctx.get_context_struct_type(state))
         output_context_struct = ir.LiteralStructType(output_context_list)
 
         parameter_context_list = []
         for state in self.parameter_states:
-            parameter_context_list.append(state.get_context_struct_type())
+            parameter_context_list.append(ctx.get_context_struct_type(state))
         parameter_context_struct = ir.LiteralStructType(parameter_context_list)
 
         return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
