@@ -1,12 +1,12 @@
 
 Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)
-================================================================
+==================================================================
 `"Conflict Monitoring and Cognitive Control" <https://www.ncbi.nlm.nih.gov/pubmed/11488380>`_
 
 Overview
 --------
-This implements a model concerning the role of the anterior cingulate cortex (ACC)
-`<https://en.wikipedia.org/wiki/Anterior_cingulate_cortex>`_ in situations calling for their
+This implements a model concerning the role of the `anterior cingulate cortex (ACC)
+<https://en.wikipedia.org/wiki/Anterior_cingulate_cortex>`_ in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
@@ -101,4 +101,4 @@ Note that this script implements a slightly different Figure than in the origina
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.
 
-Script: :download:`Botvinick_conflict_monitoring_Figure1.py <../../Scripts/Models/Botvinick_conflict_monitoring_Figure1.py>`
+Script: :download:`Botvinick_conflict_monitoring_model.py <../../Scripts/Models/Botvinick_conflict_monitoring_model.py>`

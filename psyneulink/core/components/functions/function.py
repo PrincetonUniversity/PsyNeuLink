@@ -62,6 +62,10 @@ Objective Functions:
   * `Stability`
   * `Distance`
 
+Optimization Functions:
+  * `GradientOptimization`
+  * `GridSearch`
+
 Learning Functions:
   * `Kohonen`
   * `Hebbian`
@@ -201,39 +205,67 @@ from collections import deque, namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
+# import autograd.numpy as np
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, \
+    BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
+    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
+    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
+    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
+    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
+    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
+    HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
+    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
+    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
+    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
+    NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
+    OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
+    PARAMETER_STATE_PARAMS, PARAMS, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
+    SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
+    STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
+    TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
+    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE
+
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
 
 __all__ = [
-    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'ASCENT',
     'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy', 'AUTOASSOCIATIVE',
     'BackPropagation', 'BayesGLM', 'BogaczEtAl', 'BOUNDS',
-    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian', 'DISABLE',
-    'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'ContrastiveHebbian',
+    'DESCENT', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
-    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
-    'FunctionRegistry', 'GammaDist', 'get_matrix', 'get_param_value_for_function',
-    'get_param_value_for_keyword', 'Hebbian', 'Integrator',
-    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl',
-    'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
+    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
+    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword',
+    'GradientOptimization', 'GridSearch',
+    'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
+    'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
-    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
-    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
+    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic',
+    'MAXIMIZE', 'max_vs_avg', 'max_vs_next', 'MINIMIZE', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
-    'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
+    'NormalDist', 'ObjectiveFunction', 'OptimizationFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal',
+    'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -722,6 +754,12 @@ class Function_Base(Function):
 
         if context != ContextFlags.CONSTRUCTOR:
             raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
+
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            self._assign_deferred_init_name(name, context)
+            self.init_args[NAME] = name
+            return
+
 
         self._output_type = None
         self.enable_output_type_conversion = False
@@ -3719,8 +3757,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
     """
     Exponential(           \
          default_variable, \
-         scale=1.0,        \
          rate=1.0,         \
+         bias=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -3740,8 +3780,16 @@ class Exponential(TransferFunction):  # ----------------------------------------
     rate : float : default 1.0
         specifies a value by which to multiply `variable <Exponential.variable>` before exponentiation.
 
+    bias : float : default 0.0
+        specifies a value to add to `variable <Exponential.variable>` after multplying by `rate <Exponential.rate>`
+        and before exponentiation.
+
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
+
+    offset : float : default 0.0
+        specifies value to add to the exponentiated value of `variable <Exponential.variable>`
+        after multiplying by `scale <Exponentinal.scale>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3764,10 +3812,18 @@ class Exponential(TransferFunction):  # ----------------------------------------
         contains value to be transformed.
 
     rate : float
-        value by which `variable <Exponential.variable>` is multiplied before exponentiation.
+        value by which `variable <Exponential.variable>` is multiplied before exponentiation;
+        assigned as *MULTILICATIVE_PARAM* of the Exponential Function.
+
+    bias : float
+        value added to `variable <Exponential.variable>` after multiplying by `rate <Exponential.rate>`
+        and before exponentiation;  assigned as *ADDITIVE_PARAM* of the Exponential Function.
 
     scale : float
         value by which the exponentiated value is multiplied.
+
+    offset : float
+        value added to exponentiated value after multiplying by `scale <Exponentinal.scale>`.
 
     bounds : (0, None)
 
@@ -3788,25 +3844,31 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     bounds = (0, None)
     multiplicative_param = RATE
-    additive_param = SCALE
+    additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(TransferFunction.Params):
         rate = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        scale = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Param(1.0, modulable=True)
+        offset = Param(0.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
+                                                  bias=bias,
                                                   scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3816,23 +3878,29 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_ids(self):
-        return RATE, SCALE
+        return RATE, BIAS, SCALE, OFFSET
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         rate_ptr, builder = self.get_param_ptr(ctx, builder, params, RATE)
+        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
         scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
         val = builder.fmul(val, rate)
+        val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
         val = builder.fmul(val, scale)
+        val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -3841,8 +3909,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `scale <Exponential.scale>`
-        :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable <Linear.variable>`).
+        Return: `scale <Exponential.scale>` :math:`*` e**(`rate <Exponential.rate>` :math:`*` `variable
+        <Exponential.variable>` + `bias <Exponential.bias>`).
 
         Arguments
         ---------
@@ -3865,9 +3933,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         rate = self.get_current_function_param(RATE)
+        bias = self.get_current_function_param(BIAS)
         scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
 
-        result = scale * np.exp(rate * variable)
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        # result = scale * np.exp(rate * variable + bias) + offset
+        from math import e
+        result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
     def derivative(self, input, output=None):
@@ -3880,10 +3953,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         -------
 
         derivative :  number
-            `rate <Exponential.rate>` * input.
+            `rate <Exponential.rate>` * input + `bias <Exponential.bias>`.
 
         """
-        return self.get_current_function_param(RATE) * input
+        return self.get_current_function_param(RATE) * input + self.get_current_function_param(BIAS)
 
 
 class Logistic(
@@ -3893,6 +3966,7 @@ class Logistic(
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         scale=1.0,        \
          offset=0.0,       \
          params=None,      \
          owner=None,       \
@@ -3900,7 +3974,7 @@ class Logistic(
          prefs=None        \
          )
 
-    .. _Logistic:
+    .. _fu:
 
     Logistically transform variable.
 
@@ -3948,6 +4022,10 @@ class Logistic(
     bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
+
+    offset : float : default 0.0
+        value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
+        but before logistic transformation.
 
     bounds : (0,1)
 
@@ -4060,7 +4138,11 @@ class Logistic(
         bias = self.get_current_function_param(BIAS)
         offset = self.get_current_function_param(OFFSET)
 
-        result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        # result = scale * np.exp(rate * variable + bias) + offset
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        from math import e
+        result = 1. / (1 + e**(-gain * (variable - bias) + offset))
 
         return self.convert_output_type(result)
 
@@ -10775,6 +10857,8 @@ COMMENT
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
     Attributes
     ----------
 
@@ -10806,7 +10890,8 @@ COMMENT
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).     """
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = STABILITY_FUNCTION
 
@@ -11498,6 +11583,815 @@ class Distance(ObjectiveFunction):
 
 # endregion
 
+
+# region **************************************   OPTIMIZATION FUNCTIONS ***********************************************
+
+
+OBJECTIVE_FUNCTION = 'objective_function'
+SEARCH_FUNCTION = 'search_function'
+SEARCH_SPACE = 'search_space'
+SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
+
+class OptimizationFunction(Function_Base):
+    """Abstract class of `Function <Function>` used for optimization of a variable.
+
+    Provides an interface to subclasses and external optimization functions. The default `function
+    <OptimizationFunction.function>` executes iteratively, evaluating samples from `search_space
+    <OptimizationFunction.search_space>` using `objective_function <OptimizationFunction.objective_function>`
+    until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
+    Subclasses can override this to implement their own optimization function or call an external one.
+
+    .. _Optimization_Process:
+
+    **Default Optimization Process**
+
+    When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
+
+        - get sample of `variable <OptimizationFunction.variable>` from `search_space
+        <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`.
+        ..
+        - compute value of `objective_function <OptimizationFunction.objective_function>` using the sample;
+        ..
+        - evaluate `search_termination_function <OptimizationFunction.search_termination_function>`.
+
+    Iteration continues until all values of `search_space <OptimizationFunction.search_space>` have been evaluated
+    (i.e., `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`).
+    The current iteration is contained in `iteration <OptimizationFunction.iteration>`.
+
+    .. note:
+
+        An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
+        runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
+        meant simply to allow the  constructor of the OptimziationFunction to be used to specify some but not all of
+        its parameters when specifying the OptimizationFunction in the constructor for another Component. For
+        example, an OptimizationFunction may use as its `objective_function <OptimizationFunction.objective_function>`
+        or `search_function <OptimizationFunction.search_function>` a method of the Component to which it is being
+        assigned;  however, those methods will not yet be available, as the Component itself has not yet been
+        constructed. This can be handled by calling the OptimizationFunction's `reinitialization
+        <OptimizationFunction.reinitialization>` method, with a parameter specification dictionary with a key for
+        each entry that is the name of a parameter and its value the value to be assigned to the parameter.  This is
+        done automatically for Mechanisms that take an ObjectiveFunction as their `function <Mechanism.function>`
+        (such as the `EVCControlMechanism`, `LVOCControlMechanism` and `ParamterEstimationControlMechanism`), but
+        will require it be done explicitly for Components for which that is not the case.
+
+
+    COMMENT:
+    NOTE TO DEVELOPERS:
+    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
+      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+
+    - Subclasses with attributes that depend on one of the OptimizationFunction's paramters should implement the
+      `reinitialize <OptimizationFunction.reinitialize>` method, that calls super().reinitialize(*args) and then
+      reassigns the values of the dependent attributes accordingly.
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : list or np.ndarray : default None
+        specifies the shape of the samples used to evaluate the `objective_function
+        <OptimizationFunction.objective_function>`.
+
+    objective_function : function or method : default None
+        specifies function used to evaluate `variable <OptimizationFunction.variable>` in each iteration
+        of the `optimization process <OptimizationFunction_Process>`; if it is not specified, a default
+        function will be used that simply returns the value passed as its `variable <OptimizationFunction.variable>`
+        parameter.
+
+    search_function : function or method : default None
+        specifies function used to select a sample for `objective_function <OptimizationFunction.objective_function>`
+        in each iteration of the `optimization process <OptimizationFunction_Process>`.  It **must be specified**
+        if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
+        (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
+
+    search_space : list or np.ndarray : default None
+        specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
+        in each iteration of the `optimization process <OptimizationFunction_Process>`. It **must be specified**
+        if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
+        (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
+
+    search_termination_function : function or method : None
+        specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
+        It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
+        overridden.  If it is required and not specified, the optimization process will execute exactly once.
+
+    save_samples : bool
+        specifies whether or not to save and return the values of the samples used to evalute `objective_function
+        <OptimizationFunction.objective_function>` over all iterations of the `optimization process
+        <OptimizationFunction_Process>`.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function
+        <OptimizationFunction.objective_function>` for samples evaluated in all iterations of the
+        `optimization process <OptimizationFunction_Process>`.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the `optimization process <OptimizationFunction_Process>` is allowed
+        to iterate; if exceeded, a warning is issued, and the function returns the last sample evaluated.
+
+
+    Attributes
+    ----------
+
+    default_variable : number, list or ndarray
+        shape of the samples used to evaluate `variable <OptimizationFunction.variable>` in each iteration of the
+         `optimization process <OptimizationFunction_Process>`.
+
+    objective_function : function or method
+        used to evaluate `variable <OptimizationFunction.variable>` in each iteration of the `optimization process
+        <OptimizationFunction_Process>`.
+
+    search_function : function, method or None
+        used to select a sample evaluated by `objective_function <OptimizationFunction.objective_function>`
+        in each iteration of the `optimization process <OptimizationFunction_Process>`.  `None` if
+        the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
+
+    search_space : list or np.ndarray
+        samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
+        in each iteration of the `optimization process <OptimizationFunction_Process>`;  `None` if
+        the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
+
+    search_termination_function : function or method
+        used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
+
+    iteration : int
+        the currention iteration of the optiimzaton process.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the `optimization process <OptimizationFunction_Process>` is allowed
+        to iterate; if exceeded, a warning is issued, and the function returns the last sample evaluated.
+
+    saved_samples : bool
+        determines whether or not to save the values of the samples used to evalute `objective_function
+        <OptimizationFunction.objective_function>` over all iterations of the `optimization process
+        <OptimizationFunction_Process>`.
+
+    saved_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <OptimizationFunction.objective_function>` for samples evaluated in all iterations of the
+        `optimization process <OptimizationFunction_Process>`.
+
+
+    Returns
+    -------
+
+    Optimal value of those sampled by the `optimization process <OptimizationFunction_Process>`.  If `saved_samples
+    <OptimizationFunction.saved_samples>` is `True`, the first list has the values for all variables
+    sampled in the order they were sampled;  if `False`, the list is empty.  If `saved_values
+    <OptimizationFunction.saved_values>` is `True`, the second list has the values corresponding to all
+    the variables sampled in the order they were sampled;  if `False`, the list is empty.
+
+    """
+
+    componentType = OPTIMIZATION_FUNCTION_TYPE
+
+    class Params(Function_Base.Params):
+        variable = Param(np.array([0, 0, 0]), read_only=True)
+
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 # objective_function:tc.optional(is_function_type)=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 # search_space:tc.optional(tc.any(list,np.ndarray))=None,
+                 # search_function:tc.optional(is_function_type)=None,
+                 search_function:is_function_type=lambda x:x,
+                 search_space=None,
+                 # search_space:tc.optional(list, np.ndarray)=[0],
+                 # search_termination_function:tc.optional(is_function_type)=None,
+                 search_termination_function:is_function_type=lambda x,y,z:True,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
+                 max_iterations:tc.optional(int)=None,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
+
+        if objective_function is None:
+            self.objective_function = lambda x:0
+        else:
+            self.objective_function = objective_function
+
+        self.search_function = search_function
+        self.search_termination_function = search_termination_function
+        self.search_space = search_space or [0]
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(save_samples=save_samples,
+                                                  save_values=save_values,
+                                                  max_iterations=max_iterations,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def reinitialize(self, *args):
+        '''Reinitialize parameters of the OptimizationFunction
+
+        Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
+        for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
+        parameter.  The following parameters can be reinitialized:
+
+            * `default_variable <OptimizationFunction.default_variable>`
+            * `objective_function <OptimizationFunction.objective_function>`
+            * `search_function <OptimizationFunction.search_function>`
+            * `search_termination_function <OptimizationFunction.search_termination_function>`
+
+        '''
+        if DEFAULT_VARIABLE in args[0]:
+            self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
+        if OBJECTIVE_FUNCTION in args[0]:
+            self.objective_function = args[0][OBJECTIVE_FUNCTION]
+        if SEARCH_FUNCTION in args[0]:
+            self.search_function = args[0][SEARCH_FUNCTION]
+        if SEARCH_TERMINATION_FUNCTION in args[0]:
+            self.search_termination_function = args[0][SEARCH_TERMINATION_FUNCTION]
+        if SEARCH_SPACE in args[0]:
+            self.search_space = args[0][SEARCH_SPACE]
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the last value of `variable <OptimizationFunction.variable>` and all values of
+        `objective_function <OptimizationFunction.objective_function>`.
+
+        See `Optimization Process <OptimizationFunction_Process>` for details.
+        '''
+
+        variable = self._update_variable(self._check_args(variable, params, context))
+
+        current_variable = variable
+        current_value = self.objective_function(current_variable)
+
+        self._samples = []
+        self._values = []
+
+        # Initialize variables used in while loop
+        iteration=0
+
+        # Iterate optimization process
+        while self.search_termination_function(current_variable, current_value, iteration):
+
+            # Get next sample of variable
+            new_variable = self.search_function(current_variable, iteration)
+
+            # Compute new value based on new variable
+            new_value = self.objective_function(new_variable)
+
+            # # TEST PRINT:
+            # print(
+            #         'current_variable', new_variable,
+            #         '\ncurrent_value: ', current_value,
+            #         '\nnew_value: ', new_value,
+            # )
+            # # self.update_function.__self__.test_print()
+            # # TEST PRINT END
+
+            iteration+=1
+            if self.max_iterations and iteration > self.max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+                break
+
+            current_variable = new_variable
+            current_value = new_value
+
+            if self.save_samples:
+                self._samples.append(new_variable)
+            if self.save_values:
+                self._values.append(current_value)
+
+        return new_variable, self._samples, self._values
+
+
+ASCENT = 'ascent'
+DESCENT = 'descent'
+
+
+class GradientOptimization(OptimizationFunction):
+    """
+    GradientOptimization(            \
+        default_variable=None,       \
+        objective_function=None,     \
+        direction=ASCENT,            \
+        step_size=1.0,             \
+        annealing_function=None,     \
+        convergence_criterion=VALUE, \
+        convergence_threshold=.001,  \
+        max_iterations=1000,         \
+        save_samples=False,          \
+        save_values=False,           \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
+
+    Optimize a variable with respect to a specified `objective_function <GradientOptimization.objective_function>`.
+
+    .. _GradientOptimization_Process:
+
+    **Optimization Process**
+
+    When `function <GradientOptimization.function>` is executed, it iterates over the folowing steps:
+
+        - `compute gradient <GradientOptimization_Gradient_Calculation>` using the `gradient_function
+          <GradientOptimization.gradient_function>`;
+        ..
+        - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
+          `direction <GradientOptimization.direction>` and by an amount specified by `step_size
+          <GradientOptimization.step_size>` and possibly `annealing_function
+          <GradientOptimization.annealing_function>`;
+        ..
+        - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
+          `variable <GradientOptimization.variable>`;
+        ..
+        - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
+          <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
+        ..
+        - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
+          the `convergence_threshold <GradientOptimization.convergence_threshold>`.
+
+    Iteration continues until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls
+    below `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or the number of iterations exceeds
+    `max_iterations <GradientOptimization.max_iterations>`.  The current iteration is contained in `iteration
+    <GradientOptimization.iteration>`.
+
+    .. _GradientOptimization_Gradient_Calculation:
+
+    **Gradient Calculation**
+
+    The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
+    which is the derivative of the `objective_function <GradientOptimization.objective_function>`
+    with respect to `variable <GradientOptimization.variable>` at its current value:
+
+        :math:`\\frac{d}{d(variable)}(objective\\_function(variable))`
+
+    `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
+    generate `gradient_function <GradientOptimization.gradient_function>`.
+
+
+    Arguments
+    ---------
+
+    objective_function : function or method
+        specifies function used to evaluate `variable <GradientOptimization.variable>`
+        in each iteration of the `optimization process  <GradientOptimization_Process>`;
+        it must be specified and it must return a scalar value.
+
+    direction : ASCENT or DESCENT : default ASCENT
+        specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
+        the gradient).
+
+    step_size : int or float : default 1.0
+        specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
+        iteration of the `optimization process <GradientOptimization_Process>`;  if `annealing_function
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
+
+    step_size : int or float : default 0.01
+        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
+        each iteration of the `optimization process <GradientOptimization_Process>` of the optimization process.
+
+    annealing_function : function or method : default None
+        specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
+        iteration of the `optimization process <GradientOptimization_Process>`;  must take accept two parameters —
+        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Process>`, in that
+        order — and return a scalar value, that is used for the next iteration of optimization.
+
+    convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
+        specifies the measure used to determine when to terminate iterations of the `optimization process
+        <GradientOptimization_Process>` of the optimization process.
+
+    convergence_threshold : int or float : default 0.001
+        specifies the change in value of the `convergence_criterion` below which the optimization process
+        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+
+    max_iterations : int : default 1000
+        specifies the maximum number of times the optimization process is allowed to `iterate
+        <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
+        returns the last value of `variable <GradientOptimization.variable>`.
+
+    save_samples : bool
+        specifies whether or not to save and return the values of the samples used to evalute `objective_function
+        <GradientOptimization.objective_function>`.
+
+    save_values : bool
+        specifies whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated
+
+    Attributes
+    ----------
+
+    variable : array
+        quantity evaluated by `objective_function <GradientOptimization.objective_function>`,
+        the value of which is optimized by the optimization process.
+
+    objective_function : function or method
+        function used to evaluate `variable <GradientOptimization.variable>`
+        in each iteration of the `optimization process <GradientOptimization_Process>`;
+        it must be specified and it must return a scalar value.
+
+    gradient_function : function
+        function used to compute the gradient in each iteration of the `optimization process
+        <GradientOptimization_Process>` (see `Gradient Calculation <GradientOptimization_Gradient_Calculation>` for
+        details).
+
+    direction : ASCENT or DESCENT
+        direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
+        the gradient).
+
+    step_size : int or float
+        determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
+        iteration of the `optimization process <GradientOptimization_Process>`;  if `annealing_function
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
+
+    step_size : int or float
+        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal`
+        is modified in each iteration of the `optimization process <GradientOptimization_Process>`.
+
+    annealing_function : function or method
+        function used to adapt `step_size <GradientOptimization.step_size>` in each
+        `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
+        and the same `step_size <GradientOptimization.step_size>` is used in each `iteration
+        <GradientOptimization_Process>`.
+
+    iteration : int
+        the currention iteration of the optiimzaton process.
+
+    convergence_criterion : VARIABLE or VALUE
+        determines the measure used to terminate iterations of the `optimization process
+        <GradientOptimization_Process>`.
+
+    convergence_threshold : int or float
+        determines the change in value of the `convergence_criterion` below which the optimization process
+        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+
+    max_iterations : int
+        determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
+        warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
+
+    save_samples : bool
+        determines whether or not to save and return the all of the samples of `variable
+        <GradientOptimization.variable>` used to evaluate `objective_function
+        <GradientOptimization.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
+        evaluated.
+
+    Returns
+    -------
+
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+        `objective_function <GradientOptimization.objective_function>`, depending on `direction
+        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
+        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
+        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
+        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
+    """
+
+    componentName = GRADIENT_OPTIMIZATION_FUNCTION
+
+    class Params(Function_Base.Params):
+        variable = Param([[0], [0]], read_only=True)
+        objective_function = None
+        direction = ASCENT
+        step_size = Param(1.0, modulable=True)
+        annealing_function = None
+        convergence_criterion = VALUE,
+        convergence_threshold = Param(.001, modulable=True)
+        max_iterations = Param(1000, modulable=True)
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
+                 step_size:tc.optional(tc.any(int, float))=1.0,
+                 annealing_function:tc.optional(is_function_type)=None,
+                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
+                 convergence_threshold:tc.optional(tc.any(int, float))=.001,
+                 max_iterations:tc.optional(int)=1000,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 **kwargs):
+
+        search_function = self._follow_gradient
+        search_termination_function = self._convergence_condition
+        self.gradient_function = None
+        self._return_samples = save_samples
+        self._return_values = save_values
+
+        if direction is ASCENT:
+            self.direction = 1
+        else:
+            self.direction = -1
+        self.annealing_function = annealing_function
+
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(step_size=step_size,
+                                                  convergence_criterion=convergence_criterion,
+                                                  convergence_threshold=convergence_threshold,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=search_function,
+                         search_space=[None],
+                         search_termination_function=search_termination_function,
+                         save_samples=save_samples,
+                         save_values=save_values,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        if OBJECTIVE_FUNCTION in args[0]:
+            try:
+                from autograd import grad
+                self.gradient_function = grad(self.objective_function)
+            except:
+                warnings.warn("Unable to use autograd with {} specified for {} Function: {}.".
+                              format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
+                                     args[0][OBJECTIVE_FUNCTION].__name__))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GradientOptimization.variable>` that yields the optimal value of
+        `objective_function <GradientOptimization.objective_function>`, and possibly all samples
+        of `variable <GradientOptimization.variable>` evaluated and their corresponding values.
+
+        Optimal value is defined by `direction <GradientOptimization.direction>`:
+        - if *ASCENT*, returns greatest value
+        - if *DESCENT*, returns least value
+        '''
+
+        return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        return_all_samples = return_all_values = []
+        if self._return_samples:
+            return_all_samples = all_samples
+        if self._return_values:
+            return_all_values = all_values
+        # return last_variable
+        return return_optimal, return_all_samples, return_all_values
+
+    def _follow_gradient(self, variable, sample_num):
+
+        if self.gradient_function is None:
+            return variable
+
+        # Update step_size
+        if sample_num == 0:
+            self._current_step_size = self.step_size
+        elif self.annealing_function:
+            self._current_step_size = self.annealing_function(self._current_step_size, sample_num)
+
+        # Compute gradients with respect to current variable
+        self._gradients = self.gradient_function(variable)
+
+        # # TEST_PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        # print('gradients: ', self._gradients)
+        # print('step_size: ', self._current_step_size)
+        #  # END TEST_PRINT
+
+        # Update variable based on new gradients
+        return variable + self.direction * self._current_step_size * np.array(self._gradients)
+
+    def _convergence_condition(self, variable, value, iteration):
+        if iteration is 0:
+            # self._convergence_metric = self.convergence_threshold + EPSILON
+            self._previous_variable = variable
+            self._previous_value = value
+            return True
+
+        # Evaluate for convergence
+        if self.convergence_criterion == VALUE:
+            convergence_metric = np.abs(value - self._previous_value)
+        else:
+            convergence_metric = np.max(np.abs(np.array(variable) -
+                                               np.array(self._previous_variable)))
+
+        self._previous_variable = variable
+        self._previous_value = value
+
+        return convergence_metric > self.convergence_threshold
+
+
+MAXIMIZE = 'maximize'
+MINIMIZE = 'minimize'
+
+
+class GridSearch(OptimizationFunction):
+    """
+    GridSearch(                      \
+        default_variable=None,       \
+        objective_function=None,     \
+        direction=MAXIMIZE,          \
+        save_values=False,           \
+        params=None,                 \
+        owner=None,                  \
+        prefs=None                   \
+        )
+
+    Search over all combinations of values for a set of samples for the combination that optimizes the
+    `objective_function <GridSearch.objective_function>`.
+
+    .. _GridSearch_Process:
+
+    **Grid Search Process**
+
+    When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
+
+        - get sample of `variable <GridSearch.variable>` from `search_space <GridSearch.search_space>` using the
+          `traverse_grid <GridSearch.traverse_grid>` method.
+        ..
+        - compute value of `objective_function <GridSearch.objective_function>` using the sample;
+        ..
+        - evaluate `grid_complete <GridSearch.grid_complete>` method.
+
+    Iteration continues until all values of `search_space <GridSearch.search_space>` have been evaluated
+    (i.e., `grid_complete <GridSearch.grid_complete>` returns `True`).  The current iteration is contained in
+    `iteration <GridSearch.iteration>`.
+
+
+    Arguments
+    ---------
+
+    objective_function : function or method
+        specifies function used to evaluate `variable <GridSearch.variable>`
+        in each iteration of the `optimization process <GridSearch_Process>`;
+        it must be specified and it must return a scalar value.
+
+    search_space : list or array
+        specifies samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        specifies the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    save_samples : bool
+        determines whether or not to return the all of the samples of `variable <GridSearch.variable>`
+        used to evaluate `objective_function <GridSearch.objective_function>` in the optimization process.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    Attributes
+    ----------
+
+    variable : array
+        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
+        by the optimization process.
+
+    objective_function : function or method
+        function used to evaluate `variable <GridSearch.variable>` in each iteration of the `optimization process
+        <GridSearch_Process>`, and the value of which is optimized.
+
+    search_space : list or array
+        contains samples of `variable <GridSearch.variable>` used to evaluate `objective_function
+        <GridSearch.objective_function>`.
+
+    direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
+        determines the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+
+    iteration : int
+        the currention iteration of the optiimzaton process.
+
+    save_samples : True
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    save_values : bool
+        determines whether or not to save and return the values of `objective_function
+        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
+        evaluated.
+
+    Returns
+    -------
+
+    optimized value of variable, saved_samples, saved_values : np.array, list, list
+        value of `varaiable <GridSearch.variable>` that yields the highest or lowest value of
+        `objective_function <GridSearch.objective_function>`, depending on `direction
+        <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
+        `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
+        and saved values of `objective_function <GridSearch.objective_function>` for each sample of
+        `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
+        or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
+    """
+
+    componentName = GRID_SEARCH_FUNCTION
+
+    class Params(Function_Base.Params):
+        variable = Param([[0], [0]], read_only=True)
+        objective_function = None
+        direction = MAXIMIZE
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 objective_function:tc.optional(is_function_type)=None,
+                 # search_space:tc.optional(tc.any(list, np.ndarray))=None,
+                 search_space=None,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
+                 save_values:tc.optional(bool)=False,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 **kwargs):
+
+        search_function = self.traverse_grid
+        search_termination_function = self.grid_complete
+        self._return_values = save_values
+
+        if direction is MAXIMIZE:
+            self.direction = 1
+        else:
+            self.direction = -1
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(default_variable=default_variable,
+                         objective_function=objective_function,
+                         search_function=search_function,
+                         search_space=search_space,
+                         search_termination_function=search_termination_function,
+                         save_samples=True,
+                         save_values=True,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None,
+                 **kwargs):
+        '''Return the value of `variable <GridSearch.variable>` that yields the optimal value of
+        `objective_function <GridSearch.objective_function>`, and possibly all samples
+        of `variable <GridSearch.variable>` evaluated and their corresponding values.
+
+        Optimal value is defined by `direction <GridSearch.direction>`:
+        - if *MAXIMIZE*, returns greatest value
+        - if *MINIMIZE*, returns least value
+        '''
+        last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+
+        return_optimal = all_samples[all_values.index(max(all_values))]
+
+        return_all_samples = return_all_values = []
+        # if self._return_samples:
+        #     return_all_samples = all_samples
+        if self._return_values:
+            return_all_values = all_values
+        return return_optimal, return_all_samples, return_all_values
+
+    def traverse_grid(self, variable, sample_num):
+        # # TEST PRINT:
+        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
+        #  # END TEST PRINT
+        return self.search_space[sample_num]
+
+    def grid_complete(self, variable, value, iteration):
+        return iteration != len(self.search_space)
+
+
 # region **************************************   LEARNING FUNCTIONS ***************************************************
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
@@ -11520,6 +12414,7 @@ class LearningFunction(Function_Base):
        the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
        (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
        are validated against paramClassDefaults which will not recognize params specific to another Function.
+    COMMENT
 
     Attributes
     ----------
@@ -12551,28 +13446,38 @@ class BayesGLM(LearningFunction):
     [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
     useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
 
+    .. hint::
+       The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
+       the size of the predictors array and, correspondingly, the weights array returned by the function (see
+       **Parameters** below).
+
     Arguments
     ---------
 
     default_variable : 3d array : default None
-        first item of axis 0 should be a 2d array with one or more 1d arrays to use as predictor vectors;
-        second item should be a 2d array of equal length to the first item, with one or more 1d arrays each of
-        which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, the shape
-        of `variable <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`,
-        as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior
-        <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
+        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+        each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
+        containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
+        item.  If `None` is specified, but either **mu_0** or **sigma_0 is specified, then the they are used to
+        determine the shape of `variable <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified,
+        then the shape of `variable <BayesGLM.variable>` is determined by the first call to its `function
+        <BayesGLM.function>`, as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
 
     mu_0 : int, float or 1d array : default 0
         specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
         the prediction weights returned by the function).  If a scalar is specified, the same value will be used
         for all elements of `mu_prior <BayesGLM.mu_prior>`;  if it is an array, it must be the same length as
-        the predictor array(s) in axis 0 of **default_variable**.
+        the predictor array(s) in axis 0 of **default_variable**.  If **default_variable** is not specified, the
+        specification for **mu_0** is used to determine the shape of `variable <BayesGLM.variable>` and
+        `sigma_prior <BayesGLM.sigma_prior>`.
 
     sigma_0 : int, float or 1d array : default 0
         specifies initial value of `sigma_prior <BayesGLM.Lambda_prior>` (the prior for the variance of the distribution
         for the prediction weights returned by the function).  If a scalar is specified, the same value will be used for
         all elements of `Lambda_prior <BayesGLM.Lambda_prior>`;  if it is an array, it must be the same length as the
-        predictor array(s) in axis 0 of **default_variable**.
+        predictor array(s) in axis 0 of **default_variable**.  If neither **default_variable** nor **mu_0** is
+        specified, the specification for **sigma_0** is used to determine their shapes.
 
     gamma_shape_0 : int or float : default 1
         specifies the shape of the gamma distribution from which samples of the weights are drawn (see documentation
@@ -12661,8 +13566,11 @@ class BayesGLM(LearningFunction):
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
+    class Params(LearningFunction.Params):
+        variable = Param([np.array([0,0,0]),np.array([0])], read_only=True)
+
     def __init__(self,
-                 default_variable =  None,
+                 default_variable = None,
                  mu_0=0,
                  sigma_0=1,
                  gamma_shape_0=1,
@@ -12670,6 +13578,8 @@ class BayesGLM(LearningFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        self.user_specified_default_variable = default_variable
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mu_0=mu_0,
@@ -12684,15 +13594,38 @@ class BayesGLM(LearningFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    def _handle_default_variable(self, default_variable=None, size=None):
+
+        # If default_variable was not specified by user...
+        if default_variable is None and size in {None, NotImplemented}:
+            #  but mu_0 and/or sigma_0 was specified as an array...
+            if isinstance(self.mu_0, (list, np.ndarray)) or isinstance(self.sigma_0, (list, np.ndarray)):
+                # if both are specified, make sure they are the same size
+                if (isinstance(self.mu_0, (list, np.ndarray))
+                        and isinstance(self.sigma_0, (list, np.ndarray))
+                        and len(self.mu_0) != len(self.self.sigma_0)):
+                    raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
+                                        format(repr('mu_0'), len(self.mu_0),
+                                                    repr('sigma_0'), len(self.self.sigma_0),
+                                                         self.__class.__.__name__))
+                # allow their size to determine the size of variable
+                if isinstance(self.mu_0, (list, np.ndarray)):
+                    default_variable = [np.zeros_like(self.mu_0), np.zeros((1,1))]
+                else:
+                    default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
+
+        return super()._handle_default_variable(default_variable=default_variable, size=size)
+
     def initialize_priors(self):
         '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
         to their initial (_0) values, and assign current (_n) values to the priors'''
 
         variable = np.array(self.instance_defaults.variable)
-        if variable.dtype != object:
+        variable = self.instance_defaults.variable
+        if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
+
         n = len(variable[0])
 
         if isinstance(self.mu_0, (int, float)):
@@ -12701,6 +13634,7 @@ class BayesGLM(LearningFunction):
             if len(self.mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
                                     format(len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
 
         if isinstance(self.sigma_0, (int, float)):
             Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
@@ -12716,6 +13650,14 @@ class BayesGLM(LearningFunction):
         self.Lambda_n = self.Lambda_prior
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
+
+    def reinitialize(self, *args):
+        # If variable passed during execution does not match default assigned during initialization,
+        #    reassign default and re-initialize priors
+        if DEFAULT_VARIABLE in args[0]:
+            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+                                                        np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
+            self.initialize_priors()
 
     def function(self,
                  variable=None,
@@ -12750,6 +13692,14 @@ class BayesGLM(LearningFunction):
 
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
+
+        # # MODIFIED 10/26/18 OLD:
+        # # If variable passed during execution does not match default assigned during initialization,
+        # #    reassign default and re-initialize priors
+        # elif np.array(variable).shape != self.instance_defaults.variable.shape:
+        #     self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
+        #     self.initialize_priors()
+        # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
         self.Lambda_prior = self.Lambda_n

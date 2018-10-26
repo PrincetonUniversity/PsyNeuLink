@@ -59,6 +59,8 @@ CONTENTS
 * norm
 * sinusoid
 * scalar_distance
+* powerset
+* tensor_power
 
 
 *OTHER*
@@ -109,8 +111,8 @@ __all__ = [
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
     'object_has_single_value', 'optional_parameter_spec',
     'normpdf',
-    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
-    'TEST_CONDTION', 'type_match',
+    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
 
@@ -484,7 +486,14 @@ def iscompatible(candidate, reference=None, **kargs):
                             return True
                 else:
                     if not isinstance(value, numbers.Number):
-                        return False
+                        try:
+                            # True for autograd ArrayBox (and maybe other types?)
+                            # if isinstance(value._value, numbers.Number):
+                            from autograd.numpy.numpy_boxes import ArrayBox
+                            if isinstance(value, ArrayBox):
+                                return True
+                        except:
+                            return False
                     else:
                         return True
             # Test copy since may need to convert matrix to array (see above)
@@ -539,6 +548,55 @@ def scalar_distance(measure, value, scale=1, offset=0):
         return np.exp(scale*value+offset)
     if measure is SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
+
+from itertools import chain, combinations
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+import typecheck as tc
+@tc.typecheck
+def tensor_power(items, levels:tc.optional(range)=None, flat=False):
+    '''return tensor product for all members of powerset of items
+
+    levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
+    if None, all terms will be returned
+
+    if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
+    if flat=True, returns 1d array of values
+    '''
+
+    ps = list(powerset(items))
+    max_levels = max([len(s) for s in ps])
+    levels = levels or range(1,max_levels)
+    max_spec = max(list(levels))
+    min_spec = min(list(levels))
+    if  max_spec > max_levels:
+        raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
+                             "exceeds max for items specified ({})".
+                             format(min_spec, max_spec+1, repr('levels'), max_levels+1))
+
+    pp = []
+    for s in ps:
+        order = len(s)
+        if not order in list(levels):
+            continue
+        if order==1:
+            pp.append(np.array(s[0]))
+        else:
+            i = 0
+            tp = np.tensordot(s[i],s[i+1],axes=0)
+            i+=2
+            while i < order:
+                tp = np.tensordot(tp, s[i], axes=0)
+                i+=1
+            if flat is True:
+                pp.extend(tp.reshape(-1))
+            else:
+                pp.append(tp.reshape(-1))
+    return pp
+
 
 
 # OTHER ****************************************************************************************************************
@@ -1579,3 +1637,4 @@ def unproxy_weakproxy(proxy):
             True
     """
     return proxy.__repr__.__self__
+

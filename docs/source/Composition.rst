@@ -1,5 +1,5 @@
-Compositions
-============
+Composition
+===========
 
 .. toctree::
    :maxdepth: 1

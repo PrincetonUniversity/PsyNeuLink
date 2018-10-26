@@ -11,7 +11,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -36,7 +36,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
@@ -48,15 +48,15 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_states) == 5
 
-    def test_lvoc_predictors_function(self):
+    def test_lvoc_feature_predictors_function(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
-                                        predictor_function=pnl.LinearCombination(offset=10.0),
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                        feature_function=pnl.LinearCombination(offset=10.0),
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
