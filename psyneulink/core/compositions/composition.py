@@ -451,6 +451,7 @@ class Composition(Composition_Base):
         # Compiled resources
         self.__generated_wrappers = {}
         self.__compiled_mech = {}
+        self.__generated_execution = None
         self.__compiled_execution = None
         self.__compiled_run = None
         self.__execution = None
@@ -2709,8 +2710,6 @@ class Composition(Composition_Base):
         result = None
         if bin_execute == 'LLVMRun':
             self.__bin_initialize()
-            # precompile execution FIXME: Remove this
-            self._get_bin_execution()
             self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
             return self.results
 
@@ -2891,9 +2890,15 @@ class Composition(Composition_Base):
 
         return self.__compiled_mech[mechanism]
 
+    def _get_execution_wrapper(self):
+        if self.__generated_execution is None:
+            self.__generated_execution = self.__gen_exec_wrapper()
+
+        return self.__generated_execution
+
     def _get_bin_execution(self):
         if self.__compiled_execution is None:
-            wrapper = self.__gen_exec_wrapper()
+            wrapper = self._get_execution_wrapper()
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_execution = bin_f
 
@@ -3210,7 +3215,7 @@ class Composition(Composition_Base):
             data_in_ptr = builder.gep(data_in, [input_idx])
 
             # Call execution
-            exec_f_name = self._get_bin_execution().name
+            exec_f_name = self._get_execution_wrapper()
             exec_f = ctx.get_llvm_function(exec_f_name)
             builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
