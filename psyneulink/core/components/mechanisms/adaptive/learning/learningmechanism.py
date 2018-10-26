@@ -1222,8 +1222,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
-        current_error_signal_inputs = [s for s in self.error_signal_input_states if
-                                       any(p.sender.owner._execution_id==self._execution_id for p in s.path_afferents)]
+        current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]

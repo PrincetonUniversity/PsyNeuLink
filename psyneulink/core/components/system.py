@@ -954,7 +954,6 @@ class System(System_Base):
         self.context.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
         self.default_execution_id = self.name
-        self._execution_id = None
 
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
@@ -2697,20 +2696,16 @@ class System(System_Base):
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learning_execution_list
         for mech in self.execution_graph:
-            mech._execution_id = execution_id
             mech._assign_context_values(execution_id, composition=self)
 
         for learning_mech in self.learning_execution_list:
-            learning_mech._execution_id = execution_id
             learning_mech._assign_context_values(execution_id, composition=self)
 
         if self.controller is not None:
-            self.controller._execution_id = execution_id
             self.controller._assign_context_values(execution_id, composition=self)
             if self.enable_controller and self.controller.input_states:
                 for state in self.controller.input_states:
                     for projection in state.all_afferents:
-                        projection.sender.owner._execution_id = execution_id
                         projection.sender.owner._assign_context_values(execution_id, composition=self)
 
         self._report_system_output = (self.prefs.reportOutputPref and

@@ -385,14 +385,12 @@ from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism imp
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.shellclasses import Function, System_Base
+from psyneulink.core.components.states.modulatorysignals.controlsignal import COST_OPTIONS, ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS, \
-    ControlSignal
-from psyneulink.core.components.shellclasses import Function, System_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, PARAMS
+from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PARAMS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -1154,7 +1152,6 @@ class EVCControlMechanism(ControlMechanism):
         # RUN SIMULATION
 
         # Buffer System attributes
-        execution_id_buffer = self.system._execution_id
         animate_buffer = self.system._animate
 
         # Run simulation
@@ -1170,7 +1167,6 @@ class EVCControlMechanism(ControlMechanism):
 
         # Restore System attributes
         self.system._animate = animate_buffer
-        self.system._execution_id = execution_id_buffer
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)

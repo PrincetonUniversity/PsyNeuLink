@@ -403,17 +403,6 @@ class AutodiffComposition(Composition):
             self.target_CIM.output_states.remove(self.target_CIM.output_state)
             self.target_CIM.connected_to_composition = True
 
-
-
-    def _assign_execution_ids(self, execution_id=None):
-
-        exec_id = super()._assign_execution_ids(execution_id=execution_id)
-
-        self.target_CIM._execution_id = exec_id
-
-        return exec_id
-
-
     # similar function to _assign_values_to_input_CIM from the normal composition - however, this
     # assigns values to the input or target CIM of autodiff composition,
     # executes the CIM's, and puts the values in appropriate form for pytorch

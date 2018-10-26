@@ -1403,7 +1403,6 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENT **kwargs (PER State)
 
-        self._execution_id = None
         self._is_finished = False
         self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
