@@ -231,7 +231,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
     NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
     OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    PARAMETER_STATE_PARAMS, PARAMS, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
     RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
@@ -264,7 +264,8 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OptimizationFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal',
+    'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -11589,6 +11590,7 @@ class Distance(ObjectiveFunction):
 OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
+SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 
 class OptimizationFunction(Function_Base):
     """Abstract class of `Function <Function>` used for optimization of a variable.
@@ -11636,7 +11638,11 @@ class OptimizationFunction(Function_Base):
     COMMENT:
     NOTE TO DEVELOPERS:
     - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-    by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+
+    - Subclasses with attributes that depend on one of the OptimizationFunction's paramters should implement the
+      `reinitialize <OptimizationFunction.reinitialize>` method, that calls super().reinitialize(*args) and then
+      reassigns the values of the dependent attributes accordingly.
     COMMENT
 
     Arguments
@@ -11787,6 +11793,18 @@ class OptimizationFunction(Function_Base):
                          context=context)
 
     def reinitialize(self, *args):
+        '''Reinitialize parameters of the OptimizationFunction
+
+        Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
+        for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
+        parameter.  The following parameters can be reinitialized:
+
+            * `default_variable <OptimizationFunction.default_variable>`
+            * `objective_function <OptimizationFunction.objective_function>`
+            * `search_function <OptimizationFunction.search_function>`
+            * `search_termination_function <OptimizationFunction.search_termination_function>`
+
+        '''
         if DEFAULT_VARIABLE in args[0]:
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0]:
