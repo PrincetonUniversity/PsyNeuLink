@@ -449,6 +449,7 @@ class Composition(Composition_Base):
         self.sched = Scheduler(composition=self)
 
         # Compiled resources
+        self.__generated_wrappers = {}
         self.__compiled_mech = {}
         self.__compiled_execution = None
         self.__compiled_run = None
@@ -2709,12 +2710,6 @@ class Composition(Composition_Base):
         if bin_execute == 'LLVMRun':
             self.__bin_initialize()
             # precompile execution FIXME: Remove this
-            node = self.input_CIM
-            self._get_bin_mechanism(self.input_CIM)
-            node = self.output_CIM
-            self._get_bin_mechanism(self.output_CIM)
-            for node in self.c_nodes:
-                self._get_bin_mechanism(node)
             self._get_bin_execution()
             self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
             return self.results
@@ -2879,9 +2874,17 @@ class Composition(Composition_Base):
         else:
             return self.c_nodes.index(mechanism)
 
+    def _get_node_wrapper(self, node):
+        if node not in self.__generated_wrappers:
+            wrapper = self.__gen_mech_wrapper(node)
+            self.__generated_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_wrappers[node]
+
     def _get_bin_mechanism(self, mechanism):
         if mechanism not in self.__compiled_mech:
-            wrapper = self.__gen_mech_wrapper(mechanism)
+            wrapper = self._get_node_wrapper(mechanism)
             bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
             self.__compiled_mech[mechanism] = bin_f
             return bin_f
@@ -3052,7 +3055,7 @@ class Composition(Composition_Base):
             builder = ir.IRBuilder(entry_block)
 
             # Call input CIM
-            input_cim_name = self._get_bin_mechanism(self.input_CIM).name;
+            input_cim_name = self._get_node_wrapper(self.input_CIM);
             input_cim_f = ctx.get_llvm_function(input_cim_name)
             builder.call(input_cim_f, [context, params, comp_in, data, data])
 
@@ -3105,7 +3108,7 @@ class Composition(Composition_Base):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
                 with builder.if_then(mech_cond):
-                    mech_name = self._get_bin_mechanism(mech).name;
+                    mech_name = self._get_node_wrapper(mech);
                     mech_f = ctx.get_llvm_function(mech_name)
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
                     cond_gen.generate_update_after_run(builder, cond, mech)
@@ -3143,7 +3146,7 @@ class Composition(Composition_Base):
 
             builder.position_at_end(exit_block)
             # Call output CIM
-            output_cim_name = self._get_bin_mechanism(self.output_CIM).name;
+            output_cim_name = self._get_node_wrapper(self.output_CIM);
             output_cim_f = ctx.get_llvm_function(output_cim_name)
             builder.call(output_cim_f, [context, params, comp_in, data, data])
 
