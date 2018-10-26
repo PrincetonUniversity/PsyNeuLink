@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compositions &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="System" href="System.html"/>
         <link rel="prev" title="Functions" href="Function.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -152,7 +152,7 @@
         
           <li><a href="Core.html">Core</a> &raquo;</li>
         
-      <li>Compositions</li>
+      <li>Composition</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -171,8 +171,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="compositions">
-<h1>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="composition">
+<h1>Composition<a class="headerlink" href="#composition" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
@@ -300,13 +300,13 @@ used in learning).</p>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_c_node">
 <code class="descname">add_c_node</code><span class="sig-paren">(</span><em>node</em>, <em>required_roles=None</em>, <em>external_input_source=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_c_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a Composition Node (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Compositions</span></a>) to the Composition, if it is not already added</p>
+<dd><p>Adds a Composition Node (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) to the Composition, if it is not already added</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node</strong> (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Compositions</span></a>) – the node to be added to the Composition</li>
+<li><strong>node</strong> (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) – the node to be added to the Composition</li>
 <li><strong>required_roles</strong> (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.CNodeRole" title="psyneulink.core.globals.utilities.CNodeRole"><em>psyneulink.core.globals.utilities.CNodeRole</em></a><em> or </em><em>list of CNodeRoles</em>) – any CNodeRoles roles that this node should have in addition to those determined by analyze graph.</li>
 </ul>
 </td>
@@ -337,7 +337,7 @@ value(s).</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="LCAMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>Boolean</em>) – if False, any cycles containing this projection will be</li>
 </ul>
@@ -733,7 +733,7 @@ a <a class="reference internal" href="Condition.html"><span class="doc">Conditio
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

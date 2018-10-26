@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/>
         <link rel="prev" title="IntegratorMechanism" href="IntegratorMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -163,7 +163,7 @@
         
           <li><a href="Core.html">Core</a> &raquo;</li>
         
-          <li><a href="Component.html">Components</a> &raquo;</li>
+          <li><a href="Component.html">Component</a> &raquo;</li>
         
           <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
         
@@ -431,10 +431,10 @@ As an example, the following mechanisms are equivalent:</p>
 </pre></div>
 </div>
 </li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_output_states</span></code>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_output_states</span></code>
 (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details.</li>
-<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
-<li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.LEARNING" title="psyneulink.core.globals.log.LogCondition.LEARNING"><em>LEARNING</em></a><em>, </em><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.CONTROL" title="psyneulink.core.globals.log.LogCondition.CONTROL"><em>CONTROL</em></a><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
+<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
+<li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.LEARNING" title="psyneulink.core.globals.context.ContextFlags.LEARNING"><em>LEARNING</em></a><em>, </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><em>CONTROL</em></a><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for the
 Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -597,7 +597,7 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputState.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

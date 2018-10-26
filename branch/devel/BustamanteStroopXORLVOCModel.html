@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LVOC &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>LVOC Model of Stroop XOR Task (Bustamante et al. 2017) &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,10 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/>
-        <link rel="up" title="Compositions" href="Compositions.html"/>
-        <link rel="next" title="LVOCControlMechanism" href="LVOCControlMechanism.html"/>
-        <link rel="prev" title="EVCAuxiliary" href="EVCAuxiliary.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -67,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -91,27 +88,12 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
-<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">LVOC</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="LVOCControlMechanism.html">LVOCControlMechanism</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -156,17 +138,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="Library.html">Library</a> &raquo;</li>
-        
-          <li><a href="Compositions.html">Compositions</a> &raquo;</li>
-        
-      <li>LVOC</li>
+      <li>LVOC Model of Stroop XOR Task (Bustamante et al. 2017)</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/LVOC.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/BustamanteStroopXORLVOCModel.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -179,14 +157,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="lvoc">
-<h1>LVOC<a class="headerlink" href="#lvoc" title="Permalink to this headline">¶</a></h1>
-<p>Implements a version of the <a class="reference external" href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&amp;rev=2">Learned Value of Control Model</a>.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="LVOCControlMechanism.html">LVOCControlMechanism</a></li>
-</ul>
-</div>
+  <div class="section" id="lvoc-model-of-stroop-xor-task-bustamante-et-al-2017">
+<h1>LVOC Model of Stroop XOR Task (Bustamante et al. 2017)<a class="headerlink" href="#lvoc-model-of-stroop-xor-task-bustamante-et-al-2017" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C31&amp;q=laura+bustamante+cohen+musslick&amp;btnG=">“Learning to (mis) allocate control: maltransfer can lead to self-control failure”</a>.</p>
+<p>Implements a model of the Stroop XOR task using a version of the Learned Value of Control (LVOC) model described in
+<a class="reference external" href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&amp;rev=2">Leider et al. (2018)</a>.</p>
+<p>Script: <a class="reference download internal" href="_downloads/Bustamante_Stroop_XOR_LVOC_Model.py" download=""><code class="xref download docutils literal"><span class="pre">Bustamante_Stroop_XOR_LVOC_Model.py</span></code></a></p>
 </div>
 
 
@@ -196,15 +172,6 @@
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="LVOCControlMechanism.html" class="btn btn-neutral float-right" title="LVOCControlMechanism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="EVCAuxiliary.html" class="btn btn-neutral" title="EVCAuxiliary" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -233,7 +200,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

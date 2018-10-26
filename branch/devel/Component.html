@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -154,7 +154,7 @@
         
           <li><a href="Core.html">Core</a> &raquo;</li>
         
-      <li>Components</li>
+      <li>Component</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -173,8 +173,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="components">
-<h1>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="component">
+<h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
@@ -203,11 +203,10 @@ and <code class="xref any docutils literal"><span class="pre">Informational</spa
 <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.owner" title="psyneulink.core.components.states.state.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">State</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its
 full initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="State.html"><span class="doc">State</span></a> is assigned to a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>).  This allows Components to be created before all of the information they require is
-available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
-completed its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method must be called.  This is usually done automatically when the Component is
+available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
+be completed by a call to it <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
-a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>)
-of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
+a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>) of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
 </div>
 </div>
 <div class="section" id="component-structure">
@@ -344,7 +343,7 @@ general, only parameters that take numerical values and/or do not affect the str
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <code class="xref any docutils literal"><span class="pre">clip</span></code>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>,
-<a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
+<a class="reference internal" href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_states" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <code class="xref any docutils literal"><span class="pre">integration_rate</span></code>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
 Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -405,7 +404,7 @@ following two informational attributes:</p>
 <ul class="simple" id="component-execution-count">
 <li><strong>current_execution_count</strong> – maintains a record of the number of times a Component has executed; it <em>excludes</em> the
 executions carried out during initialization and validation, but includes all other executions, whether they are of
-the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> (e.g., <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>). The value can be changed
+the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (e.g., <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>). The value can be changed
 “manually” or programmatically by assigning an integer value directly to the attribute.</li>
 </ul>
 <ul class="simple" id="component-current-execution-time">
@@ -709,7 +708,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

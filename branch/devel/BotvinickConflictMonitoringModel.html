@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -162,8 +162,7 @@
 <p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488380">“Conflict Monitoring and Cognitive Control”</a></p>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>This implements a model concerning the role of the anterior cingulate cortex (ACC)
-<a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">https://en.wikipedia.org/wiki/Anterior_cingulate_cortex</a> in situations calling for their
+<p>This implements a model concerning the role of the <a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">anterior cingulate cortex (ACC)</a> in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
@@ -223,7 +222,7 @@ elements.</p>
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
-units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_state" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
+units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.output_state" title="psyneulink.core.components.process.Process.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
 conflict over one trial for each of the three conditions.
 The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
 the plot of the Figure.</p>
@@ -233,7 +232,7 @@ the plot of the Figure.</p>
 <p>Note that this script implements a slightly different Figure than in the original Figure in the paper.
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.</p>
-<p>Script: <a class="reference download internal" href="_downloads/Botvinick_conflict_monitoring_Figure1.py" download=""><code class="xref download docutils literal"><span class="pre">Botvinick_conflict_monitoring_Figure1.py</span></code></a></p>
+<p>Script: <a class="reference download internal" href="_downloads/Botvinick_conflict_monitoring_model.py" download=""><code class="xref download docutils literal"><span class="pre">Botvinick_conflict_monitoring_model.py</span></code></a></p>
 </div>
 </div>
 
@@ -272,7 +271,7 @@ conflict monitoring simulations.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

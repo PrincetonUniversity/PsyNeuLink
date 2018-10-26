@@ -1,5 +1,5 @@
-Components
-==========
+Component
+=========
 
 .. toctree::
    :maxdepth: 1

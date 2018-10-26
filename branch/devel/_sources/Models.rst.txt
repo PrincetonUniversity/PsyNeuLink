@@ -15,3 +15,5 @@ illustrate principles of neural and/or psychological function.
 • `Cohen_HustonModel`
 
 • `BotvinickConflictMonitoringModel`
+
+• `BustamanteStroopXORLVOCModel`

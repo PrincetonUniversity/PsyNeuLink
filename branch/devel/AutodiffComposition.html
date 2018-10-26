@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,10 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
-        <link rel="prev" title="LVOCControlMechanism" href="LVOCControlMechanism.html"/> 
+        <link rel="prev" title="Compositions" href="Compositions.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -99,9 +99,6 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="Compositions.html">Compositions</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="AGT.html">AGT</a></li>
-<li class="toctree-l3"><a class="reference internal" href="EVC.html">EVC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="LVOC.html">LVOC</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">AutodiffComposition</a></li>
 </ul>
 </li>
@@ -180,16 +177,16 @@
 <span id="autodiffcomposition"></span><h1>AutodiffComposition<a class="headerlink" href="#module-psyneulink.library.compositions.autodiffcomposition" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> which trains models more quickly by integrating with
+<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models more quickly by integrating with
 <a class="reference external" href="https://pytorch.org/">PyTorch</a>, a popular machine learning library. In situations with training,
-AutodiffComposition is used similarly to a <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, but is much faster.</p>
+AutodiffComposition is used similarly to a Composition, but is much faster.</p>
 <p>The <code class="xref any docutils literal"><span class="pre">xor_in_psyneulink_and_pytorch.py</span></code> script (in the Scripts folder of the PsyNeuLink source code) is an example of
 how to use AutodiffComposition. The script also gives a comparison of runtimes.</p>
 </div>
 <div class="section" id="creating-an-autodiffcomposition">
 <span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
 <p>An AutodiffComposition can be created by calling the constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
-add methods of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>. The most significant argument in initialization is
+add methods of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. The most significant argument in initialization is
 <strong>param_init_from_pnl</strong>, which controls how parameters are set up for the internal PyTorch representation of the model.</p>
 <p>If set to True:</p>
 <ul class="simple">
@@ -218,7 +215,7 @@ stop earlier because it views fewer epochs as ‘good’.</p>
 </div>
 <div class="section" id="structure">
 <span id="autodiffcomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>AutodiffComposition has all the attributes of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, in addition to several more.</p>
+<p>AutodiffComposition has all the attributes of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, in addition to several more.</p>
 <p>The <code class="xref any docutils literal"><span class="pre">target_CIM</span></code> attribute is analogous to the <code class="xref any docutils literal"><span class="pre">input_CIM</span></code> of
 any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.</p>
 <p>The <code class="xref any docutils literal"><span class="pre">pytorch_representation</span></code> attribute holds the PyTorch representation
@@ -227,9 +224,9 @@ the average loss for each training epoch.</p>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Execute an AutodiffComposition with its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. During training, both <strong>inputs</strong> and <strong>targets</strong> must be
+<p>Execute an AutodiffComposition with its <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> method. During training, both <strong>inputs</strong> and <strong>targets</strong> must be
 specified. If you wish to run the AutodiffComposition without training it, only specify <strong>inputs</strong>. Some arguments to an
-AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method (such as <strong>inputs</strong> and <strong>execution_id</strong>) are the same as in a Composition’s
+AutodiffComposition’s <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> method (such as <strong>inputs</strong> and <strong>execution_id</strong>) are the same as in a Composition’s
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. There are several different arguments as well:</p>
 <p><strong>epochs</strong> specifies the number of times the entire input set will be run. This is in contrast to <strong>num_trials</strong> in
 Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, which specifies the number of inputs that will be run. For example, if
@@ -261,7 +258,7 @@ run, but if <strong>randomize</strong> is True then the order in which inputs ar
         <a href="Subystems.html" class="btn btn-neutral float-right" title="Subsystems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="LVOCControlMechanism.html" class="btn btn-neutral" title="LVOCControlMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Compositions.html" class="btn btn-neutral" title="Compositions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -292,7 +289,7 @@ run, but if <strong>randomize</strong> is True then the order in which inputs ar
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

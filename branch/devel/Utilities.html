@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+758.g851bd8e documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+758.g851bd8e documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+759.g7c3fe63 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+758
+                0.4.8.0+759
               </div>
             
           
@@ -221,6 +221,8 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li>norm</li>
 <li>sinusoid</li>
 <li>scalar_distance</li>
+<li>powerset</li>
+<li>tensor_power</li>
 </ul>
 </div>
 <div class="section" id="other">
@@ -402,6 +404,21 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.powerset">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">powerset</code><span class="sig-paren">(</span><em>[1,2,3]) --&gt; () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.powerset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.tensor_power">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">tensor_power</code><span class="sig-paren">(</span><em>items</em>, <em>levels: &lt;typecheck.framework.optional object at 0x1042b5438&gt; = None</em>, <em>flat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.tensor_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>return tensor product for all members of powerset of items</p>
+<p>levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
+if None, all terms will be returned</p>
+<p>if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
+if flat=True, returns 1d array of values</p>
 </dd></dl>
 
 <dl class="function">
@@ -890,7 +907,7 @@ Much like</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+758.g851bd8e',
+            VERSION:'0.4.8.0+759.g7c3fe63',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
