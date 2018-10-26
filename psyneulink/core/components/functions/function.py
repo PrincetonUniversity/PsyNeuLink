@@ -237,7 +237,7 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE
 
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -11597,7 +11597,7 @@ class OptimizationFunction(Function_Base):
     <OptimizationFunction.function>` executes iteratively, evaluating samples from `search_space
     <OptimizationFunction.search_space>` using `objective_function <OptimizationFunction.objective_function>`
     until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
-    Subclasses can override this to implement or call an external optimizer.
+    Subclasses can override this to implement their own optimization function or call an external one.
 
     .. _Optimization_Proxess:
 
@@ -11746,43 +11746,14 @@ class OptimizationFunction(Function_Base):
                  prefs=None,
                  context=None):
 
-        # # MODIFIED 10/25/18 OLD:
-        # if objective_function is None:
-        #     raise FunctionError("PROGRAM ERROR: Subclasses of {} must handle deferred_init "
-        #                         "when {} is \'None\' (i.e., has not been assigned by user)".
-        #                         format(self.__class__.__name__, repr('objective_function')))
-        #
-        # # IMPLEMENTATION NOTE:
-        # # If these are not used by the sublcass, it should
-        # if None in {search_function, search_termination_function} or search_space is None:
-        #     raise FunctionError("PROGRAM ERROR: Subclasses of {} must implement {}, {}, and {}".
-        #                         format(self.__class__.__name__,
-        #                                repr('search_function'),
-        #                                repr('search_space'),
-        #                                repr('search_termination_function')))
-        # MODIFIED 10/25/18 END
-
-        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
-        # # MODIFIED 10/25/18 OLD:
-        # self.objective_function = objective_function
-        # MODIFIED 10/25/18 NEW:
         if objective_function is None:
             self.objective_function = lambda x:0
         else:
             self.objective_function = objective_function
 
-        # MODIFIED 10/25/18 END
-
         self.search_function = search_function
         self.search_termination_function = search_termination_function
-
-        # # MODIFIED 10/25/18 NEW:
-        # self.search_space = search_space
-        # MODIFIED 10/25/18 NEW:
         self.search_space = search_space or [0]
-        # MODIFIED 10/25/18 END
-
-        # FIX: END MOVE
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
@@ -11795,6 +11766,14 @@ class OptimizationFunction(Function_Base):
                          owner=owner,
                          prefs=prefs,
                          context=context)
+
+    def reinitialize(self, *args):
+        if DEFAULT_VARIABLE in args[0]:
+            self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
+        if OBJECTIVE_FUNCTION in args[0]:
+            self.objective_function = args[0][OBJECTIVE_FUNCTION]
+        if SEARCH_SPACE in args[0]:
+            self.search_space = args[0][SEARCH_SPACE]
 
     def function(self,
                  variable=None,
@@ -12077,34 +12056,18 @@ class GradientOptimization(OptimizationFunction):
                  prefs=None,
                  **kwargs):
 
-        # # MODIFIED 10/25/18 OLD:
-        # if objective_function is None:
-        #     self.init_args = locals().copy()
-        #     self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        #     return
-        # # MODIFIED 10/25/18 END
-
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
+        self.gradient_function = None
         self._return_samples = save_samples
         self._return_values = save_values
 
-        # FIX: ?MOVE TO VALIDATE_PARAMS AND/OR _INSTANTIATE_ATTRIBUTES_BEFORE_FUNCTION
-        from autograd import grad
-
-        if objective_function:
-            try:
-                self.gradient_function = grad(objective_function)
-            except:
-                raise FunctionError("Unable to used autograd with {} ({}) specified for {} Function".
-                                    format(repr(OBJECTIVE_FUNCTION),
-                                           self.objective_function.__name__, self.__class__.__name__))
         if direction is ASCENT:
             self.direction = 1
         else:
             self.direction = -1
         self.annealing_function = annealing_function
-        # FIX: END
+
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(step_size=step_size,
@@ -12124,6 +12087,17 @@ class GradientOptimization(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def reinitialize(self, *args):
+        super().reinitialize(*args)
+        if OBJECTIVE_FUNCTION in args[0]:
+            try:
+                from autograd import grad
+                self.gradient_function = grad(self.objective_function)
+            except:
+                warnings.warn("Unable to use autograd with {} specified for {} Function: {}.".
+                              format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
+                                     args[0][OBJECTIVE_FUNCTION].__name__))
+
     def function(self,
                  variable=None,
                  params=None,
@@ -12137,6 +12111,7 @@ class GradientOptimization(OptimizationFunction):
         - if *ASCENT*, returns greatest value
         - if *DESCENT*, returns least value
         '''
+
         return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
         return_all_samples = return_all_values = []
         if self._return_samples:
@@ -12147,6 +12122,9 @@ class GradientOptimization(OptimizationFunction):
         return return_optimal, return_all_samples, return_all_values
 
     def _follow_gradient(self, variable, sample_num):
+
+        if self.gradient_function is None:
+            return variable
 
         # Update step_size
         if sample_num == 0:
@@ -12314,13 +12292,6 @@ class GridSearch(OptimizationFunction):
                  owner=None,
                  prefs=None,
                  **kwargs):
-
-        # # MODIFIED 10/25/18 OLD:
-        # if objective_function is None or search_space is None:
-        #     self.init_args = locals().copy()
-        #     self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        #     return
-        # # MODIFIED 10/25/18 END
 
         search_function = self.traverse_grid
         search_termination_function = self.grid_complete
@@ -13443,14 +13414,14 @@ class BayesGLM(LearningFunction):
     ---------
 
     default_variable : 3d array : default None
-        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors;
-        second item must be a 2d array of equal length to the first item, with one or more 1d arrays each of
-        which contains a scalar as the dependent (to-be-predicted) variable.  If `None` is specified, but either
-        **mu_0** or **sigma_0 is specified, then the they are used to determine the shape of `variable
-        <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified, then the shape of `variable
-        <BayesGLM.variable>` is determined by the first call to its `function <BayesGLM.function>`, as are `mu_prior
-        <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`, `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and
-        `gamma_size_prior <BayesGLM.gamma_size_prior>`.
+        first item of axis 0 must be a 2d array with one or more 1d arrays to use as predictor vectors, one for
+        each sample to be fit;  second item must be a 2d array of equal length to the first item, with a 1d array
+        containing a scalar that is the dependent (to-be-predicted) value for the corresponding sample in the first
+        item.  If `None` is specified, but either **mu_0** or **sigma_0 is specified, then the they are used to
+        determine the shape of `variable <BayesGLM.variable>`.  If neither **mu_0** nor **sigma_0** are specified,
+        then the shape of `variable <BayesGLM.variable>` is determined by the first call to its `function
+        <BayesGLM.function>`, as are `mu_prior <BayesGLM.mu_prior>`, `sigma_prior <BayesGLM.mu_prior>`,
+        `gamma_shape_prior <BayesGLM.gamma_shape_prior>` and `gamma_size_prior <BayesGLM.gamma_size_prior>`.
 
     mu_0 : int, float or 1d array : default 0
         specifies initial value of `mu_prior <BayesGLM.mu_prior>` (the prior for the mean of the distribution for
@@ -13554,6 +13525,9 @@ class BayesGLM(LearningFunction):
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
+    class Params(LearningFunction.Params):
+        variable = Param(np.array([ [[0,0], [0,0]], [[0],[0]] ]), read_only=True)
+
     def __init__(self,
                  default_variable = None,
                  mu_0=0,
@@ -13607,6 +13581,7 @@ class BayesGLM(LearningFunction):
         to their initial (_0) values, and assign current (_n) values to the priors'''
 
         variable = np.array(self.instance_defaults.variable)
+        variable = self.instance_defaults.variable
         if variable.dtype != object:
             variable = np.atleast_2d(variable)
 
@@ -13634,6 +13609,14 @@ class BayesGLM(LearningFunction):
         self.Lambda_n = self.Lambda_prior
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
+
+    def reinitialize(self, *args):
+        # If variable passed during execution does not match default assigned during initialization,
+        #    reassign default and re-initialize priors
+        if DEFAULT_VARIABLE in args[0]:
+            self.instance_defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
+                                                        np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
+            self.initialize_priors()
 
     def function(self,
                  variable=None,
@@ -13669,11 +13652,13 @@ class BayesGLM(LearningFunction):
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
+        # MODIFIED 10/26/18 OLD:
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         elif np.array(variable).shape != self.instance_defaults.variable.shape:
             self.instance_defaults.variable = np.array([np.zeros_like(variable[0]),np.zeros_like(variable[1])])
             self.initialize_priors()
+        # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
         self.Lambda_prior = self.Lambda_n

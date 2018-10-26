@@ -3347,6 +3347,7 @@ class Component(object, metaclass=ComponentsMeta):
         else:
             ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                            "(It does not have an accumulator to reinitialize).".format(self.name))
+        assert True
 
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)

@@ -302,7 +302,8 @@ from enum import Enum
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization
+    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
+    SEARCH_SPACE
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
@@ -314,7 +315,8 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOCCONTROLMECHANISM, NAME, PARAMETER_STATES, \
     VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -804,12 +806,21 @@ class LVOCControlMechanism(ControlMechanism):
                                                        self.prediction_terms)
 
         if isinstance(self.learning_function, type):
-            self.learning_function = self.learning_function(default_variable = self.prediction_vector.vector)
+            # MODIFIED 10/26/18 OLD:
+            self.learning_function = self.learning_function(self.prediction_vector.vector)
+            # MODIFIED 10/26/18 NEW:
+            self.learning_function = self.learning_function(
+                    default_variable=[self.prediction_vector.vector, self.input_state.value])
+            # MODIFIED 10/26/18 END
+        # # MODIFIED 10/26/18 NEW:
+        # else:
+        #     self.learning_function.reinitialize({DEFAULT_VARIABLE: self.prediction_vector.vector})
+        # MODIFIED 10/26/18 END
 
         # Assign parameters to function that rely on LVOCControlMechanism
-        self.function_object.instance_defaults.variable = self.control_signal_variables
-        self.function_object.objective_function = self.compute_lvoc_from_control_signals
-        self.function_object.search_space = self._get_control_signal_search_space()
+        self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_signal_variables,
+                                           OBJECTIVE_FUNCTION: self.compute_lvoc_from_control_signals,
+                                           SEARCH_SPACE: self._get_control_signal_search_space()})
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Find allocation_policy that optimizes EVC.
