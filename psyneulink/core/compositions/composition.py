@@ -61,6 +61,7 @@ from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
 
 from psyneulink.core.components.shellclasses import Composition_Base
+from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.function import InterfaceStateMap
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism

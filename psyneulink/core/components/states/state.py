@@ -1854,7 +1854,7 @@ class State_Base(State):
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
-    """
+        """
 
         # Set context to owner's context:
         self.context.execution_phase = self.owner.context.execution_phase

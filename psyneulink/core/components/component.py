@@ -42,11 +42,10 @@ If information necessary to complete initialization is not specified in the cons
 full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
 `Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
 <Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
-available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
-completed its `deferred_init` method must be called.  This is usually done automatically when the Component is
+available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
+be completed by a call to it `deferred_init` method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
-a Projection to the `pathway <Process.pahtway>`)
-of a `Process`), as appropriate.
+a Projection to the `pathway <Process.pahtway>`) of a `Process`), as appropriate.
 
 .. _Component_Structure:
 
@@ -1876,7 +1875,10 @@ class Component(object, metaclass=ComponentsMeta):
                 pass
 
             # Complete initialization
-            super(self.__class__,self).__init__(**self.init_args)
+            try:
+                super(self.__class__,self).__init__(**self.init_args)
+            except:
+                self.__class__,self.__init__(**self.init_args)
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:
@@ -3340,11 +3342,12 @@ class Component(object, metaclass=ComponentsMeta):
                 new_value = self.function_object.reinitialize(*args)
                 self.value = np.atleast_2d(new_value)
             else:
-                ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                                "(It does not have an accumulator to reinitialize).".format(self.name))
         else:
-            ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+            raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                            "(It does not have an accumulator to reinitialize).".format(self.name))
+        assert True
 
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)

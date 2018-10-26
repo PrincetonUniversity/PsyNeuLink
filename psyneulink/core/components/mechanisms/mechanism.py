@@ -951,7 +951,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_COUNT, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.core.globals.keywords import CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_COUNT, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT_EXECUTE_METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1337,7 +1337,7 @@ class Mechanism_Base(Mechanism):
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute Process, since some components may not yet be instantiated
     #    (such as OutputStates)
-    initMethod = INIT__EXECUTE__METHOD_ONLY
+    initMethod = INIT_EXECUTE_METHOD_ONLY
 
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple States:  one 1D np.ndarray per state
@@ -2248,7 +2248,7 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
-            elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+            elif self.initMethod is INIT_EXECUTE_METHOD_ONLY:
                 return_value =  self._execute(variable=self.instance_defaults.variable,
                                               runtime_params=runtime_params,
                                               context=context,
