@@ -2035,6 +2035,7 @@ class State_Base(State):
                     self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
 
         # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
+        # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
         try:
             # pass only function params (which implement the effects of any ModulatoryProjections)
             function_params = self.stateParams[FUNCTION_PARAMS]
