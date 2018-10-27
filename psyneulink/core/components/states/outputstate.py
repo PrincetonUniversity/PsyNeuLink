@@ -1535,7 +1535,7 @@ class StandardOutputStates():
                     continue
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
-        # Validate all INDEX specification, parse any assigned as ALL, and
+        # Validate all INDEX specifications, parse any assigned as ALL, and
         # Add names of each OutputState as property of the owner's class that returns its name string
         for state in self.data:
             if INDEX in state:

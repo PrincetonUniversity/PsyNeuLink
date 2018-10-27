@@ -5020,12 +5020,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),
-                                                                         1):
+                    param_size = np.size(np.atleast_2d(param_value), 0)
+                    param_shape = np.shape(np.atleast_2d(param_value))
+                    variable_size = np.size(np.atleast_2d(self.instance_defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.instance_defaults.variable))
+                    if param_size != variable_size:
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
-                                            format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                   np.shape(np.atleast_2d(param_value))))
+                                            format(self.name, variable_shape, param_shape))
 
                 # keyword matrix specified - not valid outside of a projection
                 elif param_value in MATRIX_KEYWORD_VALUES:
