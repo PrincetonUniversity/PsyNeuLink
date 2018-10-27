@@ -59,8 +59,6 @@ def _cpu_jit_constructor():
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
 
-_dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
-
 
 class jit_engine:
     def __init__(self):
@@ -69,18 +67,19 @@ class jit_engine:
         self._target_machine = None
         self.__mod = None
         self.__opt_modules = 0
+        self.__dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
 
     def __del__(self):
-        if _dumpenv.find("mod_count") != -1:
+        if self.__dumpenv.find("mod_count") != -1:
             print("Total JIT modules: ", self.__opt_modules)
 
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
-        if _dumpenv.find("opt") != -1:
+        if self.__dumpenv.find("opt") != -1:
             print(module)
 
         # This prints generated x86 assembly
-        if _dumpenv.find("isa") != -1:
+        if self.__dumpenv.find("isa") != -1:
             print("ISA assembly:")
             print(self._target_machine.emit_assembly(self.__mod))
 
