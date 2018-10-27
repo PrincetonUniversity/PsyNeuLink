@@ -334,7 +334,6 @@ results_CN_congruent_trial = testtrialtype(CN_congruent_trial_input,
                                            ntrials,
                                            'Color Naming Congruent Condition')
 
-#
 # # #test CN incongruent trial, should see that word interferes with color (should have most cycles + more than CN control)
 CN_incongruent_trial_input = trial_dict(1, 0, 0, 1, 1, 0) #red_color, green color, red_word, green word, CN, WR
 results_CN_incongruent_trial = testtrialtype(CN_incongruent_trial_input,
