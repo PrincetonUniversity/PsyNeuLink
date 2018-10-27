@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *************************************************  EVCControlMechanism ******************************************************
+# *************************************************  EVCControlMechanism ***********************************************
 
 """
 
@@ -508,10 +508,10 @@ class EVCControlMechanism(ControlMechanism):
         <System.origin_mechanisms>` attribute.
 
         ..note::
-            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
-            the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
-            Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that case,
-            one of the other forms of specification must be used.
+            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that
+            assumes the System for which the EVCControlMechanism is the `controller <System.controller>` has a single
+            `ORIGIN` Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that
+            case, one of the other forms of specification must be used.
         COMMENT
 
     function : function or method : ControlSignalGridSearch
@@ -649,10 +649,10 @@ class EVCControlMechanism(ControlMechanism):
         function can be assigned to `value_function` so long as it returns a tuple with three items: the calculated
         EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
         values or `None`). If used with the EVCControlMechanism's default `function <EVCControlMechanism.function>`, a
-        custom `value_function` must accommodate three arguments (passed by name): a **controller** argument that is the
-        EVCControlMechanism for which it is carrying out the calculation; an **outcome** argument that is a value; and a
-        `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can also call any
-        of the `helper functions <EVCControlMechanism_Functions>` that it calls (however, see `note
+        custom `value_function` must accommodate three arguments (passed by name): a **controller** argument that is
+        the EVCControlMechanism for which it is carrying out the calculation; an **outcome** argument that is a
+        value; and a `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can
+        also call any of the `helper functions <EVCControlMechanism_Functions>` that it calls (however, see `note
         <EVCControlMechanism_Calling_and_Assigning_Functions>` above).
 
     cost_function : function : default LinearCombination(operation=SUM)
@@ -664,13 +664,14 @@ class EVCControlMechanism(ControlMechanism):
         1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
         assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
         each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
-        EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function can also be
-        replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>` that takes an array as
-        input and returns a scalar value.  If used with the EVCControlMechanism's default `value_function
-        <EVCControlMechanism.value_function>`, a custom `cost_function <EVCControlMechanism.cost_function>` must accommodate two
-        arguments (passed by name): a **controller** argument that is the EVCControlMechanism itself;  and a **costs**
-        argument that is a 1d array of scalar values specifying the `cost <ControlSignal.cost>` for each ControlSignal
-        listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
+        EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function
+        can also be replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>` that
+        takes an array as input and returns a scalar value.  If used with the EVCControlMechanism's default
+        `value_function <EVCControlMechanism.value_function>`, a custom `cost_function
+        <EVCControlMechanism.cost_function>` must accommodate two arguments (passed by name): a **controller**
+        argument that is the EVCControlMechanism itself;  and a **costs** argument that is a 1d array of scalar
+        values specifying the `cost <ControlSignal.cost>` for each ControlSignal listed in the `control_signals`
+        attribute of the ControlMechanism specified in the **controller** argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
         combines the outcome and cost for given `allocation_policy` to determine its `EVC <EVCControlMechanisms_EVC>`.
@@ -679,10 +680,10 @@ class EVCControlMechanism(ControlMechanism):
         of the function, as described for the `cost_function <EVCControlMechanisms.cost_function>`.  The default
         function can also be replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>`
         that returns a scalar value.  If used with the EVCControlMechanism's default `value_function`, a custom
-        If used with the EVCControlMechanism's default `value_function`, a custom combine_outcome_and_cost_function must
-        accomoudate three arguments (passed by name): a **controller** argument that is the EVCControlMechanism itself;
-        an **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`; and a **cost**
-        argument that is 1d array with the cost of the current `allocation_policy`.
+        If used with the EVCControlMechanism's default `value_function`, a custom combine_outcome_and_cost_function
+        must accomodate three arguments (passed by name): a **controller** argument that is the EVCControlMechanism
+        itself; an **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`;
+        and a **cost** argument that is 1d array with the cost of the current `allocation_policy`.
 
     control_signal_search_space : 2d np.array
         an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
