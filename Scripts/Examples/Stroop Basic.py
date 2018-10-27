@@ -96,5 +96,5 @@ print('Results from {} trials of Stroop System:\n'.format(num_trials),
 
 # NOTE: THIS MAY NOT ACCURATELY DEPICT ALL PROJECTIONS (WORK IN PROGRESS!)
 # c.show_graph()
-print('Results from {} trials of Stroop Composition:\n'.format(num_trials),
-      c.run(num_trials=num_trials, inputs=inputs_dict))
+# print('Results from {} trials of Stroop Composition:\n'.format(num_trials),
+#       c.run(num_trials=num_trials, inputs=inputs_dict))
