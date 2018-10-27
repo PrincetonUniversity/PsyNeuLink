@@ -1565,7 +1565,8 @@ class StandardOutputStates():
 
     @tc.typecheck
     def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
-        self.data.append(self._instantiate_std_state_list(output_state_dicts, indices))
+        self.data.extend(self._instantiate_std_state_list(output_state_dicts, indices))
+        assert True
 
     @tc.typecheck
     def get_state_dict(self, name:str):
