@@ -1875,10 +1875,14 @@ class Component(object, metaclass=ComponentsMeta):
                 pass
 
             # Complete initialization
-            try:
-                super(self.__class__,self).__init__(**self.init_args)
-            except:
-                self.__class__,self.__init__(**self.init_args)
+            # MODIFIED 10/27/18 OLD:
+            super(self.__class__,self).__init__(**self.init_args)
+            # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
+            # try:
+            #     super(self.__class__,self).__init__(**self.init_args)
+            # except:
+            #     self.__init__(**self.init_args)
+            # MODIFIED 10/27/18 END
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:

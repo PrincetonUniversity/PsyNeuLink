@@ -77,7 +77,7 @@ that represents the stimulus for the decision process.  However, this can be con
 argument of the DDM's consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
 (e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
 *SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputState is configured to accept a 1d 2-item vector,
-and to use `Reduce` as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
+and to use `Reduce` as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
 the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
 <DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
 as an array corresponding to the input array (see `below <DDM_Custom_OutputStates>`).
@@ -142,9 +142,9 @@ The `output_states <DDM.output_states>` assigned to a DDM can be customized by s
 `Standard OutputStates <DDM_Standard_OutputStates>` in the **output_states** argument of its constructor, or the
 *OUTPUT_STATES* entry of an `OutputState specification dictionary <OutputState_Specification_Dictionary>`.  This can
 include two additional `Standard OutputStates <DDM_Standard_OutputStates>` for the DDM - `DECISION_VARIABLE_ARRAY
-<DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_SELECTED_INPUT_ARRAY>`, that are available if the
-*ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with any Mechanism, `customized
-OutputStates <OutputState_Customization>` can also be created and assigned.
+<DDM_OUTPUT.DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_OUTPUT.DDM_SELECTED_INPUT_ARRAY>`,
+that are available  if the *ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with
+any Mechanism, `customized OutputStates <OutputState_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
@@ -410,7 +410,7 @@ class DDM_OUTPUT():
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
       .. note::
-         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY* in the DDM Mechanism's constructor
          (see `DDM_Input`).
       • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
         `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
@@ -423,11 +423,11 @@ class DDM_OUTPUT():
 
     *SELECTED_INPUT_ARRAY* : 1d nparray
       .. note::
-         This is available only if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         This is available only if **input_format** is specified as *ARRAY* in the DDM Mechanism's constructor
          (see `DDM_Input`).
-      • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("selected") element -- determined by the
         outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
-        the DDM's input_state `variable <InputState.variable>`).  The "value" element is the 1st one if the decision
+        the DDM's input_state `variable <InputState.variable>`).  The "selected" element is the 1st one if the decision
         process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
         element is set to 0. \n
       • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
@@ -970,7 +970,6 @@ class DDM(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Delete params not in use, call super.instantiate_execute_method
-        :param function:
         """
 
         super()._instantiate_attributes_before_function(function=function, context=context)
