@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *************************************************  EVCControlMechanism ******************************************************
+# *************************************************  EVCControlMechanism ***********************************************
 
 """
 
@@ -385,7 +385,8 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS, \
+    ControlSignal
 from psyneulink.core.components.shellclasses import Function, System_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
@@ -482,8 +483,8 @@ class EVCControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
     np.array]] : \
     default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
-        specifies either an `ObjectiveMechanism` to use for the EVCControlMechanism or a list of the OutputStates it should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
+        specifies either an `ObjectiveMechanism` to use for the EVCControlMechanism or a list of the OutputStates it
+        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
@@ -507,15 +508,16 @@ class EVCControlMechanism(ControlMechanism):
         <System.origin_mechanisms>` attribute.
 
         ..note::
-            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
-            the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
-            Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that case,
-            one of the other forms of specification must be used.
+            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that
+            assumes the System for which the EVCControlMechanism is the `controller <System.controller>` has a single
+            `ORIGIN` Mechanism; this will cause an error if the System has more than one `ORIGIN` Mechanism;  in that
+            case, one of the other forms of specification must be used.
         COMMENT
 
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the
-        EVCControlMechanism's `system <EVCControlMechanism.system>` (see `function <EVCControlMechanism.function>` for details).
+        EVCControlMechanism's `system <EVCControlMechanism.system>` (see `function <EVCControlMechanism.function>`
+        for details).
 
     value_function : function or method : value_function
         specifies the function used to calculate the `EVC <EVCControlMechanism_EVC>` for the current `allocation_policy`
@@ -565,9 +567,10 @@ class EVCControlMechanism(ControlMechanism):
         a name based on the same.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
-        dictionary of `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` added to the EVCControlMechanism's
-        `system <EVCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
-        entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
+        dictionary of `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` added to the
+        EVCControlMechanism's `system <EVCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The
+        key for each entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction
+        Mechanism.
 
     predicted_input : Dict[ProcessingMechanism, value]
         dictionary with the `value <Mechanism_Base.value>` of each `prediction Mechanism
@@ -577,14 +580,15 @@ class EVCControlMechanism(ControlMechanism):
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCControlMechanism to evaluate the performance of its `system
-        <EVCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
-        EVCControlMechanism's constructor, they are assigned as the `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-        attribute for the `objective_mechanism <EVCControlMechanism.objective_mechanism>`.
+        <EVCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument
+        of the EVCControlMechanism's constructor, they are assigned as the `monitored_output_states
+        <ObjectiveMechanism.monitored_output_states>` attribute for the `objective_mechanism
+        <EVCControlMechanism.objective_mechanism>`.
 
     monitored_output_states : List[OutputState]
-        list of the OutputStates monitored by `objective_mechanism <EVCControlMechanism.objective_mechanism>` (and listed in
-        its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to evaluate the
-        performance of the EVCControlMechanism's `system <EVCControlMechanism.system>`.
+        list of the OutputStates monitored by `objective_mechanism <EVCControlMechanism.objective_mechanism>` (and
+        listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to
+        evaluate the performance of the EVCControlMechanism's `system <EVCControlMechanism.system>`.
 
     COMMENT:
     [TBI]
@@ -603,10 +607,11 @@ class EVCControlMechanism(ControlMechanism):
         combinations of the `allocation_samples` of its ControlSignals (and contained in its
         `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
         combination, evaluating the result using `value_function`, and returning the `allocation_policy` that yielded
-        the greatest `EVC <EVCControlMechanism_EVC>` value (see `EVCControlMechanism_Default_Configuration` for additional details).
-        If a custom function is specified, it must accommodate a **controller** argument that specifies an EVCControlMechanism
-        (and provides access to its attributes, including `control_signal_search_space`), and must return an array with
-        the same format (number and type of elements) as the EVCControlMechanism's `allocation_policy` attribute.
+        the greatest `EVC <EVCControlMechanism_EVC>` value (see `EVCControlMechanism_Default_Configuration` for
+        additional details). If a custom function is specified, it must accommodate a **controller** argument that
+        specifies an EVCControlMechanism (and provides access to its attributes, including
+        `control_signal_search_space`), and must return an array with the same format (number and type of elements)
+        as the EVCControlMechanism's `allocation_policy` attribute.
 
     COMMENT:
         NOTES ON API FOR CUSTOM VERSIONS:
@@ -639,15 +644,15 @@ class EVCControlMechanism(ControlMechanism):
         and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
         used to calculate the EVC.  The default, `ValueFunction`,  calls the EVCControlMechanism's `cost_function
         <EVCControlMechanism.cost_function>` to aggregate the value of the costs, and then calls its
-        `combine_outcome_and_costs <EVCControlMechanism.combine_outcome_and_costs>` to calculate the EVC from the outcome
-        and aggregated cost (see `EVCControlMechanism_Default_Configuration` for additional details).  A custom
+        `combine_outcome_and_costs <EVCControlMechanism.combine_outcome_and_costs>` to calculate the EVC from the
+        outcome and aggregated cost (see `EVCControlMechanism_Default_Configuration` for additional details).  A custom
         function can be assigned to `value_function` so long as it returns a tuple with three items: the calculated
         EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
-        values or `None`). If used with the EVCControlMechanism's default `function <EVCControlMechanism.function>`, a custom
-        `value_function` must accommodate three arguments (passed by name): a **controller** argument that is the
-        EVCControlMechanism for which it is carrying out the calculation; an **outcome** argument that is a value; and a
-        `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can also call any
-        of the `helper functions <EVCControlMechanism_Functions>` that it calls (however, see `note
+        values or `None`). If used with the EVCControlMechanism's default `function <EVCControlMechanism.function>`, a
+        custom `value_function` must accommodate three arguments (passed by name): a **controller** argument that is
+        the EVCControlMechanism for which it is carrying out the calculation; an **outcome** argument that is a
+        value; and a `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can
+        also call any of the `helper functions <EVCControlMechanism_Functions>` that it calls (however, see `note
         <EVCControlMechanism_Calling_and_Assigning_Functions>` above).
 
     cost_function : function : default LinearCombination(operation=SUM)
@@ -659,24 +664,26 @@ class EVCControlMechanism(ControlMechanism):
         1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
         assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
         each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
-        EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function can also be
-        replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>` that takes an array as
-        input and returns a scalar value.  If used with the EVCControlMechanism's default `value_function
-        <EVCControlMechanism.value_function>`, a custom `cost_function <EVCControlMechanism.cost_function>` must accommodate two
-        arguments (passed by name): a **controller** argument that is the EVCControlMechanism itself;  and a **costs**
-        argument that is a 1d array of scalar values specifying the `cost <ControlSignal.cost>` for each ControlSignal
-        listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
+        EVCControlMechanism's `control_signals <EVCControlMechanism.control_signals>` attribute. The default function
+        can also be replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>` that
+        takes an array as input and returns a scalar value.  If used with the EVCControlMechanism's default
+        `value_function <EVCControlMechanism.value_function>`, a custom `cost_function
+        <EVCControlMechanism.cost_function>` must accommodate two arguments (passed by name): a **controller**
+        argument that is the EVCControlMechanism itself;  and a **costs** argument that is a 1d array of scalar
+        values specifying the `cost <ControlSignal.cost>` for each ControlSignal listed in the `control_signals`
+        attribute of the ControlMechanism specified in the **controller** argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
-        combines the outcome and cost for given `allocation_policy` to determine its `EVC <EVCControlMechanisms_EVC>`. The
-        default function subtracts the cost from the outcome, and returns the difference.  This can be modified using
-        the `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>` parameters of the
-        function, as described for the `cost_function <EVCControlMechanisms.cost_function>`.  The default function can also be
-        replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with the EVCControlMechanism's default `value_function`, a custom
-        If used with the EVCControlMechanism's default `value_function`, a custom combine_outcome_and_cost_function must
-        accomoudate three arguments (passed by name): a **controller** argument that is the EVCControlMechanism itself; an
-        **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`; and a **cost**
-        argument that is 1d array with the cost of the current `allocation_policy`.
+        combines the outcome and cost for given `allocation_policy` to determine its `EVC <EVCControlMechanisms_EVC>`.
+        The default function subtracts the cost from the outcome, and returns the difference.  This can be modified
+        using the `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>` parameters
+        of the function, as described for the `cost_function <EVCControlMechanisms.cost_function>`.  The default
+        function can also be replaced with any `custom function <EVCControlMechanism_Calling_and_Assigning_Functions>`
+        that returns a scalar value.  If used with the EVCControlMechanism's default `value_function`, a custom
+        If used with the EVCControlMechanism's default `value_function`, a custom combine_outcome_and_cost_function
+        must accomodate three arguments (passed by name): a **controller** argument that is the EVCControlMechanism
+        itself; an **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`;
+        and a **cost** argument that is 1d array with the cost of the current `allocation_policy`.
 
     control_signal_search_space : 2d np.array
         an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
@@ -700,11 +707,12 @@ class EVCControlMechanism(ControlMechanism):
         `EVC_policies`, and their values are saved in `EVC_values`.
 
     EVC_policies : 2d np.array
-        array with every `allocation_policy` tested in `control_signal_search_space`.  The `EVC <EVCControlMechanism_EVC>`
-        value of each is stored in `EVC_values`.
+        array with every `allocation_policy` tested in `control_signal_search_space`.  The `EVC
+        <EVCControlMechanism_EVC>` value of each is stored in `EVC_values`.
 
     EVC_values :  1d np.array
-        array of `EVC <EVCControlMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in `EVC_policies`;
+        array of `EVC <EVCControlMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in
+        `EVC_policies`;
 
     allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
@@ -713,8 +721,8 @@ class EVCControlMechanism(ControlMechanism):
         number of ControlSignals in the EVCControlMechanism's `control_signals` attribute.
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of the EVCControlMechanism's `ControlSignals <EVCControlMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_states
+        list of the EVCControlMechanism's `ControlSignals <EVCControlMechanism_ControlSignals>`, including any that it
+        inherited from its `system <EVCControlMechanism.system>` (same as the EVCControlMechanism's `output_states
         <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
         parameter it controls
 
@@ -763,7 +771,7 @@ class EVCControlMechanism(ControlMechanism):
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
-                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
