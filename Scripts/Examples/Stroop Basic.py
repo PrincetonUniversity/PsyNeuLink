@@ -57,7 +57,7 @@ inputs_dict = {ci: [[1,0], [1,0]],
                t:  [[1,0], [1,0]]}
 num_trials = 1
 
-# # SYSTEM VERSION ----------------------------------------------------------
+# SYSTEM VERSION ----------------------------------------------------------
 #
 # PROCESSES
 cp = pnl.Process(pathway=[ci, c_ih, ch, c_hr, r], name='COLOR NAMING PROCESS')
@@ -69,13 +69,13 @@ rdp = pnl.Process(pathway=[r, d], name='DECISION PROCESS')  # Since projection u
 
 # SYSTEM
 s = pnl.System(processes=[cp, wp, cnp, wrp, rdp], name='STROOP SYSTEM')
-# s.show_graph(show_mechanism_structure=True, show_dimensions=pnl.ALL)
+s.show_graph(show_mechanism_structure=True, show_dimensions=pnl.ALL)
 print('Results from {} trials of Stroop System:\n'.format(num_trials),
       s.run(num_trials=num_trials, inputs=inputs_dict))
 
 
-# COMPOSITION VERSION -------------------------------------------------------
-
+# # COMPOSITION VERSION -------------------------------------------------------
+#
 # # COMPOSITION
 # c = pnl.Composition(name='STROOP COMPOSITION')
 # c.add_c_node(ci)
@@ -93,8 +93,8 @@ print('Results from {} trials of Stroop System:\n'.format(num_trials),
 # c.add_projection(sender=t, receiver=ch, projection=t_w)
 # c.add_projection(sender=r, receiver=d, projection=pnl.IDENTITY_MATRIX)
 # # c.add_projection(sender=r, receiver=l, projection=pnl.IDENTITY_MATRIX)  # LCA instead of DDM
-#
-# # NOTE: THIS MAY NOT ACCURATELY DEPICT ALL PROJECTIONS (WORK IN PROGRESS!)
-# # c.show_graph()
-# print('Results from {} trials of Stroop Composition:\n'.format(num_trials),
-#       c.run(num_trials=num_trials, inputs=inputs_dict))
+
+# NOTE: THIS MAY NOT ACCURATELY DEPICT ALL PROJECTIONS (WORK IN PROGRESS!)
+# c.show_graph()
+print('Results from {} trials of Stroop Composition:\n'.format(num_trials),
+      c.run(num_trials=num_trials, inputs=inputs_dict))

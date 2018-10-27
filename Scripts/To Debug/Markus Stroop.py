@@ -299,7 +299,7 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
 
     return results
 
-ntrials = 1
+ntrials = 10
 print('\nRunning {} trials per condition (one dot for each trial, space every 10)'.format(ntrials))
 
 WR_control_trial_input = trial_dict(0, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR

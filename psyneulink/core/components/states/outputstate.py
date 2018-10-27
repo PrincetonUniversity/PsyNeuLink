@@ -1591,7 +1591,6 @@ class StandardOutputStates():
     # def indices(self):
     #     return [item[INDEX] for item in self.data]
 
-
 def _parse_output_state_variable(owner, variable, output_state_name=None):
     """Return variable for OutputState based on VARIABLE entry of owner's params dict
 
