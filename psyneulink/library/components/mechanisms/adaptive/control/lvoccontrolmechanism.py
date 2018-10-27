@@ -846,10 +846,10 @@ class LVOCControlMechanism(ControlMechanism):
             self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
             self._previous_prediction_vector = self.prediction_vector.vector
 
-        # TEST PRINT
-        print ('\nOUTCOME: ', self.input_state.value)
-        print ('prediction_weights: ', self.prediction_weights)
-        # TEST PRINT END
+        # # TEST PRINT
+        # print ('\nOUTCOME: ', self.input_state.value)
+        # print ('prediction_weights: ', self.prediction_weights)
+        # # TEST PRINT END
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -858,9 +858,9 @@ class LVOCControlMechanism(ControlMechanism):
                                                                                     runtime_params=runtime_params,
                                                                                     context=context)
 
-        # TEST PRINT
-        print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
-        # TEST PRINT END
+        # # TEST PRINT
+        # print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
+        # # TEST PRINT END
 
         return allocation_policy
 
