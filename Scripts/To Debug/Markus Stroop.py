@@ -342,7 +342,6 @@ results_CN_incongruent_trial = testtrialtype(CN_incongruent_trial_input,
                                              ntrials,
                                              'Color Naming Incongruent Condition')
 
-
 # print("\nPlotting results...")
 #
 # plt.hist(12 * results_CN_control_trial[0][np.where(results_CN_control_trial[1]==1)]+ 206)
