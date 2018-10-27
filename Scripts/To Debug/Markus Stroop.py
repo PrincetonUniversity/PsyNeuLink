@@ -43,24 +43,26 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 #   Response layer, provide input to accumulator, responses: ('red', 'green')
 response_layer = pnl.TransferMechanism(size=2,
                                        function=pnl.Logistic,
-                                       name='RESPONSE',
                                        integrator_mode=True,
                                        noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
-                                       integration_rate=0.1)
+                                       integration_rate=0.1,
+                                       name='RESPONSE')
 #   Respond red accumulator
 #   alpha = rate of evidence accumlation = 0.1
 #   sigma = noise = 0.1
 #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
 accumulator_noise = 0.01 #0.03
-respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                     standard_dev=accumulator_noise).function,
-                                                                               rate=0.1),
-                                                  name='respond_red_accumulator')
+respond_red_accumulator = pnl.IntegratorMechanism(
+                                   function=pnl.SimpleIntegrator(
+                                                   noise=pnl.NormalDist(mean=0,standard_dev=accumulator_noise).function,
+                                                   rate=0.1),
+                                   name='respond_red_accumulator')
 #   Respond green accumulator
-respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                       standard_dev=accumulator_noise).function,
-                                                                               rate=0.1),
-                                                    name='respond_green_accumulator')
+respond_green_accumulator = pnl.IntegratorMechanism(
+                                   function=pnl.SimpleIntegrator(
+                                                   noise=pnl.NormalDist(mean=0,standard_dev=accumulator_noise).function,
+                                                   rate=0.1),
+                                   name='respond_green_accumulator')
 
 #   LOGGING
 # Here we set up logs to keep track of what the model is doing.
@@ -117,12 +119,10 @@ task_WR_weights = pnl.MappingProjection(matrix=np.matrix([[0, 0],
 respond_red_differencing_weights = pnl.MappingProjection(matrix=np.matrix([[1.0], [-1.0]]),
                                                          name='RESPOND_RED_WEIGHTS')
 
-
 #   row 0: response_'red' to respond_green_accumulator
 #   row 1: response_'green' to respond_green_accumulator
 respond_green_differencing_weights = pnl.MappingProjection(matrix=np.matrix([[-1.0], [1.0]]),
                                                            name='RESPOND_GREEN_WEIGHTS')
-
 
 #   Create pathways as processes
 
@@ -170,8 +170,8 @@ my_Stroop = pnl.System(processes=[colors_process,
                                   respond_green_process],
                        name='FEEDFORWARD_STROOP_SYSTEM')
 
-my_Stroop.show()
-# my_Stroop.show_graph(show_dimensions=pnl.ALL)
+# my_Stroop.show()
+my_Stroop.show_graph(show_dimensions=pnl.ALL)
 
 # Function to create test trials
 # a RED word input is [1,0] to words_input_layer and GREEN word is [0,1]
@@ -195,7 +195,6 @@ CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 1, 0)
 
 m = my_Stroop.run(inputs=CN_trial_initialize_input)
 
-
 #   CREATE THRESHOLD FUNCTION
 # first value of DDM's value is DECISION_VARIABLE
 def pass_threshold(mech1, mech2, thresh):
@@ -216,14 +215,18 @@ terminate_trial = {
 
 
 # function to test a particular trial type
-def testtrialtype(test_trial_input, initialize_trial_input, ntrials):
+def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
     # create variable to store results
     results = np.empty((10, 0))
     # clear log
     respond_red_accumulator.log.clear_entries(delete_entry=False)
     respond_red_accumulator.reinitialize(0)
     respond_green_accumulator.reinitialize(0)
+    print('\n\n{}'.format(condition))
     for trial in range(ntrials):
+        print('.', end='', flush=True)
+        if not ((trial+1) % 10):
+            print('  ', end='', flush=True)
         # run system once (with integrator mode off and no noise for hidden units) with only task so asymptotes
         colors_hidden_layer.integrator_mode = False
         words_hidden_layer.integrator_mode = False
@@ -236,13 +239,6 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):
         # but didn't want to run accumulators so set those back to zero
         respond_green_accumulator.reinitialize(0)
         respond_red_accumulator.reinitialize(0)
-        # store results
-        # colors_hidden_layer_value = np.asarray(colors_hidden_layer.value).reshape(2, 1)
-        # print('colors_hidden_layer_value: ', colors_hidden_layer_value)
-        # words_hidden_layer_value = np.asarray(words_hidden_layer.value).reshape(2, 1)
-        # print('words_hidden_layer_value: ', words_hidden_layer_value)
-        # response_layer_value = np.asarray(response_layer.value).reshape(2, 1)
-        # print('response_layer_value: ', response_layer_value)
 
         # now put back in integrator mode and noise
         colors_hidden_layer.integrator_mode = True
@@ -293,7 +289,8 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):
 
         # print('tmp_results: ', tmp_results)
 
-        # after a run we want to reset the activations of the integrating units so we can test many trials and examine the distrubtion of responses
+        # after a run we want to reset the activations of the integrating units
+        # so we can test many trials and examine the distrubtion of responses
         words_hidden_layer.reinitialize([0, 0])
         colors_hidden_layer.reinitialize([0, 0])
         response_layer.reinitialize([0, 0])
@@ -302,93 +299,104 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):
 
     return results
 
-ntrials = 100
+ntrials = 1
+print('\nRunning {} trials per condition (one dot for each trial, space every 10)'.format(ntrials))
+
 WR_control_trial_input = trial_dict(0, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
 results_WR_control_trial = testtrialtype(WR_control_trial_input,
                                          WR_trial_initialize_input,
-                                         ntrials)
+                                         ntrials,
+                                         'Word Reading Control Condition')
 
 #test WR congruent trial (should have the least cycles)
 WR_congruent_trial_input = trial_dict(1, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
 results_WR_congruent_trial = testtrialtype(WR_congruent_trial_input,
                                            WR_trial_initialize_input,
-                                           ntrials)
+                                           ntrials,
+                                           'Word Reading Congruent Condition')
 
 #test WR incongruent trial, should see that color doesn't affect word (same number of cycles as WR control)
 WR_incongruent_trial_input = trial_dict(1, 0, 0, 1, 0, 1) #red_color, green color, red_word, green word, CN, WR
 results_WR_incongruent_trial = testtrialtype(WR_incongruent_trial_input,
                                              WR_trial_initialize_input,
-                                             ntrials)
+                                             ntrials,
+                                             'Word Reading Incongruent Condition')
+
+CN_control_trial_input = trial_dict(1, 0, 0, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
+results_CN_control_trial = testtrialtype(CN_control_trial_input,
+                                         CN_trial_initialize_input,
+                                         ntrials,
+                                         'Color Naming Control Condition')
 
 CN_congruent_trial_input = trial_dict(1, 0, 1, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
 results_CN_congruent_trial = testtrialtype(CN_congruent_trial_input,
-                                             CN_trial_initialize_input,
-                                             ntrials)
+                                           CN_trial_initialize_input,
+                                           ntrials,
+                                           'Color Naming Congruent Condition')
 
 #
 # # #test CN incongruent trial, should see that word interferes with color (should have most cycles + more than CN control)
 CN_incongruent_trial_input = trial_dict(1, 0, 0, 1, 1, 0) #red_color, green color, red_word, green word, CN, WR
 results_CN_incongruent_trial = testtrialtype(CN_incongruent_trial_input,
                                              CN_trial_initialize_input,
-                                             ntrials)
+                                             ntrials,
+                                             'Color Naming Incongruent Condition')
+
+
+# print("\nPlotting results...")
 #
-CN_control_trial_input = trial_dict(1, 0, 0, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
-results_CN_control_trial = testtrialtype(CN_control_trial_input,
-                                         CN_trial_initialize_input,
-                                         ntrials)
-
-
-
 # plt.hist(12 * results_CN_control_trial[0][np.where(results_CN_control_trial[1]==1)]+ 206)
 # plt.show()
 # plt.hist(12 * results_CN_congruent_trial[0][np.where(results_CN_congruent_trial[1]==1)]+ 206)
 # plt.show()
 # plt.hist(12 * results_CN_incongruent_trial[0][np.where(results_CN_incongruent_trial[1]==1)]+ 206)
 # plt.show()
-
-
-W_control = 12 * results_WR_control_trial[0]+ 206
-W_congruent= 12 * results_WR_congruent_trial[0]+ 206
-W_incongruent = 12 * results_WR_incongruent_trial[0]+ 206
-
-
-C_control = 12 * results_CN_control_trial[0]+ 206
-C_congruent= 12 * results_CN_congruent_trial[0]+ 206
-C_incongruent = 12 * results_CN_incongruent_trial[0]+ 206
-
-
-cycles_mean = [np.mean(W_control),
-     np.mean(W_incongruent),
-     np.mean(W_congruent),
-     np.mean(C_control),
-     np.mean(C_incongruent),
-     np.mean(C_congruent)]
-cycles_std = [np.std(W_control),
-         np.std(W_incongruent),
-         np.std(W_congruent),
-         np.std(C_control),
-         np.std(C_incongruent),
-         np.std(C_congruent)]
-cycles_x = np.array([0, 1, 2, 0, 1, 2])
-labs = ['control',
-        'conflict',
-        'congruent']
-legend = ['WR trial',
-          'CN trial']
-colors = ['b', 'c']
-
-plt.plot(cycles_x[0:3], cycles_mean[0:3], color=colors[0])
-plt.errorbar(cycles_x[0:3], cycles_mean[0:3], xerr=0, yerr=cycles_std[0:3], ecolor=colors[0], fmt='none')
-plt.scatter(cycles_x[0], cycles_mean[0], marker='x', color=colors[0])
-plt.scatter(cycles_x[1], cycles_mean[1], marker='x', color=colors[0])
-plt.scatter(cycles_x[2], cycles_mean[2], marker='x', color=colors[0])
-plt.plot(cycles_x[3:6], cycles_mean[3:6], color=colors[1])
-plt.errorbar(cycles_x[3:6], cycles_mean[3:6], xerr=0, yerr=cycles_std[3:6], ecolor=colors[1], fmt='none')
-plt.scatter(cycles_x[3], cycles_mean[3], marker='o', color=colors[1])
-plt.scatter(cycles_x[4], cycles_mean[4], marker='o', color=colors[1])
-plt.scatter(cycles_x[5], cycles_mean[5], marker='o', color=colors[1])
-
-plt.xticks(cycles_x, labs, rotation=15)
-plt.tick_params(axis='x', labelsize=9)
-plt.legend(legend)
-plt.show()
+#
+#
+# W_control = 12 * results_WR_control_trial[0]+ 206
+# W_congruent= 12 * results_WR_congruent_trial[0]+ 206
+# W_incongruent = 12 * results_WR_incongruent_trial[0]+ 206
+#
+#
+# C_control = 12 * results_CN_control_trial[0]+ 206
+# C_congruent= 12 * results_CN_congruent_trial[0]+ 206
+# C_incongruent = 12 * results_CN_incongruent_trial[0]+ 206
+#
+#
+# cycles_mean = [np.mean(W_control),
+#      np.mean(W_incongruent),
+#      np.mean(W_congruent),
+#      np.mean(C_control),
+#      np.mean(C_incongruent),
+#      np.mean(C_congruent)]
+# cycles_std = [np.std(W_control),
+#          np.std(W_incongruent),
+#          np.std(W_congruent),
+#          np.std(C_control),
+#          np.std(C_incongruent),
+#          np.std(C_congruent)]
+# cycles_x = np.array([0, 1, 2, 0, 1, 2])
+# labs = ['control',
+#         'conflict',
+#         'congruent']
+# legend = ['WR trial',
+#           'CN trial']
+# colors = ['b', 'c']
+#
+# print("Still plotting....")
+#
+# plt.plot(cycles_x[0:3], cycles_mean[0:3], color=colors[0])
+# plt.errorbar(cycles_x[0:3], cycles_mean[0:3], xerr=0, yerr=cycles_std[0:3], ecolor=colors[0], fmt='none')
+# plt.scatter(cycles_x[0], cycles_mean[0], marker='x', color=colors[0])
+# plt.scatter(cycles_x[1], cycles_mean[1], marker='x', color=colors[0])
+# plt.scatter(cycles_x[2], cycles_mean[2], marker='x', color=colors[0])
+# plt.plot(cycles_x[3:6], cycles_mean[3:6], color=colors[1])
+# plt.errorbar(cycles_x[3:6], cycles_mean[3:6], xerr=0, yerr=cycles_std[3:6], ecolor=colors[1], fmt='none')
+# plt.scatter(cycles_x[3], cycles_mean[3], marker='o', color=colors[1])
+# plt.scatter(cycles_x[4], cycles_mean[4], marker='o', color=colors[1])
+# plt.scatter(cycles_x[5], cycles_mean[5], marker='o', color=colors[1])
+#
+# plt.xticks(cycles_x, labs, rotation=15)
+# plt.tick_params(axis='x', labelsize=9)
+# plt.legend(legend)
+# plt.show()
