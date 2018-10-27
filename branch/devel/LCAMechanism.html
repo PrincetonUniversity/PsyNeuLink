@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.4.8.0+776.gc4cee0f documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.4.8.0+777.g9c26916 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+776.gc4cee0f documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+777.g9c26916 documentation" href="index.html"/>
         <link rel="up" title="Transfer Mechanisms" href="TransferMechanisms.html"/>
         <link rel="next" title="KWTAMechanism" href="KWTAMechanism.html"/>
         <link rel="prev" title="RecurrentTransferMechanism" href="RecurrentTransferMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+776
+                0.4.8.0+777
               </div>
             
           
@@ -283,7 +283,7 @@ For an LCAMechanism with more than two elements, <code class="xref any docutils 
 <dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>the entropy of the result, which is calculated using the <code class="xref any docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code> with <code class="docutils literal"><span class="pre">ENTROPY</span></code> metric (Note:
-this is only present if the Mechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded between
+this is only present if the Mechanism’s <a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ControlSignalGridSearch.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ControlSignalGridSearch.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded between
 0 and 1)</dd>
 </dl>
 <dl class="docutils">
@@ -329,7 +329,7 @@ As an example, the following mechanisms are equivalent:</p>
 </li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Logistic" title="psyneulink.core.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Exponential" title="psyneulink.core.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
 or a custom function.</li>
-<li><strong>initial_value</strong> (<a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<li><strong>initial_value</strong> (<a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
 <code class="xref any docutils literal"><span class="pre">beta</span></code> is not 1.0).</li>
 <li><strong>leak</strong> (<em>value : default 0.5</em>) – sets the <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.LCAIntegrator.rate" title="psyneulink.core.components.functions.function.LCAIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> on the <a class="reference internal" href="Function.html#lcaintegrator"><span class="std std-ref">LCAIntegrator function</span></a>, which scales the
 contribution of the <a class="reference internal" href="Function.html#lcaintegrator"><span class="std std-ref">LCAIntegrator's</span></a> <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.LCAIntegrator.previous_value" title="psyneulink.core.components.functions.function.LCAIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> to the
@@ -582,7 +582,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+776.gc4cee0f',
+            VERSION:'0.4.8.0+777.g9c26916',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
