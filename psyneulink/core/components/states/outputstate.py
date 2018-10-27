@@ -1478,11 +1478,11 @@ class StandardOutputStates():
                  output_state_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
         self.owner = owner
-        self._instantiate_state_list(output_state_dicts, indices)
+        self.data = self._instantiate_std_state_list(output_state_dicts, indices)
 
-    def _instantiate_state_list(self, output_state_dicts, indices):
+    def _instantiate_std_state_list(self, output_state_dicts, indices):
 
-        self.data = output_state_dicts.copy()
+        dict_list = output_state_dicts.copy()
 
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
@@ -1519,25 +1519,25 @@ class StandardOutputStates():
                                                        self.name,
                                                        self.owner.name))
 
-            for index, state_dict in zip(indices, self.data):
+            for index, state_dict in zip(indices, dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign indices sequentially based on order of items in output_state_dicts arg
         elif indices is SEQUENTIAL:
-            for index, state_dict in enumerate(self.data):
+            for index, state_dict in enumerate(dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputStates in output_state_dicts that don't
         #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
         elif indices is PRIMARY:
-            for state_dict in self.data:
+            for state_dict in dict_list:
                 if INDEX in state_dict or VARIABLE in state_dict:
                     continue
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
         # Validate all INDEX specification, parse any assigned as ALL, and
         # Add names of each OutputState as property of the owner's class that returns its name string
-        for state in self.data:
+        for state in dict_list:
             if INDEX in state:
                 if state[INDEX] in ALL:
                     state.update({VARIABLE:OWNER_VALUE})
@@ -1552,7 +1552,7 @@ class StandardOutputStates():
 
         # For each OutputState dict with a VARIABLE entry that references it's owner's value (by index)
         # add <NAME_INDEX> as property of the OutputState owner's class that returns its index.
-        for state in self.data:
+        for state in dict_list:
             if isinstance(state[VARIABLE], tuple):
                 index = state[VARIABLE][1]
             elif isinstance(state[VARIABLE], int):
@@ -1561,9 +1561,11 @@ class StandardOutputStates():
                 continue
             setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index, name=state[NAME] + '_INDEX'))
 
+        return dict_list
+
     @tc.typecheck
     def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
-        self.data.append(self._instantiate_state_list(output_state_dicts, indices))
+        self.data.append(self._instantiate_std_state_list(output_state_dicts, indices))
 
     @tc.typecheck
     def get_state_dict(self, name:str):
