@@ -63,6 +63,7 @@ Objective Functions:
   * `Distance`
 
 Optimization Functions:
+  * `OptimizationFunction`
   * `GradientOptimization`
   * `GridSearch`
 
@@ -11574,7 +11575,15 @@ SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 
 class OptimizationFunction(Function_Base):
-    """Abstract class of `Function <Function>` used for optimization of a variable.
+    """OptimizationFunction( \
+         default_variable, objective_function, search_function, search_space, search_termination_function, \
+         save_samples, save_values, max_iterations, params, owner, prefs, context)
+
+    Abstract class of `Function <Function>` used for optimization of a variable.
+
+    .. note::
+       This information is for reference only -- OptimizationFunction cannot be called directly;
+       only subclasses can be called.
 
     Provides an interface to subclasses and external optimization functions. The default `function
     <OptimizationFunction.function>` executes iteratively, evaluating samples from `search_space
@@ -11582,14 +11591,14 @@ class OptimizationFunction(Function_Base):
     until terminated by `search_termination_function <OptimizationFunction.search_termination_function>`.
     Subclasses can override this to implement their own optimization function or call an external one.
 
-    .. _Optimization_Process:
+    .. _OptimizationFunction_Process:
 
     **Default Optimization Process**
 
     When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
 
-        - get sample of `variable <OptimizationFunction.variable>` from `search_space
-        <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`.
+        - get sample from `search_space <OptimizationFunction.search_space>` using `search_function
+          <OptimizationFunction.search_function>`.
         ..
         - compute value of `objective_function <OptimizationFunction.objective_function>` using the sample;
         ..
@@ -11601,7 +11610,7 @@ class OptimizationFunction(Function_Base):
 
     .. _OptimizationFunction_Defaults:
 
-    .. note:
+    .. note::
 
         An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
         runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
@@ -11619,7 +11628,6 @@ class OptimizationFunction(Function_Base):
         is not the case. A warning is issued if defaults are used for the arguments of an OptimizationFunction or
         its subclasses;  this can be suppressed by specifying the relevant argument(s) as `NotImplemnted`.
 
-
     COMMENT:
     NOTES TO DEVELOPERS:
     - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
@@ -11633,6 +11641,7 @@ class OptimizationFunction(Function_Base):
       constructor).
     COMMENT
 
+
     Arguments
     ---------
 
@@ -11641,17 +11650,17 @@ class OptimizationFunction(Function_Base):
         <OptimizationFunction.objective_function>`.
 
     objective_function : function or method : default None
-        specifies function used to evaluate `variable <OptimizationFunction.variable>` in each iteration
-        of the `optimization process <OptimizationFunction_Process>`; if it is not specified, a default
-        function will be used that simply returns the value passed as its `variable <OptimizationFunction.variable>`
-        parameter (see `note <OptimizationFunction_Defaults>`).
+        specifies function used to evaluate sample in each iteration of the `optimization process
+        <OptimizationFunction_Process>`; if it is not specified, a default function is used that simply returns
+        the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
         specifies function used to select a sample for `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Process>`.  It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
-        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
+        executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
 
     search_space : list or np.ndarray : default None
@@ -11659,13 +11668,13 @@ class OptimizationFunction(Function_Base):
         in each iteration of the `optimization process <OptimizationFunction_Process>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
-        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
+        executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
         It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
-        overridden.  If it is required and not specified, the optimization process will execute exactly once
+        overridden.  If it is required and not specified, the optimization process executes exactly once
         (see `note <OptimizationFunction_Defaults>`).
 
     save_samples : bool
@@ -11687,12 +11696,11 @@ class OptimizationFunction(Function_Base):
     ----------
 
     default_variable : number, list or ndarray
-        shape of the samples used to evaluate `variable <OptimizationFunction.variable>` in each iteration of the
-         `optimization process <OptimizationFunction_Process>`.
+        shape of the samples used to evaluate the `objective_function <OptimizationFunction.objective_function>`
+        in each iteration of the `optimization process <OptimizationFunction_Process>`.
 
     objective_function : function or method
-        used to evaluate `variable <OptimizationFunction.variable>` in each iteration of the `optimization process
-        <OptimizationFunction_Process>`.
+        used to evaluate the sample in each iteration of the `optimization process <OptimizationFunction_Process>`.
 
     search_function : function, method or None
         used to select a sample evaluated by `objective_function <OptimizationFunction.objective_function>`
@@ -11708,7 +11716,7 @@ class OptimizationFunction(Function_Base):
         used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
 
     iteration : int
-        the currention iteration of the optiimzaton process.
+        the current iteration of the `optimization process <OptimizationFunction_Process>`.
 
     max_iterations : int : default 1000
         specifies the maximum number of times the `optimization process <OptimizationFunction_Process>` is allowed
@@ -11723,17 +11731,6 @@ class OptimizationFunction(Function_Base):
         determines whether or not to save and return the values of `objective_function
         <OptimizationFunction.objective_function>` for samples evaluated in all iterations of the
         `optimization process <OptimizationFunction_Process>`.
-
-
-    Returns
-    -------
-
-    Optimal value of those sampled by the `optimization process <OptimizationFunction_Process>`.  If `saved_samples
-    <OptimizationFunction.saved_samples>` is `True`, the first list has the values for all variables
-    sampled in the order they were sampled;  if `False`, the list is empty.  If `saved_values
-    <OptimizationFunction.saved_values>` is `True`, the second list has the values corresponding to all
-    the variables sampled in the order they were sampled;  if `False`, the list is empty.
-
     """
 
     componentType = OPTIMIZATION_FUNCTION_TYPE
@@ -11806,8 +11803,8 @@ class OptimizationFunction(Function_Base):
             * `objective_function <OptimizationFunction.objective_function>`
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
-
         '''
+
         if DEFAULT_VARIABLE in args[0]:
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0]:
@@ -11832,10 +11829,21 @@ class OptimizationFunction(Function_Base):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the last value of `variable <OptimizationFunction.variable>` and all values of
-        `objective_function <OptimizationFunction.objective_function>`.
+        '''Find the sample that yields the optimal value of `objective_function
+        <OptimizationFunction.objective_function>`.
 
-        See `Optimization Process <OptimizationFunction_Process>` for details.
+        See `optimization process <OptimizationFunction_Process>` for details.
+
+        Returns
+        -------
+
+        optimal sample, saved_samples, saved_values : array, list, list
+          array contains sample that yields the optimal value of the `optimization process
+          <OptimizationFunction_Process>`;  first list contains all the values sampled in the order they were
+          evaluated if `saved_samples <OptimizationFunction.saved_samples>` is `True`, otherwise empty;  second list
+          contains the values returned by `objective_function <OptimizationFunction.objective_function>` for all the
+          samples in the order they were evaluated if `saved_values <OptimizationFunction.saved_values>` is `True`,
+          otherwise empty.
         '''
 
         if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -11898,7 +11906,7 @@ class GradientOptimization(OptimizationFunction):
         default_variable=None,       \
         objective_function=None,     \
         direction=ASCENT,            \
-        step_size=1.0,             \
+        step_size=1.0,               \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -11935,8 +11943,8 @@ class GradientOptimization(OptimizationFunction):
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
           the `convergence_threshold <GradientOptimization.convergence_threshold>`.
 
-    Iteration continues until `convergence_criterion <LVOCControlMechanism.convergence_criterion>` falls
-    below `convergence_threshold <LVOCControlMechanism.convergence_threshold>` or the number of iterations exceeds
+    Iteration continues until `convergence_criterion <GradientOptimization.convergence_criterion>` falls
+    below `convergence_threshold <GradientOptimization.convergence_threshold>` or the number of iterations exceeds
     `max_iterations <GradientOptimization.max_iterations>`.  The current iteration is contained in `iteration
     <GradientOptimization.iteration>`.
 
@@ -12067,18 +12075,6 @@ class GradientOptimization(OptimizationFunction):
         determines whether or not to save and return the values of `objective_function
         <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
         evaluated.
-
-    Returns
-    -------
-
-    optimized value of variable, saved_samples, saved_values : np.array, list, list
-        value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-        `objective_function <GradientOptimization.objective_function>`, depending on `direction
-        <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
-        `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
-        and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
-        `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
-        or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
@@ -12168,6 +12164,18 @@ class GradientOptimization(OptimizationFunction):
         Optimal value is defined by `direction <GradientOptimization.direction>`:
         - if *ASCENT*, returns greatest value
         - if *DESCENT*, returns least value
+
+        Returns
+        -------
+
+        optimized value of variable, saved_samples, saved_values : np.array, list, list
+            value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
+            `objective_function <GradientOptimization.objective_function>`, depending on `direction
+            <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
+            `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
+            and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
+            `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
+            or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
         '''
 
         return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
@@ -12315,18 +12323,6 @@ class GridSearch(OptimizationFunction):
         determines whether or not to save and return the values of `objective_function
         <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
         evaluated.
-
-    Returns
-    -------
-
-    optimized value of variable, saved_samples, saved_values : np.array, list, list
-        value of `varaiable <GridSearch.variable>` that yields the highest or lowest value of
-        `objective_function <GridSearch.objective_function>`, depending on `direction
-        <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
-        `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
-        and saved values of `objective_function <GridSearch.objective_function>` for each sample of
-        `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
-        or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
     """
 
     componentName = GRID_SEARCH_FUNCTION
@@ -12387,6 +12383,19 @@ class GridSearch(OptimizationFunction):
         Optimal value is defined by `direction <GridSearch.direction>`:
         - if *MAXIMIZE*, returns greatest value
         - if *MINIMIZE*, returns least value
+
+        Returns
+        -------
+
+        optimized value of variable, saved_samples, saved_values : np.array, list, list
+            value of `variable <GridSearch.variable>` that yields the highest or lowest value of
+            `objective_function <GridSearch.objective_function>`, depending on `direction
+            <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
+            `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
+            and saved values of `objective_function <GridSearch.objective_function>` for each sample of
+            `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
+            or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
+
         '''
         last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
 
