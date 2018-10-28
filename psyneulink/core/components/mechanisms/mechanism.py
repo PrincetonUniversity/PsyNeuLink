@@ -2369,9 +2369,11 @@ class Mechanism_Base(Mechanism):
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
 
-        if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-            self._increment_execution_count()
-            self._update_current_execution_time(context=context)
+        # MODIFIED 10/28/18 OLD:  [JDC: DUPLICATES SAME ON COMPONENT AND THUS DOUBLE-INCREMENTS]
+        # if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+        #     self._increment_execution_count()
+        #     self._update_current_execution_time(context=context)
+        # MODIFIED 10/28/18 END
 
         # Used by sublcasses with update_previous_value and/or convergence_function and delta
         self._current_value = value

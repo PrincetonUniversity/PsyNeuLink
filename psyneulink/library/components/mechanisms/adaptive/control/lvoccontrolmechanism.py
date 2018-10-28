@@ -847,8 +847,9 @@ class LVOCControlMechanism(ControlMechanism):
             self._previous_prediction_vector = self.prediction_vector.vector
 
         # # TEST PRINT
+        # print ('\nexecution_count: ', self.current_execution_count)
         # print ('\nOUTCOME: ', self.input_state.value)
-        # print ('prediction_weights: ', self.prediction_weights)
+        # # print ('prediction_weights: ', self.prediction_weights)
         # # TEST PRINT END
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
