@@ -11599,31 +11599,38 @@ class OptimizationFunction(Function_Base):
     (i.e., `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`).
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`.
 
+    .. _OptimizationFunction_Defaults:
+
     .. note:
 
         An OptimizationFunction or any of its subclasses can be created by calling its constructor.  This provides
         runnable defaults for all of its arguments (see below). However these do not yield useful results, and are
         meant simply to allow the  constructor of the OptimziationFunction to be used to specify some but not all of
         its parameters when specifying the OptimizationFunction in the constructor for another Component. For
-        example, an OptimizationFunction may use as its `objective_function <OptimizationFunction.objective_function>`
+        example, an OptimizationFunction may use for its `objective_function <OptimizationFunction.objective_function>`
         or `search_function <OptimizationFunction.search_function>` a method of the Component to which it is being
         assigned;  however, those methods will not yet be available, as the Component itself has not yet been
         constructed. This can be handled by calling the OptimizationFunction's `reinitialization
-        <OptimizationFunction.reinitialization>` method, with a parameter specification dictionary with a key for
-        each entry that is the name of a parameter and its value the value to be assigned to the parameter.  This is
-        done automatically for Mechanisms that take an ObjectiveFunction as their `function <Mechanism.function>`
-        (such as the `EVCControlMechanism`, `LVOCControlMechanism` and `ParamterEstimationControlMechanism`), but
-        will require it be done explicitly for Components for which that is not the case.
+        <OptimizationFunction.reinitialization>` method after the Component has been instantiated, with a parameter
+        specification dictionary with a key for each entry that is the name of a parameter and its value the value to
+        be assigned to the parameter.  This is done automatically for Mechanisms that take an ObjectiveFunction as
+        their `function <Mechanism.function>` (such as the `EVCControlMechanism`, `LVOCControlMechanism` and
+        `ParamterEstimationControlMechanism`), but will require it be done explicitly for Components for which that
+        is not the case. A warning is issued if defaults are used for the arguments of an OptimizationFunction or
+        its subclasses;  this can be suppressed by specifying the relevant argument(s) as `NotImplemnted`.
 
 
     COMMENT:
-    NOTE TO DEVELOPERS:
+    NOTES TO DEVELOPERS:
     - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`)
+      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
+      that subclasses are meant to be used interchangeably by OptimizationMechanisms.
 
-    - Subclasses with attributes that depend on one of the OptimizationFunction's paramters should implement the
+    - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
       `reinitialize <OptimizationFunction.reinitialize>` method, that calls super().reinitialize(*args) and then
-      reassigns the values of the dependent attributes accordingly.
+      reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+      `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
+      constructor).
     COMMENT
 
     Arguments
@@ -11637,26 +11644,29 @@ class OptimizationFunction(Function_Base):
         specifies function used to evaluate `variable <OptimizationFunction.variable>` in each iteration
         of the `optimization process <OptimizationFunction_Process>`; if it is not specified, a default
         function will be used that simply returns the value passed as its `variable <OptimizationFunction.variable>`
-        parameter.
+        parameter (see `note <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
         specifies function used to select a sample for `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Process>`.  It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
-        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
+        (see `note <OptimizationFunction_Defaults>`).
 
     search_space : list or np.ndarray : default None
         specifies samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
         in each iteration of the `optimization process <OptimizationFunction_Process>`. It **must be specified**
         if the `objective_function <OptimizationFunction.objective_function>` does not generate samples on its own
         (e.g., as does `GradientOptimization`).  If it is required and not specified, the optimization process
-        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter.
+        will execute exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
+        (see `note <OptimizationFunction_Defaults>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Process>`.
         It **must be specified** if the `objective_function <OptimizationFunction.objective_function>` is not
-        overridden.  If it is required and not specified, the optimization process will execute exactly once.
+        overridden.  If it is required and not specified, the optimization process will execute exactly once
+        (see `note <OptimizationFunction_Defaults>`).
 
     save_samples : bool
         specifies whether or not to save and return the values of the samples used to evalute `objective_function
@@ -11686,12 +11696,12 @@ class OptimizationFunction(Function_Base):
 
     search_function : function, method or None
         used to select a sample evaluated by `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`.  `None` if
+        in each iteration of the `optimization process <OptimizationFunction_Process>`.  `NotImplemented` if
         the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
 
     search_space : list or np.ndarray
         samples used to evaluate `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`;  `None` if
+        in each iteration of the `optimization process <OptimizationFunction_Process>`;  `NotImplemented` if
         the `objective_function <OptimizationFunction.objective_function>` generates its own samples.
 
     search_termination_function : function or method
@@ -11747,27 +11757,31 @@ class OptimizationFunction(Function_Base):
                  prefs=None,
                  context=None):
 
-        self._unspecified_functions = []
+        self._unspecified_args = []
 
         if objective_function is None:
             self.objective_function = lambda x:0
-            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
+            self._unspecified_args.append(OBJECTIVE_FUNCTION)
         else:
             self.objective_function = objective_function
 
         if search_function is None:
             self.search_function = lambda x:x
-            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
+            self._unspecified_args.append(SEARCH_FUNCTION)
         else:
             self.search_function = search_function
 
         if search_termination_function is None:
             self.search_termination_function = lambda x,y,z:True
-            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
+            self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
         else:
             self.search_termination_function = search_termination_function
 
-        self.search_space = search_space or [0]
+        if search_space is None:
+            self.search_space = [0]
+            self._unspecified_args.append(SEARCH_SPACE)
+        else:
+            self.search_space = search_space
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(save_samples=save_samples,
@@ -11798,12 +11812,20 @@ class OptimizationFunction(Function_Base):
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
         if OBJECTIVE_FUNCTION in args[0]:
             self.objective_function = args[0][OBJECTIVE_FUNCTION]
+            if OBJECTIVE_FUNCTION in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(OBJECTIVE_FUNCTION)]
         if SEARCH_FUNCTION in args[0]:
             self.search_function = args[0][SEARCH_FUNCTION]
+            if SEARCH_FUNCTION in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(SEARCH_FUNCTION)]
         if SEARCH_TERMINATION_FUNCTION in args[0]:
             self.search_termination_function = args[0][SEARCH_TERMINATION_FUNCTION]
+            if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
         if SEARCH_SPACE in args[0]:
             self.search_space = args[0][SEARCH_SPACE]
+            if SEARCH_SPACE in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
     def function(self,
                  variable=None,
@@ -11816,10 +11838,10 @@ class OptimizationFunction(Function_Base):
         See `Optimization Process <OptimizationFunction_Process>` for details.
         '''
 
-        if self._unspecified_functions and self.context.initialization_status == ContextFlags.INITIALIZED:
-            warnings.warn("The following args were not specified for {}, so defaults are being used: {}".
-                          format(self.name, ', '.join(self._unspecified_functions)))
-            self._unspecified_functions = []
+        if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
+            warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
+                          format(self.name, ', '.join(self._unspecified_args)))
+            self._unspecified_args = []
 
         variable = self._update_variable(self._check_args(variable, params, context))
 
@@ -12113,7 +12135,7 @@ class GradientOptimization(OptimizationFunction):
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
                          search_function=search_function,
-                         search_space=[None],
+                         search_space=NotImplemented,
                          search_termination_function=search_termination_function,
                          max_iterations=max_iterations,
                          save_samples=save_samples,
