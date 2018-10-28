@@ -11645,9 +11645,9 @@ class OptimizationFunction(Function_Base):
     Arguments
     ---------
 
-    default_variable : list or np.ndarray : default None
-        specifies the shape of the samples used to evaluate the `objective_function
-        <OptimizationFunction.objective_function>`.
+    default_variable : list or ndarray : default None
+        specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+        `objective_function <OptimizationFunction.objective_function>`.
 
     objective_function : function or method : default None
         specifies function used to evaluate sample in each iteration of the `optimization process
@@ -11695,9 +11695,9 @@ class OptimizationFunction(Function_Base):
     Attributes
     ----------
 
-    default_variable : number, list or ndarray
-        shape of the samples used to evaluate the `objective_function <OptimizationFunction.objective_function>`
-        in each iteration of the `optimization process <OptimizationFunction_Process>`.
+    variable : ndarray
+        first sample evaluated by `objective_function <OptimizationFunction.objective_function>` (i.e., one used to
+        evaluate it in the first iteration of the `optimization process <OptimizationFunction_Process>`).
 
     objective_function : function or method
         used to evaluate the sample in each iteration of the `optimization process <OptimizationFunction_Process>`.
@@ -11838,12 +11838,12 @@ class OptimizationFunction(Function_Base):
         -------
 
         optimal sample, saved_samples, saved_values : array, list, list
-          array contains sample that yields the optimal value of the `optimization process
-          <OptimizationFunction_Process>`;  first list contains all the values sampled in the order they were
-          evaluated if `saved_samples <OptimizationFunction.saved_samples>` is `True`, otherwise empty;  second list
-          contains the values returned by `objective_function <OptimizationFunction.objective_function>` for all the
-          samples in the order they were evaluated if `saved_values <OptimizationFunction.saved_values>` is `True`,
-          otherwise empty.
+            array contains sample that yields the optimal value of the `optimization process
+            <OptimizationFunction_Process>`.  If `saved_samples <OptimizationFunction.saved_samples>` is `True`,
+            first list contains all the values sampled in the order they were evaluated; otherwise it is empty.  If
+            `saved_values <OptimizationFunction.saved_values>` is `True`, second list contains the values returned by
+            `objective_function <OptimizationFunction.objective_function>` for all the samples in the order they were
+            evaluated; otherwise it is empty.
         '''
 
         if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -11965,13 +11965,17 @@ class GradientOptimization(OptimizationFunction):
     Arguments
     ---------
 
+    default_variable : list or ndarray : default None
+        specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+        `objective_function <GradientOptimization.objective_function>`.
+
     objective_function : function or method
         specifies function used to evaluate `variable <GradientOptimization.variable>`
         in each iteration of the `optimization process  <GradientOptimization_Process>`;
         it must be specified and it must return a scalar value.
 
     direction : ASCENT or DESCENT : default ASCENT
-        specifies the direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
@@ -11981,10 +11985,6 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
         `step_size <GradientOptimization.step_size>`.
 
-    step_size : int or float : default 0.01
-        specifies the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal` is modified in
-        each iteration of the `optimization process <GradientOptimization_Process>` of the optimization process.
-
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
         iteration of the `optimization process <GradientOptimization_Process>`;  must take accept two parameters —
@@ -11992,33 +11992,34 @@ class GradientOptimization(OptimizationFunction):
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
-        specifies the measure used to determine when to terminate iterations of the `optimization process
-        <GradientOptimization_Process>` of the optimization process.
+        specifies the parameter used to terminate the `optimization process <GradientOptimization_Process>`.
+        *VARIABLE*: process terminates when the most recent sample differs from the previous one by less than
+        `convergence_threshold <GradientOptimization.convergence_threshold>`;  *VALUE*: process terminates when the
+        last value returned by `objective_function <GradientOptimization.objective_function>` differs from the
+        previous one by less than `convergence_threshold <GradientOptimization.convergence_threshold>`.
 
     convergence_threshold : int or float : default 0.001
-        specifies the change in value of the `convergence_criterion` below which the optimization process
-        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+        specifies the change in value of `convergence_criterion` below which the optimization processis terminated.
 
     max_iterations : int : default 1000
-        specifies the maximum number of times the optimization process is allowed to `iterate
-        <GradientOptimization_Process>`; if exceeded, a warning is issued, and the function
-        returns the last value of `variable <GradientOptimization.variable>`.
+        specifies the maximum number of times the `optimization process<GradientOptimization_Process>` is allowed to
+        iterate; if exceeded, a warning is issued, and the function returns the last sample evaluated.
 
     save_samples : bool
-        specifies whether or not to save and return the values of the samples used to evalute `objective_function
-        <GradientOptimization.objective_function>`.
+        specifies whether or not to save and return all of the samples used to evaluate `objective_function
+        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Process>`.
 
     save_values : bool
         specifies whether or not to save and return the values of `objective_function
-        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
-        evaluated
+        <GradientOptimization.objective_function>` for all samples evaluated in the `optimization
+        process<GradientOptimization_Process>`
 
     Attributes
     ----------
 
-    variable : array
-        quantity evaluated by `objective_function <GradientOptimization.objective_function>`,
-        the value of which is optimized by the optimization process.
+    variable : ndarray
+        sample used as the starting point for the `optimization process <GradientOptimization_Process>` (i.e., one
+        used to evaluate `objective_function <GradientOptimization.objective_function>` in the first iteration).
 
     objective_function : function or method
         function used to evaluate `variable <GradientOptimization.variable>`
@@ -12031,50 +12032,47 @@ class GradientOptimization(OptimizationFunction):
         details).
 
     direction : ASCENT or DESCENT
-        direction of gradient optimization.  If *ASCENT*, movement is attempted in the positive direction
+        direction of gradient optimization:  if *ASCENT*, movement is attempted in the positive direction
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
     step_size : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Process>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
-        `step_size <GradientOptimization.step_size>`.
-
-    step_size : int or float
-        determines the amount by which the `variable <ControlSignal.variable>` of each `ControlSignal`
-        is modified in each iteration of the `optimization process <GradientOptimization_Process>`.
+        <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
+        determines the initial value.
 
     annealing_function : function or method
-        function used to adapt `step_size <GradientOptimization.step_size>` in each
-        `iteration <GradientOptimization_Process>` of the optimization process;  if `None`, no call is made
-        and the same `step_size <GradientOptimization.step_size>` is used in each `iteration
-        <GradientOptimization_Process>`.
+        function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
+        process <GradientOptimization_Process>`;  if `None`, no call is made and the same `step_size
+        <GradientOptimization.step_size>` is used in each iteration.
 
     iteration : int
-        the currention iteration of the optiimzaton process.
+        the currention iteration of the `optimization process <GradientOptimization_Process>`.
 
     convergence_criterion : VARIABLE or VALUE
-        determines the measure used to terminate iterations of the `optimization process
-        <GradientOptimization_Process>`.
+        determines parameter used to terminate iterations of the `optimization process<GradientOptimization_Process>`.
+        *VARIABLE*: process terminates when the most recent sample differs from the previous one by less than
+        `convergence_threshold <GradientOptimization.convergence_threshold>`;  *VALUE*: process terminates when the
+        last value returned by `objective_function <GradientOptimization.objective_function>` differs from the
+        previous one by less than `convergence_threshold <GradientOptimization.convergence_threshold>`.
 
     convergence_threshold : int or float
-        determines the change in value of the `convergence_criterion` below which the optimization process
-        is terminated, and returns the current value of `variable <GradientOptimization.variable>`.
+        determines the change in value of `convergence_criterion` below which the `optimization process
+        <GradientOptimization_Process>` terminated.
 
     max_iterations : int
-        determines the maximum number of times the optimization process is allowed to iterate; if exceeded, a
-        warning is issued, and the function returns the last value of `variable <GradientOptimization.variable>`.
+        determines the maximum number of times the `optimization process<GradientOptimization_Process>` is allowed to
+        iterate; if exceeded, a warning is issued, and the function returns the last sample evaluated.
 
     save_samples : bool
-        determines whether or not to save and return the all of the samples of `variable
-        <GradientOptimization.variable>` used to evaluate `objective_function
-        <GradientOptimization.objective_function>` in the optimization process.
+        determines whether or not to save and return all of the samples used to evaluate `objective_function
+        <GradientOptimization.objective_function>` in the `optimization process<GradientOptimization_Process>`.
 
     save_values : bool
         determines whether or not to save and return the values of `objective_function
-        <GradientOptimization.objective_function>` for all samples of `variable <GradientOptimization.variable>`
-        evaluated.
+        <GradientOptimization.objective_function>` for all samples evaluated in the `optimization
+        process<GradientOptimization_Process>`
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
@@ -12157,9 +12155,8 @@ class GradientOptimization(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the value of `variable <GradientOptimization.variable>` that yields the optimal value of
-        `objective_function <GradientOptimization.objective_function>`, and possibly all samples
-        of `variable <GradientOptimization.variable>` evaluated and their corresponding values.
+        '''Return the sample that yields the optimal value of `objective_function
+        <GradientOptimization.objective_function>`, and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <GradientOptimization.direction>`:
         - if *ASCENT*, returns greatest value
@@ -12168,14 +12165,14 @@ class GradientOptimization(OptimizationFunction):
         Returns
         -------
 
-        optimized value of variable, saved_samples, saved_values : np.array, list, list
-            value of `varaiable <GradientOptimization.variable>` that yields the highest or lowest value of
-            `objective_function <GradientOptimization.objective_function>`, depending on `direction
-            <GradientOptimization.direction>`.  If `save_samples <GradientOptimization.save_samples>` or
-            `save_values <GradientOptimization.save_values>` is `True`, the lists contain, respectively, the saved
-            and saved values of `objective_function <GradientOptimization.objective_function>` for each sample of
-            `variable <GradientOptimization.variable>`;  if either `save_samples <GradientOptimization.save_samples>`
-            or `save_values <GradientOptimization.save_values>` is `False`, the corresponding list is empty.
+        optimal sample, saved_samples, saved_values : narray, list, list
+            array contains sample that yields the highest or lowest value of `objective_function
+            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`.
+            If `saved_samples <GradientOptimization.saved_samples>` is `True`, first list contains all the values
+            sampled in the order they were evaluated; otherwise it is empty.  If `saved_values
+            <GradientOptimization.saved_values>` is `True`, second list contains the values returned by
+            `objective_function <GradientOptimization.objective_function>` for all the samples in the order they were
+            evaluated; otherwise it is empty.
         '''
 
         return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
@@ -12246,7 +12243,7 @@ class GridSearch(OptimizationFunction):
         prefs=None                   \
         )
 
-    Search over all combinations of values for a set of samples for the combination that optimizes the
+    Search over all samples in `search_space <GridSearch.search_space>` for the one that optimizes the value of
     `objective_function <GridSearch.objective_function>`.
 
     .. _GridSearch_Process:
@@ -12255,10 +12252,9 @@ class GridSearch(OptimizationFunction):
 
     When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
 
-        - get sample of `variable <GridSearch.variable>` from `search_space <GridSearch.search_space>` using the
-          `traverse_grid <GridSearch.traverse_grid>` method.
+        - get a sample from `search_space <GridSearch.search_space>` using `traverse_grid <GridSearch.traverse_grid>`;
         ..
-        - compute value of `objective_function <GridSearch.objective_function>` using the sample;
+        - compute value of `objective_function <GridSearch.objective_function>` for that sample;
         ..
         - evaluate `grid_complete <GridSearch.grid_complete>` method.
 
@@ -12270,59 +12266,59 @@ class GridSearch(OptimizationFunction):
     Arguments
     ---------
 
+    default_variable : list or ndarray : default None
+        specifies a template for (i.e., an example of the shape of) the samples used to evaluate the
+        `objective_function <GridSearch.objective_function>`.
+
     objective_function : function or method
-        specifies function used to evaluate `variable <GridSearch.variable>`
-        in each iteration of the `optimization process <GridSearch_Process>`;
-        it must be specified and it must return a scalar value.
+        specifies function used to evaluate sample in each iteration of the `optimization process <GridSearch_Process>`;
+        it must be specified and must return a scalar value.
 
     search_space : list or array
-        specifies samples of `variable <GridSearch.variable>` used to evaluate `objective_function
-        <GridSearch.objective_function>`.
+        specifies samples used to evaluate `objective_function <GridSearch.objective_function>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
-        specifies the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
-        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
+        specifies the direction of optimization:  if *MAXIMIZE*, the highest value of `objective_function
+        <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the lowest value is sought.
 
     save_samples : bool
-        determines whether or not to return the all of the samples of `variable <GridSearch.variable>`
-        used to evaluate `objective_function <GridSearch.objective_function>` in the optimization process.
+        specifies whether or not to return all of the samples used to evaluate `objective_function
+        <GridSearch.objective_function>` in the `optimization process <GridSearch_Process>`
+        (i.e., a copy of the `search_space <GridSearch.search_space>`.
 
     save_values : bool
-        determines whether or not to save and return the values of `objective_function
-        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
-        evaluated.
+        specifies whether or not to save and return the values of `objective_function <GridSearch.objective_function>`
+        for all samples evaluated in the `optimization process <GridSearch_Process>`.
 
     Attributes
     ----------
 
-    variable : array
-        quantity evaluated by `objective_function <GridSearch.objective_function>`, the value of which is optimized
-        by the optimization process.
+    variable : ndarray
+        first sample evaluated by `objective_function <GridSearch.objective_function>` (i.e., one used to evaluate it
+        in the first iteration of the `optimization process <GridSearch_Process>`).
 
     objective_function : function or method
-        function used to evaluate `variable <GridSearch.variable>` in each iteration of the `optimization process
-        <GridSearch_Process>`, and the value of which is optimized.
+        function used to evaluate sample in each iteration of the `optimization process <GridSearch_Process>`.
 
     search_space : list or array
-        contains samples of `variable <GridSearch.variable>` used to evaluate `objective_function
-        <GridSearch.objective_function>`.
+        contains samples used to evaluate `objective_function <GridSearch.objective_function>` in iterations of the
+        `optimization process <GridSearch_Process>`.
 
     direction : MAXIMIZE or MINIMIZE : default MAXIMIZE
-        determines the direction of optimization.  If *MAXIMIZE*, the greatest value of `objective_function
+        determines the direction of optimization:  if *MAXIMIZE*, the greatest value of `objective_function
         <GridSearch.objective_function>` is sought;  if *MINIMIZE*, the least value is sought.
 
     iteration : int
-        the currention iteration of the optiimzaton process.
+        the currention iteration of the `optimization process <GridSearch_Process>`.
 
     save_samples : True
-        determines whether or not to save and return the values of `objective_function
-        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
-        evaluated.
+        determines whether or not to save and return all samples evaluated by the `objective_function
+        <GridSearch.objective_function>` in the `optimization process <GridSearch_Process>` (if the process
+        completes, this should be identical to `search_space <GridSearch.search_space>`.
 
     save_values : bool
-        determines whether or not to save and return the values of `objective_function
-        <GridSearch.objective_function>` for all samples of `variable <GridSearch.variable>`
-        evaluated.
+        determines whether or not to save and return the value of `objective_function
+        <GridSearch.objective_function>` for all samples evaluated in the `optimization process <GridSearch_Process>`.
     """
 
     componentName = GRID_SEARCH_FUNCTION
@@ -12376,9 +12372,8 @@ class GridSearch(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the value of `variable <GridSearch.variable>` that yields the optimal value of
-        `objective_function <GridSearch.objective_function>`, and possibly all samples
-        of `variable <GridSearch.variable>` evaluated and their corresponding values.
+        '''Return the sample that yields the optimal value of `objective_function <GridSearch.objective_function>`,
+        and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <GridSearch.direction>`:
         - if *MAXIMIZE*, returns greatest value
@@ -12387,16 +12382,16 @@ class GridSearch(OptimizationFunction):
         Returns
         -------
 
-        optimized value of variable, saved_samples, saved_values : np.array, list, list
-            value of `variable <GridSearch.variable>` that yields the highest or lowest value of
-            `objective_function <GridSearch.objective_function>`, depending on `direction
-            <GridSearch.direction>`.  If `save_samples <GridSearch.save_samples>` or
-            `save_values <GridSearch.save_values>` is `True`, the lists contain, respectively, the saved
-            and saved values of `objective_function <GridSearch.objective_function>` for each sample of
-            `variable <GridSearch.variable>`;  if either `save_samples <GridSearch.save_samples>`
-            or `save_values <GridSearch.save_values>` is `False`, the corresponding list is empty.
-
+        optimal sample, saved_samples, saved_values : ndarray, list, list
+            array contains sample that yields the highest or lowest value of `objective_function
+            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`.
+            If `saved_samples <GridSearch.saved_samples>` is `True`, first list contains all the values
+            sampled in the order they were evaluated; otherwise it is empty.  If `saved_values
+            <GridSearch.saved_values>` is `True`, second list contains the values returned by
+            `objective_function <GridSearch.objective_function>` for all the samples in the order they were
+            evaluated; otherwise it is empty.
         '''
+
         last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
 
         return_optimal = all_samples[all_values.index(max(all_values))]
