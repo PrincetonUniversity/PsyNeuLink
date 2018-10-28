@@ -11604,9 +11604,13 @@ class OptimizationFunction(Function_Base):
         ..
         - evaluate `search_termination_function <OptimizationFunction.search_termination_function>`.
 
-    Iteration continues until all values of `search_space <OptimizationFunction.search_space>` have been evaluated
-    (i.e., `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`).
-    The current iteration is contained in `iteration <OptimizationFunction.iteration>`.
+    The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
+    values of `search_space <OptimizationFunction.search_space>` have been evaluated (i.e., `search_termination_function
+    <OptimizationFunction.search_termination_function>` returns `True`).  The `function <OptimizationFunction.function>`
+    returns the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
+    <OptimizationFunction.objective_function>`), as well as lists that may contain all of the samples evaluated and
+    their values, depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
+    <OptimizationFunction.save_values>` are `True`, respectively.
 
     .. _OptimizationFunction_Defaults:
 
@@ -11943,10 +11947,14 @@ class GradientOptimization(OptimizationFunction):
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
           the `convergence_threshold <GradientOptimization.convergence_threshold>`.
 
-    Iteration continues until `convergence_criterion <GradientOptimization.convergence_criterion>` falls
-    below `convergence_threshold <GradientOptimization.convergence_threshold>` or the number of iterations exceeds
-    `max_iterations <GradientOptimization.max_iterations>`.  The current iteration is contained in `iteration
-    <GradientOptimization.iteration>`.
+    The current iteration is contained in `iteration <GradientOptimization.iteration>`. Iteration continues until
+    `convergence_criterion <GradientOptimization.convergence_criterion>` falls below `convergence_threshold
+    <GradientOptimization.convergence_threshold>` or the number of iterations exceeds `max_iterations
+    <GradientOptimization.max_iterations>`.  The `function <GradientOptimization.function>` returns the last sample
+    evaluated by `objective_function <OptimizationFunction.objective_function>`), presumed to be the optimal one,
+    as well as lists that may contain all of the samples evaluated and their values, depending on whether
+    `save_samples <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are
+    `True`, respectively.
 
     .. _GradientOptimization_Gradient_Calculation:
 
