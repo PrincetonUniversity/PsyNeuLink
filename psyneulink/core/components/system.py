@@ -162,7 +162,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
        `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
-    .. note: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
+    .. note:: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
     COMMENT:
     (see _instantiate_graph below)
     COMMENT
