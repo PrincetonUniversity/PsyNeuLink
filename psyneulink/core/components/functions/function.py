@@ -11579,7 +11579,8 @@ class OptimizationFunction(Function_Base):
          default_variable, objective_function, search_function, search_space, search_termination_function, \
          save_samples, save_values, max_iterations, params, owner, prefs, context)
 
-    Abstract class of `Function <Function>` used for optimization of a variable.
+    Abstract class of `Function <Function>` that returns the sample of a variable yielding the optimized value
+    of an `objective_function <OptimizationFunction.objective_function>`.
 
     .. note::
        This information is for reference only -- OptimizationFunction cannot be called directly;
@@ -11922,7 +11923,8 @@ class GradientOptimization(OptimizationFunction):
         prefs=None                   \
         )
 
-    Optimize a variable with respect to a specified `objective_function <GradientOptimization.objective_function>`.
+    Return sample of variable that yields optimized value of `objective_function
+    <GradientOptimization.objective_function>`.
 
     .. _GradientOptimization_Process:
 
@@ -11951,7 +11953,7 @@ class GradientOptimization(OptimizationFunction):
     `convergence_criterion <GradientOptimization.convergence_criterion>` falls below `convergence_threshold
     <GradientOptimization.convergence_threshold>` or the number of iterations exceeds `max_iterations
     <GradientOptimization.max_iterations>`.  The `function <GradientOptimization.function>` returns the last sample
-    evaluated by `objective_function <OptimizationFunction.objective_function>`), presumed to be the optimal one,
+    evaluated by `objective_function <OptimizationFunction.objective_function>` (presumed to be the optimal one),
     as well as lists that may contain all of the samples evaluated and their values, depending on whether
     `save_samples <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are
     `True`, respectively.
@@ -11963,8 +11965,7 @@ class GradientOptimization(OptimizationFunction):
     The gradient is evaluated by `gradient_function <GradientOptimization.gradient_function>`,
     which is the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
-
-        :math:`\\frac{d}{d(variable)}(objective\\_function(variable))`
+    :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`
 
     `Autograd's <https://github.com/HIPS/autograd>`_ `grad <autograd.grad>` method is used to
     generate `gradient_function <GradientOptimization.gradient_function>`.
