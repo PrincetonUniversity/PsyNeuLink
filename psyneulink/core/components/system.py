@@ -814,14 +814,15 @@ class System(System_Base):
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
     results : List[OutputState.value]
-        list of return values from the sequence of executions.  Each item is a 1d array containing the `value
-        <OutputState.value>` of each `TERMINAL` Mechanism of the System for a given execution. Excludes simulated runs.
+        list of return values from the sequence of executions.  Each item is a 2d array containing the `output_values
+        <Mechanism.output_values>` of each `TERMINAL` Mechanism of the System for a given execution.
+        Excludes simulated runs.
 
     simulation_results : List[OutputState.value]
         list of return values from the sequence of executions in simulation run(s) of the System; requires
-        recordSimulationPref to be `True`.  Each item is a 1d array containing the `value <OutputState.value>` of
-        each `OutputState` of each `TERMINAL` Mechanism in the System for a given execution in the simulation. Excludes
-        values from non-simulation runs.
+        recordSimulationPref to be `True`.  Each item is a 2d array containing the `output_values
+        <Mechanism.output_values>` of each `TERMINAL` Mechanism in the System for a given execution in the simulation.
+        Excludes values from non-simulation runs.
 
     name : str
         the name of the System; if it is not specified in the **name** argument of the constructor, a default is

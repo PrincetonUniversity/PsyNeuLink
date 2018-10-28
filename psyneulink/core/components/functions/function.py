@@ -5020,12 +5020,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),
-                                                                         1):
+                    param_size = np.size(np.atleast_2d(param_value), 0)
+                    param_shape = np.shape(np.atleast_2d(param_value))
+                    variable_size = np.size(np.atleast_2d(self.instance_defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.instance_defaults.variable))
+                    if param_size != variable_size:
                         raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
                                             "shapes of variable {} and matrix {} are not compatible for multiplication".
-                                            format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                   np.shape(np.atleast_2d(param_value))))
+                                            format(self.name, variable_shape, param_shape))
 
                 # keyword matrix specified - not valid outside of a projection
                 elif param_value in MATRIX_KEYWORD_VALUES:
@@ -11733,15 +11735,10 @@ class OptimizationFunction(Function_Base):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 # objective_function:tc.optional(is_function_type)=None,
                  objective_function:tc.optional(is_function_type)=None,
-                 # search_space:tc.optional(tc.any(list,np.ndarray))=None,
-                 # search_function:tc.optional(is_function_type)=None,
-                 search_function:is_function_type=lambda x:x,
+                 search_function:tc.optional(is_function_type)=None,
                  search_space=None,
-                 # search_space:tc.optional(list, np.ndarray)=[0],
-                 # search_termination_function:tc.optional(is_function_type)=None,
-                 search_termination_function:is_function_type=lambda x,y,z:True,
+                 search_termination_function:tc.optional(is_function_type)=None,
                  save_samples:tc.optional(bool)=False,
                  save_values:tc.optional(bool)=False,
                  max_iterations:tc.optional(int)=None,
@@ -11750,13 +11747,26 @@ class OptimizationFunction(Function_Base):
                  prefs=None,
                  context=None):
 
+        self._unspecified_functions = []
+
         if objective_function is None:
             self.objective_function = lambda x:0
+            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
         else:
             self.objective_function = objective_function
 
-        self.search_function = search_function
-        self.search_termination_function = search_termination_function
+        if search_function is None:
+            self.search_function = lambda x:x
+            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
+        else:
+            self.search_function = search_function
+
+        if search_termination_function is None:
+            self.search_termination_function = lambda x,y,z:True
+            self._unspecified_functions.append(OBJECTIVE_FUNCTION)
+        else:
+            self.search_termination_function = search_termination_function
+
         self.search_space = search_space or [0]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -11806,6 +11816,11 @@ class OptimizationFunction(Function_Base):
         See `Optimization Process <OptimizationFunction_Process>` for details.
         '''
 
+        if self._unspecified_functions and self.context.initialization_status == ContextFlags.INITIALIZED:
+            warnings.warn("The following args were not specified for {}, so defaults are being used: {}".
+                          format(self.name, ', '.join(self._unspecified_functions)))
+            self._unspecified_functions = []
+
         variable = self._update_variable(self._check_args(variable, params, context))
 
         current_variable = variable
@@ -11826,14 +11841,14 @@ class OptimizationFunction(Function_Base):
             # Compute new value based on new variable
             new_value = self.objective_function(new_variable)
 
-            # TEST PRINT:
-            print(
-                    'current_variable', new_variable,
-                    '\ncurrent_value: ', current_value,
-                    '\nnew_value: ', new_value,
-            )
-            # self.update_function.__self__.test_print()
-            # TEST PRINT END
+            # # TEST PRINT:
+            # print(
+            #         'current_variable', new_variable,
+            #         '\ncurrent_value: ', current_value,
+            #         '\nnew_value: ', new_value,
+            # )
+            # # self.update_function.__self__.test_print()
+            # # TEST PRINT END
 
             iteration+=1
             if self.max_iterations and iteration > self.max_iterations:

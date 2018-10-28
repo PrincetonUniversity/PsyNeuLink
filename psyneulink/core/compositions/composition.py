@@ -618,7 +618,7 @@ class Composition(Composition_Base):
         self.controller = node
         # self.add_c_node(node)
 
-    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False):
+    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, name=None):
         '''
 
             Adds a projection to the Composition, if it is not already added.
@@ -652,16 +652,16 @@ class Composition(Composition_Base):
         '''
 
         if isinstance(projection, (np.ndarray, np.matrix, list)):
-            projection = MappingProjection(matrix=projection)
+            projection = MappingProjection(matrix=projection, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
-                projection = MappingProjection(matrix=projection)
+                projection = MappingProjection(matrix=projection, name=name)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
         elif isinstance(projection, ModulatoryProjection_Base):
             pass
         elif projection is None:
-            projection = MappingProjection()
+            projection = MappingProjection(name=name)
         elif not isinstance(projection, Projection):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
                                    .format(projection, self.name))
