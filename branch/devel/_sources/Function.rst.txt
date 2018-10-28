@@ -49,5 +49,7 @@ Functions
              BackPropagation,
              TDLearning,
              BayesGLM,
-             GradientOptimization
+             OptimizationFunction,
+             GradientOptimization,
+             GridSearch,
    :exclude-members: MappingProjection, ParameterState
