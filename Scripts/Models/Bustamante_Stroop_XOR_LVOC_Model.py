@@ -59,15 +59,15 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
                                 learning_function=pnl.BayesGLM,
 
-                                function=pnl.GradientOptimization(
-                                        convergence_criterion=pnl.VALUE,
-                                        convergence_threshold=0.001,
-                                        step_size=1,
-                                        annealing_function= lambda x,y : x / np.sqrt(y),
-                                        # direction=pnl.ASCENT
-                                ),
+                                # function=pnl.GradientOptimization(
+                                #         convergence_criterion=pnl.VALUE,
+                                #         convergence_threshold=0.001,
+                                #         step_size=1,
+                                #         annealing_function= lambda x,y : x / np.sqrt(y),
+                                #         # direction=pnl.ASCENT
+                                # ),
 
-                                # function=pnl.GridSearch,
+                                function=pnl.GridSearch,
 
                                 # function=pnl.OptimizationFunction,
 

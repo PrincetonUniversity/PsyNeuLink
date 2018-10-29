@@ -12419,6 +12419,9 @@ class GridSearch(OptimizationFunction):
             rank = Comm.Get_rank()
             size = Comm.Get_size()
 
+            # FIX: MAY NEED TO BE SURE THAT EACH AXIS 0 ITEM IS AT LEAST (OR CONVERRTED TO) A 1D ARRAY
+            self.search_space = np.atleast_2d(self.search_space)
+
             chunk_size = (len(self.search_space) + (size-1)) // size
             print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
             start = chunk_size * rank
@@ -12438,8 +12441,8 @@ class GridSearch(OptimizationFunction):
             sample_value_max_tuple = (sample_optimal, value_optimal)
 
             # Set up progress bar
-            _show_progess = False
-            if hasattr(self, OWNER) and self.owner.prefs.reportOutputPref:
+            _show_progress = False
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
                 _show_progress = True
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
@@ -12459,7 +12462,7 @@ class GridSearch(OptimizationFunction):
                     increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                     if increment_progress_bar:
                         print(_progress_bar_char, end='', flush=True)
-                _progress_bar_count +=1
+                    _progress_bar_count +=1
 
                 # Evaluate objective_function for current sample
                 value = self.objective_function(sample)
