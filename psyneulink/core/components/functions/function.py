@@ -11611,10 +11611,16 @@ class OptimizationFunction(Function_Base):
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
     values of `search_space <OptimizationFunction.search_space>` have been evaluated (i.e., `search_termination_function
     <OptimizationFunction.search_termination_function>` returns `True`).  The `function <OptimizationFunction.function>`
-    returns the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
-    <OptimizationFunction.objective_function>`), as well as lists that may contain all of the samples evaluated and
-    their values, depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
-    <OptimizationFunction.save_values>` are `True`, respectively.
+    returns:
+
+    - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
+      <OptimizationFunction.objective_function>`)
+
+    - the value of `objective_function <OptimzationFunction.objective_function>` associated with that sample,
+
+    - two lists that may contain all of the samples evaluated and their values, depending on whether `save_samples
+      <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are `True`,
+      respectively.
 
     .. _OptimizationFunction_Defaults:
 
@@ -11845,13 +11851,14 @@ class OptimizationFunction(Function_Base):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : array, list, list
-            array contains sample that yields the optimal value of the `optimization process
-            <OptimizationFunction_Process>`.  If `save_samples <OptimizationFunction.save_samples>` is `True`,
-            first list contains all the values sampled in the order they were evaluated; otherwise it is empty.  If
-            `save_values <OptimizationFunction.save_values>` is `True`, second list contains the values returned by
-            `objective_function <OptimizationFunction.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : array, array, list, list
+            first array contains sample that yields the optimal value of the `optimization process
+            <OptimizationFunction_Process>`, and second array contains the value of `objective_function
+            <OptimizationFunction_Process.objective_function>` for that sample.  If `save_samples
+            <OptimizationFunction.save_samples>` is `True`, first list contains all the values sampled in the order
+            they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
+            second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
+            for all the samples in the order they were evaluated; otherwise it is empty.
         '''
 
         if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -11956,10 +11963,10 @@ class GradientOptimization(OptimizationFunction):
     `convergence_criterion <GradientOptimization.convergence_criterion>` falls below `convergence_threshold
     <GradientOptimization.convergence_threshold>` or the number of iterations exceeds `max_iterations
     <GradientOptimization.max_iterations>`.  The `function <GradientOptimization.function>` returns the last sample
-    evaluated by `objective_function <OptimizationFunction.objective_function>` (presumed to be the optimal one),
-    as well as lists that may contain all of the samples evaluated and their values, depending on whether
-    `save_samples <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are
-    `True`, respectively.
+    evaluated by `objective_function <GradientOptimization.objective_function>` (presumed to be the optimal one),
+    the value of the function, as well as lists that may contain all of the samples evaluated and their values,
+    depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
+    <OptimizationFunction.save_values>` are `True`, respectively.
 
     .. _GradientOptimization_Gradient_Calculation:
 
@@ -12177,9 +12184,10 @@ class GradientOptimization(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`,
+            and the second array contains the value of the function for that sample.
             If `save_samples <GradientOptimization.save_samples>` is `True`, first list contains all the values
             sampled in the order they were evaluated; otherwise it is empty.  If `save_values
             <GradientOptimization.save_values>` is `True`, second list contains the values returned by
@@ -12274,10 +12282,11 @@ class GridSearch(OptimizationFunction):
 
     The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values of
     `search_space <GridSearch.search_space>` have been evaluated, or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The sample that yielded either the highest (if `direction <GridSearch.direction>` is *MAXIMIZE*) or
-    lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of of the `objective_function
-    <GridSearch.objective_function>` is returned, along with the samples evaluated and their values if either
-    `save_samples <GridSearch.save_samples>` or `save_values <GridSearch.save_values>` is `True`, respectively.
+    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
+    <GridSearch.objective_function>`, along with the value for that sample, as well as all of the samples evaluated and
+    their values if either `save_samples <GridSearch.save_samples>` or `save_values <GridSearch.save_values>` is `True`,
+    respectively.
 
     Arguments
     ---------
@@ -12403,14 +12412,14 @@ class GridSearch(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`.
-            If `save_samples <GridSearch.save_samples>` is `True`, first list contains all the values
-            sampled in the order they were evaluated; otherwise it is empty.  If `save_values
-            <GridSearch.save_values>` is `True`, second list contains the values returned by
-            `objective_function <GridSearch.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`, and the
+            second array contains the value of the function for that sample. If `save_samples
+            <GridSearch.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <GridSearch.save_values>` is `True`, second list
+            contains the values returned by `objective_function <GridSearch.objective_function>` for all the samples
+            in the order they were evaluated; otherwise it is empty.
         '''
 
         return_all_samples = return_all_values = []
