@@ -176,11 +176,6 @@ from types import MethodType
 import numpy as np
 import typecheck as tc
 
-import ctypes
-import functools
-
-from psyneulink.core import llvm as pnlvm
-
 from llvmlite import ir
 
 from psyneulink.core.components.component import Param, function_type, method_type
