@@ -2122,6 +2122,13 @@ class State_Base(State):
     def get_context_initializer(self):
         return self.function_object.get_context_initializer()
 
+    # Provide invocation wrapper
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        builder.call(main_function, [params, context, arg_in, arg_out])
+
+        return builder
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
