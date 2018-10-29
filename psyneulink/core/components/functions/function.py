@@ -12423,7 +12423,6 @@ class GridSearch(OptimizationFunction):
             self.search_space = np.atleast_2d(self.search_space)
 
             chunk_size = (len(self.search_space) + (size-1)) // size
-            print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
             start = chunk_size * rank
             end = chunk_size * (rank+1)
             if start > len(self.search_space):
@@ -12431,7 +12430,9 @@ class GridSearch(OptimizationFunction):
             if end > len(self.search_space):
                 end = len(self.search_space)
 
-            print("START: {0}\nEND: {1}".format(start,end))
+            # TEST PRINT
+            # print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
+            # print("START: {0}\nEND: {1}".format(start,end))
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
