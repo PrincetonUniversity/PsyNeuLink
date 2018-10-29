@@ -61,8 +61,8 @@ class LLVMBuilderContext:
         return name + '-' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
-        if hasattr(name, 'llvmSymbolName'):
-            name = name.llvmSymbolName
+        if hasattr(name, '_llvm_symbol_name'):
+            name = name._llvm_symbol_name
 
         f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
         # Add declaration to the current module
