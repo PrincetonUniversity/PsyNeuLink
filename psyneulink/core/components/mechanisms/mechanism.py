@@ -1477,6 +1477,8 @@ class Mechanism_Base(Mechanism):
         self._receivesProcessInput = False
         self.phaseSpec = None
 
+        self.__nv_state = None
+
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -2775,11 +2777,11 @@ class Mechanism_Base(Mechanism):
 
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        if self.nv_state is None:
+        if self.__nv_state is None:
             initializer = self.get_context_initializer()
-            self.nv_state = context_struct_ty(*initializer)
+            self.__nv_state = context_struct_ty(*initializer)
 
-        ct_context = self.nv_state
+        ct_context = self.__nv_state
 
         ct_param = par_struct_ty(*self.get_param_initializer())
 

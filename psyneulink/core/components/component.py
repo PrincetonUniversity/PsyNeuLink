@@ -1637,9 +1637,6 @@ class Component(object, metaclass=ComponentsMeta):
         self.__llvm_function_name = None
         self.__llvm_bin_function = None
 
-        self.nv_state = None
-
-
     @property
     def llvmSymbolName(self):
         if self.__llvm_function_name is None:
