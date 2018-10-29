@@ -2940,7 +2940,7 @@ class Composition(Composition_Base):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            m_function = ctx.get_llvm_function(mech.llvmSymbolName)
+            m_function = ctx.get_llvm_function(mech)
 
             if mech is self.input_CIM:
                 m_in = comp_in
@@ -2964,7 +2964,7 @@ class Composition(Composition_Base):
 
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
+                proj_function = ctx.get_llvm_function(par_proj)
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states

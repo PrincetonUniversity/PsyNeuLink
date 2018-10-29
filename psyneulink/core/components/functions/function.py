@@ -11031,7 +11031,7 @@ COMMENT
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.get_llvm_function(self._metric_fct.llvmSymbolName)
+        metric_fun = ctx.get_llvm_function(self._metric_fct)
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
