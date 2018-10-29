@@ -12509,7 +12509,6 @@ class GridSearch(OptimizationFunction):
             # # TEST PRINT:
             # print("value_optimal: {}\tASSOCIATED sample: {}\n".format(value_optimal, sample_optimal))
 
-            # FIX: CHECK FOR ACCURACY:
             # Aggregate, reduce and assign global results
             # combine max result tuples from all processes and distribute to all processes
             max_tuples = Comm.allgather(sample_value_max_tuple)
