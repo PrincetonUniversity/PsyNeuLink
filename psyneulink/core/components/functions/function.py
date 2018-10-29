@@ -209,6 +209,7 @@ from random import randint
 # import autograd.numpy as np
 import numpy as np
 import typecheck as tc
+from mpi4py import MPI
 
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -276,6 +277,7 @@ __all__ = [
 import ctypes
 import functools
 
+from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core import llvm as pnlvm
 
 from llvmlite import ir
@@ -12411,7 +12413,124 @@ class GridSearch(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        if MPI_IMPLEMENTATION:
+
+            Comm = MPI.COMM_WORLD
+            rank = Comm.Get_rank()
+            size = Comm.Get_size()
+
+            chunk_size = (len(self.search_space) + (size-1)) // size
+            print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
+            start = chunk_size * rank
+            end = chunk_size * (rank+1)
+            if start > len(self.search_space):
+                start = len(self.search_space)
+            if end > len(self.search_space):
+                end = len(self.search_space)
+
+            print("START: {0}\nEND: {1}".format(start,end))
+
+            sample_max = np.empty_like(self.search_space[0])
+            value_max = float('-Infinity')
+            sample_value_max_tuple = (sample_max, value_max)
+            # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
+            EVC_values = np.array([])
+            EVC_policies = np.array([[]])
+
+            # # TEST PRINT EVC:
+            # inputs = []
+            # for i in controller.predicted_input.values():
+            #     inputs.append(repr(i).replace('\n', ''))
+            # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
+
+            for allocation_vector in self.search_space[start:end,:]:
+            # for iter in range(rank, len(controller.control_signal_search_space), size):
+            #     allocation_vector = controller.control_signal_search_space[iter,:]:
+
+                if self.owner.prefs.reportOutputPref:
+                    increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
+                    if increment_progress_bar:
+                        print(kwProgressBarChar, end='', flush=True)
+                sample +=1
+
+                # Calculate EVC for specified allocation policy
+                result_tuple = self.objective_function(allocation_vector)
+                EVC, outcome, cost = result_tuple
+
+                optimal_value = max(value, value_max)
+                # max_result([t1, t2], key=lambda x: x1)
+
+
+                # Add to list of EVC values and allocation policies if save option is set
+                if self.save_values:
+                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                    values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    # Save policy associated with EVC for each process, as order of chunks
+                    #     might not correspond to order of policies in control_signal_search_space
+                if self.save_samples:
+                    if len(EVC_policies[0])==0:
+                        EVC_policies = np.atleast_2d(allocation_vector)
+                    else:
+                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
+
+                # If EVC is greater than the previous value:
+                # - store the current set of control_signals in sample_max
+                # if value_max > EVC:
+                # FIX: PUT ERROR HERE IF EVC AND/OR VALUE_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+                if EVC == value_max:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    sample_max = allocation_vector
+                    sample_value_max_tuple = (sample_max, value_max)
+
+            # # TEST PRINT EVC:
+            # print("value_max: {}\tASSOCIATED allocation_policy: {}\n".format(value_max, sample_max))
+
+            #endregion
+
+            # Aggregate, reduce and assign global results
+
+            # combine max result tuples from all processes and distribute to all processes
+            max_tuples = Comm.allgather(sample_value_max_tuple)
+            # get tuple with "EVC max of maxes"
+            max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
+            # get value_max, state values and allocation policy associated with "max of maxes"
+            optimal_sample = max_of_max_tuples[0]
+            controller.value_max = max_of_max_tuples[1]
+
+            if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
+                controller.EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
+                controller.EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        else:
+            last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
 
         return_optimal = all_samples[all_values.index(max(all_values))]
 
