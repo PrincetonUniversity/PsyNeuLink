@@ -239,7 +239,7 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE, OWNER
 
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -11575,6 +11575,7 @@ OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
+DIRECTION = 'direction'
 
 class OptimizationFunction(Function_Base):
     """OptimizationFunction( \
@@ -12368,10 +12369,7 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
 
-        if direction is MAXIMIZE:
-            self.direction = 1
-        else:
-            self.direction = -1
+        self.direction = direction
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -12413,6 +12411,8 @@ class GridSearch(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
+        return_all_samples = return_all_values = []
+
         if MPI_IMPLEMENTATION:
 
             Comm = MPI.COMM_WORLD
@@ -12430,116 +12430,95 @@ class GridSearch(OptimizationFunction):
 
             print("START: {0}\nEND: {1}".format(start,end))
 
-            sample_max = np.empty_like(self.search_space[0])
-            value_max = float('-Infinity')
-            sample_value_max_tuple = (sample_max, value_max)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
-            EVC_values = np.array([])
-            EVC_policies = np.array([[]])
+            samples = np.array([[]])
+            sample_optimal = np.empty_like(self.search_space[0])
+            values = np.array([])
+            value_optimal = float('-Infinity')
+            sample_value_max_tuple = (sample_optimal, value_optimal)
 
-            # # TEST PRINT EVC:
-            # inputs = []
-            # for i in controller.predicted_input.values():
-            #     inputs.append(repr(i).replace('\n', ''))
-            # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
+            # Set up progress bar
+            _show_progess = False
+            if hasattr(self, OWNER) and self.owner.prefs.reportOutputPref:
+                _show_progress = True
+                _progress_bar_char = '.'
+                _progress_bar_rate_str = ""
+                _search_space_size = len(self.signal_search_space)
+                _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+                if _progress_bar_rate > 1:
+                    _progress_bar_rate_str = str(_progress_bar_rate) + " "
+                print("\n{} executing GridSearch (one {} for each {}of {} samples): ".
+                      format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
+                _progress_bar_count = 0
 
-            for allocation_vector in self.search_space[start:end,:]:
+            for sample in self.search_space[start:end,:]:
             # for iter in range(rank, len(controller.control_signal_search_space), size):
-            #     allocation_vector = controller.control_signal_search_space[iter,:]:
+            #     sample = controller.control_signal_search_space[iter,:]:
 
-                if self.owner.prefs.reportOutputPref:
-                    increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
+                if _show_progress:
+                    increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                     if increment_progress_bar:
-                        print(kwProgressBarChar, end='', flush=True)
-                sample +=1
+                        print(_progress_bar_char, end='', flush=True)
+                _progress_bar_count +=1
 
-                # Calculate EVC for specified allocation policy
-                result_tuple = self.objective_function(allocation_vector)
-                EVC, outcome, cost = result_tuple
+                # Evaluate objective_function for current sample
+                value = self.objective_function(sample)
 
-                optimal_value = max(value, value_max)
-                # max_result([t1, t2], key=lambda x: x1)
+                # Evaluate for optimal value
+                if self.direction is MAXIMIZE:
+                    value_optimal = max(value, value_optimal)
+                elif self.direction is MINIMIZE:
+                    value_optimal = min(value, value_optimal)
+                else:
+                    assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".format(repr(DIRECTION),
+                                                                                         self.name,
+                                                                                         self.direction)
 
+                # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+                # If value is optimal, store corresponing sample
+                if value == value_optimal:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    sample_optimal = sample
+                    sample_value_max_tuple = (sample_optimal, value_optimal)
 
-                # Add to list of EVC values and allocation policies if save option is set
+                # Save samples and/or values if specified
                 if self.save_values:
                     # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
-                    values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
-                    # Save policy associated with EVC for each process, as order of chunks
-                    #     might not correspond to order of policies in control_signal_search_space
+                    values = np.append(values, np.atleast_1d(value), axis=0)
                 if self.save_samples:
-                    if len(EVC_policies[0])==0:
-                        EVC_policies = np.atleast_2d(allocation_vector)
+                    if len(samples[0])==0:
+                        samples = np.atleast_2d(sample)
                     else:
-                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
+                        samples = np.append(samples, np.atleast_2d(sample), axis=0)
 
-                # If EVC is greater than the previous value:
-                # - store the current set of control_signals in sample_max
-                # if value_max > EVC:
-                # FIX: PUT ERROR HERE IF EVC AND/OR VALUE_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
-                if EVC == value_max:
-                    # Keep track of state values and allocation policy associated with EVC max
-                    sample_max = allocation_vector
-                    sample_value_max_tuple = (sample_max, value_max)
+            # # TEST PRINT:
+            # print("value_optimal: {}\tASSOCIATED sample: {}\n".format(value_optimal, sample_optimal))
 
-            # # TEST PRINT EVC:
-            # print("value_max: {}\tASSOCIATED allocation_policy: {}\n".format(value_max, sample_max))
-
-            #endregion
-
+            # FIX: CHECK FOR ACCURACY:
             # Aggregate, reduce and assign global results
-
             # combine max result tuples from all processes and distribute to all processes
             max_tuples = Comm.allgather(sample_value_max_tuple)
-            # get tuple with "EVC max of maxes"
-            max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
-            # get value_max, state values and allocation policy associated with "max of maxes"
-            optimal_sample = max_of_max_tuples[0]
-            controller.value_max = max_of_max_tuples[1]
+            # get tuple with "value_max of maxes"
+            max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
+            # get value_optimal, state values and allocation policy associated with "max of maxes"
+            return_optimal_sample = max_value_of_max_tuples[0]
+            return_optimal_value = max_value_of_max_tuples[1]
 
-            if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                controller.EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
-                controller.EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            # if self._return_samples:
+            #     return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
+            if self._return_values:
+                return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
             last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+            return_optimal_value = max(all_values)
+            return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
+            # if self._return_samples:
+            #     return_all_samples = all_samples
+            if self._return_values:
+                return_all_values = all_values
 
-        return_optimal = all_samples[all_values.index(max(all_values))]
-
-        return_all_samples = return_all_values = []
-        # if self._return_samples:
-        #     return_all_samples = all_samples
-        if self._return_values:
-            return_all_values = all_values
-        return return_optimal, return_all_samples, return_all_values
+        return return_optimal_sample, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num):
         # # TEST PRINT:
