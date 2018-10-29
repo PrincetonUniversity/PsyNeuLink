@@ -2668,7 +2668,7 @@ class Mechanism_Base(Mechanism):
         f_params = builder.alloca(f_params_ptr.type.pointee, 1)
 
         # Call parameter states for function
-        for idx, f_param in enumerate(func.get_param_ids()):
+        for idx, f_param in enumerate(func._get_param_ids()):
             param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             raw_param_val = builder.load(param_in_ptr)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
