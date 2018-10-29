@@ -817,7 +817,7 @@ class LVOCControlMechanism(ControlMechanism):
         - calculate outcome from previous trial (value of objective_mechanism - costs of control_signals)
         - call learning_function with outcome and prediction_vector from previous trial to update prediction_weights
         - update prediction_vector
-        - execute primary (optimization) function to get allocation_policy that maximizes EVC
+        - execute primary (optimization) function to get allocation_policy that maximizes EVC (and corresponding EVC)
         - return allocation_policy
         """
 
@@ -854,10 +854,10 @@ class LVOCControlMechanism(ControlMechanism):
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy, self.saved_samples, self.saved_values = super(ControlMechanism, self)._execute(
-                                                                                    variable=control_signal_variables,
-                                                                                    runtime_params=runtime_params,
-                                                                                    context=context)
+        allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
+            super(ControlMechanism, self)._execute(variable=control_signal_variables,
+                                                   runtime_params=runtime_params,
+                                                   context=context)
 
         # # TEST PRINT
         # print ('\nEVC: ', allocation_policy[0],'\n---------------------------')

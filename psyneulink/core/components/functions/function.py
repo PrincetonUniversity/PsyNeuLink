@@ -11859,10 +11859,10 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        variable = self._update_variable(self._check_args(variable, params, context))
+        sample = self._update_variable(self._check_args(variable, params, context))
 
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
+        current_sample = sample
+        current_value = self.objective_function(current_sample)
 
         self._samples = []
         self._values = []
@@ -11871,17 +11871,17 @@ class OptimizationFunction(Function_Base):
         self.iteration=0
 
         # Iterate optimization process
-        while self.search_termination_function(current_variable, current_value, self.iteration):
+        while self.search_termination_function(current_sample, current_value, self.iteration):
 
-            # Get next sample of variable
-            new_variable = self.search_function(current_variable, self.iteration)
+            # Get next sample of sample
+            new_sample = self.search_function(current_sample, self.iteration)
 
-            # Compute new value based on new variable
-            new_value = self.objective_function(new_variable)
+            # Compute new value based on new sample
+            new_value = self.objective_function(new_sample)
 
             # # TEST PRINT:
             # print(
-            #         'current_variable', new_variable,
+            #         'current_sample', new_sample,
             #         '\ncurrent_value: ', current_value,
             #         '\nnew_value: ', new_value,
             # )
@@ -11893,15 +11893,15 @@ class OptimizationFunction(Function_Base):
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
-            current_variable = new_variable
+            current_sample = new_sample
             current_value = new_value
 
             if self.save_samples:
-                self._samples.append(new_variable)
+                self._samples.append(new_sample)
             if self.save_values:
                 self._values.append(current_value)
 
-        return new_variable, self._samples, self._values
+        return new_sample, new_value, self._samples, self._values
 
 
 ASCENT = 'ascent'
@@ -11926,7 +11926,7 @@ class GradientOptimization(OptimizationFunction):
         prefs=None                   \
         )
 
-    Return sample of variable that yields optimized value of `objective_function
+    Return sample that yields optimized value of `objective_function
     <GradientOptimization.objective_function>`.
 
     .. _GradientOptimization_Process:
@@ -12187,14 +12187,16 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
+                                                                                  params=params,
+                                                                                  context=context)
         return_all_samples = return_all_values = []
         if self._return_samples:
             return_all_samples = all_samples
         if self._return_values:
             return_all_values = all_values
         # return last_variable
-        return return_optimal, return_all_samples, return_all_values
+        return optimal_sample, optimal_value, return_all_samples, return_all_values
 
     def _follow_gradient(self, variable, sample_num):
 
@@ -12514,7 +12516,9 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+            last_sample, last_value, all_samples, all_values = super().function(variable=variable,
+                                                                    params=params,
+                                                                    context=context)
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -12522,7 +12526,7 @@ class GridSearch(OptimizationFunction):
             if self._return_values:
                 return_all_values = all_values
 
-        return return_optimal_sample, return_all_samples, return_all_values
+        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num):
         # # TEST PRINT:
