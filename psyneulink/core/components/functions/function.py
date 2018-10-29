@@ -11865,13 +11865,13 @@ class OptimizationFunction(Function_Base):
         self._values = []
 
         # Initialize variables used in while loop
-        iteration=0
+        self.iteration=0
 
         # Iterate optimization process
-        while self.search_termination_function(current_variable, current_value, iteration):
+        while self.search_termination_function(current_variable, current_value, self.iteration):
 
             # Get next sample of variable
-            new_variable = self.search_function(current_variable, iteration)
+            new_variable = self.search_function(current_variable, self.iteration)
 
             # Compute new value based on new variable
             new_value = self.objective_function(new_variable)
@@ -11885,8 +11885,8 @@ class OptimizationFunction(Function_Base):
             # # self.update_function.__self__.test_print()
             # # TEST PRINT END
 
-            iteration+=1
-            if self.max_iterations and iteration > self.max_iterations:
+            self.iteration+=1
+            if self.max_iterations and self.iteration > self.max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 

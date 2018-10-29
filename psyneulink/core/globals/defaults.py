@@ -19,7 +19,7 @@ __all__ = [
     'inputValueSystemDefault', 'MPI_IMPLEMENTATION', 'outputValueSystemDefault', 'SystemDefaultInputValue',
 ]
 
-MPI_IMPLEMENTATION = False
+MPI_IMPLEMENTATION = True
 
 # State values:
 inputValueSystemDefault = [0]

@@ -359,7 +359,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 size = Comm.Get_size()
 
                 chunk_size = (len(controller.control_signal_search_space) + (size-1)) // size
-                print("Rank: {}\nChunk size: {}".format(rank, chunk_size))
+                print("Rank: {}\nSize: {}\nChunk size: {}".format(rank, size, chunk_size))
                 start = chunk_size * rank
                 end = chunk_size * (rank+1)
                 if start > len(controller.control_signal_search_space):
