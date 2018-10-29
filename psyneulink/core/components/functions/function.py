@@ -925,7 +925,7 @@ class Function_Base(Function):
         ptr = builder.gep(params_ptr, [ctx.int32_ty(0), idx])
         return ptr, builder
 
-    def get_params(self):
+    def _get_param_values(self):
         param_init = []
         for p in self._get_param_ids():
             param = self.get_current_function_param(p)
@@ -940,7 +940,7 @@ class Function_Base(Function):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
             return x if x is not None else tuple()
-        return tupleize(self.get_params())
+        return tupleize(self._get_param_values())
 
     def bin_function(self,
                      variable=None,

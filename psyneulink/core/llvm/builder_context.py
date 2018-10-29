@@ -87,7 +87,7 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
 
-        params = component.get_params()
+        params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
     def get_context_struct_type(self, component):
