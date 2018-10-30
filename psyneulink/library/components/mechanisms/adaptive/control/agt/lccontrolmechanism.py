@@ -799,7 +799,7 @@ class LCControlMechanism(ControlMechanism):
             context=context
         )
 
-        gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
+        gain_t = self.parameters.scaling_factor_gain.get(execution_id) * output_values[1] + self.parameters.base_level_gain.get(execution_id)
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
