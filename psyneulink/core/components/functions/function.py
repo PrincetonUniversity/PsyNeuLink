@@ -12175,7 +12175,7 @@ class OptimizationFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_id=None):
         '''Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
@@ -12203,7 +12203,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
         if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
-            self.search_space = args[0][SEARCH_SPACE]
+            self.parameters.search_space.set(args[0][SEARCH_SPACE], execution_id)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
@@ -12239,13 +12239,13 @@ class OptimizationFunction(Function_Base):
         sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         current_sample = sample
-        current_value = self.objective_function(current_sample)
+        current_value = call_with_pruned_args(self.objective_function, current_sample, execution_id=execution_id)
 
-        self._samples = []
-        self._values = []
+        samples = []
+        values = []
 
         # Initialize variables used in while loop
-        self.iteration=0
+        iteration = 0
 
         # Set up progress bar
         _show_progress = False
@@ -12262,7 +12262,7 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
 
         # Iterate optimization process
-        while self.search_termination_function(current_sample, current_value, self.iteration, execution_id=execution_id):
+        while call_with_pruned_args(self.search_termination_function, current_sample, current_value, iteration, execution_id=execution_id):
 
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
@@ -12271,25 +12271,28 @@ class OptimizationFunction(Function_Base):
                 _progress_bar_count +=1
 
             # Get next sample of sample
-            new_sample = self.search_function(current_sample, self.iteration)
+            new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
 
             # Compute new value based on new sample
-            new_value = self.objective_function(new_sample)
+            new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
 
-            self.iteration+=1
-            if self.max_iterations and self.iteration > self.max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
+            iteration += 1
+            max_iterations = self.parameters.max_iterations.get(execution_id)
+            if max_iterations and iteration > max_iterations:
+                warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
                 break
 
             current_sample = new_sample
             current_value = new_value
 
-            if self.save_samples:
-                self._samples.append(new_sample)
-            if self.save_values:
-                self._values.append(current_value)
+            if self.parameters.save_samples.get(execution_id):
+                samples.append(new_sample)
+                self.parameters.saved_samples.set(samples, execution_id)
+            if self.parameters.save_values.get(execution_id):
+                values.append(current_value)
+                self.parameters.saved_values.set(values, execution_id)
 
-        return new_sample, new_value, self._samples, self._values
+        return new_sample, new_value, samples, values
 
 
 ASCENT = 'ascent'
@@ -12515,15 +12518,12 @@ class GradientOptimization(OptimizationFunction):
         search_function = self._follow_gradient
         search_termination_function = self._convergence_condition
         self.gradient_function = None
-        self._return_samples = save_samples
-        self._return_values = save_values
 
         if direction is ASCENT:
             self.direction = 1
         else:
             self.direction = -1
         self.annealing_function = annealing_function
-
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(step_size=step_size,
@@ -12584,29 +12584,29 @@ class GradientOptimization(OptimizationFunction):
 
         optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,execution_id=execution_id, params=params, context=context)
         return_all_samples = return_all_values = []
-        if self._return_samples:
+        if self.parameters.save_samples.get(execution_id):
             return_all_samples = all_samples
-        if self._return_values:
+        if self.parameters.save_values.get(execution_id):
             return_all_values = all_values
         # return last_variable
         return optimal_sample, optimal_value, return_all_samples, return_all_values
 
-    def _follow_gradient(self, variable, sample_num):
+    def _follow_gradient(self, variable, sample_num, execution_id=None):
 
         if self.gradient_function is None:
             return variable
 
         # Update step_size
         if sample_num == 0:
-            self._current_step_size = self.step_size
+            _current_step_size = self.parameters.step_size.get(execution_id)
         elif self.annealing_function:
-            self._current_step_size = self.annealing_function(self._current_step_size, sample_num)
+            _current_step_size = call_with_pruned_args(self.annealing_function, self._current_step_size, sample_num, execution_id=execution_id)
 
         # Compute gradients with respect to current variable
-        self._gradients = self.gradient_function(variable)
+        _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
 
         # Update variable based on new gradients
-        return variable + self.direction * self._current_step_size * np.array(self._gradients)
+        return variable + self.parameters.direction.get(execution_id) * _current_step_size * np.array(_gradients)
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
@@ -12628,7 +12628,7 @@ class GradientOptimization(OptimizationFunction):
         self.parameters.previous_variable.set(variable, execution_id, override=True)
         self.parameters.previous_value.set(value, execution_id, override=True)
 
-        return convergence_metric > self.convergence_threshold
+        return convergence_metric > self.parameters.convergence_threshold.get(execution_id)
 
 
 MAXIMIZE = 'maximize'
@@ -12925,11 +12925,11 @@ class GridSearch(OptimizationFunction):
 
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
-    def _traverse_grid(self, variable, sample_num):
-        return self.search_space[sample_num]
+    def _traverse_grid(self, variable, sample_num, execution_id=None):
+        return self.parameters.search_space.get(execution_id)[sample_num]
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
-        return iteration != len(self.search_space)
+        return iteration != len(self.parameters.search_space.get(execution_id))
 
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
