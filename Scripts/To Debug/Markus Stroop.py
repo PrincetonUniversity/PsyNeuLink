@@ -25,14 +25,14 @@ task_layer = pnl.TransferMechanism(size=2,
 #   time averaging = integration_rate = 0.1
 unit_noise = 0.001
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0), #should be able to get same result with offset = -4.0
+                                            function=pnl.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                                             integrator_mode=True,
                                             noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #    words_hidden: ('RED','GREEN')
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
                                            noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
                                            integration_rate=0.1,

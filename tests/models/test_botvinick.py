@@ -54,14 +54,14 @@ def test_botvinick_model(benchmark, mode, reps):
     # Hidden layer
     # colors: ('red','green', 'neutral') words: ('RED','GREEN', 'NEUTRAL')
     colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                         function=pnl.Logistic(bias=4.0), # bias 4.0 is -4.0 in the paper see Docs for description
+                                                         function=pnl.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
                                                          integrator_mode=True,
                                                          hetero=-2,
-                                                         integration_rate=0.01, # cohen-huston text says 0.01
+                                                         integration_rate=0.01,  # cohen-huston text says 0.01
                                                          name='COLORS_HIDDEN')
 
     words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                        function=pnl.Logistic(bias=4.0),
+                                                        function=pnl.Logistic(x_0=4.0),
                                                         integrator_mode=True,
                                                         hetero=-2,
                                                         integration_rate=0.01,
@@ -81,7 +81,7 @@ def test_botvinick_model(benchmark, mode, reps):
                                                                           metric = pnl.ENERGY,
                                                                           matrix = np.array([[0.0, -4.0],
                                                                                             [-4.0, 0.0]]))}],
-                                                    name='RESPONSE',)
+                                                    name='RESPONSE', )
 
     # Log ------------------------------------------------------------------------------------------------------------------
     response_layer.set_log_conditions('DECISION_ENERGY')

@@ -17,10 +17,11 @@ words_input_layer = pnl.TransferMechanism(size=2,
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=pnl.Logistic(gain=(1.0, pnl.ControlProjection(#receiver= response_layer.output_states[1],
-#'DECISION_ENERGY'
-                                       #modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
-                                           ))),
+                                   function=pnl.Logistic(
+                                       gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_states[1],
+                                           # 'DECISION_ENERGY'
+                                           # modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
+                                       ))),
                                    name='TASK')
 task_layer.set_log_conditions('gain')
 task_layer.set_log_conditions('value')
@@ -32,16 +33,16 @@ task_layer.loggable_items
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0),
+                                            function=pnl.Logistic(gain=1.0, x_0=4.0),
                                             integrator_mode=True,
-                                          #  noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                            #  noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
-                                       #    noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                           #    noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 

@@ -238,7 +238,7 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE, OWNER
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, X_0, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE, OWNER
 
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -3948,6 +3948,7 @@ class Logistic(
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         x_0=0.0,          \
          scale=1.0,        \
          offset=0.0,       \
          params=None,      \
@@ -3971,7 +3972,11 @@ class Logistic(
 
     bias : float : default 0.0
         specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
-        and before logistic transformation.
+        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        specifies a value to subtract from each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        and before logistic transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
@@ -4002,8 +4007,12 @@ class Logistic(
         `bias <Logistic.bias>` (if it is specified).
 
     bias : float : default 0.0
-        value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
-        (if it is specified).
+        value added to each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
+        (if it is specified). This attribute is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        value subtracted from each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
+        (if it is specified). This attribute is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
@@ -4035,6 +4044,7 @@ class Logistic(
 
     class Params(TransferFunction.Params):
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Param(0.0, modulable=True)
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Param(0.0, modulable=True)
 
@@ -4042,13 +4052,15 @@ class Logistic(
     def __init__(self,
                  default_variable=None,
                  gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
+                 x_0=0.0,
+                 bias=0.0,
                  offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
+                                                  x_0=x_0,
                                                   bias=bias,
                                                   offset=offset,
                                                   params=params)
@@ -4060,7 +4072,7 @@ class Logistic(
                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_ids(self):
-        return GAIN, BIAS, OFFSET
+        return GAIN, BIAS, X_0, OFFSET
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -4068,15 +4080,18 @@ class Logistic(
 
         gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
         bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
+        x_0_ptr, builder = self.get_param_ptr(ctx, builder, params, X_0)
         offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fsub(val, bias)
+        val = builder.fadd(val, bias)
+        val = builder.fsub(val, x_0)
         val = builder.fmul(val, gain)
         val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
@@ -4094,7 +4109,12 @@ class Logistic(
 
         .. math::
 
-            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
+            \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
+
+        .. note::
+            The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
+            accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
+            form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`.
 
         Arguments
         ---------

@@ -56,7 +56,7 @@ class TestModels:
         #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
         colors_hidden_layer = pnl.RecurrentTransferMechanism(
             size=3,
-            function=pnl.Logistic(bias=4.0),
+            function=pnl.Logistic(x_0=4.0),
             integrator_mode=True,
             hetero=-2.0,
             # noise=pnl.NormalDist(mean=0.0, standard_dev=.0).function,
@@ -66,7 +66,7 @@ class TestModels:
 
         words_hidden_layer = pnl.RecurrentTransferMechanism(
             size=3,
-            function=pnl.Logistic(bias=4.0),
+            function=pnl.Logistic(x_0=4.0),
             hetero=-2,
             integrator_mode=True,
             # noise=pnl.NormalDist(mean=0.0, standard_dev=.05).function,
@@ -308,7 +308,7 @@ class TestModels:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                    function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
                                                     noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
@@ -316,7 +316,7 @@ class TestModels:
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
                                                    noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
                                                    integration_rate=0.1,
@@ -596,9 +596,7 @@ class TestModels:
         # Create color feature layer, word feature layer, task demand layer and response layer
         color_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(  # Define Logistic fucntion & set gain
-                gain=4, bias=1
-            ),  # to 4 & bias to 1
+            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -612,9 +610,7 @@ class TestModels:
         # The word_feature_layer is set up as the color_feature_layer
         word_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(  # Define Logistic fucntion & set gain
-                gain=4, bias=1
-            ),  # to 4 & bias to 1
+            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -628,9 +624,7 @@ class TestModels:
         # The response_layer is set up as the color_feature_layer & the word_feature_layer
         response_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(  # Define Logistic fucntion & set gain
-                gain=4, bias=1
-            ),  # to 4 & bias to 1
+            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -646,9 +640,7 @@ class TestModels:
         # and a differnet inhibition weight on the hetero
         task_demand_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(  # Define Logistic fucntion & set gain
-                gain=4, bias=1
-            ),  # to 4 & bias to 1
+            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition_task,  # Inhibition among units within a layer
