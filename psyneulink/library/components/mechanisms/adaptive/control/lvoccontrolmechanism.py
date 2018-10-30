@@ -855,12 +855,14 @@ class LVOCControlMechanism(ControlMechanism):
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
-            super(ControlMechanism, self)._execute(variable=control_signal_variables,
-                                                   runtime_params=runtime_params,
-                                                   context=context)
-
+                                        super(ControlMechanism, self)._execute(variable=control_signal_variables,
+                                                                               runtime_params=runtime_params,
+                                                                               context=context)
         # # TEST PRINT
-        # print ('\nEVC: ', allocation_policy[0],'\n---------------------------')
+        print ('EXECUTION COUNT: ', self.current_execution_count)
+        print ('ALLOCATION POLICY: ', allocation_policy)
+        print ('ALLOCATION POLICY: ', self.evc_max)
+        print ('\n------------------------------------------------')
         # # TEST PRINT END
 
         return allocation_policy
@@ -1141,22 +1143,6 @@ class LVOCControlMechanism(ControlMechanism):
 
             return computed_terms
 
-        # TEST PRINT:
-        def test_print(self):
-            terms = self.specified_terms
-            vector = self.vector
-            idx = self.idx
-
-            if PV.F in terms:
-                print('feature_values: ', vector[idx[PV.F.value]])
-
-            for t in PV:
-                if t in terms and t is not PV.C:
-                    print('{}: {}'.format(t.name, vector[idx[t.value]]))
-
-            print('control_signal_values: ', vector[idx[PV.C.value]])
-
-
     def compute_lvoc_from_control_signals(self, variable):
         '''Update interaction terms and then multiply by prediction_weights
 
@@ -1165,8 +1151,8 @@ class LVOCControlMechanism(ControlMechanism):
         (provided in its call by `allocation_policy <LVOCControlMechanism.allocation_policy>`)
         to evaluate the `EVC <LVOCControlMechanism_EVC>`.
 
-        This function (including its call to `PredictionVector.compute_terms` is differentiated by
-        `autograd <https://github.com/HIPS/autograd>`_\\.grad()
+        This function (including its call to `PredictionVector.compute_terms`)
+        is differentiated by `autograd <https://github.com/HIPS/autograd>`_\\.grad()
         in `allocation_policy <LVOCControlMechanism.allocation_policy>`.
         '''
 

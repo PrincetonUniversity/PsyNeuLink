@@ -93,6 +93,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                                                   allocation_samples=[i/2 for i in list(range(0,50,1))]
                                                                   )
                                 )
+lvoc.reportOutputPref=True
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(color_stim)
 c.add_c_node(word_stim)
@@ -113,12 +114,15 @@ input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
               reward:    [[1,0]]}
 
 def run():
-    c.run(inputs=input_dict, num_trials=20)
+    c.run(inputs=input_dict, num_trials=1)
 import timeit
 duration = timeit.timeit(run, number=1)
+
 print('\n')
-print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
-print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
-print('features: ', lvoc.feature_values)
-print('lvoc: ', lvoc.compute_lvoc_from_control_signals([c.variable for c in lvoc.control_signals]))
+print('--------------------')
+# print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
+# print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
+# print('features: ', lvoc.feature_values)
+# print('lvoc: ', lvoc.compute_lvoc_from_control_signals([c.variable for c in lvoc.control_signals]))
 print('time: ', duration)
+print('--------------------')
