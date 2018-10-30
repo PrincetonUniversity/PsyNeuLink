@@ -1045,34 +1045,7 @@ class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
             pass
 
     def __getattr__(self, attr):
-        return self.source.__getattr__(attr)
-
-    def reset(self):
-        self.source.reset()
-
-    @property
-    def _inherited(self):
-        return self.source._inherited
-
-    @_inherited.setter
-    def _inherited(self, value):
-        self.source._inherited = value
-
-    def _cache_inherited_attrs(self):
-        self.source._cache_inherited_attrs()
-
-    @property
-    def _parent(self):
-        return self.source._parent
-
-    def get(self, execution_context=None, **kwargs):
-        self.source.get(execution_context, **kwargs)
-
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
-        self.source.set(value, execution_context, override, skip_history, skip_log, **kwargs)
-
-    def _initialize_from_context(self, execution_context, base_execution_context=None, override=True):
-        self.source._initialize_from_context(execution_context, base_execution_context, override)
+        return getattr(self.source, attr)
 
 
 class Parameters(ParamsTemplate):
