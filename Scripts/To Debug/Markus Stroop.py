@@ -171,7 +171,7 @@ my_Stroop = pnl.System(processes=[colors_process,
                        name='FEEDFORWARD_STROOP_SYSTEM')
 
 # my_Stroop.show()
-my_Stroop.show_graph(show_dimensions=pnl.ALL)
+# my_Stroop.show_graph(show_dimensions=pnl.ALL)
 
 # Function to create test trials
 # a RED word input is [1,0] to words_input_layer and GREEN word is [0,1]

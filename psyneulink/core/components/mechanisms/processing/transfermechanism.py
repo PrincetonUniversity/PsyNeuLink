@@ -331,7 +331,10 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
+    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, \
+    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, STANDARD_DEVIATION, \
+    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE, DISTRIBUTION_FUNCTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -869,10 +872,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
 
             if issubclass(transfer_function_class, Function):
-                if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
-                    raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
-                                        format(repr(FUNCTION), self.name, transfer_function_class.__name__,
-                                               TRANSFER_FUNCTION_TYPE + ' or ' + SELECTION_FUNCTION_TYPE))
+                if not issubclass(transfer_function_class, (TransferFunction,
+                                                            SelectionFunction,
+                                                            DistributionFunction,
+                                                            UserDefinedFunction)):
+                    raise TransferError("Function specified as {} param of {} ({}) "
+                                        "must be one of the following types: {}".
+                                        format(repr(FUNCTION), self.name,
+                                               transfer_function_class.__name__,
+                                               ", ".join([TRANSFER_FUNCTION_TYPE,
+                                                          SELECTION_FUNCTION_TYPE,
+                                                          DISTRIBUTION_FUNCTION_TYPE])))
             elif not isinstance(transfer_function, (function_type, method_type)):
                 raise TransferError("Unrecognized specification for {} param of {} ({})".
                                     format(repr(FUNCTION), self.name, transfer_function))

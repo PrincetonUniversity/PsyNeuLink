@@ -194,7 +194,7 @@ accumulator_threshold = 0.8
 #}
 
 # my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
-my_Stroop.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+# my_Stroop.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 
 
@@ -306,7 +306,7 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
 
 
 # trial_test_counter = 1
-#test WR control trial
+# #test WR control trial
 # ntrials = 50
 # WR_control_trial_title = 'RED word (control) WR trial where Red correct'
 # WR_control_trial_input = trial_dict(0, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
