@@ -14,6 +14,6 @@
     <option name="docutils_params" value="-aE" />
     <option name="docutils_task" value="html" />
     <option name="docutils_open_in_browser" value="false" />
-    <method />
+    <method v="2" />
   </configuration>
 </component>

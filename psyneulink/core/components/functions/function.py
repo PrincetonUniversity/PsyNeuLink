@@ -238,7 +238,7 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE
+    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE, OWNER
 
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -276,6 +276,7 @@ __all__ = [
 import ctypes
 import functools
 
+from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core import llvm as pnlvm
 
 from llvmlite import ir
@@ -11573,6 +11574,7 @@ OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
+DIRECTION = 'direction'
 
 class OptimizationFunction(Function_Base):
     """OptimizationFunction( \
@@ -11608,10 +11610,16 @@ class OptimizationFunction(Function_Base):
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
     values of `search_space <OptimizationFunction.search_space>` have been evaluated (i.e., `search_termination_function
     <OptimizationFunction.search_termination_function>` returns `True`).  The `function <OptimizationFunction.function>`
-    returns the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
-    <OptimizationFunction.objective_function>`), as well as lists that may contain all of the samples evaluated and
-    their values, depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
-    <OptimizationFunction.save_values>` are `True`, respectively.
+    returns:
+
+    - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
+      <OptimizationFunction.objective_function>`);
+
+    - the value of `objective_function <OptimzationFunction.objective_function>` associated with the last sample;
+
+    - two lists, that may contain all of the samples evaluated and their values, depending on whether `save_samples
+      <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are `True`,
+      respectively.
 
     .. _OptimizationFunction_Defaults:
 
@@ -11842,13 +11850,14 @@ class OptimizationFunction(Function_Base):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : array, list, list
-            array contains sample that yields the optimal value of the `optimization process
-            <OptimizationFunction_Process>`.  If `save_samples <OptimizationFunction.save_samples>` is `True`,
-            first list contains all the values sampled in the order they were evaluated; otherwise it is empty.  If
-            `save_values <OptimizationFunction.save_values>` is `True`, second list contains the values returned by
-            `objective_function <OptimizationFunction.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : array, array, list, list
+            first array contains sample that yields the optimal value of the `optimization process
+            <OptimizationFunction_Process>`, and second array contains the value of `objective_function
+            <OptimizationFunction.objective_function>` for that sample.  If `save_samples
+            <OptimizationFunction.save_samples>` is `True`, first list contains all the values sampled in the order
+            they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
+            second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
+            for all the samples in the order they were evaluated; otherwise it is empty.
         '''
 
         if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -11856,49 +11865,60 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        variable = self._update_variable(self._check_args(variable, params, context))
+        sample = self._update_variable(self._check_args(variable, params, context))
 
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
+        current_sample = sample
+        current_value = self.objective_function(current_sample)
 
         self._samples = []
         self._values = []
 
         # Initialize variables used in while loop
-        iteration=0
+        self.iteration=0
+
+        # Set up progress bar
+        _show_progress = False
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+            _show_progress = True
+            _progress_bar_char = '.'
+            _progress_bar_rate_str = ""
+            _search_space_size = len(self.search_space)
+            _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+            if _progress_bar_rate > 1:
+                _progress_bar_rate_str = str(_progress_bar_rate) + " "
+            print("\n{} executing optimization process (one {} for each {}of {} samples): ".
+                  format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
+            _progress_bar_count = 0
 
         # Iterate optimization process
-        while self.search_termination_function(current_variable, current_value, iteration):
+        while self.search_termination_function(current_sample, current_value, self.iteration):
 
-            # Get next sample of variable
-            new_variable = self.search_function(current_variable, iteration)
+            if _show_progress:
+                increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
+                if increment_progress_bar:
+                    print(_progress_bar_char, end='', flush=True)
+                _progress_bar_count +=1
 
-            # Compute new value based on new variable
-            new_value = self.objective_function(new_variable)
+            # Get next sample of sample
+            new_sample = self.search_function(current_sample, self.iteration)
 
-            # # TEST PRINT:
-            # print(
-            #         'current_variable', new_variable,
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            # )
-            # # self.update_function.__self__.test_print()
-            # # TEST PRINT END
+            # Compute new value based on new sample
+            new_value = self.objective_function(new_sample)
 
-            iteration+=1
-            if self.max_iterations and iteration > self.max_iterations:
+            self.iteration+=1
+            if self.max_iterations and self.iteration > self.max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
-            current_variable = new_variable
+            current_sample = new_sample
             current_value = new_value
 
             if self.save_samples:
-                self._samples.append(new_variable)
+                self._samples.append(new_sample)
             if self.save_values:
                 self._values.append(current_value)
 
-        return new_variable, self._samples, self._values
+        return new_sample, new_value, self._samples, self._values
 
 
 ASCENT = 'ascent'
@@ -11923,7 +11943,7 @@ class GradientOptimization(OptimizationFunction):
         prefs=None                   \
         )
 
-    Return sample of variable that yields optimized value of `objective_function
+    Return sample that yields optimized value of `objective_function
     <GradientOptimization.objective_function>`.
 
     .. _GradientOptimization_Process:
@@ -11953,10 +11973,10 @@ class GradientOptimization(OptimizationFunction):
     `convergence_criterion <GradientOptimization.convergence_criterion>` falls below `convergence_threshold
     <GradientOptimization.convergence_threshold>` or the number of iterations exceeds `max_iterations
     <GradientOptimization.max_iterations>`.  The `function <GradientOptimization.function>` returns the last sample
-    evaluated by `objective_function <OptimizationFunction.objective_function>` (presumed to be the optimal one),
-    as well as lists that may contain all of the samples evaluated and their values, depending on whether
-    `save_samples <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are
-    `True`, respectively.
+    evaluated by `objective_function <GradientOptimization.objective_function>` (presumed to be the optimal one),
+    the value of the function, as well as lists that may contain all of the samples evaluated and their values,
+    depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
+    <OptimizationFunction.save_values>` are `True`, respectively.
 
     .. _GradientOptimization_Gradient_Calculation:
 
@@ -12174,9 +12194,10 @@ class GradientOptimization(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`,
+            and the second array contains the value of the function for that sample.
             If `save_samples <GradientOptimization.save_samples>` is `True`, first list contains all the values
             sampled in the order they were evaluated; otherwise it is empty.  If `save_values
             <GradientOptimization.save_values>` is `True`, second list contains the values returned by
@@ -12184,14 +12205,16 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
+                                                                                  params=params,
+                                                                                  context=context)
         return_all_samples = return_all_values = []
         if self._return_samples:
             return_all_samples = all_samples
         if self._return_values:
             return_all_values = all_values
         # return last_variable
-        return return_optimal, return_all_samples, return_all_values
+        return optimal_sample, optimal_value, return_all_samples, return_all_values
 
     def _follow_gradient(self, variable, sample_num):
 
@@ -12206,12 +12229,6 @@ class GradientOptimization(OptimizationFunction):
 
         # Compute gradients with respect to current variable
         self._gradients = self.gradient_function(variable)
-
-        # # TEST_PRINT:
-        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
-        # print('gradients: ', self._gradients)
-        # print('step_size: ', self._current_step_size)
-        #  # END TEST_PRINT
 
         # Update variable based on new gradients
         return variable + self.direction * self._current_step_size * np.array(self._gradients)
@@ -12269,10 +12286,11 @@ class GridSearch(OptimizationFunction):
 
     The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values of
     `search_space <GridSearch.search_space>` have been evaluated, or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The sample that yielded either the highest (if `direction <GridSearch.direction>` is *MAXIMIZE*) or
-    lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of of the `objective_function
-    <GridSearch.objective_function>` is returned, along with the samples evaluated and their values if either
-    `save_samples <GridSearch.save_samples>` or `save_values <GridSearch.save_values>` is `True`, respectively.
+    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
+    <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
+    samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values
+    <GridSearch.save_values>` is `True`, respectively.
 
     Arguments
     ---------
@@ -12366,10 +12384,7 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
 
-        if direction is MAXIMIZE:
-            self.direction = 1
-        else:
-            self.direction = -1
+        self.direction = direction
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -12401,31 +12416,128 @@ class GridSearch(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`.
-            If `save_samples <GridSearch.save_samples>` is `True`, first list contains all the values
-            sampled in the order they were evaluated; otherwise it is empty.  If `save_values
-            <GridSearch.save_values>` is `True`, second list contains the values returned by
-            `objective_function <GridSearch.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`, and the
+            second array contains the value of the function for that sample. If `save_samples
+            <GridSearch.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <GridSearch.save_values>` is `True`, second list
+            contains the values returned by `objective_function <GridSearch.objective_function>` for all the samples
+            in the order they were evaluated; otherwise it is empty.
         '''
 
-        last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
-
-        return_optimal = all_samples[all_values.index(max(all_values))]
-
         return_all_samples = return_all_values = []
-        # if self._return_samples:
-        #     return_all_samples = all_samples
-        if self._return_values:
-            return_all_values = all_values
-        return return_optimal, return_all_samples, return_all_values
+
+        if MPI_IMPLEMENTATION:
+
+            from mpi4py import MPI
+
+            Comm = MPI.COMM_WORLD
+            rank = Comm.Get_rank()
+            size = Comm.Get_size()
+
+            self.search_space = np.atleast_2d(self.search_space)
+
+            chunk_size = (len(self.search_space) + (size-1)) // size
+            start = chunk_size * rank
+            end = chunk_size * (rank+1)
+            if start > len(self.search_space):
+                start = len(self.search_space)
+            if end > len(self.search_space):
+                end = len(self.search_space)
+
+            # # TEST PRINT
+            # print("\nContext: {}".format(self.context.flags_string))
+            # print("search_space length: {}".format(len(self.search_space)))
+            # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
+            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,end,end-start))
+
+            # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
+            samples = np.array([[]])
+            sample_optimal = np.empty_like(self.search_space[0])
+            values = np.array([])
+            value_optimal = float('-Infinity')
+            sample_value_max_tuple = (sample_optimal, value_optimal)
+
+            # Set up progress bar
+            _show_progress = False
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+                _show_progress = True
+                _progress_bar_char = '.'
+                _progress_bar_rate_str = ""
+                _search_space_size = len(self.search_space)
+                _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+                if _progress_bar_rate > 1:
+                    _progress_bar_rate_str = str(_progress_bar_rate) + " "
+                print("\n{} executing optimization process (one {} for each {}of {} samples): ".
+                      format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
+                _progress_bar_count = 0
+
+            for sample in self.search_space[start:end,:]:
+
+                if _show_progress:
+                    increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
+                    if increment_progress_bar:
+                        print(_progress_bar_char, end='', flush=True)
+                    _progress_bar_count +=1
+
+                # Evaluate objective_function for current sample
+                value = self.objective_function(sample)
+
+                # Evaluate for optimal value
+                if self.direction is MAXIMIZE:
+                    value_optimal = max(value, value_optimal)
+                elif self.direction is MINIMIZE:
+                    value_optimal = min(value, value_optimal)
+                else:
+                    assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
+                        format(repr(DIRECTION),self.name,self.direction)
+
+                # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+                # If value is optimal, store corresponing sample
+                if value == value_optimal:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    sample_optimal = sample
+                    sample_value_max_tuple = (sample_optimal, value_optimal)
+
+                # Save samples and/or values if specified
+                if self.save_values:
+                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                    values = np.append(values, np.atleast_1d(value), axis=0)
+                if self.save_samples:
+                    if len(samples[0])==0:
+                        samples = np.atleast_2d(sample)
+                    else:
+                        samples = np.append(samples, np.atleast_2d(sample), axis=0)
+
+            # Aggregate, reduce and assign global results
+            # combine max result tuples from all processes and distribute to all processes
+            max_tuples = Comm.allgather(sample_value_max_tuple)
+            # get tuple with "value_max of maxes"
+            max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
+            # get value_optimal, state values and allocation policy associated with "max of maxes"
+            return_optimal_sample = max_value_of_max_tuples[0]
+            return_optimal_value = max_value_of_max_tuples[1]
+
+            # if self._return_samples:
+            #     return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
+            if self._return_values:
+                return_all_values = np.concatenate(Comm.allgather(values), axis=0)
+
+        else:
+            last_sample, last_value, all_samples, all_values = super().function(variable=variable,
+                                                                    params=params,
+                                                                    context=context)
+            return_optimal_value = max(all_values)
+            return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
+            # if self._return_samples:
+            #     return_all_samples = all_samples
+            if self._return_values:
+                return_all_values = all_values
+
+        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num):
-        # # TEST PRINT:
-        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
-        #  # END TEST PRINT
         return self.search_space[sample_num]
 
     def _grid_complete(self, variable, value, iteration):
