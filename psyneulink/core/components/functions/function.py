@@ -209,7 +209,6 @@ from random import randint
 # import autograd.numpy as np
 import numpy as np
 import typecheck as tc
-from mpi4py import MPI
 
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -12430,6 +12429,8 @@ class GridSearch(OptimizationFunction):
         return_all_samples = return_all_values = []
 
         if MPI_IMPLEMENTATION:
+
+            from mpi4py import MPI
 
             Comm = MPI.COMM_WORLD
             rank = Comm.Get_rank()
