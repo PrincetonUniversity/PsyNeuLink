@@ -2837,7 +2837,12 @@ class Composition(Composition_Base):
         output_type_list = [ctx.get_output_struct_type(m) for m in self.c_nodes]
         output_type_list.append(ctx.get_output_struct_type(self.input_CIM))
         output_type_list.append(ctx.get_output_struct_type(self.output_CIM))
-        return ir.LiteralStructType(output_type_list)
+
+        data = [ir.LiteralStructType(output_type_list)]
+        for node in self.c_nodes:
+            nested_data = node._get_data_struct_type(ctx) if hasattr(node, '_get_data_struct_type') else ir.LiteralStructType([])
+            data.append(nested_data)
+        return ir.LiteralStructType(data)
 
     def get_context_initializer(self):
         mech_contexts = [tuple(m.get_context_initializer()) for m in self.c_nodes]
@@ -2853,7 +2858,7 @@ class Composition(Composition_Base):
         proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
         return (tuple(mech_params), tuple(proj_params))
 
-    def get_data_initializer(self):
+    def _get_data_initializer(self):
         def tupleize(x):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
@@ -2862,7 +2867,11 @@ class Composition(Composition_Base):
         output = [[os.value for os in m.output_states] for m in self.c_nodes]
         output.append([os.value for os in self.input_CIM.output_states])
         output.append([os.value for os in self.output_CIM.output_states])
-        return tupleize(output)
+        data = [output]
+        for node in self.c_nodes:
+            nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
+            data.append(nested_data)
+        return tupleize(data)
 
     def __get_mech_index(self, mechanism):
         if mechanism is self.input_CIM:
@@ -2971,6 +2980,7 @@ class Composition(Composition_Base):
                 mech_idx = self.__get_mech_index(par_mech)
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
+                                                ctx.int32_ty(0),
                                                 ctx.int32_ty(mech_idx),
                                                 ctx.int32_ty(output_state_idx)])
 
@@ -3007,10 +3017,11 @@ class Composition(Composition_Base):
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = self.__get_mech_index(mech)
-            m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            m_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            idx = ctx.int32_ty(self.__get_mech_index(mech))
+            zero = ctx.int32_ty(0)
+            m_params = builder.gep(params, [zero, zero, idx])
+            m_context = builder.gep(context, [zero, zero, idx])
+            m_out = builder.gep(data_out, [zero, zero, idx])
             builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
@@ -3122,8 +3133,8 @@ class Composition(Composition_Base):
                 run_set_mech_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
                 mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
                 with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
-                    data_ptr = builder.gep(data, [zero, ctx.int32_ty(idx)],
+                    out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + mech.name)
+                    data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
                                            name="data_result_" + mech.name)
                     builder.store(builder.load(out_ptr), data_ptr)
 
@@ -3220,7 +3231,7 @@ class Composition(Composition_Base):
 
             # Extract output_CIM result
             idx = self.__get_mech_index(self.output_CIM)
-            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             output_ptr = builder.gep(data_out, [iters])
             result = builder.load(result_ptr)
             builder.store(result, output_ptr)

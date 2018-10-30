@@ -173,7 +173,7 @@ class CompExecution:
         with LLVMBuilderContext() as ctx:
             # Data
             c_data = _convert_llvm_ir_to_ctype(self._composition._get_data_struct_type(ctx))
-            self.__data_struct = c_data(*self._composition.get_data_initializer())
+            self.__data_struct = c_data(*self._composition._get_data_initializer())
 
             # Params
             c_param = _convert_llvm_ir_to_ctype(ctx.get_param_struct_type(self._composition))
@@ -187,9 +187,11 @@ class CompExecution:
         return self._composition.c_nodes + [self._composition.input_CIM, self._composition.output_CIM]
 
     def extract_node_output(self, node):
-        index = self.__all_nodes.index(node)
-        field = self.__data_struct._fields_[index][0]
+        field = self.__data_struct._fields_[0][0]
         res_struct = getattr(self.__data_struct, field)
+        index = self.__all_nodes.index(node)
+        field = res_struct._fields_[index][0]
+        res_struct = getattr(res_struct, field)
         return _convert_ctype_to_python(res_struct)
 
     def insert_node_output(self, node, data):
