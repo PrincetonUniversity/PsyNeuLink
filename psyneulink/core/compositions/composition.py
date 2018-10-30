@@ -2418,20 +2418,20 @@ class Composition(Composition_Base):
                     self.__execution.execute(inputs)
                     return self.__execution.extract_node_output(self.output_CIM)
 
-                nodes = self.c_nodes + [self.input_CIM, self.output_CIM]
-                # Generate all node wrappers
-                for node in nodes:
-                    self._get_node_wrapper(node)
+                mechanisms = [n for n in self.c_nodes + [self.input_CIM, self.output_CIM] if isinstance(n, Mechanism)]
+                # Generate all mechanism wrappers
+                for m in mechanisms:
+                    self._get_node_wrapper(m)
                 # Compile all node wrappers
-                for node in nodes:
-                    self._get_bin_mechanism(node)
+                for m in mechanisms:
+                    self._get_bin_mechanism(m)
 
                 bin_execute = True
             except Exception as e:
                 if bin_execute[:4] == 'LLVM':
                     raise e
 
-                string = "Failed to compile wrapper for `{}' in `{}': {}".format(node.name, self.name, str(e))
+                string = "Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e))
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
@@ -2883,7 +2883,7 @@ class Composition(Composition_Base):
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_wrappers:
-            wrapper = self.__gen_mech_wrapper(node)
+            wrapper = self.__gen_node_wrapper(node)
             self.__generated_wrappers[node] = wrapper
             return wrapper
 
@@ -2926,6 +2926,12 @@ class Composition(Composition_Base):
     def __bin_initialize(self):
         if self.__execution is None:
             self.__execution = pnlvm.CompExecution(self)
+
+    def __gen_node_wrapper(self, node):
+        if isinstance(node, Mechanism):
+            return self.__gen_mech_wrapper(node)
+
+        assert False
 
     def __gen_mech_wrapper(self, mech):
 
