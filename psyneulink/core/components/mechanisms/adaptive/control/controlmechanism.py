@@ -986,9 +986,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Update control_signal_costs to accommodate instantiated Projection
         # MODIFIED 11/2/18 OLD:
         try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+            self.control_signal_costs = np.append(self.control_signal_costs, np.zeros((1, 1)), axis=0)
         except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+            self.control_signal_costs = np.zeros((1, 1))
         # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
