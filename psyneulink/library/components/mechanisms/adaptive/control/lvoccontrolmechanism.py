@@ -858,12 +858,12 @@ class LVOCControlMechanism(ControlMechanism):
                                         super(ControlMechanism, self)._execute(variable=control_signal_variables,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        # # TEST PRINT
-        print ('EXECUTION COUNT: ', self.current_execution_count)
-        print ('ALLOCATION POLICY: ', allocation_policy)
-        print ('ALLOCATION POLICY: ', self.evc_max)
-        print ('\n------------------------------------------------')
-        # # TEST PRINT END
+        # # # TEST PRINT
+        # print ('EXECUTION COUNT: ', self.current_execution_count)
+        # print ('ALLOCATION POLICY: ', allocation_policy)
+        # print ('ALLOCATION POLICY: ', self.evc_max)
+        # print ('\n------------------------------------------------')
+        # # # TEST PRINT END
 
         return allocation_policy
 

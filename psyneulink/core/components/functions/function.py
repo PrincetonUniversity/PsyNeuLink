@@ -12446,11 +12446,11 @@ class GridSearch(OptimizationFunction):
             if end > len(self.search_space):
                 end = len(self.search_space)
 
-            # TEST PRINT
-            print("\nContext: {}".format(self.context.flags_string))
-            print("search_space length: {}".format(len(self.search_space)))
-            print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
-            print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,end,end-start))
+            # # TEST PRINT
+            # print("\nContext: {}".format(self.context.flags_string))
+            # print("search_space length: {}".format(len(self.search_space)))
+            # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
+            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,end,end-start))
 
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
