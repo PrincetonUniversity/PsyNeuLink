@@ -334,7 +334,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, \
     OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, STANDARD_DEVIATION, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE, DISTRIBUTION_FUNCTION_TYPE
+    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, OUTPUT_VARIANCE, DISTRIBUTION_FUNCTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -399,7 +399,7 @@ class TRANSFER_OUTPUT():
 
     .. _TRANSFER_MECHANISM_VARIANCE:
 
-    *VARIANCE* : float
+    *OUTPUT_VARIANCE* : float
       variance of `output_state.value`.
 
     *MECHANISM_VALUE* : list
@@ -418,7 +418,7 @@ class TRANSFER_OUTPUT():
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    VARIANCE=OUTPUT_VARIANCE
     MAX_VAL=MAX_VAL
     MAX_ABS_VAL=MAX_ABS_VAL
     MAX_INDICATOR=MAX_INDICATOR
@@ -872,17 +872,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
 
             if issubclass(transfer_function_class, Function):
-                if not issubclass(transfer_function_class, (TransferFunction,
-                                                            SelectionFunction,
-                                                            DistributionFunction,
-                                                            UserDefinedFunction)):
-                    raise TransferError("Function specified as {} param of {} ({}) "
-                                        "must be one of the following types: {}".
-                                        format(repr(FUNCTION), self.name,
-                                               transfer_function_class.__name__,
-                                               ", ".join([TRANSFER_FUNCTION_TYPE,
-                                                          SELECTION_FUNCTION_TYPE,
-                                                          DISTRIBUTION_FUNCTION_TYPE])))
+                if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
+                    raise TransferError("Function specified as {} param of {} ({}) must be a {}".
+                                        format(repr(FUNCTION), self.name, transfer_function_class.__name__,
+                                               " or ".join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])))
             elif not isinstance(transfer_function, (function_type, method_type)):
                 raise TransferError("Unrecognized specification for {} param of {} ({})".
                                     format(repr(FUNCTION), self.name, transfer_function))
@@ -1244,7 +1237,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         Return:
             value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
             mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+            variance of items in RESULT outputState[TransferOuput.OUTPUT_VARIANCE].value
 
         Arguments:
 

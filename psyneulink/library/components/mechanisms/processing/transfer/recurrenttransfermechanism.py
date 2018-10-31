@@ -195,7 +195,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutpu
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
@@ -250,7 +250,7 @@ class RECURRENT_OUTPUT():
         *MEAN* : float
             the mean of the result
 
-        *VARIANCE* : float
+        *OUTPUT_VARIANCE* : float
             the variance of the result
 
         .. ENERGY:
@@ -271,7 +271,7 @@ class RECURRENT_OUTPUT():
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    VARIANCE=OUTPUT_VARIANCE
     ENERGY=ENERGY
     ENTROPY=ENTROPY
     # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP

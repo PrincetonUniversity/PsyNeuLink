@@ -165,7 +165,7 @@ and assigns three `Standard OutputStates <OutputState_Standard>`::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism(input_states=['MY_INPUT'],
-    ...                                 output_states=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE])
+    ...                                 output_states=[pnl.RESULT, pnl.MEAN, pnl.OUTPUT_VARIANCE])
 
 
 .. _Mechanism_Example_2:
@@ -173,7 +173,7 @@ and assigns three `Standard OutputStates <OutputState_Standard>`::
 This shows how the same Mechanism can be specified using a dictionary assigned to the **params** argument::
 
      >>> my_mech = pnl.TransferMechanism(params={pnl.INPUT_STATES: ['MY_INPUT'],
-     ...                                         pnl.OUTPUT_STATES: [pnl.RESULT, pnl.MEAN, pnl.VARIANCE]})
+     ...                                         pnl.OUTPUT_STATES: [pnl.RESULT, pnl.MEAN, pnl.OUTPUT_VARIANCE]})
 
 See `State <State_Examples>` for additional examples of specifying the States of a Mechanism.
 
