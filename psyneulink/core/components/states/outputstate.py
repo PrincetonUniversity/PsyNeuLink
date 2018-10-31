@@ -360,21 +360,22 @@ Most types of Mechanisms have a `standard_output_states` class attribute, that c
 OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
-defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that are the names of
-predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
-These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
+defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that
+are the names of predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>`
+attribute. These can be used in the list of OutputStates specified for a TransferMechanism object, as in the
+following example::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
     ...                                 function=pnl.Logistic(),
     ...                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
-    ...                                                pnl.TRANSFER_OUTPUT.OUTPUT_MEAN,
+    ...                                                pnl.TRANSFER_OUTPUT.MEAN,
     ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
-represent logistic transform of the 2-element input vector;  the second will be named  *OUTPUT_MEAN* and will represent mean
-of the result (i.e., of its two elements); and the third will be named *OUTPUT_VARIANCE* and contain the variance of the
-result.
+represent logistic transform of the 2-element input vector;  the second will be named  *OUTPUT_MEAN* and will
+represent mean of the result (i.e., of its two elements); and the third will be named *OUTPUT_VARIANCE* and contain
+the variance of the result.
 
 .. _OutputState_Customization:
 

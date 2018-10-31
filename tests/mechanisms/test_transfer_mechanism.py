@@ -295,12 +295,12 @@ class TestDistributionFunctions:
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_noise_standard_deviation_error(self):
         with pytest.raises(FunctionError) as error_text:
-            standard_deviationiation = -2.0
+            standard_deviation = -2.0
             T = TransferMechanism(
                 name="T",
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=NormalDist(standard_deviation=standard_deviationiation),
+                noise=NormalDist(standard_deviation=standard_deviation),
                 integration_rate=1.0,
                 integrator_mode=True
             )

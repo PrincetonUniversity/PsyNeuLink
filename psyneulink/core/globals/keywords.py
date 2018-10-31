@@ -885,7 +885,7 @@ BETA = 'beta'
 
 DIST_SHAPE = 'dist_shape'
 
-STANDARD_DEVIATION = 'standard_deviationiation'
+STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 DIST_MEAN = 'mean'
 

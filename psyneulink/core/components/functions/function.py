@@ -4423,30 +4423,30 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     def get_param_ids(self):
         return VARIANCE, BIAS, SCALE, OFFSET
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        variance_ptr, builder = self.get_param_ptr(ctx, builder, params, VARIANCE)
-        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
-        scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
-        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
-
-        variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fsub(val, bias)
-        val = builder.fmul(val, gain)
-        val = builder.fsub(offset, val)
-        val = builder.call(exp_f, [val])
-        val = builder.fadd(ctx.float_ty(1), val)
-        val = builder.fdiv(ctx.float_ty(1), val)
-
-        builder.store(val, ptro)
+    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+    #
+    #     variance_ptr, builder = self.get_param_ptr(ctx, builder, params, VARIANCE)
+    #     bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
+    #     scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+    #     offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+    #
+    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
+    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+    #
+    #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+    #     val = builder.load(ptri)
+    #     val = builder.fsub(val, bias)
+    #     val = builder.fmul(val, variance)
+    #     val = builder.fsub(offset, val)
+    #     val = builder.call(exp_f, [val])
+    #     val = builder.fadd(ctx.float_ty(1), val)
+    #     val = builder.fdiv(ctx.float_ty(1), val)
+    #
+    #     builder.store(val, ptro)
 
     def function(self,
                  variable=None,
@@ -4490,20 +4490,20 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         return self.convert_output_type(result)
 
 
-    def derivative(self, output, input=None):
-        """
-        derivative(output)
-
-        Derivative of `function <Logistic.function>`.
-
-        Returns
-        -------
-
-        derivative :  number
-            output * (1 - output).
-
-        """
-        return output * (1 - output)
+    # def derivative(self, output, input=None):
+    #     """
+    #     derivative(output)
+    #
+    #     Derivative of `function <Logistic.function>`.
+    #
+    #     Returns
+    #     -------
+    #
+    #     derivative :  number
+    #         output * (1 - output).
+    #
+    #     """
+    #     return output * (1 - output)
 
 
 class SoftMax(TransferFunction):
@@ -10312,12 +10312,12 @@ class DistributionFunction(Function_Base):
 
 class NormalDist(DistributionFunction):
     """
-    NormalDist(                     \
-             mean=0.0,              \
-             standard_deviation=1.0,      \
-             params=None,           \
-             owner=None,            \
-             prefs=None             \
+    NormalDist(                      \
+             mean=0.0,               \
+             standard_deviation=1.0, \
+             params=None,            \
+             owner=None,             \
+             prefs=None              \
              )
 
     .. _NormalDist:
@@ -10416,21 +10416,21 @@ class NormalDist(DistributionFunction):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.get_current_function_param(DIST_MEAN)
-        standard_deviationiation = self.get_current_function_param(STANDARD_DEVIATION)
+        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
 
-        result = np.random.normal(mean, standard_deviationiation)
+        result = np.random.normal(mean, standard_deviation)
 
         return self.convert_output_type(result)
 
 
 class UniformToNormalDist(DistributionFunction):
     """
-    UniformToNormalDist(            \
-             mean=0.0,              \
-             standard_deviation=1.0,      \
-             params=None,           \
-             owner=None,            \
-             prefs=None             \
+    UniformToNormalDist(             \
+             mean=0.0,               \
+             standard_deviation=1.0, \
+             params=None,            \
+             owner=None,             \
+             prefs=None              \
              )
 
     .. _UniformToNormalDist:
@@ -10541,10 +10541,10 @@ class UniformToNormalDist(DistributionFunction):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.get_current_function_param(DIST_MEAN)
-        standard_deviationiation = self.get_current_function_param(STANDARD_DEVIATION)
+        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
 
         sample = np.random.rand(1)[0]
-        result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviationiation) + mean
+        result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
 
         return self.convert_output_type(result)
 
