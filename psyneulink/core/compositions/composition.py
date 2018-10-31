@@ -2515,7 +2515,9 @@ class Composition(Composition_Base):
                         node.context.execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
-                    ret = node.execute(execution_id=self._execution_id)
+                    # TODO: Make sure all incoming projections have
+                    # up-to-date values if executing in binary mode
+                    ret = node.execute(execution_id=self._execution_id, bin_execute=bin_execute)
                     if bin_execute:
                         self.__execution.insert_node_output(node, ret)
 
