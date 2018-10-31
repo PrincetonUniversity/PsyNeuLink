@@ -37,7 +37,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     #                                             name='COLORS HIDDEN')
 
     colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                 # should be able to get same result with offset = -4.0
                                                 integrator_mode=True,
                                                 noise=0.0,
@@ -51,7 +51,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     #                                            integration_rate=0.1,
     #                                            name='WORDS HIDDEN')
     words_hidden_layer = pnl.TransferMechanism(size=2,
-                                               function=pnl.Logistic(gain=1.0, bias=4.0),
+                                               function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                integrator_mode=True,
                                                noise=0.0,
                                                integration_rate=0.1,

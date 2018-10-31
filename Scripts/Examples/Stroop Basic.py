@@ -12,14 +12,14 @@ t = pnl.TransferMechanism(size=2, function=pnl.Linear, name='TASK')
 unit_noise = 0.001
 processing_rate = 0.1
 ch = pnl.TransferMechanism(size=2,
-                           function=pnl.Logistic(gain=1.0, bias=4.0), #should be able to get same result with offset = -4.0
+                           function=pnl.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                            integrator_mode=False,
                            noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                            integration_rate=processing_rate,
                            name='COLORS HIDDEN')
 
 wh = pnl.TransferMechanism(size=2,
-                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                           function=pnl.Logistic(gain=1.0, x_0=4.0),
                            integrator_mode=False,
                            noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                            integration_rate=processing_rate,
