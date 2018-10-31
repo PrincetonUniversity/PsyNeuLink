@@ -4486,10 +4486,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
 
         variable = self._check_args(variable=variable, params=params, context=context)
-        variance = self.get_current_function_param(VARIANCE)
-        bias = self.get_current_function_param(BIAS)
-        scale = self.get_current_function_param(SCALE)
-        offset = self.get_current_function_param(OFFSET)
+        variance = self.get_current_function_param(VARIANCE, execution_id)
+        bias = self.get_current_function_param(BIAS, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * np.random.normal(variable+bias, variance) + offset
