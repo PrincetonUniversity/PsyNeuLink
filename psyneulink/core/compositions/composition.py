@@ -2859,11 +2859,6 @@ class Composition(Composition_Base):
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self):
-        def tupleize(x):
-            if hasattr(x, "__len__"):
-                return tuple([tupleize(y) for y in x])
-            return x
-
         output = [[os.value for os in m.output_states] for m in self.c_nodes]
         output.append([os.value for os in self.input_CIM.output_states])
         output.append([os.value for os in self.output_CIM.output_states])
@@ -2871,7 +2866,7 @@ class Composition(Composition_Base):
         for node in self.c_nodes:
             nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
             data.append(nested_data)
-        return tupleize(data)
+        return pnlvm._tupleize(data)
 
     def __get_mech_index(self, mechanism):
         if mechanism is self.input_CIM:

@@ -937,11 +937,7 @@ class Function_Base(Function):
         return tuple(param_init)
 
     def get_param_initializer(self):
-        def tupleize(x):
-            if hasattr(x, "__len__"):
-                return tuple([tupleize(y) for y in x])
-            return x if x is not None else tuple()
-        return tupleize(self._get_param_values())
+        return pnlvm._tupleize(self._get_param_values())
 
     def bin_function(self,
                      variable=None,

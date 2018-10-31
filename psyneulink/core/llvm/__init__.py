@@ -163,6 +163,11 @@ def _convert_ctype_to_python(x):
     print(x)
     assert False
 
+def _tupleize(x):
+    if hasattr(x, '__len__'):
+        return tuple([_tupleize(y) for y in x])
+    return x if x is not None else tuple()
+
 class CompExecution:
 
     def __init__(self, composition):
@@ -204,12 +209,8 @@ class CompExecution:
         # Read provided input data and separate each input state
         input_data = [[x] for m in origins for x in inputs[m]]
         c_input = _convert_llvm_ir_to_ctype(ctx.get_input_struct_type(self._composition))
-        def tupleize(x):
-            if hasattr(x, '__len__'):
-                return tuple([tupleize(y) for y in x])
-            return x
 
-        return c_input(*tupleize(input_data))
+        return c_input(*_tupleize(input_data))
 
     def _get_run_input_struct(self, inputs, num_input_sets):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
@@ -223,12 +224,7 @@ class CompExecution:
         input_ty = ir.ArrayType(ctx.get_input_struct_type(self._composition),
                                 num_input_sets)
         c_input = _convert_llvm_ir_to_ctype(input_ty)
-        def tupleize(x):
-            if hasattr(x, '__len__'):
-                return tuple([tupleize(y) for y in x])
-            return x
-
-        return c_input(*tupleize(run_inputs))
+        return c_input(*_tupleize(run_inputs))
 
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self.__data_struct)

@@ -2787,17 +2787,12 @@ class Mechanism_Base(Mechanism):
 
         ct_param = par_struct_ty(*self.get_param_initializer())
 
-        def tupleize(val):
-            try:
-                return tuple([tupleize(x) for x in val])
-            except:
-                return val
-        # convert to 3d(we always assume the input is vector of input states
-        # input states take vector of projection outputs
-        # projection output can be a vector
+        # convert to 3d. we always assume that:
+        # a) the input is vector of input states
+        # b) input states take vector of projection outputs
+        # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        vi_init = tupleize(new_var)
-        ct_vi = vi_ty(*vi_init)
+        ct_vi = vi_ty(*pnlvm._tupleize(new_var))
 
         ct_vo = vo_ty()
 
