@@ -10314,7 +10314,7 @@ class NormalDist(DistributionFunction):
     """
     NormalDist(                     \
              mean=0.0,              \
-             standard_dev=1.0,      \
+             standard_deviation=1.0,      \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -10330,7 +10330,7 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
@@ -10353,7 +10353,7 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
@@ -10378,19 +10378,19 @@ class NormalDist(DistributionFunction):
 
     class Params(DistributionFunction.Params):
         mean = Param(0.0, modulable=True)
-        standard_dev = Param(1.0, modulable=True)
+        standard_deviation = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  mean=0.0,
-                 standard_dev=1.0,
+                 standard_deviation=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_dev=standard_dev,
+                                                  standard_deviation=standard_deviation,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -10405,7 +10405,7 @@ class NormalDist(DistributionFunction):
 
         if STANDARD_DEVIATION in target_set:
             if target_set[STANDARD_DEVIATION] <= 0.0:
-                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
 
     def function(self,
@@ -10416,9 +10416,9 @@ class NormalDist(DistributionFunction):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.get_current_function_param(DIST_MEAN)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
+        standard_deviationiation = self.get_current_function_param(STANDARD_DEVIATION)
 
-        result = np.random.normal(mean, standard_deviation)
+        result = np.random.normal(mean, standard_deviationiation)
 
         return self.convert_output_type(result)
 
@@ -10427,7 +10427,7 @@ class UniformToNormalDist(DistributionFunction):
     """
     UniformToNormalDist(            \
              mean=0.0,              \
-             standard_dev=1.0,      \
+             standard_deviation=1.0,      \
              params=None,           \
              owner=None,            \
              prefs=None             \
@@ -10456,7 +10456,7 @@ class UniformToNormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
@@ -10479,7 +10479,7 @@ class UniformToNormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
@@ -10503,7 +10503,7 @@ class UniformToNormalDist(DistributionFunction):
     class Params(DistributionFunction.Params):
         variable = Param(np.array([0]), read_only=True)
         mean = Param(0.0, modulable=True)
-        standard_dev = Param(1.0, modulable=True)
+        standard_deviation = Param(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -10511,13 +10511,13 @@ class UniformToNormalDist(DistributionFunction):
     def __init__(self,
                  default_variable=None,
                  mean=0.0,
-                 standard_dev=1.0,
+                 standard_deviation=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_dev=standard_dev,
+                                                  standard_deviation=standard_deviation,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -10541,10 +10541,10 @@ class UniformToNormalDist(DistributionFunction):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.get_current_function_param(DIST_MEAN)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
+        standard_deviationiation = self.get_current_function_param(STANDARD_DEVIATION)
 
         sample = np.random.rand(1)[0]
-        result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
+        result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviationiation) + mean
 
         return self.convert_output_type(result)
 

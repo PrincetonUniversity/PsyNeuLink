@@ -34,14 +34,14 @@ task_layer.loggable_items
 colors_hidden_layer = pnl.TransferMechanism(size=2,
                                             function=pnl.Logistic(gain=1.0, bias=4.0),
                                             integrator_mode=True,
-                                          #  noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                          #  noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.TransferMechanism(size=2,
                                            function=pnl.Logistic(gain=1.0, bias=4.0),
                                            integrator_mode=True,
-                                       #    noise=pnl.NormalDist(mean=0.0, standard_dev=.005).function,
+                                       #    noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -72,7 +72,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                                                                        metric=pnl.ENERGY,
                                                                        matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
                          integrator_mode=True,#)
-                        # noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function)
+                        # noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function)
                          integration_rate=0.1)
 
 #response_layer.set_log_conditions('value')
@@ -249,9 +249,9 @@ CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 1, 0)
 #         colors_hidden_layer.integrator_mode = True
 #         words_hidden_layer.integrator_mode = True
 #         response_layer.integrator_mode = True
-#         #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-#         #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-#         #response_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
+#         #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+#         #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+#         #response_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
 #         # run system with test pattern
 #         my_Stroop.run(inputs=test_trial_input) #termination_processing=terminate_trial)
 #
@@ -283,9 +283,9 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
         colors_hidden_layer.integrator_mode = True
         words_hidden_layer.integrator_mode = True
         response_layer.integrator_mode = True
-        #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        #response_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
+        #colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        #words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        #response_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
 
         # run system with test pattern
         my_Stroop.run(inputs=test_trial_input)

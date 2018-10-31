@@ -65,7 +65,7 @@ decision_layer = pnl.LCAMechanism(
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
     function=pnl.Logistic(bias=decbias),   # Set the Logistic function with bias = decbias
-    # noise=pnl.UniformToNormalDist(standard_dev = SD).function, # The UniformToNormalDist function will
+    # noise=pnl.UniformToNormalDist(standard_deviation = SD).function, # The UniformToNormalDist function will
     integrator_mode=True,               # set the noise with a seed generator that is compatible with
     name='DECISION LAYER'               # MATLAB random seed generator 22 (rsg=22)
 )
@@ -85,7 +85,7 @@ response_layer = pnl.LCAMechanism(
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
     function=pnl.Logistic(bias=respbias),          # Set the Logistic function with bias = decbias
-    # noise=pnl.UniformToNormalDist(standard_dev = SD).function,
+    # noise=pnl.UniformToNormalDist(standard_deviation = SD).function,
     integrator_mode=True,
     name='RESPONSE LAYER'
 )
