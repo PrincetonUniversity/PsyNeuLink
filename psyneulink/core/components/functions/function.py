@@ -4114,7 +4114,7 @@ class Logistic(
         .. note::
             The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
             accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
-            form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`.
+            form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
 
         Arguments
         ---------
@@ -4138,13 +4138,14 @@ class Logistic(
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
+        x_0 = self.get_current_function_param(X_0)
         offset = self.get_current_function_param(OFFSET)
 
         # result = scale * np.exp(rate * variable + bias) + offset
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         from math import e
-        result = 1. / (1 + e**(-gain * (variable - bias) + offset))
+        result = 1. / (1 + e**(-gain * (variable + bias - x_0) + offset))
 
         return self.convert_output_type(result)
 
