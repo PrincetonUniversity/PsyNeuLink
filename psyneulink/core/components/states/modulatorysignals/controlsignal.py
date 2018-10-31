@@ -255,7 +255,7 @@ COMMENT:
 
     My_Mech_A = TransferMechanism(function=Logistic)
     My_Mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, MEAN])
+                                 output_states=[RESULT, OUTPUT_MEAN])
 
     Process_A = Process(pathway=[My_Mech_A])
     Process_B = Process(pathway=[My_Mech_B])
@@ -263,7 +263,7 @@ COMMENT:
 
     My_EVC_Mechanism = EVCControlMechanism(system=My_System,
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[MEAN]],
+                                                         My_Mech_B.output_states[OUTPUT_MEAN]],
                                     control_signals=[(GAIN, My_Mech_A),
                                                      {NAME: INTERCEPT,
                                                       MECHANISM: My_Mech_B,
@@ -277,14 +277,14 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`
 
     >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
     >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
-    ...                                   output_states=[pnl.RESULT, pnl.MEAN])
+    ...                                   output_states=[pnl.RESULT, pnl.OUTPUT_MEAN])
 
     >>> process_a = pnl.Process(pathway=[my_mech_a])
     >>> process_b = pnl.Process(pathway=[my_mech_b])
 
     >>> my_system = pnl.System(processes=[process_a, process_b],
     ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
-    ...                                             my_mech_b.output_states[pnl.MEAN]],
+    ...                                             my_mech_b.output_states[pnl.OUTPUT_MEAN]],
     ...                        control_signals=[(pnl.GAIN, my_mech_a),
     ...                                         {pnl.NAME: pnl.INTERCEPT,
     ...                                          pnl.MECHANISM: my_mech_b,

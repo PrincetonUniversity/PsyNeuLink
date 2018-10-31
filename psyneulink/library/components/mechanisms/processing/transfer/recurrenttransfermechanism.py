@@ -195,7 +195,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutpu
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, OUTPUT_STD_DEV, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
@@ -247,10 +247,10 @@ class RECURRENT_OUTPUT():
 
         .. TRANSFER_MEAN:
 
-        *MEAN* : float
+        *OUTPUT_MEAN* : float
             the mean of the result
 
-        *VARIANCE* : float
+        *OUTPUT_VARIANCE* : float
             the variance of the result
 
         .. ENERGY:
@@ -268,10 +268,10 @@ class RECURRENT_OUTPUT():
             between 0 and 1 (e.g. the `Logistic` Function)).
         """
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
+    VARIANCE=OUTPUT_VARIANCE
     ENERGY=ENERGY
     ENTROPY=ENTROPY
     # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP

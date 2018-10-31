@@ -466,7 +466,7 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
 The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
 <OutputState_Standard>`::
 
-    my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
+    my_mech = pnl.TransferMechanism(output_states=['RESULT', 'OUTPUT_MEAN'])
 
 As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
 default OutPutStates that would have been created if no OutputStates were specified (see `note

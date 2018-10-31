@@ -293,19 +293,19 @@ class TestDistributionFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_normal_noise_standard_dev_error(self):
+    def test_transfer_mech_normal_noise_standard_deviation_error(self):
         with pytest.raises(FunctionError) as error_text:
             standard_deviation = -2.0
             T = TransferMechanism(
                 name="T",
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=NormalDist(standard_dev=standard_deviation),
+                noise=NormalDist(standard_deviation=standard_deviation),
                 integration_rate=1.0,
                 integrator_mode=True
             )
 
-        assert "The standard_dev parameter" in str(error_text) and "must be greater than zero" in str(error_text)
+        assert "The standard_deviation parameter" in str(error_text) and "must be greater than zero" in str(error_text)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1084,12 +1084,12 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
     def test_transfer_mech_2d_variable_mean(self):
-        from psyneulink.core.globals.keywords import MEAN
+        from psyneulink.core.globals.keywords import OUTPUT_MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_states=[MEAN]
+            output_states=[OUTPUT_MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
