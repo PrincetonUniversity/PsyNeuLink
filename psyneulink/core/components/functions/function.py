@@ -4775,12 +4775,6 @@ class SoftMax(TransferFunction):
 
         filtered by `ouptput <SoftMax.output>` specification.
 
-        COMMENT:
-        e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
-        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
-        filtered by `ouptput <SoftMax.output>` specification.
-        COMMENT
-
         Arguments
         ---------
 
