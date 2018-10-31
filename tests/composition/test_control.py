@@ -303,7 +303,7 @@ class TestObjectiveMechanismRoles:
 #             name='Input',
 #         )
 #         Reward = TransferMechanism(
-#             output_states=[RESULT, MEAN, OUTPUT_VARIANCE],
+#             output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
 #             name='Reward'
 #         )
 #         Decision = DDM(
@@ -447,7 +447,7 @@ class TestObjectiveMechanismRoles:
 #         #     #       transfer mean
 #         #     (Reward.output_states[RESULT].value, np.array([15.])),
 #         #     #       transfer_result
-#         #     (Reward.output_states[MEAN].value, np.array(15.0)),
+#         #     (Reward.output_states[OUTPUT_MEAN].value, np.array(15.0)),
 #         #     #       transfer variance
 #         #     (Reward.output_states[OUTPUT_VARIANCE].value, np.array(0.0)),
 #         #

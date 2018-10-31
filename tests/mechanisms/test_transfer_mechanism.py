@@ -1084,12 +1084,12 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
     def test_transfer_mech_2d_variable_mean(self):
-        from psyneulink.core.globals.keywords import MEAN
+        from psyneulink.core.globals.keywords import OUTPUT_MEAN
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[0.0, 0.0], [0.0, 0.0]],
-            output_states=[MEAN]
+            output_states=[OUTPUT_MEAN]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 

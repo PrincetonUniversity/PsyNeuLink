@@ -332,8 +332,8 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
-    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, \
-    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, STANDARD_DEVIATION, \
+    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, \
+    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, OUTPUT_STD_DEV, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, OUTPUT_VARIANCE, DISTRIBUTION_FUNCTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -384,17 +384,17 @@ class TRANSFER_OUTPUT():
 
     .. _TRANSFER_MECHANISM_MEAN:
 
-    *MEAN* : float
+    *OUTPUT_MEAN* : float
       mean of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_MEDIAN:
 
-    *MEDIAN* : float
+    *OUTPUT_MEDIAN* : float
       median of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_STD_DEV:
 
-    *STANDARD_DEVIATION* : float
+    *OUTPUT_STD_DEV* : float
       standard deviation of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_VARIANCE:
@@ -415,9 +415,9 @@ class TRANSFER_OUTPUT():
 
     RESULTS=RESULTS
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
     VARIANCE=OUTPUT_VARIANCE
     MAX_VAL=MAX_VAL
     MAX_ABS_VAL=MAX_ABS_VAL
@@ -1236,7 +1236,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             - Variance of the activation values across units
         Return:
             value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
+            mean of items in RESULT outputState[TransferOuput.OUTPUT_MEAN].value
             variance of items in RESULT outputState[TransferOuput.OUTPUT_VARIANCE].value
 
         Arguments:

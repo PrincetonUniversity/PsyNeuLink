@@ -360,7 +360,7 @@ Most types of Mechanisms have a `standard_output_states` class attribute, that c
 OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
-defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *OUTPUT_VARIANCE* and *STANDARD_DEVIATION* that are the names of
+defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that are the names of
 predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
 
@@ -368,11 +368,11 @@ These can be used in the list of OutputStates specified for a TransferMechanism 
     >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
     ...                                 function=pnl.Logistic(),
     ...                                 output_states=[pnl.TRANSFER_OUTPUT.RESULT,
-    ...                                                pnl.TRANSFER_OUTPUT.MEAN,
+    ...                                                pnl.TRANSFER_OUTPUT.OUTPUT_MEAN,
     ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
-represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
+represent logistic transform of the 2-element input vector;  the second will be named  *OUTPUT_MEAN* and will represent mean
 of the result (i.e., of its two elements); and the third will be named *OUTPUT_VARIANCE* and contain the variance of the
 result.
 
@@ -595,7 +595,7 @@ from psyneulink.core.components.functions.function import Function, OneHot, func
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, MECHANISM_VALUE, OUTPUT_MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, OUTPUT_STD_DEV, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import UtilitiesError, is_numeric, iscompatible, make_readonly_property, recursive_update
@@ -624,9 +624,9 @@ DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OUTPUTS():
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
     VARIANCE=OUTPUT_VARIANCE
     MECHANISM_VALUE=MECHANISM_VALUE
     MAX_VAL=MAX_VAL
@@ -636,11 +636,11 @@ class OUTPUTS():
     PROB=PROB
 
 standard_output_states = [{NAME: RESULT},
-                          {NAME:MEAN,
+                          {NAME:OUTPUT_MEAN,
                            FUNCTION:lambda x: np.mean(x)},
-                          {NAME: MEDIAN,
+                          {NAME: OUTPUT_MEDIAN,
                            FUNCTION:lambda x: np.median(x)},
-                          {NAME: STANDARD_DEVIATION,
+                          {NAME: OUTPUT_STD_DEV,
                            FUNCTION:lambda x: np.std(x)},
                           {NAME: OUTPUT_VARIANCE,
                            FUNCTION:lambda x: np.var(x)},

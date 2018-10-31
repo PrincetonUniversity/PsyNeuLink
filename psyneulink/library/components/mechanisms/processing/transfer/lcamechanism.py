@@ -142,7 +142,7 @@ import typecheck as tc
 from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import LCAIntegrator, Logistic, SelectionFunction, max_vs_avg, max_vs_next
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, RATE, RESULT, OUTPUT_STD_DEV, TIME_STEP_SIZE, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
@@ -175,7 +175,7 @@ class LCAMechanism_OUTPUT():
 
             .. _LCAMechanism_MEAN
 
-            *MEAN* : float
+            *OUTPUT_MEAN* : float
                 the mean of the result
 
             .. _LCAMechanism_VARIANCE
@@ -213,9 +213,9 @@ class LCAMechanism_OUTPUT():
                 other elements
         """
         RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEVIATION=STANDARD_DEVIATION
+        MEAN=OUTPUT_MEAN
+        MEDIAN=OUTPUT_MEDIAN
+        STANDARD_DEVIATION=OUTPUT_STD_DEV
         VARIANCE=OUTPUT_VARIANCE
         ENERGY=ENERGY
         ENTROPY=ENTROPY
