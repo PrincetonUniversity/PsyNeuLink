@@ -200,9 +200,11 @@ class CompExecution:
         return _convert_ctype_to_python(res_struct)
 
     def insert_node_output(self, node, data):
+        my_field_name = self.__data_struct._fields_[0][0]
+        my_res_struct = getattr(self.__data_struct, my_field_name)
         index = self.__all_nodes.index(node)
-        field = self.__data_struct._fields_[index][0]
-        getattr(self.__data_struct, field, data)
+        node_field_name = my_res_struct._fields_[index][0]
+        setattr(my_res_struct, node_field_name, _tupleize(data))
 
     def _get_input_struct(self, inputs):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
