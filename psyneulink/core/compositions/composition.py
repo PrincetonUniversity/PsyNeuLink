@@ -2515,7 +2515,10 @@ class Composition(Composition_Base):
                         node.context.execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
-                    node.execute(execution_id=self._execution_id)
+                    ret = node.execute(execution_id=self._execution_id)
+                    if bin_execute:
+                        self.__execution.insert_node_output(node, ret)
+
                 if node in origin_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
