@@ -4314,7 +4314,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. _Gaussian_Function:
 
-    Gaussian transform of
+    Appply Gaussian transform to `variable <Gaussian.variable>`, by drawing a sample from the normal distribution
+    centered on the value of each of its elements.
 
     Arguments
     ---------
@@ -4323,18 +4324,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         specifies a template for the value used as the mean for the Guassian transform.
 
     variance : float : default 1.0
-        specifies variance used for Gaussian transform applied to each element of `variable <Logistic.variable>`.
+        specifies "width" of the Gaussian transform applied to each element of `variable <Gaussian.variable>`.
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Logistic.variable>` before applying Gaussian transform.
+        value to add to each element after applying height and before applying Gaussian transform.
 
     scale : float : default 1.0
-        specifies a value by which to multiply each element of `variable <Logistic.variable>` after applying
-        Gaussian transform.
+        value by which to multiply each element after applying Gaussian transform.
 
     offset : float : default 0.0
-        specifies a value to add to each element of `variable <Logistic.variable>` after applying Gaussian transform
-        and `scale <Gaussian.scale>`.
+        value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4357,17 +4356,16 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         value used as the mean of the Gaussian transform.
 
     variance : float : default 1.0
-        variance used for Gaussian transform applied to each element of `variable <Logistic.variable>`.
+        variance used for Gaussian transform.
 
     bias : float : default 0.0
-        value added to each element of `variable <Logistic.variable>` before applying the Gaussian transform.
+        value added to each element after applying height and before applying the Gaussian transform.
 
     scale : float : default 0.0
-        value by which each element of `variable <Logistic.variable>` is multiplied after applying the Gaussian
-        transform.
+        value by which each element is multiplied after applying the Gaussian transform.
 
     offset : float : default 0.0
-        value to added to each element of `variable <Logistic.variable>` after applying the Gaussian transform.
+        value added to each element after applying the Gaussian transform and scale.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4457,7 +4455,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         .. math::
 
-            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
+            scale * e^{-\\frac{(variable-bias)^{2}}{variance * \\sqrt{2\\pi}}} + offset
 
         Arguments
         ---------
@@ -4769,9 +4767,19 @@ class SoftMax(TransferFunction):
                  params=None,
                  context=None):
         """
-        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        Return:
+
+        .. math::
+
+            \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
+
+        filtered by `ouptput <SoftMax.output>` specification.
+
+        COMMENT:
+        e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
+        COMMENT
 
         Arguments
         ---------
