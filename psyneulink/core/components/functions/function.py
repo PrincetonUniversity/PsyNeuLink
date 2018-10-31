@@ -4439,7 +4439,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     #
     #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
     #     val = builder.load(ptri)
-    #     val = builder.fsub(val, bias)
+    #     val = builder.fadd(val, bias)
     #     val = builder.fmul(val, variance)
     #     val = builder.fsub(offset, val)
     #     val = builder.call(exp_f, [val])
