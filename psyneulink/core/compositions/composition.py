@@ -2933,11 +2933,11 @@ class Composition(Composition_Base):
 
         assert False
 
-    def __gen_mech_wrapper(self, mech):
+    def __gen_mech_wrapper(self, node):
 
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.get_unique_name("comp_wrap_" + mech.name)
+            func_name = ctx.get_unique_name("comp_wrap_" + node.name)
             data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
             func_ty = ir.FunctionType(ir.VoidType(), (
                 ctx.get_context_struct_type(self).as_pointer(),
@@ -2955,14 +2955,14 @@ class Composition(Composition_Base):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            m_function = ctx.get_llvm_function(mech)
+            m_function = ctx.get_llvm_function(node)
 
-            if mech is self.input_CIM:
+            if node is self.input_CIM:
                 m_in = comp_in
                 incoming_projections = []
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
-                incoming_projections = mech.afferents
+                incoming_projections = node.afferents
 
             # Run all incoming projections
             #TODO: This should filter out projections with different execution ID
@@ -2997,7 +2997,7 @@ class Composition(Composition_Base):
                                                 ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
-                assert state.owner is mech
+                assert state.owner is node
                 if state in state.owner.input_states:
                     state_idx = state.owner.input_states.index(state)
 
@@ -3024,12 +3024,12 @@ class Composition(Composition_Base):
                                               ctx.int32_ty(projection_idx)])
 
                 if proj_in.type != proj_function.args[2].type:
-                    assert mech is self.output_CIM
+                    assert node is self.output_CIM
                     proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = ctx.int32_ty(self.__get_node_index(mech))
+            idx = ctx.int32_ty(self.__get_node_index(node))
             zero = ctx.int32_ty(0)
             m_params = builder.gep(params, [zero, zero, idx])
             m_context = builder.gep(context, [zero, zero, idx])
