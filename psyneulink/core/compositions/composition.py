@@ -2983,11 +2983,17 @@ class Composition(Composition_Base):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                mech_idx = self.__get_mech_index(par_mech)
+                if par_mech is self.input_CIM or par_mech is self.output_CIM \
+                    or par_mech in self.c_nodes:
+                    par_idx = self.__get_mech_index(par_mech)
+                else:
+                    comp = par_mech.composition
+                    assert par_mech is comp.output_CIM
+                    par_idx = self.c_nodes.index(comp)
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),
-                                                ctx.int32_ty(mech_idx),
+                                                ctx.int32_ty(par_idx),
                                                 ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
