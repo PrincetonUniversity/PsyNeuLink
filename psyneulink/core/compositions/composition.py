@@ -2873,13 +2873,13 @@ class Composition(Composition_Base):
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
-    def __get_mech_index(self, mechanism):
-        if mechanism is self.input_CIM:
+    def __get_node_index(self, node):
+        if node is self.input_CIM:
             return len(self.c_nodes)
-        elif mechanism is self.output_CIM:
+        elif node is self.output_CIM:
             return len(self.c_nodes) + 1
         else:
-            return self.c_nodes.index(mechanism)
+            return self.c_nodes.index(node)
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_wrappers:
@@ -2985,7 +2985,7 @@ class Composition(Composition_Base):
                 assert output_s in par_mech.output_states
                 if par_mech is self.input_CIM or par_mech is self.output_CIM \
                     or par_mech in self.c_nodes:
-                    par_idx = self.__get_mech_index(par_mech)
+                    par_idx = self.__get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
@@ -3029,7 +3029,7 @@ class Composition(Composition_Base):
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = ctx.int32_ty(self.__get_mech_index(mech))
+            idx = ctx.int32_ty(self.__get_node_index(mech))
             zero = ctx.int32_ty(0)
             m_params = builder.gep(params, [zero, zero, idx])
             m_context = builder.gep(context, [zero, zero, idx])
@@ -3242,7 +3242,7 @@ class Composition(Composition_Base):
             builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
             # Extract output_CIM result
-            idx = self.__get_mech_index(self.output_CIM)
+            idx = self.__get_node_index(self.output_CIM)
             result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             output_ptr = builder.gep(data_out, [iters])
             result = builder.load(result_ptr)
