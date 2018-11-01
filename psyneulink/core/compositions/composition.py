@@ -2515,11 +2515,24 @@ class Composition(Composition_Base):
                         node.context.execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
-                    # TODO: Make sure all incoming projections have
-                    # up-to-date values if executing in binary mode
+                    if bin_execute:
+                        # Values pf node with compiled wrappers are
+                        # in binary data structure
+                        srcs = set([proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers])
+                        for src_node in srcs:
+                            assert src_node in self.c_nodes or src_node is self.input_CIM
+                            data = self.__execution.extract_frozen_node_output(src_node)
+                            for i, v in enumerate(data):
+                                #This sets frozen values
+                                src_node.output_states[i].set_value_without_logging(v)
+
                     ret = node.execute(execution_id=self._execution_id, bin_execute=bin_execute)
                     if bin_execute:
+                        # Update result in binary data structure
                         self.__execution.insert_node_output(node, ret)
+                        for i, v in enumerate(ret):
+                            # Set current output. This will be stored to "new_values" below
+                            node.output_CIM.output_states[i].set_value_without_logging(v)
 
                 if node in origin_nodes:
                     if clamp_input:

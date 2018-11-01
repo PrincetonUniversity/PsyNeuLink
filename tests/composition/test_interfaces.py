@@ -133,7 +133,7 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-# Fails because of sync      pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_connect_compositions_with_simple_states(self, mode):
@@ -205,7 +205,7 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-# Fails because of sync      pytest.param('LLVM', marks=pytest.mark.llvm),
+# Fails to construct input   pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_connect_compositions_with_complicated_states(self, mode):
@@ -277,7 +277,7 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-# Fails because of sync      pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_compositions_as_origin_nodes(self, mode):
@@ -360,7 +360,7 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-# Fails because of sync      pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_compositions_as_origin_nodes_multiple_trials(self, mode):

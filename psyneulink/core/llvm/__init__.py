@@ -191,7 +191,11 @@ class CompExecution:
     def __all_nodes(self):
         return self._composition.c_nodes + [self._composition.input_CIM, self._composition.output_CIM]
 
-    def extract_node_output(self, node):
+    def extract_frozen_node_output(self, node):
+        return self.extract_node_output(node, self.__frozen_vals)
+
+    def extract_node_output(self, node, data = None):
+        data = self.__data_struct if data == None else data
         field = self.__data_struct._fields_[0][0]
         res_struct = getattr(self.__data_struct, field)
         index = self.__all_nodes.index(node)
