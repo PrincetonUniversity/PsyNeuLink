@@ -406,7 +406,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     terminal_objective_mechanism=False,                    \
     learning_function=BayesGLM,                            \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
-    function=GradientOptimization, \
+    function=GradientOptimization,                         \
     control_signals=None,                                  \
     modulation=ModulationParam.MULTIPLICATIVE,             \
     params=None,                                           \
@@ -578,7 +578,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     class Params(ControlMechanism.Params):
         function = GradientOptimization
 
-    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
+    paramClassDefaults = OptimizationControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
     @tc.typecheck
@@ -651,18 +651,6 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             if not all(term in PV for term in request_set[PREDICTION_TERMS]):
                 raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
                                 format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
-
-        if PREDICTION_WEIGHT_PRIORS in request_set and request_set[PREDICTION_WEIGHT_PRIORS]:
-            priors = request_set[PREDICTION_WEIGHT_PRIORS]
-            if isinstance(priors, dict):
-                if not all(key in PV for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
-                    raise LVOCError("One or more keys in dict specifed for {} arg of {} is not a member of the {} enum".
-                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name, PV.__class__.__name__))
-                if not all(key in self.prediction_terms for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
-                    raise LVOCError("One or more keys in dict specifed for {} arg of {} "
-                                    "is for a prediction term not specified in {} arg".
-                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name,
-                                           PV.__class__.__name__, repr(PREDICTION_TERMS)))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.

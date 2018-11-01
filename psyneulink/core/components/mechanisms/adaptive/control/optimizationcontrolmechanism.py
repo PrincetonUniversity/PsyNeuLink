@@ -165,7 +165,7 @@ from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS
+    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -191,30 +191,19 @@ class OptimizationControlMechanismError(Exception):
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
-    function=BayesGLM,                                     \
-    prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
-    function=GradientOptimization, \
+    learning_function=None,                                \
+    function=None,                                         \
     control_signals=None,                                  \
     modulation=ModulationParam.MULTIPLICATIVE,             \
     params=None,                                           \
     name=None,                                             \
     prefs=None)
 
-    Subclass of `ControlMechanism <ControlMechanism>` that learns to optimize its `ControlSignals <ControlSignal>`.
+    Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
+    performance of the `Composition` to which it belongs
 
     Arguments
     ---------
-
-    feature_predictors : Mechanism, OutputState, Projection, dict, or list containing any of these
-        specifies the values that the LVOCControlMechanism learns to use for determining its `allocation_policy
-        <LVOCControlMechanism.allocation_policy>`.  Any `InputState specification <InputState_Specification>`
-        can be used that resolves to an `OutputState` that projects to the InputState.  In addition, a dictionary
-        with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the Composition's `ORIGIN` Mechanism(s)
-        (see `LVOCControlMechanism_Creation` for details).
-
-    feature_function : Function or function : default None
-        specifies the `function <InputState.function>` for the `InputState` assigned to each `feature_predictor
-        <LVOCControlMechanism_Feature_Predictors>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
@@ -227,11 +216,6 @@ class OptimizationControlMechanism(ControlMechanism):
         <LVOCControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
         `control_signals <LVOCControlMechanism.control_signals>` from the `prediction_vector
         <LVOCControlMechanism.prediction_vector>` (see `LVOCControlMechanism_Learning_Function` for details).
-
-    prediction_terms : List[PV] : default [PV.F, PV.C, PV.FC, PV.COST]
-        specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-        items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
-        if `None` is specified, the default values will automatically be assigned.
 
     function : OptimizationFunction, function or method : default GradientOptimization
         specifies the function used to optimize the `allocation_policy`;  must take as its sole argument an array
@@ -258,11 +242,6 @@ class OptimizationControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    feature_values : 1d ndarray
-        the current `values <InputState.value>` of the InputStates used by `learning_function <LVOCControlMechanism.learning_function>`
-        to determine `allocation_policy <LVOCControlMechanism.allocation_policy>` (see
-        `LVOCControlMechanism_Feature_Predictors` for details about feature_predictors).
-
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the LVOCControlMechanism to evaluate the performance of its `system
         <LVOCControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument
@@ -279,23 +258,6 @@ class OptimizationControlMechanism(ControlMechanism):
     monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
         a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
-
-    prediction_terms : List[PV]
-        identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector.vector>`.
-        Items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
-
-    prediction_vector : PredictionVector
-        object with `vector <PredictionVector.vector>` containing current values of `feature_predictors
-        <LVOCControlMechanism_Feature_Predictors>` `control_signals <LVOCControlMechanism.control_signals>`,
-        their interactions, and `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`
-        as specified in `prediction_terms <LVOCControlMechanism.prediction_terms>`, as well as an `update_vector`
-        <PredictionVector.update_vector>` method used to update their values, and attributes for accessing their values.
-
-        COMMENT:
-        current values, respectively, of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`,
-        interaction terms for feature_predictors x control_signals, `control_signals
-        <LVOCControlMechanism.control_signals>`, and `costs <ControlSignal.cost>` of control_signals.
-        COMMENT
 
     prediction_weights : 1d ndarray
         weights assigned to each term of `prediction_vector <LVOCControlMechanism.prediction_vectdor>`
@@ -349,7 +311,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <LINK>` for details).
     """
 
-    componentType = LVOC_CONTROL_MECHANISM
+    componentType = OPTIMIZATION_CONTROL_MECHANISM
     # initMethod = INIT_FULL_EXECUTE_METHOD
     # initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -385,23 +347,10 @@ class OptimizationControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        # Avoid mutable default:
-        prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
-        if ALL in prediction_terms:
-            prediction_terms = list(PV.__members__.values())
-
-        if feature_predictors is None:
-            # Included for backward compatibility
-            if 'predictors' in kwargs:
-                feature_predictors = kwargs['predictors']
-                del(kwargs['predictors'])
-            else:
-                raise LVOCError("{} arg for {} must be specified".format(repr(FEATURE_PREDICTORS),
-                                                                         self.__class__.__name__))
         if kwargs:
                 for i in kwargs.keys():
-                    raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
-                                                                                        repr(i)))
+                    raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
+                                                            format(self.__class__.__name__, repr(i)))
 
         self.learning_function = learning_function
 
@@ -430,26 +379,10 @@ class OptimizationControlMechanism(ControlMechanism):
         if (OBJECTIVE_MECHANISM in request_set and
                 isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
                 and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-            raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
-                            format(ObjectiveMechanism.__name__, self.name,
-                                   request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
-
-        if PREDICTION_TERMS in request_set:
-            if not all(term in PV for term in request_set[PREDICTION_TERMS]):
-                raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
-                                format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
-
-        if PREDICTION_WEIGHT_PRIORS in request_set and request_set[PREDICTION_WEIGHT_PRIORS]:
-            priors = request_set[PREDICTION_WEIGHT_PRIORS]
-            if isinstance(priors, dict):
-                if not all(key in PV for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
-                    raise LVOCError("One or more keys in dict specifed for {} arg of {} is not a member of the {} enum".
-                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name, PV.__class__.__name__))
-                if not all(key in self.prediction_terms for key in request_set[PREDICTION_WEIGHT_PRIORS.keys()]):
-                    raise LVOCError("One or more keys in dict specifed for {} arg of {} "
-                                    "is for a prediction term not specified in {} arg".
-                                    format(repr(PREDICTION_WEIGHT_PRIORS), self.name,
-                                           PV.__class__.__name__, repr(PREDICTION_TERMS)))
+            raise OptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
+                                                    format(ObjectiveMechanism.__name__, self.name,
+                                                           request_set[OBJECTIVE_MECHANISM],
+                                                           repr(MONITORED_OUTPUT_STATES)))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
