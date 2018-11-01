@@ -95,14 +95,14 @@ class ConditionGenerator:
     def get_condition_struct_type(self, composition = None):
         composition = self.composition if composition is None else composition
         structs = [self.get_private_condition_struct_type(composition)]
-        for node in self.composition.c_nodes:
+        for node in composition.c_nodes:
             structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
         return ir.LiteralStructType(structs)
 
     def get_condition_initializer(self, composition = None):
         composition = self.composition if composition is None else composition
         data = [self.get_private_condition_initializer(composition)]
-        for node in self.composition.c_nodes:
+        for node in composition.c_nodes:
             data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
         return tuple(data)
 
