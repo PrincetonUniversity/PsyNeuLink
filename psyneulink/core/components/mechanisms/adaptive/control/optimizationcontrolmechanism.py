@@ -46,13 +46,15 @@ Learning Function
 The `learning_function <OptimizationControlMechanism.learning_function>` of an OptimizationControlMechanism is used
 to generate a model that predicts, for a given `allocation_policy <OptimizationControlMechanism.allocation_policy>`,
 the outcome of processing for the `Composition` to which the OptimizatonControlMechanism belongs (as reported by its
-`objective_mechanism <OptimizationControlMechanism.objective_mechanism>`.  The function must return an array of
-weights (the `prediction_weights <OptimizationControlMechanism.prediction_weights>`, one for each of the
-OptimizationControlMechanism`s `control_signals <OptimizationControlMechanism.control_signals>` and any other values
-used by its primary `function <OptimizationControlMechanism.function>` to optimize its `allocation_policy
-<OptimizationControlMechanism.allocation_policy>`. By default, the `learning_function
-<OptimizationControlMechanism.function>` returns a `prediction_weights
-<OptimizationControlMechanism.prediction_weights>` array that is an identity array the length of the
+`objective_mechanism <OptimizationControlMechanism.objective_mechanism>`. The function takes as its arguments an array
+of values it uses to predict the outcome of processing, and the most recent outcome of processing.  It returns an array
+of weights that is assigned as `prediction_weights),  one for each of the values in the first array it is passed, that
+is used by its primary `function <OptimizationControlMechanism.function>` to optimize its  `allocation_policy
+<OptimizationControlMechanism.allocation_policy>`. The default `learning_function
+<OptimizationControlMechanism.function>` takes as its arguments the `variable <ControlSignal.variable>` of the
+OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>`) and the `value
+<OutputState.value>` of the *OUTCOME* `OUtputState` of its `objective_mechanism
+<OptimizationControlMechanism.objective_mechanism>`, and returns an identity array the length of the
 OptimizationControlMechanism's `allocation_policy <OptimizationControlMechanism.allocation_policy>`, which gives
 equal weight to all of the OptimizationControlMechanism's `control_signals
 <OptimizationControlMechanism.control_signals>`.
@@ -105,38 +107,25 @@ When an OptimizationControlMechanism executes, it calls its `learning_function
 `allocation_policy <OptimizationControlMechanism.allocation_policy>` that optimizes the value of its
 `objective_function <OptimizationControlMechanism.objective_function>`.
 
- and the
-`prediction_weights <OptimizationControlMechanism.prediction_weights>` provided by its `learning_function
-<OptimizationControlMechanism.learning_function>`,
-
-uses the `values <ControlSignals.values>` of its `control_signals
-<OptimizationControlMechanism.control_signals>`, usually together with their `costs <ControlSignal.cost>`,
-to update its prediction of the
-outcome of processing (the `value <ObjectiveMechanisms.value>` of its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` minus the cost of its `control_signals
-<LVOCControlMechanism.control_signals>`), and then determines the `allocation_policy
-<LVOCControlMechanism.allocation_policy>` that maximizes the outcome for the current `trial` of execution.
 Specifically, it executes the following steps:
 
-  * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
-    <LVOCControlMechanism.feature_values>`, `values <ControlSignal.values>` of its `control_signals
-    <LVOCControlMechanism.control_signals>` (computed using their `functions <ControlSignal.function>`),
-    and their `costs <ControlSignal.cost>` (computed using their `cost_functions <ControlSignal.cost_functions>`).
+  * Calls its `learning_function <OptimizationControlMechanism.learning_function>` with the current variables of its
+    `control_signals <OptimizationControlMechanism.control_signals>` and the outcome received from the
+    OptimizationControlMechanism's `objective_mechanism <OptimizationControlMechanism.objective_mechanism>`,
+    discounted by the `costs <ControlSignal.cost>` associated with each of its `control_signals
+    <LVOCControlMechanism.control_signals>`, to update its `prediction_weights
+    <LVOCControlMechanism.prediction_weights>`.
 
-  * Calls its `learning_function <LVOCControlMechanism.learning_function>` with the `prediction_vector
-    <LVOCControlMechanism.prediction_vector>` and the outcome received from the
-    LVOCControlMechanism's `objective_mechanism <LVOCControlMechanism.objective_mechanism>`, discounted by the
-    `costs <ControlSignal.cost>` associated with each of its `control_signals <LVOCControlMechanism.control_signals>`,
-    to update its `prediction_weights <LVOCControlMechanism.prediction_weights>`.
+  * Calls its `function <OptimizationControlMechanism.function>`, which uses the current variables of its
+    `control_signals <OptimizationControlMechanism.control_signals>`, their `cost
+    <ControlSignal.cost>`, and `prediction_weights <OptimizationControlMechanism.prediction_weights>` to
+    determine the `allocation_policy <OptimizationControlMechanism.alocation_policy>` that yields the best value of
+    its `objective_function <OptimizationControlMechanism.objective_function>`.
 
-  * Calls its `function <LVOCControlMechanism.function>`, which uses the current `feature_values
-    <LVOCControlMechanism.feature_values>` and `prediction_weights <LVOCControlMechanism.prediction_weights>` to
-    determine the `allocation_policy <LVOCControlMechanism.alocation_policy>` that yields the greatest `EVC
-    <LVOCControlMechanism_EVC>`.
-
-The values in the `allocation_policy <LVOCControlMechanism.allocation_policy>` returned by `function
-<LVOCControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its `control_signals
-<LVOCControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
+The values in the `allocation_policy <OptimizationControlMechanism.allocation_policy>` returned by `function
+<OptimizationControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its
+`control_signals <OptimizationControlMechanism.control_signals>`, from which they compute their `values
+<ControlSignal.value>`.
 
 COMMENT:
 .. _LVOCControlMechanism_Examples:
@@ -183,68 +172,15 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
 
 __all__ = [
-    'LVOC', 'OptimizationControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'OptimizationControlMechanism', 'OptimizationControlMechanismError'
 ]
 
-LVOC = 'LVOC'
-FEATURE_PREDICTORS = 'feature_predictors'
-SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 PREDICTION_TERMS = 'prediction_terms'
 PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 
 
-class PV(Enum):
-# class PV(AutoNumberEnum):
-    '''PV()
-    Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
-
-    Attributes
-    ----------
-
-    F
-        Main effect of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`.
-    C
-        Main effect of `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    FF
-        Interaction among `feature_predictors <LVOCControlMechanism_Feature_Predictors>`.
-    CC
-        Interaction among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    FC
-        Interaction between `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
-        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    FFC
-        Interaction between interactions of `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
-        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    FCC
-        Interaction between `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and interactions among
-        `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    FFCC
-        Interaction between interactions of `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
-        interactions among `values <ControlSignal.value>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    COST
-        Main effect of `costs <ControlSignal.cost>` of `control_signals <LVOCControlMechanism.control_signals>`.
-    '''
-    # F =    auto()
-    # C =    auto()
-    # FF =   auto()
-    # CC =   auto()
-    # FC =   auto()
-    # FFC =  auto()
-    # FCC =  auto()
-    # FFCC = auto()
-    # COST = auto()
-    F =    0
-    C =    1
-    FF =   2
-    CC =   3
-    FC =   4
-    FFC =  5
-    FCC =  6
-    FFCC = 7
-    COST = 8
-
-class LVOCError(Exception):
+class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -253,12 +189,8 @@ class LVOCError(Exception):
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(                               \
-    feature_predictors,                                    \
-    feature_function=None,                                 \
+    """OptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
-    origin_objective_mechanism=False,                      \
-    terminal_objective_mechanism=False,                    \
     function=BayesGLM,                                     \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
     function=GradientOptimization, \

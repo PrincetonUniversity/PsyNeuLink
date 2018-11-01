@@ -404,7 +404,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     objective_mechanism=None,                              \
     origin_objective_mechanism=False,                      \
     terminal_objective_mechanism=False,                    \
-    function=BayesGLM,                                     \
+    learning_function=BayesGLM,                            \
     prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
     function=GradientOptimization, \
     control_signals=None,                                  \
