@@ -689,8 +689,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
         #     - Variance of the activation values across units
         # Return:
         #     value of input transformed by TransferMechanism function in OutputState[TransferOuput.RESULT].value
-        #     mean of items in RESULT OutputState[TransferOuput.MEAN].value
-        #     variance of items in RESULT OutputState[TransferOuput.VARIANCE].value
+        #     mean of items in RESULT OutputState[TransferOuput.OUTPUT_MEAN].value
+        #     variance of items in RESULT OutputState[TransferOuput.OUTPUT_VARIANCE].value
         #
         # Arguments:
         #

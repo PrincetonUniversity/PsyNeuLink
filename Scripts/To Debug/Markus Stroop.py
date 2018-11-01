@@ -25,16 +25,16 @@ task_layer = pnl.TransferMechanism(size=2,
 #   time averaging = integration_rate = 0.1
 unit_noise = 0.001
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0), #should be able to get same result with offset = -4.0
+                                            function=pnl.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                                             integrator_mode=True,
-                                            noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                            noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #    words_hidden: ('RED','GREEN')
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
-                                           noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                           noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -44,7 +44,7 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 response_layer = pnl.TransferMechanism(size=2,
                                        function=pnl.Logistic,
                                        integrator_mode=True,
-                                       noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                       noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                        integration_rate=0.1,
                                        name='RESPONSE')
 #   Respond red accumulator
@@ -54,13 +54,13 @@ response_layer = pnl.TransferMechanism(size=2,
 accumulator_noise = 0.01 #0.03
 respond_red_accumulator = pnl.IntegratorMechanism(
                                    function=pnl.SimpleIntegrator(
-                                                   noise=pnl.NormalDist(mean=0,standard_dev=accumulator_noise).function,
+                                                   noise=pnl.NormalDist(mean=0,standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_red_accumulator')
 #   Respond green accumulator
 respond_green_accumulator = pnl.IntegratorMechanism(
                                    function=pnl.SimpleIntegrator(
-                                                   noise=pnl.NormalDist(mean=0,standard_dev=accumulator_noise).function,
+                                                   noise=pnl.NormalDist(mean=0,standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_green_accumulator')
 
@@ -171,7 +171,7 @@ my_Stroop = pnl.System(processes=[colors_process,
                        name='FEEDFORWARD_STROOP_SYSTEM')
 
 # my_Stroop.show()
-my_Stroop.show_graph(show_dimensions=pnl.ALL)
+# my_Stroop.show_graph(show_dimensions=pnl.ALL)
 
 # Function to create test trials
 # a RED word input is [1,0] to words_input_layer and GREEN word is [0,1]
@@ -244,9 +244,9 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
         colors_hidden_layer.integrator_mode = True
         words_hidden_layer.integrator_mode = True
         response_layer.integrator_mode = True
-        colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
-        response_layer.noise = pnl.NormalDist(mean=0, standard_dev=unit_noise).function
+        colors_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        words_hidden_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
+        response_layer.noise = pnl.NormalDist(mean=0, standard_deviation=unit_noise).function
 
         # run system with test pattern
         my_Stroop.run(inputs=test_trial_input, termination_processing=terminate_trial)

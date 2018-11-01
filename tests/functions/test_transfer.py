@@ -21,7 +21,7 @@ softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 test_data = [
     (Function.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
     (Function.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var) ),
-    (Function.Logistic, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3}, None, 1/ (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)) ),
+    (Function.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1/ (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)) ),
     (Function.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
     (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
     (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),

@@ -9,7 +9,7 @@ myInputLayer = pnl.TransferMechanism(
 
 myHiddenLayer = pnl.TransferMechanism(
     name='Hidden Layer 1',
-    function=pnl.Logistic(gain=1.0, bias=0),
+    function=pnl.Logistic(gain=1.0, x_0=0),
     default_variable=np.zeros((5,))
 )
 

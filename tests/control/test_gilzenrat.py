@@ -193,7 +193,7 @@ class TestGilzenratMechanisms:
 #                                                     # hetero=-1.0,
 #                                                     time_step_size=time_step_size,
 #                                                     noise=NormalDist(mean=0.0,
-#                                                                      standard_dev=standard_deviation).function,
+#                                                                      standard_deviation=standard_deviation).function,
 #                                                     function=Logistic(bias=0.0),
 #                                                     name='DECISION LAYER')
 #
@@ -207,7 +207,7 @@ class TestGilzenratMechanisms:
 #                                               matrix=np.matrix([[0.5]]),
 #                                               function=Logistic(bias=2),
 #                                               time_step_size=time_step_size,
-#                                               noise=NormalDist(mean=0.0, standard_dev=standard_deviation).function,
+#                                               noise=NormalDist(mean=0.0, standard_deviation=standard_deviation).function,
 #                                               name='RESPONSE')
 #
 #         # Implement response layer with input_state for ObjectiveMechanism that has a single value

@@ -32,12 +32,12 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     #                                             function=pnl.Logistic(gain=1.0, bias=4.0),
     #                                             # should be able to get same result with offset = -4.0
     #                                             integrator_mode=True,
-    #                                             noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+    #                                             noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
     #                                             integration_rate=0.1,
     #                                             name='COLORS HIDDEN')
 
     colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                 # should be able to get same result with offset = -4.0
                                                 integrator_mode=True,
                                                 noise=0.0,
@@ -47,11 +47,11 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     # words_hidden_layer = pnl.TransferMechanism(size=2,
     #                                            function=pnl.Logistic(gain=1.0, bias=4.0),
     #                                            integrator_mode=True,
-    #                                            noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+    #                                            noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
     #                                            integration_rate=0.1,
     #                                            name='WORDS HIDDEN')
     words_hidden_layer = pnl.TransferMechanism(size=2,
-                                               function=pnl.Logistic(gain=1.0, bias=4.0),
+                                               function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                integrator_mode=True,
                                                noise=0.0,
                                                integration_rate=0.1,
@@ -66,7 +66,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     #                                        function=pnl.Logistic,
     #                                        name='RESPONSE',
     #                                        integrator_mode=True,
-    #                                        noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+    #                                        noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
     #                                        integration_rate=0.1)
     response_layer = pnl.TransferMechanism(size=2,
                                            function=pnl.Logistic,
@@ -80,7 +80,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
     #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
     accumulator_noise = 0.1
     # respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-    #                                                                                                      standard_dev= accumulator_noise).function,
+    #                                                                                                      standard_deviation= accumulator_noise).function,
     #                                                                                 rate=0.1),
     #                                                   name='respond_red_accumulator')
     respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.0,
@@ -88,7 +88,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
                                                       name='respond_red_accumulator')
     #   Respond green accumulator
     # respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-    #                                                                                                        standard_dev=accumulator_noise).function,
+    #                                                                                                        standard_deviation=accumulator_noise).function,
     #                                                                                   rate=0.1),
     #                                                     name='respond_green_accumulator')
     respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.0,
@@ -255,7 +255,7 @@ def test_lauras_cohen_1990_model(red_color, green_color, red_word, green_word, C
         # Turn on accumulation
         switch_integrator_mode(mechanisms, True)
         # Turn on noise
-        # switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_dev=unit_noise).function)
+        # switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_deviation=unit_noise).function)
         # Execute until one of the accumulators crosses the threshold
         my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.While(pass_threshold,
                                                                            respond_red_accumulator,

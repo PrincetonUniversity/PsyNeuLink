@@ -19,6 +19,7 @@ Functions
              Logistic,
              ReLU,
              OneHot,
+             Gaussian,
              SoftMax,
              LinearMatrix,
              Integrator,

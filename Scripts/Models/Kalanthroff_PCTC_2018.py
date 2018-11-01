@@ -66,9 +66,7 @@ def my_conflict_function(variable):
 # Create color feature layer, word feature layer, task demand layer and response layer
 color_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
-    function=pnl.Logistic(      # Define Logistic fucntion & set gain
-        gain=4, bias=1
-    ),       # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),       # to 4 & bias to 1
     integrator_mode=True,       # Set Integrator mode to True
     integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
@@ -82,9 +80,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
 # The word_feature_layer is set up as the color_feature_layer
 word_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
-    function=pnl.Logistic(           # Define Logistic fucntion & set gain
-        gain=4, bias=1
-    ),            # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
     integrator_mode=True,   # Set Integrator mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
@@ -99,9 +95,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
 # The response_layer is set up as the color_feature_layer & the word_feature_layer
 response_layer = pnl.RecurrentTransferMechanism(
     size=2,                         # Define unit size
-    function=pnl.Logistic(         # Define Logistic fucntion & set gain
-        gain=4, bias=1
-    ),           # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),           # to 4 & bias to 1
     integrator_mode=True,           # Set Integrator mode to True
     integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
@@ -117,9 +111,7 @@ response_layer = pnl.RecurrentTransferMechanism(
 # and a differnet inhibition weight on the hetero
 task_demand_layer = pnl.RecurrentTransferMechanism(
     size=2,                      # Define unit size
-    function=pnl.Logistic(           # Define Logistic fucntion & set gain
-        gain=4, bias=1
-    ),            # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
     integrator_mode=True,   # Set Integrator mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer

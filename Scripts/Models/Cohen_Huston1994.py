@@ -47,20 +47,20 @@ task_layer = pnl.RecurrentTransferMechanism(
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=pnl.Logistic(bias=4.0),
+    function=pnl.Logistic(x_0=4.0),
     integrator_mode=True,
     hetero=-2.0,
-    # noise=pnl.NormalDist(mean=0.0, standard_dev=.0).function,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0).function,
     integration_rate=0.1,  # cohen-huston text says 0.01
     name='COLORS HIDDEN'
 )
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=pnl.Logistic(bias=4.0),
+    function=pnl.Logistic(x_0=4.0),
     hetero=-2,
     integrator_mode=True,
-    # noise=pnl.NormalDist(mean=0.0, standard_dev=.05).function,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05).function,
     integration_rate=0.1,
     name='WORDS HIDDEN'
 )

@@ -223,7 +223,7 @@ from psyneulink.core.globals.keywords import \
     ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
     EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
     FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
+    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GAUSSIAN_FUNCTION, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
     HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
@@ -238,7 +238,9 @@ from psyneulink.core.globals.keywords import \
     STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, VALUE, DEFAULT_VARIABLE
+    VARIABLE, VARIANCE, WALD_DIST_FUNCTION, WEIGHTS, X_0, kwComponentCategory, kwPreferenceSetName, VALUE, \
+    DEFAULT_VARIABLE, OWNER
+
 
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -254,7 +256,7 @@ __all__ = [
     'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
     'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword',
+    'GammaDist', 'Gaussian', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword',
     'GradientOptimization', 'GridSearch',
     'Hebbian', 'Integrator', 'IntegratorFunction', 'is_Function', 'is_function_type',
     'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
@@ -276,6 +278,7 @@ __all__ = [
 import ctypes
 import functools
 
+from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core import llvm as pnlvm
 
 from llvmlite import ir
@@ -3301,12 +3304,12 @@ class InterfaceStateMap(InterfaceFunction):
 
     .. _Identity:
 
-    Returns variable
+    Returns `variable <InterfaceStateMap.variable>`.
 
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     params : Dict[param keyword: param value] : default None
@@ -3547,14 +3550,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     .. _Linear:
 
-    Linearly transform variable.
+    Linearly transform `variable <Linear.variable>`.
 
     Note: default values for `slope` and `intercept` implement the IDENTITY_FUNCTION
 
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     slope : float : default 1.0
@@ -3749,12 +3752,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     .. _Exponential:
 
-    Exponentially transform variable.
+    Exponentially transform `variable <Exponential.variable>`.
 
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     rate : float : default 1.0
@@ -3943,6 +3946,7 @@ class Logistic(
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
+         x_0=0.0,          \
          scale=1.0,        \
          offset=0.0,       \
          params=None,      \
@@ -3951,14 +3955,14 @@ class Logistic(
          prefs=None        \
          )
 
-    .. _fu:
+    .. _Logistic_Function:
 
-    Logistically transform variable.
+    Logistically transform `variable <Logistic.variable>`.
 
     Arguments
     ---------
 
-    variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -3966,7 +3970,11 @@ class Logistic(
 
     bias : float : default 0.0
         specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
-        and before logistic transformation.
+        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        specifies a value to subtract from each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        and before logistic transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
@@ -3997,8 +4005,12 @@ class Logistic(
         `bias <Logistic.bias>` (if it is specified).
 
     bias : float : default 0.0
-        value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
-        (if it is specified).
+        value added to each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
+        (if it is specified). This attribute is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        value subtracted from each element of `variable <Logistic.variable>` before applying the `gain <Logistic.gain>`
+        (if it is specified). This attribute is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
@@ -4020,7 +4032,7 @@ class Logistic(
     """
 
     componentName = LOGISTIC_FUNCTION
-    parameter_keywords.update({GAIN, BIAS})
+    parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
     multiplicative_param = GAIN
@@ -4030,6 +4042,7 @@ class Logistic(
 
     class Params(TransferFunction.Params):
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Param(0.0, modulable=True)
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Param(0.0, modulable=True)
 
@@ -4037,13 +4050,15 @@ class Logistic(
     def __init__(self,
                  default_variable=None,
                  gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
+                 x_0=0.0,
+                 bias=0.0,
                  offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
+                                                  x_0=x_0,
                                                   bias=bias,
                                                   offset=offset,
                                                   params=params)
@@ -4060,15 +4075,18 @@ class Logistic(
 
         gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
         bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
+        x_0_ptr, builder = self.get_param_ptr(ctx, builder, params, X_0)
         offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fsub(val, bias)
+        val = builder.fadd(val, bias)
+        val = builder.fsub(val, x_0)
         val = builder.fmul(val, gain)
         val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
@@ -4086,7 +4104,12 @@ class Logistic(
 
         .. math::
 
-            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
+            \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
+
+        .. note::
+            The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
+            accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
+            form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
 
         Arguments
         ---------
@@ -4110,13 +4133,13 @@ class Logistic(
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
+        x_0 = self.get_current_function_param(X_0)
         offset = self.get_current_function_param(OFFSET)
 
-        # result = scale * np.exp(rate * variable + bias) + offset
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         from math import e
-        result = 1. / (1 + e**(-gain * (variable - bias) + offset))
+        result = 1. / (1 + e**(-gain * (variable + bias - x_0) + offset))
 
         return self.convert_output_type(result)
 
@@ -4153,13 +4176,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
          prefs=None        \
          )
     .. _Relu:
-    Perform rectified linear transformation on variable,
+    Perform rectified linear transformation on `variable <ReLU.variable>`.
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
 
     Arguments
     ---------
-    variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
@@ -4180,8 +4203,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         specifies the name of the Function.
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
     Attributes
     ----------
+
     variable : number or np.array
         contains value to be transformed.
     gain : float : default 1.0
@@ -4211,6 +4236,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bounds = (None,None)
     multiplicative_param = GAIN
     additive_param = BIAS
+
     class Params(TransferFunction.Params):
         gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -4287,6 +4313,213 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
 MODE = 'mode'
 
+
+class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
+    """
+    Gaussian(              \
+         default_variable, \
+         variance=1.0,     \
+         bias=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Gaussian_Function:
+
+    Appply Gaussian transform to `variable <Gaussian.variable>`, by drawing a sample from the normal distribution
+    centered on the value of each of its elements.
+
+    Arguments
+    ---------
+
+    default_variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value used as the mean for the Guassian transform.
+
+    variance : float : default 1.0
+        specifies "width" of the Gaussian transform applied to each element of `variable <Gaussian.variable>`.
+
+    bias : float : default 0.0
+        value to add to each element after applying height and before applying Gaussian transform.
+
+    scale : float : default 1.0
+        value by which to multiply each element after applying Gaussian transform.
+
+    offset : float : default 0.0
+        value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        value used as the mean of the Gaussian transform.
+
+    variance : float : default 1.0
+        variance used for Gaussian transform.
+
+    bias : float : default 0.0
+        value added to each element after applying height and before applying the Gaussian transform.
+
+    scale : float : default 0.0
+        value by which each element is multiplied after applying the Gaussian transform.
+
+    offset : float : default 0.0
+        value added to each element after applying the Gaussian transform and scale.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = GAUSSIAN_FUNCTION
+    # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
+
+    bounds = (None,None)
+    multiplicative_param = VARIANCE
+    additive_param = BIAS
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(TransferFunction.Params):
+        variance = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Param(0.0, modulable=True)
+        offset = Param(0.0, modulable=True)
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 variance: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(variance=variance,
+                                                  bias=bias,
+                                                  scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def get_param_ids(self):
+        return VARIANCE, BIAS, SCALE, OFFSET
+
+    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+    #
+    #     variance_ptr, builder = self.get_param_ptr(ctx, builder, params, VARIANCE)
+    #     bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
+    #     scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+    #     offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+    #
+    #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
+    #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+    #     scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+    #     offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+    #
+    #     exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+    #     val = builder.load(ptri)
+    #     val = builder.fadd(val, bias)
+    #     val = builder.fmul(val, variance)
+    #     val = builder.fsub(offset, val)
+    #     val = builder.call(exp_f, [val])
+    #     val = builder.fadd(ctx.float_ty(1), val)
+    #     val = builder.fdiv(ctx.float_ty(1), val)
+    #
+    #     builder.store(val, ptro)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return:
+
+        .. math::
+
+            scale * e^{-\\frac{(variable-bias)^{2}}{variance * \\sqrt{2\\pi}}} + offset
+
+        Arguments
+        ---------
+
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        Gaussian transformation of variable : number or np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variance = self.get_current_function_param(VARIANCE)
+        bias = self.get_current_function_param(BIAS)
+        scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
+
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        result = scale * np.random.normal(variable+bias, variance) + offset
+
+        return self.convert_output_type(result)
+
+
+    # def derivative(self, output, input=None):
+    #     """
+    #     derivative(output)
+    #
+    #     Derivative of `function <Logistic.function>`.
+    #
+    #     Returns
+    #     -------
+    #
+    #     derivative :  number
+    #         output * (1 - output).
+    #
+    #     """
+    #     return output * (1 - output)
+
+
 class SoftMax(TransferFunction):
     """
     SoftMax(               \
@@ -4301,7 +4534,7 @@ class SoftMax(TransferFunction):
 
     .. _SoftMax:
 
-    SoftMax transform of variable (see `The Softmax function and its derivative
+    SoftMax transform of `variable <Softmax.variable>` (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
     Arguments
@@ -4351,7 +4584,7 @@ class SoftMax(TransferFunction):
             * **ALL**: array of all SoftMax-transformed values (the default);
             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after selection the
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after setting the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
@@ -4547,8 +4780,12 @@ class SoftMax(TransferFunction):
                  params=None,
                  context=None):
         """
-        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
-        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        Return:
+
+        .. math::
+
+            \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
+
         filtered by `ouptput <SoftMax.output>` specification.
 
         Arguments
@@ -5352,7 +5589,7 @@ class OneHot(SelectionFunction):
             * *MAX_ABS_VAL*: element with the maximum absolute value;
             * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
             * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
-            * *PROB*: probabilistically chosen element based on probabilities passed in second item of
+            * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
             * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
 
     owner : Component
@@ -10079,12 +10316,12 @@ class DistributionFunction(Function_Base):
 
 class NormalDist(DistributionFunction):
     """
-    NormalDist(                     \
-             mean=0.0,              \
-             standard_dev=1.0,      \
-             params=None,           \
-             owner=None,            \
-             prefs=None             \
+    NormalDist(                      \
+             mean=0.0,               \
+             standard_deviation=1.0, \
+             params=None,            \
+             owner=None,             \
+             prefs=None              \
              )
 
     .. _NormalDist:
@@ -10097,7 +10334,7 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
@@ -10120,7 +10357,7 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
@@ -10145,19 +10382,19 @@ class NormalDist(DistributionFunction):
 
     class Params(DistributionFunction.Params):
         mean = Param(0.0, modulable=True)
-        standard_dev = Param(1.0, modulable=True)
+        standard_deviation = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  mean=0.0,
-                 standard_dev=1.0,
+                 standard_deviation=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_dev=standard_dev,
+                                                  standard_deviation=standard_deviation,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -10172,7 +10409,7 @@ class NormalDist(DistributionFunction):
 
         if STANDARD_DEVIATION in target_set:
             if target_set[STANDARD_DEVIATION] <= 0.0:
-                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
 
     def function(self,
@@ -10192,12 +10429,12 @@ class NormalDist(DistributionFunction):
 
 class UniformToNormalDist(DistributionFunction):
     """
-    UniformToNormalDist(            \
-             mean=0.0,              \
-             standard_dev=1.0,      \
-             params=None,           \
-             owner=None,            \
-             prefs=None             \
+    UniformToNormalDist(             \
+             mean=0.0,               \
+             standard_deviation=1.0, \
+             params=None,            \
+             owner=None,             \
+             prefs=None              \
              )
 
     .. _UniformToNormalDist:
@@ -10223,7 +10460,7 @@ class UniformToNormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
@@ -10246,7 +10483,7 @@ class UniformToNormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution
 
-    standard_dev : float : default 1.0
+    standard_deviation : float : default 1.0
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
@@ -10270,7 +10507,7 @@ class UniformToNormalDist(DistributionFunction):
     class Params(DistributionFunction.Params):
         variable = Param(np.array([0]), read_only=True)
         mean = Param(0.0, modulable=True)
-        standard_dev = Param(1.0, modulable=True)
+        standard_deviation = Param(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -10278,13 +10515,13 @@ class UniformToNormalDist(DistributionFunction):
     def __init__(self,
                  default_variable=None,
                  mean=0.0,
-                 standard_dev=1.0,
+                 standard_deviation=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_dev=standard_dev,
+                                                  standard_deviation=standard_deviation,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -11549,6 +11786,7 @@ OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
+DIRECTION = 'direction'
 
 class OptimizationFunction(Function_Base):
     """OptimizationFunction( \
@@ -11584,10 +11822,16 @@ class OptimizationFunction(Function_Base):
     The current iteration is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until all
     values of `search_space <OptimizationFunction.search_space>` have been evaluated (i.e., `search_termination_function
     <OptimizationFunction.search_termination_function>` returns `True`).  The `function <OptimizationFunction.function>`
-    returns the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
-    <OptimizationFunction.objective_function>`), as well as lists that may contain all of the samples evaluated and
-    their values, depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
-    <OptimizationFunction.save_values>` are `True`, respectively.
+    returns:
+
+    - the last sample evaluated (which may or may not be the optimal value, depending on the `objective_function
+      <OptimizationFunction.objective_function>`);
+
+    - the value of `objective_function <OptimzationFunction.objective_function>` associated with the last sample;
+
+    - two lists, that may contain all of the samples evaluated and their values, depending on whether `save_samples
+      <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are `True`,
+      respectively.
 
     .. _OptimizationFunction_Defaults:
 
@@ -11818,13 +12062,14 @@ class OptimizationFunction(Function_Base):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : array, list, list
-            array contains sample that yields the optimal value of the `optimization process
-            <OptimizationFunction_Process>`.  If `save_samples <OptimizationFunction.save_samples>` is `True`,
-            first list contains all the values sampled in the order they were evaluated; otherwise it is empty.  If
-            `save_values <OptimizationFunction.save_values>` is `True`, second list contains the values returned by
-            `objective_function <OptimizationFunction.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : array, array, list, list
+            first array contains sample that yields the optimal value of the `optimization process
+            <OptimizationFunction_Process>`, and second array contains the value of `objective_function
+            <OptimizationFunction.objective_function>` for that sample.  If `save_samples
+            <OptimizationFunction.save_samples>` is `True`, first list contains all the values sampled in the order
+            they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
+            second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
+            for all the samples in the order they were evaluated; otherwise it is empty.
         '''
 
         if self._unspecified_args and self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -11832,49 +12077,60 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        variable = self._update_variable(self._check_args(variable, params, context))
+        sample = self._update_variable(self._check_args(variable, params, context))
 
-        current_variable = variable
-        current_value = self.objective_function(current_variable)
+        current_sample = sample
+        current_value = self.objective_function(current_sample)
 
         self._samples = []
         self._values = []
 
         # Initialize variables used in while loop
-        iteration=0
+        self.iteration=0
+
+        # Set up progress bar
+        _show_progress = False
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+            _show_progress = True
+            _progress_bar_char = '.'
+            _progress_bar_rate_str = ""
+            _search_space_size = len(self.search_space)
+            _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+            if _progress_bar_rate > 1:
+                _progress_bar_rate_str = str(_progress_bar_rate) + " "
+            print("\n{} executing optimization process (one {} for each {}of {} samples): ".
+                  format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
+            _progress_bar_count = 0
 
         # Iterate optimization process
-        while self.search_termination_function(current_variable, current_value, iteration):
+        while self.search_termination_function(current_sample, current_value, self.iteration):
 
-            # Get next sample of variable
-            new_variable = self.search_function(current_variable, iteration)
+            if _show_progress:
+                increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
+                if increment_progress_bar:
+                    print(_progress_bar_char, end='', flush=True)
+                _progress_bar_count +=1
 
-            # Compute new value based on new variable
-            new_value = self.objective_function(new_variable)
+            # Get next sample of sample
+            new_sample = self.search_function(current_sample, self.iteration)
 
-            # # TEST PRINT:
-            # print(
-            #         'current_variable', new_variable,
-            #         '\ncurrent_value: ', current_value,
-            #         '\nnew_value: ', new_value,
-            # )
-            # # self.update_function.__self__.test_print()
-            # # TEST PRINT END
+            # Compute new value based on new sample
+            new_value = self.objective_function(new_sample)
 
-            iteration+=1
-            if self.max_iterations and iteration > self.max_iterations:
+            self.iteration+=1
+            if self.max_iterations and self.iteration > self.max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))
                 break
 
-            current_variable = new_variable
+            current_sample = new_sample
             current_value = new_value
 
             if self.save_samples:
-                self._samples.append(new_variable)
+                self._samples.append(new_sample)
             if self.save_values:
                 self._values.append(current_value)
 
-        return new_variable, self._samples, self._values
+        return new_sample, new_value, self._samples, self._values
 
 
 ASCENT = 'ascent'
@@ -11899,7 +12155,7 @@ class GradientOptimization(OptimizationFunction):
         prefs=None                   \
         )
 
-    Return sample of variable that yields optimized value of `objective_function
+    Return sample that yields optimized value of `objective_function
     <GradientOptimization.objective_function>`.
 
     .. _GradientOptimization_Process:
@@ -11929,10 +12185,10 @@ class GradientOptimization(OptimizationFunction):
     `convergence_criterion <GradientOptimization.convergence_criterion>` falls below `convergence_threshold
     <GradientOptimization.convergence_threshold>` or the number of iterations exceeds `max_iterations
     <GradientOptimization.max_iterations>`.  The `function <GradientOptimization.function>` returns the last sample
-    evaluated by `objective_function <OptimizationFunction.objective_function>` (presumed to be the optimal one),
-    as well as lists that may contain all of the samples evaluated and their values, depending on whether
-    `save_samples <OptimizationFunction.save_samples>` and/or `save_vales <OptimizationFunction.save_values>` are
-    `True`, respectively.
+    evaluated by `objective_function <GradientOptimization.objective_function>` (presumed to be the optimal one),
+    the value of the function, as well as lists that may contain all of the samples evaluated and their values,
+    depending on whether `save_samples <OptimizationFunction.save_samples>` and/or `save_vales
+    <OptimizationFunction.save_values>` are `True`, respectively.
 
     .. _GradientOptimization_Gradient_Calculation:
 
@@ -12150,9 +12406,10 @@ class GradientOptimization(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GradientOptimization.objective_function>`, depending on `direction <GradientOptimization.direction>`,
+            and the second array contains the value of the function for that sample.
             If `save_samples <GradientOptimization.save_samples>` is `True`, first list contains all the values
             sampled in the order they were evaluated; otherwise it is empty.  If `save_values
             <GradientOptimization.save_values>` is `True`, second list contains the values returned by
@@ -12160,14 +12417,16 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        return_optimal, all_samples, all_values = super().function(variable=variable, params=params, context=context)
+        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
+                                                                                  params=params,
+                                                                                  context=context)
         return_all_samples = return_all_values = []
         if self._return_samples:
             return_all_samples = all_samples
         if self._return_values:
             return_all_values = all_values
         # return last_variable
-        return return_optimal, return_all_samples, return_all_values
+        return optimal_sample, optimal_value, return_all_samples, return_all_values
 
     def _follow_gradient(self, variable, sample_num):
 
@@ -12182,12 +12441,6 @@ class GradientOptimization(OptimizationFunction):
 
         # Compute gradients with respect to current variable
         self._gradients = self.gradient_function(variable)
-
-        # # TEST_PRINT:
-        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
-        # print('gradients: ', self._gradients)
-        # print('step_size: ', self._current_step_size)
-        #  # END TEST_PRINT
 
         # Update variable based on new gradients
         return variable + self.direction * self._current_step_size * np.array(self._gradients)
@@ -12245,10 +12498,11 @@ class GridSearch(OptimizationFunction):
 
     The current iteration is contained in `iteration <GridSearch.iteration>`. Iteration continues until all values of
     `search_space <GridSearch.search_space>` have been evaluated, or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The sample that yielded either the highest (if `direction <GridSearch.direction>` is *MAXIMIZE*) or
-    lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of of the `objective_function
-    <GridSearch.objective_function>` is returned, along with the samples evaluated and their values if either
-    `save_samples <GridSearch.save_samples>` or `save_values <GridSearch.save_values>` is `True`, respectively.
+    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
+    <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
+    samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values
+    <GridSearch.save_values>` is `True`, respectively.
 
     Arguments
     ---------
@@ -12342,10 +12596,7 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
 
-        if direction is MAXIMIZE:
-            self.direction = 1
-        else:
-            self.direction = -1
+        self.direction = direction
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -12377,31 +12628,128 @@ class GridSearch(OptimizationFunction):
         Returns
         -------
 
-        optimal sample, saved_samples, saved_values : ndarray, list, list
-            array contains sample that yields the highest or lowest value of `objective_function
-            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`.
-            If `save_samples <GridSearch.save_samples>` is `True`, first list contains all the values
-            sampled in the order they were evaluated; otherwise it is empty.  If `save_values
-            <GridSearch.save_values>` is `True`, second list contains the values returned by
-            `objective_function <GridSearch.objective_function>` for all the samples in the order they were
-            evaluated; otherwise it is empty.
+        optimal sample, optimal value, saved_samples, saved_values : ndarray, list, list
+            first array contains sample that yields the highest or lowest value of `objective_function
+            <GridSearch.objective_function>`, depending on `direction <GridSearch.direction>`, and the
+            second array contains the value of the function for that sample. If `save_samples
+            <GridSearch.save_samples>` is `True`, first list contains all the values sampled in the order they were
+            evaluated; otherwise it is empty.  If `save_values <GridSearch.save_values>` is `True`, second list
+            contains the values returned by `objective_function <GridSearch.objective_function>` for all the samples
+            in the order they were evaluated; otherwise it is empty.
         '''
 
-        last_sample, all_samples, all_values = super().function(variable=variable, params=params, context=context)
-
-        return_optimal = all_samples[all_values.index(max(all_values))]
-
         return_all_samples = return_all_values = []
-        # if self._return_samples:
-        #     return_all_samples = all_samples
-        if self._return_values:
-            return_all_values = all_values
-        return return_optimal, return_all_samples, return_all_values
+
+        if MPI_IMPLEMENTATION:
+
+            from mpi4py import MPI
+
+            Comm = MPI.COMM_WORLD
+            rank = Comm.Get_rank()
+            size = Comm.Get_size()
+
+            self.search_space = np.atleast_2d(self.search_space)
+
+            chunk_size = (len(self.search_space) + (size-1)) // size
+            start = chunk_size * rank
+            end = chunk_size * (rank+1)
+            if start > len(self.search_space):
+                start = len(self.search_space)
+            if end > len(self.search_space):
+                end = len(self.search_space)
+
+            # # TEST PRINT
+            # print("\nContext: {}".format(self.context.flags_string))
+            # print("search_space length: {}".format(len(self.search_space)))
+            # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
+            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,end,end-start))
+
+            # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
+            samples = np.array([[]])
+            sample_optimal = np.empty_like(self.search_space[0])
+            values = np.array([])
+            value_optimal = float('-Infinity')
+            sample_value_max_tuple = (sample_optimal, value_optimal)
+
+            # Set up progress bar
+            _show_progress = False
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+                _show_progress = True
+                _progress_bar_char = '.'
+                _progress_bar_rate_str = ""
+                _search_space_size = len(self.search_space)
+                _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+                if _progress_bar_rate > 1:
+                    _progress_bar_rate_str = str(_progress_bar_rate) + " "
+                print("\n{} executing optimization process (one {} for each {}of {} samples): ".
+                      format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
+                _progress_bar_count = 0
+
+            for sample in self.search_space[start:end,:]:
+
+                if _show_progress:
+                    increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
+                    if increment_progress_bar:
+                        print(_progress_bar_char, end='', flush=True)
+                    _progress_bar_count +=1
+
+                # Evaluate objective_function for current sample
+                value = self.objective_function(sample)
+
+                # Evaluate for optimal value
+                if self.direction is MAXIMIZE:
+                    value_optimal = max(value, value_optimal)
+                elif self.direction is MINIMIZE:
+                    value_optimal = min(value, value_optimal)
+                else:
+                    assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
+                        format(repr(DIRECTION),self.name,self.direction)
+
+                # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+                # If value is optimal, store corresponing sample
+                if value == value_optimal:
+                    # Keep track of state values and allocation policy associated with EVC max
+                    sample_optimal = sample
+                    sample_value_max_tuple = (sample_optimal, value_optimal)
+
+                # Save samples and/or values if specified
+                if self.save_values:
+                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
+                    values = np.append(values, np.atleast_1d(value), axis=0)
+                if self.save_samples:
+                    if len(samples[0])==0:
+                        samples = np.atleast_2d(sample)
+                    else:
+                        samples = np.append(samples, np.atleast_2d(sample), axis=0)
+
+            # Aggregate, reduce and assign global results
+            # combine max result tuples from all processes and distribute to all processes
+            max_tuples = Comm.allgather(sample_value_max_tuple)
+            # get tuple with "value_max of maxes"
+            max_value_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[1])
+            # get value_optimal, state values and allocation policy associated with "max of maxes"
+            return_optimal_sample = max_value_of_max_tuples[0]
+            return_optimal_value = max_value_of_max_tuples[1]
+
+            # if self._return_samples:
+            #     return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
+            if self._return_values:
+                return_all_values = np.concatenate(Comm.allgather(values), axis=0)
+
+        else:
+            last_sample, last_value, all_samples, all_values = super().function(variable=variable,
+                                                                    params=params,
+                                                                    context=context)
+            return_optimal_value = max(all_values)
+            return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
+            # if self._return_samples:
+            #     return_all_samples = all_samples
+            if self._return_values:
+                return_all_values = all_values
+
+        return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num):
-        # # TEST PRINT:
-        # print('\niteration {}-{}'.format(self.owner.current_execution_count-1, sample_num))
-        #  # END TEST PRINT
         return self.search_space[sample_num]
 
     def _grid_complete(self, variable, value, iteration):

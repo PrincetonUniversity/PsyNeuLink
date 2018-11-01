@@ -27,17 +27,17 @@ class TestStroop:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                    function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
-                                                    noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                                    noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                     integration_rate=0.1,
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Logistic(gain=1.0, bias=4.0),
+                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
-                                                   noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                                   noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                    integration_rate=0.1,
                                                    name='WORDS HIDDEN')
 
@@ -50,7 +50,7 @@ class TestStroop:
                                                function=pnl.Logistic,
                                                name='RESPONSE',
                                                integrator_mode=True,
-                                               noise=pnl.NormalDist(mean=0, standard_dev=unit_noise).function,
+                                               noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                integration_rate=0.1)
         #   Respond red accumulator
         #   alpha = rate of evidence accumlation = 0.1
@@ -58,12 +58,12 @@ class TestStroop:
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
         respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                             standard_dev=accumulator_noise).function,
+                                                                                                             standard_deviation=accumulator_noise).function,
                                                                                         rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
         respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                               standard_dev=accumulator_noise).function,
+                                                                                                               standard_deviation=accumulator_noise).function,
                                                                                           rate=0.1),
                                                             name='respond_green_accumulator')
 
@@ -225,7 +225,7 @@ class TestStroop:
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
-            switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_dev=unit_noise).function)
+            switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
             my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.While(pass_threshold,
                                                                                respond_red_accumulator,

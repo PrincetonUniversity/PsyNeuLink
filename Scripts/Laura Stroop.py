@@ -28,19 +28,19 @@ words_input_layer = pnl.TransferMechanism(size=2,
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, bias=4.0),
+                                            function=pnl.Logistic(gain=1.0, x_0=4.0),
                                             # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                             integrator_mode=False,
-                                            noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                            noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, bias=4.0),
+                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
                                            # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                            integrator_mode=False,
-                                           noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                           noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -63,7 +63,7 @@ response_layer = pnl.TransferMechanism(size=2,
                                        function=pnl.Logistic,
                                        name='RESPONSE',
                                        integrator_mode=True,
-                                       noise=pnl.NormalDist(mean=0.0, standard_dev=.01).function,
+                                       noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,
                                        integration_rate=0.1)
 #   Respond red accumulator
 #parameters from paper

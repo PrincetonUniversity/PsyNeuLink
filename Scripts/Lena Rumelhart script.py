@@ -80,44 +80,32 @@ rels_in = pnl.TransferMechanism(name="rels_input",
 
 h1 = pnl.TransferMechanism(name="hidden_nouns",
                            size=9,
-                           function=pnl.Logistic(
-                           #gain=0.3
-                           )
+                           function=pnl.Logistic()
                             )
 
 h2 = pnl.TransferMechanism(name="hidden_mixed",
                            size=16,
-                           function=pnl.Logistic(
-                               #gain=0.3
-                           )
+                           function=pnl.Logistic()
                                )
 
 out_sig_I = pnl.TransferMechanism(name="sig_outs_I",
                                   size=len(nouns),
-                                  function=pnl.Logistic(
-                                      #gain=0.3
-                                  )
+                                  function=pnl.Logistic()
                                   )
 
 out_sig_is = pnl.TransferMechanism(name="sig_outs_is",
                                    size=len(is_list),
-                                   function=pnl.Logistic(
-                                       #gain=0.3
-                                   )
+                                   function=pnl.Logistic()
  )
 
 out_sig_has = pnl.TransferMechanism(name="sig_outs_has",
                                     size=len(has_list),
-                                    function=pnl.Logistic(
-                                        #gain=0.3
-                                    )
+                                    function=pnl.Logistic()
                                     )
 
 out_sig_can = pnl.TransferMechanism(name="sig_outs_can",
                                     size=len(can_list),
-                                    function=pnl.Logistic(
-                                        #gain=0.3
-                                    )
+                                    function=pnl.Logistic()
                                     )
 
 ###################### THIS IS THE PART WHERE I PUT IN THE FORCED RANDOM MATRICES #########################
