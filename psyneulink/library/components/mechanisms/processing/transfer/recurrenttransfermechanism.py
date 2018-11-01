@@ -176,11 +176,6 @@ from types import MethodType
 import numpy as np
 import typecheck as tc
 
-import ctypes
-import functools
-
-from psyneulink.core import llvm as pnlvm
-
 from llvmlite import ir
 
 from psyneulink.core.components.component import Param, function_type, method_type
@@ -1407,7 +1402,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(is_real_input.type.pointee) - 1
             real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            recurrent_f = ctx.get_llvm_function(self.recurrent_projection.llvmSymbolName)
+            recurrent_f = ctx.get_llvm_function(self.recurrent_projection)
             recurrent_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # FIXME: Why does this have a wrapper struct?

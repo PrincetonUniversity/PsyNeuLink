@@ -1637,11 +1637,8 @@ class Component(object, metaclass=ComponentsMeta):
         self.__llvm_function_name = None
         self.__llvm_bin_function = None
 
-        self.nv_state = None
-
-
     @property
-    def llvmSymbolName(self):
+    def _llvm_symbol_name(self):
         if self.__llvm_function_name is None:
             self.__llvm_function_name = self._gen_llvm_function()
             self.__llvm_bin_function = None
@@ -1650,7 +1647,7 @@ class Component(object, metaclass=ComponentsMeta):
     @property
     def _llvmBinFunction(self):
         if self.__llvm_bin_function is None:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_symbol_name)
         return self.__llvm_bin_function
 
     def _gen_llvm_function(self):

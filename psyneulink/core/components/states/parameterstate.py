@@ -854,7 +854,7 @@ class ParameterState(State_Base):
         return ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        state_f = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        state_f = ctx.get_llvm_function(self.function_object)
 
         # Extract the original mechanism function's param value
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])

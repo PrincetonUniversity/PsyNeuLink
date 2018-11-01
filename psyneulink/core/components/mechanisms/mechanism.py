@@ -1477,6 +1477,8 @@ class Mechanism_Base(Mechanism):
         self._receivesProcessInput = False
         self.phaseSpec = None
 
+        self.__nv_state = None
+
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -2643,7 +2645,7 @@ class Mechanism_Base(Mechanism):
         # of input state results should match the main function input.
         is_output_list = []
         for state in self.input_states:
-            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            is_function = ctx.get_llvm_function(state)
             is_output_list.append(is_function.args[3].type.pointee)
 
         # Check if all elements are the same
@@ -2658,7 +2660,7 @@ class Mechanism_Base(Mechanism):
             is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             is_in = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            is_function = ctx.get_llvm_function(state)
             builder.call(is_function, [is_params, is_context, is_in, is_out])
 
         return is_output, builder
@@ -2668,7 +2670,7 @@ class Mechanism_Base(Mechanism):
         f_params = builder.alloca(f_params_ptr.type.pointee, 1)
 
         # Call parameter states for function
-        for idx, f_param in enumerate(func.get_param_ids()):
+        for idx, f_param in enumerate(func._get_param_ids()):
             param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             raw_param_val = builder.load(param_in_ptr)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
@@ -2683,7 +2685,7 @@ class Mechanism_Base(Mechanism):
 
             assert state is self.parameter_states[i]
 
-            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+            ps_function = ctx.get_llvm_function(state)
 
             # Param states are in the 4th block (idx 3).
             # After input, function_object,  and output
@@ -2730,13 +2732,13 @@ class Mechanism_Base(Mechanism):
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_function = ctx.get_llvm_function(state.llvmSymbolName)
+            os_function = ctx.get_llvm_function(state)
             builder.call(os_function, [os_params, os_context, os_input, os_output])
 
         return builder
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
-        fun = ctx.get_llvm_function(function.llvmSymbolName)
+        fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee, 1)
 
@@ -2777,25 +2779,20 @@ class Mechanism_Base(Mechanism):
 
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        if self.nv_state is None:
+        if self.__nv_state is None:
             initializer = self.get_context_initializer()
-            self.nv_state = context_struct_ty(*initializer)
+            self.__nv_state = context_struct_ty(*initializer)
 
-        ct_context = self.nv_state
+        ct_context = self.__nv_state
 
         ct_param = par_struct_ty(*self.get_param_initializer())
 
-        def tupleize(val):
-            try:
-                return tuple([tupleize(x) for x in val])
-            except:
-                return val
-        # convert to 3d(we always assume the input is vector of input states
-        # input states take vector of projection outputs
-        # projection output can be a vector
+        # convert to 3d. we always assume that:
+        # a) the input is vector of input states
+        # b) input states take vector of projection outputs
+        # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        vi_init = tupleize(new_var)
-        ct_vi = vi_ty(*vi_init)
+        ct_vi = vi_ty(*pnlvm._tupleize(new_var))
 
         ct_vo = vo_ty()
 

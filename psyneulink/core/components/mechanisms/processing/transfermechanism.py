@@ -345,7 +345,6 @@ __all__ = [
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
-import ctypes
 import functools
 
 from psyneulink.core import llvm as pnlvm
