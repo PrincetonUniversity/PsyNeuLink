@@ -715,6 +715,8 @@ class DDM(ProcessingMechanism_Base):
             stateful=False,
             loggable=False
         )
+        input_format = Param(SCALAR, stateful=False, loggable=False)
+
         initializer = np.array([[0]])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -1127,14 +1129,14 @@ class DDM(ProcessingMechanism_Base):
                     break
 
         if (
-            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
+            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD, execution_context)
             and isinstance(self.function.__self__, Integrator)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function_object.get_current_function_param(THRESHOLD)
+                    self.function_object.get_current_function_param(THRESHOLD, execution_context)
                 )
             )
             return True
