@@ -3365,7 +3365,9 @@ class TestNestedCompositions:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                             pytest.param('LLVM', marks=pytest.mark.llvm)])
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_nested_transfer_mechanism_composition(self, mode):
 
         # mechanisms
@@ -3391,7 +3393,9 @@ class TestNestedCompositions:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                             pytest.param('LLVM', marks=pytest.mark.llvm)])
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_nested_transfer_mechanism_composition_parallel(self, mode):
 
         # mechanisms

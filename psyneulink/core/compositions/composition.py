@@ -3162,7 +3162,11 @@ class Composition(Composition_Base):
                 with builder.if_then(mech_cond):
                     mech_name = self._get_node_wrapper(mech);
                     mech_f = ctx.get_llvm_function(mech_name)
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                    if isinstance(mech, Mechanism):
+                        builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                    else:
+                        builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
+
                     cond_gen.generate_update_after_run(builder, cond, mech)
 
             # Writeback results
