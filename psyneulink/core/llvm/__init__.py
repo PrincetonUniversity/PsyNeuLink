@@ -173,6 +173,7 @@ class CompExecution:
     def __init__(self, composition):
         self._composition = composition
         self.__frozen_vals = None
+        self.__conds = None
 
         #TODO: This should use compiled function
         with LLVMBuilderContext() as ctx:
@@ -186,6 +187,14 @@ class CompExecution:
             # Context
             c_context = _convert_llvm_ir_to_ctype(ctx.get_context_struct_type(self._composition))
             self.__context_struct = c_context(*self._composition.get_context_initializer())
+
+    @property
+    def __conditions(self):
+        if self.__conds is None:
+            bin_exec = self._composition._get_bin_execution()
+            gen = helpers.ConditionGenerator(None, self._composition)
+            self.__conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
+        return self.__conds
 
     @property
     def __all_nodes(self):
@@ -256,13 +265,10 @@ class CompExecution:
                            inputs, self.__frozen_vals, self.__data_struct)
 
     def execute(self, inputs):
-        bin_exec = self._composition._get_bin_execution()
         inputs = self._get_input_struct(inputs)
-        gen = helpers.ConditionGenerator(None, self._composition)
-        conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
-
+        bin_exec = self._composition._get_bin_execution()
         bin_exec.wrap_call(self.__context_struct, self.__param_struct,
-                           inputs, self.__data_struct, conds)
+                           inputs, self.__data_struct, self.__conditions)
 
     def run(self, inputs, runs, num_input_sets):
         bin_run = self._composition._get_bin_run()
