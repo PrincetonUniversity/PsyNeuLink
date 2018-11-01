@@ -49,10 +49,11 @@ the outcome of processing for the `Composition` to which the OptimizatonControlM
 `objective_mechanism <OptimizationControlMechanism.objective_mechanism>`.  The function must return an array of
 weights (the `prediction_vector <OptimizationControlMechanism.prediction_vector>`, one for each of the
 OptimizationControlMechanism`s `control_signals <OptimizationControlMechanism.control_signals>` and any other values
-used by its primary `function <OptimizationControlMechanism.function>` to optmize its `allocation_policy
+used by its primary `function <OptimizationControlMechanism.function>` to optimize its `allocation_policy
 <OptimizationControlMechanism.allocation_policy>`.  By default, the `learning_function
-<OptimizationControlMechanism.function>` returns an identity array the length of the OptimizationControlMechanism's
-`allocation_policy <OptimizationControlMechanism.allocation_policy>`, that gives equal weight to all of the
+<OptimizationControlMechanism.function>` returns a `prediction_vector <OptimizationControlMechanism.prediction_vector>`
+that is an identity array the length of the OptimizationControlMechanism's `allocation_policy
+<OptimizationControlMechanism.allocation_policy>`, which gives equal weight to all of the
 OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>`.
 
 .. _LVOCControlMechanism_Optimization_Function:
