@@ -361,8 +361,8 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
 # Fails because of sync      pytest.param('LLVM', marks=pytest.mark.llvm),
-                             pytest.param('LLVMExec', marks=pytest.mark.llvm)])
-# Fails on second and third  pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_compositions_as_origin_nodes_multiple_trials(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")

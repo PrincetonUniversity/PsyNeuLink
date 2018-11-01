@@ -3206,6 +3206,9 @@ class Composition(Composition_Base):
             output_cim_f = ctx.get_llvm_function(output_cim_name)
             builder.call(output_cim_f, [context, params, comp_in, data, data])
 
+            # Bump run counter
+            cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
             builder.ret_void()
         return func_name
 
@@ -3276,9 +3279,6 @@ class Composition(Composition_Base):
             output_ptr = builder.gep(data_out, [iters])
             result = builder.load(result_ptr)
             builder.store(result, output_ptr)
-
-            # Bump run counter
-            cond_gen.bump_ts(builder, cond, (1, 0, 0))
 
             # increment counter
             iters = builder.add(iters, ctx.int32_ty(1))
