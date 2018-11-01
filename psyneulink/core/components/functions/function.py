@@ -12287,10 +12287,10 @@ class OptimizationFunction(Function_Base):
 
             if self.parameters.save_samples.get(execution_id):
                 samples.append(new_sample)
-                self.parameters.saved_samples.set(samples, execution_id)
+                self.parameters.saved_samples.set(samples, execution_id, override=True)
             if self.parameters.save_values.get(execution_id):
                 values.append(current_value)
-                self.parameters.saved_values.set(values, execution_id)
+                self.parameters.saved_values.set(values, execution_id, override=True)
 
         return new_sample, new_value, samples, values
 
