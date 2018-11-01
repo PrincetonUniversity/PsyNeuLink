@@ -38,7 +38,7 @@ from a weighted sum of its `feature_predictors <LVOCControlMechanism.feature_pre
 <LVOCControlMechanism.control_signals>`.  The `prediction_weights <LVOCControlMechanism.prediction_weights>` it learns
 are referred to as  the **learned value of control** (*LVOC*).
 
-The LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` uses the `prediction_weights 
+The LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` uses the `prediction_weights
 LVOCControlMechanism.prediction_weights` learned by its `learning_function <LVOCControlMechanism.learning_function>`
 (i.e., the LVOC) to find an `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the EVC given
 the current value of its `feature_predictors <LVOCControlMechanism.feature_preditors>`. 
@@ -71,7 +71,9 @@ Creating an LVOCControlMechanism
     Feature_predictors can also be added to an existing LVOCControlMechanism using its `add_features` method.
 
   * **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
-    **feature_predictors**.
+    **feature_predictors**.  By default, this is the identity function, that provides the current value of the feature
+    to the LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>`.  However,
+    other functions can be assigned, to maintain a record of past values, or integrate them over trials.
 
   * **learning_function** -- specifies `LearningFunction` that learns to predict the outcome of the
     `objective_mechanism <LVOCControlMechanism.objective_mechanism>` discounted by the cost of the `control_signals
