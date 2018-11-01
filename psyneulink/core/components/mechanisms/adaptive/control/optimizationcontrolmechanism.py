@@ -47,9 +47,9 @@ The `learning_function <OptimizationControlMechanism.learning_function>` of an O
 to generate a model that predicts, for a given `allocation_policy <OptimizationControlMechanism.allocation_policy>`,
 the outcome of processing for the `Composition` to which the OptimizatonControlMechanism belongs (as reported by its
 `objective_mechanism <OptimizationControlMechanism.objective_mechanism>`.  The function must return an array of
-weights, one for each of the OptimizationControlMechanism`s `control_signals
-<OptimizationControlMechanism.control_signals>` and any other values used by its primary `function
-<OptimizationControlMechanism.function>` to optmize its `allocation_policy
+weights (the `prediction_vector <OptimizationControlMechanism.prediction_vector>`, one for each of the
+OptimizationControlMechanism`s `control_signals <OptimizationControlMechanism.control_signals>` and any other values
+used by its primary `function <OptimizationControlMechanism.function>` to optmize its `allocation_policy
 <OptimizationControlMechanism.allocation_policy>`.  By default, the `learning_function
 <OptimizationControlMechanism.function>` returns an identity array the length of the OptimizationControlMechanism's
 `allocation_policy <OptimizationControlMechanism.allocation_policy>`, that gives equal weight to all of the
@@ -88,20 +88,18 @@ following requirements:
 
 
 STILL WORKING ON THIS:
-.. _LVOCControlMechanism_Execution:
+.. _OptimizationControlMechanism_Execution:
 
 Execution
 ---------
 
-When an LVOCControlMechanism is executed, it uses the values of its `feature_predictors
-<LVOCControlMechanism_Feature_Predictors>` (listed in its `feature_values <LVOCControlMechanism.feature_values>`
-attribute), together with the `values <ControlSignals.values>` of its `control_signals
-<LVOCControlMechanism.control_signals>` and their `costs <ControlSignal.cost>` to update its prediction of the
+When an OptimizationControlMechanism is executed, it uses the `values <ControlSignals.values>` of its `control_signals
+<OptimizationControlMechanism.control_signals>` and their `costs <ControlSignal.cost>` to update its prediction of the
 outcome of processing (the `value <ObjectiveMechanisms.value>` of its `objective_mechanism
 <LVOCControlMechanism.objective_mechanism>` minus the cost of its `control_signals
 <LVOCControlMechanism.control_signals>`), and then determines the `allocation_policy
-<LVOCControlMechanism.allocation_policy>` that maximizes hte `EVC <LVOCControlMechanism_EVC>` for the current `trial`
-of execution. Specifically, it executes the following steps:
+<LVOCControlMechanism.allocation_policy>` that maximizes the outcome for the current `trial` of execution.
+Specifically, it executes the following steps:
 
   * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
     <LVOCControlMechanism.feature_values>`, `values <ControlSignal.values>` of its `control_signals
