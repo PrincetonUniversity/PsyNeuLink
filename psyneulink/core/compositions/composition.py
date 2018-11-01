@@ -2928,25 +2928,31 @@ class Composition(Composition_Base):
             self.__execution = pnlvm.CompExecution(self)
 
     def __gen_node_wrapper(self, node):
-        if isinstance(node, Mechanism):
-            return self.__gen_mech_wrapper(node)
-
-        assert False
-
-    def __gen_mech_wrapper(self, node):
+        is_mech = isinstance(node, Mechanism)
 
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + node.name)
             data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
-            func_ty = ir.FunctionType(ir.VoidType(), (
+            args = [
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
-                data_struct_ptr, data_struct_ptr))
+                data_struct_ptr, data_struct_ptr]
+
+            if not is_mech:
+                # Add condition struct
+                cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
+                cond_ty = cond_gen.get_condition_struct_type().as_pointer()
+                args.append(cond_ty)
+
+            func_ty = ir.FunctionType(ir.VoidType(), tuple(args))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
-            context, params, comp_in, data_in, data_out = llvm_func.args
+            context, params, comp_in, data_in, data_out = llvm_func.args[:5]
+            cond_ptr = llvm_func.args[-1]
+
+
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -2955,11 +2961,18 @@ class Composition(Composition_Base):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            m_function = ctx.get_llvm_function(node)
+            if is_mech:
+                m_function = ctx.get_llvm_function(node)
+            else:
+                m_func_name = node._get_execution_wrapper()
+                m_function = ctx.get_llvm_function(m_func_name)
 
             if node is self.input_CIM:
                 m_in = comp_in
                 incoming_projections = []
+            elif not is_mech:
+                m_in = builder.alloca(m_function.args[2].type.pointee)
+                incoming_projections = node.input_CIM.afferents
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
                 incoming_projections = node.afferents
@@ -2997,7 +3010,7 @@ class Composition(Composition_Base):
                                                 ctx.int32_ty(output_state_idx)])
 
                 state = par_proj.receiver
-                assert state.owner is node
+                assert state.owner is node or state.owner is node.input_CIM
                 if state in state.owner.input_states:
                     state_idx = state.owner.input_states.index(state)
 
@@ -3034,7 +3047,19 @@ class Composition(Composition_Base):
             m_params = builder.gep(params, [zero, zero, idx])
             m_context = builder.gep(context, [zero, zero, idx])
             m_out = builder.gep(data_out, [zero, zero, idx])
-            builder.call(m_function, [m_params, m_context, m_in, m_out])
+            if is_mech:
+                builder.call(m_function, [m_params, m_context, m_in, m_out])
+            else:
+                # Condition and data structures includes parent first
+                nested_idx = ctx.int32_ty(self.__get_node_index(node) + 1)
+                m_data = builder.gep(data_in, [zero, nested_idx])
+                m_cond = builder.gep(cond_ptr, [zero, nested_idx])
+                builder.call(m_function, [m_context, m_params, m_in, m_data, m_cond])
+                # Copy output of the nested composition to its output place
+                output_idx = node.__get_node_index(node.output_CIM)
+                result = builder.gep(m_data, [zero, zero, ctx.int32_ty(output_idx)])
+                builder.store(builder.load(result), m_out)
+
             builder.ret_void()
 
         return func_name
