@@ -184,7 +184,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
 
 __all__ = [
-    'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'LVOC', 'OptimizationControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
 LVOC = 'LVOC'
@@ -253,8 +253,8 @@ class LVOCError(Exception):
         return repr(self.error_value)
 
 
-class LVOCControlMechanism(ControlMechanism):
-    """LVOCControlMechanism(                               \
+class OptimizationControlMechanism(ControlMechanism):
+    """OptimizationControlMechanism(                               \
     feature_predictors,                                    \
     feature_function=None,                                 \
     objective_mechanism=None,                              \
