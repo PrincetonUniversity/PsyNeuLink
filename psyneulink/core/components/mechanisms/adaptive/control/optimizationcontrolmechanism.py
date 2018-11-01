@@ -109,7 +109,6 @@ When an OptimizationControlMechanism executes, it calls its `learning_function
 `prediction_weights <OptimizationControlMechanism.prediction_weights>` provided by its `learning_function
 <OptimizationControlMechanism.learning_function>`,
 
-
 uses the `values <ControlSignals.values>` of its `control_signals
 <OptimizationControlMechanism.control_signals>`, usually together with their `costs <ControlSignal.cost>`,
 to update its prediction of the
