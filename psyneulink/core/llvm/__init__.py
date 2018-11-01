@@ -247,9 +247,9 @@ class CompExecution:
     def execute_node(self, node, inputs = None):
         # We need to reconstruct the inputs here if they were not provided.
         # This happens during node execution of nested compositions.
-        if node is self._composition.input_CIM and inputs is None:
+        if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
-            # incoming projections
+            # CIM input states
             origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
             input_data = [[proj.value for proj in state.all_afferents] for state in node.input_states]
             inputs = dict(zip(origins, input_data))
@@ -257,7 +257,7 @@ class CompExecution:
         if inputs is not None:
             inputs = self._get_input_struct(inputs)
 
-        assert node is not self._composition.input_CIM or inputs is not None
+        assert inputs is not None or node is not self._composition.input_CIM
 
         assert node in self.__all_nodes
         bin_node = self._composition._get_bin_mechanism(node)
