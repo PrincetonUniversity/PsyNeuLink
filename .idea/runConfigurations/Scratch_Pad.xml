@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Scratch Pad" type="PythonConfigurationType" factoryName="Python" singleton="true">
-    <module name="PsyNeuLink (Dropbox)" />
+  <configuration default="false" factoryName="Python" name="Scratch Pad" singleton="true" type="PythonConfigurationType">
+    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
