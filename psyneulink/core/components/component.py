@@ -2815,6 +2815,14 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._assign_context_values(execution_id, base_execution_id, **kwargs)
 
+    def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
+        """
+            Unnecessary, but can simplify multiple parameter assignments at once
+            For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
+        """
+        for (k, v) in kwargs.items():
+            getattr(self.parameters, k).set(v, execution_id, override=override)
+
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
     # ------------------------------------------------------------------------------------------------------------------
