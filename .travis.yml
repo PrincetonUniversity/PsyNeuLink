@@ -19,6 +19,16 @@ cache:
   directories:
     - $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
     - $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin
+# These files are provided by travis do not overwrite them with cached version.
+# We need to preserve them because after_script still needs working python environment
+before_cache:
+    - mkdir -p $HOME/venv-bak/{bin,site-packages}
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/pip* $HOME/venv-bak/site-packages
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/easy-intall* $HOME/venv-bak/site-packages
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/pip* $HOME/venv-bak/bin
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/easy-install* $HOME/venv-bak/bin
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python* $HOME/vevn-bak/bin
+    - mv -vf $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate* $HOME/venv-bak/bin
 
 matrix:
   include:
@@ -106,4 +116,7 @@ script:
   - python -m pytest -p no:logging --cov=psyneulink tests/
 
 after_script:
+  # Restore python environment
+  - mv -vf $HOME/venv-bak/site-packages/* $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/
+  - mv -vf $HOME/venv-bak/bin/* $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/
   - coveralls
