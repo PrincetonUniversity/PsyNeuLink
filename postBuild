@@ -3,4 +3,3 @@
 pip install .
 pip install matplotlib
 pip install graphviz
-sudo apt-get install graphviz -y
