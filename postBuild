@@ -1,4 +1,4 @@
 #!/bin/bash
 # used for mybinder.org hosting of tutorial notebook
 pip install .
-pip install -r tutorial_requirements.txt
+#pip install -r tutorial_requirements.txt
