@@ -27,7 +27,6 @@ An OptimizationControlMechanism can be created in the same was as any `ControlMe
 is that an `OptimizationFunction` must be specified as the **function** argument of its constructor.  In addition,
 a **learning_function** can be specified (see `below <OptimizationControlMechanism_Learning_Function>`)
 
-
 .. _OptimizationControlMechanism_Structure:
 
 Structure
@@ -128,36 +127,23 @@ Class Reference
 ---------------
 
 """
-import warnings
-from collections import Iterable, deque
-from itertools import product
 import typecheck as tc
-# from aenum import AutoNumberEnum, auto
-from enum import Enum
 
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE, GridSearch, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+    ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
+    SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    OUTCOME, ObjectiveMechanism, MONITORED_OUTPUT_STATES
-from psyneulink.core.components.states.state import _parse_state_spec
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.outputstate import OutputState
+    ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, PARAMETER_STATES, \
-    VARIABLE, OBJECTIVE_MECHANISM, FUNCTION, ALL, CONTROL_SIGNALS, OPTIMIZATION_CONTROL_MECHANISM
+    DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
+from psyneulink.core.globals.utilities import is_iterable
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError'
@@ -192,7 +178,6 @@ class OptimizationControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    # FIX: READ THROUGH AND REPLACE LVOCCONTROLMECHANISM WITH OptimizationControlMechanism
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the 
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
