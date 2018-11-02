@@ -1,6 +1,6 @@
 #!/bin/bash
 # used for mybinder.org hosting of tutorial notebook
 pip install .
-pip install matplotlib
-conda install -y graphviz
+#pip install matplotlib
+#conda install -y graphviz
 #pip install -r tutorial_requirements.txt
