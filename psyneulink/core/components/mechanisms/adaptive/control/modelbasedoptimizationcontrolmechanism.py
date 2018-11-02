@@ -133,6 +133,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
     ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -167,8 +168,9 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
     name=None,                                             \
     prefs=None)
 
-    Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
-    performance of the `Composition` to which it belongs
+    Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `run_simulation
+    <ModelBasedOptimizationControlMechanism.run_simulation>` method in order to adjusts its `ControlSignals
+    <ControlSignal>` and optimize performance of the `Composition` to which it belongs.
 
     Arguments
     ---------
@@ -438,3 +440,69 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
         raise ModelBasedOptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
                                                 format(self.__class__.__name__, repr('objective_function')))
 
+    def run_simulation(self,
+                       allocation_policy=None,
+                       num_trials=1,
+                       reinitialize_values=None,
+                       predicted_input=None,
+                       call_after_simulation=None,
+                       runtime_params=None,
+                       context=None):
+
+        if allocation_policy is not None:
+            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+
+        execution_id = self.composition._get_unique_id()
+
+        allocation_policy_outcomes = []
+        other_simulation_data = []
+        for i in range(num_trials):
+            inputs = {}
+            for node in predicted_input:
+                inputs[node] = predicted_input[node][i]
+
+            self.composition.context.execution_phase = ContextFlags.SIMULATION
+            for output_state in self.output_states:
+                for proj in output_state.efferents:
+                    proj.context.execution_phase = ContextFlags.PROCESSING
+
+            self.composition.run(inputs=inputs,
+                                 reinitialize_values=reinitialize_values,
+                                 execution_id=execution_id,
+                                 runtime_params=runtime_params,
+                                 context=context)
+
+            self.composition.simulation_results.append(self.composition.output_CIM.output_values)
+
+            call_after_simulation_data = None
+
+            if call_after_simulation:
+                call_after_simulation_data = call_after_simulation()
+
+            monitored_states = self.objective_mechanism.output_values
+
+            self.composition.context.execution_phase = ContextFlags.PROCESSING
+            allocation_policy_outcomes.append(monitored_states)
+            other_simulation_data.append(call_after_simulation_data)
+        return allocation_policy_outcomes, other_simulation_data
+
+    def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
+
+        predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
+
+        outcome_list = []
+
+        for allocation_policy in allocation_policies:
+            allocation_policy_outcomes, simulation_data = self.run_simulation(allocation_policy=allocation_policy,
+                                                                              num_trials=num_trials,
+                                                                              reinitialize_values=reinitialize_values,
+                                                                              predicted_input=predicted_input,
+                                                                              call_after_simulation=call_after_simulation,
+                                                                              runtime_params=runtime_params,
+                                                                              context=context)
+
+            outcome_list.append((allocation_policy, allocation_policy_outcomes, simulation_data))
+
+        self.composition.after_simulations(reinitialize_values, node_values)
+
+        return outcome_list

@@ -410,8 +410,8 @@ class Composition(Composition_Base):
 
     def __init__(self,
                  name=None,
-                 controller=None,
-                 enable_controller=None,
+                 model_based_optimizer=None,
+                 enable_model_based_optimizer=None,
                  external_input_sources=None):
         # also sets name
         register_category(
@@ -436,10 +436,10 @@ class Composition(Composition_Base):
         self.input_CIM_states = {}
         self.output_CIM_states = {}
 
-        self.enable_controller = enable_controller
+        self.enable_model_based_optimizer = enable_model_based_optimizer
         self.simulation_results = []
         self.execution_ids = []
-        self.controller = controller
+        self.model_based_optimizer = model_based_optimizer
 
         self.projections = []
 
@@ -478,7 +478,7 @@ class Composition(Composition_Base):
 
     def _instantiate_prediction_mechanisms(self, context=None):
 
-        if self.controller:
+        if self.model_based_optimizer:
             if hasattr(self, "prediction_mechanisms"):
                 for mechanism in self.prediction_mechanisms:
                     del mechanism
@@ -668,15 +668,15 @@ class Composition(Composition_Base):
             self.external_input_sources[node] = node.shadow_external_inputs
 
 
-    def add_controller(self, type, monitor_for_control, control_signals):
+    def add_model_based_optimizer(self, type, monitor_for_control, control_signals):
         self.monitor_for_control = monitor_for_control
-        self.controller = type(
+        self.model_based_optimizer = type(
             # system=self,
                                objective_mechanism=self._get_monitored_output_states_for_system(),
                                control_signals=self._get_control_signals_for_system(control_signals))
-        self.controller.composition = self
-        self.add_c_node(self.controller.objective_mechanism)
-        for proj in self.controller.objective_mechanism.path_afferents:
+        self.model_based_optimizer.composition = self
+        self.add_c_node(self.model_based_optimizer.objective_mechanism)
+        for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
         self._analyze_graph()
 
@@ -703,44 +703,44 @@ class Composition(Composition_Base):
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
 
-    def _get_monitored_output_states_for_system(self, controller=None):
+    def _get_monitored_output_states_for_system(self, model_based_optimizer=None):
         """
-        Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
+        Parse a list of OutputState specifications for System, model_based_optimizer, Mechanisms and/or their OutputStates:
             - if specification in output_state is None:
                  do NOT monitor this state (this overrides any other specifications)
             - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
-            - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
+            - if a Mechanism is terminal and/or specified in the System or `model_based_optimizer <Systsem_Base.model_based_optimizer>`:
                 if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
                 if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > model_based_optimizer > System
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
             - it specifies options for assigning OutputStates of TERMINAL Mechanisms in the System
-                to controller.monitored_output_states;  the options are:
+                to model_based_optimizer.monitored_output_states;  the options are:
                 + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
                   TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
-            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
-        * controller.monitored_output_states is a list, each item of which is an OutputState from which a Projection
+            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > model_based_optimizer > System
+        * model_based_optimizer.monitored_output_states is a list, each item of which is an OutputState from which a Projection
             will be instantiated to a corresponding InputState of the ControlMechanism
-        * controller.input_states is the usual ordered dict of states,
-            each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
+        * model_based_optimizer.input_states is the usual ordered dict of states,
+            each of which receives a Projection from a corresponding OutputState in model_based_optimizer.monitored_output_states
 
         Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
 
         """
         # PARSE SPECS
 
-        # Get OutputStates already being -- or specified to be -- monitored by controller
-        if controller is not None and not inspect.isclass(controller):
+        # Get OutputStates already being -- or specified to be -- monitored by model_based_optimizer
+        if model_based_optimizer is not None and not inspect.isclass(model_based_optimizer):
             try:
-                # Get from monitored_output_states attribute if controller is already implemented
-                monitored_output_states = controller.monitored_output_states.copy() or []
+                # Get from monitored_output_states attribute if model_based_optimizer is already implemented
+                monitored_output_states = model_based_optimizer.monitored_output_states.copy() or []
                 # Convert them to MonitoredOutputStateTuple specifications (for treatment below)
                 monitored_output_state_specs = []
                 for monitored_output_state, input_state in zip(monitored_output_states,
-                                                               controller.objective_mechanism.input_states):
+                                                               model_based_optimizer.objective_mechanism.input_states):
                     projection = input_state.path_afferents[0]
                     if not projection.sender is monitored_output_state:
                         raise SystemError("PROGRAM ERROR: Problem identifying projection ({}) for "
@@ -748,44 +748,44 @@ class Composition(Composition_Base):
                                           format(projection.name,
                                                  monitored_output_state.name,
                                                  ControlMechanism.__name__,
-                                                 controller.name,
+                                                 model_based_optimizer.name,
                                                  self.name))
                     monitored_output_state_specs.append(MonitoredOutputStateTuple(monitored_output_state,
                                                                                   projection.weight,
                                                                                   projection.exponent,
                                                                                   projection.matrix))
 
-                controller_specs = monitored_output_state_specs
+                model_based_optimizer_specs = monitored_output_state_specs
             except AttributeError:
-                # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
+                # If model_based_optimizer has no monitored_output_states attribute, it has not yet been fully instantiated
                 #    (i.e., the call to this method is part of its instantiation by a System)
                 #    so, get specification from the **object_mechanism** argument
-                if isinstance(controller.objective_mechanism, list):
+                if isinstance(model_based_optimizer.objective_mechanism, list):
                     # **objective_mechanism** argument was specified as a list
-                    controller_specs = controller.objective_mechanism.copy() or []
-                elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
+                    model_based_optimizer_specs = model_based_optimizer.objective_mechanism.copy() or []
+                elif isinstance(model_based_optimizer.objective_mechanism, ObjectiveMechanism):
                     # **objective_mechanism** argument was specified as an ObjectiveMechanism, which has presumably
                     # already been instantiated, so use its monitored_output_states attribute
-                    controller_specs = controller.objective_mechanism.monitored_output_states
+                    model_based_optimizer_specs = model_based_optimizer.objective_mechanism.monitored_output_states
         else:
-            controller_specs = []
+            model_based_optimizer_specs = []
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
         system_specs = self.monitor_for_control.copy()
 
-        # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
-        if controller_specs:
-            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+        # If model_based_optimizer_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if model_based_optimizer_specs:
+            if (any(isinstance(item, MonitoredOutputStatesOption) for item in model_based_optimizer_specs)):
                 option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputStatesOption)),None)
                 if option_item is not None:
                     del system_specs[option_item]
-            for item in controller_specs:
+            for item in model_based_optimizer_specs:
                 if item in system_specs:
                     del system_specs[system_specs.index(item)]
 
-        # Combine controller and system specs
+        # Combine model_based_optimizer and system specs
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
-        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        all_specs = model_based_optimizer_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Convert references to Mechanisms and/or OutputStates in all_specs to MonitoredOutputStateTuples;
         # Each spec to be converted should be one of the following:
@@ -882,7 +882,7 @@ class Composition(Composition_Base):
             raise SystemError("PROGRAM ERROR: Fail to parse items of \'{}\' arg ({}) in constructor for {}".
                               format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
 
-        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
+        # Get MonitoredOutputStatesOptions if specified for model_based_optimizer or System, and make sure there is only one:
         option_specs = [item for item in all_specs_extracted_from_tuples
                         if isinstance(item, MonitoredOutputStatesOption)]
         if not option_specs:
@@ -901,20 +901,20 @@ class Composition(Composition_Base):
         # Notes:
         # * Use all_specs to accumulate specs from all mechanisms and their outputStates
         #     (for use in generating exponents and weights below)
-        # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
+        # * Use local_specs to combine *only current* Mechanism's specs with those from model_based_optimizer and system specs;
         #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
-        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+        model_based_optimizer_and_system_specs = all_specs_extracted_from_tuples.copy()
 
         for node in self.c_nodes:
 
             # For each Mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
             # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
-            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
-            # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
+            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from model_based_optimizer or system)
+            # - use local_specs (which now has this Mechanism's specs with those from model_based_optimizer and system specs)
             #     to assign outputStates to monitored_output_states
 
-            local_specs = controller_and_system_specs.copy()
+            local_specs = model_based_optimizer_and_system_specs.copy()
             option_spec = ctlr_or_sys_option_spec
 
             # PARSE MECHANISM'S SPECS
@@ -952,7 +952,7 @@ class Composition(Composition_Base):
                     local_specs.append(item)
 
                 # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
-                #    if there is one, use it in place of any specified for controller or system
+                #    if there is one, use it in place of any specified for model_based_optimizer or system
                 option_specs = [item for item in node_specs if isinstance(item, MonitoredOutputStatesOption)]
                 if not option_specs:
                     option_spec = ctlr_or_sys_option_spec
@@ -1323,8 +1323,8 @@ class Composition(Composition_Base):
         if len(self.scheduler_processing.consideration_queue) > 0:
             for node in self.scheduler_processing.consideration_queue[-1]:
 
-                if self.controller:
-                    if node == self.controller.objective_mechanism:
+                if self.model_based_optimizer:
+                    if node == self.model_based_optimizer.objective_mechanism:
                         for vertex in graph.get_parents_from_component(node):
                             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
                 else:
@@ -1337,8 +1337,8 @@ class Composition(Composition_Base):
             # Identify Terminal nodes
             if graph.get_children_from_component(node) == []:
 
-                if self.controller:
-                    if node == self.controller.objective_mechanism:
+                if self.model_based_optimizer:
+                    if node == self.model_based_optimizer.objective_mechanism:
                         for vertex in graph.get_parents_from_component(node):
                             self._add_c_node_role(vertex.component, CNodeRole.TERMINAL)
                 else:
@@ -1862,9 +1862,9 @@ class Composition(Composition_Base):
             for prediction_mechanism in self.prediction_mechanisms:
                 prediction_mechanism._execution_id = execution_id
 
-        if hasattr(self, "controller"):
-            if self.controller:
-                self.controller._execution_id = execution_id
+        if hasattr(self, "model_based_optimizer"):
+            if self.model_based_optimizer:
+                self.model_based_optimizer._execution_id = execution_id
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -1980,7 +1980,7 @@ class Composition(Composition_Base):
         Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
         Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
-        System's `controller <System_Control>`.
+        System's `model_based_optimizer <System_Control>`.
 
         `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
         Mechanism nodes are subdivided into sections for its States with information about each determined by the
@@ -2027,9 +2027,9 @@ class Composition(Composition_Base):
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
-                                   controller=pnl.ControlMechanism(name='my_system Controller'),
+                                   model_based_optimizer=pnl.ControlMechanism(name='my_system Controller'),
                                    monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
-                                   enable_controller=True)
+                                   enable_model_based_optimizer=True)
 
         .. _System_show_graph_figure:
 
@@ -2172,7 +2172,7 @@ class Composition(Composition_Base):
 
         control_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
-            `controller <System.controller>` is an `EVCControlMechanism`, then a link is shown in pink from the
+            `model_based_optimizer <System.model_based_optimizer>` is an `EVCControlMechanism`, then a link is shown in pink from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
@@ -2321,8 +2321,8 @@ class Composition(Composition_Base):
                     G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-            # # if recvr is ObjectiveMechanism for System's controller, break, as those handled below
-            # if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
+            # # if recvr is ObjectiveMechanism for System's model_based_optimizer, break, as those handled below
+            # if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_model_based_optimizer is True:
             #     return
 
             # loop through senders to implement edges
@@ -2384,8 +2384,8 @@ class Composition(Composition_Base):
         def _assign_control_components(G, sg):
             '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
-            controller = self.controller
-            if controller in active_items:
+            model_based_optimizer = self.model_based_optimizer
+            if model_based_optimizer in active_items:
                 if active_color is BOLD:
                     ctlr_color = control_color
                 else:
@@ -2396,14 +2396,14 @@ class Composition(Composition_Base):
                 ctlr_color = control_color
                 ctlr_width = str(default_width)
 
-            if controller is None:
-                print ("\nWARNING: {} has not been assigned a \'controller\', so \'show_control\' option "
+            if model_based_optimizer is None:
+                print ("\nWARNING: {} has not been assigned a \'model_based_optimizer\', so \'show_control\' option "
                        "can't be used in its show_graph() method\n".format(self.name))
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = controller.input_state.path_afferents[0]
-            if controller in active_items:
+            objmech_ctlr_proj = model_based_optimizer.input_state.path_afferents[0]
+            if model_based_optimizer in active_items:
                 if active_color is BOLD:
                     objmech_ctlr_proj_color = control_color
                 else:
@@ -2427,11 +2427,11 @@ class Composition(Composition_Base):
                 objmech_color = control_color
                 objmech_width = str(default_width)
 
-            ctlr_label = self._get_graph_node_label(controller, show_dimensions, show_roles)
+            ctlr_label = self._get_graph_node_label(model_based_optimizer, show_dimensions, show_roles)
             objmech_label = self._get_graph_node_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                        controller.show_structure(**mech_struct_args),
+                        model_based_optimizer.show_structure(**mech_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
                         rank = control_rank
@@ -2450,7 +2450,7 @@ class Composition(Composition_Base):
                         color=objmech_color, penwidth=objmech_width, shape=mechanism_shape,
                         rank=control_rank)
 
-            # objmech to controller edge
+            # objmech to model_based_optimizer edge
             if show_projection_labels:
                 edge_label = objmech_ctlr_proj.name
             else:
@@ -2476,11 +2476,11 @@ class Composition(Composition_Base):
             # [LEARNING]". Something is probably seriously wrong.
             # These do not appear to reflect corruptions of the graph structure and/or execution.
 
-            # outgoing edges (from controller to ProcessingMechanisms)
-            for control_signal in controller.control_signals:
+            # outgoing edges (from model_based_optimizer to ProcessingMechanisms)
+            for control_signal in model_based_optimizer.control_signals:
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
-                    if controller in active_items:
+                    if model_based_optimizer in active_items:
                         if active_color is BOLD:
                             ctl_proj_color = control_color
                         else:
@@ -2989,7 +2989,7 @@ class Composition(Composition_Base):
                         self.__execution.execute_node(node)
                     else:
                         node.context.execution_phase = ContextFlags.PROCESSING
-                        if node is not self.controller:
+                        if node is not self.model_based_optimizer:
                             node.execute(runtime_params=execution_runtime_params,
                                          context=ContextFlags.COMPOSITION)
 
@@ -3064,12 +3064,12 @@ class Composition(Composition_Base):
         # control phase
         if self.context.execution_phase != ContextFlags.INITIALIZING \
                 and self.context.execution_phase != ContextFlags.SIMULATION \
-                and self.enable_controller:
-            if self.controller:
-                self.controller.objective_mechanism.execute(context=context)
+                and self.enable_model_based_optimizer:
+            if self.model_based_optimizer:
+                self.model_based_optimizer.objective_mechanism.execute(context=context)
                 # KAM - temporary solution for assiging control signal values
-                allocation_policy = self.controller.execute(context=context)
-                self.controller.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
+                allocation_policy = self.model_based_optimizer.execute(context=context)
+                self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
