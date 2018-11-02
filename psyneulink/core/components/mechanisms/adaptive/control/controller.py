@@ -900,11 +900,6 @@ class Controller(ControlMechanism):
         return outcome_list
 
 
-    @tc.typecheck
-    def assign_as_controller(self, system, context=ContextFlags.COMMAND_LINE):
-        self._instantiate_prediction_mechanisms(system=system, context=context)
-        super().assign_as_controller(system=system, context=context)
-
     def get_allocation_policies(self):
         # grid search -- all possible combinations of control signal
         control_signal_sample_lists = []

@@ -337,6 +337,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
                  search_space: tc.optional(tc.any(list, np.ndarray)) = None,
                  control_signals: tc.optional(tc.any(is_iterable, ParameterState, ControlSignal)) = None,
                  modulation: tc.optional(_is_modulation_param) = ModulationParam.MULTIPLICATIVE,
+                 composition=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -351,6 +352,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
         self.search_function = search_function
         self.search_termination_function = search_termination_function
         self.search_space = search_space
+        self.composition = composition
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(origin_objective_mechanism=origin_objective_mechanism,
@@ -415,19 +417,13 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
         self.predicted_input, self.num_trials, self.reinitialize_values, self.node_values = self.composition.before_simulations()
 
-        # Compute allocation_policy using LVOCControlMechanism's optimization function
-        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        # Compute allocation_policy using MBOCM's optimization function
         allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
                                         super(ControlMechanism, self)._execute(variable=self.allocation_policy,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
+
         self.composition.after_simulations(self.reinitialize_values, self.node_values)
-        # # # TEST PRINT
-        # print ('EXECUTION COUNT: ', self.current_execution_count)
-        # print ('ALLOCATION POLICY: ', allocation_policy)
-        # print ('ALLOCATION POLICY: ', self.evc_max)
-        # print ('\n------------------------------------------------')
-        # # # TEST PRINT END
 
         return allocation_policy
     def get_control_signal_search_space(self):
@@ -450,10 +446,11 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
     def objective_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
-
-        raise ModelBasedOptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
-                                                format(self.__class__.__name__, repr('objective_function')))
-
+        # returns (allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data)
+        return self.run_simulation(allocation_policy=allocation_policy,
+                                   num_trials=self.num_trials,
+                                   reinitialize_values=self.reinitialize_values,
+                                   predicted_input=self.predicted_input)
     def run_simulation(self,
                        allocation_policy=None,
                        num_trials=1,
@@ -469,6 +466,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
         execution_id = self.composition._get_unique_id()
 
         allocation_policy_outcomes = []
+        net_allocation_policy_outcomes = []
         other_simulation_data = []
         for i in range(num_trials):
             inputs = {}
@@ -497,6 +495,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
             allocation_policy_outcomes.append(monitored_states)
+            net_allocation_policy_outcomes.append(self.net_outcome)
             other_simulation_data.append(call_after_simulation_data)
-        return allocation_policy_outcomes, other_simulation_data
+        return allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data
 
