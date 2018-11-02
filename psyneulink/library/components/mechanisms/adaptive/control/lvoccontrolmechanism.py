@@ -613,8 +613,6 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                     raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
                                                                                         repr(i)))
 
-        self.learning_function = learning_function
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
                                                   feature_function=feature_function,
@@ -624,6 +622,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                                                   params=params)
 
         super().__init__(objective_mechanism=objective_mechanism,
+                         learning_function=learning_function,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
