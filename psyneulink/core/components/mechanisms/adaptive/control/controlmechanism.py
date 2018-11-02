@@ -238,13 +238,21 @@ ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of 
 `ParameterState` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
+.. _ControlMechanism_Output:
+
+*Costs and Net Outcome*
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlMechanism executes, each of its `control_signals <ControlMechanmism>` can incur a `cost
+<ControlSignal.cost>`.  The costs
+
 
 .. _ControlMechanism_Execution:
 
 Execution
 ---------
 
-A ControlMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
+If a ControlMechanism is a System's `controller`, it is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
 ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
 its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `outcome <ControlSignal.outcome>`
@@ -932,10 +940,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
-        try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
-        except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+        # MODIFIED 11/2/18 OLD:
+        # try:
+        #     self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+        # except AttributeError:
+        #     self.control_signal_costs = np.empty((1,1))
+        # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
@@ -1196,9 +1206,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #         return np.array([c.instance_defaults.variable for c in self.control_signals])
 
     @property
+    def allocation_policy(self):
+        return self.value
+
+    # MODIFIED 11/2/18 NEW:
+    @property
+    def costs(self):
+        return [c._compute_costs(c.variable) for c in self.control_signals]
+
+    @property
+    def combined_costs(self):
+        return np.sum(self.costs)
+
+    @property
+    def net_outcome(self):
+        return self.outcome - self.combined_costs
+    # MODIFIED 11/2/18 END
+
+    @property
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
-    @property
-    def allocation_policy(self):
-        return self.value

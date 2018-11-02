@@ -437,3 +437,5 @@ class OptimizationControlMechanism(ControlMechanism):
         raise OptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
                                                 format(self.__class__.__name__, repr('objective_function')))
 
+    # def compute_EVC
+
