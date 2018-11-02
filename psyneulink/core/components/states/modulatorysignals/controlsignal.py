@@ -166,19 +166,19 @@ computes a different component of the cost, and a function that combines them, a
     * `duration_cost` - calculated by the `duration_cost_function` based on an integral of the ControlSignal's
       `cost <ControlSignal.cost>`;
     ..
-    * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
+    * `cost` - calculated by the `combine_costs_function` that combines the results of any cost functions that are
       enabled.
 
 The components used to determine the ControlSignal's `cost <ControlSignal.cost>` can be specified in the
 **costs_options** argument of its constructor, or using its `enable_costs`, `disable_costs` and `assign_costs`
 methods.  All of these take one or more values of `ControlSignalCosts`, each of which specifies a cost component.
-How the enabled components are combined is determined by the `cost_combination_function`.  By default, the values of
-the enabled cost components are summed, however this can be modified by specifying the `cost_combination_function`.
+How the enabled components are combined is determined by the `combine_costs_function`.  By default, the values of
+the enabled cost components are summed, however this can be modified by specifying the `combine_costs_function`.
 
     COMMENT:
     .. _ControlSignal_Toggle_Costs:
 
-    *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the `cost_combination_function`) can
+    *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the `combine_costs_function`) can
     be enabled or disabled using the `toggle_cost_function` method to turn it `ON` or `OFF`. If it is disabled, that
     component of the cost is not included in the ControlSignal's `cost` attribute.  A cost function  can  also be
     permanently disabled for the ControlSignal by assigning it's attribute `None`.  If a cost function is permanently
@@ -323,7 +323,7 @@ from psyneulink.core.globals.utilities import get_validator_by_function, get_val
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
-    'COST_COMBINATION_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
+    'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
     'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
     'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
 ]
@@ -346,11 +346,11 @@ DURATION_COST = 'DURATION COST'
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
-COST_COMBINATION_FUNCTION = 'cost_combination_function'
+COMBINE_COSTS_FUNCTION = 'combine_costs_function'
 costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
-                     COST_COMBINATION_FUNCTION]
+                     COMBINE_COSTS_FUNCTION]
 
 # Attributes / KVO keypaths
 # kpLog = "Control Signal Log"
@@ -423,7 +423,7 @@ class ControlSignal(ModulatorySignal):
         intensity_cost_function=Exponential,                      \
         adjustment_cost_function=Linear,                          \
         duration_cost_function=Integrator,                        \
-        cost_combination_function=Reduce(operation=SUM),          \
+        combine_costs_function=Reduce(operation=SUM),          \
         allocation_samples=self.ClassDefaults.allocation_samples, \
         modulation=ModulationParam.MULTIPLICATIVE                 \
         projections=None                                          \
@@ -487,7 +487,7 @@ class ControlSignal(ModulatorySignal):
         specifies the function used to calculate the contribution of the ControlSignal's duration to its
         `cost <ControlSignal.cost>`.
 
-    cost_combination_function : function : default `Reduce(operation=SUM) <Function.Reduce>`
+    combine_costs_function : function : default `Reduce(operation=SUM) <Function.Reduce>`
         specifies the function used to combine the results of any cost functions that are enabled, the result of
         which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
@@ -588,7 +588,7 @@ class ControlSignal(ModulatorySignal):
     duration_cost : float
         intregral of `cost`.
 
-    cost_combination_function : function : default Reduce(operation=SUM)
+    combine_costs_function : function : default Reduce(operation=SUM)
         combines the results of all cost functions that are enabled, and assigns the result to `cost`.
         It can be any function that takes an array and returns a scalar value.
 
@@ -631,7 +631,7 @@ class ControlSignal(ModulatorySignal):
         intensity_cost_function = Exponential
         adjustment_cost_function = Linear
         duration_cost_function = SimpleIntegrator
-        cost_combination_function = Reduce(operation=SUM)
+        combine_costs_function = Reduce(operation=SUM)
         modulation = None
 
         _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
@@ -649,7 +649,7 @@ class ControlSignal(ModulatorySignal):
                                                           INTENSITY_COST_FUNCTION,
                                                           ADJUSTMENT_COST_FUNCTION,
                                                           DURATION_COST_FUNCTION,
-                                                          COST_COMBINATION_FUNCTION}
+                                                          COMBINE_COSTS_FUNCTION}
 
     connectsWith = [PARAMETER_STATE]
     connectsWithAttribute = [PARAMETER_STATES]
@@ -685,7 +685,7 @@ class ControlSignal(ModulatorySignal):
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
+                 combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=Params.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
@@ -717,7 +717,7 @@ class ControlSignal(ModulatorySignal):
                                                   intensity_cost_function=intensity_cost_function,
                                                   adjustment_cost_function=adjustment_cost_function,
                                                   duration_cost_function=duration_cost_function,
-                                                  cost_combination_function=cost_combination_function,
+                                                  combine_costs_function=combine_costs_function,
                                                   allocation_samples=allocation_samples,
                                                   params=params)
 
@@ -767,14 +767,14 @@ class ControlSignal(ModulatorySignal):
                 cost_function = cost_function()
 
             # cost_function is Function object:
-            #     COST_COMBINATION_FUNCTION must be CombinationFunction
+            #     COMBINE_COSTS_FUNCTION must be CombinationFunction
             #     DURATION_COST_FUNCTION must be an IntegratorFunction
             #     others must be TransferFunction
             if isinstance(cost_function, Function):
-                if cost_function_name == COST_COMBINATION_FUNCTION:
+                if cost_function_name == COMBINE_COSTS_FUNCTION:
                     if not isinstance(cost_function, CombinationFunction):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
-                                                 format(COST_COMBINATION_FUNCTION, cost_function))
+                                                 format(COMBINE_COSTS_FUNCTION, cost_function))
                 elif cost_function_name == DURATION_COST_FUNCTION:
                     if not isinstance(cost_function, IntegratorFunction):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
@@ -784,11 +784,11 @@ class ControlSignal(ModulatorySignal):
                                              format(cost_function_name, cost_function))
 
             # cost_function is custom-specified function
-            #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
+            #     DURATION_COST_FUNCTION and COMBINE_COSTS_FUNCTION must accept an array
             #     others must accept a scalar
             #     all must return a scalar
             elif isinstance(cost_function, (function_type, method_type)):
-                if cost_function_name in COST_COMBINATION_FUNCTION:
+                if cost_function_name in COMBINE_COSTS_FUNCTION:
                     test_value = [1, 1]
                 else:
                     test_value = 1
@@ -1013,7 +1013,7 @@ class ControlSignal(ModulatorySignal):
         if ControlSignalCosts.DURATION & self.cost_options:
             self.duration_cost = self.duration_cost_function(self.cost)
 
-        return max(0.0, self.cost_combination_function([self.intensity_cost,
+        return max(0.0, self.combine_costs_function([self.intensity_cost,
                                                              self.adjustment_cost,
                                                              self.duration_cost]))
 
@@ -1140,8 +1140,8 @@ class ControlSignal(ModulatorySignal):
             cost_option = ControlSignalCosts.DURATION
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
             cost_option = ControlSignalCosts.ADJUSTMENT
-        elif cost_function_name == COST_COMBINATION_FUNCTION:
-            raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
+        elif cost_function_name == COMBINE_COSTS_FUNCTION:
+            raise ControlSignalError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
         else:
             raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
