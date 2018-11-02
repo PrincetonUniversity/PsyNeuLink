@@ -45,27 +45,19 @@ Learning Function
 ^^^^^^^^^^^^^^^^^
 
 An OptimizationControlMechanism may have a `learning_function <OptimizationControlMechanism.learning_function>`
-used to generate a model that predicts, for a given `allocation_policy <ControlMechanism.allocation_policy>`,
-the *OUTCOME* of its `objective_mechanism <ControlMechanism.objective_mechanism>`. The function takes as its arguments
-an array of values it uses to predict the outcome of processing (the OptimizationControlMechanism's `prediction_vector
-<OptimizationControlMechanism.prediction_vector>`) and the most recent `value <OutputState.value>` of the *OUTCOME*
-`OutputState` of its `objective_mechanism <ControlMechanism.objective_mechanism>`.  It returns an array
-of weights with one element for each of the values in the first array it is passed.  This is assigned to the
-OptimizationControlMechanism's `prediction_weights <OptimizationControlMechanism.prediction_weights>`) attribute,
-and can be used by its primary `function <OptimizationControlMechanism.function>` in seeking to optimze the
-OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` (see `below
+used to generate a model that attempts to predict the value of its `objective_function
+<OptimizationControlMechanism.objective_function>` for a given `allocation_policy <ControlMechanism.allocation_policy>`
+from a `prediction_vector <OptimizationControlMechanism.prediction_vector>`; it is up to the subclass of the
+OptimizationControlMechanism to determine the contents of `prediction_vector
+<OptimizationControlMechanism.prediction_vector>`. The `learning_function
+<OptimizationControlMechanism.learning_function>` takes as its first argument the `prediction_vector
+<OptimizationControlMechanism.prediction_vector>`) and, as its second, `outcome <ControlMechanism.outcome>` minus
+the `cost <ControlSignal.cost>` of its `control_signals <ControlMechanism.control_signals>`.  It returns an array
+with one weight for each element of `prediction_vector <OptimizationControlMechanism.prediction_vector>`, that is
+assigned as the OptimizationControlMechanism's `prediction_weights <OptimizationControlMechanism.prediction_weights>`)
+attribute.  This is can be used by its primary `function <OptimizationControlMechanism.function>` in seeking to
+optimze the OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` (see `below
 <OptimizationControlMechanism_Function>).
-
-COMMENT:
-xxxxxxx
-The default `learning_function <OptimizationControlMechanism.function>` takes as its `prediction_vector
-arguments the `variable
-<ControlSignal.variable>` of the OptimizationControlMechanism's `control_signals
-<ControlMechanism.control_signals>`) and the `value <OutputState.value>` of the *OUTCOME* `OUtputState`
-of its `objective_mechanism <ControlMechanism.objective_mechanism>`, and returns an identity array the length of the
-OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`, which gives equal weight to
-all of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`.
-COMMENT
 
 .. _OptimizationControlMechanism_Function:
 
@@ -187,10 +179,10 @@ class OptimizationControlMechanism(ControlMechanism):
         is passed to its **monitored_output_states** argument.
 
     learning_function : LearningFunction, function or method
-        specifies the function used to learn to predict the outcome of `objective_mechanism
-        <ControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
-        `control_signals <ControlMechanism.control_signals>` from the `prediction_vector
-        <OptimizationControlMechanism.prediction_vector>` (see `OptimizationControlMechanism_Learning_Function` for details).
+        specifies a function used to predict `outcome <ControlMechanism.outcome> minus the `costs <ControlSignal.cost>`
+        of the `control_signals <ControlMechanism.control_signals>` from `prediction_vector
+        <OptimizationControlMechanism.prediction_vector>` (see `OptimizationControlMechanism_Learning_Function`
+        for details).
 
     objective_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
@@ -256,16 +248,18 @@ class OptimizationControlMechanism(ControlMechanism):
     ----------
 
     prediction_vector : 1d ndarray
-        array passed to `learning_function <OptimizationControlMechanism.learning_function>` if it is implemented.
+        array passed to `learning_function <OptimizationControlMechanism.learning_function>` if that is implemented.
 
     prediction_weights : 1d ndarray
         weights assigned to each term of `prediction_vector <OptimizationControlMechanism.prediction_vector>`
         by `learning_function <OptimizationControlMechanism.learning_function>`.
 
     learning_function : LearningFunction, function or method
-        takes `prediction_vector <OptimizationControlMechanism.prediction_vector>` and outcome and returns an updated
-        set of `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see
-        `OptimizationControlMechanism_Learning_Function` for additional details).
+        takes `prediction_vector <OptimizationControlMechanism.prediction_vector>` as its first argument, and `outcome
+        <ControlMechanism.outcome> minus the `costs <ControlSignal.cost>` of the `control_signals
+        <ControlMechanism.control_signals>` as its second argument, and returns an updated set of `prediction_weights
+        <OptimizationControlMechanism.prediction_weights>` (see `OptimizationControlMechanism_Learning_Function` for
+        additional details).
 
     objective_function : function or method
         `objective_function <OptimizationFunction.objective_function>` assigned to `function 
