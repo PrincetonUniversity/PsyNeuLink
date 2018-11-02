@@ -264,15 +264,22 @@ class LeabraFunction(Function_Base):
                  context=None):
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
+        network = self.parameters.network.get(execution_id)
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
         if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            output_size = len(self.network.layers[-1].units)
+            output_size = len(network.layers[-1].units)
             return np.zeros(output_size)
 
-        if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
+        try:
+            training_flag = self.owner.parameters.training_flag.get(execution_id)
+        except AttributeError:
+            training_flag = False
+
+        # None or False
+        if not training_flag:
             if isinstance(variable[0], (list, np.ndarray)):
                 variable = variable[0]
-            return run_leabra_network(self.network, input_pattern=variable)
+            return run_leabra_network(network, input_pattern=variable)
 
         else:
             # variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
@@ -280,12 +287,28 @@ class LeabraFunction(Function_Base):
                 raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
                                   "should be a 2D array containing two vectors, corresponding to the input and the "
                                   "training target.".format(variable))
-            if len(variable[0]) != len(self.network.layers[0].units) or len(variable[1]) != len(self.network.layers[-1].units):
+            if len(variable[0]) != len(network.layers[0].units) or len(variable[1]) != len(network.layers[-1].units):
                 raise LeabraError("Input Error: the input given ({}) was not the right format: it should be a 2D array "
                                   "containing two vectors, corresponding to the input (which should be length {}) and "
                                   "the training target (which should be length {})".
-                                  format(variable, self.network.layers[0], len(self.network.layers[-1].units)))
-            return train_leabra_network(self.network, input_pattern=variable[0], output_pattern=variable[1])
+                                  format(variable, network.layers[0], len(network.layers[-1].units)))
+            return train_leabra_network(network, input_pattern=variable[0], output_pattern=variable[1])
+
+
+def _network_getter(owning_component=None, execution_id=None):
+    return owning_component.function_object.parameters.network.get(execution_id)
+
+
+def _network_setter(value, owning_component=None, execution_id=None):
+    owning_component.function_object.parameters.network.set(value, execution_id)
+    return value
+
+
+def _training_flag_setter(value, self=None, owning_component=None, execution_id=None):
+    if value is not self.get(execution_id):
+        set_training(owning_component.parameters.network.get(execution_id), value)
+
+    return value
 
 
 class LeabraMechanism(ProcessingMechanism_Base):
@@ -454,8 +477,10 @@ class LeabraMechanism(ProcessingMechanism_Base):
         output_size = 1
         hidden_layers = 0
         hidden_sizes = None
-        training_flag = None
         quarter_size = 50
+
+        network = Param(None, getter=_network_getter, setter=_network_setter)
+        training_flag = Param(None, setter=_training_flag_setter)
 
     def __init__(self,
                  leabra_net=None,
@@ -521,7 +546,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         if runtime_params:
             if "training_flag" in runtime_params.keys():
-                self.training_flag = runtime_params["training_flag"]
+                self.parameters.training_flag.set(runtime_params["training_flag"], execution_id)
                 del runtime_params["training_flag"]
 
         return super()._execute(
