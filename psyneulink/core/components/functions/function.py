@@ -12030,19 +12030,19 @@ class OptimizationFunction(Function_Base):
 
         if DEFAULT_VARIABLE in args[0]:
             self.instance_defaults.variable = args[0][DEFAULT_VARIABLE]
-        if OBJECTIVE_FUNCTION in args[0]:
+        if OBJECTIVE_FUNCTION in args[0] and args[0][OBJECTIVE_FUNCTION] is not None:
             self.objective_function = args[0][OBJECTIVE_FUNCTION]
             if OBJECTIVE_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(OBJECTIVE_FUNCTION)]
-        if SEARCH_FUNCTION in args[0]:
+        if SEARCH_FUNCTION in args[0] and args[0][SEARCH_FUNCTION] is not None:
             self.search_function = args[0][SEARCH_FUNCTION]
             if SEARCH_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_FUNCTION)]
-        if SEARCH_TERMINATION_FUNCTION in args[0]:
+        if SEARCH_TERMINATION_FUNCTION in args[0] and args[0][SEARCH_TERMINATION_FUNCTION] is not None:
             self.search_termination_function = args[0][SEARCH_TERMINATION_FUNCTION]
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
-        if SEARCH_SPACE in args[0]:
+        if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
             self.search_space = args[0][SEARCH_SPACE]
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]

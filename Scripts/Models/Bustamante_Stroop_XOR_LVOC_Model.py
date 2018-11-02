@@ -116,13 +116,13 @@ input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
 def run():
     c.run(inputs=input_dict, num_trials=1)
 import timeit
-duration = timeit.timeit(run, number=1)
+duration = timeit.timeit(run, number=2)
 
 print('\n')
 print('--------------------')
-# print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
-# print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
-# print('features: ', lvoc.feature_values)
-# print('lvoc: ', lvoc.compute_lvoc_from_control_signals([c.variable for c in lvoc.control_signals]))
+print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
+print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
+print('features: ', lvoc.feature_values)
+print('lvoc: ', lvoc._compute_EVC([c.variable for c in lvoc.control_signals]))
 print('time: ', duration)
 print('--------------------')
