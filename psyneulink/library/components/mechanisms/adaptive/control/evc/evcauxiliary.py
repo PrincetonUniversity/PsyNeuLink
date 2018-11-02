@@ -346,7 +346,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #        preserved here for possible future restoration
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
-            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, context)
+            results = EVC_pool.map(compute_EVC, [(controller, arg, runtime_params, context)
                                                  for arg in controller.control_signal_search_space])
 
         else:
@@ -406,7 +406,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
-                result_tuple = _compute_EVC(controller, allocation_vector, runtime_params, context)
+                result_tuple = compute_EVC(controller, allocation_vector, runtime_params, context)
                 EVC, outcome, cost = result_tuple
 
                 EVC_max = max(EVC, EVC_max)
@@ -517,7 +517,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
 
-def _compute_EVC(ctlr, allocation_vector, runtime_params, context):
+def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool

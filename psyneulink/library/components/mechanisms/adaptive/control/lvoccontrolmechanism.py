@@ -663,7 +663,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     def _instantiate_attributes_after_function(self, context=None):
         '''Assign LVOCControlMechanism's objective_function'''
 
-        self.objective_function = self._compute_EVC
+        self.objective_function = self.compute_EVC
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_learning_function(self):
@@ -710,6 +710,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Update prediction_weights
             previous_cost = np.sum(self._previous_prediction_vector[self.prediction_vector.idx[PV.COST.value]])
             # costs are assigned as negative in prediction_vector.update, so add them here
+            # self.outcome is for previous trials, so use previous_cost
             net_outcome = self.outcome + previous_cost
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, net_outcome])
 
@@ -996,17 +997,19 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             return computed_terms
 
-    def _compute_EVC(self, variable):
+    def compute_EVC(self, variable):
         '''Update interaction terms and then multiply by prediction_weights
 
-        Uses the current values of `prediction_weights <LVOCControlMechanism.prediction_weights>`
-        and `feature_values <LVOCControlMechanism.feature_values>`, together with the variable
-        (provided in its call by `allocation_policy <ControlMechanism.allocation_policy>`)
-        to evaluate the `EVC <LVOCControlMechanism_EVC>`.
+        Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
 
-        This function (including its call to `PredictionVector.compute_terms`)
-        is differentiated by `autograd <https://github.com/HIPS/autograd>`_\\.grad()
-        in `allocation_policy <ControlMechanism.allocation_policy>`.
+        Uses the current values of `prediction_weights <LVOCControlMechanism.prediction_weights>`
+        and `feature_values <LVOCControlMechanism.feature_values>`, together with the `allocation_policy
+        <ControlMechanism.allocation_policy>` (provided in variable) to evaluate the `EVC <LVOCControlMechanism_EVC>`.
+
+        .. note::
+            If `GradientOptimization` is used as the LVOCControlMechanism's `function <LVOCControlMechanism.function>`,
+            this method (including its call to `PredictionVector.compute_terms`) is differentiated using `autograd
+            <https://github.com/HIPS/autograd>`_\\.grad().
         '''
 
         terms = self.prediction_terms
@@ -1014,10 +1017,11 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         weights = self.prediction_weights
         evc = 0
 
-        for k, v in vector.items():
-            if k in terms:
-                idx = self.prediction_vector.idx[k.value]
-                evc += np.sum(v.reshape(-1) * weights[idx])
+        for term_label, term_value in vector.items():
+            if term_label in terms:
+                pv_enum_val = term_label.value
+                item_idx = self.prediction_vector.idx[pv_enum_val]
+                evc += np.sum(term_value.reshape(-1) * weights[item_idx])
 
         return evc
 
