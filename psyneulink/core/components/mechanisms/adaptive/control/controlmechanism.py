@@ -91,10 +91,10 @@ OutputStates that it monitors, and how it evaluates them can be specified in a v
 context in which the ControlMechanism is created, as described in the subsections below. In all cases,
 the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's `primary
-InputState <InputState_Primary>`.  All of the OutputStates monitored by the ObjectiveMechanism are listed in its
-`monitored_output_States <ObjectiveMechanism.monitored_output_states>` attribute, and in the ControlMechanism's
-`monitor_for_control <ControlMechanism.montior_for_control>` attribute.
+ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's *OUTCOME*
+`InputState` (which is its  `primary InputState <InputState_Primary>`.  All of the OutputStates monitored by the
+ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>`
+attribute, and in the ControlMechanism's `monitor_for_control <ControlMechanism.montior_for_control>` attribute.
 
 *When the ControlMechanism is created explicitly*
 
@@ -192,14 +192,15 @@ Structure
 *Input*
 ~~~~~~~
 
-A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
-input to the ControlMechanism's `function <ControlMechanism.function>`, that determines the ControlMechanism's
-`allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
-via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
-ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute)
-are also listed in the `monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
+A ControlMechanism has a single *OUTCOME* `InputState`. Its `value <InputState.value>` (that can be referenced
+by its `outcome <ControlMechanism.outcome>` attribute) is used as the input to the ControlMechanism's `function
+<ControlMechanism.function>`, that determines the ControlMechanism's `allocation_policy
+<ControlMechanism.allocation_policy>`. The *OUTCOME* InputState receives its input via a `MappingProjection` from the
+*OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The Objective Mechanism is specified
+in the **objective_mechanism** argument of its constructor, and listed in its `objective_mechanism
+<EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the ObjectiveMechanism (listed
+in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute) are also listed in the
+`monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
 `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the OutputStates it monitors are specified).
 The OutputStates monitored by the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` can
 be displayed using its `show <ControlMechanism.show>` method. The ObjectiveMechanism's `function <ObjectiveMechanism>`
@@ -212,11 +213,11 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
-*ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism.allocation_policy>`.  By
-default, each item of the `allocation_policy <ControlMechanism.allocation_policy>` is assigned as the
-`allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
-<ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
-(for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
+*OUTCOME* `InputState` (`outcome <ControlMechanism.outcome>` to generate an `allocation_policy
+<ControlMechanism.allocation_policy>`.  By default, each item of the `allocation_policy
+<ControlMechanism.allocation_policy>` is assigned as the `allocation <ControlSignal.allocation>` of the corresponding
+`ControlSignal` in `control_signals <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may
+assign values differently (for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
 
 
 .. _ControlMechanism_Output:
@@ -246,12 +247,12 @@ Execution
 A ControlMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
 ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
-its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
-<ControlMechanism.allocation_policy>` which specifies the value assigned to the `allocation
-<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
-calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
-to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
-subsequent `TRIAL` of execution.
+its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `outcome <ControlSignal.outcome>`
+and uses that to determine its `allocation_policy <ControlMechanism.allocation_policy>` which specifies the value
+assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
+ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
+`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
+controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
@@ -348,8 +349,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  \
-    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE, \
+    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, OUTCOME
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import CNodeRole,ContentAddressableList, is_iterable
@@ -513,7 +514,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
-        **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
+        **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_state <Mechanism_Base.input_state>`.
 
     origin_objective_mechanism : Boolean
@@ -554,6 +555,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ControlMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
+
+    outcome : nd.array
+        the `value <InputState.value>` of the ControlMechanism's `primary InputState <InputState_Primary>`,
+        which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
@@ -856,9 +862,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.aux_components.append((projection_from_objective, True))
         self.monitor_for_control = self.monitored_output_states
 
-
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
+        self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
@@ -1176,6 +1182,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
+
+    @property
+    def outcome(self):
+        return self.variable[0]
 
     @property
     def control_projections(self):

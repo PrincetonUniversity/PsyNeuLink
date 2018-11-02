@@ -19,7 +19,6 @@ import warnings
 
 from psyneulink.core.components.functions.function import Buffer, Function_Base, Integrator, Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -33,7 +32,7 @@ __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
     'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
-    'INPUT', 'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
+    'INPUT', 'INPUT_SEQUENCE', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
 ]
 

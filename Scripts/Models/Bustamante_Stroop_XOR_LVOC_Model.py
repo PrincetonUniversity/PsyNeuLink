@@ -116,7 +116,7 @@ input_dict = {color_stim:[[1,0,0,0,0,0,0,0]],
 def run():
     c.run(inputs=input_dict, num_trials=1)
 import timeit
-duration = timeit.timeit(run, number=1)
+duration = timeit.timeit(run, number=2)
 
 print('\n')
 print('--------------------')
