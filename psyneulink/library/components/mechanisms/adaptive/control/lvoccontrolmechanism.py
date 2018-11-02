@@ -623,8 +623,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
 
-        super().__init__(system=None,
-                         objective_mechanism=objective_mechanism,
+        super().__init__(objective_mechanism=objective_mechanism,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
@@ -773,7 +772,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     def _instantiate_attributes_after_function(self, context=None):
         '''Assign LVOCControlMechanism's objective_function'''
 
-        self.objective_function = self.compute_EVC
+        self.objective_function = self._compute_EVC
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_learning_function(self):
