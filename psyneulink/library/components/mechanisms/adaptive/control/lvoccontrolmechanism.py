@@ -705,7 +705,6 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Initialize prediction_vector and control_signals on first trial
             # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
             self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 1)
-            control_signal_variables = np.array([c.instance_defaults.variable for c in self.control_signals])
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
         else:
             # Update prediction_weights
@@ -716,8 +715,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             # Update prediction_vector with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
-            control_signal_variables = np.array([c.variable for c in self.control_signals])
-            self.prediction_vector.update_vector(self.control_signal_variables, self.feature_values)
+            self.prediction_vector.update_vector(self.allocation_policy, self.feature_values)
             self._previous_prediction_vector = self.prediction_vector.vector
 
         # # TEST PRINT
@@ -729,7 +727,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
-                                        super(ControlMechanism, self)._execute(variable=control_signal_variables,
+                                        super(ControlMechanism, self)._execute(variable=self.allocation_policy,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
         # # # TEST PRINT

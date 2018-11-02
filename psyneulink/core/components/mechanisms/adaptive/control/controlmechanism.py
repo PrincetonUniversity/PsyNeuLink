@@ -1187,6 +1187,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def outcome(self):
         return self.variable[0]
 
+    # @property
+    # def control_signal_variables(self):
+    #     v = np.array([c.variable for c in self.control_signals])
+    #     if v is not None:
+    #         return v
+    #     else:
+    #         return np.array([c.instance_defaults.variable for c in self.control_signals])
+
     @property
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]

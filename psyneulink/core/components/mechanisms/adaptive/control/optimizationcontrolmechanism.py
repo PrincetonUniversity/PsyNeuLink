@@ -179,10 +179,10 @@ class OptimizationControlMechanism(ControlMechanism):
         is passed to its **monitored_output_states** argument.
 
     learning_function : LearningFunction, function or method
-        specifies a function used to predict `outcome <ControlMechanism.outcome> minus the `costs <ControlSignal.cost>`
-        of the `control_signals <ControlMechanism.control_signals>` from `prediction_vector
-        <OptimizationControlMechanism.prediction_vector>` (see `OptimizationControlMechanism_Learning_Function`
-        for details).
+        specifies a function used to predict `outcome <ControlMechanism.outcome> minus the `cost <ControlSignal.cost>`
+        of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>` from
+        `prediction_vector <OptimizationControlMechanism.prediction_vector>` (see
+        `OptimizationControlMechanism_Learning_Function` for details).
 
     objective_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
@@ -278,10 +278,9 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>`.
 
     function : OptimizationFunction, function or method
-        takes current `control_signal_variables <OptimiziationControlMechanism.control_signal_variables>`
-        and returns an `allocation_policy` that optimizes the value of its `objective_function
-        <OptimizationControlMechanism.objective_function>`  (see `Primary Function
-        <OptimizationControlMechanism_Function>` for additional details).
+        takes current `allocation_policy <ControlMechanism.allocation_policy>` and returns an `allocation_policy`
+        that optimizes the value of its `objective_function <OptimizationControlMechanism.objective_function>`  (see
+        `Primary Function <OptimizationControlMechanism_Function>` for additional details).
 
     saved_samples : list
         contains all values of `allocation_policy <ControlMechanism.allocation_policy>` sampled by `function
@@ -292,10 +291,6 @@ class OptimizationControlMechanism(ControlMechanism):
         contains all values of the `objective_function <OptimizationControlMechanism.objective_function>` sampled
         by `function <OptimizationControlMechanism.function>` if its
         `save_values <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
-
-    control_signal_variables : np.array
-        variables of the OptimizationControlMechanism's `control_signals
-        <ControlMechanism.control_signals>`.
 
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -396,14 +391,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        # Instantiate attributes for OptimizationControlMechanism
-        self.control_signal_variables = np.array([c.variable for c in self.control_signals])
-
         if self.learning_function:
             self._instantiate_learning_function()
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_signal_variables,
+        self.function_object.reinitialize({DEFAULT_VARIABLE: self.allocation_policy,
                                            OBJECTIVE_FUNCTION: self.objective_function,
                                            SEARCH_FUNCTION: self.search_function,
                                            SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
