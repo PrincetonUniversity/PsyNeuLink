@@ -162,7 +162,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
        `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
-    .. note: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
+    .. note:: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
     COMMENT:
     (see _instantiate_graph below)
     COMMENT
@@ -814,14 +814,15 @@ class System(System_Base):
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
     results : List[OutputState.value]
-        list of return values from the sequence of executions.  Each item is a 1d array containing the `value
-        <OutputState.value>` of each `TERMINAL` Mechanism of the System for a given execution. Excludes simulated runs.
+        list of return values from the sequence of executions.  Each item is a 2d array containing the `output_values
+        <Mechanism.output_values>` of each `TERMINAL` Mechanism of the System for a given execution.
+        Excludes simulated runs.
 
     simulation_results : List[OutputState.value]
         list of return values from the sequence of executions in simulation run(s) of the System; requires
-        recordSimulationPref to be `True`.  Each item is a 1d array containing the `value <OutputState.value>` of
-        each `OutputState` of each `TERMINAL` Mechanism in the System for a given execution in the simulation. Excludes
-        values from non-simulation runs.
+        recordSimulationPref to be `True`.  Each item is a 2d array containing the `output_values
+        <Mechanism.output_values>` of each `TERMINAL` Mechanism in the System for a given execution in the simulation.
+        Excludes values from non-simulation runs.
 
     name : str
         the name of the System; if it is not specified in the **name** argument of the constructor, a default is
@@ -3778,14 +3779,14 @@ class System(System_Base):
         show_graph method::
 
             import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_states=[pnl.RESULTS, pnl.MEAN])
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_states=[pnl.RESULTS, pnl.OUTPUT_MEAN])
             mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
             mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
                                    controller=pnl.ControlMechanism(name='my_system Controller'),
-                                   monitor_for_control=[(pnl.MEAN, mech_1)],
+                                   monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
                                    enable_controller=True)
 
         .. _System_show_graph_figure:

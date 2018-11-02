@@ -466,7 +466,7 @@ than one InputState.  OutputStates can be specified in a similar way, using the 
 The following example specifies two OutputStates for ``my_mech``, using its `Standard OutputStates
 <OutputState_Standard>`::
 
-    my_mech = pnl.TransferMechanism(output_states=['RESULT', 'MEAN'])
+    my_mech = pnl.TransferMechanism(output_states=['RESULT', 'OUTPUT_MEAN'])
 
 As with InputStates, specification of OutputStates in the **output_states** argument suppresses the creation of any
 default OutPutStates that would have been created if no OutputStates were specified (see `note
@@ -1854,7 +1854,7 @@ class State_Base(State):
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
-    """
+        """
 
         # Set context to owner's context:
         self.context.execution_phase = self.owner.context.execution_phase
@@ -2035,6 +2035,7 @@ class State_Base(State):
                     self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
 
         # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
+        # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
         try:
             # pass only function params (which implement the effects of any ModulatoryProjections)
             function_params = self.stateParams[FUNCTION_PARAMS]
@@ -2103,23 +2104,30 @@ class State_Base(State):
     def _assign_default_state_name(self, context=None):
         return False
 
-    def get_input_struct_type(self):
-        return self.function_object.get_input_struct_type()
+    def _get_input_struct_type(self, ctx):
+        return ctx.get_input_struct_type(self.function_object)
 
-    def get_output_struct_type(self):
-        return self.function_object.get_output_struct_type()
+    def _get_output_struct_type(self, ctx):
+        return ctx.get_output_struct_type(self.function_object)
 
-    def get_param_struct_type(self):
-        return self.function_object.get_param_struct_type()
+    def _get_param_struct_type(self, ctx):
+        return ctx.get_param_struct_type(self.function_object)
+
+    def _get_context_struct_type(self, ctx):
+        return ctx.get_context_struct_type(self.function_object)
 
     def get_param_initializer(self):
         return self.function_object.get_param_initializer()
 
-    def get_context_struct_type(self):
-        return self.function_object.get_context_struct_type()
-
     def get_context_initializer(self):
         return self.function_object.get_context_initializer()
+
+    # Provide invocation wrapper
+    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+        main_function = ctx.get_llvm_function(self.function_object)
+        builder.call(main_function, [params, context, arg_in, arg_out])
+
+        return builder
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):

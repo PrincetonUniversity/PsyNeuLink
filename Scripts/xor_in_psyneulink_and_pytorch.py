@@ -62,12 +62,12 @@ xor_in = pnl.TransferMechanism(name='input_layer',
                            default_variable=np.zeros(2))
 
 xor_hid = pnl.TransferMechanism(name='hidden_layer',
-                            default_variable=np.zeros(10),
-                            function=pnl.Logistic())
+                                default_variable=np.zeros(10),
+                                function=pnl.Logistic())
 
 xor_out = pnl.TransferMechanism(name='output_layer',
-                            default_variable=np.zeros(1),
-                            function=pnl.Logistic())
+                                default_variable=np.zeros(1),
+                                function=pnl.Logistic())
 
 # projection that takes the signal from the input layer and transforms it to get an input for
 # the hidden layer (the xor_hid mechanism)
@@ -131,12 +131,12 @@ xor_in = pnl.TransferMechanism(name='xor_in',
                            default_variable=np.zeros(2))
 
 xor_hid = pnl.TransferMechanism(name='xor_hid',
-                            default_variable=np.zeros(10),
-                            function=pnl.Logistic())
+                                default_variable=np.zeros(10),
+                                function=pnl.Logistic())
 
 xor_out = pnl.TransferMechanism(name='xor_out',
-                            default_variable=np.zeros(1),
-                            function=pnl.Logistic())
+                                default_variable=np.zeros(1),
+                                function=pnl.Logistic())
 
 hid_map = pnl.MappingProjection(name='input_to_hidden',
                             matrix=np.random.randn(2,10)*0.1,

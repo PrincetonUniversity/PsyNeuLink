@@ -65,8 +65,8 @@ decision_layer = pnl.LCAMechanism(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=pnl.Logistic(bias=b_decision),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=pnl.Logistic(x_0=b_decision),
+    noise=pnl.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='DECISION LAYER'
 )
@@ -80,8 +80,8 @@ response_layer = pnl.LCAMechanism(
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=pnl.Logistic(bias=b_response),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=pnl.Logistic(x_0=b_response),
+    noise=pnl.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='RESPONSE'
 )

@@ -176,11 +176,6 @@ from types import MethodType
 import numpy as np
 import typecheck as tc
 
-import ctypes
-import functools
-
-from psyneulink.core import llvm as pnlvm
-
 from llvmlite import ir
 
 from psyneulink.core.components.component import Param, function_type, method_type
@@ -195,7 +190,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutpu
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, OUTPUT_STD_DEV, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
@@ -247,10 +242,10 @@ class RECURRENT_OUTPUT():
 
         .. TRANSFER_MEAN:
 
-        *MEAN* : float
+        *OUTPUT_MEAN* : float
             the mean of the result
 
-        *VARIANCE* : float
+        *OUTPUT_VARIANCE* : float
             the variance of the result
 
         .. ENERGY:
@@ -268,10 +263,10 @@ class RECURRENT_OUTPUT():
             between 0 and 1 (e.g. the `Logistic` Function)).
         """
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
+    VARIANCE=OUTPUT_VARIANCE
     ENERGY=ENERGY
     ENTROPY=ENTROPY
     # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
@@ -1334,13 +1329,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         '''
         return self.output_state
 
-    def get_input_struct_type(self):
+    def _get_input_struct_type(self, ctx):
         input_type_list = []
         # FIXME: What if we have more than one state? Does the autoprojection
         # connect only to the first one?
         assert len(self.input_states) == 1
         for state in self.input_states:
-            s_type = state.get_input_struct_type()
+            s_type = ctx.get_input_struct_type(state)
             if isinstance(s_type, ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
@@ -1353,19 +1348,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         for state in self.parameter_states:
             state_input_type_list = []
             for proj in state.mod_afferents:
-                state_input_type_list.append(proj.get_output_struct_type())
+                state_input_type_list.append(ctx.get_output_struct_type(proj))
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def get_param_struct_type(self):
-        transfer_t = super().get_param_struct_type()
-        projection_t = self.recurrent_projection.get_param_struct_type()
+    def _get_param_struct_type(self, ctx):
+        transfer_t = ctx.get_param_struct_type(super())
+        projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return ir.LiteralStructType([transfer_t, projection_t])
 
-    def get_context_struct_type(self):
-        transfer_t = super().get_context_struct_type()
-        projection_t = self.recurrent_projection.get_context_struct_type()
-        return_t = self.get_output_struct_type()
+    def _get_context_struct_type(self, ctx):
+        transfer_t = ctx.get_context_struct_type(super())
+        projection_t = ctx.get_context_struct_type(self.recurrent_projection)
+        return_t = ctx.get_output_struct_type(self)
         return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
     def get_param_initializer(self):
@@ -1383,7 +1378,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return tuple([transfer_init, projection_init, tuple(retval_init)])
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        real_input_type = super().get_input_struct_type()
+        real_input_type = super()._get_input_struct_type(ctx)
         real_in = builder.alloca(real_input_type, 1)
         old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
@@ -1407,7 +1402,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(is_real_input.type.pointee) - 1
             real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            recurrent_f = ctx.get_llvm_function(self.recurrent_projection.llvmSymbolName)
+            recurrent_f = ctx.get_llvm_function(self.recurrent_projection)
             recurrent_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             # FIXME: Why does this have a wrapper struct?

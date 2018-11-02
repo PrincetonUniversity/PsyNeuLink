@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 from llvmlite import binding
+
 import os
 
 __all__ = ['cpu_jit_engine']
@@ -58,7 +59,6 @@ def _cpu_jit_constructor():
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
 
-_dumpenv = os.environ.get("PNL_LLVM_DUMP")
 
 class jit_engine:
     def __init__(self):
@@ -66,19 +66,26 @@ class jit_engine:
         self._jit_pass_manager = None
         self._target_machine = None
         self.__mod = None
+        self.__opt_modules = 0
+        self.__dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
+
+    def __del__(self):
+        if self.__dumpenv.find("mod_count") != -1:
+            print("Total JIT modules: ", self.__opt_modules)
 
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
-        if _dumpenv is not None and _dumpenv.find("opt") != -1:
+        if self.__dumpenv.find("opt") != -1:
             print(module)
 
         # This prints generated x86 assembly
-        if _dumpenv is not None and _dumpenv.find("isa") != -1:
+        if self.__dumpenv.find("isa") != -1:
             print("ISA assembly:")
             print(self._target_machine.emit_assembly(self.__mod))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
+        self.__opt_modules += 1
 
     def _remove_bin_module(self, module):
         self._engine.remove_module(module)

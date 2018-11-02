@@ -19,9 +19,10 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
+                                        function=pnl.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -44,9 +45,10 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
+                                        function=pnl.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -56,21 +58,21 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_states) == 5
 
-    def test_lvoc_predictors_function(self):
+    def test_lvoc_feature_predictors_function(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.LVOCControlMechanism(predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
-                                        predictor_function=pnl.LinearCombination(offset=10.0),
+        lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
+                                        feature_function=pnl.LinearCombination(offset=10.0),
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
+                                        function=pnl.GradientOptimization(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
-
 
         c.run(inputs=input_dict)
 
@@ -248,6 +250,47 @@ class TestControlMechanisms:
 #
 #         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN) and \
 #                B in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
+
+#     def test_evc(self):
+#         # Mechanisms
+#         Input = TransferMechanism(
+#             name='Input',
+#         )
+#         Reward = TransferMechanism(
+#             output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
+#             name='Reward'
+#         )
+#         Decision = DDM(
+#             function=BogaczEtAl(
+#                 drift_rate=(
+#                     1.0,
+#                     ControlProjection(
+#                         function=Linear,
+#                         control_signal_params={
+#                             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+#                         },
+#                     ),
+#                 ),
+#                 threshold=(
+#                     1.0,
+#                     ControlProjection(
+#                         function=Linear,
+#                         control_signal_params={
+#                             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+#                         },
+#                     ),
+#                 ),
+#                 noise=(0.5),
+#                 starting_point=(0),
+#                 t0=0.45
+#             ),
+#             output_states=[
+#                 DECISION_VARIABLE,
+#                 RESPONSE_TIME,
+#                 PROBABILITY_UPPER_THRESHOLD
+#             ],
+#             name='Decision',
+#         )
 #
 #     def test_terminal_objective_mechanism_false(self):
 #         # When False, even if the ObjectiveMechanism is a terminal node according to the structure of the graph, the
@@ -454,4 +497,3 @@ class TestControllers:
         print("results = ", comp.results[0])
         for trial in range(len(expected_results_array)):
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
-

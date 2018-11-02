@@ -8,14 +8,22 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import numpy as np
+import atexit
 import ctypes
+import numpy as np
+import os
+
 from llvmlite import ir
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
 
 _modules = set()
 _all_modules = set()
+
+@atexit.register
+def module_count():
+    if str(os.environ.get("PNL_LLVM_DUMP")).find("mod_count") != -1:
+        print("Total LLVM modules: ", len(_all_modules))
 
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
@@ -53,6 +61,9 @@ class LLVMBuilderContext:
         return name + '-' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
+        if hasattr(name, '_llvm_symbol_name'):
+            name = name._llvm_symbol_name
+
         f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
         # Add declaration to the current module
         if f.name not in LLVMBuilderContext.module.globals:
@@ -60,6 +71,33 @@ class LLVMBuilderContext:
             assert decl_f.is_declaration
             return decl_f
         return f
+
+    def get_input_struct_type(self, component):
+        if hasattr(component, '_get_input_struct_type'):
+            return component._get_input_struct_type(self)
+
+        default_var = component.instance_defaults.variable
+        return self.convert_python_struct_to_llvm_ir(default_var)
+
+    def get_output_struct_type(self, component):
+        if hasattr(component, '_get_output_struct_type'):
+            return component._get_output_struct_type(self)
+
+        default_val = component.instance_defaults.value
+        return self.convert_python_struct_to_llvm_ir(default_val)
+
+    def get_param_struct_type(self, component):
+        if hasattr(component, '_get_param_struct_type'):
+            return component._get_param_struct_type(self)
+
+        params = component._get_param_values()
+        return self.convert_python_struct_to_llvm_ir(params)
+
+    def get_context_struct_type(self, component):
+        if hasattr(component, '_get_context_struct_type'):
+            return component._get_context_struct_type(self)
+
+        return ir.LiteralStructType([])
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
@@ -77,7 +115,7 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
 
         print(type(t))
-        assert(False)
+        assert False
 
 def _find_llvm_function(name, mods = _all_modules):
     f = None

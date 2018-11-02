@@ -360,9 +360,10 @@ Most types of Mechanisms have a `standard_output_states` class attribute, that c
 OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
-defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STANDARD_DEVIATION* that are the names of
-predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
-These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
+defines `TRANSFER_OUTPUT`, with attributes *OUTPUT_MEAN*, *OUTPUT_MEDIAN*, *OUTPUT_VARIANCE* and *OUTPUT_STD_DEV* that
+are the names of predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>`
+attribute. These can be used in the list of OutputStates specified for a TransferMechanism object, as in the
+following example::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism(default_variable=[0,0],
@@ -372,9 +373,9 @@ These can be used in the list of OutputStates specified for a TransferMechanism 
     ...                                                pnl.TRANSFER_OUTPUT.VARIANCE])
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
-represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
-of the result (i.e., of its two elements); and the third will be named *VARIANCE* and contain the variance of the
-result.
+represent logistic transform of the 2-element input vector;  the second will be named  *OUTPUT_MEAN* and will
+represent mean of the result (i.e., of its two elements); and the third will be named *OUTPUT_VARIANCE* and contain
+the variance of the result.
 
 .. _OutputState_Customization:
 
@@ -595,7 +596,7 @@ from psyneulink.core.components.functions.function import Function, OneHot, func
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
+from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, MECHANISM_VALUE, OUTPUT_MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, OUTPUT_STD_DEV, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import UtilitiesError, is_numeric, iscompatible, make_readonly_property, recursive_update
@@ -624,10 +625,10 @@ DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OUTPUTS():
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
+    VARIANCE=OUTPUT_VARIANCE
     MECHANISM_VALUE=MECHANISM_VALUE
     MAX_VAL=MAX_VAL
     MAX_ABS_VAL=MAX_VAL
@@ -636,13 +637,13 @@ class OUTPUTS():
     PROB=PROB
 
 standard_output_states = [{NAME: RESULT},
-                          {NAME:MEAN,
+                          {NAME:OUTPUT_MEAN,
                            FUNCTION:lambda x: np.mean(x)},
-                          {NAME:MEDIAN,
+                          {NAME: OUTPUT_MEDIAN,
                            FUNCTION:lambda x: np.median(x)},
-                          {NAME:STANDARD_DEVIATION,
+                          {NAME: OUTPUT_STD_DEV,
                            FUNCTION:lambda x: np.std(x)},
-                          {NAME:VARIANCE,
+                          {NAME: OUTPUT_VARIANCE,
                            FUNCTION:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
                            VARIABLE: OWNER_VALUE},
@@ -1266,11 +1267,6 @@ class OutputState(State_Base):
             label_dictionary = self.owner.output_labels_dict
         return self._get_value_label(label_dictionary, self.owner.output_states)
 
-    @property
-    def llvmSymbolName(self):
-        return self.function_object.llvmSymbolName
-
-
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
 
@@ -1478,11 +1474,11 @@ class StandardOutputStates():
                  output_state_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
         self.owner = owner
-        self._instantiate_state_list(output_state_dicts, indices)
+        self.data = self._instantiate_std_state_list(output_state_dicts, indices)
 
-    def _instantiate_state_list(self, output_state_dicts, indices):
+    def _instantiate_std_state_list(self, output_state_dicts, indices):
 
-        self.data = output_state_dicts.copy()
+        dict_list = output_state_dicts.copy()
 
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
@@ -1519,25 +1515,25 @@ class StandardOutputStates():
                                                        self.name,
                                                        self.owner.name))
 
-            for index, state_dict in zip(indices, self.data):
+            for index, state_dict in zip(indices, dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign indices sequentially based on order of items in output_state_dicts arg
         elif indices is SEQUENTIAL:
-            for index, state_dict in enumerate(self.data):
+            for index, state_dict in enumerate(dict_list):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputStates in output_state_dicts that don't
         #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
         elif indices is PRIMARY:
-            for state_dict in self.data:
+            for state_dict in dict_list:
                 if INDEX in state_dict or VARIABLE in state_dict:
                     continue
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
-        # Validate all INDEX specification, parse any assigned as ALL, and
+        # Validate all INDEX specifications, parse any assigned as ALL, and
         # Add names of each OutputState as property of the owner's class that returns its name string
-        for state in self.data:
+        for state in dict_list:
             if INDEX in state:
                 if state[INDEX] in ALL:
                     state.update({VARIABLE:OWNER_VALUE})
@@ -1552,7 +1548,7 @@ class StandardOutputStates():
 
         # For each OutputState dict with a VARIABLE entry that references it's owner's value (by index)
         # add <NAME_INDEX> as property of the OutputState owner's class that returns its index.
-        for state in self.data:
+        for state in dict_list:
             if isinstance(state[VARIABLE], tuple):
                 index = state[VARIABLE][1]
             elif isinstance(state[VARIABLE], int):
@@ -1561,9 +1557,12 @@ class StandardOutputStates():
                 continue
             setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index, name=state[NAME] + '_INDEX'))
 
+        return dict_list
+
     @tc.typecheck
     def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
-        self.data.append(self._instantiate_state_list(output_state_dicts, indices))
+        self.data.extend(self._instantiate_std_state_list(output_state_dicts, indices))
+        assert True
 
     @tc.typecheck
     def get_state_dict(self, name:str):
@@ -1587,7 +1586,6 @@ class StandardOutputStates():
     # @property
     # def indices(self):
     #     return [item[INDEX] for item in self.data]
-
 
 def _parse_output_state_variable(owner, variable, output_state_name=None):
     """Return variable for OutputState based on VARIABLE entry of owner's params dict

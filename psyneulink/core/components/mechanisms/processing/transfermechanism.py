@@ -331,7 +331,10 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
+    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, \
+    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, OUTPUT_STD_DEV, \
+    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, OUTPUT_VARIANCE, DISTRIBUTION_FUNCTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -342,7 +345,6 @@ __all__ = [
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
-import ctypes
 import functools
 
 from psyneulink.core import llvm as pnlvm
@@ -381,22 +383,22 @@ class TRANSFER_OUTPUT():
 
     .. _TRANSFER_MECHANISM_MEAN:
 
-    *MEAN* : float
+    *OUTPUT_MEAN* : float
       mean of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_MEDIAN:
 
-    *MEDIAN* : float
+    *OUTPUT_MEDIAN* : float
       median of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_STD_DEV:
 
-    *STANDARD_DEVIATION* : float
+    *OUTPUT_STD_DEV* : float
       standard deviation of `value <TransferMechanism.value>`.
 
     .. _TRANSFER_MECHANISM_VARIANCE:
 
-    *VARIANCE* : float
+    *OUTPUT_VARIANCE* : float
       variance of `output_state.value`.
 
     *MECHANISM_VALUE* : list
@@ -412,10 +414,10 @@ class TRANSFER_OUTPUT():
 
     RESULTS=RESULTS
     RESULT=RESULT
-    MEAN=MEAN
-    MEDIAN=MEDIAN
-    STANDARD_DEVIATION=STANDARD_DEVIATION
-    VARIANCE=VARIANCE
+    MEAN=OUTPUT_MEAN
+    MEDIAN=OUTPUT_MEDIAN
+    STANDARD_DEVIATION=OUTPUT_STD_DEV
+    VARIANCE=OUTPUT_VARIANCE
     MAX_VAL=MAX_VAL
     MAX_ABS_VAL=MAX_ABS_VAL
     MAX_INDICATOR=MAX_INDICATOR
@@ -870,9 +872,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
-                    raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
+                    raise TransferError("Function specified as {} param of {} ({}) must be a {}".
                                         format(repr(FUNCTION), self.name, transfer_function_class.__name__,
-                                               TRANSFER_FUNCTION_TYPE + ' or ' + SELECTION_FUNCTION_TYPE))
+                                               " or ".join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])))
             elif not isinstance(transfer_function, (function_type, method_type)):
                 raise TransferError("Unrecognized specification for {} param of {} ({})".
                                     format(repr(FUNCTION), self.name, transfer_function))
@@ -1066,52 +1068,52 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def get_param_struct_type(self):
+    def _get_param_struct_type(self, ctx):
         input_param_list = []
         for state in self.input_states:
-            input_param_list.append(state.get_param_struct_type())
+            input_param_list.append(ctx.get_param_struct_type(state))
         input_param_struct = ir.LiteralStructType(input_param_list)
 
-        param_type_list = [self.function_object.get_param_struct_type()]
+        param_type_list = [ctx.get_param_struct_type(self.function_object)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            param_type_list.append(self.integrator_function.get_param_struct_type())
+            param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
         function_param_struct = ir.LiteralStructType(param_type_list)
 
         output_param_list = []
         for state in self.output_states:
-            output_param_list.append(state.get_param_struct_type())
+            output_param_list.append(ctx.get_param_struct_type(state))
         output_param_struct = ir.LiteralStructType(output_param_list)
 
         param_param_list = []
         for state in self.parameter_states:
-            param_param_list.append(state.get_param_struct_type())
+            param_param_list.append(ctx.get_param_struct_type(state))
         param_param_struct = ir.LiteralStructType(param_param_list)
 
         return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct, param_param_struct])
 
 
-    def get_context_struct_type(self):
+    def _get_context_struct_type(self, ctx):
         input_context_list = []
         for state in self.input_states:
-            input_context_list.append(state.get_context_struct_type())
+            input_context_list.append(ctx.get_context_struct_type(state))
         input_context_struct = ir.LiteralStructType(input_context_list)
 
-        context_type_list = [self.function_object.get_context_struct_type()]
+        context_type_list = [ctx.get_context_struct_type(self.function_object)]
         if self.integrator_mode:
            assert self.integrator_function is not None
-           context_type_list.append(self.integrator_function.get_context_struct_type())
+           context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
 
         function_context_struct = ir.LiteralStructType(context_type_list)
 
         output_context_list = []
         for state in self.output_states:
-            output_context_list.append(state.get_context_struct_type())
+            output_context_list.append(ctx.get_context_struct_type(state))
         output_context_struct = ir.LiteralStructType(output_context_list)
 
         parameter_context_list = []
         for state in self.parameter_states:
-            parameter_context_list.append(state.get_context_struct_type())
+            parameter_context_list.append(ctx.get_context_struct_type(state))
         parameter_context_struct = ir.LiteralStructType(parameter_context_list)
 
         return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
@@ -1233,8 +1235,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             - Variance of the activation values across units
         Return:
             value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+            mean of items in RESULT outputState[TransferOuput.OUTPUT_MEAN].value
+            variance of items in RESULT outputState[TransferOuput.OUTPUT_VARIANCE].value
 
         Arguments:
 

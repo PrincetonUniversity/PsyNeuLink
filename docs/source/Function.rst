@@ -19,6 +19,7 @@ Functions
              Logistic,
              ReLU,
              OneHot,
+             Gaussian,
              SoftMax,
              LinearMatrix,
              Integrator,
@@ -48,5 +49,8 @@ Functions
              Reinforcement,
              BackPropagation,
              TDLearning,
-             BayesGLM
+             BayesGLM,
+             OptimizationFunction,
+             GradientOptimization,
+             GridSearch,
    :exclude-members: MappingProjection, ParameterState

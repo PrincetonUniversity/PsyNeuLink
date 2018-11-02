@@ -1,13 +1,11 @@
 #!/usr/bin/python3
 
 import copy
-import ctypes
 import functools
 import numpy as np
 import pytest
 
 from psyneulink.core import llvm as pnlvm
-
 from llvmlite import ir
 
 

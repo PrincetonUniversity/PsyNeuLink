@@ -846,15 +846,15 @@ class ParameterState(State_Base):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
-    def get_input_struct_type(self):
-        func_input_type = self.function_object.get_input_struct_type()
+    def _get_input_struct_type(self, ctx):
+        func_input_type = ctx.get_input_struct_type(self.function_object)
         input_types = [func_input_type]
         for mod in self.mod_afferents:
-            input_types.append(mod.get_output_struct_type())
+            input_types.append(ctx.get_output_struct_type(mod))
         return ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        state_f = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        state_f = ctx.get_llvm_function(self.function_object)
 
         # Extract the original mechanism function's param value
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])

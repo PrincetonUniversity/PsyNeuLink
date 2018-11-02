@@ -20,8 +20,8 @@ KohonenMechanism, to implement a `self-organized map (SOM) <https://en.wikipedia
 
 .. _KohonenLearningMechanism_Creation:
 
-Creating an KohonenLearningMechanism
---------------------------------------------
+Creating a KohonenLearningMechanism
+-----------------------------------
 
 An KohonenLearningMechanism can be created directly by calling its constructor, but most commonly it is
 created automatically when a KohonenMechanism is `configured for learning <Kohonen_Learning>`.
