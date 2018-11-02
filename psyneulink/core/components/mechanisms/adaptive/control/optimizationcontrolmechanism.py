@@ -93,6 +93,8 @@ OptimizationFunction and OptimizationControlMechanism.  A custom function can al
 <OptimizationControlMechanism.function>` of an OptimizationControlMechanism, however it must meet the following
 requirements:
 
+.. _OptimizationControlMechanism_Custom_Funtion:
+
     - it must accept as its first argument and return as its result an array with the same shape as the
       OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
 

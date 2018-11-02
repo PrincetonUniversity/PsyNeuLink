@@ -90,14 +90,17 @@ Creating an LVOCControlMechanism
 Structure
 ---------
 
+Same as an OptimizationControlMechanism, with the following exceptions.
+
 .. _LVOCControlMechanism_Input:
 
 *Input*
 ~~~~~~~
 
-An LVOCControlMechanism has one `InputState` that receives a `Projection` from its `objective_mechanism
-<ControlMechanism.objective_mechanism>` (its primary `InputState <InputState_Primary>`), and additional ones for
-each of its feature_predictors, as described below.
+Like any `ControlMechanism`, an LVOCControlMechanism has a `primary InputState <InputState_Primary>` named *OUTCOME*
+that receives a `Projection` from the *OUTCOME* `OutputState` of its `objective_mechanism
+<ControlMechanism.objective_mechanism>`. However, it also has an additional InputState for each of its
+feature_predictors, as described below.
 
 .. _LVOCControlMechanism_Feature_Predictors:
 
@@ -170,18 +173,8 @@ together with the current `feature_values <LVOCControlMechanism.feature_values>`
 
 The default for `function <LVOCControlMechanism.function>` is the `GradientOptimization` Function, however any
 `OptimizationFunction` can be used in its place.  A custom function can also be used, however it must meet the
-following requirements:
-
-    - It must accept as its first argument an array with the same shape as the
-      LVOCControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
-
-    - It must accept a keyword argument **objective_function**, that is passed the LVOCControlMechanism's
-      `compute_EVC <LVOCControlMechanism.compute_EVC>` method;
-      this is the function used by `function <LVOCControlMechanism.function>`
-      to evaluate `EVC <LVOCControlMechanism_EVC>` during the optimization process.
-
-    - It must return an array with the same shape as the LVOCControlMechanism's `allocation_policy
-      <ControlMechanism.allocation_policy>`.
+requirements for the `function <OptimizationControlMechanism.function>` of an `OptimizationControlFunction`,
+as described `here <OptimizationControlMechanism_Custom_Funtion>`.
 
 .. _LVOCControlMechanism_ControlSignals:
 
