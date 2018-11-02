@@ -413,9 +413,23 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
 
-        raise ModelBasedOptimizationControlMechanismError("PROGRAM ERROR: {} must implement its own {} method".
-                                                format(self.__class__.__name__, repr('_execute')))
+        self.predicted_input, self.num_trials, self.reinitialize_values, self.node_values = self.composition.before_simulations()
 
+        # Compute allocation_policy using LVOCControlMechanism's optimization function
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
+                                        super(ControlMechanism, self)._execute(variable=self.allocation_policy,
+                                                                               runtime_params=runtime_params,
+                                                                               context=context)
+        self.composition.after_simulations(self.reinitialize_values, self.node_values)
+        # # # TEST PRINT
+        # print ('EXECUTION COUNT: ', self.current_execution_count)
+        # print ('ALLOCATION POLICY: ', allocation_policy)
+        # print ('ALLOCATION POLICY: ', self.evc_max)
+        # print ('\n------------------------------------------------')
+        # # # TEST PRINT END
+
+        return allocation_policy
     def get_control_signal_search_space(self):
 
         control_signal_sample_lists = []
@@ -486,23 +500,3 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
             other_simulation_data.append(call_after_simulation_data)
         return allocation_policy_outcomes, other_simulation_data
 
-    def run_simulations(self, allocation_policies, call_after_simulation=None, runtime_params=None, context=None):
-
-        predicted_input, num_trials, reinitialize_values, node_values = self.composition.before_simulations()
-
-        outcome_list = []
-
-        for allocation_policy in allocation_policies:
-            allocation_policy_outcomes, simulation_data = self.run_simulation(allocation_policy=allocation_policy,
-                                                                              num_trials=num_trials,
-                                                                              reinitialize_values=reinitialize_values,
-                                                                              predicted_input=predicted_input,
-                                                                              call_after_simulation=call_after_simulation,
-                                                                              runtime_params=runtime_params,
-                                                                              context=context)
-
-            outcome_list.append((allocation_policy, allocation_policy_outcomes, simulation_data))
-
-        self.composition.after_simulations(reinitialize_values, node_values)
-
-        return outcome_list
