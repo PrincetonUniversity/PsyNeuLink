@@ -708,11 +708,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
         else:
             # Update prediction_weights
-            #     self.outcome is for previous trial, so use previous_cost
-            previous_cost = np.sum(self.costs)
-            net_outcome = self.outcome - previous_cost
-
-            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, net_outcome])
+            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector,
+                                                                       self.net_outcome])
 
             # Update prediction_vector with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())

@@ -1205,6 +1205,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def costs(self):
         return [c._compute_costs(c.variable) for c in self.control_signals]
+
+    @property
+    def net_outcome(self):
+        return self.outcome - np.sum(self.costs)
     # MODIFIED 11/2/18 END
 
     @property
