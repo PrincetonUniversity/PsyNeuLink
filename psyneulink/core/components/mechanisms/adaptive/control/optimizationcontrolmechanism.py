@@ -14,8 +14,8 @@ Overview
 --------
 
 An OptimizationControlMechanism is an abstract class for subclasses of `ControlMechanism <ControlMechanism>` that
-use an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.alloction_policy>` -- 
-that is, a `value <ControlSignal.value>` for each of its `ControlSignals <ControlSignal>` -- that optimizes the
+use an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.allocation_policy>` -- 
+that is, a `variable <ControlSignal.variable>` for each of its `ControlSignals <ControlSignal>` -- that optimizes the
 `objective_function <OptimizationFunction.objective_function>` used by its `OptimizationFunction`.
 
 .. _OptimizationControlMechanism_Creation:
@@ -23,20 +23,21 @@ that is, a `value <ControlSignal.value>` for each of its `ControlSignals <Contro
 Creating an OptimizationControlMechanism
 ----------------------------------------
 
-An OptimizationControlMechanism can be created in the same was as any `ControlMechanism`.  The only constraint
-is that an `OptimizationFunction` must be specified as the **function** argument of its constructor.  In addition,
-a **learning_function** can be specified (see `below <OptimizationControlMechanism_Learning_Function>`)
+An OptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  The only
+constraint is that an `OptimizationFunction` (or one that has the same structure) must be specified as the **function**
+argument of its constructor.  In addition, a **learning_function** can be specified (see `below
+<OptimizationControlMechanism_Learning_Function>`)
 
 .. _OptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-An OptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection` to
-its `primary InputState <InputState_Primary>` from its associated `objective_mechanism
+An OptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection <Projection>`
+to its `primary InputState <InputState_Primary>` from its associated `objective_mechanism
 <ControlMechanism.objective_mechanism>`, that it seeks to optimize.  In addition to its primary `function
 <OptimizationControlMechanism.function>`, which is an `OptimizationFunction`, it may also have a `learning_function
-<OptimizationControlMechanism_Structure.learning_function>`, both of which are described below.
+<OptimizationControlMechanism.learning_function>`, both of which are described below.
 
 .. _OptimizationControlMechanism_Learning_Function:
 
@@ -44,7 +45,7 @@ Learning Function
 ^^^^^^^^^^^^^^^^^
 
 An OptimizationControlMechanism may have a `learning_function <OptimizationControlMechanism.learning_function>`
-that is used to generate a model that predicts, for a given `allocation_policy <ControlMechanism.allocation_policy>`,
+used to generate a model that predicts, for a given `allocation_policy <ControlMechanism.allocation_policy>`,
 the *OUTCOME* of its `objective_mechanism <ControlMechanism.objective_mechanism>`. The function takes as its arguments
 an array of values it uses to predict the outcome of processing (the OptimizationControlMechanism's `prediction_vector
 <OptimizationControlMechanism.prediction_vector>`) and the most recent `value <OutputState.value>` of the *OUTCOME*
@@ -52,7 +53,7 @@ an array of values it uses to predict the outcome of processing (the Optimizatio
 of weights with one element for each of the values in the first array it is passed.  This is assigned to the
 OptimizationControlMechanism's `prediction_weights <OptimizationControlMechanism.prediction_weights>`) attribute,
 and can be used by its primary `function <OptimizationControlMechanism.function>` in seeking to optimze the
-OptimizationControlMechanism's `allocation_policy <OptimizationControlMechanism.allocation_policy>` (see `below
+OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` (see `below
 <OptimizationControlMechanism_Function>).
 
 COMMENT:
@@ -60,11 +61,10 @@ xxxxxxx
 The default `learning_function <OptimizationControlMechanism.function>` takes as its `prediction_vector
 arguments the `variable
 <ControlSignal.variable>` of the OptimizationControlMechanism's `control_signals
-<OptimizationControlMechanism.control_signals>`) and the `value <OutputState.value>` of the *OUTCOME* `OUtputState`
+<ControlMechanism.control_signals>`) and the `value <OutputState.value>` of the *OUTCOME* `OUtputState`
 of its `objective_mechanism <ControlMechanism.objective_mechanism>`, and returns an identity array the length of the
-OptimizationControlMechanism's `allocation_policy <OptimizationControlMechanism.allocation_policy>`, which gives
-equal weight to all of the OptimizationControlMechanism's `control_signals
-<OptimizationControlMechanism.control_signals>`.
+OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`, which gives equal weight to
+all of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`.
 COMMENT
 
 .. _OptimizationControlMechanism_Function:
@@ -77,9 +77,9 @@ The `function <OptimizationControlMechanism.function>` of an OptimizationControl
 `search_function <OptimizationFunction.search_function>` and `search_termination_function
 <OptimizationFunction.search_termination_function>` methods, as well as a `search_space
 <OptimizationFunction.search_space>` attribute.  The `objective_function <OptimizationFunction.objective_function>`
-is used to evaluate each `allocation_policy <OptimizationControlMechanism.allocation_policy>` generated by the
-`search_function <OptimizationFunction.search_function>`, and return the one that optimizes the value of the
-`objective_function <OptimizationFunction.objective_function>`.
+is used to evaluate each `allocation_policy <ControlMechanism.allocation_policy>` generated by the `search_function
+<OptimizationFunction.search_function>`, and return the one that optimizes the value of the `objective_function
+<OptimizationFunction.objective_function>`.
 
 An OptimizationControlMechanism must implement an `objective_function <OptimizationControlMechanism>` method that
 is passed to the `OptimizationFunction` as its `objective_function <OptimizationFunction.objective_function>` parameter.
@@ -87,16 +87,16 @@ The OptimizationControlMechanism may also implement `search_function <Optimizati
 and `search_termination_function <OptimizationControlMechanism.search_termination_function>` methods, as well as a
 `search_space <OptimizationControlMechanism.search_space>` attribute, which will also be passed as parameters to the
 `OptimizationFunction` when it is constructed.  Any or all of these assignments can be overriden by specifying the
-relevant parameters in a constructor for the `OptimizationFunction>` assigned to the **function** argument of the
+relevant parameters in a constructor for the `OptimizationFunction` assigned to the **function** argument of the
 OptimizationControlMechanism's constructor, as long as they are compatible with the requirements of the
 OptimizationFunction and OptimizationControlMechanism.  A custom function can also be assigned as the `function
 <OptimizationControlMechanism.function>` of an OptimizationControlMechanism, however it must meet the following
 requirements:
 
     - it must accept as its first argument and return as its result an array with the same shape as the
-      OptimizationControlMechanism's `allocation_policy <OptimizationControlMechanism.allocation_policy>`.
+      OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
 
-    - it must implement a `reinitialize` method that accepts as keyword arguments **objective_function**,
+    - it must implement a :method:`reinitialize` method that accepts as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
       with corresponding names.
 
@@ -108,11 +108,11 @@ Execution
 When an OptimizationControlMechanism executes, it calls its `learning_function
 <OptimizationControlMechanism.learning_function>` if it has one, to udpate its prediction model, and then calls
 its primary `function <OptimizationControlMechanism.function>` to find the `allocation_policy
-<OptimizationControlMechanism.allocation_policy>` that optimizes the value of its `objective_function
+<ControlMechanism.allocation_policy>` that optimizes the value of its `objective_function
 <OptimizationControlMechanism.objective_function>`. The values in the `allocation_policy
 <OptimizationControlMechanism.allocation_policy>` returned by `function <OptimizationControlMechanism.function>` are
-assigned as the `variables <ControlSignal.variables>` of its `control_signals
-<OptimizationControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
+assigned as the `variables <ControlSignal.variable>` of its `control_signals <ControlMechanism.control_signals>`,
+from which they compute their `values <ControlSignal.value>`.
 
 COMMENT:
 .. _OptimizationControlMechanism_Examples:
@@ -187,7 +187,7 @@ class OptimizationControlMechanism(ControlMechanism):
     learning_function : LearningFunction, function or method
         specifies the function used to learn to predict the outcome of `objective_mechanism
         <ControlMechanism.objective_mechanism>` minus the `costs <ControlSignal.cost>` of the
-        `control_signals <OptimizationControlMechanism.control_signals>` from the `prediction_vector
+        `control_signals <ControlMechanism.control_signals>` from the `prediction_vector
         <OptimizationControlMechanism.prediction_vector>` (see `OptimizationControlMechanism_Learning_Function` for details).
 
     objective_function : function or method
@@ -196,12 +196,12 @@ class OptimizationControlMechanism(ControlMechanism):
         constructor for `function <OptimizationControlMechanism.function>`. It must take as its first argument 
         an array with the same shape as the OptimizationControlMechanism's `allocation_policy
         <ControlMechanism.allocation_policy>`, and return the following four values: an array containing the 
-        `allocation_policy <ControlSignal.allocation_policy>` that generated the optimal value of the function; 
+        `allocation_policy <ControlMechanism.allocation_policy>` that generated the optimal value of the function;
         an array containing that optimal value;  a list containing each `allocation_policy 
-        <ControlSignal.allocation_policy>` sampled if `function <OptimizationControlMechanism.function>` has a  
-        a `save_samples <OptimizationFunction.save_samples>` attribute and it is `True, otherwise `None`; and a list 
-        containing the value of the function for `allocation_policy <ControlSignal.allocation_policy>` sampled if 
-        it has a `save_values <OptimizationFunction.save_values>` attribute and it is `True, otherwise `None`.  
+        <ControlMechanism.allocation_policy>` sampled if `function <OptimizationControlMechanism.function>` has a
+        a `save_samples <OptimizationFunction.save_samples>` attribute and it is `True`, otherwise `None`; and a list
+        containing the value of the function for `allocation_policy <ControlMechanism.allocation_policy>` sampled if
+        it has a `save_values <OptimizationFunction.save_values>` attribute and it is `True`, otherwise `None`.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
@@ -247,36 +247,23 @@ class OptimizationControlMechanism(ControlMechanism):
         specifies the name of the OptimizationControlMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the OptimizationControlMechanism; see `prefs <OptimizationControlMechanism.prefs>` for details.
+        specifies the `PreferenceSet` for the OptimizationControlMechanism; see `prefs
+        <OptimizationControlMechanism.prefs>` for details.
 
     Attributes
     ----------
 
-    objective_mechanism : ObjectiveMechanism
-        the 'ObjectiveMechanism' used by the OptimizationControlMechanism to evaluate the performance of its `system
-        <OptimizationControlMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism**
-        argument of the OptimizationControlMechanism's constructor, they are assigned as the `monitored_output_states
-        <ObjectiveMechanism.monitored_output_states>` attribute for the `objective_mechanism
-        <ControlMechanism.objective_mechanism>` (see ControlMechanism_ObjectiveMechanism for additional
-        details).
-
-    monitored_output_states : List[OutputState]
-        list of the OutputStates monitored by `objective_mechanism <ControlMechanism.objective_mechanism>`
-        (and listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute),
-        and used to evaluate the performance of the `Composition` to which the OptimizationControlMechanism belongs.
-
-    monitored_output_states_weights_and_exponents: List[Tuple[scalar, scalar]]
-        a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
-        `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
+    prediction_vector : 1d ndarray
+        array passed to `learning_function <OptimizationControlMechanism.learning_function>` if it is implemented.
 
     prediction_weights : 1d ndarray
-        weights assigned to each term of `prediction_vector <OptimizationControlMechanism.prediction_vectdor>`
-        last returned by `learning_function <OptimizationControlMechanism.learning_function>`.
+        weights assigned to each term of `prediction_vector <OptimizationControlMechanism.prediction_vector>`
+        by `learning_function <OptimizationControlMechanism.learning_function>`.
 
     learning_function : LearningFunction, function or method
-        takes `prediction_vector <OptimizationControlMechanism.prediction_vector>` and outcome and returns an updated set of
-        `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see `OptimizationControlMechanism_Learning_Function`
-        for additional details).
+        takes `prediction_vector <OptimizationControlMechanism.prediction_vector>` and outcome and returns an updated
+        set of `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see
+        `OptimizationControlMechanism_Learning_Function` for additional details).
 
     objective_function : function or method
         `objective_function <OptimizationFunction.objective_function>` assigned to `function 
@@ -301,9 +288,9 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Function>` for additional details).
 
     saved_samples : list
-        contains all values of `allocation_policy <OptimizationControlMechanism.allocation_policy>` sampled by
-        `function <OptimizationControlMechanism.function>` if its
-        `save_samples <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
+        contains all values of `allocation_policy <ControlMechanism.allocation_policy>` sampled by `function
+        <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
+        is `True`;  otherwise list is empty.
 
     saved_values : list
         contains all values of the `objective_function <OptimizationControlMechanism.objective_function>` sampled
@@ -312,15 +299,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
     control_signal_variables : np.array
         variables of the OptimizationControlMechanism's `control_signals
-        <OptimizationControlMechanism.control_signals>`.
+        <ControlMechanism.control_signals>`.
 
     name : str
-        the name of the LVOCControlMechanism; if it is not specified in the **name** argument of the constructor, a
+        name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LVOCControlMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        the `PreferenceSet` for the OptimizationControlMechanism; if it is not specified in the **prefs** argument of
+        the constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
 
