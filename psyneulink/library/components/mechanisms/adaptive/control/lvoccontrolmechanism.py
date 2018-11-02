@@ -82,7 +82,7 @@ Creating an LVOCControlMechanism
     
   * **prediction_terms** -- specifies the terms used by the `learning_function <LVOCControlMechanism.learning_function>`
     and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the 
-    `allocation_policy LVOCControlMechanism.allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
+    `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
 
 .. _LVOCControlMechanism_Structure:
@@ -96,7 +96,7 @@ Structure
 ~~~~~~~
 
 An LVOCControlMechanism has one `InputState` that receives a `Projection` from its `objective_mechanism
-<LVOCControlMechanism.objective_mechanism>` (its primary InputState <InputState_Primary>`), and additional ones for
+<LVOCControlMechanism.objective_mechanism>` (its primary `InputState <InputState_Primary>`), and additional ones for
 each of its feature_predictors, as described below.
 
 .. _LVOCControlMechanism_Feature_Predictors:
@@ -193,7 +193,7 @@ LVOCControlMechanism's `allocation_policy <LVOCControlMechanism.allocation_polic
 .. note::
   The LVOCControlMechanism's `function <LVOCControlMechanism.learning_function>` is provided the values of the
   `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and outcome of its `objective_mechanism
-  <LVOCControlMechanism.objective_mechanism>` from the *previous* trial to update the `prediction_weights
+  <LVOCControlMechanism.objective_mechanism>` from the *previous* trial to update the
   `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to determine (and implement)
   the `allocation_policy <LVOCControlMechanism.allocation_policy>` that is predicted to generate the greatest `EVC
   <LVOCControlMechanism_EVC>` based on the `feature_values <LVOCControlMechanism.feature_values>` for the current
@@ -257,7 +257,7 @@ attribute), together with the `values <ControlSignals.values>` of its `control_s
 outcome of processing (the `value <ObjectiveMechanisms.value>` of its `objective_mechanism
 <LVOCControlMechanism.objective_mechanism>` minus the cost of its `control_signals
 <LVOCControlMechanism.control_signals>`), and then determines the `allocation_policy
-<LVOCControlMechanism.allocation_policy>` that maximizes hte `EVC <LVOCControlMechanism_EVC>` for the current `trial`
+<LVOCControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>` for the current `trial`
 of execution. Specifically, it executes the following steps:
 
   * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the current `features_values
