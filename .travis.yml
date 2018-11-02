@@ -42,7 +42,7 @@ matrix:
     python: 3.6
     language: generic
     env:
-        - PYTHON=3.6.6
+        - PYTHON=3.6.7
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
     # Cache installed python virtual env
