@@ -932,10 +932,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
-        try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
-        except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+        # MODIFIED 11/2/18 OLD:
+        # try:
+        #     self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+        # except AttributeError:
+        #     self.control_signal_costs = np.empty((1,1))
+        # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
@@ -1196,9 +1198,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #         return np.array([c.instance_defaults.variable for c in self.control_signals])
 
     @property
+    def allocation_policy(self):
+        return self.value
+
+    # MODIFIED 11/2/18 NEW:
+    @property
+    def costs(self):
+        return [c._compute_costs(c.variable) for c in self.control_signals]
+    # MODIFIED 11/2/18 END
+
+    @property
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
-    @property
-    def allocation_policy(self):
-        return self.value

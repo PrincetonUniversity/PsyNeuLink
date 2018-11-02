@@ -704,14 +704,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         if not self.current_execution_count:
             # Initialize prediction_vector and control_signals on first trial
             # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
-            self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 1)
+            self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 0)
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
         else:
             # Update prediction_weights
-            previous_cost = np.sum(self._previous_prediction_vector[self.prediction_vector.idx[PV.COST.value]])
-            # costs are assigned as negative in prediction_vector.update, so add them here
-            # self.outcome is for previous trials, so use previous_cost
-            net_outcome = self.outcome + previous_cost
+            #     self.outcome is for previous trial, so use previous_cost
+            previous_cost = np.sum(self.costs)
+            net_outcome = self.outcome - previous_cost
+
             self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, net_outcome])
 
             # Update prediction_vector with current feature_values and control_signals and store for next trial
