@@ -1,4 +1,5 @@
 #!/bin/bash
 # used for mybinder.org hosting of tutorial notebook
 pip install .
+pip install matplotlib
 #pip install -r tutorial_requirements.txt
