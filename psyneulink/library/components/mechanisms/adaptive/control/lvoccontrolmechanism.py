@@ -815,7 +815,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                     v = v or ControlSignal.class_defaults.variable
                 control_signal_variables.append(v)
             self.control_signal_functions = [c.function for c in control_signals]
-            self.compute_costs = [c._compute_costs for c in control_signals]
+            self._compute_costs = [c.compute_costs for c in control_signals]
 
             def get_intrxn_labels(x):
                 return list([s for s in powerset(x) if len(s)>1])
@@ -975,7 +975,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
-                    costs[i] = -(self.compute_costs[i](val))
+                    costs[i] = -(self._compute_costs[i](val))
                 computed_terms[PV.COST] = np.array(costs)
 
             # Compute terms interaction that are used

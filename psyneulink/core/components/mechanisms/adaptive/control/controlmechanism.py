@@ -564,7 +564,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
-    outcome : nd.array
+    outcome : 1d array
         the `value <InputState.value>` of the ControlMechanism's `primary InputState <InputState_Primary>`,
         which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
@@ -584,6 +584,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
+
+    costs : list
+        current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
+        for each using its `compute_costs <ControlSignals.compute_costs>` method.
+
+    combined_costs : 1d array
+
+    net_outcome : 1d array
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -1209,10 +1217,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def allocation_policy(self):
         return self.value
 
-    # MODIFIED 11/2/18 NEW:
     @property
     def costs(self):
-        return [c._compute_costs(c.variable) for c in self.control_signals]
+        return [c.compute_costs(c.variable) for c in self.control_signals]
 
     @property
     def combined_costs(self):
@@ -1221,7 +1228,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def net_outcome(self):
         return self.outcome - self.combined_costs
-    # MODIFIED 11/2/18 END
 
     @property
     def control_projections(self):

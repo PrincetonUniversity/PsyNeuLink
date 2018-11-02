@@ -986,7 +986,7 @@ class ControlSignal(ModulatorySignal):
         '''
         super().update(params=params, context=context)
         if self.cost_options:
-            self.cost = self._compute_costs(self.intensity)
+            self.cost = self.compute_costs(self.intensity)
         # Store current intensity and costs for use in next call as last state
         self.last_intensity = self.intensity
         if self.cost_options:
@@ -994,7 +994,7 @@ class ControlSignal(ModulatorySignal):
             if ControlSignalCosts.DURATION & self.cost_options:
                 self.last_duration_cost = self.duration_cost
 
-    def _compute_costs(self, intensity):
+    def compute_costs(self, intensity):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
         try:
