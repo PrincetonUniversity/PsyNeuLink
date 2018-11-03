@@ -58,7 +58,7 @@ the ModelBasedControlMechanism belongs. ModelBasedControlMechanisms may or may n
 <ModelBasedControlMechanism.run_simulation>` method (e.g., for efficiency, or to handle factors that influence
 `outcome <ControlMechanism.outcome>` and/or `costs <ControlMechanism.costs>` in different ways).  Like model-free 
 OptimizationControlMechanisms, their `function <OptimizationControlMechanism.function>` uses `objective_function 
-<OptimizationControlMechanism.objective_function` to identify the `allocation_policy 
+<OptimizationControlMechanism.objective_function>` to identify the `allocation_policy
 <ControlMechanism.allocation_policy>` that yields the greatest EVC, and then implement that for the next 
 `trial` of execution.
   
@@ -67,14 +67,14 @@ OptimizationControlMechanisms, their `function <OptimizationControlMechanism.fun
 *Expected Value of Control*
 
 All OptimizationControlMechanisms seek to maximize their Expected Value of Control (EVC) --  a cost-benefit analysis 
-that weighs the `cost <ControlSignal.cost> of its `control_signals` for an `allocation_policy 
+that weighs the `cost <ControlSignal.cost>` of its `control_signals` for an `allocation_policy
 <ControlMechanism.allocation_policy>` against the `outcome <OptimizationControlMechanism.outcome>` 
 resulting from that policy.  The EVC for an `allocation_policy <ControlMechanism.allocation_policy>`
 is computed by `objective_function <OptimizationControlMechanism.objective_function>` using the 
 OptimizationControlMechanism's `compute_EVC <OptimizationControlMechanism.compute_EVC>` method and some combination
-of its `outcome <OptimizationControlMechanism.outcome>`, `costs <ControlMechanismd.costs>`, and current
-`predicition_vector <OptimizationControlMechanism.prediction_vector>`, depending on whether it is `model-free
-<OptimizationControlMechanism_Model_Free>` or model-based <OptimizationControlMechanism_Model_Based>`,
+of its `outcome <ControlMechanism.outcome>`, `costs <ControlMechanismd.costs>`, and current `predicition_vector
+<OptimizationControlMechanism.prediction_vector>`, depending on whether it is `model-free
+<OptimizationControlMechanism_Model_Free>` or `model-based <OptimizationControlMechanism_Model_Based>`,
 its particular subclass.
 
 The table `below <OptimizationControlMechanism_Examples>` lists different types of
@@ -142,20 +142,20 @@ An OptimizationControlMechanism must implement an `objective_function <Optimizat
 is passed to the `OptimizationFunction` as its `objective_function <OptimizationFunction.objective_function>` parameter.
 The OptimizationControlMechanism may also implement `search_function <OptimizationControlMechanism.search_function>`
 and `search_termination_function <OptimizationControlMechanism.search_termination_function>` methods, as well as a
-`search_space <OptimizationControlMechanism.search_space>` attribute, that will also be passed as parameters to the
-`OptimizationFunction` when it is constructed.  Any or all of these assignments can be overriden by specifying the
-relevant parameters in a constructor for the `OptimizationFunction` assigned as the **function** argument of the
-OptimizationControlMechanism's constructor, as long as they are compatible with the requirements of the
-OptimizationFunction and OptimizationControlMechanism.  A custom function can also be assigned as the `function
-<OptimizationControlMechanism.function>` of an OptimizationControlMechanism, however it must meet the following
-requirements:
+`allocation_policy_search_space <OptimizationControlMechanism.allocation_policy_search_space>` attribute, that will also be
+passed as parameters to the `OptimizationFunction` when it is constructed.  Any or all of these assignments can be
+overriden by specifying the relevant parameters in a constructor for the `OptimizationFunction` assigned as the
+**function** argument of the OptimizationControlMechanism's constructor, as long as they are compatible with the
+requirements of the OptimizationFunction and OptimizationControlMechanism.  A custom function can also be assigned as
+the `function <OptimizationControlMechanism.function>` of an OptimizationControlMechanism, however it must meet the
+following requirements:
 
 .. _OptimizationControlMechanism_Custom_Funtion:
 
     - it must accept as its first argument and return as its result an array with the same shape as the
       OptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
 
-    - it must implement a :method:`reinitialize` method that accepts as keyword arguments **objective_function**,
+    - it must implement a `reinitialize` method that accepts as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
       with corresponding names.
 
@@ -166,23 +166,23 @@ Execution
 
 When an OptimizationControlMechanism executes, it calls its `learning_function
 <OptimizationControlMechanism.learning_function>` if it has one, to udpate its `prediction_weights 
-OptimizationControlMechanism.prediction_weights>`. It then calls its primary `function 
+<OptimizationControlMechanism.prediction_weights>`. It then calls its primary `function
 <OptimizationControlMechanism.function>` to find the `allocation_policy <ControlMechanism.allocation_policy>` that 
 yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The `function <OptimizationControlMechanism.function>` 
 does this by selecting a sample `allocation_policy <ControlMechanism.allocation_policy>` (usually using  
-`search_function <OptimizationControlMechanism.search_function>` to select one from `control_signal_search_space 
-<OptimizationControlMechanism.control_signal_search_space>`, and evaluating the EVC for that `allocation_policy 
+`search_function <OptimizationControlMechanism.search_function>` to select one from `allocation_policy_search_space
+<OptimizationControlMechanism.allocation_policy_search_space>`, and evaluating the EVC for that `allocation_policy
 <ControlMechanism.allocation_policy>` using the `objective_function <OptimizationControlMechanism.objective_function>`.
-The latter does so either by using the current `prediction_vector OptimizationControlMechanism.prediction_vector` and
-`prediction_weights <OptimizationControlMechanism.prediction_weights>` to predict the EVC (model-free
+The latter does so either by using the current `prediction_vector <OptimizationControlMechanism.prediction_vector>`
+and `prediction_weights <OptimizationControlMechanism.prediction_weights>` to predict the EVC (model-free
 OptimizationControlMechanisms), or by calling the OptimizationControlMechanism's `run_simulation
 <ModelBasedControlMechanism.run_simulation>` to "empirically" generate the `outcome
 <OptimizationControlMechanism.outcome>` for the `allocation_policy <ControlMechanism.allocation_policy>` and then
-evaluting the EVC for the resulting `outcome <OptimizationControlMechanism.outcome>` and `costs
-<ControlMechanism.costs>` (model-based `controller <Composition.controller>`\\s).  In either case, one or
-more allocation_policies are evaluated, and the one that yields the greatest EVC is returned.  The values of that
-`allocation_policy <ControlMechanism.allocation_policy>` are assigned as the `variables <ControlSignal.variable>` of
-its `control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
+evaluting the EVC for the resulting `outcome <ControlMechanism.outcome>` and `costs <ControlMechanism.costs>` (
+model-based `controller <Composition.controller>`\\s).  In either case, one or more allocation_policies are
+evaluated, and the one that yields the greatest EVC is returned.  The values of that `allocation_policy
+<ControlMechanism.allocation_policy>` are assigned as the `variables <ControlSignal.variable>` of its
+`control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
 
 .. _OptimizationControlMechanism_Examples:
 
@@ -300,8 +300,8 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.compute_EVC>`. A custom function can be assigned, but it must take as its 
         first argument an array with the same shape as the OptimizationControlMechanism's `allocation_policy 
         <ControlMechanism.allocation_policy>`, and return the following four values: an array containing the 
-        `allocation_policy <ControlMechanism.allocation_policy>` that generated the optimal EVC 
-        <OptimizationControlMechanism_EVC>; an array containing that EVC value;  a list containing each 
+        `allocation_policy <ControlMechanism.allocation_policy>` that generated the optimal `EVC
+        <OptimizationControlMechanism_EVC>`; an array containing that EVC value;  a list containing each
         `allocation_policy <ControlMechanism.allocation_policy>` sampled if `function 
         <OptimizationControlMechanism.function>` has a `save_samples <OptimizationFunction.save_samples>` attribute 
         and it is `True`, otherwise it should return an empty list; and a list containing the EVC values for each 
@@ -368,10 +368,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
     function : OptimizationFunction, function or method
         takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer),
-        uses its search_function to select samples of `allocation_policy <ControlMechanism.allocation_policy>`
-        from its `search_space <OptimizationControlMechanism.search_space>`, evaluates these using its
-        `objective_function <OptimizationControlMechanism.objective_function>`, and returns the one that yields the
-        greatest EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
+        uses its `search_function <OptimizationFunction.search_function>` to select samples of `allocation_policy
+        <ControlMechanism.allocation_policy>` from its `search_space <OptimizationControlMechanism.search_space>`,
+        evaluates these using its `objective_function <OptimizationControlMechanism.objective_function>`, and returns
+        the one that yields the greatest `EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
         <OptimizationControlMechanism_Function>` for additional details).
 
     objective_function : function or method
@@ -390,7 +390,7 @@ class OptimizationControlMechanism(ControlMechanism):
         `function <OptimizationControlMechanism.function>`;  determines when to terminate the 
         `optimization process <OptimizationFunction_Process>`.
         
-    search_space : list or ndarray
+    allocation_policy_search_space : list or ndarray
         `search_space <OptimizationFunction.search_space>` assigned to `function 
         <OptimizationControlMechanism.function>`;  determines the samples of 
         `allocation_policy <ControlMechanism.allocation_policy>` evaluated by the `objective_function 
@@ -513,30 +513,30 @@ class OptimizationControlMechanism(ControlMechanism):
                                            OBJECTIVE_FUNCTION: self.objective_function,
                                            SEARCH_FUNCTION: self.search_function,
                                            SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                           SEARCH_SPACE: self.get_control_signal_search_space()})
+                                           SEARCH_SPACE: self.get_allocation_policy_search_space()})
         
         self.objective_function = self.function_object.objective_function
         self.search_function = self.function_object.search_function
         self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
-    def get_control_signal_search_space(self):
+    def get_allocation_policy_search_space(self):
 
         control_signal_sample_lists = []
         for control_signal in self.control_signals:
             control_signal_sample_lists.append(control_signal.allocation_samples)
 
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
+        # Construct allocation_policy_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
+        self.allocation_policy_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
 
         # Insure that ControlSignal in each sample is in its own 1d array
-        re_shape = (self.control_signal_search_space.shape[0], self.control_signal_search_space.shape[1], 1)
+        re_shape = (self.allocation_policy_search_space.shape[0], self.allocation_policy_search_space.shape[1], 1)
 
-        return self.control_signal_search_space.reshape(re_shape)
+        return self.allocation_policy_search_space.reshape(re_shape)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
@@ -550,7 +550,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                 format(self.__class__.__name__, repr('objective_function')))
 
     def compute_EVC(self):
-        '''Computes `EVC <OptimizationControlMechanism_EVC> for a given allocation_policy.'''
+        '''Computes `EVC <OptimizationControlMechanism_EVC>` for a given allocation_policy.'''
 
         raise OptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
                                                 format(self.__class__.__name__, repr('compute_EVC')))
