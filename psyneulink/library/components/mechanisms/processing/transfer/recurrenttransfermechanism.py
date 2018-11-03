@@ -765,8 +765,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero = Param(0, modulable=True)
         integration_rate = Param(0.5, modulable=True)
 
-        initial_value = None
         enable_learning = False
+
+        combination_function = LinearCombination
+        convergence_function = Distance(metric=MAX_ABS_DIFF)
 
         learning_function = Param(Hebbian, stateful=False, loggable=False)
         learning_condition = Param(None, stateful=False, loggable=False)
@@ -1401,7 +1403,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input)
 
     def reinitialize(self, *args, execution_context=None):
-        if self.integrator_mode:
+        if self.parameters.integrator_mode.get(execution_context):
             super().reinitialize(*args, execution_context=execution_context)
         self.parameters.previous_value.set(None, execution_context, override=True)
 
