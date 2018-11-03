@@ -77,6 +77,10 @@ of its `outcome <OptimizationControlMechanism.outcome>`, `costs <ControlMechanis
 <OptimizationControlMechanism_Model_Free>` or model-based <OptimizationControlMechanism_Model_Based>`,
 its particular subclass.
 
+The `chart and models <OptimizationControlMechanism_Examples>` described below provide examples of different types of
+OptimizationControlMechanism.
+
+
 .. _OptimizationControlMechanism_Creation:
 
 Creating an OptimizationControlMechanism
@@ -180,12 +184,33 @@ more allocation_policies are evaluated, and the one that yields the greatest EVC
 `allocation_policy <ControlMechanism.allocation_policy>` are assigned as the `variables <ControlSignal.variable>` of
 its `control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
 
-COMMENT:
 .. _OptimizationControlMechanism_Examples:
 
 Example
 -------
-COMMENT
+
+.. table:: **Model-Free and Model-Based OptimizationControlMechanisms**
+
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |                         |                                        **OptimizationControlMechanisms**                                               |
+   +                         +----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |                         |     *Model-Free*     |                           *Model-Based*                                                         |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |**Functions**            |`LVOCControlMechanism`|`LVOMControlMechanism`|`MDPControlMechanism`|`EVCControlMechanism`|`ParameterEStimationMechanism`|
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |**learning_function**    |       *None*         |        `pymc`        |    `BeliefUpdate`   |       *None*        |           `pymc`             |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |**function** *(primnary)*|`GradientOptimization`|     `GridSearch`     |       `Sample`      |    `GridSearch`     |           `Sample`           |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |       *search_function* |  *follow_gradient*   |   *traverse_grid*    | *sample_from_dist*  |   *traverse_grid*   |      *sample_from_dist*      |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |    *objective_function* |    *compute_EVC*     |  *run_simulation*    |  *run_simulation*   |  *run_simulation*   |       *run_simulation*       |
+   |                         |                      |    *compute_EVC*     |    *compute_EVC*    |   *compute_EVC*     |     *compute_likelihood*     |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+   |             *execution* | *iterate w/in trial* |  *once per trial*    | *iterate w/in trial*| *iterate w/in trial*|     *iterate w/in trial*     |
+   +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+
+
 
 .. _OptimizationControlMechanism_Class_Reference:
 
