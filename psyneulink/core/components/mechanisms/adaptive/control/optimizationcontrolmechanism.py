@@ -77,8 +77,8 @@ of its `outcome <OptimizationControlMechanism.outcome>`, `costs <ControlMechanis
 <OptimizationControlMechanism_Model_Free>` or model-based <OptimizationControlMechanism_Model_Based>`,
 its particular subclass.
 
-The `chart and models <OptimizationControlMechanism_Examples>` described below provide examples of different types of
-OptimizationControlMechanism.
+The table `below <OptimizationControlMechanism_Examples>` lists different types of
+OptimizationControlMechanism, followed by a list of models that implement examples of these.
 
 
 .. _OptimizationControlMechanism_Creation:
@@ -186,29 +186,38 @@ its `control_signals <ControlMechanism.control_signals>`, from which they comput
 
 .. _OptimizationControlMechanism_Examples:
 
-Example
--------
+Examples
+--------
+
+The table below lists `model-free <OptimizationControlMechanism_Model_Free>` and `model-based
+<OptimizationControlMechanism_Model_Based>` subclasses of OptimizationControlMechanisms, that implement
+different combinations of `learning_function <OptimizationControlMechanism.learning_function>` and `function
+<OptimizationControlMechanism.function>`.
 
 .. table:: **Model-Free and Model-Based OptimizationControlMechanisms**
 
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
-   |                         |                                        **OptimizationControlMechanisms**                                               |
-   +                         +----------------------+----------------------+---------------------+---------------------+------------------------------+
    |                         |     *Model-Free*     |                           *Model-Based*                                                         |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
-   |**Functions**            |`LVOCControlMechanism`|`LVOMControlMechanism`|`MDPControlMechanism`|`EVCControlMechanism`|`ParameterEStimationMechanism`|
+   |**Functions**            |`LVOCControlMechanism`| LVOMControlMechanism | MDPControlMechanism |`EVCControlMechanism`| ParameterEstimationMechanism |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
-   |**learning_function**    |       *None*         |        `pymc`        |    `BeliefUpdate`   |       *None*        |           `pymc`             |
+   |**learning_function**    |     `BayesGLM`       |        `pymc`        |    `BeliefUpdate`   |       *None*        |           `pymc`             |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
-   |**function** *(primnary)*|`GradientOptimization`|     `GridSearch`     |       `Sample`      |    `GridSearch`     |           `Sample`           |
+   |**function** *(primary)* |`GradientOptimization`|     `GridSearch`     |       `Sample`      |    `GridSearch`     |           `Sample`           |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
    |       *search_function* |  *follow_gradient*   |   *traverse_grid*    | *sample_from_dist*  |   *traverse_grid*   |      *sample_from_dist*      |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
-   |    *objective_function* |    *compute_EVC*     |  *run_simulation*    |  *run_simulation*   |  *run_simulation*   |       *run_simulation*       |
-   |                         |                      |    *compute_EVC*     |    *compute_EVC*    |   *compute_EVC*     |     *compute_likelihood*     |
+   |    *objective_function* |    *compute_EVC*     |  *run_simulation*,   |  *run_simulation*,  |  *run_simulation*,  |    *run_simulation*,         |
+   |                         |                      |  *compute_EVC*       |  *compute_EVC*      |  *compute_EVC*      |    *compute_likelihood*      |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
    |             *execution* | *iterate w/in trial* |  *once per trial*    | *iterate w/in trial*| *iterate w/in trial*|     *iterate w/in trial*     |
    +-------------------------+----------------------+----------------------+---------------------+---------------------+------------------------------+
+
+The following models provide examples of implementing the OptimizationControlMechanisms in the table above:
+
+`LVOCControlMechanism`\\:  `BustamanteStroopXORLVOCModel`
+`EVCControlMechanism`\\:  `UmemotoTaskSwitchingEVCModel`
+
 
 
 
