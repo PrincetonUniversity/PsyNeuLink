@@ -9,9 +9,10 @@
 # ********************************************* PNL LLVM helpers **************************************************************
 
 from llvmlite import ir
+from contextlib import contextmanager
 
-
-def for_loop(builder, start, stop, inc, body_func, id):
+@contextmanager
+def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
     assert(start.type is stop.type)
     index_var = builder.alloca(stop.type)
@@ -30,21 +31,22 @@ def for_loop(builder, start, stop, inc, body_func, id):
         # Loop body
         with builder.if_then(cond, likely=True):
             index = builder.load(index_var)
-            if (body_func is not None):
-                body_func(builder, index)
+
+            yield (builder, index)
+
             index = builder.add(index, inc)
             builder.store(index, index_var)
             builder.branch(cond_block)
 
         out_block = builder.block
 
-    return ir.IRBuilder(out_block)
+    builder.position_at_end(out_block)
 
 
-def for_loop_zero_inc(builder, stop, body_func, id):
+def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)
-    return for_loop(builder, start, stop, inc, body_func, id)
+    return for_loop(builder, start, stop, inc, id)
 
 
 def fclamp(builder, val, min_val, max_val):
