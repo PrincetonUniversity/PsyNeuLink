@@ -33,10 +33,11 @@ matrix:
         - PYTHON=3.5.4
         - PYTHON_PKG_VERSION=macosx10.6
         - PRIV=sudo
-    # Cache installed python virtual env
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
           - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
   - os: osx
     python: 3.6
@@ -45,10 +46,11 @@ matrix:
         - PYTHON=3.6.7
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
-    # Cache installed python virtual env
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
           - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
   - os: osx
     python: 3.7
@@ -57,10 +59,11 @@ matrix:
         - PYTHON=3.7.1
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
-    # Cache installed python virtual env
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
           - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
 addons:
   apt:
