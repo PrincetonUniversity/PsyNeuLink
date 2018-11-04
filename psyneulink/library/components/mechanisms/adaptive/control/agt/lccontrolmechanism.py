@@ -845,9 +845,8 @@ class LCControlMechanism(ControlMechanism):
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        vector_length = ctx.int32_ty(gain_ty.count)
         index = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, vector_length, "LC_gain") as (builder, index):
+        with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (builder, index):
             in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
             val = builder.load(in_ptr);
             val = builder.fmul(val, scaling_factor)
