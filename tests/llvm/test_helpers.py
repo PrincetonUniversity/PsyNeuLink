@@ -70,7 +70,7 @@ def test_helper_fclamp_const():
         def _clamp_wrap(builder, index, vec):
             val_ptr = builder.gep(vec, [index])
             val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp_const(builder, val, TST_MIN, TST_MAX)
+            val = pnlvm.helpers.fclamp(builder, val, TST_MIN, TST_MAX)
             builder.store(val, val_ptr)
         kwargs = {"vec":vec}
         inner = functools.partial(_clamp_wrap, **kwargs)

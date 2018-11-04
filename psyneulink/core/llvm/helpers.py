@@ -48,16 +48,13 @@ def for_loop_zero_inc(builder, stop, body_func, id):
 
 
 def fclamp(builder, val, min_val, max_val):
+    min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)
+    max_val = max_val if isinstance(max_val, ir.Value) else val.type(max_val)
+
     cond = builder.fcmp_unordered("<", val, min_val)
     tmp = builder.select(cond, min_val, val)
     cond = builder.fcmp_unordered(">", tmp, max_val)
     return builder.select(cond, max_val, tmp)
-
-
-def fclamp_const(builder, val, min_val, max_val):
-    minval = val.type(min_val)
-    maxval = val.type(max_val)
-    return fclamp(builder, val, minval, maxval)
 
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)

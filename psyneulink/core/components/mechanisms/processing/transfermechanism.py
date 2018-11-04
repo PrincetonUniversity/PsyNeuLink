@@ -1174,7 +1174,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         val = builder.load(ptri)
-        val = pnlvm.helpers.fclamp_const(builder, val, min_val, max_val)
+        val = pnlvm.helpers.fclamp(builder, val, min_val, max_val)
 
         builder.store(val, ptro)
 
