@@ -48,6 +48,11 @@ def for_loop_zero_inc(builder, stop, id):
     inc = stop.type(1)
     return for_loop(builder, start, stop, inc, id)
 
+def array_ptr_loop(builder, array, id):
+    # Assume we'll never have more than 4GB arrays
+    stop = ir.IntType(32)(array.type.pointee.count)
+    return for_loop_zero_inc(builder, stop, id)
+
 
 def fclamp(builder, val, min_val, max_val):
     min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)

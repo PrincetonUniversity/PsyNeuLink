@@ -1196,9 +1196,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
                 index = None
-                with helpers.for_loop_zero_inc(builder, vector_length, "clip") as (builder, index):
+                with helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
                     ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
                     ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
 

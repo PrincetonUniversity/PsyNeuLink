@@ -2525,9 +2525,8 @@ class LinearCombination(
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self.__gen_llvm_combine, **kwargs)
 
-        vector_length = ctx.int32_ty(arg_out.type.pointee.count)
         index = None
-        with helpers.for_loop_zero_inc(builder, vector_length, "linear") as (builder, index):
+        with helpers.array_ptr_loop(builder, arg_out, "linear") as (builder, index):
             inner(builder, index)
         return builder
 
@@ -3532,9 +3531,8 @@ class TransferFunction(Function_Base):
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         index = None
-        with helpers.for_loop_zero_inc(builder, vector_length, "transfer_loop") as (builder, index):
+        with helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as (builder, index):
             inner(builder, index)
 
         return builder
@@ -4723,9 +4721,8 @@ class SoftMax(TransferFunction):
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         index = None
-        with helpers.for_loop_zero_inc(builder, vector_length, "exp_sum_max") as (builder, index):
+        with helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as (builder, index):
             inner(builder, index)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -4736,7 +4733,7 @@ class SoftMax(TransferFunction):
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-            with helpers.for_loop_zero_inc(builder, vector_length, "exp_div") as (builder, index):
+            with helpers.array_ptr_loop(builder, arg_in, "exp_div") as (builder, index):
                 inner(builder, index)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
@@ -7235,9 +7232,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         index = None
-        with helpers.for_loop_zero_inc(builder, vector_length, "integrate") as (builder, index):
+        with helpers.array_ptr_loop(builder, arg_in, "integrate") as (builder, index):
             inner(builder, index)
 
         return builder
@@ -8696,9 +8692,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
         index = None
-        with helpers.for_loop_zero_inc(builder, vector_length, method + "_body") as (builder, index):
+        with helpers.array_ptr_loop(builder, arg_in, method + "_body") as (builder, index):
             func(builder, index)
 
         # Save context
