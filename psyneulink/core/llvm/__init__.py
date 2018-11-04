@@ -196,10 +196,6 @@ class CompExecution:
             self.__conds = bin_exec.byref_arg_types[4](*gen.get_condition_initializer())
         return self.__conds
 
-    @property
-    def __all_nodes(self):
-        return self._composition.c_nodes + [self._composition.input_CIM, self._composition.output_CIM]
-
     def extract_frozen_node_output(self, node):
         return self.extract_node_output(node, self.__frozen_vals)
 
@@ -207,7 +203,7 @@ class CompExecution:
         data = self.__data_struct if data == None else data
         field = self.__data_struct._fields_[0][0]
         res_struct = getattr(self.__data_struct, field)
-        index = self.__all_nodes.index(node)
+        index = self._composition._get_node_index(node)
         field = res_struct._fields_[index][0]
         res_struct = getattr(res_struct, field)
         return _convert_ctype_to_python(res_struct)
@@ -215,7 +211,7 @@ class CompExecution:
     def insert_node_output(self, node, data):
         my_field_name = self.__data_struct._fields_[0][0]
         my_res_struct = getattr(self.__data_struct, my_field_name)
-        index = self.__all_nodes.index(node)
+        index = self._composition._get_node_index(node)
         node_field_name = my_res_struct._fields_[index][0]
         setattr(my_res_struct, node_field_name, _tupleize(data))
 
@@ -261,7 +257,7 @@ class CompExecution:
 
         assert inputs is not None or node is not self._composition.input_CIM
 
-        assert node in self.__all_nodes
+        assert node in self._composition._all_nodes
         bin_node = self._composition._get_bin_mechanism(node)
         bin_node.wrap_call(self.__context_struct, self.__param_struct,
                            inputs, self.__frozen_vals, self.__data_struct)
