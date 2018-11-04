@@ -2858,7 +2858,7 @@ class Composition(Composition_Base):
 
         data = [ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
-            nested_data = node._get_data_struct_type(ctx) if hasattr(node, '_get_data_struct_type') else ir.LiteralStructType([])
+            nested_data = ctx.get_data_struct_type(node)
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
@@ -2946,7 +2946,7 @@ class Composition(Composition_Base):
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + node.name)
-            data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
+            data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
@@ -3106,7 +3106,7 @@ class Composition(Composition_Base):
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
-                self._get_data_struct_type(ctx).as_pointer(),
+                ctx.get_data_struct_type(self).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -3232,7 +3232,7 @@ class Composition(Composition_Base):
             func_ty = ir.FunctionType(ir.VoidType(), (
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
-                self._get_data_struct_type(ctx).as_pointer(),
+                ctx.get_data_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer(),
                 ctx.int32_ty.as_pointer(),
