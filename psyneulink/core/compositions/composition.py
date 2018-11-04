@@ -2881,7 +2881,7 @@ class Composition(Composition_Base):
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
-    def __get_node_index(self, node):
+    def _get_node_index(self, node):
         return list(self._all_nodes).index(node)
 
     def _get_node_wrapper(self, node):
@@ -3000,7 +3000,7 @@ class Composition(Composition_Base):
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
                 if par_mech in self._all_nodes:
-                    par_idx = self.__get_node_index(par_mech)
+                    par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
@@ -3044,7 +3044,7 @@ class Composition(Composition_Base):
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = ctx.int32_ty(self.__get_node_index(node))
+            idx = ctx.int32_ty(self._get_node_index(node))
             zero = ctx.int32_ty(0)
             m_params = builder.gep(params, [zero, zero, idx])
             m_context = builder.gep(context, [zero, zero, idx])
@@ -3053,12 +3053,12 @@ class Composition(Composition_Base):
                 builder.call(m_function, [m_params, m_context, m_in, m_out])
             else:
                 # Condition and data structures includes parent first
-                nested_idx = ctx.int32_ty(self.__get_node_index(node) + 1)
+                nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 m_data = builder.gep(data_in, [zero, nested_idx])
                 m_cond = builder.gep(cond_ptr, [zero, nested_idx])
                 builder.call(m_function, [m_context, m_params, m_in, m_data, m_cond])
                 # Copy output of the nested composition to its output place
-                output_idx = node.__get_node_index(node.output_CIM)
+                output_idx = node._get_node_index(node.output_CIM)
                 result = builder.gep(m_data, [zero, zero, ctx.int32_ty(output_idx)])
                 builder.store(builder.load(result), m_out)
 
@@ -3276,7 +3276,7 @@ class Composition(Composition_Base):
             builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
             # Extract output_CIM result
-            idx = self.__get_node_index(self.output_CIM)
+            idx = self._get_node_index(self.output_CIM)
             result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             output_ptr = builder.gep(data_out, [iters])
             result = builder.load(result_ptr)
