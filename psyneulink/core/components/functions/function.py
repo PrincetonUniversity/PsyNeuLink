@@ -912,17 +912,26 @@ class Function_Base(Function):
     def get_context_initializer(self):
         return tuple([])
 
-    def get_param_ids(self):
-        return []
+    def _get_param_ids(self):
+        params = []
+
+        for pc in self.parameters.names():
+            # Filter out params not allowed in get_current_function_param
+            if pc != 'function' and pc != 'value' and pc != 'variable':
+                val = self.get_current_function_param(pc)
+                # or are not numeric (this includes aliases)
+                if not isinstance(val, str):
+                    params.append(pc)
+        return params
 
     def get_param_ptr(self, ctx, builder, params_ptr, param_name):
-        idx = ctx.int32_ty(self.get_param_ids().index(param_name))
+        idx = ctx.int32_ty(self._get_param_ids().index(param_name))
         ptr = builder.gep(params_ptr, [ctx.int32_ty(0), idx])
         return ptr, builder
 
-    def get_params(self):
+    def _get_param_values(self):
         param_init = []
-        for p in self.get_param_ids():
+        for p in self._get_param_ids():
             param = self.get_current_function_param(p)
             if not np.isscalar(param) and param is not None:
                 param = np.asfarray(param).flatten().tolist()
@@ -931,11 +940,7 @@ class Function_Base(Function):
         return tuple(param_init)
 
     def get_param_initializer(self):
-        def tupleize(x):
-            if hasattr(x, "__len__"):
-                return tuple([tupleize(y) for y in x])
-            return x if x is not None else tuple()
-        return tupleize(self.get_params())
+        return pnlvm._tupleize(self._get_param_values())
 
     def bin_function(self,
                      variable=None,
@@ -2447,9 +2452,6 @@ class LinearCombination(
         default_var = np.atleast_2d(self.instance_defaults.variable)
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
-    def get_param_ids(self):
-        return SCALE, OFFSET, EXPONENTS
-
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
         scale_type = scale_ptr.type.pointee
@@ -2523,8 +2525,8 @@ class LinearCombination(
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
         inner = functools.partial(self.__gen_llvm_combine, **kwargs)
 
-        vector_length = ctx.int32_ty(arg_out.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+        with helpers.array_ptr_loop(builder, arg_out, "linear") as args:
+            inner(*args)
         return builder
 
     @property
@@ -3528,8 +3530,8 @@ class TransferFunction(Function_Base):
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
         assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "transfer_loop")
+        with helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
+            inner(*args)
 
         return builder
 
@@ -3646,9 +3648,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-    def get_param_ids(self):
-        return SLOPE, INTERCEPT
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3861,9 +3860,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def get_param_ids(self):
-        return RATE, BIAS, SCALE, OFFSET
-
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -4072,9 +4068,6 @@ class Logistic(
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
-
-    def get_param_ids(self):
-        return GAIN, BIAS, X_0, OFFSET
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -4677,9 +4670,6 @@ class SoftMax(TransferFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
-    def get_param_ids(self):
-        return [GAIN]
-
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -4729,8 +4719,8 @@ class SoftMax(TransferFunction):
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "max_ptr": max_ptr, "gain": gain, "max_ind_ptr": max_ind_ptr, "exp_sum_ptr": exp_sum_ptr}
         inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
+        with helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
+            inner(*args)
 
         output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
@@ -4740,7 +4730,8 @@ class SoftMax(TransferFunction):
         if output_type == ALL:
             kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
+            with helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
+                inner(*args)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
@@ -5332,9 +5323,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 return matrix
         else:
             return np.array(specification)
-
-    def get_param_ids(self):
-        return [MATRIX]
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
@@ -7180,9 +7168,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             if rate < 0.0 or rate > 1.0:
                 raise FunctionError(rate_value_msg.format(rate, self.name))
 
-    def get_param_ids(self):
-        return RATE, OFFSET, NOISE
-
     def _get_context_struct_type(self, ctx):
         return ctx.get_output_struct_type(self)
 
@@ -7244,8 +7229,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state": context}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
+        with helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
+            inner(*args)
 
         return builder
 
@@ -8570,9 +8555,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         uncorrelated_activity = self.get_current_function_param("uncorrelated_activity")
         time_constant_w = self.get_current_function_param("time_constant_w")
         mode = self.get_current_function_param("mode")
-        integration_method = self.get_current_function_param("integration_method")
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
 
+        # integration_method is a compile time parameter
+        integration_method = self.get_current_function_param("integration_method")
         if integration_method == "RK4":
             approximate_values = self._runge_kutta_4_FHN(variable,
                                                          self.previous_v,
@@ -8649,12 +8635,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return ret
 
-    def get_param_ids(self):
-        # Omit "integration_method" which is a compile time parameter
-        return ("a_v", "b_v", "c_v", "d_v", "e_v", "f_v", "a_w", "b_w", "c_w",
-                "time_constant_v", "time_constant_w", "threshold",
-                "uncorrelated_activity", "mode", TIME_STEP_SIZE)
-
     def _get_context_struct_type(self, ctx):
         context = (self.previous_v, self.previous_w, self.previous_time)
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
@@ -8687,7 +8667,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Load parameters
         param_vals = {}
-        for p in self.get_param_ids():
+        for p in self._get_param_ids():
             param_ptr, builder = self.get_param_ptr(ctx, builder, params, p)
             param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
                                             builder, param_ptr)
@@ -8708,8 +8688,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        vector_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, func, method + "_body")
+        with helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
+            func(*args)
 
         # Save context
         result = builder.load(arg_out)
@@ -11257,9 +11237,6 @@ COMMENT
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
-    def get_param_ids(self):
-        return MATRIX,
-
     def _get_param_struct_type(self, ctx):
         my_params = ctx.get_param_struct_type(super())
         metric_params = ctx.get_param_struct_type(self._metric_fct)
@@ -11289,7 +11266,7 @@ COMMENT
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.get_llvm_function(self._metric_fct.llvmSymbolName)
+        metric_fun = ctx.get_llvm_function(self._metric_fct)
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
@@ -11660,7 +11637,9 @@ class Distance(ObjectiveFunction):
 
         input_length = arg_in.type.pointee.element.count
         vector_length = ctx.int32_ty(input_length)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
+        with helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
+            inner(*args)
+
         sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
         fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)

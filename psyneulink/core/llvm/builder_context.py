@@ -61,6 +61,9 @@ class LLVMBuilderContext:
         return name + '-' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
+        if hasattr(name, '_llvm_symbol_name'):
+            name = name._llvm_symbol_name
+
         f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
         # Add declaration to the current module
         if f.name not in LLVMBuilderContext.module.globals:
@@ -87,7 +90,7 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
 
-        params = component.get_params()
+        params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
     def get_context_struct_type(self, component):

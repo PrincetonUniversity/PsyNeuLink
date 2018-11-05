@@ -974,10 +974,9 @@ class Projection_Base(Projection):
     def get_context_initializer(self):
         return self.function_object.get_context_initializer()
 
-    # Provide invocation wrapper for easier debuging
-    # This can be replaced by redirecting llvmSymbolName to self.function_object
+    # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        main_function = ctx.get_llvm_function(self.function_object)
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder

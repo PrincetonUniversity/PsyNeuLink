@@ -1,13 +1,11 @@
 #!/usr/bin/python3
 
 import copy
-import ctypes
 import functools
 import numpy as np
 import pytest
 
 from psyneulink.core import llvm as pnlvm
-
 from llvmlite import ir
 
 
@@ -32,18 +30,15 @@ def test_helper_fclamp():
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        def _clamp_wrap(builder, index, minv, maxv, vec):
+        index = None
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (builder, index):
             val_ptr = builder.gep(vec, [index])
             val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp(builder, val, minv, maxv)
+            val = pnlvm.helpers.fclamp(builder, val, ctx.float_ty(TST_MIN), ctx.float_ty(TST_MAX))
             builder.store(val, val_ptr)
-        kwargs = {"minv": ctx.float_ty(TST_MIN), "maxv":ctx.float_ty(TST_MAX), "vec":vec}
-        inner = functools.partial(_clamp_wrap, **kwargs)
-
-        builder = pnlvm.helpers.for_loop_zero_inc(builder, count, inner, "linear")
-
 
         builder.ret_void()
+
     ref = np.clip(vector, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
@@ -69,18 +64,15 @@ def test_helper_fclamp_const():
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        def _clamp_wrap(builder, index, vec):
+        index = None
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (builder, index):
             val_ptr = builder.gep(vec, [index])
             val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp_const(builder, val, TST_MIN, TST_MAX)
+            val = pnlvm.helpers.fclamp(builder, val, TST_MIN, TST_MAX)
             builder.store(val, val_ptr)
-        kwargs = {"vec":vec}
-        inner = functools.partial(_clamp_wrap, **kwargs)
-
-        builder = pnlvm.helpers.for_loop_zero_inc(builder, count, inner, "linear")
-
 
         builder.ret_void()
+
     ref = np.clip(vector, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)

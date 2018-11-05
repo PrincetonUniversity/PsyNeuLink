@@ -3362,6 +3362,73 @@ class TestNestedCompositions:
         assert np.allclose(comp1.results, comp2.results)
         assert np.allclose(comp2.results, [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_nested_transfer_mechanism_composition(self, mode):
+
+        # mechanisms
+        A = ProcessingMechanism(name="A",
+                                function=AdaptiveIntegrator(rate=0.1))
+        B = ProcessingMechanism(name="B",
+                                function=Logistic)
+
+        inner_comp = Composition(name="inner_comp")
+        inner_comp.add_linear_processing_pathway([A, B])
+        inner_comp._analyze_graph()
+        sched = Scheduler(composition=inner_comp)
+
+        outer_comp = Composition(name="outer_comp")
+        outer_comp.add_c_node(inner_comp)
+
+        outer_comp._analyze_graph()
+        sched = Scheduler(composition=outer_comp)
+        ret = outer_comp.run(inputs=[1.0], bin_execute=mode)
+        assert np.allclose(ret, [[[0.52497918747894]]])
+
+
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_nested_transfer_mechanism_composition_parallel(self, mode):
+
+        # mechanisms
+        A = ProcessingMechanism(name="A",
+                                function=AdaptiveIntegrator(rate=0.1))
+        B = ProcessingMechanism(name="B",
+                                function=Logistic)
+
+        inner_comp1 = Composition(name="inner_comp1")
+        inner_comp1.add_linear_processing_pathway([A, B])
+        inner_comp1._analyze_graph()
+        sched = Scheduler(composition=inner_comp1)
+
+        C = TransferMechanism(name="C",
+                              function=Logistic,
+                              integration_rate=0.1,
+                              integrator_mode=True)
+
+        inner_comp2 = Composition(name="inner_comp2")
+        inner_comp2.add_c_node(C)
+        inner_comp2._analyze_graph()
+        sched = Scheduler(composition=inner_comp2)
+
+        outer_comp = Composition(name="outer_comp")
+        outer_comp.add_c_node(inner_comp1)
+        outer_comp.add_c_node(inner_comp2)
+
+        outer_comp._analyze_graph()
+        sched = Scheduler(composition=outer_comp)
+        ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
+        assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
+
+
     # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
     # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version 
     # def test_recurrent_transfer_mechanism_composition(self):

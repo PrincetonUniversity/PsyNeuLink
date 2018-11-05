@@ -9,9 +9,10 @@
 # ********************************************* PNL LLVM helpers **************************************************************
 
 from llvmlite import ir
+from contextlib import contextmanager
 
-
-def for_loop(builder, start, stop, inc, body_func, id):
+@contextmanager
+def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
     assert(start.type is stop.type)
     index_var = builder.alloca(stop.type)
@@ -30,34 +31,37 @@ def for_loop(builder, start, stop, inc, body_func, id):
         # Loop body
         with builder.if_then(cond, likely=True):
             index = builder.load(index_var)
-            if (body_func is not None):
-                body_func(builder, index)
+
+            yield (builder, index)
+
             index = builder.add(index, inc)
             builder.store(index, index_var)
             builder.branch(cond_block)
 
         out_block = builder.block
 
-    return ir.IRBuilder(out_block)
+    builder.position_at_end(out_block)
 
 
-def for_loop_zero_inc(builder, stop, body_func, id):
+def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)
-    return for_loop(builder, start, stop, inc, body_func, id)
+    return for_loop(builder, start, stop, inc, id)
+
+def array_ptr_loop(builder, array, id):
+    # Assume we'll never have more than 4GB arrays
+    stop = ir.IntType(32)(array.type.pointee.count)
+    return for_loop_zero_inc(builder, stop, id)
 
 
 def fclamp(builder, val, min_val, max_val):
+    min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)
+    max_val = max_val if isinstance(max_val, ir.Value) else val.type(max_val)
+
     cond = builder.fcmp_unordered("<", val, min_val)
     tmp = builder.select(cond, min_val, val)
     cond = builder.fcmp_unordered(">", tmp, max_val)
     return builder.select(cond, max_val, tmp)
-
-
-def fclamp_const(builder, val, min_val, max_val):
-    minval = val.type(min_val)
-    maxval = val.type(max_val)
-    return fclamp(builder, val, minval, maxval)
 
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
@@ -70,8 +74,9 @@ class ConditionGenerator:
     def __init__(self, ctx, composition):
         self.ctx = ctx
         self.composition = composition
+        self._zero = ctx.int32_ty(0) if ctx is not None else None
 
-    def get_condition_struct_type(self):
+    def get_private_condition_struct_type(self, composition):
         time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
                                                   self.ctx.int32_ty,
                                                   self.ctx.int32_ty])
@@ -82,17 +87,31 @@ class ConditionGenerator:
                 ir.LiteralStructType([
                     self.ctx.int32_ty, # number of executions
                     time_stamp_struct # time stamp of last execution
-                ]), len(self.composition.c_nodes)
+                ]), len(composition.c_nodes)
             )
         ])
         return structure
 
-    def get_condition_initializer(self):
+    def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple([(0,(-1, -1, -1)) for _ in self.composition.c_nodes]))
+                tuple([(0,(-1, -1, -1)) for _ in composition.c_nodes]))
+
+    def get_condition_struct_type(self, composition = None):
+        composition = self.composition if composition is None else composition
+        structs = [self.get_private_condition_struct_type(composition)]
+        for node in composition.c_nodes:
+            structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
+        return ir.LiteralStructType(structs)
+
+    def get_condition_initializer(self, composition = None):
+        composition = self.composition if composition is None else composition
+        data = [self.get_private_condition_initializer(composition)]
+        for node in composition.c_nodes:
+            data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
+        return tuple(data)
 
     def bump_ts(self, builder, cond_ptr, count=(0,0,1)):
-        ts_ptr = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 
         # run, pass, step
@@ -127,9 +146,8 @@ class ConditionGenerator:
         return builder.or_(trial, builder.or_(run, step))
 
     def __get_node_status_ptr(self, builder, cond_ptr, node):
-            zero = self.ctx.int32_ty(0)
-            node_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
-            return builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1), node_idx])
+        node_idx = self.ctx.int32_ty(self.composition.c_nodes.index(node))
+        return builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1), node_idx])
 
     def __get_node_ts(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
@@ -147,15 +165,14 @@ class ConditionGenerator:
         status = builder.insert_value(status, runs, 0)
 
         # Update time stamp
-        ts = builder.gep(cond_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+        ts = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts)
         status = builder.insert_value(status, ts, 1)
 
         builder.store(status, status_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
-                                                        self.ctx.int32_ty(0)]))
+        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
         global_pass = builder.extract_value(global_ts, 1)
         global_run = builder.extract_value(global_ts, 0)
 
@@ -168,8 +185,7 @@ class ConditionGenerator:
         return builder.and_(pass_eq, run_eq)
 
     def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self.ctx.int32_ty(0),
-                                                        self.ctx.int32_ty(0)]))
+        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
         global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
@@ -179,7 +195,6 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
-        zero = self.ctx.int32_ty(0)
         from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, EveryNCalls
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
@@ -191,7 +206,7 @@ class ConditionGenerator:
             return agg_cond
         elif isinstance(condition, AllHaveRun):
             run_cond = ir.IntType(1)(1)
-            array_ptr = builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1)])
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
             for node in self.composition.c_nodes:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
@@ -201,14 +216,14 @@ class ConditionGenerator:
 
             target_idx = self.ctx.int32_ty(self.composition.c_nodes.index(target))
 
-            array_ptr = builder.gep(cond_ptr, [zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [zero, target_idx]))
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            ran = builder.icmp_unsigned('>', target_runs, zero)
+            ran = builder.icmp_unsigned('>', target_runs, self._zero)
             remainder = builder.urem(target_runs, self.ctx.int32_ty(count))
-            divisible = builder.icmp_unsigned('==', remainder, zero)
+            divisible = builder.icmp_unsigned('==', remainder, self._zero)
             completedNruns = builder.and_(ran, divisible)
 
             # Check that we have not run yet

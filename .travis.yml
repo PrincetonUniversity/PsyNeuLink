@@ -33,52 +33,37 @@ matrix:
         - PYTHON=3.5.4
         - PYTHON_PKG_VERSION=macosx10.6
         - PRIV=sudo
-    # Cache installed python packages
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.5/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.5/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
   - os: osx
     python: 3.6
     language: generic
     env:
-        - PYTHON=3.6.6
+        - PYTHON=3.6.7
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
-    # Cache installed python packages
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.6/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.6/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
   - os: osx
     python: 3.7
     language: generic
     env:
-        - PYTHON=3.7.0
+        - PYTHON=3.7.1
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
-    # Cache installed python packages
+    # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - venv/lib/python3.7/site-packages
-          - venv/bin
-    # The pip update script below overwrites (and thus modifies) cached entries.
-    # Remove them to avoid reuploading the cache on every build
-    before_cache:
-        - rm -rvf venv/lib/python3.7/site-packages/pip*
-        - rm -rvf venv/bin/pip*
+          - $HOME/venv
+          - $HOME/Library/Caches/Homebrew
 
 addons:
   apt:
@@ -91,20 +76,28 @@ before_install: |
     curl -O -#  https://www.python.org/ftp/python/$PYTHON/$FILE
     $PRIV installer -pkg $FILE -target /
     python3 --version
-    # This sidesteps TLSv1.1 issue when using pip
-    curl https://bootstrap.pypa.io/get-pip.py | python3
-    python3 -m pip  install virtualenv
-    python3 -m venv venv
-    source venv/bin/activate
-    python --version
-    # virtualenv installs default pip even if we updated it above.
-    # update it again.
-    curl https://bootstrap.pypa.io/get-pip.py | python
+    # Check if the cached version is available
+    if [ "x`$HOME/venv/bin/python --version`" == "xPython $PYTHON" ] ; then
+       echo "Reusing python venv"
+       source $HOME/venv/bin/activate
+       python --version
+    else
+       echo "Deploying new python venv"
+       # This sidesteps TLSv1.1 issue when using pip
+       curl https://bootstrap.pypa.io/get-pip.py | python3
+       python3 -m pip  install virtualenv
+       python3 -m venv $HOME/venv
+       source $HOME/venv/bin/activate
+       python --version
+       # virtualenv installs default pip even if we updated it above.
+       # update it again.
+       curl https://bootstrap.pypa.io/get-pip.py | python
 
-    # setuptools also face the same TLS deprecation issue.
-    # Update them explicitly
-    python -m pip install -U setuptools
-    python -m pip install -U setuptools-git
+       # setuptools also face the same TLS deprecation issue.
+       # Update them explicitly
+       python -m pip install -U setuptools
+       python -m pip install -U setuptools-git
+    fi
 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi

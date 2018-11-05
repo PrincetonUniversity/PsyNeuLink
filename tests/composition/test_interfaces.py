@@ -130,7 +130,13 @@ class TestExecuteCIM:
 
 class TestConnectCompositionsViaCIMS:
 
-    def test_connect_compositions_with_simple_states(self):
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_connect_compositions_with_simple_states(self, mode):
 
         comp1 = Composition(name="first_composition")
 
@@ -189,12 +195,20 @@ class TestConnectCompositionsViaCIMS:
         # comp3:
         # input = 5.0
         # output = 180.0
-        comp3.run(inputs={comp1: [[5.]]})
-        assert np.allclose(comp1.output_state.value, [30.0])
-        assert np.allclose(comp2.output_state.value, [180.0])
-        assert np.allclose(comp3.output_state.value, [180.0])
+        res = comp3.run(inputs={comp1: [[5.]]}, bin_execute=mode)
+        assert np.allclose(res, [[[180.0]]])
+        if mode == 'Python':
+            assert np.allclose(comp1.output_state.value, [30.0])
+            assert np.allclose(comp2.output_state.value, [180.0])
+            assert np.allclose(comp3.output_state.value, [180.0])
 
-    def test_connect_compositions_with_complicated_states(self):
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+# Fails to construct input   pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_connect_compositions_with_complicated_states(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
@@ -250,14 +264,23 @@ class TestConnectCompositionsViaCIMS:
         outer_composition._analyze_graph()
         output = outer_composition.run(
             inputs={inner_composition_1: [[[5.0], [50.0]]]},
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=mode
         )
 
-        assert np.allclose(inner_composition_1.output_values, [[30.], [300.]])
-        assert np.allclose(inner_composition_2.output_values, [[180.], [1800.]])
-        assert np.allclose(outer_composition.output_values, [[180.], [1800.]])
+        assert np.allclose(output, [[[180.], [1800.]]])
+        if mode == 'Python':
+            assert np.allclose(inner_composition_1.output_values, [[30.], [300.]])
+            assert np.allclose(inner_composition_2.output_values, [[180.], [1800.]])
+            assert np.allclose(outer_composition.output_values, [[180.], [1800.]])
 
-    def test_compositions_as_origin_nodes(self):
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_compositions_as_origin_nodes(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
@@ -318,20 +341,29 @@ class TestConnectCompositionsViaCIMS:
                 inner_composition_1: {A: [2.0],
                                           B: [1.0]},
                 inner_composition_2: [[12.0]]},
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=mode
         )
+        assert np.allclose(output, [[[36.]]])
 
-        assert np.allclose(A.output_values, [[1.0]])
-        assert np.allclose(B.output_values, [[2.0]])
-        assert np.allclose(C.output_values, [[9.0]])
-        assert np.allclose(A2.output_values, [[3.0]])
-        assert np.allclose(B2.output_values, [[3.0]])
-        assert np.allclose(inner_composition_1.output_values, [[9.0]])
-        assert np.allclose(inner_composition_2.output_values, [[3.0]])
-        assert np.allclose(mechanism_d.output_values, [[36.0]])
-        assert np.allclose(outer_composition.output_values, [[36.0]])
+        if mode == 'Python':
+            assert np.allclose(A.output_values, [[1.0]])
+            assert np.allclose(B.output_values, [[2.0]])
+            assert np.allclose(C.output_values, [[9.0]])
+            assert np.allclose(A2.output_values, [[3.0]])
+            assert np.allclose(B2.output_values, [[3.0]])
+            assert np.allclose(inner_composition_1.output_values, [[9.0]])
+            assert np.allclose(inner_composition_2.output_values, [[3.0]])
+            assert np.allclose(mechanism_d.output_values, [[36.0]])
+            assert np.allclose(outer_composition.output_values, [[36.0]])
 
-    def test_compositions_as_origin_nodes_multiple_trials(self):
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm)])
+    def test_compositions_as_origin_nodes_multiple_trials(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
@@ -391,7 +423,8 @@ class TestConnectCompositionsViaCIMS:
                 inner_composition_1: {A: [[2.0], [1.5], [2.5]],
                                       B: [[1.0], [1.5], [1.5]]},
                 inner_composition_2: [[12.0], [11.5], [12.5]]},
-            scheduler_processing=sched
+            scheduler_processing=sched,
+            bin_execute=mode
         )
         print(output)
         # trial 0:
