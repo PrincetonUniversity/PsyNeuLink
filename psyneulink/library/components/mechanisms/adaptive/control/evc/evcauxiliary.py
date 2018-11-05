@@ -19,7 +19,6 @@ import warnings
 
 from psyneulink.core.components.functions.function import Buffer, Function_Base, Integrator, Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -33,7 +32,7 @@ __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
     'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
-    'INPUT', 'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
+    'INPUT', 'INPUT_SEQUENCE', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
 ]
 
@@ -347,7 +346,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #        preserved here for possible future restoration
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
-            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, context)
+            results = EVC_pool.map(compute_EVC, [(controller, arg, runtime_params, context)
                                                  for arg in controller.control_signal_search_space])
 
         else:
@@ -407,7 +406,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
-                result_tuple = _compute_EVC(controller, allocation_vector, runtime_params, context)
+                result_tuple = compute_EVC(controller, allocation_vector, runtime_params, context)
                 EVC, outcome, cost = result_tuple
 
                 EVC_max = max(EVC, EVC_max)
@@ -518,7 +517,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
 
-def _compute_EVC(ctlr, allocation_vector, runtime_params, context):
+def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool

@@ -123,7 +123,7 @@ Execution
 ---------
 
 An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
-its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
+its *OUTCOME* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
 <ITC.allocation_policy>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
 its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
 receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
