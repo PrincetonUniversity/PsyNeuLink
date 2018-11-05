@@ -668,12 +668,13 @@ class Composition(Composition_Base):
             self.external_input_sources[node] = node.shadow_external_inputs
 
 
-    def add_model_based_optimizer(self, type, monitor_for_control, control_signals):
+    def add_model_based_optimizer(self, optimizer, monitor_for_control= None, control_signals=None):
         self.monitor_for_control = monitor_for_control
-        self.model_based_optimizer = type(
-            # system=self,
-                               objective_mechanism=self._get_monitored_output_states_for_system(),
-                               control_signals=self._get_control_signals_for_system(control_signals))
+        # self.model_based_optimizer = type(
+        #     # system=self,
+        #                        objective_mechanism=self._get_monitored_output_states_for_system(),
+        #                        control_signals=self._get_control_signals_for_system(control_signals))
+        self.model_based_optimizer = optimizer
         self.model_based_optimizer.composition = self
         self.add_c_node(self.model_based_optimizer.objective_mechanism)
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
@@ -1907,7 +1908,7 @@ class Composition(Composition_Base):
                     role = role or ""
                 except KeyError:
                     if isinstance(item, ControlMechanism) and hasattr(item, 'system'):
-                        role = 'CONTROLLER'
+                        role = 'MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM'
                     else:
                         role = ""
                 name = "{}\n[{}]".format(item.name, role)
@@ -2027,7 +2028,7 @@ class Composition(Composition_Base):
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
-                                   model_based_optimizer=pnl.ControlMechanism(name='my_system Controller'),
+                                   model_based_optimizer=pnl.ControlMechanism(name='my_system ModelBasedOptimizationControlMechanism'),
                                    monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
                                    enable_model_based_optimizer=True)
 
@@ -2729,8 +2730,8 @@ class Composition(Composition_Base):
         # Add control-related Components to graph if show_control
         if show_control:
             if show_processes:
-                with G.subgraph(name='cluster_CONTROLLER') as sg:
-                    sg.attr(label='CONTROLLER')
+                with G.subgraph(name='cluster_MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM') as sg:
+                    sg.attr(label='MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM')
                     sg.attr(rank='top')
                     # sg.attr(style='filled')
                     # sg.attr(color='lightgrey')
@@ -3053,6 +3054,16 @@ class Composition(Composition_Base):
 
             return self.__execution.extract_node_output(self.output_CIM)
 
+        # control phase
+        if self.context.execution_phase != ContextFlags.INITIALIZING \
+                and self.context.execution_phase != ContextFlags.SIMULATION \
+                and self.enable_model_based_optimizer:
+            if self.model_based_optimizer:
+                # self.model_based_optimizer.objective_mechanism.execute(context=context)
+                # KAM - temporary solution for assiging control signal values
+                allocation_policy = self.model_based_optimizer.execute(context=context)
+                self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
+
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
 
@@ -3060,19 +3071,6 @@ class Composition(Composition_Base):
 
         for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].value)
-
-        # control phase
-        if self.context.execution_phase != ContextFlags.INITIALIZING \
-                and self.context.execution_phase != ContextFlags.SIMULATION \
-                and self.enable_model_based_optimizer:
-            if self.model_based_optimizer:
-                self.model_based_optimizer.objective_mechanism.execute(context=context)
-                # KAM - temporary solution for assiging control signal values
-                allocation_policy = self.model_based_optimizer.execute(context=context)
-                self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
-
-        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(context=ContextFlags.PROCESSING)
 
         return output_values
 
@@ -3293,13 +3291,6 @@ class Composition(Composition_Base):
                                         runtime_params=runtime_params,
                                         bin_execute=bin_execute)
 
-            if self.context.execution_phase != ContextFlags.SIMULATION:
-                if isinstance(trial_output, Iterable):
-                    result_copy = trial_output.copy()
-                else:
-                    result_copy = trial_output
-                self.results.append(result_copy)
-
         # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
             execution_targets = {}
@@ -3336,10 +3327,19 @@ class Composition(Composition_Base):
             if call_after_trial:
                 call_after_trial()
 
+
+        trial_result = []
+        for node in self.c_nodes:
+            trial_result.append(node.value)
+        if self.context.execution_phase != ContextFlags.SIMULATION:
+            self.results.append(trial_result)
+        else:
+            self.simulation_results.append(trial_result)
+
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 
         # return trial_output
-        return self.results
+        return trial_output
 
     def _save_state(self):
         saved_state = {}
@@ -3370,7 +3370,6 @@ class Composition(Composition_Base):
 
     def before_simulations(self, context=None):
         predicted_input = self.update_predicted_input()
-        print("composition's predicted input = ", predicted_input)
         num_trials = 1
         reinitialize_values, node_values = self._save_state()
 
@@ -3864,9 +3863,6 @@ class Composition(Composition_Base):
             builder.ret_void()
 
         return func_name
-
-    def run_simulation(self):
-        print("simulation runs now")
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform

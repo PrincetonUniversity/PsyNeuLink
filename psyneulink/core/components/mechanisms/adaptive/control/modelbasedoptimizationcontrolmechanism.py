@@ -134,6 +134,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -367,6 +368,13 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs)
+    def apply_control_signal_values(self, control_signal_values, runtime_params, context):
+        for i in range(len(control_signal_values)):
+            if self.value is None:
+                self.value = self.instance_defaults.value
+            self.value[i] = np.atleast_1d(control_signal_values[i])
+
+        self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
@@ -394,7 +402,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate ModelBasedOptimizationControlMechanism attributes and assign parameters to learning_function & function'''
-
+        self.objective_function = self.compute_EVC
         super()._instantiate_attributes_after_function(context=context)
 
         if self.learning_function:
@@ -414,7 +422,8 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
-
+        if (self.context.initialization_status == ContextFlags.INITIALIZING):
+            return defaultControlAllocation
         self.predicted_input, self.num_trials, self.reinitialize_values, self.node_values = self.composition.before_simulations()
 
         # Compute allocation_policy using MBOCM's optimization function
@@ -426,6 +435,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
         self.composition.after_simulations(self.reinitialize_values, self.node_values)
 
         return allocation_policy
+
     def get_control_signal_search_space(self):
 
         control_signal_sample_lists = []
@@ -444,7 +454,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
         return self.control_signal_search_space.reshape(re_shape)
 
-    def objective_function(self, allocation_policy):
+    def compute_EVC(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns (allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data)
         return self.run_simulation(allocation_policy=allocation_policy,

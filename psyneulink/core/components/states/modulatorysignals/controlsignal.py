@@ -1004,18 +1004,23 @@ class ControlSignal(ModulatorySignal):
 
         # COMPUTE COST(S)
 
-        if ControlSignalCosts.INTENSITY & self.cost_options:
+        # KAM HACK 11/5/18 -- initialize costs to zero to avoid attr does not exist errors
+        # If initializing to zero IS correct, should they be initialized on construction? Or within compute_costs()?
+        self.intensity_cost = 0.0
+        self.adjustment_cost = 0.0
+        self.duration_cost = 0.0
+        if ControlSignalCosts.INTENSITY and self.cost_options:
             self.intensity_cost = self.intensity_cost_function(intensity)
 
-        if ControlSignalCosts.ADJUSTMENT & self.cost_options:
+        if ControlSignalCosts.ADJUSTMENT and self.cost_options:
             self.adjustment_cost = self.adjustment_cost_function(self.intensity_change)
 
-        if ControlSignalCosts.DURATION & self.cost_options:
+        if ControlSignalCosts.DURATION and self.cost_options:
             self.duration_cost = self.duration_cost_function(self.cost)
+        # KAM HACK 11/5 get rid of nested arrays so that reduce function (sum) works properly
+        costs_to_combine = [self.intensity_cost.item(), self.adjustment_cost.item(), self.duration_cost.item()]
 
-        return max(0.0, self.combine_costs_function([self.intensity_cost,
-                                                             self.adjustment_cost,
-                                                             self.duration_cost]))
+        return max(0.0, self.combine_costs_function(costs_to_combine))
 
     @property
     def allocation_samples(self):
