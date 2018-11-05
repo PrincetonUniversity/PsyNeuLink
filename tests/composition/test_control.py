@@ -345,7 +345,7 @@ class TestControlMechanisms:
 #
 #         assert lvoc.objective_mechanism in c.get_c_nodes_by_role(pnl.CNodeRole.TERMINAL)
 
-class TestControllers:
+class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
         # Mechanisms
@@ -394,13 +394,18 @@ class TestControllers:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_controller(type=pnl.EVCController,
+        # comp.add_controller(type=pnl.EVCController,
+        #                     control_signals=[("drift_rate", Decision), ("threshold", Decision)],
+        #                     monitor_for_control=[Reward,
+        #                                          Decision.PROBABILITY_UPPER_THRESHOLD,
+        #                                          (Decision.RESPONSE_TIME, -1, 1)
+        #                                          ])
+        comp.add_controller(type=pnl.ModelBasedOptimizationControlMechanism,
                             control_signals=[("drift_rate", Decision), ("threshold", Decision)],
                             monitor_for_control=[Reward,
                                                  Decision.PROBABILITY_UPPER_THRESHOLD,
                                                  (Decision.RESPONSE_TIME, -1, 1)
                                                  ])
-
         comp.enable_controller = True
 
         # Stimuli
