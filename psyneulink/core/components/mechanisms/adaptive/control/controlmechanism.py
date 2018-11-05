@@ -346,7 +346,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param, \
+    is_function_type
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base,System_Base, Composition_Base
@@ -401,6 +402,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         origin_objective_mechanism=False           \
         terminal_objective_mechanism=False         \
         function=Linear,                           \
+        combine_costs=np.sum,             \
+        compute_net_outcome=lambda x,y:x-y,        \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
         params=None,                               \
@@ -491,6 +494,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
+    combine_costs : Function, function or method : default np.sum
+        specifies function used to combine the `cost <ControlSignal.cost>` of the ControlMechanism's `control_signals
+        <ControlMechanism.control_signals>`;  must take a list or 1d array of scalar values as its argument and
+        return a list or array with a single scalar value.
+
+    compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
+        <ControlMechanism.costs>` attributes;  must take two 1d arrays with scalar values as its arguments
+        and return an array with a single scalar value.
+
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
@@ -564,7 +577,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
-    outcome : nd.array
+    outcome : 1d array
         the `value <InputState.value>` of the ControlMechanism's `primary InputState <InputState_Primary>`,
         which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
@@ -584,6 +597,33 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
+
+    costs : list
+        current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
+        for each using its `compute_costs <ControlSignals.compute_costs>` method.
+
+    combine_costs : Function, function or method
+        function used to combine the `cost <ControlSignal.cost>` of its `control_signals
+        <ControlMechanism.control_signals>`; result is an array with a scalar value that can be accessed by
+        `combined_costs <ControlMechanism.combined_costs>`.
+
+        .. note::
+          This function is distinct from the `combine_costs_function <ControlSignal.combine_costs_function>` of a
+          `ControlSignal`.  The latter combines the different `costs <ControlSignal_Costs>` for an individual
+          ControlSignal to yield its overall `cost <ControlSignal.cost>`; the ControlMechanism's
+          `combine_costs <ControlMechanism.combine_costs>` function combines those `cost <ControlSignal.cost>`\\s
+          for its `control_signals <ControlMechanism.control_signals>`.
+
+    combined_costs : 1d array
+        result of the ControlMechanism's `combine_costs <ControlMechanism.combine_costs>` function;
+
+    compute_net_outcome : Function, function or method
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
+        <ControlMechanism.costs>` attributes;  result is an array with a scalar value that can be accessed
+        by the the `net_outcome <ControlMechanism.net_outcome>` attribute.
+
+    net_outcome : 1d array
+        result of the ControlMechanism's `compute_net_outcome <ControlMechanism.compute_net_outcome>` function.
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -637,6 +677,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function=None,
+                 combine_costs:is_function_type=np.sum,
+                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -646,6 +688,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signals = control_signals or []
         if not isinstance(control_signals, list):
             control_signals = [control_signals]
+        self.combine_costs = combine_costs
+        self.compute_net_outcome = compute_net_outcome
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -941,10 +985,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Update control_signal_costs to accommodate instantiated Projection
         # MODIFIED 11/2/18 OLD:
-        # try:
-        #     self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
-        # except AttributeError:
-        #     self.control_signal_costs = np.empty((1,1))
+        try:
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+        except AttributeError:
+            self.control_signal_costs = np.empty((1,1))
         # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
@@ -1197,31 +1241,22 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def outcome(self):
         return self.variable[0]
 
-    # @property
-    # def control_signal_variables(self):
-    #     v = np.array([c.variable for c in self.control_signals])
-    #     if v is not None:
-    #         return v
-    #     else:
-    #         return np.array([c.instance_defaults.variable for c in self.control_signals])
-
     @property
     def allocation_policy(self):
         return self.value
 
-    # MODIFIED 11/2/18 NEW:
     @property
     def costs(self):
-        return [c._compute_costs(c.variable) for c in self.control_signals]
+        return [c.compute_costs(c.variable) for c in self.control_signals]
 
     @property
     def combined_costs(self):
-        return np.sum(self.costs)
+        return self.combine_costs(self.costs)
 
     @property
     def net_outcome(self):
+        # return self.compute_net_outcome(self.outcome, self.costs)
         return self.outcome - self.combined_costs
-    # MODIFIED 11/2/18 END
 
     @property
     def control_projections(self):

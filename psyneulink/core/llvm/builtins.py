@@ -14,11 +14,6 @@ from llvmlite import ir
 from psyneulink.core.llvm import helpers
 
 
-def __set_array_body(builder, index, array, value):
-    ptr = builder.gep(array, [index])
-    builder.store(value, ptr)
-
-
 def setup_vxm(ctx):
     module = ctx.module
     # Setup types
@@ -39,11 +34,11 @@ def setup_vxm(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    kwargs = {"array": o, "value": ctx.float_ty(.0)}
-
+    index = None
     # zero the output array
-    zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = helpers.for_loop_zero_inc(builder, y, zero_array, "zero")
+    with helpers.for_loop_zero_inc(builder, y, "zero") as (builder, index):
+        ptr = builder.gep(o, [index])
+        builder.store(ctx.float_ty(0), ptr)
 
     # Multiplication
 

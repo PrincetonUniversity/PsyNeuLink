@@ -1168,16 +1168,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
 
-
-    def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
-        ptri = builder.gep(vo, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        val = builder.load(ptri)
-        val = pnlvm.helpers.fclamp_const(builder, val, min_val, max_val)
-
-        builder.store(val, ptro)
-
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
 
@@ -1206,10 +1196,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                kwargs = {"ctx":ctx, "vo":mf_out_local, "min_val":clip[0], "max_val":clip[1]}
-                inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
-                vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
-                builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
+                index = None
+                with helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
+                    ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
+                    ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
+
+                    val = builder.load(ptri)
+                    val = pnlvm.helpers.fclamp(builder, val, clip[0], clip[1])
+                    builder.store(val, ptro)
 
         builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
 
