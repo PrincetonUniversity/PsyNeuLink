@@ -35,6 +35,8 @@ matrix:
   - python: 3.7
     dist: xenial # Python 3.7 is only available on xenial because of deps
     sudo: required
+    env:
+        - PYTHONWARNINGS="ignore::DeprecationWarning"
 
   - os: osx
     python: 3.5
@@ -69,6 +71,7 @@ matrix:
         - PYTHON=3.7.1
         - PYTHON_PKG_VERSION=macosx10.9
         - PRIV=sudo
+        - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
