@@ -37,7 +37,7 @@ broad types of OptimizationControlMechanisms: "model-free" and "model-based."
 
 .. _OptimizationControlMechanism_Model_Free:
 
-**Model Free OptimizationControlMechanisms**
+**Model-Free OptimizationControlMechanisms**
 
 These use a `learning_function <OptimizationControlMechanism_Learning_Function>` to generate a set of
 `prediction_weights <OptimizationControlMechanism.prediction_weights>` that can predict, for the current state,
