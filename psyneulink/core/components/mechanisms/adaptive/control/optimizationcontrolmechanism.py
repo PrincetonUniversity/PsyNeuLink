@@ -272,6 +272,11 @@ class OptimizationControlMechanism(ControlMechanism):
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
     performance of the `Composition` to which it belongs
 
+    .. note::
+       OptimizationControlMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a subclass.
+
+
     Arguments
     ---------
 
