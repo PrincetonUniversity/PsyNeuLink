@@ -9,9 +9,10 @@
 # ********************************************* PNL LLVM helpers **************************************************************
 
 from llvmlite import ir
+from contextlib import contextmanager
 
-
-def for_loop(builder, start, stop, inc, body_func, id):
+@contextmanager
+def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
     assert(start.type is stop.type)
     index_var = builder.alloca(stop.type)
@@ -30,34 +31,37 @@ def for_loop(builder, start, stop, inc, body_func, id):
         # Loop body
         with builder.if_then(cond, likely=True):
             index = builder.load(index_var)
-            if (body_func is not None):
-                body_func(builder, index)
+
+            yield (builder, index)
+
             index = builder.add(index, inc)
             builder.store(index, index_var)
             builder.branch(cond_block)
 
         out_block = builder.block
 
-    return ir.IRBuilder(out_block)
+    builder.position_at_end(out_block)
 
 
-def for_loop_zero_inc(builder, stop, body_func, id):
+def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)
-    return for_loop(builder, start, stop, inc, body_func, id)
+    return for_loop(builder, start, stop, inc, id)
+
+def array_ptr_loop(builder, array, id):
+    # Assume we'll never have more than 4GB arrays
+    stop = ir.IntType(32)(array.type.pointee.count)
+    return for_loop_zero_inc(builder, stop, id)
 
 
 def fclamp(builder, val, min_val, max_val):
+    min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)
+    max_val = max_val if isinstance(max_val, ir.Value) else val.type(max_val)
+
     cond = builder.fcmp_unordered("<", val, min_val)
     tmp = builder.select(cond, min_val, val)
     cond = builder.fcmp_unordered(">", tmp, max_val)
     return builder.select(cond, max_val, tmp)
-
-
-def fclamp_const(builder, val, min_val, max_val):
-    minval = val.type(min_val)
-    maxval = val.type(max_val)
-    return fclamp(builder, val, minval, maxval)
 
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
