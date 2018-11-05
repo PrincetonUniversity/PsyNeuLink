@@ -13,72 +13,67 @@
 Overview
 --------
 
-An OptimizationControlMechanism is an abstract class for subclasses of `ControlMechanism <ControlMechanism>` that
-uses an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.allocation_policy>` -- 
-a `variable <ControlSignal.variable>` for each of its `ControlSignals <ControlSignal>` -- that optimizes the
-value of its `objective_function <OptimizationControlMechanism.objective_function>`.  The `objective_function 
-<OptimizationControlMechanism.objective_function>` is used by the OptimizationControlMechanism's primary 
-`function <OptimizationControlMechanism.function>` to determine the `Expected Value of Control (EVC) 
-<OptimizationControlMechanism_EVC>` for a given  `allocation_policy <ControlMechanism.allocation_policy>`. 
-There are two broad types of OptimizationControlMechanisms, that can be described loosely as "model-free" and  
-"model-based," based on how their `objective_function <OptimizationControlMechanism.objective_function>` determines 
-the EVC.
+OptimizationControlMechanism is an abstract class for defining subclasses of `ControlMechanism <ControlMechanism>` that
+use an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.allocation_policy>` that maximizes the
+Expected Value of Control (EVC) for a given state.  The `OptimizationFunction` uses the OptimizationControlMechanism's
+`objective_function <OptimizationControlMechanism.objective_function>` to evaluate the EVC for samples of
+`allocation_policy <ControlMechanism.allocation_policy>`, and retuns the one that yields the greatest EVC.
+
+.. _OptimizationControlMechanism_EVC:
+
+**Expected Value of Control**
+
+All OptimizationControlMechanisms compute the `Expected Value of Control (EVC)
+<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ --  a cost-benefit analysis that weighs the `costs
+<ControlMechanism.costs>` of the `control_signals <ControlMechanism.control_signals>` for a given `allocation_policy
+<ControlMechanism.allocation_policy>` against the `outcome <ControlMechanism.outcome>` expected to result from that
+policy.  The EVC for an `allocation_policy <ControlMechanism.allocation_policy>` is computed by the
+OptimizationControlMechanism's `objective_function <OptimizationControlMechanism.objective_function>`, using its
+`compute_EVC <OptimizationControlMechanism.compute_EVC>` method and some combination of the `costs
+<ControlMechanism.costs>` associated with the `allocation_policy <ControlMechanism.allocation_policy>` and the current
+state, depending on the particular subclass.  The table `below <OptimizationControlMechanism_Examples>` lists different
+types of OptimizationControlMechanisms, followed by a list of models that implement examples of these.  There are two
+broad types of OptimizationControlMechanisms: "model-free" and "model-based."
 
 .. _OptimizationControlMechanism_Model_Free:
 
-*Model Free OptimizationControlMechanisms*
+**Model Free OptimizationControlMechanisms**
 
-OptimizationControlMechanism that are model-free use a `learning_function
-<OptimizationControlMechanism_Learning_Function>` to generate a set of `prediction_weights
-<OptimizationControlMechanism.prediction_weights>` that can predict, for the current state, 
-the `outcome <ControlMechanism.outcome>` resulting from different allocation_policies.  The current state is 
-represented in a `prediction_vector <OptimizationControlMechanism.prediction_vector>`.  In each trial, 
-the `learning_function <OptimizationControlMechanism.learning_function>` updates the 
-`prediction_weights <OptimizationControlMechanism.prediction_weights>` based on the `prediction_vector 
-<OptimizationControlMechanism.prediction_vector>` and the `outcome <ControlMechanism.outcome>` for the 
-previous trial.  The updated weights can be used by the `objective_function  
-<OptimizationControlMechanism.objective_function>` to predict the EVC for the current `prediction_vector 
-<OptimizationControlMechanism.prediction_vector>` and a given `allocation_policy 
-<ControlMechanism.allocation_policy>`  The OptimizationControlMechainsm's primary `function 
-<OptimizationControlMechanism.function>` exploits this to find the `allocation_policy 
-<ControlMechanism.allocation_policy>` that yields the *best* EVC for the current `prediction_vector 
-<OptimizationControlMechanism.prediction_vector>`, and then implements that for the next `trial` of execution.  
+These use a `learning_function <OptimizationControlMechanism_Learning_Function>` to generate a set of
+`prediction_weights <OptimizationControlMechanism.prediction_weights>` that can predict, for the current state,
+the net outcome of processing for different allocation_policies. The current state, represented in
+`prediction_vector <OptimizationControlMechanism.prediction_vector>`, may include information about the inputs or
+outputs of other `Mechanisms`, the current  `allocation_policy <ControlMechanism.allocation_policy>`, and/or its
+associated `costs <ControlMechanism.costs>`.  The net outcome is represented in `net_outcome
+<ControlMechanism.net_outcome>`, and is generated by the Mechanism's `compute_net_outcome_function
+<ControlMechanism.compute_net_outome_function>` which is usually the `outcome <ControlMechanism.outcome>` for a given
+trial minus the `costs <ControlMechanism.costs>` of the `allocation_policy <ControlMechanism.allocation_policy>` for
+that trial. In each trial, `learning_function <OptimizationControlMechanism.learning_function>` updates the
+`prediction_weights <OptimizationControlMechanism.prediction_weights>` based on the `prediction_vector
+<OptimizationControlMechanism.prediction_vector>` and the `net_outcome <ControlMechanism.net_outcome>` for the previous
+trial. The updated weights are then used by the `objective_function <OptimizationControlMechanism.objective_function>`
+to predict the EVC for the current `prediction_vector <OptimizationControlMechanism.prediction_vector>` and a given
+`allocation_policy <ControlMechanism.allocation_policy>`.  The OptimizationControlMechainsm's `function
+<OptimizationControlMechanism.function>` uses this to find the `allocation_policy <ControlMechanism.allocation_policy>`
+that yields the *best* EVC for the current state, and then implements that for the current `trial` of execution.
 
 .. _OptimizationControlMechanism_Model_Based:
 
-*Model-Based OptimizationControlMechanisms*
+**Model-Based OptimizationControlMechanisms**
 
-OptimizationControlMechanisms that are model-based are called `controllers <Composition.controllers>`.   These use the  
-`ModelBasedControlMechanism` subclass, that has a `run_simulation <ModelBasedControlMechanism.run_simulation>` method.  
-Their `objective_function <OptimizationControlMechanism.objective_function>` uses this to empirically determine the 
-`EVC <OptimizationControlMechanism_EVC>` for a given `allocation_policy 
-<ControlMechanism.allocation_policy>`, by running one or more simulations of the `Composition` to which 
-the ModelBasedControlMechanism belongs. ModelBasedControlMechanisms may or may not also use a `learning_function 
-<OptimizationControlMechanism_Learning_Function>` in combination with their `run_simulation 
-<ModelBasedControlMechanism.run_simulation>` method (e.g., for efficiency, or to handle factors that influence
-`outcome <ControlMechanism.outcome>` and/or `costs <ControlMechanism.costs>` in different ways).  Like model-free 
-OptimizationControlMechanisms, their `function <OptimizationControlMechanism.function>` uses `objective_function 
+These are called `controllers <Composition.controllers>`, and are implemented using the `ModelBasedControlMechanism`
+subclass.  This has a `run_simulation <ModelBasedControlMechanism.run_simulation>` method, that is used by the
+`objective_function <OptimizationControlMechanism.objective_function>` to empirically determine the `EVC
+<OptimizationControlMechanism_EVC>` for a given `allocation_policy <ControlMechanism.allocation_policy>` by running one
+or more simulations of the `Composition` to which the ModelBasedControlMechanism belongs. The `learning_function
+<OptimizationControlMechanism.learning_function>` may or may not be used in combination with the `run_simulation
+<ModelBasedControlMechanism.run_simulation>` method (e.g., for efficiency, or to differentially manage
+elements of the `prediction_vector <OptimizationControlMechanism.prediction_vector>` that influence `outcome
+<ControlMechanism.outcome>` and/or `costs <ControlMechanism.costs>` in different ways). Like model-free
+OptimizationControlMechanisms, their `function <OptimizationControlMechanism.function>` uses the `objective_function
 <OptimizationControlMechanism.objective_function>` to identify the `allocation_policy
-<ControlMechanism.allocation_policy>` that yields the greatest EVC, and then implement that for the next 
-`trial` of execution.
-  
-.. _OptimizationControlMechanism_EVC:
-
-*Expected Value of Control*
-
-All OptimizationControlMechanisms seek to maximize their Expected Value of Control (EVC) --  a cost-benefit analysis 
-that weighs the `cost <ControlSignal.cost>` of its `control_signals` for an `allocation_policy
-<ControlMechanism.allocation_policy>` against the `outcome <OptimizationControlMechanism.outcome>` 
-resulting from that policy.  The EVC for an `allocation_policy <ControlMechanism.allocation_policy>`
-is computed by `objective_function <OptimizationControlMechanism.objective_function>` using the 
-OptimizationControlMechanism's `compute_EVC <OptimizationControlMechanism.compute_EVC>` method and some combination
-of its `outcome <ControlMechanism.outcome>`, `costs <ControlMechanismd.costs>`, and current `predicition_vector
-<OptimizationControlMechanism.prediction_vector>`, depending on whether it is `model-free
-<OptimizationControlMechanism_Model_Free>` or `model-based <OptimizationControlMechanism_Model_Based>`,
-its particular subclass.
-
-The table `below <OptimizationControlMechanism_Examples>` lists different types of
-OptimizationControlMechanism, followed by a list of models that implement examples of these.
+<ControlMechanism.allocation_policy>` that yields the greatest EVC, and then implements that for the next `trial`
+of execution.
 
 
 .. _OptimizationControlMechanism_Creation:
@@ -87,8 +82,8 @@ Creating an OptimizationControlMechanism
 ----------------------------------------
 
 An OptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  The only
-constraint is that an `OptimizationFunction` (or one that has the same structure) must be specified as the **function**
-argument of its constructor.  In addition, a **learning_function** can be specified (see `below
+constraint is that an `OptimizationFunction` (or a function that has the same structure as one) must be specified as
+the **function** argument of its constructor.  In addition, a **learning_function** can be specified (see `below
 <OptimizationControlMechanism_Learning_Function>`)
 
 .. _OptimizationControlMechanism_Structure:
@@ -106,22 +101,22 @@ addition to its primary `function <OptimizationControlMechanism.function>`, it m
 Learning Function
 ^^^^^^^^^^^^^^^^^
 
-An OptimizationControlMechanism may have a `learning_function <OptimizationControlMechanism.learning_function>`
-used to generate a model that attempts to predict the value of its `objective_function
-<OptimizationControlMechanism.objective_function>` for a given `allocation_policy <ControlMechanism.allocation_policy>`
-from a `prediction_vector <OptimizationControlMechanism.prediction_vector>`; it is up to the subclass of the
-OptimizationControlMechanism to determine the contents of `prediction_vector
-<OptimizationControlMechanism.prediction_vector>`, as well as the `objective_function
-<OptimizationControlMechanism.objective_function>`. The `learning_function
+An OptimizationControlMechanism may have a `learning_function <OptimizationControlMechanism.learning_function>` used
+to learn a set of `prediction_weights <<OptimizationControlMechanism.prediction_weights>` that can predict `net_outcome
+<ControlMechanism.net_outcome>` from a `prediction_vector <OptimizationControlMechanism.prediction_vector>`; it is up
+to the subclass of the OptimizationControlMechanism to determine the contents of `prediction_vector
+<OptimizationControlMechanism.prediction_vector>` (which may include information from other Mechanisms, the
+current `allocation_policy <ControlMechanism.allocation_policy>`, or its associated `costs
+<ControlMechanism.allocation_policy>`) and how `net_outcome <ControlMechanism.net_outcome>` is computed
+(defined by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function). The `learning_function
 <OptimizationControlMechanism.learning_function>` takes as its first argument the `prediction_vector
-<OptimizationControlMechanism.prediction_vector>`), and as its second argument the value of it seeks to predict
-(typically, the OptimizationControlMechanism's `net_oucome <OptimizationControlMechanism.net_outcome>` attribute.
-It returns an array with one weight for each element of `prediction_vector
-<OptimizationControlMechanism.prediction_vector>`, that is assigned as the OptimizationControlMechanism's
-`prediction_weights <OptimizationControlMechanism.prediction_weights>`) attribute.  This is can be used by its
-primary `function <OptimizationControlMechanism.function>` in seeking an `allocation_policy
-<ControlMechanism.allocation_policy>` that yields the best value of the `objective_function
-<OptimizationControlMechanism.objective_function>` (see `below <OptimizationControlMechanism_Function>).
+<OptimizationControlMechanism.prediction_vector>`, and as its second argument the value of `net_oucome
+<OptimizationControlMechanism.net_outcome>`. It returns an array with one weight for each element of
+`prediction_vector <OptimizationControlMechanism.prediction_vector>`, that is assigned to `prediction_weights
+<OptimizationControlMechanism.prediction_weights>`. This is can be used by the OptimizationControlMechanism's primary
+`function <OptimizationControlMechanism.function>` to predict the `EVC <OptimizationControlMechanism_EVC>` for a
+given `allocation_policy <ControlMechanism.allocation_policy>`, and seek the one that yields the greatest EVC
+(see `below <OptimizationControlMechanism_Function>`).
 
 .. _OptimizationControlMechanism_Function:
 
@@ -171,18 +166,20 @@ When an OptimizationControlMechanism executes, it calls its `learning_function
 yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The `function <OptimizationControlMechanism.function>` 
 does this by selecting a sample `allocation_policy <ControlMechanism.allocation_policy>` (usually using  
 `search_function <OptimizationControlMechanism.search_function>` to select one from `allocation_policy_search_space
-<OptimizationControlMechanism.allocation_policy_search_space>`, and evaluating the EVC for that `allocation_policy
+<OptimizationControlMechanism.allocation_policy_search_space>`), and evaluating the EVC for that `allocation_policy
 <ControlMechanism.allocation_policy>` using the `objective_function <OptimizationControlMechanism.objective_function>`.
-The latter does so either by using the current `prediction_vector <OptimizationControlMechanism.prediction_vector>`
+The latter does this either by using the current `prediction_vector <OptimizationControlMechanism.prediction_vector>`
 and `prediction_weights <OptimizationControlMechanism.prediction_weights>` to predict the EVC (model-free
-OptimizationControlMechanisms), or by calling the OptimizationControlMechanism's `run_simulation
+OptimizationControlMechanism), or by calling the OptimizationControlMechanism's `run_simulation
 <ModelBasedControlMechanism.run_simulation>` to "empirically" generate the `outcome
 <OptimizationControlMechanism.outcome>` for the `allocation_policy <ControlMechanism.allocation_policy>` and then
 evaluting the EVC for the resulting `outcome <ControlMechanism.outcome>` and `costs <ControlMechanism.costs>` (
-model-based `controller <Composition.controller>`\\s).  In either case, one or more allocation_policies are
+model-based OptimizationControlMechanism).  In either case, one or more allocation_policies are
 evaluated, and the one that yields the greatest EVC is returned.  The values of that `allocation_policy
-<ControlMechanism.allocation_policy>` are assigned as the `variables <ControlSignal.variable>` of its
-`control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
+<ControlMechanism.allocation_policy>` are assigned as the `variables <ControlSignal.variable>` of the
+OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`.  These are used by the
+`control_signals <ControlMechanism.control_signals>` to compute their `values <ControlSignal.value>`, which are used
+by their `ControlProjections <ControlProjection>` to modulate the parameters they control.
 
 .. _OptimizationControlMechanism_Examples:
 

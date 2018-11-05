@@ -500,7 +500,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         return a list or array with a single scalar value.
 
     compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
-        function used to combine the values of its `outcome <ControlMechanism.outcome>` and costs
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
         <ControlMechanism.costs>` attributes;  must take two 1d arrays with scalar values as its arguments
         and return an array with a single scalar value.
 
@@ -618,7 +618,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         result of the ControlMechanism's `combine_costs <ControlMechanism.combine_costs>` function;
 
     compute_net_outcome : Function, function or method
-        function used to combine the values of its `outcome <ControlMechanism.outcome>` and costs
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
         <ControlMechanism.costs>` attributes;  result is an array with a scalar value that can be accessed
         by the the `net_outcome <ControlMechanism.net_outcome>` attribute.
 
