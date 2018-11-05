@@ -1,18 +1,17 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import BogaczEtAl, DRIFT_RATE, Exponential, Linear, THRESHOLD
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE, SLOPE, CONTROL
-from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
-from psyneulink.globals.preferences.systempreferenceset import RECORD_SIMULATION_PREF
-from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
-from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-from psyneulink.scheduling.condition import Never
+from psyneulink.core.components.functions.function import BogaczEtAl, DRIFT_RATE, Exponential, Linear, THRESHOLD
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, SLOPE, OUTPUT_VARIANCE
+from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.scheduling.condition import Never
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 def test_EVC():
@@ -21,7 +20,7 @@ def test_EVC():
         name='Input',
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, MEAN, VARIANCE],
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -56,18 +55,18 @@ def test_EVC():
         name='Decision',
     )
 
-    # Input.prefs.paramValidationPref = False
-    # Reward.prefs.paramValidationPref = False
-    # Decision.prefs.paramValidationPref = False
-    # Decision.input_state.prefs.paramValidationPref = False
-    # for mech in [Input, Reward, Decision]:
-    #     mech.function_object.prefs.paramValidationPref = False
-    #     for os in mech.output_states:
-    #         os.prefs.paramValidationPref = False
-    #     for instate in mech.input_states:
-    #         instate.prefs.paramValidationPref = False
-    #     for pstate in mech._parameter_states:
-    #         pstate.prefs.paramValidationPref = False
+    Input.prefs.paramValidationPref = False
+    Reward.prefs.paramValidationPref = False
+    Decision.prefs.paramValidationPref = False
+    Decision.input_state.prefs.paramValidationPref = False
+    for mech in [Input, Reward, Decision]:
+        mech.function_object.prefs.paramValidationPref = False
+        for os in mech.output_states:
+            os.prefs.paramValidationPref = False
+        for instate in mech.input_states:
+            instate.prefs.paramValidationPref = False
+        for pstate in mech._parameter_states:
+            pstate.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = Process(
@@ -97,10 +96,10 @@ def test_EVC():
         name='EVC Test System',
         # prefs={RECORD_SIMULATION_PREF:True}
     )
-
-    # TaskExecutionProcess.prefs.paramValidationPref = False
-    # RewardProcess.prefs.paramValidationPref = False
-    # mySystem.prefs.paramValidationPref = False
+    mySystem.show_graph(show_control=True)
+    TaskExecutionProcess.prefs.paramValidationPref = False
+    RewardProcess.prefs.paramValidationPref = False
+    mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
 
     # Stimuli
@@ -198,9 +197,9 @@ def test_EVC():
         #       transfer mean
         (Reward.output_states[RESULT].value, np.array([15.])),
         #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
+        (Reward.output_states[OUTPUT_MEAN].value, np.array(15.0)),
         #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
+        (Reward.output_states[OUTPUT_VARIANCE].value, np.array(0.0)),
 
         # System Results Array
         #   (all intermediate output values of system)
@@ -554,7 +553,7 @@ def test_laming_validation_specify_control_signals():
     )
     Reward = TransferMechanism(
         name='Reward',
-        output_states=[RESULT, MEAN, VARIANCE]
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE]
     )
     Decision = DDM(
         function=BogaczEtAl(
@@ -712,9 +711,9 @@ def test_laming_validation_specify_control_signals():
         #       transfer mean
         (Reward.output_states[RESULT].value, np.array([15.])),
         #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
+        (Reward.output_states[OUTPUT_MEAN].value, np.array(15.0)),
         #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
+        (Reward.output_states[OUTPUT_VARIANCE].value, np.array(0.0)),
 
         # System Results Array
         #   (all intermediate output values of system)
@@ -748,7 +747,7 @@ def test_stateful_mechanism_in_simulation():
         integrator_mode=True,
     )
     Reward = TransferMechanism(
-        output_states=[RESULT, MEAN, VARIANCE],
+        output_states=[RESULT, OUTPUT_MEAN, OUTPUT_VARIANCE],
         name='Reward'
     )
     Decision = DDM(
@@ -911,9 +910,9 @@ def test_stateful_mechanism_in_simulation():
         #       transfer mean
         (Reward.output_states[RESULT].value, np.array([15.])),
         #       transfer_result
-        (Reward.output_states[MEAN].value, np.array(15.0)),
+        (Reward.output_states[OUTPUT_MEAN].value, np.array(15.0)),
         #       transfer variance
-        (Reward.output_states[VARIANCE].value, np.array(0.0)),
+        (Reward.output_states[OUTPUT_VARIANCE].value, np.array(0.0)),
 
         # System Results Array
         #   (all intermediate output values of system)

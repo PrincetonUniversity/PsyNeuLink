@@ -1,6 +1,6 @@
 ControlSignal
 =============
 
-.. automodule:: psyneulink.components.states.modulatorysignals.controlsignal
+.. automodule:: psyneulink.core.components.states.modulatorysignals.controlsignal
    :members:
    :exclude-members: random, execute

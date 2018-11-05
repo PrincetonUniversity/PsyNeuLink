@@ -57,7 +57,7 @@ input_layer = pnl.TransferMechanism(
 
 # Create Decision Layer  --- [ Target, Distractor ]
 
-decision_layer = pnl.LCA(
+decision_layer = pnl.LCAMechanism(
     size=2,
     time_step_size=dt,
     leak=-1.0,
@@ -65,23 +65,23 @@ decision_layer = pnl.LCA(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=pnl.Logistic(bias=b_decision),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=pnl.Logistic(x_0=b_decision),
+    noise=pnl.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='DECISION LAYER'
 )
 
 # Create Response Layer  --- [ Target ]
 
-response_layer = pnl.LCA(
+response_layer = pnl.LCAMechanism(
     size=1,
     time_step_size=dt,
     leak=-1.0,
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=pnl.Logistic(bias=b_response),
-    noise=pnl.NormalDist(standard_dev=SD).function,
+    function=pnl.Logistic(x_0=b_response),
+    noise=pnl.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='RESPONSE'
 )

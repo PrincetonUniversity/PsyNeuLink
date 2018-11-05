@@ -1,6 +1,6 @@
 LearningProjection
 ==================
 
-.. automodule:: psyneulink.components.projections.modulatory.learningprojection
+.. automodule:: psyneulink.core.components.projections.modulatory.learningprojection
    :members:
    :exclude-members: random, execute

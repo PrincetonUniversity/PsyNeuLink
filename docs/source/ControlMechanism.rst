@@ -1,6 +1,13 @@
-Control Mechanism
-=================
+Control Mechanisms
+==================
 
-.. automodule:: psyneulink.components.mechanisms.adaptive.control.controlmechanism
+.. _ControlMechanism_Subtypes:
+
+.. toctree::
+   :maxdepth: 1
+
+   Optimzation Control Mechanisms <OptimizationControlMechanism>
+
+.. automodule:: psyneulink.core.components.mechanisms.adaptive.control.controlmechanism
    :members:
    :exclude-members: Linear, random

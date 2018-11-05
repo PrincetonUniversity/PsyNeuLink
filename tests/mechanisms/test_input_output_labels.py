@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.globals.keywords import INPUT_LABELS_DICT, OUTPUT_LABELS_DICT, ENABLED
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_LABELS_DICT
 
 
 class TestMechanismInputLabels:

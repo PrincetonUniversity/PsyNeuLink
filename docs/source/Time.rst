@@ -1,6 +1,6 @@
 Time
 ====
 
-.. automodule:: psyneulink.scheduling.time
+.. automodule:: psyneulink.core.scheduling.time
    :members:
    :exclude-members: random

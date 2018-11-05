@@ -1,8 +1,9 @@
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.functions.function import Linear
-from psyneulink.components.component import ComponentError
 import numpy as np
 import pytest
+
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import Linear
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 class TestParameterStates:
     def test_inspect_function_params_slope_noise(self):

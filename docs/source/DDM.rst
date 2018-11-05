@@ -1,6 +1,6 @@
 DDM
 ===
 
-.. automodule:: psyneulink.library.mechanisms.processing.integrator.ddm
+.. automodule:: psyneulink.library.components.mechanisms.processing.integrator.ddm
    :members:
    :exclude-members: random

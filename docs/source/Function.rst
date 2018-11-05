@@ -4,7 +4,7 @@ Functions
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: psyneulink.components.functions.function
+.. automodule:: psyneulink.core.components.functions.function
    :members: Function_Base,
              ModulationParam,
              ArgumentTherapy,
@@ -19,6 +19,7 @@ Functions
              Logistic,
              ReLU,
              OneHot,
+             Gaussian,
              SoftMax,
              LinearMatrix,
              Integrator,
@@ -47,5 +48,9 @@ Functions
              ContrastiveHebbian,
              Reinforcement,
              BackPropagation,
-             TDLearning
+             TDLearning,
+             BayesGLM,
+             OptimizationFunction,
+             GradientOptimization,
+             GridSearch,
    :exclude-members: MappingProjection, ParameterState

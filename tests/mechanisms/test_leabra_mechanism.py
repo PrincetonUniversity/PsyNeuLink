@@ -1,21 +1,20 @@
+import copy
 import numpy as np
 import pytest
 import random
-import copy
 try:
     import leabra
     leabra_available = True
 except ImportError:
     leabra_available = False
 
-from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism,\
-    build_leabra_network, run_leabra_network, train_leabra_network
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.functions.function import Linear, Logistic
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.globals.keywords import LEARNING
+from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.process import Process
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import LEARNING
+from psyneulink.library.components.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, run_leabra_network, train_leabra_network
 
 @pytest.mark.skipif(
     not leabra_available,
