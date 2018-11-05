@@ -5,6 +5,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
+
 # **************************************  OptimizationControlMechanism *************************************************
 
 """
@@ -94,6 +95,28 @@ An OptimizationControlMechanism has the same structure as a `ControlMechanism`, 
 to its *OUTCOME* InputState from its `objective_mechanism <ControlMechanism.objective_mechanism>`.  In
 addition to its primary `function <OptimizationControlMechanism.function>`, it may also have a `learning_function
 <OptimizationControlMechanism.learning_function>`, both of which are described below.
+
+.. _OptimizationControlMechanism_ObjectiveMechanism:
+
+ObjectiveMechanism
+^^^^^^^^^^^^^^^^^^
+
+Like any `ControlMechanism`, an OptimizationControlMechanism has an associated `objective_mechanism
+<ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial and pass
+the result to the OptimizationControlMechanism, which it places in its `outcome <OptimizationControlMechanism.outcome>`
+attribute.  This is used by its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, together with
+the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to carry out the
+`EVC <OptimizationControlMechanism_EVC>` calculation.
+
+.. note::
+    The `objective_mechanism is distinct from, and should not be confused with the OptimizationControlMechanism's
+    `evaluation_function <OptimizationControlMechanism.evaluation_function>`, which as the `objective_function
+    <OptimizationFunction.objective_function>` parameter of its `OptimizationFunction`.  The `objective_mechanism
+    <OptimizationControlMechanism.objective_mechanism>` evaluates the outcome of processing without taking into
+    account the `costs <ControlMechanism.costs>` of the OptimizationControlMechanism's `control_signals
+    <ControlMechanism.control_signals>`, whereas the its `evaluation_function
+    <ControlMechanismOptimizationControlMechanism.evaluation_function>` takes these into account in calculating the
+    `EVC <OptimizationControlMechanism_EVC>`.
 
 .. _OptimizationControlMechanism_Learning_Function:
 
