@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.4.8.0+831.g1112f17 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.4.8.0+832.g625ff27 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+831.g1112f17 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+832.g625ff27 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="next" title="GatingSignal" href="GatingSignal.html"/>
         <link rel="prev" title="LearningSignal" href="LearningSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+831
+                0.4.8.0+832
               </div>
             
           
@@ -344,15 +344,15 @@ ControlSignal;</li>
 <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>;</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> - calculated by the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_combination_function</span></code></a> that combines the results of any cost functions that are
+<li><a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> - calculated by the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_costs_function</span></code></a> that combines the results of any cost functions that are
 enabled.</li>
 </ul>
 </div></blockquote>
 <p>The components used to determine the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> can be specified in the
 <strong>costs_options</strong> argument of its constructor, or using its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.enable_costs" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.enable_costs"><code class="xref any py py-meth docutils literal"><span class="pre">enable_costs</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.disable_costs" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.disable_costs"><code class="xref any py py-meth docutils literal"><span class="pre">disable_costs</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.assign_costs" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.assign_costs"><code class="xref any py py-meth docutils literal"><span class="pre">assign_costs</span></code></a>
 methods.  All of these take one or more values of <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts"><code class="xref any py py-class docutils literal"><span class="pre">ControlSignalCosts</span></code></a>, each of which specifies a cost component.
-How the enabled components are combined is determined by the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_combination_function</span></code></a>.  By default, the values of
-the enabled cost components are summed, however this can be modified by specifying the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_combination_function</span></code></a>.</p>
+How the enabled components are combined is determined by the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_costs_function</span></code></a>.  By default, the values of
+the enabled cost components are summed, however this can be modified by specifying the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_costs_function</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="xref any docutils literal"><span class="pre">index</span></code> and <code class="xref any docutils literal"><span class="pre">assign</span></code>
@@ -477,7 +477,7 @@ ControlSignal’s <a class="reference internal" href="#psyneulink.core.component
 
 <dl class="class">
 <dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.controlsignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>index=SEQUENTIAL</em>, <em>function=Linear()</em>, <em>costs_options=None</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=self.ClassDefaults.allocation_samples</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                         projections=None                                                  params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.controlsignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>index=SEQUENTIAL</em>, <em>function=Linear()</em>, <em>costs_options=None</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>combine_costs_function=Reduce(operation=SUM)</em>, <em>allocation_samples=self.ClassDefaults.allocation_samples</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                         projections=None                                                  params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to
 modulate the parameter(s) of one or more other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -496,7 +496,7 @@ used as the ControlSignal’s <a class="reference internal" href="#psyneulink.co
 (from its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> value) to its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
 <li><strong>duration_cost_function</strong> (<em>IntegratorFunction : default Integrator</em>) – specifies the function used to calculate the contribution of the ControlSignal’s duration to its
 <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
-<li><strong>cost_combination_function</strong> (function : default <code class="xref any docutils literal"><span class="pre">Reduce(operation=SUM)</span></code>) – specifies the function used to combine the results of any cost functions that are enabled, the result of
+<li><strong>combine_costs_function</strong> (function : default <code class="xref any docutils literal"><span class="pre">Reduce(operation=SUM)</span></code>) – specifies the function used to combine the results of any cost functions that are enabled, the result of
 which is assigned as the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute.</li>
 <li><strong>allocation_samples</strong> (<em>list : default range</em><em>(</em><em>0.1</em><em>, </em><em>1</em><em>, </em><em>0.1</em><em>)</em>) – specifies the values used by <code class="xref any docutils literal"><span class="pre">ControlSignal's</span> <span class="pre">`ControlSignal.owner</span></code> to determine its
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> (see <a class="reference internal" href="#controlsignal-execution"><span class="std std-ref">Execution</span></a>).</li>
@@ -639,8 +639,8 @@ for the ControlSignal by assigning <code class="xref any docutils literal"><span
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function">
-<code class="descname">cost_combination_function</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost_combination_function" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function">
+<code class="descname">combine_costs_function</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>function : default Reduce(operation=SUM)</em> – combines the results of all cost functions that are enabled, and assigns the result to <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.
 It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
@@ -690,6 +690,12 @@ details).</p>
 <dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update value (intensity) and costs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.compute_costs">
+<code class="descname">compute_costs</code><span class="sig-paren">(</span><em>intensity</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.compute_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute costs based on self.value (<a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>).</p>
 </dd></dl>
 
 <dl class="method">
@@ -808,7 +814,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+831.g1112f17',
+            VERSION:'0.4.8.0+832.g625ff27',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
