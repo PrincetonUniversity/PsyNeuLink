@@ -100,9 +100,9 @@ class LLVMBinaryFunction:
         return self.c_func(*args, **kwargs)
 
     def wrap_call(self, *pargs):
-        cpargs = [ctypes.byref(p) if p is not None else None for p in pargs]
+        cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
         args = zip(cpargs, self.byref_arg_types)
-        cargs = [ctypes.cast(p, ctypes.POINTER(t)) for p, t in args]
+        cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
         self(*tuple(cargs))
 
     # This will be useful for non-native targets
@@ -220,7 +220,7 @@ class CompExecution:
     def _get_input_struct(self, inputs):
         origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
         # Read provided input data and separate each input state
-        input_data = [[x] for m in origins for x in inputs[m]]
+        input_data = ([x] for m in origins for x in inputs[m])
 
         # Either node execute or composition execute, either way the
         # input_CIM should be ready
@@ -250,8 +250,8 @@ class CompExecution:
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
-            origins = [n for n in self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN) for istate in n.input_states]
-            input_data = [[proj.value for proj in state.all_afferents] for state in node.input_states]
+            origins = (n for n in self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN) for istate in n.input_states)
+            input_data = ([proj.value for proj in state.all_afferents] for state in node.input_states)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])

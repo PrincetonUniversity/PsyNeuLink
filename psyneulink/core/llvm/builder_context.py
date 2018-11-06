@@ -111,7 +111,7 @@ class LLVMBuilderContext:
             elem_t = self.convert_python_struct_to_llvm_ir(t[0])
             return ir.ArrayType(elem_t, len(t))
         elif type(t) is tuple:
-            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
             return ir.LiteralStructType(elems_t)
         elif isinstance(t, (int, float)):
             return self.float_ty

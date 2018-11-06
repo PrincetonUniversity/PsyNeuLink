@@ -2518,7 +2518,7 @@ class Composition(Composition_Base):
                     if bin_execute:
                         # Values pf node with compiled wrappers are
                         # in binary data structure
-                        srcs = set([proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers])
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
                             data = self.__execution.extract_frozen_node_output(src_node)
