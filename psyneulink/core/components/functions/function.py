@@ -12080,8 +12080,9 @@ class OptimizationFunction(Function_Base):
 
         sample = self._update_variable(self._check_args(variable, params, context))
 
+        # KAM HACK - originally current value called objective function, but for EVC this runs a simulation
         current_sample = sample
-        current_value = self.objective_function(current_sample)
+        current_value = 0.0
 
         self._samples = []
         self._values = []
@@ -12105,7 +12106,6 @@ class OptimizationFunction(Function_Base):
 
         # Iterate optimization process
         while self.search_termination_function(current_sample, current_value, self.iteration):
-
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                 if increment_progress_bar:
@@ -12117,7 +12117,6 @@ class OptimizationFunction(Function_Base):
 
             # Compute new value based on new sample
             new_value = self.objective_function(new_sample)
-
             self.iteration+=1
             if self.max_iterations and self.iteration > self.max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, self.max_iterations))

@@ -676,6 +676,8 @@ class Composition(Composition_Base):
         #                        control_signals=self._get_control_signals_for_system(control_signals))
         self.model_based_optimizer = optimizer
         self.model_based_optimizer.composition = self
+        if monitor_for_control:
+            self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
         self.add_c_node(self.model_based_optimizer.objective_mechanism)
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
@@ -3327,14 +3329,9 @@ class Composition(Composition_Base):
             if call_after_trial:
                 call_after_trial()
 
+            if self.context.execution_phase != ContextFlags.SIMULATION:
+                self.results.append(self.output_values)
 
-        trial_result = []
-        for node in self.c_nodes:
-            trial_result.append(node.value)
-        if self.context.execution_phase != ContextFlags.SIMULATION:
-            self.results.append(trial_result)
-        else:
-            self.simulation_results.append(trial_result)
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 

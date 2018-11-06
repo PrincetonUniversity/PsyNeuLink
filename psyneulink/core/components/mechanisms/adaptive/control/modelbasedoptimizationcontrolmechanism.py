@@ -129,10 +129,12 @@ from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
     SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
     ObjectiveMechanism, MONITORED_OUTPUT_STATES
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
+
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -154,7 +156,7 @@ class ModelBasedOptimizationControlMechanismError(Exception):
         return repr(self.error_value)
 
 
-class ModelBasedOptimizationControlMechanism(ControlMechanism):
+class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     """ModelBasedOptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
     learning_function=None,                                \
@@ -360,14 +362,14 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
 
-        super().__init__(system=None,
-                         objective_mechanism=objective_mechanism,
+        super().__init__(objective_mechanism=objective_mechanism,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs)
+
     def apply_control_signal_values(self, control_signal_values, runtime_params, context):
         for i in range(len(control_signal_values)):
             if self.value is None:
@@ -376,49 +378,10 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        '''Insure that specification of ObjectiveMechanism has projections to it'''
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        if (OBJECTIVE_MECHANISM in request_set and
-                isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
-                and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-            raise ModelBasedOptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
-                                                    format(ObjectiveMechanism.__name__, self.name,
-                                                           request_set[OBJECTIVE_MECHANISM],
-                                                           repr(MONITORED_OUTPUT_STATES)))
-
-    def _instantiate_control_signal(self, control_signal, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
-        ModelBasedOptimizationControlMechanism requires use of at least one of the cost options
-        '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
-
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
-
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate ModelBasedOptimizationControlMechanism attributes and assign parameters to learning_function & function'''
         self.objective_function = self.compute_EVC
         super()._instantiate_attributes_after_function(context=context)
-
-        if self.learning_function:
-            self._instantiate_learning_function()
-
-        # Assign parameters to function (OptimizationFunction) that rely on ModelBasedOptimizationControlMechanism
-        self.function_object.reinitialize({DEFAULT_VARIABLE: self.allocation_policy,
-                                           OBJECTIVE_FUNCTION: self.objective_function,
-                                           SEARCH_FUNCTION: self.search_function,
-                                           SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                           SEARCH_SPACE: self.get_control_signal_search_space()})
-
-        self.objective_function = self.function_object.objective_function
-        self.search_function = self.function_object.search_function
-        self.search_termination_function = self.function_object.search_termination_function
-        self.search_space = self.function_object.search_space
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
@@ -435,24 +398,6 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
         self.composition.after_simulations(self.reinitialize_values, self.node_values)
 
         return allocation_policy
-
-    def get_control_signal_search_space(self):
-
-        control_signal_sample_lists = []
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
-
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
-
-        # Insure that ControlSignal in each sample is in its own 1d array
-        re_shape = (self.control_signal_search_space.shape[0], self.control_signal_search_space.shape[1], 1)
-
-        return self.control_signal_search_space.reshape(re_shape)
 
     def compute_EVC(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
@@ -494,7 +439,7 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
                                  runtime_params=runtime_params,
                                  context=context)
 
-            self.composition.simulation_results.append(self.composition.output_CIM.output_values)
+            self.composition.simulation_results.append(self.composition.output_values)
 
             call_after_simulation_data = None
 
@@ -507,5 +452,6 @@ class ModelBasedOptimizationControlMechanism(ControlMechanism):
             allocation_policy_outcomes.append(monitored_states)
             net_allocation_policy_outcomes.append(self.net_outcome)
             other_simulation_data.append(call_after_simulation_data)
+
         return allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data
 

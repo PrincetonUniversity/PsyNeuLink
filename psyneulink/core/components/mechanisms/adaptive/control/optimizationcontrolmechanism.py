@@ -478,13 +478,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if (OBJECTIVE_MECHANISM in request_set and
-                isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
-                and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-            raise OptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
-                                                    format(ObjectiveMechanism.__name__, self.name,
-                                                           request_set[OBJECTIVE_MECHANISM],
-                                                           repr(MONITORED_OUTPUT_STATES)))
+        # KAM Removed the exception below 11/6/2018 because it was rejecting valid
+        # monitored_output_state spec on ObjectiveMechanism
+
+        # if (OBJECTIVE_MECHANISM in request_set and
+        #         isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
+        #         and not request_set[OBJECTIVE_MECHANISM].path_afferents):
+        #     raise OptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
+        #                                             format(ObjectiveMechanism.__name__, self.name,
+        #                                                    request_set[OBJECTIVE_MECHANISM],
+        #                                                    repr(MONITORED_OUTPUT_STATES)))
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
@@ -532,7 +535,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Insure that ControlSignal in each sample is in its own 1d array
         re_shape = (self.allocation_policy_search_space.shape[0], self.allocation_policy_search_space.shape[1], 1)
-
         return self.allocation_policy_search_space.reshape(re_shape)
 
     def _execute(self, variable=None, runtime_params=None, context=None):

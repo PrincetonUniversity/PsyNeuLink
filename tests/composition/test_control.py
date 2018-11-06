@@ -390,30 +390,21 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp = pnl.Composition(name="evc")
 
-        comp.add_c_node(Reward)
+        comp.add_c_node(Reward, required_roles=[pnl.CNodeRole.TERMINAL])
         comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.TERMINAL])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(function=pnl.GridSearch(),
-                                                                                            control_signals=[(
-                                                                                                             "drift_rate",
-                                                                                                             Decision),
-                                                                                                             (
-                                                                                                             "threshold",
-                                                                                                             Decision)],
-                                                                                            objective_mechanism=pnl.ObjectiveMechanism(
+        comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(
+                                                        function=pnl.GridSearch(),
+                                                        control_signals=[("drift_rate", Decision),
+                                                                         ("threshold", Decision)],
+                                                        objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
+                                                                                                                        Decision.PROBABILITY_UPPER_THRESHOLD,
+                                                                                                                        (Decision.RESPONSE_TIME, -1, 1)]
+                                                                                                   ),
 
-                                                                                            monitored_output_states=[Reward,
-                                                                                                                     Decision
-                                                                                                                 # Decision.PROBABILITY_UPPER_THRESHOLD,
-
-                                                                                                                 # (
-                                                                                                                 # Decision.RESPONSE_TIME,
-                                                                                                                 # -1, 1)
-                                                                                                                 ]
-                                                                                            )
-                                                                                            )
+                                                        )
                                        )
 
         comp.enable_model_based_optimizer = True
@@ -436,8 +427,7 @@ class TestModelBasedOptimizationControlMechanisms:
         for origin_node in prediction_mechanisms_expected_values:
             assert np.allclose(comp.origin_prediction_pairs[origin_node].output_states[0].value,
                                prediction_mechanisms_expected_values[origin_node])
-        print("simulation results: ")
-        print(comp.simulation_results)
+
         expected_sim_results_array = [
             [[10.], [10.0], [0.0], [-0.1], [0.48999867], [0.50499983]],
             [[10.], [10.0], [0.0], [-0.4], [1.08965888], [0.51998934]],
@@ -474,7 +464,6 @@ class TestModelBasedOptimizationControlMechanisms:
         ]
         np.allclose(expected_sim_results_array, comp.simulation_results)
 
-        print(comp.simulation_results)
         # Resetting to pre-simulation values changed all of these value:
         expected_output = [
             # Decision Output | Second Trial
@@ -511,6 +500,6 @@ class TestModelBasedOptimizationControlMechanisms:
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
             [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
-        print("results = ", comp.results)
-        # for trial in range(len(expected_results_array)):
-        #     np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
