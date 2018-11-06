@@ -165,9 +165,10 @@ def _convert_ctype_to_python(x):
     assert False
 
 def _tupleize(x):
-    if hasattr(x, '__len__'):
-        return tuple([_tupleize(y) for y in x])
-    return x if x is not None else tuple()
+    try:
+        return tuple(_tupleize(y) for y in x)
+    except TypeError:
+        return x if x is not None else tuple()
 
 class CompExecution:
 
