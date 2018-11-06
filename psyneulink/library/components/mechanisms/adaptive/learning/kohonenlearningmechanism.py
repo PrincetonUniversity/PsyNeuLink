@@ -86,7 +86,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.component import Param, parameter_keywords
 from psyneulink.core.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
@@ -283,6 +283,16 @@ class KohonenLearningMechanism(LearningMechanism):
     learning_type = LearningType.UNSUPERVISED
     learning_timing = LearningTiming.EXECUTION_PHASE
 
+    class Params(LearningMechanism.Params):
+        function = Param(Hebbian, stateful=False, loggable=False)
+
+        matrix = Param(None, modulable=True)
+        learning_rate = Param(None, modulable=True)
+
+        learning_type = LearningType.UNSUPERVISED
+        learning_timing = LearningTiming.EXECUTION_PHASE
+        modulation = ModulationParam.ADDITIVE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -376,9 +386,7 @@ class KohonenLearningMechanism(LearningMechanism):
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, learning_signal))
 
-        value = [learning_signal]
-        self.learning_signal = value
-        return value
+        return [learning_signal]
 
     def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         '''Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
