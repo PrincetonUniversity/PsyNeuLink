@@ -20,7 +20,7 @@ from . import builtins
 from .builder_context import *
 from .jit_engine import cpu_jit_engine
 
-__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext', '_convert_llvm_ir_to_ctype', '_convert_ctype_to_python']
+__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext', '_convert_ctype_to_python']
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _compiled_modules = set()
