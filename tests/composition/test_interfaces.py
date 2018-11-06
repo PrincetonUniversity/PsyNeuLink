@@ -205,7 +205,7 @@ class TestConnectCompositionsViaCIMS:
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-# Fails to construct input   pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                              pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_connect_compositions_with_complicated_states(self, mode):
