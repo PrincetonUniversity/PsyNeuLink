@@ -10,6 +10,7 @@
 
 from psyneulink.core.globals.utilities import CNodeRole
 
+from collections import defaultdict
 import copy, ctypes, os
 import sys as _sys
 
@@ -248,9 +249,11 @@ class CompExecution:
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
-            origins = self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN)
+            origins = [n for n in self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN) for istate in n.input_states]
             input_data = [[proj.value for proj in state.all_afferents] for state in node.input_states]
-            inputs = dict(zip(origins, input_data))
+            inputs = defaultdict(list)
+            for n, d in zip(origins, input_data):
+                inputs[n].append(d[0])
 
         if inputs is not None:
             inputs = self._get_input_struct(inputs)
