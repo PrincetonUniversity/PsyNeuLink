@@ -91,10 +91,10 @@ OutputStates that it monitors, and how it evaluates them can be specified in a v
 context in which the ControlMechanism is created, as described in the subsections below. In all cases,
 the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
 <ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's `primary
-InputState <InputState_Primary>`.  All of the OutputStates monitored by the ObjectiveMechanism are listed in its
-`monitored_output_States <ObjectiveMechanism.monitored_output_states>` attribute, and in the ControlMechanism's
-`monitor_for_control <ControlMechanism.montior_for_control>` attribute.
+ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's *OUTCOME*
+`InputState` (which is its  `primary InputState <InputState_Primary>`.  All of the OutputStates monitored by the
+ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>`
+attribute, and in the ControlMechanism's `monitor_for_control <ControlMechanism.montior_for_control>` attribute.
 
 *When the ControlMechanism is created explicitly*
 
@@ -192,14 +192,15 @@ Structure
 *Input*
 ~~~~~~~
 
-A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
-input to the ControlMechanism's `function <ControlMechanism.function>`, that determines the ControlMechanism's
-`allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
-via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
-ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute)
-are also listed in the `monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
+A ControlMechanism has a single *OUTCOME* `InputState`. Its `value <InputState.value>` (that can be referenced
+by its `outcome <ControlMechanism.outcome>` attribute) is used as the input to the ControlMechanism's `function
+<ControlMechanism.function>`, that determines the ControlMechanism's `allocation_policy
+<ControlMechanism.allocation_policy>`. The *OUTCOME* InputState receives its input via a `MappingProjection` from the
+*OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The Objective Mechanism is specified
+in the **objective_mechanism** argument of its constructor, and listed in its `objective_mechanism
+<EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the ObjectiveMechanism (listed
+in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute) are also listed in the
+`monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
 `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the OutputStates it monitors are specified).
 The OutputStates monitored by the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` can
 be displayed using its `show <ControlMechanism.show>` method. The ObjectiveMechanism's `function <ObjectiveMechanism>`
@@ -212,11 +213,11 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 ~~~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism.function>` uses the `value <InputState.value>` of its
-*ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism.allocation_policy>`.  By
-default, each item of the `allocation_policy <ControlMechanism.allocation_policy>` is assigned as the
-`allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
-<ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
-(for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
+*OUTCOME* `InputState` (`outcome <ControlMechanism.outcome>` to generate an `allocation_policy
+<ControlMechanism.allocation_policy>`.  By default, each item of the `allocation_policy
+<ControlMechanism.allocation_policy>` is assigned as the `allocation <ControlSignal.allocation>` of the corresponding
+`ControlSignal` in `control_signals <ControlMechanism.control_signals>`;  however, subtypes of ControlMechanism may
+assign values differently (for example, an `LCControlMechanism` assigns a single value to all of its ControlSignals).
 
 
 .. _ControlMechanism_Output:
@@ -237,21 +238,29 @@ ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of 
 `ParameterState` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
+.. _ControlMechanism_Output:
+
+*Costs and Net Outcome*
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlMechanism executes, each of its `control_signals <ControlMechanmism>` can incur a `cost
+<ControlSignal.cost>`.  The costs
+
 
 .. _ControlMechanism_Execution:
 
 Execution
 ---------
 
-A ControlMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
+If a ControlMechanism is a System's `controller`, it is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
 ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
-its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
-<ControlMechanism.allocation_policy>` which specifies the value assigned to the `allocation
-<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
-calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
-to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
-subsequent `TRIAL` of execution.
+its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `outcome <ControlSignal.outcome>`
+and uses that to determine its `allocation_policy <ControlMechanism.allocation_policy>` which specifies the value
+assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
+ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
+`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
+controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
@@ -337,7 +346,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param, \
+    is_function_type
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base,System_Base, Composition_Base
@@ -348,8 +358,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  \
-    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE, \
+    PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, OUTCOME
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import CNodeRole,ContentAddressableList, is_iterable
@@ -392,6 +402,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         origin_objective_mechanism=False           \
         terminal_objective_mechanism=False         \
         function=Linear,                           \
+        combine_costs=np.sum,             \
+        compute_net_outcome=lambda x,y:x-y,        \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
         params=None,                               \
@@ -482,6 +494,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
+    combine_costs : Function, function or method : default np.sum
+        specifies function used to combine the `cost <ControlSignal.cost>` of the ControlMechanism's `control_signals
+        <ControlMechanism.control_signals>`;  must take a list or 1d array of scalar values as its argument and
+        return a list or array with a single scalar value.
+
+    compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
+        <ControlMechanism.costs>` attributes;  must take two 1d arrays with scalar values as its arguments
+        and return an array with a single scalar value.
+
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
@@ -513,7 +535,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
-        **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
+        **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_state <Mechanism_Base.input_state>`.
 
     origin_objective_mechanism : Boolean
@@ -555,6 +577,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
+    outcome : 1d array
+        the `value <InputState.value>` of the ControlMechanism's `primary InputState <InputState_Primary>`,
+        which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
+
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
@@ -570,6 +597,33 @@ class ControlMechanism(AdaptiveMechanism_Base):
         `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
         ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
+
+    costs : list
+        current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
+        for each using its `compute_costs <ControlSignals.compute_costs>` method.
+
+    combine_costs : Function, function or method
+        function used to combine the `cost <ControlSignal.cost>` of its `control_signals
+        <ControlMechanism.control_signals>`; result is an array with a scalar value that can be accessed by
+        `combined_costs <ControlMechanism.combined_costs>`.
+
+        .. note::
+          This function is distinct from the `combine_costs_function <ControlSignal.combine_costs_function>` of a
+          `ControlSignal`.  The latter combines the different `costs <ControlSignal_Costs>` for an individual
+          ControlSignal to yield its overall `cost <ControlSignal.cost>`; the ControlMechanism's
+          `combine_costs <ControlMechanism.combine_costs>` function combines those `cost <ControlSignal.cost>`\\s
+          for its `control_signals <ControlMechanism.control_signals>`.
+
+    combined_costs : 1d array
+        result of the ControlMechanism's `combine_costs <ControlMechanism.combine_costs>` function;
+
+    compute_net_outcome : Function, function or method
+        function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
+        <ControlMechanism.costs>` attributes;  result is an array with a scalar value that can be accessed
+        by the the `net_outcome <ControlMechanism.net_outcome>` attribute.
+
+    net_outcome : 1d array
+        result of the ControlMechanism's `compute_net_outcome <ControlMechanism.compute_net_outcome>` function.
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -623,6 +677,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function=None,
+                 combine_costs:is_function_type=np.sum,
+                 compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -632,6 +688,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signals = control_signals or []
         if not isinstance(control_signals, list):
             control_signals = [control_signals]
+        self.combine_costs = combine_costs
+        self.compute_net_outcome = compute_net_outcome
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -856,9 +914,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.aux_components.append((projection_from_objective, True))
         self.monitor_for_control = self.monitored_output_states
 
-
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
+        self.input_state.name = OUTCOME
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
@@ -926,10 +984,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
+        # MODIFIED 11/2/18 OLD:
         try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+            self.control_signal_costs = np.append(self.control_signal_costs, np.zeros((1, 1)), axis=0)
         except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+            self.control_signal_costs = np.zeros((1, 1))
+        # MODIFIED 11/2/18 END
 
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
@@ -1178,9 +1238,27 @@ class ControlMechanism(AdaptiveMechanism_Base):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
 
     @property
-    def control_projections(self):
-        return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+    def outcome(self):
+        return self.variable[0]
 
     @property
     def allocation_policy(self):
         return self.value
+
+    @property
+    def costs(self):
+        return [c.compute_costs(c.variable) for c in self.control_signals]
+
+    @property
+    def combined_costs(self):
+        return self.combine_costs(self.costs)
+
+    @property
+    def net_outcome(self):
+        # return self.compute_net_outcome(self.outcome, self.costs)
+        return self.outcome - self.combined_costs
+
+    @property
+    def control_projections(self):
+        return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
+

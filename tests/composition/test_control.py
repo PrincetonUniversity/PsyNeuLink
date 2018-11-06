@@ -202,8 +202,6 @@ class TestObjectiveMechanismRoles:
 
         c.add_linear_processing_pathway([lvoc, A])
 
-        c.show_graph()
-
         assert lvoc.objective_mechanism not in c.get_c_nodes_by_role(pnl.CNodeRole.ORIGIN)
 
     def test_origin_objective_mechanism_true_origin(self):

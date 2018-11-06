@@ -111,7 +111,7 @@ Middle_Weights.set_log_conditions('matrix')
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
-# mySystem.show_graph(show_dimensions=pnl.ALL)
+mySystem.show_graph(show_dimensions=pnl.ALL)
 mySystem.show_graph(show_learning=pnl.ALL)
 # mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)

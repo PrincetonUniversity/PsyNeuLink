@@ -1,11 +1,12 @@
 ControlMechanisms
 =================
 
-**Core class**:
+**Core classes**:
 
 * `ControlMechanism`
+* `OptimizationControlMechanism`
 
-**Subtypes**:
+**ControlMechanism Subtypes**:
 
 .. _ControlMechanism_Subtypes:
 
@@ -15,5 +16,16 @@ ControlMechanisms
 
 * `AGTControlMechanism`
 * `LCControlMechanism`
+
+
+.. _OptimizationControlMechanism_Subtypes:
+
+**OptimizationControlMechanism Subtypes**:
+
+.. toctree::
+   :maxdepth: 1
+
+
 * `EVCControlMechanism`
 * `LVOCControlMechanism`
+
