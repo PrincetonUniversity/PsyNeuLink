@@ -177,18 +177,22 @@ class CompExecution:
         self.__frozen_vals = None
         self.__conds = None
 
-        #TODO: This should use compiled function
+        # At least the input_CIM wrapper should be generated
         with LLVMBuilderContext() as ctx:
-            # Data
-            c_data = _convert_llvm_ir_to_ctype(self._composition._get_data_struct_type(ctx))
-            self.__data_struct = c_data(*self._composition._get_data_initializer())
+            input_cim_fn_name = composition._get_node_wrapper(composition.input_CIM)
+            input_cim_fn = ctx.get_llvm_function(input_cim_fn_name)
 
-            # Params
-            c_param = _convert_llvm_ir_to_ctype(ctx.get_param_struct_type(self._composition))
-            self.__param_struct = c_param(*self._composition.get_param_initializer())
-            # Context
-            c_context = _convert_llvm_ir_to_ctype(ctx.get_context_struct_type(self._composition))
-            self.__context_struct = c_context(*self._composition.get_context_initializer())
+        # Context
+        c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
+        self.__context_struct = c_context(*composition.get_context_initializer())
+
+        # Params
+        c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
+        self.__param_struct = c_param(*self._composition.get_param_initializer())
+        # Data
+        c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
+        self.__data_struct = c_data(*self._composition._get_data_initializer())
+
 
     @property
     def __conditions(self):
