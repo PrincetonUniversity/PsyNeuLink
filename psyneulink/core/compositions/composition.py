@@ -2835,18 +2835,18 @@ class Composition(Composition_Base):
         yield self.output_CIM
 
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self._all_nodes]
-        proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_param_type_list),
-            ir.LiteralStructType(proj_param_type_list)])
+            ir.LiteralStructType(proj_param_type_list)))
 
     def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self._all_nodes]
-        proj_ctx_type_list = [ctx.get_context_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
+        proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_ctx_type_list),
-            ir.LiteralStructType(proj_ctx_type_list)])
+            ir.LiteralStructType(proj_ctx_type_list)))
 
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.input_CIM)
@@ -2855,7 +2855,7 @@ class Composition(Composition_Base):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
+        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
         data = [ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
@@ -2864,17 +2864,17 @@ class Composition(Composition_Base):
         return ir.LiteralStructType(data)
 
     def get_context_initializer(self):
-        mech_contexts = [tuple(m.get_context_initializer()) for m in self._all_nodes]
-        proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
+        mech_contexts = (tuple(m.get_context_initializer()) for m in self._all_nodes)
+        proj_contexts = (tuple(p.get_context_initializer()) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def get_param_initializer(self):
-        mech_params = [tuple(m.get_param_initializer()) for m in self._all_nodes]
-        proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
+        mech_params = (tuple(m.get_param_initializer()) for m in self._all_nodes)
+        proj_params = (tuple(p.get_param_initializer()) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self):
-        output = [[os.value for os in m.output_states] for m in self._all_nodes]
+        output = ((os.value for os in m.output_states) for m in self._all_nodes)
         data = [output]
         for node in self.c_nodes:
             nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
