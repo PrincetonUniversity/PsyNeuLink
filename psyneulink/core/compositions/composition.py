@@ -2418,7 +2418,7 @@ class Composition(Composition_Base):
                     self.__execution.execute(inputs)
                     return self.__execution.extract_node_output(self.output_CIM)
 
-                mechanisms = [n for n in self.c_nodes + [self.input_CIM, self.output_CIM] if isinstance(n, Mechanism)]
+                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
