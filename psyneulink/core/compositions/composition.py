@@ -3254,7 +3254,9 @@ class Composition(Composition_Base):
         if bin_execute == 'LLVMRun':
             self.__bin_initialize()
             self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
-            return self.results
+            # KAM added the [-1] index after changing Composition run()
+            # behavior to return only last trial of run (11/7/18)
+            return self.results[-1]
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
@@ -3312,8 +3314,12 @@ class Composition(Composition_Base):
             if call_after_trial:
                 call_after_trial()
 
+            if isinstance(trial_output, Iterable):
+                trial_output_copy = trial_output.copy()
+            else:
+                trial_output_copy = trial_output
             if self.context.execution_phase != ContextFlags.SIMULATION:
-                self.results.append(self.output_values)
+                self.results.append(trial_output_copy)
 
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)

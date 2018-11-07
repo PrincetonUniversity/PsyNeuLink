@@ -3929,7 +3929,7 @@ class TestCompositionInterface:
         sched = Scheduler(composition=comp)
         output2 = comp.run(inputs=inputs_dict2, scheduler_processing=sched)
 
-        assert np.allclose(np.array([[135.]]), output)
+        assert np.allclose(np.array([[135.]]), output2)
 
     def test_changing_origin_for_second_execution(self):
 
@@ -4075,7 +4075,7 @@ class TestCompositionInterface:
         assert np.allclose(D.input_states[1].value, [4.])
         assert np.allclose(D.variable, [[2.], [4.]])
 
-        assert np.allclose([np.array([[50.]]), np.array([[40.]])], output2)
+        assert np.allclose(np.array([[40.]]), output2)
 
     def test_output_cim_one_terminal_mechanism_multiple_output_states(self):
 
@@ -4399,7 +4399,7 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs, scheduler_processing=sched)
 
-        assert np.allclose([np.array([[0.]]), np.array([[6.]]), np.array([[12.]])], output)
+        assert np.allclose(np.array([[12.]]), output)
 
     def test_2_mechanisms_input_5(self):
         comp = Composition()
