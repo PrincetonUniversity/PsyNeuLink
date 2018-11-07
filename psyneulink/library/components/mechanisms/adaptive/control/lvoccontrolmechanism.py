@@ -670,11 +670,11 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         self.feature_values = np.array(self.instance_defaults.variable[1:])
 
-        self.prediction_vector = self.PredictionVector(self.feature_values,
+        self.current_state = self.PredictionVector(self.feature_values,
                                                        self.control_signals,
                                                        self.prediction_terms)
         # Assign parameters to learning_function
-        learning_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
+        learning_function_default_variable = [self.current_state.vector, np.zeros(1)]
         if isinstance(self.learning_function, type):
             self.learning_function = self.learning_function(default_variable=learning_function_default_variable)
         else:
@@ -703,17 +703,17 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         if not self.current_execution_count:
             # Initialize prediction_vector and control_signals on first trial
             # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
-            self._previous_prediction_vector = np.full_like(self.prediction_vector.vector, 0)
-            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector, 0])
+            self._previous_state = np.full_like(self.current_state.vector, 0)
+            self.prediction_weights = self.learning_function.function([self._previous_state, 0])
         else:
             # Update prediction_weights
-            self.prediction_weights = self.learning_function.function([self._previous_prediction_vector,
+            self.prediction_weights = self.learning_function.function([self._previous_state,
                                                                        self.net_outcome])
 
             # Update prediction_vector with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
-            self.prediction_vector.update_vector(self.allocation_policy, self.feature_values)
-            self._previous_prediction_vector = self.prediction_vector.vector
+            self.current_state.update_vector(self.allocation_policy, self.feature_values)
+            self._previous_state = self.current_state.vector
 
         # # TEST PRINT
         # print ('\nexecution_count: ', self.current_execution_count)
@@ -1009,14 +1009,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         '''
 
         terms = self.prediction_terms
-        vector = self.prediction_vector.compute_terms(variable)
+        vector = self.current_state.compute_terms(variable)
         weights = self.prediction_weights
         evc = 0
 
         for term_label, term_value in vector.items():
             if term_label in terms:
                 pv_enum_val = term_label.value
-                item_idx = self.prediction_vector.idx[pv_enum_val]
+                item_idx = self.current_state.idx[pv_enum_val]
                 evc += np.sum(term_value.reshape(-1) * weights[item_idx])
 
         return evc
