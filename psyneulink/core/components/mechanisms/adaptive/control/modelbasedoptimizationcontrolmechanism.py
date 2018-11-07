@@ -387,6 +387,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         '''Find allocation_policy that optimizes objective_function.'''
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
+
         self.predicted_input, self.num_trials, self.reinitialize_values, self.node_values = self.composition.before_simulations()
 
         # Compute allocation_policy using MBOCM's optimization function
@@ -401,11 +402,13 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
     def compute_EVC(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
-        # returns (allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data)
+        # returns net_allocation_policy_outcomes
         return self.run_simulation(allocation_policy=allocation_policy,
                                    num_trials=self.num_trials,
                                    reinitialize_values=self.reinitialize_values,
-                                   predicted_input=self.predicted_input)
+                                   predicted_input=self.predicted_input,
+                                   context=self.function_object.context)
+
     def run_simulation(self,
                        allocation_policy=None,
                        num_trials=1,
@@ -415,6 +418,10 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                        runtime_params=None,
                        context=None):
 
+        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
+        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
+        # be modified to return anything, this may not be necessary
+
         if allocation_policy is not None:
             self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
 
@@ -422,7 +429,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
         allocation_policy_outcomes = []
         net_allocation_policy_outcomes = []
-        other_simulation_data = []
+        # other_simulation_data = []
         for i in range(num_trials):
             inputs = {}
             for node in predicted_input:
@@ -439,19 +446,21 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                                  runtime_params=runtime_params,
                                  context=context)
 
-            self.composition.simulation_results.append(self.composition.output_values)
+            if context.initialization_status != ContextFlags.INITIALIZING:
+                self.composition.simulation_results.append(self.composition.output_values)
 
-            call_after_simulation_data = None
-
-            if call_after_simulation:
-                call_after_simulation_data = call_after_simulation()
+            # call_after_simulation_data = None
+            #
+            # if call_after_simulation:
+            #     call_after_simulation_data = call_after_simulation()
 
             monitored_states = self.objective_mechanism.output_values
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
+
             allocation_policy_outcomes.append(monitored_states)
             net_allocation_policy_outcomes.append(self.net_outcome)
-            other_simulation_data.append(call_after_simulation_data)
+            # other_simulation_data.append(call_after_simulation_data)
 
-        return allocation_policy_outcomes, net_allocation_policy_outcomes, other_simulation_data
+        return net_allocation_policy_outcomes
 
