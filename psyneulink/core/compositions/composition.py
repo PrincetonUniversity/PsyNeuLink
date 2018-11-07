@@ -3382,19 +3382,22 @@ class Composition(Composition_Base):
             for i in range(len(node.output_states)):
                 node.output_states[i].value = node_values[node][1][i]
 
+    @property
+    def _all_nodes(self):
+        for n in self.c_nodes:
+            yield n
+        yield self.input_CIM
+        yield self.output_CIM
+
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self.c_nodes]
-        mech_param_type_list.append(ctx.get_param_struct_type(self.input_CIM))
-        mech_param_type_list.append(ctx.get_param_struct_type(self.output_CIM))
+        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self._all_nodes]
         proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_param_type_list),
             ir.LiteralStructType(proj_param_type_list)])
 
     def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self.c_nodes]
-        mech_ctx_type_list.append(ctx.get_context_struct_type(self.input_CIM))
-        mech_ctx_type_list.append(ctx.get_context_struct_type(self.output_CIM))
+        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self._all_nodes]
         proj_ctx_type_list = [ctx.get_context_struct_type(p) for p in self.projections]
         return ir.LiteralStructType([
             ir.LiteralStructType(mech_ctx_type_list),
@@ -3407,47 +3410,34 @@ class Composition(Composition_Base):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [ctx.get_output_struct_type(m) for m in self.c_nodes]
-        output_type_list.append(ctx.get_output_struct_type(self.input_CIM))
-        output_type_list.append(ctx.get_output_struct_type(self.output_CIM))
+        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
 
         data = [ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
-            nested_data = node._get_data_struct_type(ctx) if hasattr(node, '_get_data_struct_type') else ir.LiteralStructType([])
+            nested_data = ctx.get_data_struct_type(node)
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
     def get_context_initializer(self):
-        mech_contexts = [tuple(m.get_context_initializer()) for m in self.c_nodes]
-        mech_contexts.append(tuple(self.input_CIM.get_context_initializer()))
-        mech_contexts.append(tuple(self.output_CIM.get_context_initializer()))
+        mech_contexts = [tuple(m.get_context_initializer()) for m in self._all_nodes]
         proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def get_param_initializer(self):
-        mech_params = [tuple(m.get_param_initializer()) for m in self.c_nodes]
-        mech_params.append(tuple(self.input_CIM.get_param_initializer()))
-        mech_params.append(tuple(self.output_CIM.get_param_initializer()))
+        mech_params = [tuple(m.get_param_initializer()) for m in self._all_nodes]
         proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self):
-        output = [[os.value for os in m.output_states] for m in self.c_nodes]
-        output.append([os.value for os in self.input_CIM.output_states])
-        output.append([os.value for os in self.output_CIM.output_states])
+        output = [[os.value for os in m.output_states] for m in self._all_nodes]
         data = [output]
         for node in self.c_nodes:
             nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
-    def __get_node_index(self, node):
-        if node is self.input_CIM:
-            return len(self.c_nodes)
-        elif node is self.output_CIM:
-            return len(self.c_nodes) + 1
-        else:
-            return self.c_nodes.index(node)
+    def _get_node_index(self, node):
+        return list(self._all_nodes).index(node)
 
     def _get_node_wrapper(self, node):
         if node not in self.__generated_wrappers:
@@ -3501,7 +3491,7 @@ class Composition(Composition_Base):
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.get_unique_name("comp_wrap_" + node.name)
-            data_struct_ptr = self._get_data_struct_type(ctx).as_pointer()
+            data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
@@ -3564,9 +3554,8 @@ class Composition(Composition_Base):
 
                 output_s = par_proj.sender
                 assert output_s in par_mech.output_states
-                if par_mech is self.input_CIM or par_mech is self.output_CIM \
-                    or par_mech in self.c_nodes:
-                    par_idx = self.__get_node_index(par_mech)
+                if par_mech in self._all_nodes:
+                    par_idx = self._get_node_index(par_mech)
                 else:
                     comp = par_mech.composition
                     assert par_mech is comp.output_CIM
@@ -3610,7 +3599,7 @@ class Composition(Composition_Base):
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
 
-            idx = ctx.int32_ty(self.__get_node_index(node))
+            idx = ctx.int32_ty(self._get_node_index(node))
             zero = ctx.int32_ty(0)
             m_params = builder.gep(params, [zero, zero, idx])
             m_context = builder.gep(context, [zero, zero, idx])
@@ -3619,12 +3608,12 @@ class Composition(Composition_Base):
                 builder.call(m_function, [m_params, m_context, m_in, m_out])
             else:
                 # Condition and data structures includes parent first
-                nested_idx = ctx.int32_ty(self.__get_node_index(node) + 1)
+                nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 m_data = builder.gep(data_in, [zero, nested_idx])
                 m_cond = builder.gep(cond_ptr, [zero, nested_idx])
                 builder.call(m_function, [m_context, m_params, m_in, m_data, m_cond])
                 # Copy output of the nested composition to its output place
-                output_idx = node.__get_node_index(node.output_CIM)
+                output_idx = node._get_node_index(node.output_CIM)
                 result = builder.gep(m_data, [zero, zero, ctx.int32_ty(output_idx)])
                 builder.store(builder.load(result), m_out)
 
@@ -3661,7 +3650,7 @@ class Composition(Composition_Base):
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
-                self._get_data_struct_type(ctx).as_pointer(),
+                ctx.get_data_struct_type(self).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -3787,7 +3776,7 @@ class Composition(Composition_Base):
             func_ty = ir.FunctionType(ir.VoidType(), (
                 ctx.get_context_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
-                self._get_data_struct_type(ctx).as_pointer(),
+                ctx.get_data_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer(),
                 ctx.int32_ty.as_pointer(),
@@ -3842,7 +3831,7 @@ class Composition(Composition_Base):
             builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
             # Extract output_CIM result
-            idx = self.__get_node_index(self.output_CIM)
+            idx = self._get_node_index(self.output_CIM)
             result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             output_ptr = builder.gep(data_out, [iters])
             result = builder.load(result_ptr)

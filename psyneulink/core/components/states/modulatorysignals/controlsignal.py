@@ -1019,8 +1019,8 @@ class ControlSignal(ModulatorySignal):
             self.duration_cost = self.duration_cost_function(self.cost)
         # KAM HACK 11/5 get rid of nested arrays so that reduce function (sum) works properly
         costs_to_combine = [self.intensity_cost.item(), self.adjustment_cost.item(), self.duration_cost.item()]
-
         return max(0.0, self.combine_costs_function(costs_to_combine))
+
 
     @property
     def allocation_samples(self):

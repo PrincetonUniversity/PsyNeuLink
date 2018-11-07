@@ -10,8 +10,8 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, IDENTI
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.condition import Never
-from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 
 
 def test_EVC():
@@ -96,7 +96,6 @@ def test_EVC():
         name='EVC Test System',
         # prefs={RECORD_SIMULATION_PREF:True}
     )
-    mySystem.show_graph(show_control=True)
     TaskExecutionProcess.prefs.paramValidationPref = False
     RewardProcess.prefs.paramValidationPref = False
     mySystem.prefs.paramValidationPref = False

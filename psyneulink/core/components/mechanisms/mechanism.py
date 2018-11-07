@@ -811,11 +811,8 @@ System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 Attribute Dictionary
 ^^^^^^^^^^^^^^^^^^^^
 
-Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
-`variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
-
-    * `attributes_dict` -- a dictionary that contains the attributes of the Mechanism and their values,
-      that can be used in the `variable <OutputState.variable>` of its OutputState(s).
+A Mechanism has an `attributes_dict` attribute containing a dictionary of its attributes that can be used to
+specify the `variable <OutputState.variable>` of its OutputStates (see `OutputState_Customization`).
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
@@ -864,7 +861,7 @@ these can be overridden when it `executed <Mechanism_Base.execution>`.  This can
 dictionary <ParameterState_Specification>` assigned to the **runtime_param** argument of the Mechanism's `execute
 <Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
 of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
-that parameter for the (and *only* the) current execution of the Mechanism; the value will return to its previous value
+the parameter for that (and *only* that) execution of the Mechanism; the value will return to its previous value
 following that execution.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which

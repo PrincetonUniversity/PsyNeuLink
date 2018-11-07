@@ -865,12 +865,7 @@ class LCControlMechanism(ControlMechanism):
         return new_out, builder
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        # FIXME: Is this part of input parse? Shouls it be more targeted?
-        if func.args[2].type.pointee != func_in.type.pointee:
-            return builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)]), builder
-        else:
-            return func_in, builder
-
+        return func_in, builder
 
     @tc.typecheck
     def _add_system(self, system, role:str):
