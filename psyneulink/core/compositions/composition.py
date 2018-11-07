@@ -3309,23 +3309,6 @@ class Composition(Composition_Base):
                         else:
                             execution_targets[node] = targets[node][target_index]
 
-                    # devel needs the lines below because target and current_targets are attrs of system
-                    # self.target = execution_targets
-                    # self.current_targets = execution_targets
-
-            # TBI execute learning
-            # pass along the targets for this trial
-            # self.learning_composition.execute(execution_targets,
-            #                                   scheduler_processing,
-            #                                   scheduler_learning,
-            #                                   call_before_time_step,
-            #                                   call_before_pass,
-            #                                   call_after_time_step,
-            #                                   call_after_pass,
-            #                                   execution_id,
-            #                                   clamp_input,
-            #                                   )
-
             if call_after_trial:
                 call_after_trial()
 
