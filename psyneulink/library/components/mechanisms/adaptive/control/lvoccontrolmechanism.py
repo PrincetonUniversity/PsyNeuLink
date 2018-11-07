@@ -31,7 +31,7 @@ The `Expected Value of Control (EVC) <OptimizationControlMechanism_EVC>` is the 
 <ControlMechanism.allocation_policy>`, as determined by its `objective_function <ControlMechanism.objective_function>`.
 
 The LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>` learns to estimate the EVC
-from its `prediction_vector <LVOCControlMechanism.prediction_vector>` -- comprised of `feature_predictors
+from its `current_state <LVOCControlMechanism.current_state>` -- comprised of `feature_predictors
 <LVOCControlMechanism.feature_predictors>`, an `allocation_policy <ControlMechanism.allocation_policy>`, interactions
 among these, and the `costs <ControlMechanism.costs> of its `control_signals <ControlMechanism.control_signals>`.
 by learning a set of `prediction_weights <LVOCControlMechanism.prediction_weights>` that can predict the
@@ -109,7 +109,7 @@ Feature Predictors
 ^^^^^^^^^^^^^^^^^^
 
 Features_Predictors, together with the LVOCControlMechanism's `control_signals <ControlMechanism.control_signals>`
-and `costs <ControlMechanism.costs>` are assigned to its `prediction_vector <LVOCControlMechanism.prediction_vector>`,
+and `costs <ControlMechanism.costs>` are assigned to its `current_state <LVOCControlMechanism.current_state>`,
 from which its `learning_function <LVOCControlMechanism.learning_function>` learns to predict the `EVC
 <LVOCControlMechanism_EVC>`.
 
@@ -198,14 +198,14 @@ When an LVOCControlMechanism is executed, it first calls its `learning_function
 <ControlMechanism.allocation_policy>` that will yield the greatet `EVC <LVOCControlMechanism_EVC>`, and then
 implements that for the next `trial` of execution.  Specifically, it executes the following steps:
 
-  * Calls `learning_function <LVOCControlMechanism.learning_function>` with the `prediction_vector
-    <LVOCControlMechanism.prediction_vector>` (containing the `feature_values
+  * Calls `learning_function <LVOCControlMechanism.learning_function>` with the `current_state
+    <LVOCControlMechanism.current_state>` (containing the `feature_values
     <LVOCControlMechanism.feature_values>`, `allocation_policy <ControlMechanism.allocation_policy>`, and associated
     `costs <ControlMechanism.cost>`) for the previous trial, together with the `net_outcome
     <ControlMechanism.net_outcome>` for that trial, and updates its `prediction_weights
     <LVOCControlMechanism.prediction_weights>`.
 
-  * Updates `prediction_vector <LVOCControlMechanism.prediction_vector>` with the `features_values
+  * Updates `current_state <LVOCControlMechanism.current_state>` with the `features_values
     <LVOCControlMechanism.feature_values>` for the current trial.
 
   * Calls `function <LVOCControlMechanism.function>`, which uses the current `feature_values
@@ -278,7 +278,7 @@ PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 class PV(Enum):
 # class PV(AutoNumberEnum):
     '''PV()
-    Specifies terms used to compute `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+    Specifies terms used to compute `current_state <LVOCControlMechanism.current_state>`.
 
     Attributes
     ----------
@@ -355,7 +355,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     ---------
 
     feature_predictors : Mechanism, OutputState, Projection, dict, or list containing any of these
-        specifies values to assign to `prediction_vector <LVOCControlMechanism.prediction_vector>`,
+        specifies values to assign to `current_state <LVOCControlMechanism.current_state>`,
         that are used to estimate `EVC <LVOCControlMechanism_EVC>`.  Any `InputState specification
         <InputState_Specification>` can be used that resolves to an `OutputState` that projects to the InputState.
         In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the
@@ -372,12 +372,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         is passed to its **monitored_output_states** argument.
 
     learning_function : LearningFunction, function or method : default BayesGLM
-        specifies the function used to learn to estimate `EVC <LVOCControlMechanism_EVC>` from the `prediction_vector
-        <LVOCControlMechanism.prediction_vector>` and `net_outcome <ControlMechanism.net_outcome>` (see
+        specifies the function used to learn to estimate `EVC <LVOCControlMechanism_EVC>` from the `current_state
+        <LVOCControlMechanism.current_state>` and `net_outcome <ControlMechanism.net_outcome>` (see
         `LVOCControlMechanism_Learning_Function` for details).
 
     prediction_terms : List[PV] : default [PV.F, PV.C, PV.FC, PV.COST]
-        specifies terms to be included in `prediction_vector <LVOCControlMechanism.prediction_vector>`.
+        specifies terms to be included in `current_state <LVOCControlMechanism.current_state>`.
         items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
         if `None` is specified, the default values will automatically be assigned.
 
@@ -406,10 +406,10 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         the current `values <InputState.value>` of `feature_predictors LVOCControlMechanism_Feature_Predictors`.
 
     prediction_terms : List[PV]
-        identifies terms included in `prediction_vector <LVOCControlMechanism.prediction_vector.vector>`;
+        identifies terms included in `current_state <LVOCControlMechanism.current_state.vector>`;
         items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
 
-    prediction_vector : PredictionVector
+    current_state : PredictionVector
         object with `vector <PredictionVector.vector>` containing current values of `feature_predictors
         <LVOCControlMechanism_Feature_Predictors>` `allocation_policy <ControlMechanism.allocation_policy>`,
         their interactions, and `costs <ControlMechanism.costs>` of `control_signals <ControlMechanism.control_signals>`
@@ -423,11 +423,11 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         COMMENT
 
     prediction_weights : 1d ndarray
-        weights assigned to each term of `prediction_vector <LVOCControlMechanism.prediction_vectdor>`
+        weights assigned to each term of `current_state <LVOCControlMechanism.prediction_vectdor>`
         last returned by `learning_function <LVOCControlMechanism.learning_function>`.
 
     learning_function : LearningFunction, function or method
-        takes `prediction_vector <LVOCControlMechanism.prediction_vector>` and `net_outcome
+        takes `current_state <LVOCControlMechanism.current_state>` and `net_outcome
         <ControlMechanism.net_outcome>` and returns an updated set of `prediction_weights
         <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Learning_Function`
         for additional details).
@@ -435,7 +435,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     function : OptimizationFunction, function or method
         takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer) and, using the current
         `feature_values <LVOCControlMechanism.feature_values>`, `prediction_weights
-        <LVOCControlMechanism.prediction_vector>` and `compute_EVC <LVOCControlMechanism.compute_EVC>`, returns an
+        <LVOCControlMechanism.current_state>` and `compute_EVC <LVOCControlMechanism.compute_EVC>`, returns an
         `allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>` (see `Primary Function
         <LVOCControlMechanism_Function>` for additional details).
 
@@ -691,8 +691,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         Executes the following steps:
         - calculate net_outcome from previous trial (value of objective_mechanism - costs of control_signals)
-        - call learning_function with net_outcome and prediction_vector from previous trial to update prediction_weights
-        - update prediction_vector
+        - call learning_function with net_outcome and current_state from previous trial to update prediction_weights
+        - update current_state
         - execute primary (optimization) function to get allocation_policy that maximizes EVC (and corresponding EVC)
         - return allocation_policy
         """
@@ -701,8 +701,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             return defaultControlAllocation
 
         if not self.current_execution_count:
-            # Initialize prediction_vector and control_signals on first trial
-            # Note:  initialize prediction_vector to 1's so that learning_function returns specified priors
+            # Initialize current_state and control_signals on first trial
+            # Note:  initialize current_state to 1's so that learning_function returns specified priors
             self._previous_state = np.full_like(self.current_state.vector, 0)
             self.prediction_weights = self.learning_function.function([self._previous_state, 0])
         else:
@@ -710,7 +710,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             self.prediction_weights = self.learning_function.function([self._previous_state,
                                                                        self.net_outcome])
 
-            # Update prediction_vector with current feature_values and control_signals and store for next trial
+            # Update current_state with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
             self.current_state.update_vector(self.allocation_policy, self.feature_values)
             self._previous_state = self.current_state.vector
@@ -847,7 +847,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Feature_predictors
             self.terms[F] = f = feature_values
             self.num[F] = len(f)  # feature_predictors are arrays
-            self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to prediction_vector.vector
+            self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to current_state.vector
             self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
 
             # Placemarker until control_signals are instantiated
@@ -919,7 +919,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                 self.num_elems[FFCC] = len(ffcc.reshape(-1))
                 self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
 
-            # Construct "flattened" prediction_vector based on specified terms, and assign indices (as slices)
+            # Construct "flattened" current_state based on specified terms, and assign indices (as slices)
             i=0
             for t in range(len(PV)):
                 if t in [t.value for t in specified_terms]:
@@ -932,8 +932,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
-            Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `prediction_vector
-            <LVOCControlMechanism.prediction_vector>`, with current values of variable (i.e., `variable
+            Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `current_state
+            <LVOCControlMechanism.current_state>`, with current values of variable (i.e., `variable
             <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
             <LVOCControlMechanism.feature_values>`.
 
@@ -1025,30 +1025,30 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 # OLD ******************************************************************************************************************
 # Manual computation of derivatives
 
-    # def gradient_ascent(self, control_signals, prediction_vector, prediction_weights):
+    # def gradient_ascent(self, control_signals, current_state, prediction_weights):
     #     '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
     #     <LVOCControlMechanism_EVC>`.
     #
-    #     Iterate over prediction_vector; for each iteration: \n
-    #     - compute gradients based on current control_signal values and their costs (in prediction_vector);
+    #     Iterate over current_state; for each iteration: \n
+    #     - compute gradients based on current control_signal values and their costs (in current_state);
     #     - compute new control_signal values based on gradients;
-    #     - update prediction_vector with new control_signal values and the interaction terms and costs based on those;
-    #     - use prediction_weights and updated prediction_vector to compute new `EVC <LVOCControlMechanism_EVC>`.
+    #     - update current_state with new control_signal values and the interaction terms and costs based on those;
+    #     - use prediction_weights and updated current_state to compute new `EVC <LVOCControlMechanism_EVC>`.
     #
     #     Continue to iterate until difference between new and old EVC is less than `convergence_threshold
     #     <LearnAllocationPolicy.convergence_threshold>` or number of iterations exceeds `max_iterations
     #     <LearnAllocationPolicy.max_iterations>`.
     #
-    #     Return control_signals field of prediction_vector (used by LVOCControlMechanism as its `allocation_vector
+    #     Return control_signals field of current_state (used by LVOCControlMechanism as its `allocation_vector
     #     <LVOCControlMechanism.allocation_policy>`).
     #     '''
     #
-    #     pv = prediction_vector.vector
-    #     idx = prediction_vector.idx
-    #     # labels = prediction_vector.labels
-    #     num_c = prediction_vector.num_c
-    #     num_cst = prediction_vector.num_cst
-    #     # num_intrxn = prediction_vector.num_interactions
+    #     pv = current_state.vector
+    #     idx = current_state.idx
+    #     # labels = current_state.labels
+    #     num_c = current_state.num_c
+    #     num_cst = current_state.num_cst
+    #     # num_intrxn = current_state.num_interactions
     #
     #     convergence_metric = self.convergence_threshold + EPSILON
     #     previous_value = np.finfo(np.longdouble).max
@@ -1077,7 +1077,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     if PV.FC in self.prediction_terms:
     #         # Get weights for fc interaction term and reshape so that there is one row per control_signal
     #         #    containing the terms for the interaction of that control_signal with each of the feature_predictors
-    #         fc_weights = prediction_weights[idx.fc].reshape(num_c, prediction_vector.num_f_elems)
+    #         fc_weights = prediction_weights[idx.fc].reshape(num_c, current_state.num_f_elems)
     #         fc_weights_x_features = fc_weights * feature_predictors
     #         for i in range(num_c):
     #             gradient_constants[i] += np.sum(fc_weights_x_features[i])
@@ -1086,8 +1086,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     if PV.FFC in self.prediction_terms:
     #         # Get weights for ffc interaction term and reshape so that there is one row per control_signal
     #         #    containing the terms for the interaction of that control_signal with each of the feature interactions
-    #         ffc_weights = prediction_weights[idx.ffc].reshape(num_c, prediction_vector.num_ff_elems)
-    #         ffc_weights_x_ff = ffc_weights * prediction_vector.ff.reshape(-1)
+    #         ffc_weights = prediction_weights[idx.ffc].reshape(num_c, current_state.num_ff_elems)
+    #         ffc_weights_x_ff = ffc_weights * current_state.ff.reshape(-1)
     #         for i in range(num_c):
     #             gradient_constants[i] += np.sum(ffc_weights_x_ff[i])
     #
@@ -1095,7 +1095,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     print(
     #             '\nprediction_weights: ', prediction_weights,
     #           )
-    #     self.test_print(prediction_vector)
+    #     self.test_print(current_state)
     #     # TEST PRINT END:
     #
     #     # Perform gradient ascent on d(control_signals)/dEVC until convergence criterion is reached
@@ -1108,12 +1108,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #
     #             # Derivative of cc interaction term with respect to current control_signal_value
     #             if PV.CC in self.prediction_terms:
-    #                 gradient[i] += prediction_vector._partial_derivative(PV.CC, prediction_weights, i,
+    #                 gradient[i] += current_state._partial_derivative(PV.CC, prediction_weights, i,
     #                                                                      control_signal_value)
     #
     #             # Derivative of ffcc interaction term with respect to current control_signal_value
     #             if PV.FFCC in self.prediction_terms:
-    #                 gradient[i] += prediction_vector._partial_derivative(PV.FFCC, prediction_weights, i,
+    #                 gradient[i] += current_state._partial_derivative(PV.FFCC, prediction_weights, i,
     #                                                                      control_signal_value)
     #
     #             # Derivative for costs (since costs depend on control_signals)
@@ -1129,7 +1129,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #
     #         # Only updatre terms with control_signal in them
     #         terms = [term for term in self.prediction_terms if 'c' in term.value]
-    #         prediction_vector._update(self.feature_values, control_signal_values, costs, terms)
+    #         current_state._update(self.feature_values, control_signal_values, costs, terms)
     #
     #         # Compute current LVOC using current feature_predictors, weights and new control signals
     #         current_lvoc = self.compute_lvoc(pv, prediction_weights)
@@ -1148,7 +1148,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #                 '\ncurrent_lvoc: ',current_lvoc ,
     #                 '\nconvergence_metric: ',convergence_metric,
     #         )
-    #         self.test_print(prediction_vector)
+    #         self.test_print(current_state)
     #         # TEST PRINT END
     #
     #         j+=1
@@ -1166,12 +1166,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     with respect to control_signal i'''
     #
     #     # Get label and value of control signal with respect to which the derivative is being taken
-    #     ctl_label = self.prediction_vector.labels.c[ctl_idx]
+    #     ctl_label = self.current_state.labels.c[ctl_idx]
     #
     #     # Get labels and values of terms, and weights
-    #     t_labels = getattr(self.prediction_vector.labels, term_label.value)
-    #     terms = getattr(self.prediction_vector, term_label.value)
-    #     wts_idx = getattr(self.prediction_vector.idx, term_label.value)
+    #     t_labels = getattr(self.current_state.labels, term_label.value)
+    #     terms = getattr(self.current_state, term_label.value)
+    #     wts_idx = getattr(self.current_state.idx, term_label.value)
     #     # Reshape weights to match termss
     #     weights = pw[wts_idx].reshape(np.array(terms).shape)
     #
