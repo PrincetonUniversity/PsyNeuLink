@@ -940,7 +940,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, Param, function_type, method_type
+from psyneulink.core.components.component import Component, Param, Parameters, function_type, method_type
 from psyneulink.core.components.functions.function import FunctionOutputType, Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
@@ -949,7 +949,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_COUNT, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT_EXECUTE_METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.core.globals.keywords import CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_COUNT, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric, parse_execution_context
@@ -1311,6 +1311,9 @@ class Mechanism_Base(Mechanism):
 
         input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
+    class _CompilationData(Parameters):
+        nv_state = None
+
     registry = MechanismRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -1456,7 +1459,7 @@ class Mechanism_Base(Mechanism):
         self._receivesProcessInput = False
         self.phaseSpec = None
 
-        self.__nv_state = None
+        self._compilation_data = self._CompilationData(owner=self)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2305,6 +2308,7 @@ class Mechanism_Base(Mechanism):
         if bin_execute:
             value = self._bin_execute(
                 variable=variable,
+                execution_id=execution_id,
                 runtime_params=runtime_params,
                 context=context,
             )
@@ -2560,22 +2564,22 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def get_param_initializer(self):
+    def get_param_initializer(self, execution_id=None):
         input_param_init_list = []
         for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer())
+            input_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         input_param_init = tuple(input_param_init_list)
 
-        function_param_init = self.function_object.get_param_initializer()
+        function_param_init = self.function_object.get_param_initializer(execution_id=execution_id)
 
         output_param_init_list = []
         for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer())
+            output_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         output_param_init = tuple(output_param_init_list)
 
         param_param_init_list = []
         for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer())
+            param_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         param_param_init = tuple(param_param_init_list)
 
         param_init_list = [input_param_init, function_param_init,
@@ -2592,22 +2596,22 @@ class Mechanism_Base(Mechanism):
         pass
 
 
-    def get_context_initializer(self):
+    def get_context_initializer(self, execution_id=None):
         input_context_init_list = []
         for state in self.input_states:
-            input_context_init_list.append(state.get_context_initializer())
+            input_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         input_context_init = tuple(input_context_init_list)
 
-        function_context_init = self.function_object.get_context_initializer()
+        function_context_init = self.function_object.get_context_initializer(execution_id=execution_id)
 
         output_context_init_list = []
         for state in self.output_states:
-            output_context_init_list.append(state.get_context_initializer())
+            output_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         output_context_init = tuple(output_context_init_list)
 
         parameter_context_init_list = []
         for state in self.parameter_states:
-            parameter_context_init_list.append(state.get_context_initializer())
+            parameter_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         parameter_context_init = tuple(parameter_context_init_list)
 
         return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
@@ -2743,6 +2747,7 @@ class Mechanism_Base(Mechanism):
 
     def _bin_execute(self,
                  variable=None,
+                 execution_id=None,
                  runtime_params=None,
                  context=None):
 
@@ -2751,13 +2756,16 @@ class Mechanism_Base(Mechanism):
 
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        if self.__nv_state is None:
-            initializer = self.get_context_initializer()
-            self.__nv_state = context_struct_ty(*initializer)
+        __nv_state = self._compilation_data.nv_state.get(execution_id)
 
-        ct_context = self.__nv_state
+        if __nv_state is None:
+            initializer = self.get_context_initializer(execution_id=execution_id)
+            __nv_state = context_struct_ty(*initializer)
 
-        ct_param = par_struct_ty(*self.get_param_initializer())
+        ct_context = __nv_state
+        self._compilation_data.nv_state.set(__nv_state, execution_id)
+
+        ct_param = par_struct_ty(*self.get_param_initializer(execution_id=execution_id))
 
         # convert to 3d. we always assume that:
         # a) the input is vector of input states

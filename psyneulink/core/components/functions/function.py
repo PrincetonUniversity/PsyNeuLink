@@ -890,7 +890,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def get_context_initializer(self):
+    def get_context_initializer(self, execution_id=None):
         return tuple([])
 
     def _get_param_ids(self, execution_id=None):
@@ -920,16 +920,17 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def get_param_initializer(self):
-        return pnlvm._tupleize(self._get_param_values())
+    def get_param_initializer(self, execution_id=None):
+        return pnlvm._tupleize(self._get_param_values(execution_id))
 
     def bin_function(self,
                      variable=None,
+                     execution_id=None,
                      params=None,
                      context=None):
 
         # TODO: Port this to llvm
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         bf = self._llvmBinFunction
 
@@ -938,8 +939,8 @@ class Function_Base(Function):
 
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        ct_param = par_struct_ty(*self.get_param_initializer())
-        ct_state = state_struct_ty(*self.get_context_initializer())
+        ct_param = par_struct_ty(*self.get_param_initializer(execution_id=execution_id))
+        ct_state = state_struct_ty(*self.get_context_initializer(execution_id=execution_id))
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = vo_ty()
@@ -7210,9 +7211,9 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def _get_context_struct_type(self, ctx):
         return ctx.get_output_struct_type(self)
 
-    def get_context_initializer(self, data=None):
+    def get_context_initializer(self, data=None, execution_id=None):
         if data is None:
-            data = np.asfarray(self.previous_value).flatten().tolist()
+            data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
             if self.instance_defaults.value.ndim > 1:
                 return (tuple(data),)
             return tuple(data)
@@ -7275,17 +7276,18 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
     def bin_function(self,
                      variable=None,
+                     execution_id=None,
                      params=None,
                      context=None):
 
-        ret = super().bin_function(variable, params, context)
+        ret = super().bin_function(variable, execution_id, params, context)
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         # ct_old also contains the correct value
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = ret
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self.parameters.previous_value.set(ret, execution_id, override=True)
 
         return ret
 
@@ -8277,7 +8279,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         uncorrelated_activity = Param(0.0, modulable=True)
 
         # FIX: make an integration_method enum class for RK4/EULER
-        integration_method = "RK4"
+        integration_method = Param("RK4", stateful=False)
+
         initial_w = np.array([1.0])
         initial_v = np.array([1.0])
         t_0 = 0.0
@@ -8726,18 +8729,22 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     def bin_function(self,
                      variable=None,
+                     execution_id=None,
                      params=None,
                      context=None):
 
-        ret = super().bin_function(variable, params, context)
+        ret = super().bin_function(variable, execution_id, params, context)
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_v = ret[0]
-            self.previous_w = ret[1]
-            self.previous_time = ret[2]
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            self._set_multiple_parameter_values(
+                execution_id,
+                previous_v=ret[0],
+                previous_w=ret[1],
+                previous_time=ret[2]
+            )
 
         return ret
 
@@ -8746,10 +8753,14 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
-    def get_context_initializer(self):
-        v = self.previous_v if np.isscalar(self.previous_v) else tuple(self.previous_v)
-        w = self.previous_w if np.isscalar(self.previous_w) else tuple(self.previous_w)
-        time = self.previous_time if np.isscalar(self.previous_time) else tuple(self.previous_time)
+    def get_context_initializer(self, execution_id=None):
+        previous_v = self.parameters.previous_v.get(execution_id)
+        previous_w = self.parameters.previous_w.get(execution_id)
+        previous_time = self.parameters.previous_time.get(execution_id)
+
+        v = previous_v if np.isscalar(previous_v) else tuple(previous_v)
+        w = previous_w if np.isscalar(previous_w) else tuple(previous_w)
+        time = previous_time if np.isscalar(previous_time) else tuple(previous_time)
         return (v, w, time)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
@@ -8785,6 +8796,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                       "previous_w_ptr": previous_w_ptr,
                       "previous_time_ptr": previous_time_ptr}
 
+        # KDM 11/7/18: since we're compiling with this set, I'm assuming it should be
+        # stateless and considered an inherent feature of the function. Changing parameter
+        # to stateful=False accordingly. If it should be stateful, need to pass an execution_id here
         method = self.get_current_function_param("integration_method")
         if method == "RK4":
             func = functools.partial(self.__gen_llvm_rk4_body, **inner_args)
@@ -8792,7 +8806,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             func = functools.partial(self.__gen_llvm_euler_body, **inner_args)
         else:
             raise FunctionError("Invalid integration method ({}) selected for {}".
-                                format(integration_method, self.name))
+                                format(method, self.name))
 
         with helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             func(*args)
@@ -11380,10 +11394,10 @@ COMMENT
         transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
-    def get_param_initializer(self):
-        my_params = super().get_param_initializer()
-        metric_params = self._metric_fct.get_param_initializer()
-        transfer_params = self.transfer_fct.get_param_initializer() if self.transfer_fct is not None else tuple()
+    def get_param_initializer(self, execution_id=None):
+        my_params = super().get_param_initializer(execution_id=execution_id)
+        metric_params = self._metric_fct.get_param_initializer(execution_id=execution_id)
+        transfer_params = self.transfer_fct.get_param_initializer(execution_id=execution_id) if self.transfer_fct is not None else tuple()
         return tuple([my_params, metric_params, transfer_params])
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):

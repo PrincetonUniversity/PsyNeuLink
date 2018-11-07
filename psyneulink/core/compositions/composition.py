@@ -393,6 +393,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class Params(Parameters):
         results = Param([], loggable=False)
 
+    class _CompilationData(Parameters):
+        execution = None
+
+
     def __init__(self,
                  name=None,
                  controller=None,
@@ -460,7 +464,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__generated_execution = None
         self.__compiled_execution = None
         self.__compiled_run = None
-        self.__execution = None
+
+        self._compilation_data = self._CompilationData(owner=self)
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -2466,10 +2471,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if bin_execute:
             try:
-                self.__bin_initialize()
+                self.__bin_initialize(execution_id)
                 if bin_execute == 'LLVMExec':
-                    self.__execution.execute(inputs)
-                    return self.__execution.extract_node_output(self.output_CIM)
+                    __execution = self._compilation_data.execution.get(execution_id)
+                    __execution.execute(inputs)
+                    return __execution.extract_node_output(self.output_CIM)
 
                 mechanisms = [n for n in self.c_nodes + [self.input_CIM, self.output_CIM] if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
@@ -2489,7 +2495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bin_execute = False
 
         if bin_execute:
-            self.__execution.execute_node(self.input_CIM, inputs, execution_id=execution_id)
+            self._compilation_data.execution.get(execution_id).execute_node(self.input_CIM, inputs, execution_id=execution_id)
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_id=execution_id)
@@ -2513,7 +2519,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             frozen_values = {}
             new_values = {}
             if bin_execute:
-                self.__execution.freeze_values()
+                self._compilation_data.execution.get(execution_id).freeze_values()
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
@@ -2552,7 +2558,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
                     if bin_execute:
-                        self.__execution.execute_node(node)
+                        self._compilation_data.execution.get(execution_id).execute_node(node)
                         node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
                         if node is not self.controller:
@@ -2584,7 +2590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         srcs = set([proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers])
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
-                            data = self.__execution.extract_frozen_node_output(src_node)
+                            data = self._compilation_data.execution.get(execution_id).extract_frozen_node_output(src_node)
                             for i, v in enumerate(data):
                                 #This sets frozen values
                                 src_node.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
@@ -2592,7 +2598,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ret = node.execute(execution_id=execution_id, bin_execute=bin_execute)
                     if bin_execute:
                         # Update result in binary data structure
-                        self.__execution.insert_node_output(node, ret)
+                        self._compilation_data.execution.get(execution_id).insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
                             node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
@@ -2621,10 +2627,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # extract result here
         if bin_execute:
-            self.__execution.freeze_values()
-            self.__execution.execute_node(self.output_CIM)
+            __execution = self._compilation_data.execution.get(execution_id)
+            __execution.freeze_values()
+            __execution.execute_node(self.output_CIM)
 
-            return self.__execution.extract_node_output(self.output_CIM)
+            return __execution.extract_node_output(self.output_CIM)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
@@ -2797,8 +2804,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
-            self.__bin_initialize()
-            results += self.__execution.run(inputs, num_trials, num_inputs_sets)
+            self.__bin_initialize(execution_id)
+            results += self._compilation_data.execution.get(execution_id).run(inputs, num_trials, num_inputs_sets)
 
             full_results = self.parameters.results.get(execution_id)
             if full_results is None:
@@ -2947,21 +2954,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
-    def get_context_initializer(self):
-        mech_contexts = [tuple(m.get_context_initializer()) for m in self._all_nodes]
-        proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
+    def get_context_initializer(self, execution_id=None):
+        mech_contexts = [tuple(m.get_context_initializer(execution_id=execution_id)) for m in self._all_nodes]
+        proj_contexts = [tuple(p.get_context_initializer(execution_id=execution_id)) for p in self.projections]
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def get_param_initializer(self):
-        mech_params = [tuple(m.get_param_initializer()) for m in self._all_nodes]
-        proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
+    def get_param_initializer(self, execution_id=None):
+        mech_params = [tuple(m.get_param_initializer(execution_id=execution_id)) for m in self._all_nodes]
+        proj_params = [tuple(p.get_param_initializer(execution_id=execution_id)) for p in self.projections]
         return (tuple(mech_params), tuple(proj_params))
 
-    def _get_data_initializer(self):
-        output = [[os.value for os in m.output_states] for m in self._all_nodes]
+    def _get_data_initializer(self, execution_id=None):
+        output = [[os.parameters.value.get(execution_id) for os in m.output_states] for m in self._all_nodes]
         data = [output]
         for node in self.c_nodes:
-            nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
+            nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
@@ -3007,12 +3014,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__compiled_run
 
-    def reinitialize(self):
-        self.__execution = None
+    def reinitialize(self, execution_context=NotImplemented):
+        if execution_context is NotImplemented:
+            execution_context = self.default_execution_id
 
-    def __bin_initialize(self):
-        if self.__execution is None:
-            self.__execution = pnlvm.CompExecution(self)
+        self._compilation_data.execution.set(None, execution_context)
+
+    def __bin_initialize(self, execution_id=None):
+        if self._compilation_data.execution.get(execution_id) is None:
+            self._compilation_data.execution.set(pnlvm.CompExecution(self, execution_id), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)

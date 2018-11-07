@@ -189,7 +189,7 @@ from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutpu
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, OUTPUT_STD_DEV, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -1448,14 +1448,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         return_t = ctx.get_output_struct_type(self)
         return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
-    def get_param_initializer(self):
-        transfer_params = super().get_param_initializer()
-        projection_params = self.recurrent_projection.get_param_initializer()
+    def get_param_initializer(self, execution_id=None):
+        transfer_params = super().get_param_initializer(execution_id=execution_id)
+        projection_params = self.recurrent_projection.get_param_initializer(execution_id=execution_id)
         return tuple([transfer_params, projection_params])
 
-    def get_context_initializer(self):
-        transfer_init = super().get_context_initializer()
-        projection_init = self.recurrent_projection.get_context_initializer()
+    def get_context_initializer(self, execution_id=None):
+        transfer_init = super().get_context_initializer(execution_id=execution_id)
+        projection_init = self.recurrent_projection.get_context_initializer(execution_id=execution_id)
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.

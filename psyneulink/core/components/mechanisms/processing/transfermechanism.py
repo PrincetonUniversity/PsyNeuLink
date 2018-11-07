@@ -332,10 +332,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
-    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, \
-    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, OUTPUT_STD_DEV, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, OUTPUT_VARIANCE, DISTRIBUTION_FUNCTION_TYPE
+from psyneulink.core.globals.keywords import DIFFERENCE, DISTRIBUTION_FUNCTION_TYPE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -1160,51 +1157,51 @@ class TransferMechanism(ProcessingMechanism_Base):
         return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
 
 
-    def get_param_initializer(self):
+    def get_param_initializer(self, execution_id=None):
         input_param_init_list = []
         for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer())
+            input_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         input_param_init = tuple(input_param_init_list)
 
-        function_param_list = [self.function_object.get_param_initializer()]
+        function_param_list = [self.function_object.get_param_initializer(execution_id=execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function.get_param_initializer())
+            function_param_list.append(self.integrator_function.get_param_initializer(execution_id=execution_id))
         function_param_init = tuple(function_param_list)
 
         output_param_init_list = []
         for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer())
+            output_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         output_param_init = tuple(output_param_init_list)
 
         param_param_init_list = []
         for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer())
+            param_param_init_list.append(state.get_param_initializer(execution_id=execution_id))
         param_param_init = tuple(param_param_init_list)
 
         return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
 
 
-    def get_context_initializer(self):
+    def get_context_initializer(self, execution_id=None):
         input_context_init_list = []
         for state in self.input_states:
-            input_context_init_list.append(state.get_context_initializer())
+            input_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         input_context_init = tuple(input_context_init_list)
 
-        context_list = [self.function_object.get_context_initializer()]
+        context_list = [self.function_object.get_context_initializer(execution_id=execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function.get_context_initializer())
+            context_list.append(self.integrator_function.get_context_initializer(execution_id=execution_id))
         function_context_init = tuple(context_list)
 
         output_context_init_list = []
         for state in self.output_states:
-            output_context_init_list.append(state.get_context_initializer())
+            output_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         output_context_init = tuple(output_context_init_list)
 
         parameter_context_init_list = []
         for state in self.parameter_states:
-            parameter_context_init_list.append(state.get_context_initializer())
+            parameter_context_init_list.append(state.get_context_initializer(execution_id=execution_id))
         parameter_context_init = tuple(parameter_context_init_list)
 
         return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])

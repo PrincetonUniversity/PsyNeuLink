@@ -10,9 +10,10 @@
 
 from psyneulink.core.globals.utilities import CNodeRole
 
-from collections import defaultdict
 import copy, ctypes, os
 import sys as _sys
+
+from collections import defaultdict
 
 from llvmlite import binding, ir
 
@@ -171,7 +172,7 @@ def _tupleize(x):
 
 class CompExecution:
 
-    def __init__(self, composition):
+    def __init__(self, composition, execution_id=None):
         self._composition = composition
         self.__frozen_vals = None
         self.__conds = None
@@ -180,14 +181,14 @@ class CompExecution:
         with LLVMBuilderContext() as ctx:
             # Data
             c_data = _convert_llvm_ir_to_ctype(self._composition._get_data_struct_type(ctx))
-            self.__data_struct = c_data(*self._composition._get_data_initializer())
+            self.__data_struct = c_data(*self._composition._get_data_initializer(execution_id=execution_id))
 
             # Params
             c_param = _convert_llvm_ir_to_ctype(ctx.get_param_struct_type(self._composition))
-            self.__param_struct = c_param(*self._composition.get_param_initializer())
+            self.__param_struct = c_param(*self._composition.get_param_initializer(execution_id=execution_id))
             # Context
             c_context = _convert_llvm_ir_to_ctype(ctx.get_context_struct_type(self._composition))
-            self.__context_struct = c_context(*self._composition.get_context_initializer())
+            self.__context_struct = c_context(*self._composition.get_context_initializer(execution_id=execution_id))
 
     @property
     def __conditions(self):
