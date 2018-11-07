@@ -105,6 +105,11 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
+    def get_param_ptr(self, component, builder, params_ptr, param_name):
+        idx = self.int32_ty(component._get_param_ids().index(param_name))
+        ptr = builder.gep(params_ptr, [self.int32_ty(0), idx])
+        return ptr, builder
+
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             assert all(type(x) == type(t[0]) for x in t)
