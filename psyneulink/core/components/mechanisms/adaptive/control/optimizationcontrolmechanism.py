@@ -396,9 +396,10 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Function>` for additional details).
 
     evaluation_function : function or method
-        assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of `function
-        <OptimizationControlMechanism.function>`;  often this is simply the OptimizationControlMechanism's
-        `compute_EVC <OptimizationControlMechanism.compute_EVC>` method, but it should always call that.  
+        returns `EVC <OptimizationControlMechanism_EVC>` for either the `current_state
+        <OptimizationControlMechanism.current_state>` (model-free OptimizationControlMechanism) or an
+        `allocation_policy <ControlMechanism.allocation_policy>` (model-based); assigned as the `objective_function
+        <OptimizationFunction.objective_function>` parameter of `function <OptimizationControlMechanism.function>`.
         
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function 
@@ -571,10 +572,3 @@ class OptimizationControlMechanism(ControlMechanism):
 
         raise OptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
                                                 format(self.__class__.__name__, repr('evaluation_function')))
-
-    def compute_EVC(self):
-        '''Computes `EVC <OptimizationControlMechanism_EVC>` for a given allocation_policy.'''
-
-        raise OptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
-                                                format(self.__class__.__name__, repr('compute_EVC')))
-

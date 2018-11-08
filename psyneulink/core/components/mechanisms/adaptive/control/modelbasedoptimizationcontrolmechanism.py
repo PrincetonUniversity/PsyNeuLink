@@ -378,12 +378,6 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        '''Instantiate ModelBasedOptimizationControlMechanism attributes and assign parameters to learning_function & function'''
-        # FIX: changed this to evaluation_function
-        self.evaluation_function = self.compute_EVC
-        super()._instantiate_attributes_after_function(context=context)
-
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
@@ -401,7 +395,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
         return allocation_policy
 
-    def compute_EVC(self, allocation_policy):
+    def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
         return self.run_simulation(allocation_policy=allocation_policy,

@@ -659,12 +659,6 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    def _instantiate_attributes_after_function(self, context=None):
-        '''Assign LVOCControlMechanism's objective_function'''
-
-        self.evaluation_function = self.compute_EVC
-        super()._instantiate_attributes_after_function(context=context)
-
     def _instantiate_learning_function(self):
         '''Instantiate attributes for LVOCControlMechanism's learning_function'''
 
@@ -993,7 +987,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             return computed_terms
 
-    def compute_EVC(self, variable):
+    def evaluation_function(self, variable):
         '''Update interaction terms and then multiply by prediction_weights
 
         Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
