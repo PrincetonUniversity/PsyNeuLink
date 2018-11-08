@@ -459,7 +459,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
 
-            # FIX: SHOULDN'T THIS BE self.outcome RATHER THAN monitored_states??
+            # FIX: IS THERE ANY REASON FOR "COLLECTING" THE allocation_policy_outcomes
+            # FIX: AND, IF SO, SHOULDN'T IT BE self.outcome RATHER THAN monitored_states??
+
             allocation_policy_outcomes.append(monitored_states)
             net_allocation_policy_outcomes.append(self.net_outcome)
             # other_simulation_data.append(call_after_simulation_data)
