@@ -1390,7 +1390,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._parse_function_variable(variable, execution_id=execution_id, context=context)
 
-    def _get_variable_from_input(self, input):
+    def _get_variable_from_input(self, input, execution_id=None):
         if self.has_recurrent_input_state:
             input = np.atleast_2d(input)
             input_len = len(input[0])
@@ -1400,7 +1400,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 z = np.zeros((1, input_len))
                 input = np.concatenate((input, z))
 
-        return super()._get_variable_from_input(input)
+        return super()._get_variable_from_input(input, execution_id)
 
     def reinitialize(self, *args, execution_context=None):
         if self.parameters.integrator_mode.get(execution_context):

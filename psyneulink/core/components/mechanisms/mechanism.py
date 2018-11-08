@@ -2296,7 +2296,7 @@ class Mechanism_Base(Mechanism):
                 input = self.instance_defaults.variable
             #     FIX:  this input value is sent to input CIMs when compositions are nested
             #           variable should be based on afferent projections
-            variable = self._get_variable_from_input(input)
+            variable = self._get_variable_from_input(input, execution_id)
 
         self.parameters.variable.set(variable, execution_context=execution_id, override=True)
 
@@ -2407,7 +2407,7 @@ class Mechanism_Base(Mechanism):
             call_after_trial=call_after_execution,
         )
 
-    def _get_variable_from_input(self, input):
+    def _get_variable_from_input(self, input, execution_id=None):
         input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
         num_input_states = len(self.input_states)
@@ -2423,8 +2423,8 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):
-            if len(input_state.value) == len(input_item):
-                input_state.value = input_item
+            if len(input_state.defaults.value) == len(input_item):
+                input_state.parameters.value.set(input_item, execution_id, override=True)
             else:
                 raise MechanismError(
                     "Length ({}) of input ({}) does not match "
@@ -2437,7 +2437,7 @@ class Mechanism_Base(Mechanism):
                     )
                 )
 
-        return np.array(self.input_values)
+        return np.array(self.get_input_values(execution_id))
 
     def _update_previous_value(self, execution_id=None):
         self.parameters.previous_value.set(self.parameters.value.get(execution_id), execution_id, override=True)
