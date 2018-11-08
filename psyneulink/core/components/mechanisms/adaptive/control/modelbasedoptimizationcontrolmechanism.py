@@ -367,7 +367,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        '''Find allocation_policy that optimizes objective_function.'''
+        '''Find allocation_policy that optimizes evaluation_function.'''
+
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
@@ -386,67 +387,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
-        return self.run_simulation(allocation_policy=allocation_policy,
-                                   num_trials=self.num_trials,
-                                   reinitialize_values=self.reinitialize_values,
-                                   predicted_input=self.predicted_input,
-                                   context=self.function_object.context)
-
-    def run_simulation(self,
-                       allocation_policy=None,
-                       num_trials=1,
-                       reinitialize_values=None,
-                       predicted_input=None,
-                       call_after_simulation=None,
-                       runtime_params=None,
-                       context=None):
-
-        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
-        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
-        # be modified to return anything, this may not be necessary
-
-        if allocation_policy is not None:
-            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-
-        execution_id = self.composition._get_unique_id()
-
-        allocation_policy_outcomes = []
-        net_allocation_policy_outcomes = []
-        # other_simulation_data = []
-        for i in range(num_trials):
-            inputs = {}
-            for node in predicted_input:
-                inputs[node] = predicted_input[node][i]
-
-            self.composition.context.execution_phase = ContextFlags.SIMULATION
-            for output_state in self.output_states:
-                for proj in output_state.efferents:
-                    proj.context.execution_phase = ContextFlags.PROCESSING
-
-            self.composition.run(inputs=inputs,
-                                 reinitialize_values=reinitialize_values,
-                                 execution_id=execution_id,
-                                 runtime_params=runtime_params,
-                                 context=context)
-
-            if context.initialization_status != ContextFlags.INITIALIZING:
-                self.composition.simulation_results.append(self.composition.output_values)
-
-            # call_after_simulation_data = None
-            #
-            # if call_after_simulation:
-            #     call_after_simulation_data = call_after_simulation()
-
-            monitored_states = self.objective_mechanism.output_values
-
-            self.composition.context.execution_phase = ContextFlags.PROCESSING
-
-            # FIX: IS THERE ANY REASON FOR "COLLECTING" THE allocation_policy_outcomes
-            # FIX: AND, IF SO, SHOULDN'T IT BE self.outcome RATHER THAN monitored_states??
-
-            allocation_policy_outcomes.append(monitored_states)
-            net_allocation_policy_outcomes.append(self.net_outcome)
-            # other_simulation_data.append(call_after_simulation_data)
-
-        return net_allocation_policy_outcomes
+        return self.composition.run_simulation(allocation_policy=allocation_policy,
+                                               num_trials=self.num_trials,
+                                               reinitialize_values=self.reinitialize_values,
+                                               predicted_input=self.predicted_input,
+                                               context=self.function_object.context)
 

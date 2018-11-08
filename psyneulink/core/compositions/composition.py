@@ -668,16 +668,18 @@ class Composition(Composition_Base):
             self.external_input_sources[node] = node.shadow_external_inputs
 
 
-    def add_model_based_optimizer(self, optimizer, monitor_for_control= None, control_signals=None):
-        self.monitor_for_control = monitor_for_control
-        # self.model_based_optimizer = type(
-        #     # system=self,
-        #                        objective_mechanism=self._get_monitored_output_states_for_system(),
-        #                        control_signals=self._get_control_signals_for_system(control_signals))
+    def add_model_based_optimizer(self, optimizer):
+        """
+        Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
+        <Composition.model_based_optimizer>` of the Composition, which gives the Mechanism access to the
+        `Composition`'s `run_simulation <Composition.run_simulation>` method. This allows the
+        `ModelBasedOptimizationControlMechanism` to use simulations to determine an optimal Control policy.
+        """
+
         self.model_based_optimizer = optimizer
         self.model_based_optimizer.composition = self
-        if monitor_for_control:
-            self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
+        # if monitor_for_control:
+        #     self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
         self.add_c_node(self.model_based_optimizer.objective_mechanism)
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
@@ -3355,6 +3357,11 @@ class Composition(Composition_Base):
         return saved_state, node_values
 
     def before_simulations(self, context=None):
+        """
+        Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
+        simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
+        after all simulations are complete, and (3) set the number of trials of simulations.
+        """
         predicted_input = self.update_predicted_input()
         num_trials = 1
         reinitialize_values, node_values = self._save_state()
@@ -3362,7 +3369,10 @@ class Composition(Composition_Base):
         return predicted_input, num_trials, reinitialize_values, node_values
 
     def after_simulations(self, reinitialize_values, node_values, context=None):
-
+        """
+        Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
+        simulations are complete in order to reinstate the `Composition`'s pre-simulation values.
+        """
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
 
@@ -3990,6 +4000,61 @@ class Composition(Composition_Base):
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
+
+    def run_simulation(self,
+                       allocation_policy=None,
+                       num_trials=1,
+                       reinitialize_values=None,
+                       predicted_input=None,
+                       call_after_simulation=None,
+                       runtime_params=None,
+                       context=None):
+        '''Runs a simulation of the `Composition`, with the specified allocation_policy, excluding its
+           `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
+           `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
+           `model_based_optimizer <Composition.model_based_optimizer>` under that allocation_policy. All values are
+           reset to pre-simulation values at the end of the simulation. '''
+
+        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
+        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
+        # be modified to return anything, this may not be necessary
+
+        if allocation_policy is not None:
+            self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+
+        execution_id = self._get_unique_id()
+
+        net_allocation_policy_outcomes = []
+        # other_simulation_data = []
+        for i in range(num_trials):
+            inputs = {}
+            for node in predicted_input:
+                inputs[node] = predicted_input[node][i]
+
+            self.context.execution_phase = ContextFlags.SIMULATION
+            for output_state in self.output_states:
+                for proj in output_state.efferents:
+                    proj.context.execution_phase = ContextFlags.PROCESSING
+
+            self.run(inputs=inputs,
+                     reinitialize_values=reinitialize_values,
+                     execution_id=execution_id,
+                     runtime_params=runtime_params,
+                     context=context)
+
+            if context.initialization_status != ContextFlags.INITIALIZING:
+                self.simulation_results.append(self.output_values)
+
+            # call_after_simulation_data = None
+            #
+            # if call_after_simulation:
+            #     call_after_simulation_data = call_after_simulation()
+
+            self.context.execution_phase = ContextFlags.PROCESSING
+            net_allocation_policy_outcomes.append(self.model_based_optimizer.net_outcome)
+            # other_simulation_data.append(call_after_simulation_data)
+
+        return net_allocation_policy_outcomes
 
     @property
     def input_states(self):
