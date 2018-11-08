@@ -662,7 +662,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     def _instantiate_attributes_after_function(self, context=None):
         '''Assign LVOCControlMechanism's objective_function'''
 
-        self.objective_function = self.compute_EVC
+        self.evaluation_function = self.compute_EVC
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_learning_function(self):

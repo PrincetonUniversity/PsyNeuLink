@@ -534,7 +534,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function_object.reinitialize({DEFAULT_VARIABLE: self.allocation_policy,
-                                           OBJECTIVE_FUNCTION: self.objective_function,
+                                           OBJECTIVE_FUNCTION: self.evaluation_function,
                                            SEARCH_FUNCTION: self.search_function,
                                            SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
                                            SEARCH_SPACE: self.get_allocation_policy_search_space()})
