@@ -463,7 +463,7 @@ class TestModelBasedOptimizationControlMechanisms:
             [[15.], [15.0], [0.0], [1.], [3.84279648], [0.81637827]]
         ]
         np.allclose(expected_sim_results_array, comp.simulation_results)
-
+        print(comp.simulation_results)
         # Resetting to pre-simulation values changed all of these value:
         expected_output = [
             # Decision Output | Second Trial

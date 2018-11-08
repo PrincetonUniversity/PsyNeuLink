@@ -13,27 +13,33 @@
 Overview
 --------
 
-An ModelBasedOptimizationControlMechanism is an abstract class for subclasses of `ControlMechanism <ControlMechanism>` that
-use an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.allocation_policy>` -- 
-that is, a `variable <ControlSignal.variable>` for each of its `ControlSignals <ControlSignal>` -- that optimizes the
-`objective_function <OptimizationFunction.objective_function>` used by its `OptimizationFunction`.
+A ModelBasedOptimizationControlMechanism is a subclass of `OptimizationControlMechanism <OptimizationControlMechanism>`
+that uses the Composition's `run_simulation <Compositon.run_simulation>` method as the `objective_function
+<OptimizationFunction.objective_function>` of its `OptimizationFunction` in order to find an optimal `allocation_policy
+<ControlMechanism.allocation_policy>`.
 
 .. _ModelBasedOptimizationControlMechanism_Creation:
 
 Creating an ModelBasedOptimizationControlMechanism
 ----------------------------------------
 
-An ModelBasedOptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  The only
-constraint is that an `OptimizationFunction` (or one that has the same structure) must be specified as the **function**
-argument of its constructor.  In addition, a **learning_function** can be specified (see `below
-<ModelBasedOptimizationControlMechanism_Learning_Function>`)
+A ModelBasedOptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.
+The only constraints are:
+
+    (1) an `OptimizationFunction` (or one that has the same structure) must be specified as the **function** argument
+        of its constructor.
+
+    (2) the `Composition`'s `run_simulation <Composition.run_simulation>` method must be objective_function.
+
+In addition, a **learning_function** can be specified (see `Optimization Control Mechanism Learning Function
+<OptimizationControlMechanism_Learning_Function>`)
 
 .. _ModelBasedOptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-An ModelBasedOptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection <Projection>`
+A ModelBasedOptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection <Projection>`
 to its `primary InputState <InputState_Primary>` from its associated `objective_mechanism
 <ControlMechanism.objective_mechanism>`, that it seeks to optimize.  In addition to its primary `function
 <ModelBasedOptimizationControlMechanism.function>`, which is an `OptimizationFunction`, it may also have a `learning_function
@@ -44,7 +50,7 @@ to its `primary InputState <InputState_Primary>` from its associated `objective_
 Learning Function
 ^^^^^^^^^^^^^^^^^
 
-An ModelBasedOptimizationControlMechanism may have a `learning_function <ModelBasedOptimizationControlMechanism.learning_function>`
+A ModelBasedOptimizationControlMechanism may have a `learning_function <ModelBasedOptimizationControlMechanism.learning_function>`
 used to generate a model that attempts to predict the value of its `objective_function
 <ModelBasedOptimizationControlMechanism.objective_function>` for a given `allocation_policy <ControlMechanism.allocation_policy>`
 from a `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>`; it is up to the subclass of the
@@ -73,7 +79,7 @@ is used to evaluate each `allocation_policy <ControlMechanism.allocation_policy>
 <OptimizationFunction.search_function>`, and return the one that optimizes the value of the `objective_function
 <OptimizationFunction.objective_function>`.
 
-An ModelBasedOptimizationControlMechanism must implement an `objective_function <ModelBasedOptimizationControlMechanism>` method that
+A ModelBasedOptimizationControlMechanism must implement an `objective_function <ModelBasedOptimizationControlMechanism>` method that
 is passed to the `OptimizationFunction` as its `objective_function <OptimizationFunction.objective_function>` parameter.
 The ModelBasedOptimizationControlMechanism may also implement `search_function <ModelBasedOptimizationControlMechanism.search_function>`
 and `search_termination_function <ModelBasedOptimizationControlMechanism.search_termination_function>` methods, as well as a
