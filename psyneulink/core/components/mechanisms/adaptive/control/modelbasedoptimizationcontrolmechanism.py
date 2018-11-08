@@ -380,7 +380,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate ModelBasedOptimizationControlMechanism attributes and assign parameters to learning_function & function'''
-        self.objective_function = self.compute_EVC
+        # FIX: changed this to evaluation_function
+        self.evaluation_function = self.compute_EVC
         super()._instantiate_attributes_after_function(context=context)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
@@ -449,6 +450,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
             monitored_states = self.objective_mechanism.output_values
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
+            # FIX: SHOULDN'T THIS BE self.outcome RATHER THAN monitored_states??
             allocation_policy_outcomes.append(monitored_states)
             net_allocation_policy_outcomes.append(self.net_outcome)
             other_simulation_data.append(call_after_simulation_data)
