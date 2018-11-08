@@ -125,20 +125,16 @@ import typecheck as tc
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
+from psyneulink.core.globals.keywords import PARAMETER_STATES, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -309,19 +305,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
-    # initMethod = INIT_FULL_EXECUTE_METHOD
-    # initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
 
-    # classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
-    # Note: only need to specify setting;  level will be assigned to Type automatically
-    # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
-
-    # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
         function = None
 
@@ -345,7 +331,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs):
-        '''Abstract class that implements ModelBasedOptimizationControlMechanism'''
+        '''Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `run_simulation
+           <ModelBasedOptimizationControlMechanism.run_simulation>` method in order to adjusts its `ControlSignals
+           <ControlSignal>` and optimize performance of the `Composition` to which it belongs.'''
 
         if kwargs:
             for i in kwargs.keys():
