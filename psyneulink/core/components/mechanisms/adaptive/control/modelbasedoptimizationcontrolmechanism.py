@@ -366,11 +366,6 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        '''Instantiate ModelBasedOptimizationControlMechanism attributes and assign parameters to learning_function & function'''
-        self.objective_function = self.compute_EVC
-        super()._instantiate_attributes_after_function(context=context)
-
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes objective_function.'''
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
@@ -388,7 +383,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
         return allocation_policy
 
-    def compute_EVC(self, allocation_policy):
+    def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
         return self.run_simulation(allocation_policy=allocation_policy,
@@ -445,6 +440,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
             monitored_states = self.objective_mechanism.output_values
 
             self.composition.context.execution_phase = ContextFlags.PROCESSING
+
+            # FIX: IS THERE ANY REASON FOR "COLLECTING" THE allocation_policy_outcomes
+            # FIX: AND, IF SO, SHOULDN'T IT BE self.outcome RATHER THAN monitored_states??
 
             allocation_policy_outcomes.append(monitored_states)
             net_allocation_policy_outcomes.append(self.net_outcome)
