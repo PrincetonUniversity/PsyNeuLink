@@ -181,7 +181,7 @@ Execution
 ---------
 
 When an OptimizationControlMechanism executes, it calls its `learning_function
-<OptimizationControlMechanism.learning_function>` if it has one, to udpate its `prediction_weights 
+<OptimizationControlMechanism.learning_function>` if it has one, to update its `prediction_weights
 <OptimizationControlMechanism.prediction_weights>`. It then calls its primary `function
 <OptimizationControlMechanism.function>` to find the `allocation_policy <ControlMechanism.allocation_policy>` that 
 yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The `function <OptimizationControlMechanism.function>` 
