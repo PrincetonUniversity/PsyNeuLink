@@ -983,7 +983,7 @@ class PredictionVector():
         # # MODIFIED 11/9/18 OLD:
         # computed_terms = self.compute_terms(np.array(variable))
         # MODIFIED 11/9/18 NEW: [JDC]
-        computed_terms = self.compute_terms(np.array(variable), self.reference_variable)
+        • Lcomputed_terms = self.compute_terms(np.array(variable), self.reference_variable)
         # MODIFIED 11/9/18 END
 
         # Assign flattened versions of specified terms to vector
