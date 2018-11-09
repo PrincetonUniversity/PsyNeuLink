@@ -652,7 +652,7 @@ class FunctionApproximator():
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
                     # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL?
-                    # (NECESSARY, SINCE duration_costs DEPEND ON PREVIOUS VALUE OF ControlSignal,
+                    # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
                     #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
                     costs[i] = -(self._compute_costs[i](val))
                 computed_terms[PV.COST] = np.array(costs)

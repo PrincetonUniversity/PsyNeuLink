@@ -4020,10 +4020,12 @@ class Composition(Composition_Base):
         # be modified to return anything, this may not be necessary
 
         # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
-        # (NECESSARY, SINCE duration_costs DEPEND ON PREVIOUS VALUE OF ControlSignal,
+        # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         if allocation_policy is not None:
-            self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
+            self.model_based_optimizer.apply_control_signal_values(allocation_policy,
+                                                                   runtime_params=runtime_params,
+                                                                   context=context)
 
         execution_id = self._get_unique_id()
 

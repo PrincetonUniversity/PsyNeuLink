@@ -706,7 +706,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             # Update current_state with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
-            self.current_state.update_vector(self.allocation_policy, self.feature_values)
+            self.current_state.update_vector(self.allocation_policy, self.feature_values, self.allocation_policy)
             self._previous_state = self.current_state.vector
 
         # # TEST PRINT
@@ -837,6 +837,7 @@ class PredictionVector():
                 v = state_spec_dict[VARIABLE]
                 v = v or ControlSignal.class_defaults.variable
             control_signal_variables.append(v)
+        self.reference_variable = control_signal_variables
         self.control_signal_functions = [c.function for c in control_signals]
         self._compute_costs = [c.compute_costs for c in control_signals]
 
@@ -952,33 +953,38 @@ class PredictionVector():
 
         self.vector = np.zeros(i)
 
-    def update_vector(self, variable, feature_values=None):
-        '''Update vector with flattened versions of values returned from `compute_terms
-        <LVOCControlMechanism.PredictionVector.compute_terms>`.
+    def update_vector(self, variable, feature_values=None, reference_variable=None):
+        '''Update vector with flattened versions of values returned by `compute_terms <PredictionVector.compute_terms>`.
 
-        Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `current_state
-        <LVOCControlMechanism.current_state>`, with current values of variable (i.e., `variable
+        Updates `vector <PredictionVector.vector>`, with current values of variable (i.e., `variable
         <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
         <LVOCControlMechanism.feature_values>`.
 
-        This method is passed to `function <LVOCControlMechanism.function>` as its **update_function** (see
-        `Primary Function <LVOCControlMechanism_Function>`.
+        **orig_variable** can be specified as a reference for computing adjustment_cost and/or duration_cost;
+        If it is not specified, the value stored in self.reference_variable will be used
         '''
+
+        self.reference_variable = reference_variable or self.reference_variable
 
         if feature_values is not None:
             self.terms[PV.F.value] = np.array(feature_values)
-        computed_terms = self.compute_terms(np.array(variable))
+        computed_terms = self.compute_terms(np.array(variable, self.reference_variable))
 
         # Assign flattened versions of specified terms to vector
         for k, v in computed_terms.items():
             if k in self.specified_terms:
                 self.vector[self.idx[k.value]] = v.reshape(-1)
 
-    def compute_terms(self, control_signal_variables):
+    def compute_terms(self, variables, ref_variables=None):
         '''Calculate interaction terms.
+
         Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
         Values of entries are nd arrays.
+
+        Stateful costs are calcuated relative either ref_variables if specified, else self.ref_variables
         '''
+
+        ref_variables = ref_variables or self.reference_variable
 
         terms = self.specified_terms
         computed_terms = {}
@@ -987,8 +993,8 @@ class PredictionVector():
         computed_terms[PV.F] = f = self.terms[PV.F.value]
 
         # Compute value of each control_signal from its variable
-        c = [None] * len(control_signal_variables)
-        for i, var in enumerate(control_signal_variables):
+        c = [None] * len(variables)
+        for i, var in enumerate(variables):
             c[i] = self.control_signal_functions[i](var)
         computed_terms[PV.C] = c = np.array(c)
 
@@ -998,7 +1004,7 @@ class PredictionVector():
             # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
             costs = [None] * len(c)
             for i, val in enumerate(c):
-                costs[i] = -(self._compute_costs[i](val))
+                costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
             computed_terms[PV.COST] = np.array(costs)
 
         # Compute terms interaction that are used

@@ -886,7 +886,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
-            self.intensity_change = [0]
+            # self.intensity_change = [0]
 
     def _initialize_cost_attributes(self):
         if self.cost_options:
@@ -986,7 +986,7 @@ class ControlSignal(ModulatorySignal):
         '''
         super().update(params=params, context=context)
         if self.cost_options:
-            self.cost = self.compute_costs(self.intensity)
+            self.cost = self.compute_costs(self.intensity, self.last_intensity)
         # Store current intensity and costs for use in next call as last state
         self.last_intensity = self.intensity
         if self.cost_options:
@@ -994,11 +994,12 @@ class ControlSignal(ModulatorySignal):
             if ControlSignalCosts.DURATION & self.cost_options:
                 self.last_duration_cost = self.duration_cost
 
-    def compute_costs(self, intensity):
+    def compute_costs(self, intensity, last_intensity):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
         try:
-            self.intensity_change = intensity-self.last_intensity
+            # self.intensity_change = intensity-self.last_intensity
+            self.intensity_change = intensity=last_intensity
         except AttributeError:
             self.intensity_change = [0]
 
