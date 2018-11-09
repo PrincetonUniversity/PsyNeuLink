@@ -13,100 +13,64 @@
 Overview
 --------
 
-An ModelBasedOptimizationControlMechanism is an abstract class for subclasses of `ControlMechanism <ControlMechanism>` that
-use an `OptimizationFunction` to find an `allocation_policy <ControlMechanism.allocation_policy>` -- 
-that is, a `variable <ControlSignal.variable>` for each of its `ControlSignals <ControlSignal>` -- that optimizes the
-`objective_function <OptimizationFunction.objective_function>` used by its `OptimizationFunction`.
+A ModelBasedOptimizationControlMechanism is a subclass of `OptimizationControlMechanism <OptimizationControlMechanism>`
+that uses the Composition's `run_simulation <Composition.run_simulation>` method as the `evaluation_function
+<OptimizationFunction.evaluation_function>` of its `OptimizationFunction` in order to find an optimal `allocation_policy
+<ControlMechanism.allocation_policy>`.
 
 .. _ModelBasedOptimizationControlMechanism_Creation:
 
-Creating an ModelBasedOptimizationControlMechanism
+Creating a ModelBasedOptimizationControlMechanism
 ----------------------------------------
 
-An ModelBasedOptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  The only
-constraint is that an `OptimizationFunction` (or one that has the same structure) must be specified as the **function**
-argument of its constructor.  In addition, a **learning_function** can be specified (see `below
-<ModelBasedOptimizationControlMechanism_Learning_Function>`)
+A ModelBasedOptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.
+The only constraints are:
+
+    (1) an `OptimizationFunction` (or one that has the same structure) must be specified as the **function** argument
+        of its constructor.
+
+    (2) the `evaluation_function <OptimizationControlMechanism.evaluation_function>` must be the
+        `composition's <ModelBasedOptimizationControlMechanism.composition>` `run_simulation
+        <Composition.run_simulation>` method.
+
+In addition, a **learning_function** can be specified (see `Optimization Control Mechanism Learning Function
+<OptimizationControlMechanism_Learning_Function>`)
 
 .. _ModelBasedOptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-An ModelBasedOptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection <Projection>`
-to its `primary InputState <InputState_Primary>` from its associated `objective_mechanism
-<ControlMechanism.objective_mechanism>`, that it seeks to optimize.  In addition to its primary `function
-<ModelBasedOptimizationControlMechanism.function>`, which is an `OptimizationFunction`, it may also have a `learning_function
-<ModelBasedOptimizationControlMechanism.learning_function>`, both of which are described below.
+A ModelBasedOptimizationControlMechanism is based on the same structure as an `OptimizationControlMechanism
+<OptimizationControlMechanism>`. A ModelBasedOptimizationControlMechanism more specifically seeks to optimize the
+`net_outcome <ControlMechanism.net_outcome>` by running simulations of its `composition
+<ModelBasedOptimizationControlMechanism.composition>` with various control allocation policies.
 
-.. _ModelBasedOptimizationControlMechanism_Learning_Function:
+As a result, a ModelBasedOptimizationControlMechanism differs from an `OptimizationControlMechanism
+<OptimizationControlMechanism>` in the following ways:
 
-Learning Function
-^^^^^^^^^^^^^^^^^
+    - it has a `composition <ModelBasedOptimizationControlMechanism.composition>`, which is the `Composition` to which
+      it belongs
 
-An ModelBasedOptimizationControlMechanism may have a `learning_function <ModelBasedOptimizationControlMechanism.learning_function>`
-used to generate a model that attempts to predict the value of its `objective_function
-<ModelBasedOptimizationControlMechanism.objective_function>` for a given `allocation_policy <ControlMechanism.allocation_policy>`
-from a `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>`; it is up to the subclass of the
-ModelBasedOptimizationControlMechanism to determine the contents of `prediction_vector
-<ModelBasedOptimizationControlMechanism.prediction_vector>`. The `learning_function
-<ModelBasedOptimizationControlMechanism.learning_function>` takes as its first argument the `prediction_vector
-<ModelBasedOptimizationControlMechanism.prediction_vector>`) and, as its second, `outcome <ControlMechanism.outcome>` minus
-the `cost <ControlSignal.cost>` of its `control_signals <ControlMechanism.control_signals>`.  It returns an array
-with one weight for each element of `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>`, that is
-assigned as the ModelBasedOptimizationControlMechanism's `prediction_weights <ModelBasedOptimizationControlMechanism.prediction_weights>`)
-attribute.  This is can be used by its primary `function <ModelBasedOptimizationControlMechanism.function>` in seeking to
-optimze the ModelBasedOptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` (see `below
-<ModelBasedOptimizationControlMechanism_Function>).
-
-.. _ModelBasedOptimizationControlMechanism_Function:
-
-*Primary Function*
-^^^^^^^^^^^^^^^^^^
-
-The `function <ModelBasedOptimizationControlMechanism.function>` of an ModelBasedOptimizationControlMechanism is generally an
-`OptimizationFunction`, which in turn has `objective_function <OptimizationFunction.objective_function>`,
-`search_function <OptimizationFunction.search_function>` and `search_termination_function
-<OptimizationFunction.search_termination_function>` methods, as well as a `search_space
-<OptimizationFunction.search_space>` attribute.  The `objective_function <OptimizationFunction.objective_function>`
-is used to evaluate each `allocation_policy <ControlMechanism.allocation_policy>` generated by the `search_function
-<OptimizationFunction.search_function>`, and return the one that optimizes the value of the `objective_function
-<OptimizationFunction.objective_function>`.
-
-An ModelBasedOptimizationControlMechanism must implement an `objective_function <ModelBasedOptimizationControlMechanism>` method that
-is passed to the `OptimizationFunction` as its `objective_function <OptimizationFunction.objective_function>` parameter.
-The ModelBasedOptimizationControlMechanism may also implement `search_function <ModelBasedOptimizationControlMechanism.search_function>`
-and `search_termination_function <ModelBasedOptimizationControlMechanism.search_termination_function>` methods, as well as a
-`search_space <ModelBasedOptimizationControlMechanism.search_space>` attribute, which will also be passed as parameters to the
-`OptimizationFunction` when it is constructed.  Any or all of these assignments can be overriden by specifying the
-relevant parameters in a constructor for the `OptimizationFunction` assigned to the **function** argument of the
-ModelBasedOptimizationControlMechanism's constructor, as long as they are compatible with the requirements of the
-OptimizationFunction and ModelBasedOptimizationControlMechanism.  A custom function can also be assigned as the `function
-<ModelBasedOptimizationControlMechanism.function>` of an ModelBasedOptimizationControlMechanism, however it must meet the following
-requirements:
-
-.. _ModelBasedOptimizationControlMechanism_Custom_Funtion:
-
-    - it must accept as its first argument and return as its result an array with the same shape as the
-      ModelBasedOptimizationControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
-
-    - it must implement a :method:`reinitialize` method that accepts as keyword arguments **objective_function**,
-      **search_function**, **search_termination_function**, and **search_space**, and implement attributes
-      with corresponding names.
+    - its `evaluation_function <OptimizationControlMechanism.evaluation_function>` is or includes its `composition's
+      <ModelBasedOptimizationControlMechanism.composition>` `run_simulation <Composition.run_simulation>` method
 
 .. _ModelBasedOptimizationControlMechanism_Execution:
 
 Execution
 ---------
 
-When an ModelBasedOptimizationControlMechanism executes, it calls its `learning_function
-<ModelBasedOptimizationControlMechanism.learning_function>` if it has one, to udpate its prediction model, and then calls
-its primary `function <ModelBasedOptimizationControlMechanism.function>` to find the `allocation_policy
-<ControlMechanism.allocation_policy>` that optimizes the value of its `objective_function
-<ModelBasedOptimizationControlMechanism.objective_function>`. The values in the `allocation_policy
-<ModelBasedOptimizationControlMechanism.allocation_policy>` returned by `function <ModelBasedOptimizationControlMechanism.function>` are
-assigned as the `variables <ControlSignal.variable>` of its `control_signals <ControlMechanism.control_signals>`,
-from which they compute their `values <ControlSignal.value>`.
+There are three parts to the execution of a ModelBasedOptimizationControlMechanism.
+
+First, it calls its `composition's <ModelBasedOptimizationControlMechanism.composition>`
+`before_simulations <Composition.before_simulations>` method, which prepares the Composition for simulations by
+updating predicted inputs and storing current values.
+
+Next, the ModelBasedOptimizationControlMechanism goes through the standard `OptimizationControlMechanism` execution.
+
+Finally, it calls its `composition's <ModelBasedOptimizationControlMechanism.composition>`
+`after_simulations <Composition.after_simulations>` method, which reinstates the values that were stored before the
+simulations.
 
 COMMENT:
 .. _ModelBasedOptimizationControlMechanism_Examples:
@@ -125,20 +89,16 @@ import typecheck as tc
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
+from psyneulink.core.globals.keywords import PARAMETER_STATES, OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -160,13 +120,13 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     """ModelBasedOptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
     learning_function=None,                                \
-    objective_function=None,                               \
+    function=None,                                         \
     search_function=None,                                  \
     search_termination_function=None,                      \
     search_space=None,                                     \
-    function=None,                                         \
     control_signals=None,                                  \
     modulation=ModulationParam.MULTIPLICATIVE,             \
+    composition=None                                       \
     params=None,                                           \
     name=None,                                             \
     prefs=None)
@@ -179,149 +139,132 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     ---------
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
-        specifies either an `ObjectiveMechanism` to use for the ModelBasedOptimizationControlMechanism, or a list of the
+        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
     learning_function : LearningFunction, function or method
-        specifies a function used to predict `outcome <ControlMechanism.outcome> minus the `cost <ControlSignal.cost>`
-        of the ModelBasedOptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>` from
-        `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>` (see
-        `ModelBasedOptimizationControlMechanism_Learning_Function` for details).
-
-    objective_function : function or method
-        specifies the function assigned to `function <ModelBasedOptimizationControlMechanism.function>` as its
-        `objective_function <OptimizationFunction.objective_function>` parameter, unless that is specified in a
-        constructor for `function <ModelBasedOptimizationControlMechanism.function>`. It must take as its first argument
-        an array with the same shape as the ModelBasedOptimizationControlMechanism's `allocation_policy
-        <ControlMechanism.allocation_policy>`, and return the following four values: an array containing the
-        `allocation_policy <ControlMechanism.allocation_policy>` that generated the optimal value of the function;
-        an array containing that optimal value;  a list containing each `allocation_policy
-        <ControlMechanism.allocation_policy>` sampled if `function <ModelBasedOptimizationControlMechanism.function>` has a
-        a `save_samples <OptimizationFunction.save_samples>` attribute and it is `True`, otherwise `None`; and a list
-        containing the value of the function for `allocation_policy <ControlMechanism.allocation_policy>` sampled if
-        it has a `save_values <OptimizationFunction.save_values>` attribute and it is `True`, otherwise `None`.
+        specifies a function used to learn to predict the `EVC <OptimizationControlMechanism_EVC>` from
+        the current `current_state <OptimizationControlMechanism.current_state>` (see
+        `OptimizationControlMechanism_Learning_Function` for details).
 
     search_function : function or method
-        specifies the function assigned to `function <ModelBasedOptimizationControlMechanism.function>` as its
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
         `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a
-        constructor for `function <ModelBasedOptimizationControlMechanism.function>`.  It must take as its arguments
+        constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments
         an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and an integer
         (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return
         an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>`.
 
     search_termination_function : function or method
-        specifies the function assigned to `function <ModelBasedOptimizationControlMechanism.function>` as its
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
         `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is
-        specified in a constructor for `function <ModelBasedOptimizationControlMechanism.function>`.  It must take as its
+        specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its
         arguments an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and two
-        integers (the first representing the value of `objective_function
-        <ModelBasedOptimizationControlMechanism.objective_function>` for the current `allocation_policy
-        <ControlMechanism.allocation_policy>` and the second the current iteration of the `optimization process
-        <OptimizationFunction_Process>`;  it must return `True` or `False`.
+        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current
+        `allocation_policy <ControlMechanism.allocation_policy>`, and the second the current iteration of the
+        `optimization process <OptimizationFunction_Process>`;  it must return `True` or `False`.
 
     search_space : list or ndarray
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
-        <ModelBasedOptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
-        <ModelBasedOptimizationControlMechanism.function>`.  Each item must have the same shape as `allocation_policy
+        <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
+        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `allocation_policy
         <ControlMechanism.allocation_policy>`.
 
     function : OptimizationFunction, function or method
-        specifies the function used to optimize the `allocation_policy`;  must take as its sole argument an array
-        with the same shape as `allocation_policy <ControlMechanism.allocation_policy>`, and return a similar
-        array (see `Primary Function <ModelBasedOptimizationControlMechanism>` for
-        additional details).
+        specifies the function used to optimize the `allocation_policy <ControlMechanism.allocation_policy>`;
+        must take as its sole argument an array with the same shape as `allocation_policy
+        <ControlMechanism.allocation_policy>`, and return a similar array (see `Primary Function
+        <OptimizationControlMechanism>` for additional details).
 
-    control_signals : ControlSignal specification or List[ControlSignal specification, ...]
-        specifies the parameters to be controlled by the ModelBasedOptimizationControlMechanism
-        (see `ControlSignal_Specification` for details of specification).
+    composition : Composition : default None
+        the `Composition` to which this ModelBasedOptimizationControlMechanism belongs
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <ModelBasedOptimizationControlMechanism.learning_function>`, and/or a custom function and its parameters.  Values
+        Mechanism, its `learning_function <OptimizationControlMechanism.learning_function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default see `name <ModelBasedOptimizationControlMechanism.name>`
-        specifies the name of the ModelBasedOptimizationControlMechanism.
+    name : str : default see `name <OptimizationControlMechanism.name>`
+        specifies the name of the OptimizationControlMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the ModelBasedOptimizationControlMechanism; see `prefs
-        <ModelBasedOptimizationControlMechanism.prefs>` for details.
+        specifies the `PreferenceSet` for the OptimizationControlMechanism; see `prefs
+        <OptimizationControlMechanism.prefs>` for details.
 
     Attributes
     ----------
-
-    prediction_vector : 1d ndarray
-        array passed to `learning_function <ModelBasedOptimizationControlMechanism.learning_function>` if that is implemented.
+    current_state : 1d ndarray
+        array passed to `learning_function <OptimizationControlMechanism.learning_function>` if that is implemented.
 
     prediction_weights : 1d ndarray
-        weights assigned to each term of `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>`
-        by `learning_function <ModelBasedOptimizationControlMechanism.learning_function>`.
+        weights assigned to each term of `current_state <OptimizationControlMechanism.current_state>`
+        by `learning_function <OptimizationControlMechanism.learning_function>`.
 
     learning_function : LearningFunction, function or method
-        takes `prediction_vector <ModelBasedOptimizationControlMechanism.prediction_vector>` as its first argument, and `outcome
-        <ControlMechanism.outcome> minus the `costs <ControlSignal.cost>` of the `control_signals
-        <ControlMechanism.control_signals>` as its second argument, and returns an updated set of `prediction_weights
-        <ModelBasedOptimizationControlMechanism.prediction_weights>` (see `ModelBasedOptimizationControlMechanism_Learning_Function` for
-        additional details).
+        takes `current_state <OptimizationControlMechanism.current_state>` as its first argument, and
+        `net_outcome <ControlMechanism.net_outcome>` as its second argument, and returns an updated set of
+        `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see
+        `OptimizationControlMechanism_Learning_Function` for additional details).
 
-    objective_function : function or method
-        `objective_function <OptimizationFunction.objective_function>` assigned to `function
-        <ModelBasedOptimizationControlMechanism.function>`.
+    function : OptimizationFunction, function or method
+        takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer),
+        uses its `search_function <OptimizationFunction.search_function>` to select samples of `allocation_policy
+        <ControlMechanism.allocation_policy>` from its `search_space <OptimizationControlMechanism.search_space>`,
+        evaluates these using its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, and returns
+        the one that yields the greatest `EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
+        <OptimizationControlMechanism_Function>` for additional details).
+
+    composition : Composition : default None
+        the `Composition` to which this ModelBasedOptimizationControlMechanism belongs
+
+    evaluation_function : function or method
+        calls the `composition's <ModelBasedOptimizationControlMechanism.composition>` `run_simulation
+        <Composition.run_simulation>` method in order to evaluate a particular allocation policy
 
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function
-        <ModelBasedOptimizationControlMechanism.function>`.
+        <OptimizationControlMechanism.function>`; used to select samples of `allocation_policy
+        <ControlMechanism.allocation_policy>` to evaluate by `evaluation_function
+        <OptimizationControlMechanism.evaluation_function>`.
 
     search_termination_function : function or method
         `search_termination_function <OptimizationFunction.search_termination_function>` assigned to
-        `function <ModelBasedOptimizationControlMechanism.function>`.
+        `function <OptimizationControlMechanism.function>`;  determines when to terminate the
+        `optimization process <OptimizationFunction_Process>`.
 
-    search_space : list or ndarray
+    allocation_policy_search_space : list or ndarray
         `search_space <OptimizationFunction.search_space>` assigned to `function
-        <ModelBasedOptimizationControlMechanism.function>`.
-
-    function : OptimizationFunction, function or method
-        takes current `allocation_policy <ControlMechanism.allocation_policy>` and returns an `allocation_policy`
-        that optimizes the value of its `objective_function <ModelBasedOptimizationControlMechanism.objective_function>`  (see
-        `Primary Function <ModelBasedOptimizationControlMechanism_Function>` for additional details).
+        <OptimizationControlMechanism.function>`;  determines the samples of
+        `allocation_policy <ControlMechanism.allocation_policy>` evaluated by the `evaluation_function
+        <OptimizationControlMechanism.evaluation_function>`.
 
     saved_samples : list
         contains all values of `allocation_policy <ControlMechanism.allocation_policy>` sampled by `function
-        <ModelBasedOptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
+        <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
         is `True`;  otherwise list is empty.
 
     saved_values : list
-        contains all values of the `objective_function <ModelBasedOptimizationControlMechanism.objective_function>` sampled
-        by `function <ModelBasedOptimizationControlMechanism.function>` if its
-        `save_values <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
+        contains values of EVC associated with all samples of `allocation_policy <ControlMechanism.allocation_policy>`
+         evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values
+         <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
 
     name : str
-        name of the ModelBasedOptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
+        name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ModelBasedOptimizationControlMechanism; if it is not specified in the **prefs** argument of
+        the `PreferenceSet` for the OptimizationControlMechanism; if it is not specified in the **prefs** argument of
         the constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
-    # initMethod = INIT_FULL_EXECUTE_METHOD
-    # initMethod = INIT_EXECUTE_METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
 
-    # classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TypeDefaultPreferences
-    # Note: only need to specify setting;  level will be assigned to Type automatically
-    # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
-    #     kp<pref>: <setting>...}
-
-    # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
         function = None
 
@@ -345,7 +288,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs):
-        '''Abstract class that implements ModelBasedOptimizationControlMechanism'''
+        '''Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `run_simulation
+           <ModelBasedOptimizationControlMechanism.run_simulation>` method in order to adjusts its `ControlSignals
+           <ControlSignal>` and optimize performance of the `Composition` to which it belongs.'''
 
         if kwargs:
             for i in kwargs.keys():
@@ -379,7 +324,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        '''Find allocation_policy that optimizes objective_function.'''
+        '''Find allocation_policy that optimizes evaluation_function.'''
+
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
@@ -398,67 +344,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
-        return self.run_simulation(allocation_policy=allocation_policy,
-                                   num_trials=self.num_trials,
-                                   reinitialize_values=self.reinitialize_values,
-                                   predicted_input=self.predicted_input,
-                                   context=self.function_object.context)
-
-    def run_simulation(self,
-                       allocation_policy=None,
-                       num_trials=1,
-                       reinitialize_values=None,
-                       predicted_input=None,
-                       call_after_simulation=None,
-                       runtime_params=None,
-                       context=None):
-
-        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
-        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
-        # be modified to return anything, this may not be necessary
-
-        if allocation_policy is not None:
-            self.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
-
-        execution_id = self.composition._get_unique_id()
-
-        allocation_policy_outcomes = []
-        net_allocation_policy_outcomes = []
-        # other_simulation_data = []
-        for i in range(num_trials):
-            inputs = {}
-            for node in predicted_input:
-                inputs[node] = predicted_input[node][i]
-
-            self.composition.context.execution_phase = ContextFlags.SIMULATION
-            for output_state in self.output_states:
-                for proj in output_state.efferents:
-                    proj.context.execution_phase = ContextFlags.PROCESSING
-
-            self.composition.run(inputs=inputs,
-                                 reinitialize_values=reinitialize_values,
-                                 execution_id=execution_id,
-                                 runtime_params=runtime_params,
-                                 context=context)
-
-            if context.initialization_status != ContextFlags.INITIALIZING:
-                self.composition.simulation_results.append(self.composition.output_values)
-
-            # call_after_simulation_data = None
-            #
-            # if call_after_simulation:
-            #     call_after_simulation_data = call_after_simulation()
-
-            monitored_states = self.objective_mechanism.output_values
-
-            self.composition.context.execution_phase = ContextFlags.PROCESSING
-
-            # FIX: IS THERE ANY REASON FOR "COLLECTING" THE allocation_policy_outcomes
-            # FIX: AND, IF SO, SHOULDN'T IT BE self.outcome RATHER THAN monitored_states??
-
-            allocation_policy_outcomes.append(monitored_states)
-            net_allocation_policy_outcomes.append(self.net_outcome)
-            # other_simulation_data.append(call_after_simulation_data)
-
-        return net_allocation_policy_outcomes
+        return self.composition.run_simulation(allocation_policy=allocation_policy,
+                                               num_trials=self.num_trials,
+                                               reinitialize_values=self.reinitialize_values,
+                                               predicted_input=self.predicted_input,
+                                               context=self.function_object.context)
 
