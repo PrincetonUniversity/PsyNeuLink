@@ -1031,7 +1031,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             return defaultControlAllocation
 
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM' 
-        self.function_approximator.before_execution(context=context)
+        feature_values = self.function_approximator.before_execution(context=context)
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values

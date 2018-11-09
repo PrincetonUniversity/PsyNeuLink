@@ -706,7 +706,11 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             # Update current_state with current feature_values and control_signals and store for next trial
             self.feature_values = np.array(np.array(variable[1:]).tolist())
+            # # MODIFIED 11/9/18 OLD:
+            # self.current_state.update_vector(self.allocation_policy, self.feature_values)
+            # MODIFIED 11/9/18 NEW: [JDC]
             self.current_state.update_vector(self.allocation_policy, self.feature_values, self.allocation_policy)
+            # MODIFIED 11/9/18 END
             self._previous_state = self.current_state.vector
 
         # # TEST PRINT
@@ -837,7 +841,9 @@ class PredictionVector():
                 v = state_spec_dict[VARIABLE]
                 v = v or ControlSignal.class_defaults.variable
             control_signal_variables.append(v)
+        # MODIFIED 11/9/18 NEW: [JDC]
         self.reference_variable = control_signal_variables
+        # MODIFIED 11/9/18 END
         self.control_signal_functions = [c.function for c in control_signals]
         self._compute_costs = [c.compute_costs for c in control_signals]
 
@@ -953,7 +959,11 @@ class PredictionVector():
 
         self.vector = np.zeros(i)
 
+    # # MODIFIED 11/9/18 OLD:
+    # def update_vector(self, variable, feature_values=None):
+    # MODIFIED 11/9/18 NEW: [JDC]
     def update_vector(self, variable, feature_values=None, reference_variable=None):
+    # MODIFIED 11/9/18 END
         '''Update vector with flattened versions of values returned by `compute_terms <PredictionVector.compute_terms>`.
 
         Updates `vector <PredictionVector.vector>`, with current values of variable (i.e., `variable
@@ -964,18 +974,28 @@ class PredictionVector():
         If it is not specified, the value stored in self.reference_variable will be used
         '''
 
+        # MODIFIED 11/9/19 NEW: [JDC]
         self.reference_variable = reference_variable or self.reference_variable
+        # MODIFIED 11/9/19 END
 
         if feature_values is not None:
             self.terms[PV.F.value] = np.array(feature_values)
-        computed_terms = self.compute_terms(np.array(variable, self.reference_variable))
+        # # MODIFIED 11/9/18 OLD:
+        # computed_terms = self.compute_terms(np.array(variable))
+        # MODIFIED 11/9/18 NEW: [JDC]
+        computed_terms = self.compute_terms(np.array(variable), self.reference_variable)
+        # MODIFIED 11/9/18 END
 
         # Assign flattened versions of specified terms to vector
         for k, v in computed_terms.items():
             if k in self.specified_terms:
                 self.vector[self.idx[k.value]] = v.reshape(-1)
 
+    # # MODIFIED 11/9/18 OLD:
+    # def compute_terms(self, control_signal_variables):
+    # MODIFIED 11/9/18 NEW: [JDC]
     def compute_terms(self, variables, ref_variables=None):
+    # MODIFIED 11/9/18 END
         '''Calculate interaction terms.
 
         Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -984,7 +1004,9 @@ class PredictionVector():
         Stateful costs are calcuated relative either ref_variables if specified, else self.ref_variables
         '''
 
+        # MODIFIED 11/9/18 NEW: [JDC]
         ref_variables = ref_variables or self.reference_variable
+        # MODIFIED 11/9/18 END
 
         terms = self.specified_terms
         computed_terms = {}
@@ -1004,7 +1026,11 @@ class PredictionVector():
             # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
             costs = [None] * len(c)
             for i, val in enumerate(c):
+                # # MODIFIED 11/9/19 OLD:
+                # costs[i] = -(self._compute_costs[i](val))
+                # MODIFIED 11/9/19 NEW: [JDC]
                 costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
+                # MODIFIED 11/9/19 END
             computed_terms[PV.COST] = np.array(costs)
 
         # Compute terms interaction that are used

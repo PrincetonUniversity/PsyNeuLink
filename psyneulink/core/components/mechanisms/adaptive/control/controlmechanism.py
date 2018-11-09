@@ -1248,7 +1248,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     @property
     def costs(self):
-        return [c.compute_costs(c.variable) for c in self.control_signals]
+        # # MODIFIED 11/9/18 OLD:
+        # return [c.compute_costs(c.variable) for c in self.control_signals]
+        # MODIFIED 11/9/18 NEW:
+        return [c.compute_costs(c.variable, c.last_intensity) for c in self.control_signals]
+        # MODIFIED 11/9/18 END
 
     @property
     def combined_costs(self):
