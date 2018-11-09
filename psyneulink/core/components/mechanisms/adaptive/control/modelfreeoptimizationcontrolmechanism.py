@@ -329,11 +329,8 @@ class FunctionApproximator():
     '''Placeholder for Composition with learning
 
     '''
-    def __init__(self,
-                 owner=None,
-                 parameterization_function=None,
-                 initializers=None,
-                 default_current_state=None):
+    def __init__(self, owner=None,
+                 parameterization_function=BayesGLM):
 
         self.owner = owner
         self.feature_values = np.array(owner.instance_defaults.variable[1:])
@@ -343,7 +340,8 @@ class FunctionApproximator():
                                                        owner.prediction_terms)
         self.current_state = self.prediction_vector.vector
 
-        # Assign parameters to learning_function
+        # Assign parameters to parameterization_function
+        self.parameterization_function = parameterization_function
         parameterization_function_default_variable = [self.current_state, np.zeros(1)]
         if isinstance(self.parameterization_function, type):
             self.parameterization_function = \
@@ -372,7 +370,7 @@ class FunctionApproximator():
         return self.feature_values
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
-    def __call__(self, allocation_policy, num_samples, feature_values, context):
+    def make_prediction(self, allocation_policy, num_samples, feature_values, context):
         '''Update interaction terms and then multiply by prediction_weights
 
         Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
@@ -683,20 +681,21 @@ class LVOCError(Exception):
         return repr(self.error_value)
 
 
-class LVOCControlMechanism(OptimizationControlMechanism):
-    """LVOCControlMechanism(                               \
-    feature_predictors,                                    \
-    feature_function=None,                                 \
-    objective_mechanism=None,                              \
-    origin_objective_mechanism=False,                      \
-    terminal_objective_mechanism=False,                    \
-    learning_function=BayesGLM,                            \
-    prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]          \
-    function=GradientOptimization,                         \
-    control_signals=None,                                  \
-    modulation=ModulationParam.MULTIPLICATIVE,             \
-    params=None,                                           \
-    name=None,                                             \
+class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
+    """ModelFreeOptimizationControlMechanism(                                                  \
+    feature_predictors,                                                                        \
+    feature_function=None,                                                                     \
+    objective_mechanism=None,                                                                  \
+    origin_objective_mechanism=False,                                                          \
+    terminal_objective_mechanism=False,                                                        \
+    function_approximator=FunctionApproximator(parameterization_function=BayesGLM,             \
+                                               prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]), \
+    num_samples=1,                                                                             \
+    function=GradientOptimization,                                                             \
+    control_signals=None,                                                                      \
+    modulation=ModulationParam.MULTIPLICATIVE,                                                 \
+    params=None,                                                                               \
+    name=None,                                                                                 \
     prefs=None)
 
     Subclass of `OptimizationControlMechanism` that learns to optimize its `ControlSignals <ControlSignal>`.
@@ -1031,7 +1030,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             return defaultControlAllocation
 
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM' 
-        feature_values = self.function_approximator.before_execution(context=context)
+        self.feature_values = self.function_approximator.before_execution(context=context)
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -1042,6 +1041,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         self.function_approximator.after_execution(context=context)
 
         return allocation_policy
+
+    def evaluation_function(self, allocation_policy):
+        '''Compute outcome for a given allocation_policy.'''
+        # returns net_allocation_policy_outcomes
+        return self.function_approximator.make_prediction(allocation_policy=allocation_policy,
+                                                          num_samples=self.num_samples,
+                                                          predicted_input=self.feature_values,
+                                                          context=self.function_object.context)
 
 
 # OLD ******************************************************************************************************************
