@@ -369,9 +369,10 @@ class FunctionApproximator():
             self.feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
             self.current_state.update_vector(self.owner.allocation_policy, self.feature_values)
             self._previous_state = self.current_state.vector
+        return self.feature_values
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
-    def __call__(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
+    def __call__(self, allocation_policy, num_samples, feature_values, context):
         '''Update interaction terms and then multiply by prediction_weights
 
         Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
