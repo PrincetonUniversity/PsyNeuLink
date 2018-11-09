@@ -333,11 +333,11 @@ class FunctionApproximator():
                  parameterization_function=BayesGLM):
 
         self.owner = owner
-        self.feature_values = np.array(owner.instance_defaults.variable[1:])
+        self.feature_values = np.array(self.owner.instance_defaults.variable[1:])
 
-        self.prediction_vector = self.PredictionVector(owner.feature_values,
-                                                       owner.control_signals,
-                                                       owner.prediction_terms)
+        self.prediction_vector = self.PredictionVector(self.owner.feature_values,
+                                                       self.owner.control_signals,
+                                                       self.owner.prediction_terms)
         self.current_state = self.prediction_vector.vector
 
         # Assign parameters to parameterization_function
@@ -363,14 +363,15 @@ class FunctionApproximator():
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
                                                                        self.owner.net_outcome])
 
-            # Update current_state with current feature_values and control_signals and store for next trial
+            # Update current_state with owner's current variable and feature_values and  and store for next trial
+            # Note: self.owner.value = last allocation used by owner
             self.feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
-            self.current_state.update_vector(self.owner.allocation_policy, self.feature_values)
+            self.current_state.update_vector(self.owner.value, self.feature_values, self.owner.value)
             self._previous_state = self.current_state.vector
         return self.feature_values
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
-    def make_prediction(self, allocation_policy, num_samples, feature_values, context):
+    def make_prediction(self, variable, num_samples, feature_values, context):
         '''Update interaction terms and then multiply by prediction_weights
 
         Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
@@ -385,12 +386,12 @@ class FunctionApproximator():
             <https://github.com/HIPS/autograd>`_\\.grad().
         '''
 
-        self.prediction_vector.update(allocation_policy, feature_values)
+        self.prediction_vector.update(variable, feature_values)
 
         predicted_net_outcomes = []
         for i in range(num_samples):
             terms = self.prediction_terms
-            vector = self.current_state.compute_terms(allocation_policy)
+            vector = self.current_state.compute_terms(variable )
             weights = self.prediction_weights
             net_outcome = 0
 
@@ -604,7 +605,7 @@ class FunctionApproximator():
             else:
                 return tuple([self.idx[pv_member.value] for pv_member in terms])
 
-        def update_vector(self, variable, feature_values=None):
+        def update_vector(self, variable, feature_values=None, reference_variable=None):
             '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
@@ -617,20 +618,24 @@ class FunctionApproximator():
             `Primary Function <LVOCControlMechanism_Function>`.
             '''
 
+            self.reference_variable = reference_variable or self.reference_variable
+
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
-            computed_terms = self.compute_terms(np.array(variable))
+            computed_terms = self.compute_terms(np.array(variable), self.reference_variable)
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_signal_variables):
+        def compute_terms(self, control_signal_variables, ref_variables=None):
             '''Calculate interaction terms.
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
             Values of entries are nd arrays.
             '''
+
+            ref_variables = ref_variables or self.reference_variable
 
             terms = self.specified_terms
             computed_terms = {}
@@ -650,10 +655,7 @@ class FunctionApproximator():
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
-                    # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL?
-                    # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
-                    #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
-                    costs[i] = -(self._compute_costs[i](val))
+                    costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
                 computed_terms[PV.COST] = np.array(costs)
 
             # Compute terms interaction that are used
