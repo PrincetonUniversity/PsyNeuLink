@@ -3362,17 +3362,19 @@ class Composition(Composition_Base):
         simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
         after all simulations are complete, and (3) set the number of trials of simulations.
         """
+
         predicted_input = self.update_predicted_input()
-        num_trials = 1
-        reinitialize_values, node_values = self._save_state()
+        self.sim_reinitialize_values, self.sim_node_values = self._save_state()
 
-        return predicted_input, num_trials, reinitialize_values, node_values
+        return predicted_input
 
-    def after_simulations(self, reinitialize_values, node_values, context=None):
+    def after_simulations(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
         simulations are complete in order to reinstate the `Composition`'s pre-simulation values.
         """
+        reinitialize_values = self.sim_reinitialize_values
+        node_values = self.sim_node_values
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node])
 
@@ -4004,9 +4006,7 @@ class Composition(Composition_Base):
     def run_simulation(self,
                        allocation_policy=None,
                        num_trials=1,
-                       reinitialize_values=None,
                        predicted_input=None,
-                       call_after_simulation=None,
                        runtime_params=None,
                        context=None):
         '''Runs a simulation of the `Composition`, with the specified allocation_policy, excluding its
@@ -4018,6 +4018,9 @@ class Composition(Composition_Base):
         # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
         # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
         # be modified to return anything, this may not be necessary
+
+        # These attrs are set during composition.before_simulation
+        reinitialize_values = self.sim_reinitialize_values
 
         if allocation_policy is not None:
             self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
