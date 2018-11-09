@@ -851,6 +851,9 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             else:
                 raise MFOCMError("{} arg for {} must be specified".format(repr(FEATURE_PREDICTORS),
                                                                          self.__class__.__name__))
+
+        self.function_approximator = function_approximator
+
         if kwargs:
                 for i in kwargs.keys():
                     raise MFOCMError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
@@ -865,7 +868,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                                                   params=params)
 
         super().__init__(objective_mechanism=objective_mechanism,
-                         function_approximator=function_approximator,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
@@ -888,7 +890,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         if PREDICTION_TERMS in request_set:
             if not all(term in PV for term in request_set[PREDICTION_TERMS]):
                 raise MFOCMError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
-                                format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
+                                format(repr(PREDICTION_TERMS), self.name, PV.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
