@@ -4019,6 +4019,9 @@ class Composition(Composition_Base):
         # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
         # be modified to return anything, this may not be necessary
 
+        # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
+        # (NECESSARY, SINCE duration_costs DEPEND ON PREVIOUS VALUE OF ControlSignal,
+        #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         if allocation_policy is not None:
             self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=runtime_params, context=context)
 

@@ -315,11 +315,12 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                          name=name,
                          prefs=prefs)
 
-    def apply_control_signal_values(self, control_signal_values, runtime_params, context):
-        for i in range(len(control_signal_values)):
+    def apply_control_signal_values(self, allocation_policy, runtime_params, context):
+        '''Assign specified allocation_policy'''
+        for i in range(len(allocation_policy)):
             if self.value is None:
                 self.value = self.instance_defaults.value
-            self.value[i] = np.atleast_1d(control_signal_values[i])
+            self.value[i] = np.atleast_1d(allocation_policy[i])
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
