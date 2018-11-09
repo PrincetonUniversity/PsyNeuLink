@@ -256,7 +256,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, \
+    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, NAME, \
     PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -264,10 +264,10 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
 
 __all__ = [
-    'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'MFOCM', 'ModelFreeOptimizationControlMechanism', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
-LVOC = 'LVOC'
+MFOCM = 'ModelFreeOptimizationControlMechanism'
 FEATURE_PREDICTORS = 'feature_predictors'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
@@ -331,23 +331,25 @@ class FunctionApproximator():
     '''
     def __init__(self, owner=None,
                  parameterization_function=BayesGLM):
-
-        self.owner = owner
-        self.feature_values = np.array(self.owner.instance_defaults.variable[1:])
-
-        self.prediction_vector = self.PredictionVector(self.owner.feature_values,
-                                                       self.owner.control_signals,
-                                                       self.owner.prediction_terms)
-        self.current_state = self.prediction_vector.vector
-
-        # Assign parameters to parameterization_function
         self.parameterization_function = parameterization_function
-        parameterization_function_default_variable = [self.current_state, np.zeros(1)]
-        if isinstance(self.parameterization_function, type):
-            self.parameterization_function = \
-                self.parameterization_function(default_variable=parameterization_function_default_variable)
-        else:
-            self.parameterization_function.reinitialize({DEFAULT_VARIABLE: parameterization_function_default_variable})
+        if owner:
+            self.initialize(owner=owner)
+
+    def initialize(self, owner):
+
+            self.owner = owner
+            self.prediction_vector = self.PredictionVector(self.owner.feature_values,
+                                                           self.owner.control_signals,
+                                                           self.owner.prediction_terms)
+            self.current_state = self.prediction_vector.vector
+
+            # Assign parameters to parameterization_function
+            parameterization_function_default_variable = [self.current_state, np.zeros(1)]
+            if isinstance(self.parameterization_function, type):
+                self.parameterization_function = \
+                    self.parameterization_function(default_variable=parameterization_function_default_variable)
+            else:
+                self.parameterization_function.reinitialize({DEFAULT_VARIABLE: parameterization_function_default_variable})
 
     def before_execution(self, context):
         '''Call learning_function prior to optimizing allocation_policy'''
@@ -476,7 +478,7 @@ class FunctionApproximator():
                     if issubclass(c, ControlSignal):
                         v = c.class_defaults.variable
                     else:  # If a class other than ControlSignal was specified, typecheck should have found it
-                        raise LVOCError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
+                        raise MFOCMError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
                                         format(repr(CONTROL_SIGNALS), self.name, c))
                 else:
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
@@ -491,7 +493,7 @@ class FunctionApproximator():
 
             def error_for_too_few_terms(term):
                 spec_type = {'FF':'feature_predictors', 'CC':'control_signals'}
-                raise LVOCError("Specification of {} for {} arg of {} requires at least two {} be specified".
+                raise MFOCMError("Specification of {} for {} arg of {} requires at least two {} be specified".
                                 format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
@@ -675,7 +677,7 @@ class FunctionApproximator():
             return computed_terms
 
 
-class LVOCError(Exception):
+class MFOCMError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -800,7 +802,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         <LINK>` for details).
     """
 
-    componentType = LVOC_CONTROL_MECHANISM
+    componentType = 'MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM'
     # initMethod = INIT_FULL_EXECUTE_METHOD
     # initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -847,14 +849,12 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                 feature_predictors = kwargs['predictors']
                 del(kwargs['predictors'])
             else:
-                raise LVOCError("{} arg for {} must be specified".format(repr(FEATURE_PREDICTORS),
+                raise MFOCMError("{} arg for {} must be specified".format(repr(FEATURE_PREDICTORS),
                                                                          self.__class__.__name__))
         if kwargs:
                 for i in kwargs.keys():
-                    raise LVOCError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
+                    raise MFOCMError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
                                                                                         repr(i)))
-
-        self.function_approximator.owner = self
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
@@ -881,13 +881,13 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         if (OBJECTIVE_MECHANISM in request_set and
                 isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
                 and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-            raise LVOCError("{} specified for {} ({}) must be assigned one or more {}".
+            raise MFOCMError("{} specified for {} ({}) must be assigned one or more {}".
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
 
         if PREDICTION_TERMS in request_set:
             if not all(term in PV for term in request_set[PREDICTION_TERMS]):
-                raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
+                raise MFOCMError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
                                 format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
 
     def _instantiate_input_states(self, context=None):
@@ -952,7 +952,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_inputs_spec(spec, feature_function)
                 else:
-                    raise LVOCError("Incorrect specification ({}) in feature_predictors argument of {}."
+                    raise MFOCMError("Incorrect specification ({}) in feature_predictors argument of {}."
                                     .format(spec, self.name))
             # e.g. Mechanism, OutputState
             else:
@@ -1011,6 +1011,19 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
             control_signal._instantiate_cost_attributes()
         return control_signal
+
+    def _instantiate_function_approximator(self):
+        '''Instantiate attributes for LVOCControlMechanism's learning_function'''
+
+        self.feature_values = np.array(self.instance_defaults.variable[1:])
+
+        # Assign parameters to learning_function
+        function_approximator_default_variable = [self.current_state.vector, np.zeros(1)]
+        if isinstance(self.function_approximator, type):
+            self.function_approximator = self.function_approximator(
+                    default_variable=function_approximator_default_variable)
+        else:
+            self.function_approximator.initialize(owner=self)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Find allocation_policy that optimizes EVC.
