@@ -330,7 +330,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        self.predicted_input, self.num_trials, self.reinitialize_values, self.node_values = self.composition.before_simulations()
+        self.predicted_input = self.composition.before_simulations()
 
         # Compute allocation_policy using MBOCM's optimization function
         allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
@@ -338,7 +338,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                                                                                runtime_params=runtime_params,
                                                                                context=context)
 
-        self.composition.after_simulations(self.reinitialize_values, self.node_values)
+        self.composition.after_simulations()
 
         return allocation_policy
 
@@ -346,8 +346,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
         return self.composition.run_simulation(allocation_policy=allocation_policy,
-                                               num_trials=self.num_trials,
-                                               reinitialize_values=self.reinitialize_values,
                                                predicted_input=self.predicted_input,
+                                               num_trials=1,
                                                context=self.function_object.context)
 
