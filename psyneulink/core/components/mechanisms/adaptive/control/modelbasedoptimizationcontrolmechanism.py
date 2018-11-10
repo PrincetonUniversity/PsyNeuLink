@@ -98,7 +98,8 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import PARAMETER_STATES, OPTIMIZATION_CONTROL_MECHANISM
+from psyneulink.core.globals.keywords import PARAMETER_STATES, OPTIMIZATION_CONTROL_MECHANISM, \
+    MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -261,7 +262,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         <LINK>` for details).
     """
 
-    componentType = OPTIMIZATION_CONTROL_MECHANISM
+    componentType = MODEL_BASED_OPTIMIZATION_CONTROL_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
 

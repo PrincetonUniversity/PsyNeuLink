@@ -240,8 +240,7 @@ from enum import Enum
 import numpy as np
 
 from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE
+    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import \
@@ -257,17 +256,18 @@ from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, NAME, \
-    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS
+    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS, \
+    MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
+from psyneulink.core.globals.utilities import is_iterable, powerset, tensor_power
 
 __all__ = [
-    'MFOCM', 'ModelFreeOptimizationControlMechanism', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'ModelFreeOptimizationControlMechanism', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
 ]
 
-MFOCM = 'ModelFreeOptimizationControlMechanism'
+
 FEATURE_PREDICTORS = 'feature_predictors'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
@@ -482,8 +482,9 @@ class FunctionApproximator():
                     if issubclass(c, ControlSignal):
                         v = c.class_defaults.variable
                     else:  # If a class other than ControlSignal was specified, typecheck should have found it
-                        raise MFOCMError("PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".
-                                        format(repr(CONTROL_SIGNALS), self.name, c))
+                        raise ModelFreeOptimizationControlMechanismError("PROGRAM ERROR: unrecognized specification "
+                                                                         "for {} arg of {}: {}".
+                                                                         format(repr(CONTROL_SIGNALS), self.name, c))
                 else:
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
                     v = state_spec_dict[VARIABLE]
@@ -497,7 +498,8 @@ class FunctionApproximator():
 
             def error_for_too_few_terms(term):
                 spec_type = {'FF':'feature_predictors', 'CC':'control_signals'}
-                raise MFOCMError("Specification of {} for {} arg of {} requires at least two {} be specified".
+                raise ModelFreeOptimizationControlMechanismError("Specification of {} for {} arg of {} "
+                                                                 "requires at least two {} be specified".
                                 format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
@@ -688,7 +690,7 @@ class FunctionApproximator():
             return computed_terms
 
 
-class MFOCMError(Exception):
+class ModelFreeOptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -813,7 +815,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         <LINK>` for details).
     """
 
-    componentType = 'MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM'
+    componentType = MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM
     # initMethod = INIT_FULL_EXECUTE_METHOD
     # initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -876,15 +878,16 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                 feature_predictors = kwargs['predictors']
                 del(kwargs['predictors'])
             else:
-                raise MFOCMError("{} arg for {} must be specified".format(repr(FEATURE_PREDICTORS),
-                                                                         self.__class__.__name__))
+                raise ModelFreeOptimizationControlMechanismError("{} arg for {} must be specified".
+                                                                 format(repr(FEATURE_PREDICTORS),
+                                                                        self.__class__.__name__))
 
         self.function_approximator = function_approximator
 
         if kwargs:
                 for i in kwargs.keys():
-                    raise MFOCMError("Unrecognized arg in constructor for {}: {}".format(self.__class__.__name__,
-                                                                                        repr(i)))
+                    raise ModelFreeOptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
+                                                                     format(self.__class__.__name__, repr(i)))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
@@ -910,14 +913,17 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         if (OBJECTIVE_MECHANISM in request_set and
                 isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
                 and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-            raise MFOCMError("{} specified for {} ({}) must be assigned one or more {}".
+            raise ModelFreeOptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
         if PREDICTION_TERMS in request_set:
             for term in request_set[PREDICTION_TERMS]:
                 if not term in PV:
-                    raise MFOCMError("{} specified in {} arg of {} is not a member of the {} enum".
-                                     format(repr(term.name), repr(PREDICTION_TERMS), self.name, PV.__name__))
+                    raise ModelFreeOptimizationControlMechanismError("{} specified in {} arg of {} "
+                                                                     "is not a member of the {} enum".
+                                                                     format(repr(term.name),
+                                                                            repr(PREDICTION_TERMS),
+                                                                            self.name, PV.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
@@ -981,8 +987,9 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                     self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
                     spec = self._parse_shadow_inputs_spec(spec, feature_function)
                 else:
-                    raise MFOCMError("Incorrect specification ({}) in feature_predictors argument of {}."
-                                    .format(spec, self.name))
+                    raise ModelFreeOptimizationControlMechanismError("Incorrect specification ({}) "
+                                                                     "in feature_predictors argument of {}."
+                                                                     .format(spec, self.name))
             # e.g. Mechanism, OutputState
             else:
                 spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
