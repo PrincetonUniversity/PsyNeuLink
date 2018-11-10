@@ -12742,8 +12742,8 @@ class GridSearch(OptimizationFunction):
 
         else:
             last_sample, last_value, all_samples, all_values = super().function(variable=variable,
-                                                                    params=params,
-                                                                    context=context)
+                                                                                params=params,
+                                                                                context=context)
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:

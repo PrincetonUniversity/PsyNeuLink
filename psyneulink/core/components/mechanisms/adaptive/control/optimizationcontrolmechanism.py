@@ -462,7 +462,9 @@ class OptimizationControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
-                 # learning_function=None,
+                 # MODIFIED 11/9/18 OLD:
+                 learning_function=None,
+                 # MODIFIED 11/9/18 END
                  function:tc.optional(tc.any(is_function_type))=None,
                  search_function:tc.optional(tc.any(is_function_type))=None,
                  search_termination_function:tc.optional(tc.any(is_function_type))=None,
@@ -479,7 +481,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 for i in kwargs.keys():
                     raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                             format(self.__class__.__name__, repr(i)))
-        # self.learning_function = learning_function
+        # MODIFIED 11/9/18 OLD:
+        self.learning_function = learning_function
+        # MODIFIED 11/9/18 END
         self.search_function = search_function
         self.search_termination_function = search_termination_function
         self.search_space = search_space
@@ -530,8 +534,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        # if self.learning_function:
-        #     self._instantiate_learning_function()
+        # MODIFIED 11/9/18 OLD:
+        if self.learning_function:
+            self._instantiate_learning_function()
+        # MODIFIED 11/9/18 END
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function_object.reinitialize({DEFAULT_VARIABLE: self.allocation_policy,

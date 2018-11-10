@@ -345,8 +345,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
-        return self.composition.run_simulation(allocation_policy=allocation_policy,
-                                               predicted_input=self.predicted_input,
-                                               num_trials=1,
+        num_trials = 1
+        return self.composition.run_simulation(allocation_policy,
+                                               self.predicted_input,
+                                               num_trials,
                                                context=self.function_object.context)
 

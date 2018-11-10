@@ -349,28 +349,30 @@ class FunctionApproximator():
                 self.parameterization_function = \
                     self.parameterization_function(default_variable=parameterization_function_default_variable)
             else:
-                self.parameterization_function.reinitialize({DEFAULT_VARIABLE: parameterization_function_default_variable})
+                self.parameterization_function.reinitialize({DEFAULT_VARIABLE:
+                                                                 parameterization_function_default_variable})
 
     def before_execution(self, context):
         '''Call learning_function prior to optimizing allocation_policy'''
 
-        # if not self.current_execution_count:
-        if context.initialization_status is ContextFlags.INITIALIZING:
-            # Initialize current_state and control_signals on first trial
-            # Note:  initialize current_state to 1's so that learning_function returns specified priors
-            self._previous_state = np.full_like(self.current_state.vector, 0)
-            self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
-        else:
+        feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
+        try:
             # Update prediction_weights
+            variable = self.owner.value
+            outcome = self.owner.net_outcome
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
-                                                                       self.owner.net_outcome])
-
+                                                                               outcome])
             # Update current_state with owner's current variable and feature_values and  and store for next trial
             # Note: self.owner.value = last allocation used by owner
-            self.feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
-            self.current_state.update_vector(self.owner.value, self.feature_values, self.owner.value)
-            self._previous_state = self.current_state.vector
-        return self.feature_values
+            self.prediction_vector.update_vector(variable, feature_values, variable)Ω
+            self._previous_state = self.prediction_vector.vector
+        except AttributeError:
+            # Initialize current_state and control_signals on first trial
+            # Note:  initialize current_state to 1's so that learning_function returns specified priors
+            self.prediction_vector.reference_variable = self.owner.allocation_policy
+            self._previous_state = np.full_like(self.current_state, 0)
+            self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
+        return feature_values
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
@@ -388,24 +390,25 @@ class FunctionApproximator():
             <https://github.com/HIPS/autograd>`_\\.grad().
         '''
 
-        self.prediction_vector.update(variable, feature_values)
+        # self.prediction_vector.update_vector(variable, feature_values, variable)
 
-        predicted_net_outcomes = []
+        predicted_net_outcome=0
         for i in range(num_samples):
-            terms = self.prediction_terms
-            vector = self.current_state.compute_terms(variable )
+            terms = self.owner.prediction_terms
+            vector = self.prediction_vector.compute_terms(variable )
             weights = self.prediction_weights
             net_outcome = 0
 
             for term_label, term_value in vector.items():
                 if term_label in terms:
                     pv_enum_val = term_label.value
-                    item_idx = self.current_state.idx[pv_enum_val]
+                    item_idx = self.prediction_vector.idx[pv_enum_val]
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
-            predicted_net_outcomes.append(net_outcome)
-        return np.mean(predicted_net_outcomes)
+            predicted_net_outcome+=net_outcome
+        predicted_net_outcome/=num_samples
+        return predicted_net_outcome
 
-    def after_execution(self):
+    def after_execution(self, context):
         pass
 
     class PredictionVector():
@@ -620,7 +623,7 @@ class FunctionApproximator():
             `Primary Function <LVOCControlMechanism_Function>`.
             '''
 
-            self.reference_variable = reference_variable or self.reference_variable
+            self.reference_variable = reference_variable
 
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
@@ -638,6 +641,7 @@ class FunctionApproximator():
             '''
 
             ref_variables = ref_variables or self.reference_variable
+            self.reference_variable = ref_variables
 
             terms = self.specified_terms
             computed_terms = {}
@@ -839,9 +843,25 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                  **kwargs):
 
         # Avoid mutable default:
-        prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
-        if ALL in prediction_terms:
-            prediction_terms = list(PV.__members__.values())
+        # # MODIFIED 11/9/18 OLD:
+        # prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
+        # if ALL in prediction_terms:
+        #     prediction_terms = list(PV.__members__.values())
+        # MODIFIED 11/9/18 NEW: [JDC]
+        # FIX: FOR SOME REASON prediction_terms ARE NOT GETTING PASSED INTACT (ARE NOT RECOGNIZED IN AS MEMBERS OF PV)
+        #      AND SO THEY'RE FAILING IN _validate_params
+        #      EVEN THOUGH THEY ARE FINE UNDER EXACTLY THE SAME CONDITIONS IN LVOCCONTROLMECHANISM
+        #      THIS IS A HACK TO FIX THE PROBLEM:
+        if prediction_terms:
+            if ALL in prediction_terms:
+                prediction_terms = list(PV.__members__.values())
+            else:
+                terms = prediction_terms.copy()
+                prediction_terms = []
+                for term in terms:
+                    prediction_terms.append(PV[term.name])
+
+        # MODIFIED 11/9/18 END
 
         if feature_predictors is None:
             # Included for backward compatibility
@@ -886,11 +906,11 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             raise MFOCMError("{} specified for {} ({}) must be assigned one or more {}".
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
-
         if PREDICTION_TERMS in request_set:
-            if not all(term in PV for term in request_set[PREDICTION_TERMS]):
-                raise MFOCMError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
-                                format(repr(PREDICTION_TERMS), self.name, PV.__name__))
+            for term in request_set[PREDICTION_TERMS]:
+                if not term in PV:
+                    raise MFOCMError("{} specified in {} arg of {} is not a member of the {} enum".
+                                     format(repr(term.name), repr(PREDICTION_TERMS), self.name, PV.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
@@ -1014,16 +1034,22 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #     super()._instantiate_attributes_before_function(function=function, context=context)
+    #     self._instantiate_function_approximator()
+
+    def _instantiate_attributes_after_function(self, context=None):
+        super()._instantiate_attributes_after_function(context=context)
+        self._instantiate_function_approximator()
+
     def _instantiate_function_approximator(self):
         '''Instantiate attributes for LVOCControlMechanism's learning_function'''
 
         self.feature_values = np.array(self.instance_defaults.variable[1:])
 
         # Assign parameters to learning_function
-        function_approximator_default_variable = [self.current_state.vector, np.zeros(1)]
         if isinstance(self.function_approximator, type):
-            self.function_approximator = self.function_approximator(
-                    default_variable=function_approximator_default_variable)
+            self.function_approximator = self.function_approximator(owner=self)
         else:
             self.function_approximator.initialize(owner=self)
 
@@ -1046,15 +1072,32 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM' 
-        self.feature_values = self.function_approximator.before_execution(context=context)
+        assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
+        if self.allocation_policy is None:
+            self.value = [c.instance_defaults.variable for c in self.control_signals]
+        self.feature_values = self.function_approximator.before_execution(context=self.context)
+
+
+        # TEST PRINT
+        print ('\n------------------------------------------------')
+        print ('BEFORE EXECUTION:')
+        print ('\tEXECUTION COUNT: ', self.current_execution_count)
+        print ('\tPREDICTION WEIGHTS', self.function_approximator.prediction_weights)
+        # TEST PRINT END
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
-                                        super(ControlMechanism, self)._execute(variable=self.allocation_policy,
-                                                                               runtime_params=runtime_params,
-                                                                               context=context)
+        allocation_policy, self.net_outcome_max, self.saved_samples, self.saved_values = \
+                                            super(ControlMechanism, self)._execute(variable=self.allocation_policy,
+                                                                                   runtime_params=runtime_params,
+                                                                                   context=context)
+        # # TEST PRINT
+        print ('\nAFTER EXECUTION:')
+        print ('\tEXECUTION COUNT: ', self.current_execution_count)
+        print ('\tALLOCATION POLICY: ', allocation_policy)
+        print ('\tNET_OUTCOME MAX: ', self.net_outcome_max)
+        # # TEST PRINT END
+
         self.function_approximator.after_execution(context=context)
 
         return allocation_policy
@@ -1062,9 +1105,10 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
     def evaluation_function(self, allocation_policy):
         '''Compute outcome for a given allocation_policy.'''
         # returns net_allocation_policy_outcomes
-        return self.function_approximator.make_prediction(allocation_policy=allocation_policy,
-                                                          num_samples=self.num_samples,
-                                                          predicted_input=self.feature_values,
+        num_samples = 1
+        return self.function_approximator.make_prediction(allocation_policy,
+                                                          num_samples,
+                                                          self.feature_values,
                                                           context=self.function_object.context)
 
 

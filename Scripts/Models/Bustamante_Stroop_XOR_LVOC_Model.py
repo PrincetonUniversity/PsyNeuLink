@@ -56,7 +56,6 @@ task_decision = pnl.DDM(name='Task Decision',
 #                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
 #                                 terminal_objective_mechanism=True,
 #
-#                                 # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
 #                                 learning_function=pnl.BayesGLM,
 #
 #                                 # function=pnl.GradientOptimization(
@@ -66,20 +65,8 @@ task_decision = pnl.DDM(name='Task Decision',
 #                                 #         annealing_function= lambda x,y : x / np.sqrt(y),
 #                                 #         # direction=pnl.ASCENT
 #                                 # ),
-#
 #                                 function=pnl.GridSearch,
 #
-#                                 # function=pnl.OptimizationFunction,
-#
-#                                 # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
-#                                 #                                    ('color_control', word_task)]}
-#                                 # control_signals={pnl.NAME:'COLOR CONTROL',
-#                                 #                  pnl.PROJECTIONS:[(pnl.SLOPE, color_task),
-#                                 #                                   ('color_control', word_task)],
-#                                 #                  pnl.COST_OPTIONS:[pnl.ControlSignalCosts.INTENSITY,
-#                                 #                                    pnl.ControlSignalCosts.ADJUSTMENT],
-#                                 #                  pnl.INTENSITY_COST_FUNCTION:pnl.Exponential(rate=0.25, bias=-3),
-#                                 #                  pnl.ADJUSTMENT_COST_FUNCTION:pnl.Exponential(rate=0.25,bias=-3)}
 #                                 control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
 #                                                                                ('color_control', word_task)],
 #                                                                   # function=pnl.ReLU,
@@ -104,9 +91,6 @@ lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
                                 prediction_terms=[pnl.PV.FC, pnl.PV.COST],
                                 terminal_objective_mechanism=True,
 
-                                # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
-                                # learning_function=pnl.BayesGLM,
-
                                 # function=pnl.GradientOptimization(
                                 #         convergence_criterion=pnl.VALUE,
                                 #         convergence_threshold=0.001,
@@ -114,20 +98,8 @@ lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
                                 #         annealing_function= lambda x,y : x / np.sqrt(y),
                                 #         # direction=pnl.ASCENT
                                 # ),
-
                                 function=pnl.GridSearch,
 
-                                # function=pnl.OptimizationFunction,
-
-                                # control_signals={'COLOR CONTROL':[(pnl.SLOPE, color_task),
-                                #                                    ('color_control', word_task)]}
-                                # control_signals={pnl.NAME:'COLOR CONTROL',
-                                #                  pnl.PROJECTIONS:[(pnl.SLOPE, color_task),
-                                #                                   ('color_control', word_task)],
-                                #                  pnl.COST_OPTIONS:[pnl.ControlSignalCosts.INTENSITY,
-                                #                                    pnl.ControlSignalCosts.ADJUSTMENT],
-                                #                  pnl.INTENSITY_COST_FUNCTION:pnl.Exponential(rate=0.25, bias=-3),
-                                #                  pnl.ADJUSTMENT_COST_FUNCTION:pnl.Exponential(rate=0.25,bias=-3)}
                                 control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
                                                                                ('color_control', word_task)],
                                                                   # function=pnl.ReLU,
@@ -143,7 +115,7 @@ lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
                                 )
 
 
-lvoc.reportOutputPref=True
+# lvoc.reportOutputPref=True
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(color_stim)
 c.add_c_node(word_stim)

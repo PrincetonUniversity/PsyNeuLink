@@ -533,9 +533,13 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
 
         if PREDICTION_TERMS in request_set:
-            if not all(term in PV for term in request_set[PREDICTION_TERMS]):
-                raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
-                                format(repr(PREDICTION_TERMS), self.name, PV.__class__.__name__))
+            # if not all(term in PV for term in request_set[PREDICTION_TERMS]):
+            #     raise LVOCError("One or more items in list specified for {} arg of {} is not a member of the {} enum".
+            #                     format(repr(PREDICTION_TERMS), self.name, PV.__name__))
+            for term in request_set[PREDICTION_TERMS]:
+                if not term in PV:
+                    raise LVOCError("{} specified in {} arg of {} is not a member of the {} enum".
+                                     format(repr(term.name), repr(PREDICTION_TERMS), self.name, PV.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
@@ -667,6 +671,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         self.current_state = PredictionVector(self.feature_values,
                                               self.control_signals,
                                               self.prediction_terms)
+
         # Assign parameters to learning_function
         learning_function_default_variable = [self.current_state.vector, np.zeros(1)]
         if isinstance(self.learning_function, type):
@@ -713,11 +718,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # MODIFIED 11/9/18 END
             self._previous_state = self.current_state.vector
 
-        # # TEST PRINT
-        # print ('\nexecution_count: ', self.current_execution_count)
-        # print ('\outcome: ', self.outcome)
-        # # print ('prediction_weights: ', self.prediction_weights)
-        # # TEST PRINT END
+        # TEST PRINT
+        print ('\n------------------------------------------------')
+        print ('BEFORE EXECUTION:')
+        print ('\tEXECUTION COUNT: ', self.current_execution_count)
+        print ('\tPREDICTION WEIGHTS', self.prediction_weights)
+        # TEST PRINT END
 
         # Compute allocation_policy using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -725,12 +731,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                                         super(ControlMechanism, self)._execute(variable=self.allocation_policy,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        # # # TEST PRINT
-        # print ('EXECUTION COUNT: ', self.current_execution_count)
-        # print ('ALLOCATION POLICY: ', allocation_policy)
-        # print ('ALLOCATION POLICY: ', self.evc_max)
-        # print ('\n------------------------------------------------')
-        # # # TEST PRINT END
+        # # TEST PRINT
+        print ('\nAFTER EXECUTION:')
+        print ('EXECUTION COUNT: ', self.current_execution_count)
+        print ('ALLOCATION POLICY: ', allocation_policy)
+        print ('EVC_MAX: ', self.evc_max)
+        # # TEST PRINT END
 
         return allocation_policy
 
@@ -974,8 +980,11 @@ class PredictionVector():
         If it is not specified, the value stored in self.reference_variable will be used
         '''
 
-        # MODIFIED 11/9/19 NEW: [JDC]
-        self.reference_variable = reference_variable or self.reference_variable
+        # # MODIFIED 11/9/19 NEW: [JDC]
+        # self.reference_variable = reference_variable or self.reference_variable
+        # MODIFIED 11/9/19 NEWER: [JDC]
+        if reference_variable is not None:
+            self.reference_variable = reference_variable
         # MODIFIED 11/9/19 END
 
         if feature_values is not None:
@@ -1006,6 +1015,7 @@ class PredictionVector():
 
         # MODIFIED 11/9/18 NEW: [JDC]
         ref_variables = ref_variables or self.reference_variable
+        self.reference_variable = ref_variables
         # MODIFIED 11/9/18 END
 
         terms = self.specified_terms
