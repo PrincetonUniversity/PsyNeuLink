@@ -13,46 +13,44 @@
 Overview
 --------
 
-An LVOCControlMechanism is an `OptimizationControlMechanism` that learns to regulate its `ControlSignals
-<ControlSignal>` in order to optimize the performance of the `Composition` to which it belongs.  It
-implements a form of the Learned Value of Control model described in `Leider et al.
-<https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_, which learns to select the
-value for its `control_signals <ControlMechanism.control_signals>` (i.e., its `allocation_policy
-<ControlMechanism.allocation_policy>`) that maximzes its `EVC <OptimizationControlMechanism_EVC>` based on a set of
-`predictors <LVOCControlMechanism_Feature_Predictors>`.
+A ModelFreeOptimizationControlMechanism is an `OptimizationControlMechanism` that uses a `FunctionApproximator`
+to regulate its `ControlSignals <ControlSignal>` in order to optimize the processing of the `Components` monitored
+by the ModelFreeOptimizationControlMechanism's `objective_mechanism
+<ModelFreeOptimizationControlMechanism.objective_mechanism>`, as evaluated by its `evaluation_function
+<ModelFreeOptimizationControlMechanism.evaluation_function>`.  An example of its use is the Learned Value of Control
+model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev
+=2>`_, which learns to select the value for its `control_signals <ControlMechanism.control_signals>` (i.e.,
+its `allocation_policy <ControlMechanism.allocation_policy>`) that maximzes its `EVC <OptimizationControlMechanism_EVC>`
+based on a set of `predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>`.
 
-.. _LVOCControlMechanism_EVC:
+.. _ModelFreeOptimizationControlMechanism_EVC:
 
-*Expected Value of Control (EVC) and Learned Value of Control (LVOC)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*ModelFreeOptimizationControlMechanism and the Expected Value of Control (EVC)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `Expected Value of Control (EVC) <OptimizationControlMechanism_EVC>` is the predicted value of executing the
-`Composition` to which the LVOCControlMechanism belongs under a given `allocation_policy
-<ControlMechanism.allocation_policy>`, as determined by its `objective_function <ControlMechanism.objective_function>`.
+`Components` montiored by the ModelFreeOptimizationControlMechanism's `objective_mechanism
+<ModelFreeOptimizationControlMechanism.objective_mechanism>`, and executed under a given `allocation_policy
+<ControlMechanism.allocation_policy>`, as determined by its `evaluation_function 
+<OptimizationControlMechanism_EVC.evaluaton_function>`.
 
-The LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>` learns to estimate the EVC
-from its `current_state <LVOCControlMechanism.current_state>` -- comprised of `feature_predictors
-<LVOCControlMechanism.feature_predictors>`, an `allocation_policy <ControlMechanism.allocation_policy>`, interactions
-among these, and the `costs <ControlMechanism.costs> of its `control_signals <ControlMechanism.control_signals>`.
-by learning a set of `prediction_weights <LVOCControlMechanism.prediction_weights>` that can predict the
-`net_outcome <ControlMechanism.net_outcome>` of processing for experienced values of those variables.   The
-set of `prediction_weights <LVOCControlMechaism.prediction_weights>` it learns are referred to as  the **learned value
-of control** (*LVOC*).
+The ModelFreeOptimizationControlMechanism's `function_approximator 
+<ModelFreeOptimizationControlMechanism.function_approximator>` is parameterized, over `trials <trial>` to estimate the 
+`EVC <OptimizationControlMechanism_EVC>` from its current `feature_values
+<ModelFreeOptimizationControlMechanism.features_values>` (comprised of `feature_predictors
+<ModelFreeOptimizationControlMechanism.feature_predictors>`), an `allocation_policy
+<ControlMechanism.allocation_policy>`, interactions among these, and the `costs <ControlMechanism.costs> of its 
+`control_signals <ControlMechanism.control_signals>`, by learning to predict the `net_outcome 
+<ControlMechanism.net_outcome>` of processing for experienced values of those factors.
 
-The LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` optimizes the EVC for the current value
-of its `feature_predictors <LVOCControlMechanism.feature_preditors>`, by using its `prediction_weights
-LVOCControlMechanism.prediction_weights` (i.e., the LVOC) to estimate the EVC for samples of `allocation_policy
-<ControlMechanism.allocation_policy>`, and returning the one that maximizes the EVC for the current `feature_predictors
-<LVOCControlMechanism.feature_preditors>`.
-  
-  
-.. _LVOCControlMechanism_Creation:
 
-Creating an LVOCControlMechanism
---------------------------------
+.. _ModelFreeOptimizationControlMechanism_Creation:
 
- An LVOCControlMechanism can be created in the same was as any `OptimizationControlMechanism`.  The following arguments
- of its constructor are specific to the LVOCControlMechanism:
+Creating a ModelFreeOptimizationControlMechanism
+-------------------------------------------------
+
+ It can be created in the same was as any `OptimizationControlMechanism`.  The following arguments
+ of its constructor are specific to the ModelFreeOptimizationControlMechanism:
 
   * **feature_predictors** -- takes the place of the standard **input_states** argument in the constructor for a
     Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
@@ -60,171 +58,163 @@ Creating an LVOCControlMechanism
     It can be specified using any of the following, singly or combined in a list:
 
         * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
-          InputStates of the same shapes as those listed are created on the LVOC, and are connected to the
-          corresponding input_CIM OutputStates by projections. The external input values that are passed through the
-          input_CIM are used as the `feature_predictors <LVOCControlMechanism_Feature>`. If a Mechanism is included
-          in the list, it refers to all of its InputStates.
+          InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
+          and are connected to the corresponding input_CIM OutputStates by projections. The external input values
+          that are passed through the input_CIM are used as the `feature_predictors
+          <ModelFreeOptimizationControlMechanism_Feature>`. If a Mechanism is included in the list, it refers to all
+          of its InputStates.
         |
         * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
           that resolves to an OutputState from which the InputState receives a Projection;  the `value
-          <OutputState.value>` of that OutputState is used as the `feature <LVOCControlMechanism.feature>`. Each of
-          these InputStates is marked as internal_only.
+          <OutputState.value>` of that OutputState is used as the feature. Each of these InputStates is marked as
+          `internal_only <InputStates.internal_only>` = `True`.
 
-    Feature_predictors can also be added to an existing LVOCControlMechanism using its `add_features` method.
+    Feature_predictors can also be added to an existing ModelFreeOptimizationControlMechanism using its `add_features`
+    method.
 
   * **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
     **feature_predictors**.  By default, this is the identity function, that provides the current value of the feature
-    to the LVOCControlMechanism's `learning_function <LVOCControlMechanism.learning_function>`.  However,
-    other functions can be assigned, to maintain a record of past values, or integrate them over trials.
+    to the ModelFreeOptimizationControlMechanism's `function_approximator
+    <ModelFreeOptimizationControlMechanism.function_approximator>`.  However, other functions can be assigned,
+    for example to maintain a record of past values, or integrate them over trials.
 
-  * **learning_function** -- specifies `LearningFunction` that learns to predict the `EVC <LVOCControlMechanism_EVC>`
-    for a given `allocation_policy <ControlMechanism.allocation_policy>` from the terms specified in the
-    **prediction_terms** argument.
+  * **function_approximator** -- this specifies the `FunctionApproximator` that is parameterized over trials to
+    predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `allocation_policy
+    <ControlMechanism.allocation_policy>` from the terms specified in the **prediction_terms** argument.
     
-  * **prediction_terms** -- specifies the terms used by the `learning_function <LVOCControlMechanism.learning_function>`
-    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the 
-    `allocation_policy <ControlMechanism.allocation_policy>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
+  * **prediction_terms** -- specifies the terms used to parameterize the `function_approximator
+    <ModelFreeOptimizationControlMechanism.function_approximator>` by its `parameterization_function
+    <FunctionApproximator.parameterization_function` and by its `make_prediction <FunctionApproximator.make_prediction>`
+    method to predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for an `allocation_policy
+    <ControlMechanism.allocation_policy>` and current (or expected) input.
 
 
-.. _LVOCControlMechanism_Structure:
+.. _ModelFreeOptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-Same as an OptimizationControlMechanism, with the following exceptions.
+Same as an `OptimizationControlMechanism`, with the following exceptions.
 
-.. _LVOCControlMechanism_Input:
+.. _ModelFreeOptimizationControlMechanism_Input:
 
 *Input*
 ~~~~~~~
 
-Like any `ControlMechanism`, an LVOCControlMechanism has a `primary InputState <InputState_Primary>` named *OUTCOME*
-that receives a `Projection` from the *OUTCOME* `OutputState` of its `objective_mechanism
+Like any `ControlMechanism`, an ModelFreeOptimizationControlMechanism has a `primary InputState <InputState_Primary>`
+named *OUTCOME* that receives a `Projection` from the *OUTCOME* `OutputState` of its `objective_mechanism
 <ControlMechanism.objective_mechanism>`. However, it also has an additional InputState for each of its
 feature_predictors, as described below.
 
-.. _LVOCControlMechanism_Feature_Predictors:
+.. _ModelFreeOptimizationControlMechanism_Feature_Predictors:
 
 Feature Predictors
 ^^^^^^^^^^^^^^^^^^
 
-Features_Predictors, together with the LVOCControlMechanism's `control_signals <ControlMechanism.control_signals>`
-and `costs <ControlMechanism.costs>` are assigned to its `current_state <LVOCControlMechanism.current_state>`,
-from which its `learning_function <LVOCControlMechanism.learning_function>` learns to predict the `EVC
-<LVOCControlMechanism_EVC>`.
+Features_Predictors, together with the ModelFreeOptimizationControlMechanism's `control_signals
+<ControlMechanism.control_signals>` and `costs <ControlMechanism.costs>` are assigned to its `feature_values
+<ModelFreeOptimizationControlMechanism.feature_values>` attribute, that is `function_approximator
+<ModelFreeOptimizationControlMechanism>.function_approximator` uses to predict the `EVC
+<ModelFreeOptimizationControlMechanism_EVC>`.
 
 Feature_Predictors can be of two types:
 
 * *Input Feature Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the `Composition`.
-    These are specified in the **feature_predictors** argument of the LVOCControlMechanism's constructor (see
-    `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
-    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each, 
-    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's 
-    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState 
-    of the LVOCControlMechanism assigned to that feature_predictor.
+    These are specified in the **feature_predictors** argument of the ModelFreeOptimizationControlMechanism's
+    constructor (see `ModelFreeOptimizationControlMechanism_Creation`), in a dictionary containing a
+    *SHADOW_EXTERNAL_INPUTS* entry, the value of which is one or more `ORIGIN` Mechanisms and/or their `InputStates
+    <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
+    Projection from the Composition's `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of
+    the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
 
 * *Output Feature Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism
-    in the Composition.  These too are specified in the **feature_predictors** argument of the LVOCControlMechanism's
-    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified 
-    OutputState(s) to the InputState of the LVOCControlMechanism for that feature.
+    in the Composition.  These too are specified in the **feature_predictors** argument of the
+    ModelFreeOptimizationControlMechanism's constructor (see `ModelFreeOptimizationControlMechanism_Creation`), and
+    each is assigned a Projection from the specified OutputState(s) to the InputState of the
+    ModelFreeOptimizationControlMechanism for that feature.
 
 The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the 
-`feature_values <LVOCControlMechanism.feature_values>` attribute.
+`feature_values <ModelFreeOptimizationControlMechanism.feature_values>` attribute.
 
 *Functions*
 ~~~~~~~~~~~
 
-.. _LVOCControlMechanism_Learning_Function:
+.. _ModelFreeOptimizationControlMechanism_Function_Approximator:
 
-Learning Function
-^^^^^^^^^^^^^^^^^
+Function Approximator
+^^^^^^^^^^^^^^^^^^^^^
 
-The `learning_function <LVOCControlMechanism.learning_function>` of an LVOCControlMechanism learns how to weight its
-`feature_predictors <LVOCControlMechanism_Feature_Predictors>`, `allocation_policy
-<ControlMechanism.allocation_policy>`, the interactions between these, and the `costs <ControlMechanism.costs>` of its
-`control_signals <ControlMechanism.control_signals>`, to best predict the `net_outcome <ControlMechanism.net_outcome>`
-that results from their values.  Those weights, together with the current value of its `feature_predictors
-<LVOCControlMechanism_Feature_Predictors>` (contained in its `feature_values <LVOCControlMechanism.feature_values>`
-attribute, are used by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to estimate
-the `EVC <_LVOCControlMechanism_EVC>` for those different samples of `allocation_policy
-<ControlMechanism.allocation_policy>`. By  default, the `learning_function <LVOCControlMechanism.function>` is
-`BayesGLM`. However, any function can be used that accepts a 2d array, the first item of which is an array of scalar
-values (the prediction terms) and the second that is a scalar value (the outcome to be predicted), and returns an
-array with the same shape as the LVOCControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`.
+The `function_approximator <ModelFreeOptimizationControlMechanism.function_approximator>` attribute of a
+ModelFreeOptimizationControlMechanism is a `FunctionApproximator` that it parameterizes over trials (using the
+FunctionApproximator's `parameterization_function <FunctionApproximator.parameterization_function>`) to predict
+the `net_outcome <ControlMechanism.net_outcome>` of processing of the Components monitored by
+its `objective_mechanism <ModelFreeOptimizationControlMechanism.objective_mechanism>`, from
+combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
+<ControlMechanism.allocation_policy>` it has experienced.  By default, the `parameterization_function
+<FunctionApproximator.parameterization_function>` is `BayesGLM`. However, any function can be used that accepts a 2d
+array, the first item of which is an array of scalar values (the prediction terms) and the second that is a scalar
+value (the outcome to be predicted), and returns an array with the same shape as the first item.
+
+The FunctionApproximator's `make_prediction <FunctionApproximator.make_prediction>` function uses the current
+parameters of the `FunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
+a sample `allocation_policy <ControlMechanism.allocation_policy>`, given the current `feature_values
+<ModelFreeOptimizationControlMechanism.feature_values>` and the `costs <ControlMechanism.costs>` of the
+`allocation_policy <ControlMechanism.allocation_policy>`.
 
 .. note::
-  The LVOCControlMechanism's `function <LVOCControlMechanism.learning_function>` is provided the `feature_values
-  <LVOCControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the *previous* trial
-  to update the `prediction_weights <LVOCControlMechanism.prediction_weights>`.  Those are then used to estimate
-  (and implement) the `allocation_policy <ControlMechanism.allocation_policy>` that is  predicted to generate the
-  greatest `EVC <LVOCControlMechanism_EVC>` based on the `feature_values <LVOCControlMechanism.feature_values>` for
-  the current trial.
+  The ModelFreeOptimizationControlMechanism_Feature_Predictor's `function_approximator
+  <ModelFreeOptimizationControlMechanism.function_approximator>` is provided the `feature_values
+  <ModelFreeOptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
+  *previous* trial to update its parameters.  Those are then used to estimate
+  (and implement) the `allocation_policy <ControlMechanism.allocation_policy>` that is predicted to generate the
+  greatest `EVC <ModelFreeOptimizationControlMechanism_EVC>` based on the `feature_values
+  <ModelFreeOptimizationControlMechanism.feature_values>` for the current trial.
 
-.. _LVOCControlMechanism_Function:
+.. _ModelFreeOptimizationControlMechanism_Function:
 
-*Primary Function*
-^^^^^^^^^^^^^^^^^^
+*Function*
+^^^^^^^^^^
 
-The `function <LVOCControlMechanism.function>` of an LVOCControlMechanism uses the `prediction_weights
-<LVOCControlMechanism.prediction_weights>` learned by its `learning_function <LVOCControlMechanism.learning_function>`,
-together with the current `feature_values <LVOCControlMechanism.feature_values>`, to find the `allocation_policy
-<ControlMechanism.allocation_policy>` that maximizes the estimated `EVC <LVOCControlMechanism_EVC>`.  It does this by
-selecting samples of `allocation_policy <ControlMechanism.allocation_policy>` and evaluating each using its
-`objective_function <OptimizationControlMechanism.objective_function>`.  The latter calls the LVOCControlMechanism's
-`compute_EVC <LVOCControlMechanism.compute_EVC>` method, which uses `prediction_weights
-<LVOCControlMechanism.prediction_weights>` and current `feature_values <LVOCControlMechanism.feature_values>`
-to estimate the EVC for each `allocation_policy <ControlMechanism.allocation_policy>` sampled.  The `function
-<LVOCControlMechanism.function>` returns the `allocation_policy <ControlMechanism.allocation_policy>` that yields
-the greatest `EVC <LVOCControlMechanism_EVC>.
-
-The default for `function <LVOCControlMechanism.function>` is the `GradientOptimization` Function, which uses
+The `function <ModelFreeOptimizationControlMechanism.function>` of a ModelFreeOptimizationControlMechanism uses the
+`make_prediction <FunctionApproximator.make_prediction>` method of its `function_approximator
+<ModelFreeOptimizationControlMechanism.function_approximator>`, to find the `allocation_policy
+<ControlMechanism.allocation_policy>` that yields the greatest predicted `EVC
+<ModelFreeOptimizationControlMechanism_EVC>` given the current `feature_values
+<ModelFreeOptimizationControlMechanism.feature_values>`. The default for `function
+<ModelFreeOptimizationControlMechanism.function>` is the `GradientOptimization` Function, which uses
 gradient ascent to select samples of `allocation_policy <ControlMechanism.allocation_policy>` that yield
-progessively better values of `EVC <LVOCControlMechanism_EVC>`. However, any `OptimizationFunction` can be used in
-its place.  A custom function can also be used, however it must meet the requirements for the `function
+progessively better values of `EVC <ModelFreeOptimizationControlMechanism_EVC>`. However, any `OptimizationFunction`
+can be used in its place.  A custom function can also be used, however it must meet the requirements for the `function
 <OptimizationControlMechanism.function>` of an `OptimizationControlFunction`, as described `here
 <OptimizationControlMechanism_Custom_Funtion>`.
 
-.. _LVOCControlMechanism_ControlSignals:
-
-.. _LVOCControlMechanism_Execution:
+.. _ModelFreeOptimizationControlMechanism_Execution:
 
 Execution
 ---------
 
-When an LVOCControlMechanism is executed, it first calls its `learning_function
-<LVOCControlMechanism.learning_function>`, which uses information from the previous trial to update its
-`prediction_weights <LVOCControlMechanism.prediction_weights>`.  It then calls its `function
-<LVOCControlMechanism.function>`, which uses those weights to predict the `allocadtion_policy
-<ControlMechanism.allocation_policy>` that will yield the greatet `EVC <LVOCControlMechanism_EVC>`, and then
-implements that for the next `trial` of execution.  Specifically, it executes the following steps:
-
-  * Calls `learning_function <LVOCControlMechanism.learning_function>` with the `current_state
-    <LVOCControlMechanism.current_state>` (containing the `feature_values
-    <LVOCControlMechanism.feature_values>`, `allocation_policy <ControlMechanism.allocation_policy>`, and associated
-    `costs <ControlMechanism.cost>`) for the previous trial, together with the `net_outcome
-    <ControlMechanism.net_outcome>` for that trial, and updates its `prediction_weights
-    <LVOCControlMechanism.prediction_weights>`.
-
-  * Updates `current_state <LVOCControlMechanism.current_state>` with the `features_values
-    <LVOCControlMechanism.feature_values>` for the current trial.
-
-  * Calls `function <LVOCControlMechanism.function>`, which uses the current `feature_values
-    <LVOCControlMechanism.feature_values>` and `prediction_weights <LVOCControlMechanism.prediction_weights>` to
-    determine the `allocation_policy <LVOCControlMechanism.alocation_policy>` that yields the greatest `EVC
-    <LVOCControlMechanism_EVC>` (see `above <LVOCControlMechanism_Learning_Function>` for details).
-
+When a ModelFreeOptimizationControlMechanism is executed, its `function
+<ModelFreeOptimizationControlMechanism.function>` first calls its `function_approximator
+<ModelFreeOptimizationControlMechanism.function_approximator>` to update its parameters based on the
+`feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `net_outcome
+<ControlMechanism.net_outcome>` of the last `trial`.  It then uses the `make_prediction
+<FunctionApproximator.make_prediction>` of the `function_approximator
+<ModelFreeOptimizationControlMechanism.function_approximator>` to find the `allocadtion_policy
+<ControlMechanism.allocation_policy>` that predicts the greatet `EVC <ModelFreeOptimizationControlMechanism_EVC>`
+for the current `feature_values <ModelFreeOptimizationControlMechanism.feature_values>`, and implements that for the
+next `trial` of execution.  Specifically, it executes the following steps:
 The values in the `allocation_policy <ControlMechanism.allocation_policy>` returned by `function
-<LVOCControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its `control_signals
-<ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
+<ModelFreeOptimizationControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its
+`control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
 
 COMMENT:
-.. _LVOCControlMechanism_Examples:
+.. _ModelFreeOptimizationControlMechanism_Examples:
 
 Example
 -------
 COMMENT
 
-.. _LVOCControlMechanism_Class_Reference:
+.. _ModelFreeOptimizationControlMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -278,31 +268,33 @@ PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 class PV(Enum):
 # class PV(AutoNumberEnum):
     '''PV()
-    Specifies terms used to compute `current_state <LVOCControlMechanism.current_state>`.
+    Specifies terms used to compute `vector <PredictionVector.vector>` attribute of `PredictionVector`.
 
     Attributes
     ----------
 
     F
-        Main effect of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`.
+        Main effect of `feature_predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>`.
     C
         Main effect of `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FF
-        Interaction among `feature_predictors <LVOCControlMechanism_Feature_Predictors>`.
+        Interaction among `feature_predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>`.
     CC
         Interaction among `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FC
-        Interaction between `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
+        Interaction between `feature_predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>` and
         `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FFC
-        Interaction between interactions of `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
-        `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
+        Interaction between interactions of `feature_predictors
+        <ModelFreeOptimizationControlMechanism_Feature_Predictors>` and `values <ControlSignal.value>` of
+        `control_signals <ControlMechanism.control_signals>`.
     FCC
-        Interaction between `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and interactions among
-        `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
-    FFCC
-        Interaction between interactions of `feature_predictors <LVOCControlMechanism_Feature_Predictors>` and
+        Interaction between `feature_predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>` and
         interactions among `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
+    FFCC
+        Interaction between interactions of `feature_predictors
+        <ModelFreeOptimizationControlMechanism_Feature_Predictors>` and interactions among `values
+        <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <ControlMechanism.control_signals>`.
     '''
@@ -326,7 +318,22 @@ class PV(Enum):
     COST = 8
 
 class FunctionApproximator():
-    '''Placeholder for Composition with learning
+    '''Parameterizes a `parameterization_function <FunctionApproximator.parameterization_function>` to predict an
+    outcome from an input.
+
+    The input is represented in the `vector <PredictionVector.vector>` attribute of a `PredictionVector`
+    (assigned to the FunctionApproximator`s `prediction_vector <FunctionApproximator.prediction_vector>`) attribute,
+    and the `make_prediction <FunctionApproximator.make_prediction>` method is used to predict the outcome from the
+    prediction_vector.
+
+    When used with a ModelBasedOptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
+    `allocation_policy <ControlMechanism_allocation_policy>` (assigned to the variable field of the prediction_vector)
+    and its `feature_values <ModelBasedOptimizationControlMechanism.feature_values>` assigned to the
+    features field of the prediction_vector).  The prediction vector may also contain fields for the `costs
+    ControlMechanism.costs` associated with the `allocation_policy <ControlMechanism.allocation_policy>` and
+    for interactions among those terms.
+
+    [Placeholder for Composition with learning]
 
     '''
     def __init__(self, owner=None,
@@ -341,10 +348,8 @@ class FunctionApproximator():
             self.prediction_vector = self.PredictionVector(self.owner.feature_values,
                                                            self.owner.control_signals,
                                                            self.owner.prediction_terms)
-            self.current_state = self.prediction_vector.vector
-
             # Assign parameters to parameterization_function
-            parameterization_function_default_variable = [self.current_state, np.zeros(1)]
+            parameterization_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
             if isinstance(self.parameterization_function, type):
                 self.parameterization_function = \
                     self.parameterization_function(default_variable=parameterization_function_default_variable)
@@ -362,38 +367,32 @@ class FunctionApproximator():
             outcome = self.owner.net_outcome
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
                                                                                outcome])
-            # Update current_state with owner's current variable and feature_values and  and store for next trial
+            # Update vector with owner's current variable and feature_values and  and store for next trial
             # Note: self.owner.value = last allocation_policy used by owner
             self.prediction_vector.update_vector(variable, feature_values, variable)
             self._previous_state = self.prediction_vector.vector
         except AttributeError:
-            # Initialize current_state and control_signals on first trial
-            # Note:  initialize current_state to 1's so that learning_function returns specified priors
+            # Initialize vector and control_signals on first trial
+            # Note:  initialize vector to 1's so that learning_function returns specified priors
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             self.prediction_vector.reference_variable = self.owner.allocation_policy
-            self._previous_state = np.full_like(self.current_state, 0)
+            self._previous_state = np.full_like(self.prediction_vector.vector, 0)
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
         return feature_values
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
-        '''Update interaction terms and then multiply by prediction_weights
+        '''Update interaction terms and then multiply by prediction_weights.
 
-        Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.
-
-        Uses the current values of `prediction_weights <LVOCControlMechanism.prediction_weights>`
-        and `feature_values <LVOCControlMechanism.feature_values>`, together with the `allocation_policy
-        <ControlMechanism.allocation_policy>` (provided in variable) to evaluate the `EVC <LVOCControlMechanism_EVC>`.
+        Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>`
+        together with **variable** and **feature_values** passed in, to predict outcome
 
         .. note::
-            If `GradientOptimization` is used as the LVOCControlMechanism's `function <LVOCControlMechanism.function>`,
-            this method (including its call to `PredictionVector.compute_terms`) is differentiated using `autograd
-            <https://github.com/HIPS/autograd>`_\\.grad().
+            If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
+            it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
         '''
 
-        # self.prediction_vector.update_vector(variable, feature_values, variable)
-
-        predicted_net_outcome=0
+        predicted_outcome=0
         for i in range(num_samples):
             terms = self.owner.prediction_terms
             vector = self.prediction_vector.compute_terms(variable )
@@ -405,9 +404,9 @@ class FunctionApproximator():
                     pv_enum_val = term_label.value
                     item_idx = self.prediction_vector.idx[pv_enum_val]
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
-            predicted_net_outcome+=net_outcome
-        predicted_net_outcome/=num_samples
-        return predicted_net_outcome
+            predicted_outcome+=net_outcome
+        predicted_outcome/=num_samples
+        return predicted_outcome
 
     def after_execution(self, context):
         pass
@@ -525,7 +524,7 @@ class FunctionApproximator():
             # Feature_predictors
             self.terms[F] = f = feature_values
             self.num[F] = len(f)  # feature_predictors are arrays
-            self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to current_state.vector
+            self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to vector
             self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
 
             # Placemarker until control_signals are instantiated
@@ -597,7 +596,7 @@ class FunctionApproximator():
                 self.num_elems[FFCC] = len(ffcc.reshape(-1))
                 self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
 
-            # Construct "flattened" current_state based on specified terms, and assign indices (as slices)
+            # Construct "flattened" vector based on specified terms, and assign indices (as slices)
             i=0
             for t in range(len(PV)):
                 if t in [t.value for t in specified_terms]:
@@ -615,16 +614,13 @@ class FunctionApproximator():
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         def update_vector(self, variable, feature_values=None, reference_variable=None):
-            '''Update vector with flattened versions of values returned from `compute_terms
-            <LVOCControlMechanism.PredictionVector.compute_terms>`.
+            '''Update vector with flattened versions of values returned from the `compute_terms
+            <PredictionVector.compute_terms>` method of the `prediction_vector
+            <FunctionApproximator.prediction_vector>`.
 
-            Updates `vector <PredictionVector.vector>` used by LVOCControlMechanism as its `current_state
-            <LVOCControlMechanism.current_state>`, with current values of variable (i.e., `variable
-            <LVOCControlMechanism.variable>`) and, optionally, and feature_vales (i.e., `feature_values
-            <LVOCControlMechanism.feature_values>`.
+            Updates `vector <PredictionVector.vector>` with current values of variable and, optionally,
+            and feature_values.
 
-            This method is passed to `function <LVOCControlMechanism.function>` as its **update_function** (see
-            `Primary Function <LVOCControlMechanism_Function>`.
             '''
 
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
@@ -644,6 +640,7 @@ class FunctionApproximator():
 
         def compute_terms(self, control_signal_variables, ref_variables=None):
             '''Calculate interaction terms.
+
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
             Values of entries are nd arrays.
             '''
@@ -721,98 +718,90 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
     ---------
 
     feature_predictors : Mechanism, OutputState, Projection, dict, or list containing any of these
-        specifies values to assign to `current_state <LVOCControlMechanism.current_state>`,
-        that are used to estimate `EVC <LVOCControlMechanism_EVC>`.  Any `InputState specification
+        specifies values to assign to `feature_values <ModelFreeOptimizationControlMechanism.feature_values>`,
+        that are used to estimate `EVC <ModelFreeOptimizationControlMechanism_EVC>`.  Any `InputState specification
         <InputState_Specification>` can be used that resolves to an `OutputState` that projects to the InputState.
         In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to shadow inputs to the
-        Composition's `ORIGIN` Mechanism(s) (see `LVOCControlMechanism_Creation` for details).
+        Composition's `ORIGIN` Mechanism(s) (see `ModelFreeOptimizationControlMechanism_Creation` for details).
 
     feature_function : Function or function : default None
         specifies the `function <InputState.function>` for the `InputState` assigned to each `feature_predictor
-        <LVOCControlMechanism_Feature_Predictors>`.
+        <ModelFreeOptimizationControlMechanism_Feature_Predictors>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
-        specifies either an `ObjectiveMechanism` to use for the LVOCControlMechanism, or a list of the `OutputState
-        <OutputState>`\\s it should monitor; if a list of `OutputState specifications
+        specifies either an `ObjectiveMechanism` to use for the ModelFreeOptimizationControlMechanism, or a list of the
+        `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    learning_function : LearningFunction, function or method : default BayesGLM
-        specifies the function used to learn to estimate `EVC <LVOCControlMechanism_EVC>` from the `current_state
-        <LVOCControlMechanism.current_state>` and `net_outcome <ControlMechanism.net_outcome>` (see
-        `LVOCControlMechanism_Learning_Function` for details).
+    function_approximator : FunctionApproximator : default FunctionApproximator(parameterization_function=BayesGLM)
+        specifies the FunctionApproximator that is parameterized to predict the `net_outcome
+        <ControlMechanism.net_outcome>` of processing by the Components monitored by the
+        ModelFreeOptimizationControlMechanism's `objective_mechanism
+        <ModelFreeOptimizationControlMechanism.objective_mechanism>` from the `current
+        <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
+        <ControlMechanism.allocation_policy>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator` for
+        details).
 
     prediction_terms : List[PV] : default [PV.F, PV.C, PV.FC, PV.COST]
-        specifies terms to be included in `current_state <LVOCControlMechanism.current_state>`.
-        items must be members of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used;
-        if `None` is specified, the default values will automatically be assigned.
+        specifies terms to be included in `prediction_vector <FunctionApproximator.prediction_vector>` used by
+        `function_approximator <ModelFreeOptimizationControlMechanism.function_approximator>`; items must be members
+        of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used; if `None` is specified,
+        the default values will automatically be assigned.
 
     function : OptimizationFunction, function or method : default GradientOptimization
-        specifies the function used to find the `allocation_policy` that maximizes `EVC <LVOCControlMechanism_EVC>`>`;
-        must take as its sole argument an array with the same shape as `allocation_policy
-        <ControlMechanism.allocation_policy>`, and return a similar array (see `Primary Function
-        <LVOCControlMechanism_Function>` for additional details).
+        specifies the function used to find the `allocation_policy` that maximizes `EVC
+        <ModelFreeOptimizationControlMechanism_EVC>`>`; must take as its sole argument an array with the same shape
+        as `allocation_policy <ControlMechanism.allocation_policy>`, and return a similar array (see `Function
+        <ModelFreeOptimizationControlMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its 
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in 
-        arguments of the constructor.
+        Mechanism, its `function_approximator <ModelFreeOptimizationControlMechanism.function_approximator>`,
+        and/or a custom function and its parameters.  Values specified for parameters in the dictionary override any
+        assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <LVOCControlMechanism.name>`
-        specifies the name of the LVOCControlMechanism.
+    name : str : default see `name <ModelFreeOptimizationControlMechanism.name>`
+        specifies the name of the ModelFreeOptimizationControlMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LVOCControlMechanism; see `prefs <LVOCControlMechanism.prefs>` for details.
+        specifies the `PreferenceSet` for the ModelFreeOptimizationControlMechanism;
+        see `prefs <ModelFreeOptimizationControlMechanism.prefs>` for details.
 
     Attributes
     ----------
 
     feature_values : 1d ndarray
-        the current `values <InputState.value>` of `feature_predictors LVOCControlMechanism_Feature_Predictors`.
+        the current `values <InputState.value>` of `feature_predictors
+        ModelFreeOptimizationControlMechanism_Feature_Predictors`.
 
     prediction_terms : List[PV]
-        identifies terms included in `current_state <LVOCControlMechanism.current_state.vector>`;
+        identifies terms included in `current_state <ModelFreeOptimizationControlMechanism.current_state.vector>`;
         items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
 
-    current_state : PredictionVector
-        object with `vector <PredictionVector.vector>` containing current values of `feature_predictors
-        <LVOCControlMechanism_Feature_Predictors>` `allocation_policy <ControlMechanism.allocation_policy>`,
-        their interactions, and `costs <ControlMechanism.costs>` of `control_signals <ControlMechanism.control_signals>`
-        as specified in `prediction_terms <LVOCControlMechanism.prediction_terms>`, as well as an `update_vector`
-        <PredictionVector.update_vector>` method used to update their values, and attributes for accessing their values.
-
-        COMMENT:
-        current values, respectively, of `feature_predictors <LVOCControlMechanism_Feature_Predictors>`,
-        interaction terms for feature_predictors x control_signals, `control_signals
-        <ControlMechanism.control_signals>`, and `costs <ControlSignal.cost>` of control_signals.
-        COMMENT
-
-    prediction_weights : 1d ndarray
-        weights assigned to each term of `current_state <LVOCControlMechanism.prediction_vectdor>`
-        last returned by `learning_function <LVOCControlMechanism.learning_function>`.
-
-    learning_function : LearningFunction, function or method
-        takes `current_state <LVOCControlMechanism.current_state>` and `net_outcome
-        <ControlMechanism.net_outcome>` and returns an updated set of `prediction_weights
-        <LVOCControlMechanism.prediction_weights>` (see `LVOCControlMechanism_Learning_Function`
+    function_approxmiator : FunctionApproximator
+        used to predict `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `feature_values
+        <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
+        <ControlMechanism.allocation_policy>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator`
         for additional details).
 
     function : OptimizationFunction, function or method
         takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer) and, using the current
-        `feature_values <LVOCControlMechanism.feature_values>`, `prediction_weights
-        <LVOCControlMechanism.current_state>` and `compute_EVC <LVOCControlMechanism.compute_EVC>`, returns an
-        `allocation_policy` that maximizes the `EVC <LVOCControlMechanism_EVC>` (see `Primary Function
-        <LVOCControlMechanism_Function>` for additional details).
+        `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and the `make_prediction
+        <FunctionApproximator.make_prediction>` method of the `function_approximator
+        <ModelFreeOptimizationControlMechanism.function_approximator>`, returns an
+        `allocation_policy` that maximizes the `EVC <ModelFreeOptimizationControlMechanism_EVC>` (see `Function
+        <ModelFreeOptimizationControlMechanism_Function>` for additional details).
 
     name : str
-        the name of the LVOCControlMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the ModelFreeOptimizationControlMechanism; if it is not specified in the **name** argument of the
+        constructor, a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and
+        duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LVOCControlMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        the `PreferenceSet` for the ModelFreeOptimizationControlMechanism; if it is not specified in the **prefs**
+        argument of the constructor, a default is assigned using `classPreferences` defined in __init__.py (see
+        :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM
@@ -930,7 +919,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
         Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
         InputState specifications generated in _parse_feature_specs from the **feature_predictors** and
-        **feature_function** arguments of the LVOCControlMechanism constructor.
+        **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
         """
 
         self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
@@ -946,7 +935,8 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
     tc.typecheck
     def add_features(self, feature_predictors):
-        '''Add InputStates and Projections to LVOCControlMechanism for feature_predictors used to predict outcome
+        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for feature_predictors used to
+        predict `net_outcome <ControlMechanism.net_outcome>`
 
         **feature_predictors** argument can use any of the forms of specification allowed for InputState(s),
             as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
@@ -1039,7 +1029,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
     def _instantiate_control_signal(self, control_signal, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
-        LVOCControlMechanism requires use of at least one of the cost options
+        ModelFreeOptimizationControlMechanism requires use of at least one of the cost options
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
@@ -1057,7 +1047,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         self._instantiate_function_approximator()
 
     def _instantiate_function_approximator(self):
-        '''Instantiate attributes for LVOCControlMechanism's learning_function'''
+        '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
 
         self.feature_values = np.array(self.instance_defaults.variable[1:])
 
@@ -1073,7 +1063,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         Items of variable should be:
           - self.outcome: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
             <ControlMechanism.objective_mechanism>`.
-          - variable[n]: current value of `feature_predictor <LVOCControlMechanism_Feature_Predictors>`\\[n]
+          - variable[n]: current value of `feature_predictor <ModelFreeOptimizationControlMechanism_Feature_Predictors>`
 
         Executes the following steps:
         - calculate net_outcome from previous trial (value of objective_mechanism - costs of control_signals)
@@ -1099,7 +1089,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         print ('\tPREDICTION WEIGHTS', self.function_approximator.prediction_weights)
         # TEST PRINT END
 
-        # Compute allocation_policy using LVOCControlMechanism's optimization function
+        # Compute allocation_policy using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy, self.net_outcome_max, self.saved_samples, self.saved_values = \
                                             super(ControlMechanism, self)._execute(variable=self.allocation_policy,
@@ -1131,13 +1121,13 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
     # def gradient_ascent(self, control_signals, current_state, prediction_weights):
     #     '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
-    #     <LVOCControlMechanism_EVC>`.
+    #     <ModelFreeOptimizationControlMechanism_EVC>`.
     #
     #     Iterate over current_state; for each iteration: \n
     #     - compute gradients based on current control_signal values and their costs (in current_state);
     #     - compute new control_signal values based on gradients;
     #     - update current_state with new control_signal values and the interaction terms and costs based on those;
-    #     - use prediction_weights and updated current_state to compute new `EVC <LVOCControlMechanism_EVC>`.
+    #     - use prediction_weights and updated current_state to compute new `EVC <ModelFreeOptimizationControlMechanism_EVC>`.
     #
     #     Continue to iterate until difference between new and old EVC is less than `convergence_threshold
     #     <LearnAllocationPolicy.convergence_threshold>` or number of iterations exceeds `max_iterations
