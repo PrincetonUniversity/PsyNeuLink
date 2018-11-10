@@ -855,10 +855,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         the current `values <InputState.value>` of `feature_predictors
         ModelFreeOptimizationControlMechanism_Feature_Predictors`.
 
-    prediction_terms : List[PV]
-        identifies terms included in `current_state <ModelFreeOptimizationControlMechanism.current_state.vector>`;
-        items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
-
     function_approxmiator : FunctionApproximator
         used to predict `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `feature_values
         <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
@@ -1109,16 +1105,28 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         """Find allocation_policy that optimizes EVC.
 
         Items of variable should be:
-          - self.outcome: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
-            <ControlMechanism.objective_mechanism>`.
-          - variable[n]: current value of `feature_predictor <ModelFreeOptimizationControlMechanism_Feature_Predictors>`
+
+              - self.outcome: `value <OutputState.value>` of the *OUTCOME* OutputState of `objective_mechanism
+                <ControlMechanism.objective_mechanism>`.
+
+              - variable[n]: current value of `feature_predictor
+                <ModelFreeOptimizationControlMechanism_Feature_Predictors>`
 
         Executes the following steps:
-        - calculate net_outcome from previous trial (value of objective_mechanism - costs of control_signals)
-        - call learning_function with net_outcome and current_state from previous trial to update prediction_weights
-        - update current_state
-        - execute primary (optimization) function to get allocation_policy that maximizes EVC (and corresponding EVC)
-        - return allocation_policy
+
+            - call `before_execution <FunctionApproximator.before_execution>` method of `function_approximator
+              <ModelFreeOptimizationControlMechanism.function_approximator>`, which calls its `parameterization_function
+              <FunctionApproximator.parameterization_function>` to update its parameters;
+
+            - call super()._execute(), which calls the `OptimizationFunction` assigned as the
+              ModelFreeOptimizationControlMechanism's `function <ModelFreeOptimizationControlMechanism.function>` that
+              finds the `allocation_policy <ControlMechanism.allocation_policy>` predictive of the greatest `EVC
+              <ModelFreeOptimizationControlMechanism_EVC>`;
+
+            - call `after_execution <FunctionApproximator.after_execution>` method of `function_approximator
+              <ModelFreeOptimizationControlMechanism.function_approximator>`;
+
+            - return allocation_policy.
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
@@ -1127,8 +1135,8 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
         if self.allocation_policy is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
-        self.feature_values = self.function_approximator.before_execution(context=self.context)
 
+        self.feature_values = self.function_approximator.before_execution(context=self.context)
 
         # TEST PRINT
         print ('\n------------------------------------------------')
