@@ -1248,6 +1248,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     @property
     def costs(self):
+        # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         # # MODIFIED 11/9/18 OLD:
         # return [c.compute_costs(c.variable) for c in self.control_signals]
         # MODIFIED 11/9/18 NEW:

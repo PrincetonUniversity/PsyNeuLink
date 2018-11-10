@@ -886,6 +886,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # MODIFIED 11/9/18 OLD:[JDC]
             # self.intensity_change = [0]
             # MODIFIED 11/9/18 END
@@ -988,6 +989,7 @@ class ControlSignal(ModulatorySignal):
         '''
         super().update(params=params, context=context)
 
+        # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         # # MODIFIED 11/9/18 OLD:
         # self.cost = self.compute_costs(self.intensity)
         # MODIFIED 11/9/18 NEW: [JDC]
@@ -1005,6 +1007,7 @@ class ControlSignal(ModulatorySignal):
             if ControlSignalCosts.DURATION & self.cost_options:
                 self.last_duration_cost = self.duration_cost
 
+    # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
     # # MODIFIED 11/9/18 OLD:
     # def compute_costs(self, intensity):
     # MODIFIED 11/9/18 NEW: [JDC]
@@ -1012,6 +1015,7 @@ class ControlSignal(ModulatorySignal):
     # MODIFIED 11/9/18 END
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
+        # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         # # MODIFIED 11/19/18 OLD:
         # try:
         #     # self.intensity_change = intensity-self.last_intensity

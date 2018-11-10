@@ -363,12 +363,13 @@ class FunctionApproximator():
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
                                                                                outcome])
             # Update current_state with owner's current variable and feature_values and  and store for next trial
-            # Note: self.owner.value = last allocation used by owner
-            self.prediction_vector.update_vector(variable, feature_values, variable)Ω
+            # Note: self.owner.value = last allocation_policy used by owner
+            self.prediction_vector.update_vector(variable, feature_values, variable)
             self._previous_state = self.prediction_vector.vector
         except AttributeError:
             # Initialize current_state and control_signals on first trial
             # Note:  initialize current_state to 1's so that learning_function returns specified priors
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             self.prediction_vector.reference_variable = self.owner.allocation_policy
             self._previous_state = np.full_like(self.current_state, 0)
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
@@ -610,6 +611,7 @@ class FunctionApproximator():
             else:
                 return tuple([self.idx[pv_member.value] for pv_member in terms])
 
+        # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         def update_vector(self, variable, feature_values=None, reference_variable=None):
             '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
@@ -623,10 +625,14 @@ class FunctionApproximator():
             `Primary Function <LVOCControlMechanism_Function>`.
             '''
 
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
+            if reference_variable is not None:
+                self.reference_variable = reference_variable
             self.reference_variable = reference_variable
 
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             computed_terms = self.compute_terms(np.array(variable), self.reference_variable)
 
             # Assign flattened versions of specified terms to vector
@@ -640,6 +646,7 @@ class FunctionApproximator():
             Values of entries are nd arrays.
             '''
 
+            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             ref_variables = ref_variables or self.reference_variable
             self.reference_variable = ref_variables
 
