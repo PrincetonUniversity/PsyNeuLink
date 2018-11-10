@@ -2782,7 +2782,11 @@ class System(System_Base):
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
-            self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif')
+            # if this fails, the scheduler has no data for execution_id yet. It also may be the first, so fall back to default execution_id
+            try:
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=execution_id)
+            except KeyError:
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=self.default_execution_id)
 
         # EXECUTE MECHANISMS
 
@@ -3785,6 +3789,7 @@ class System(System_Base):
                    prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
+                   execution_id=NotImplemented,
                    ):
         """Generate a display of the graph structure of Mechanisms and Projections in the System.
 
@@ -4034,6 +4039,9 @@ class System(System_Base):
         #          (otherwise, it should simply be passed G)
 
         # HELPER METHODS
+
+        if execution_id is NotImplemented:
+            execution_id = self.default_execution_id
 
         tc.typecheck
         def _assign_processing_components(G, sg, rcvr,
@@ -4926,21 +4934,22 @@ class System(System_Base):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
+                execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
-                elif self.context.execution_phase == ContextFlags.PROCESSING:
+                elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.clock.time
+                    time = self.scheduler_processing.get_clock(execution_id).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
-                elif self.context.execution_phase == ContextFlags.LEARNING:
-                    time = self.scheduler_learning.clock.time
+                elif execution_phase == ContextFlags.LEARNING:
+                    time = self.scheduler_learning.get_clock(execution_id).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Learning Phase - '
-                elif self.context.execution_phase == ContextFlags.CONTROL:
+                elif execution_phase == ContextFlags.CONTROL:
                     time_string = ''
                     phase_string = 'Control phase'
                 else:
@@ -4954,7 +4963,7 @@ class System(System_Base):
                     index = '-'
                 else:
                     index = repr(self._component_execution_count)
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
+                image_filename = repr(self.scheduler_processing.get_clock(execution_id).simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
