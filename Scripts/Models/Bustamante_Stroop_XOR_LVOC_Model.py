@@ -88,7 +88,9 @@ lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
                                                                            monitored_output_states=[task_decision,
                                                                                                     reward],
                                                                            function=objective_function),
-                                prediction_terms=[pnl.PV.FC, pnl.PV.COST],
+                                function_approximator=pnl.FunctionApproximator(parameterization_function=pnl.BayesGLM,
+                                                                               prediction_terms=[pnl.PV.FC,
+                                                                                                 pnl.PV.COST]),
                                 terminal_objective_mechanism=True,
 
                                 function=pnl.GradientOptimization(

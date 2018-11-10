@@ -80,14 +80,8 @@ Creating a ModelFreeOptimizationControlMechanism
 
   * **function_approximator** -- this specifies the `FunctionApproximator` that is parameterized over trials to
     predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `allocation_policy
-    <ControlMechanism.allocation_policy>` from the terms specified in the **prediction_terms** argument.
+    <ControlMechanism.allocation_policy>` from the terms specified in its **prediction_terms** argument.
     
-  * **prediction_terms** -- specifies the terms used to parameterize the `function_approximator
-    <ModelFreeOptimizationControlMechanism.function_approximator>` by its `parameterization_function
-    <FunctionApproximator.parameterization_function` and by its `make_prediction <FunctionApproximator.make_prediction>`
-    method to predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for an `allocation_policy
-    <ControlMechanism.allocation_policy>` and current (or expected) input.
-
 
 .. _ModelFreeOptimizationControlMechanism_Structure:
 
@@ -254,7 +248,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import is_iterable, powerset, tensor_power
 
 __all__ = [
-    'ModelFreeOptimizationControlMechanism', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
+    'ModelFreeOptimizationControlMechanism', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV', 'FunctionApproximator'
 ]
 
 
@@ -317,6 +311,7 @@ class PV(Enum):
     FFCC = 7
     COST = 8
 
+
 class FunctionApproximator():
     '''Parameterizes a `parameterization_function <FunctionApproximator.parameterization_function>` to predict an
     outcome from an input.
@@ -337,28 +332,116 @@ class FunctionApproximator():
 
     '''
     def __init__(self, owner=None,
-                 parameterization_function=BayesGLM):
+                 parameterization_function=BayesGLM,
+                 prediction_terms:tc.optional(list)=None):
+        '''
+
+        Arguments
+        ---------
+
+        owner : ModelFreeOptimizationControlMechanism : default None
+            ModelFreeOptimizationControlMechanism to which the FunctionApproximator is assiged.
+
+        parameterization_function : LearningFunction, function or method : default BayesGLM
+            used to parameterize the FunctionApproximator.  It must take a 2d array as its first argument,
+            the first item of which is an array the same length of the `vector <PredictionVector.prediction_vector>`
+            attribute of its `prediction_vector <FunctionApproximator.prediction_vector>`, and the second item a
+            1d array containing a scalar value that it tries predict.
+
+        prediction_terms : List[PV] : default [PV.F, PV.C, PV.COST]
+            terms to be included in (and thereby determines the length of) the `vector
+            <PredictionVector.prediction_vector>` attribute of the  `prediction_vector
+            <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the default is [`F
+            <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].  if `None` is specified, the default
+            values will automatically be assigned.
+
+        Attributes
+        ----------
+
+        owner : ModelFreeOptimizationControlMechanism
+            `ModelFreeOptimizationControlMechanism` to which the `FunctionApproximator` belongs;  assigned as the
+            `objective_function <OptimizationFunction.objective_function>` parameter of the `OptimizationFunction`
+            assigned as that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
+
+        parameterization_function : LearningFunction, function or method
+            used to parameterize the FunctionApproximator;  its result is assigned as the
+            `prediction_weights <FunctionApproximator.prediction_weights>` attribute.
+
+        prediction_terms : List[PV]
+            terms included in `vector <PredictionVector.prediction_vector>` attribute of the
+            `prediction_vector <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the
+            default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
+
+        prediction_vector : PredictionVector
+            represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
+            `make_prediction <FunctionApproximator.make_prediction>`, along with `prediction_weights
+            <FunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
+            the `vector <PredictionVector.vector>` attribute are determined by `prediction_terms
+            <FunctionApproximator.prediction_terms>`.
+
+        prediction_weights : 1d array
+            result of `parameterization_function <FunctionApproximator.parameterization_function>, used by
+            `make_prediction <FunctionApproximator.make_prediction>` method to generate its prediction.
+        '''
+
         self.parameterization_function = parameterization_function
+        self._instantiate_prediction_terms(prediction_terms)
         if owner:
             self.initialize(owner=owner)
 
-    def initialize(self, owner):
+    def _instantiate_prediction_terms(self, prediction_terms):
 
-            self.owner = owner
-            self.prediction_vector = self.PredictionVector(self.owner.feature_values,
-                                                           self.owner.control_signals,
-                                                           self.owner.prediction_terms)
-            # Assign parameters to parameterization_function
-            parameterization_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
-            if isinstance(self.parameterization_function, type):
-                self.parameterization_function = \
-                    self.parameterization_function(default_variable=parameterization_function_default_variable)
+        # # MODIFIED 11/9/18 OLD:
+        # prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
+        # if ALL in prediction_terms:
+        #     prediction_terms = list(PV.__members__.values())
+        # MODIFIED 11/9/18 NEW: [JDC]
+        # FIX: FOR SOME REASON prediction_terms ARE NOT GETTING PASSED INTACT (ARE NOT RECOGNIZED IN AS MEMBERS OF PV)
+        #      AND SO THEY'RE FAILING IN _validate_params
+        #      EVEN THOUGH THEY ARE FINE UNDER EXACTLY THE SAME CONDITIONS IN LVOCCONTROLMECHANISM
+        #      THIS IS A HACK TO FIX THE PROBLEM:
+        if prediction_terms:
+            if ALL in prediction_terms:
+                self.prediction_terms = list(PV.__members__.values())
             else:
-                self.parameterization_function.reinitialize({DEFAULT_VARIABLE:
-                                                                 parameterization_function_default_variable})
+                terms = prediction_terms.copy()
+                self.prediction_terms = []
+                for term in terms:
+                    self.prediction_terms.append(PV[term.name])
+        # MODIFIED 11/9/18 END
+            for term in self.prediction_terms:
+                if not term in PV:
+                    raise ModelFreeOptimizationControlMechanismError("{} specified in {} arg of {} "
+                                                                     "is not a member of the {} enum".
+                                                                     format(repr(term.name),
+                                                                            repr(PREDICTION_TERMS),
+                                                                            self.__class__.__name__, PV.__name__))
+        else:
+            self.prediction_terms = [PV.F,PV.C,PV.COST]
+
+    def initialize(self, owner):
+        '''Assign owner and instantiate `prediction_vector <FunctionApproximator.prediction_vector>`
+
+        Must be called before FunctionApproximator's methods can be used if its `owner <FunctionApproximator.owner>`
+        was not specified in its constructor.
+        '''
+
+        self.owner = owner
+        self.prediction_vector = self.PredictionVector(self.owner.feature_values,
+                                                       self.owner.control_signals,
+                                                       self.prediction_terms)
+        # Assign parameters to parameterization_function
+        parameterization_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
+        if isinstance(self.parameterization_function, type):
+            self.parameterization_function = \
+                self.parameterization_function(default_variable=parameterization_function_default_variable)
+        else:
+            self.parameterization_function.reinitialize({DEFAULT_VARIABLE:
+                                                             parameterization_function_default_variable})
 
     def before_execution(self, context):
-        '''Call learning_function prior to optimizing allocation_policy'''
+        '''Call `parameterization_function <FunctionApproximator.parameterization_function>` prior to calls to
+        `make_prediction <FunctionApproximator.make_prediction>`.'''
 
         feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
         try:
@@ -382,10 +465,11 @@ class FunctionApproximator():
 
     # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
-        '''Update interaction terms and then multiply by prediction_weights.
+        '''Update terms of prediction_vector <FunctionApproximator.prediction_vector>` and then multiply by
+        prediction_weights.
 
         Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>`
-        together with **variable** and **feature_values** passed in, to predict outcome
+        together with values of **variable** and **feature_values** arguments to generate a predicted outcome.
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
@@ -394,7 +478,7 @@ class FunctionApproximator():
 
         predicted_outcome=0
         for i in range(num_samples):
-            terms = self.owner.prediction_terms
+            terms = self.prediction_terms
             vector = self.prediction_vector.compute_terms(variable )
             weights = self.prediction_weights
             net_outcome = 0
@@ -412,10 +496,12 @@ class FunctionApproximator():
         pass
 
     class PredictionVector():
-        '''Maintain lists and vector of prediction terms.
+        '''Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
+        `specified_terms <PredictionVector.specified_terms>`.
 
-        Lists are indexed by the `PV` Enum, and vector fields are indexed by slices listed in the `idx
-        <PredicitionVector.idx>` attribute.
+        Terms are maintained in lists indexed by the `PV` Enum and, in "flattened" form within fields of a 1d
+        array in `vector <PredictionVector.vector>` indexed by slices listed in the `idx <PredicitionVector.idx>`
+        attribute.
 
         Arguments
         ---------
@@ -743,12 +829,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         <ControlMechanism.allocation_policy>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator` for
         details).
 
-    prediction_terms : List[PV] : default [PV.F, PV.C, PV.FC, PV.COST]
-        specifies terms to be included in `prediction_vector <FunctionApproximator.prediction_vector>` used by
-        `function_approximator <ModelFreeOptimizationControlMechanism.function_approximator>`; items must be members
-        of the `PV` Enum.  If the keyword *ALL* is specified, then all of the terms are used; if `None` is specified,
-        the default values will automatically be assigned.
-
     function : OptimizationFunction, function or method : default GradientOptimization
         specifies the function used to find the `allocation_policy` that maximizes `EVC
         <ModelFreeOptimizationControlMechanism_EVC>`>`; must take as its sole argument an array with the same shape
@@ -831,7 +911,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function_approximator:FunctionApproximator=FunctionApproximator(parameterization_function=BayesGLM),
-                 prediction_terms:tc.optional(list)=None,
                  function=GradientOptimization,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -839,27 +918,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        # Avoid mutable default:
-        # # MODIFIED 11/9/18 OLD:
-        # prediction_terms = prediction_terms or [PV.F,PV.C,PV.FC, PV.COST]
-        # if ALL in prediction_terms:
-        #     prediction_terms = list(PV.__members__.values())
-        # MODIFIED 11/9/18 NEW: [JDC]
-        # FIX: FOR SOME REASON prediction_terms ARE NOT GETTING PASSED INTACT (ARE NOT RECOGNIZED IN AS MEMBERS OF PV)
-        #      AND SO THEY'RE FAILING IN _validate_params
-        #      EVEN THOUGH THEY ARE FINE UNDER EXACTLY THE SAME CONDITIONS IN LVOCCONTROLMECHANISM
-        #      THIS IS A HACK TO FIX THE PROBLEM:
-        if prediction_terms:
-            if ALL in prediction_terms:
-                prediction_terms = list(PV.__members__.values())
-            else:
-                terms = prediction_terms.copy()
-                prediction_terms = []
-                for term in terms:
-                    prediction_terms.append(PV[term.name])
-
-        # MODIFIED 11/9/18 END
 
         if feature_predictors is None:
             # Included for backward compatibility
@@ -870,7 +928,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                 raise ModelFreeOptimizationControlMechanismError("{} arg for {} must be specified".
                                                                  format(repr(FEATURE_PREDICTORS),
                                                                         self.__class__.__name__))
-
         self.function_approximator = function_approximator
 
         if kwargs:
@@ -881,7 +938,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=feature_predictors,
                                                   feature_function=feature_function,
-                                                  prediction_terms=prediction_terms,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
@@ -905,14 +961,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             raise ModelFreeOptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
                             format(ObjectiveMechanism.__name__, self.name,
                                    request_set[OBJECTIVE_MECHANISM], repr(MONITORED_OUTPUT_STATES)))
-        if PREDICTION_TERMS in request_set:
-            for term in request_set[PREDICTION_TERMS]:
-                if not term in PV:
-                    raise ModelFreeOptimizationControlMechanismError("{} specified in {} arg of {} "
-                                                                     "is not a member of the {} enum".
-                                                                     format(repr(term.name),
-                                                                            repr(PREDICTION_TERMS),
-                                                                            self.name, PV.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
