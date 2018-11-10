@@ -944,6 +944,9 @@ class System(System_Base):
             context = ContextFlags.COMPOSITION
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
+
+        self.default_execution_id = self.name
+
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=params,
@@ -953,14 +956,13 @@ class System(System_Base):
 
         self.context.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
-        self.default_execution_id = self.name
 
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
         # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self)
+            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1975,7 +1977,7 @@ class System(System_Base):
 
         # Assign scheduler for _execute_learning:
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
 
         # Assign conditions to scheduler_learning:
         #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
@@ -2673,10 +2675,10 @@ class System(System_Base):
         """
 
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self)
+            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
 
         self._add_mechanism_conditions(context=context)
 

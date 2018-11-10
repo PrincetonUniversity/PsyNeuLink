@@ -453,7 +453,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.target_nodes = []  # Do not need to track explicit as they must be explicit
 
         # TBI: update self.sched whenever something is added to the composition
-        self.sched = Scheduler(composition=self)
+        self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self)
@@ -493,7 +493,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
         if self.needs_update_scheduler_processing or self._scheduler_processing is None:
             old_scheduler = self._scheduler_processing
-            self._scheduler_processing = Scheduler(graph=self.graph_processing)
+            self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
                 self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
@@ -512,7 +512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
         if self.needs_update_scheduler_learning or self._scheduler_learning is None:
             old_scheduler = self._scheduler_learning
-            # self._scheduler_learning = Scheduler(graph=self.graph)
+            # self._scheduler_learning = Scheduler(graph=self.graph, execution_id=self.default_execution_id)
 
             # if old_scheduler is not None:
             #     self._scheduler_learning.add_condition_set(old_scheduler.condition_set)

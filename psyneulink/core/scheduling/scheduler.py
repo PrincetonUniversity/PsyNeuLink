@@ -387,6 +387,7 @@ class Scheduler(object):
         graph=None,
         condition_set=None,
         termination_conds=None,
+        execution_id=None,
     ):
         '''
         :param self:
@@ -395,7 +396,7 @@ class Scheduler(object):
         '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet()
 
-        self.default_execution_id = uuid.uuid4()
+        self.default_execution_id = execution_id
         # stores the in order list of self.run's yielded outputs
         self.execution_list = {self.default_execution_id: []}
         self.clocks = {self.default_execution_id: Clock()}
