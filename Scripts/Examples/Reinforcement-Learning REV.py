@@ -35,35 +35,36 @@ actions = ['left', 'middle', 'right']
 reward_values = [10, 0, 0]
 first_reward = 0
 
+
 # Must initialize reward (won't be used, but needed for declaration of lambda function)
 action_selection.output_state.value = [0, 0, 1]
 # Get reward value for selected action)
 
 
-def reward():
+def reward(execution_context=None):
     """Return the reward associated with the selected action"""
-    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    return [reward_values[int(np.nonzero(action_selection.output_state.parameters.value.get(execution_context))[0])]]
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
+    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
 
 
 def show_weights(system):
     comparator = action_selection.output_state.efferents[0].receiver.owner
     learn_mech = action_selection.output_state.efferents[1].receiver.owner
-    print('\n'
-          '\naction_selection value:     {} '
-          '\naction_selection output:    {} '
-          '\ncomparator sample:          {} '
-          '\ncomparator target:          {} '
-          '\nlearning mech act in:       {} '
-          '\nlearning mech act out:      {} '
-          '\nlearning mech error in:     {} '
-          '\nlearning mech error out:    {} '
-          '\nlearning mech learning_sig: {} '
-          '\npredicted reward:           {} '.
-        format(
+    print(
+        '\n'
+        '\naction_selection value:     {} '
+        '\naction_selection output:    {} '
+        '\ncomparator sample:          {} '
+        '\ncomparator target:          {} '
+        '\nlearning mech act in:       {} '
+        '\nlearning mech act out:      {} '
+        '\nlearning mech error in:     {} '
+        '\nlearning mech error out:    {} '
+        '\nlearning mech learning_sig: {} '
+        '\npredicted reward:           {} '.format(
             action_selection.parameters.value.get(system),
             action_selection.output_state.parameters.value.get(system),
             comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
@@ -73,7 +74,8 @@ def show_weights(system):
             learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
             learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
-            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0])
+            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0]
+        )
     )
 
 p.run(

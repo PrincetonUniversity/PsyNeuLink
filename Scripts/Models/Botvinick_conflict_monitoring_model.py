@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import psyneulink as pnl
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
@@ -186,15 +186,15 @@ for cond in range(condition):
     System_Conflict_Monitoring.run(inputs=Stimulus[cond][0], num_trials=ntrials0)   #run System with initial input
     System_Conflict_Monitoring.run(inputs=Stimulus[cond][1], num_trials=ntrials)    #run System with condition input
     # reinitialize System after condition was run
-    colors_hidden_layer.reinitialize([[0,0,0]])
-    words_hidden_layer.reinitialize([[0,0,0]])
-    response_layer.reinitialize([[0,0]])
-    task_layer.reinitialize([[0,0]])
+    colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=System_Conflict_Monitoring)
+    words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=System_Conflict_Monitoring)
+    response_layer.reinitialize([[0, 0]], execution_context=System_Conflict_Monitoring)
+    task_layer.reinitialize([[0, 0]], execution_context=System_Conflict_Monitoring)
 
 ####------- PLOTTING  -------------------------------------------------------------------------------------------------
 # Plot energy figure
-r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
-energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY
+r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY')[System_Conflict_Monitoring.name]      # get logged DECISION_ENERGY dictionary
+energy = r2['DECISION_ENERGY']                                                                      # save logged DECISION_ENERGY
 
 plt.figure()
 x = np.arange(0,1500,1)             # create x-axis length

@@ -291,9 +291,9 @@ PCTC.show_graph(show_dimensions=pnl.ALL)  # ,show_mechanism_structure=pnl.VALUES
 # Create threshold function -------------------------------------------------------------------------------------------
 
 
-def pass_threshold(response_layer, thresh):
-    results1 = response_layer.output_states.values[0][0]  # red response
-    results2 = response_layer.output_states.values[0][1]  # green response
+def pass_threshold(response_layer, thresh, execution_id):
+    results1 = response_layer.get_output_values(execution_id)[0][0]  # red response
+    results2 = response_layer.get_output_values(execution_id)[0][1]  # green response
     # print(results1)
     # print(results2)
     if results1 >= thresh or results2 >= thresh:
@@ -327,141 +327,171 @@ initialize_input = trial_dict(1.0, 0.0, 1.0, 0.0, pc, 0.0, bias)
 congruent_input = trial_dict(1.0, 0.0, 1.0, 0.0, pc, 0.0, bias)  # specify congruent trial input
 PCTC.run(inputs=initialize_input, num_trials=settle)    # run system to settle for 200 trials with congruent stimuli input
 
-color_input_weights.matrix = np.array([
-    [1.0, 0.0],      # set color input projections to 1 on the diagonals to e.g.
-    [0.0, 1.0]
-])     # send a green color input to the green unit of the color layer
-word_input_weights.matrix = np.array([
-    [1.0, 0.0],      # the same for word input projections
-    [0.0, 1.0]
-])
+color_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],      # set color input projections to 1 on the diagonals to e.g.
+        [0.0, 1.0]
+    ]),     # send a green color input to the green unit of the color layer
+    PCTC
+)
+word_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],      # the same for word input projections
+        [0.0, 1.0]
+    ]),
+    PCTC
+)
 
 PCTC.run(inputs=congruent_input, termination_processing=terminate_trial)  # run system with congruent stimulus input until
 # threshold in of of the response layer units is reached
 
 # Store values from run -----------------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')    # Log task output from special logistic function
-tt = t['SPECIAL_LOGISTIC']
+tt = t[PCTC]['SPECIAL_LOGISTIC']
 n_con = tt.shape[0]
 ttt_cong = tt.reshape(n_con, 2)
 conflict_con = ttt_cong[200:, 0] * ttt_cong[200:, 1] * 100             # Compute conflict for plotting (as in MATLAB code)
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')  # Log color output from special logistic function
-cc = c['SPECIAL_LOGISTIC']
+cc = c[PCTC]['SPECIAL_LOGISTIC']
 ccc_cong = cc.reshape(n_con, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')   # Log word output from special logistic function
-ww = w['SPECIAL_LOGISTIC']
+ww = w[PCTC]['SPECIAL_LOGISTIC']
 www_cong = ww.reshape(n_con, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')       # Log response output from special logistic function
-rr = r['SPECIAL_LOGISTIC']
+rr = r[PCTC]['SPECIAL_LOGISTIC']
 rrr_cong = rr.reshape(n_con, 2)
 
 # Clear log & reinitialize --------------------------------------------------------------------------------------------
-response_layer.log.clear_entries(delete_entry=False)
-color_feature_layer.log.clear_entries(delete_entry=False)
-word_feature_layer.log.clear_entries(delete_entry=False)
-task_demand_layer.log.clear_entries(delete_entry=False)
+response_layer.log.clear_entries()
+color_feature_layer.log.clear_entries()
+word_feature_layer.log.clear_entries()
+task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]])
-word_feature_layer.reinitialize([[0, 0]])
-response_layer.reinitialize([[0, 0]])
-task_demand_layer.reinitialize([[0, 0]])
+color_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
+word_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
+response_layer.reinitialize([[0, 0]], execution_context=PCTC)
+task_demand_layer.reinitialize([[0, 0]], execution_context=PCTC)
 
 # Run neutral trials --------------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period
-color_input_weights.matrix = np.array([
-    [0.0, 0.0],
-    [0.0, 0.0]
-])
-word_input_weights.matrix = np.array([
-    [0.0, 0.0],
-    [0.0, 0.0]
-])
+color_input_weights.parameters.matrix.set(
+    np.array([
+        [0.0, 0.0],
+        [0.0, 0.0]
+    ]),
+    PCTC
+)
+word_input_weights.parameters.matrix.set(
+    np.array([
+        [0.0, 0.0],
+        [0.0, 0.0]
+    ]),
+    PCTC
+)
 
 neutral_input = trial_dict(1.0, 0.0, 0.0, 0.0, pc, 0.0, bias)  # create neutral stimuli input
 PCTC.run(inputs=initialize_input, num_trials=settle)  # run system to settle for 200 trials with neutral stimuli input
 
-color_input_weights.matrix = np.array([
-    [1.0, 0.0],      # Set input projections to 1 for stimulus presentation period
-    [0.0, 1.0]
-])
-word_input_weights.matrix = np.array([
-    [1.0, 0.0],
-    [0.0, 1.0]
-])
+color_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],      # Set input projections to 1 for stimulus presentation period
+        [0.0, 1.0]
+    ]),
+    PCTC
+)
+word_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],
+        [0.0, 1.0]
+    ]),
+    PCTC
+)
 
 PCTC.run(inputs=neutral_input, termination_processing=terminate_trial)  # run system with neutral stimulus input until
 # threshold in of of the response layer units is reached
 
 # Store values from neutral run ---------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-tt = t['SPECIAL_LOGISTIC']
+tt = t[PCTC]['SPECIAL_LOGISTIC']
 n_neutral = tt.shape[0]
 ttt_neutral = tt.reshape(n_neutral, 2)
 conflict_neutral = ttt_neutral[200:, 0] * ttt_neutral[200:, 1] * 100
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-cc = c['SPECIAL_LOGISTIC']
+cc = c[PCTC]['SPECIAL_LOGISTIC']
 ccc_neutral = cc.reshape(n_neutral, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-ww = w['SPECIAL_LOGISTIC']
+ww = w[PCTC]['SPECIAL_LOGISTIC']
 www_neutral = ww.reshape(n_neutral, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-rr = r['SPECIAL_LOGISTIC']
+rr = r[PCTC]['SPECIAL_LOGISTIC']
 rrr_neutral = rr.reshape(n_neutral, 2)
 # Clear log & reinitialize --------------------------------------------------------------------------------------------
 
-response_layer.log.clear_entries(delete_entry=False)
-color_feature_layer.log.clear_entries(delete_entry=False)
-word_feature_layer.log.clear_entries(delete_entry=False)
-task_demand_layer.log.clear_entries(delete_entry=False)
+response_layer.log.clear_entries()
+color_feature_layer.log.clear_entries()
+word_feature_layer.log.clear_entries()
+task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]])
-word_feature_layer.reinitialize([[0, 0]])
-response_layer.reinitialize([[0, 0]])
-task_demand_layer.reinitialize([[0, 0]])
+color_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
+word_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
+response_layer.reinitialize([[0, 0]], execution_context=PCTC)
+task_demand_layer.reinitialize([[0, 0]], execution_context=PCTC)
 
 # Run incongruent trials ----------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period
-color_input_weights.matrix = np.array([
-    [0.0, 0.0],
-    [0.0, 0.0]
-])
-word_input_weights.matrix = np.array([
-    [0.0, 0.0],
-    [0.0, 0.0]
-])
+color_input_weights.parameters.matrix.set(
+    np.array([
+        [0.0, 0.0],
+        [0.0, 0.0]
+    ]),
+    PCTC
+)
+word_input_weights.parameters.matrix.set(
+    np.array([
+        [0.0, 0.0],
+        [0.0, 0.0]
+    ]),
+    PCTC
+)
 
 incongruent_input = trial_dict(1.0, 0.0, 0.0, 1.0, pc, 0.0, bias)
 PCTC.run(inputs=initialize_input, num_trials=settle)
 
-color_input_weights.matrix = np.array([
-    [1.0, 0.0],
-    [0.0, 1.0]
-])
-word_input_weights.matrix = np.array([
-    [1.0, 0.0],
-    [0.0, 1.0]
-])
+color_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],
+        [0.0, 1.0]
+    ]),
+    PCTC
+)
+word_input_weights.parameters.matrix.set(
+    np.array([
+        [1.0, 0.0],
+        [0.0, 1.0]
+    ]),
+    PCTC
+)
 
 PCTC.run(inputs=incongruent_input, termination_processing=terminate_trial)
 
 # Store values from neutral run ---------------------------------------------------------------------------------------
 
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-tt = t['SPECIAL_LOGISTIC']
+tt = t[PCTC]['SPECIAL_LOGISTIC']
 n_incon = tt.shape[0]
 ttt_incong = tt.reshape(n_incon, 2)
 conflict_incon = ttt_incong[200:, 0] * ttt_incong[200:, 1] * 100
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-cc = c['SPECIAL_LOGISTIC']
+cc = c[PCTC]['SPECIAL_LOGISTIC']
 ccc_incong = cc.reshape(n_incon, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-ww = w['SPECIAL_LOGISTIC']
+ww = w[PCTC]['SPECIAL_LOGISTIC']
 www_incong = ww.reshape(n_incon, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-rr = r['SPECIAL_LOGISTIC']
+rr = r[PCTC]['SPECIAL_LOGISTIC']
 rrr_incong = rr.reshape(n_incon, 2)
 
 # Plotting ------------------------------------------------------------------------------------------------------------

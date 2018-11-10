@@ -51,8 +51,8 @@ p = pnl.Process(
 )
 
 s = pnl.System(
-        processes=[p],
-        controller=pnl.EVCControlMechanism(control_signals=(pnl.LEARNING_RATE, p.learning_mechanisms[1]))
+    processes=[p],
+    controller=pnl.EVCControlMechanism(control_signals=(pnl.LEARNING_RATE, p.learning_mechanisms[1]))
 )
 
 # EXECUTION:
@@ -60,12 +60,15 @@ s = pnl.System(
 # Prints initial weight matrix for the Projection from the input_layer to the action_selection Mechanism
 print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
 
+
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
 # Note:  should be replaced by use of logging functionality that has now been implemented.
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
-def show_weights():
-    print('\nReward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
+
+
+def show_weights(execution_context=None):
+    print('\nReward prediction weights: \n', action_selection.input_state.path_afferents[0].get_mod_matrix(execution_context))
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
     #         np.nonzero(action_selection.output_state.value)[0][0],
@@ -87,17 +90,17 @@ def show_weights():
           '\nlearning mech learning_sig: {} '
           # '\npredicted reward:           {} '
         .format(
-            action_selection.input_states[0].variable,
-            action_selection.input_states[0].value,
-            action_selection.variable,
-            action_selection.output_state.value,
-            comparator.input_states[pnl.SAMPLE].value,
-            comparator.input_states[pnl.TARGET].value,
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
-            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
+            action_selection.input_states[0].parameters.variable.get(execution_context),
+            action_selection.input_states[0].parameters.value.get(execution_context),
+            action_selection.parameters.variable.get(execution_context),
+            action_selection.output_state.parameters.value.get(execution_context),
+            comparator.input_states[pnl.SAMPLE].parameters.value.get(execution_context),
+            comparator.input_states[pnl.TARGET].parameters.value.get(execution_context),
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(execution_context),
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(execution_context),
+            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(execution_context),
+            learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(execution_context),
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(execution_context),
             # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
     ))
 
@@ -107,9 +110,9 @@ def show_weights():
 reward_values = [0, 10]
 
 # Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
-def reward():
+def reward(execution_context=None):
     """Return the reward associated with the selected action"""
-    selected_action = action_selection.output_state.value
+    selected_action = action_selection.output_state.parameters.value.get(execution_context)
     if not any(selected_action):
         # Deal with initialization, during which action_selection.output_state.value may == [0,0]
         selected_action = np.array([1,0])

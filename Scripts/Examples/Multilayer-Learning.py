@@ -87,9 +87,9 @@ def show_target(system):
     i = system.input
     t = system.target_input_states[0].parameters.value.get(system)
     print('\nOLD WEIGHTS: \n')
-    print('- Input Weights: \n', Input_Weights.matrix)
-    print('- Middle Weights: \n', Middle_Weights.matrix)
-    print('- Output Weights: \n', Output_Weights.matrix)
+    print('- Input Weights: \n', Input_Weights.parameters.matrix.get(system))
+    print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(system))
+    print('- Output Weights: \n', Output_Weights.parameters.matrix.get(system))
 
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('ACTIVITY FROM OLD WEIGHTS: \n')
@@ -107,7 +107,7 @@ mySystem = pnl.System(
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
 # Hidden_Layer_2.set_log_conditions('Middle Weights')
-Middle_Weights.set_log_conditions('matrix')
+Middle_Weights.set_log_conditions('mod_matrix')
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:
@@ -134,4 +134,4 @@ mySystem.run(
 
 # Print out logged weights for Middle_Weights
 # print('\nMiddle Weights (to Hidden_Layer_2): \n', Hidden_Layer_2.log.nparray(entries='Middle Weights', header=False))
-print('\nMiddle Weights (to Hidden_Layer_2): \n', Middle_Weights.log.nparray(entries='matrix', header=False))
+print('\nMiddle Weights (to Hidden_Layer_2): \n', Middle_Weights.log.nparray(entries='mod_matrix', header=False))
