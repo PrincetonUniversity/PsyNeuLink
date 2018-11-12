@@ -1018,8 +1018,7 @@ class ControlSignal(ModulatorySignal):
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         # MODIFIED 11/19/18 OLD:
         try:
-            # self.intensity_change = intensity-self.last_intensity
-            self.intensity_change = intensity=last_intensity
+            self.intensity_change = intensity-self.last_intensity
         except AttributeError:
             self.intensity_change = [0]
         # # MODIFIED 11/19/18 NEW:
