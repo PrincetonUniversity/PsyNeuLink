@@ -888,7 +888,7 @@ class ControlSignal(ModulatorySignal):
             self.paramsCurrent[cost_function_name] = cost_function
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # MODIFIED 11/9/18 OLD:[JDC]
-            # self.intensity_change = [0]
+            self.intensity_change = [0]
             # MODIFIED 11/9/18 END
 
     def _initialize_cost_attributes(self):
@@ -990,14 +990,14 @@ class ControlSignal(ModulatorySignal):
         super().update(params=params, context=context)
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-        # # MODIFIED 11/9/18 OLD:
-        # self.cost = self.compute_costs(self.intensity)
-        # MODIFIED 11/9/18 NEW: [JDC]
-        if self.cost_options:
-            try:
-                self.cost = self.compute_costs(self.intensity, self.last_intensity)
-            except AttributeError:
-                self.cost = self.compute_costs(self.intensity, self.intensity)
+        # MODIFIED 11/9/18 OLD:
+        self.cost = self.compute_costs(self.intensity)
+        # # MODIFIED 11/9/18 NEW: [JDC]
+        # if self.cost_options:
+        #     try:
+        #         self.cost = self.compute_costs(self.intensity, self.last_intensity)
+        #     except AttributeError:
+        #         self.cost = self.compute_costs(self.intensity, self.intensity)
         # MODIFIED 11/9/18 END
 
         # Store current intensity and costs for use in next call as last state
@@ -1008,22 +1008,22 @@ class ControlSignal(ModulatorySignal):
                 self.last_duration_cost = self.duration_cost
 
     # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-    # # MODIFIED 11/9/18 OLD:
-    # def compute_costs(self, intensity):
-    # MODIFIED 11/9/18 NEW: [JDC]
-    def compute_costs(self, intensity, last_intensity):
+    # MODIFIED 11/9/18 OLD:
+    def compute_costs(self, intensity):
+    # # MODIFIED 11/9/18 NEW: [JDC]
+    # def compute_costs(self, intensity, last_intensity):
     # MODIFIED 11/9/18 END
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-        # # MODIFIED 11/19/18 OLD:
-        # try:
-        #     # self.intensity_change = intensity-self.last_intensity
-        #     self.intensity_change = intensity=last_intensity
-        # except AttributeError:
-        #     self.intensity_change = [0]
-        # MODIFIED 11/19/18 NEW:
-        self.intensity_change = intensity=last_intensity
+        # MODIFIED 11/19/18 OLD:
+        try:
+            # self.intensity_change = intensity-self.last_intensity
+            self.intensity_change = intensity=last_intensity
+        except AttributeError:
+            self.intensity_change = [0]
+        # # MODIFIED 11/19/18 NEW:
+        # self.intensity_change = intensity=last_intensity
         # MODIFIED 11/19/18 END
 
         # COMPUTE COST(S)
