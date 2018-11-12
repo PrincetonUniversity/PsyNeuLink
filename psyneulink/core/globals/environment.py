@@ -570,6 +570,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Sys
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -815,14 +816,14 @@ def run(obj,
     for execution in range(num_trials):
 
         if call_before_trial:
-            call_before_trial()
+            call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
         for time_step in range(time_steps):
 
             result = None
 
             if call_before_time_step:
-                call_before_time_step()
+                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
@@ -868,7 +869,7 @@ def run(obj,
             )
 
             if call_after_time_step:
-                call_after_time_step()
+                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
         if obj.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
             if isinstance(result, Iterable):
@@ -878,7 +879,7 @@ def run(obj,
             obj.results.append(result_copy)
 
         if call_after_trial:
-            call_after_trial()
+            call_with_pruned_args(call_after_trial, execution_context=execution_id)
 
         from psyneulink.core.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(

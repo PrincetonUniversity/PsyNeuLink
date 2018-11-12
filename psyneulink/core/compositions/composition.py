@@ -2504,23 +2504,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.execution.get(execution_id).execute_node(self.input_CIM, inputs, execution_id=execution_id)
 
         if call_before_pass:
-            call_with_pruned_args(call_before_pass, execution_id=execution_id)
+            call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing, execution_id=execution_id):
             if call_after_pass:
                 if next_pass_after == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
                     logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
-                    call_with_pruned_args(call_after_pass, execution_id=execution_id)
+                    call_with_pruned_args(call_after_pass, execution_context=execution_id)
                     next_pass_after += 1
 
             if call_before_pass:
                 if next_pass_before == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
-                    call_with_pruned_args(call_before_pass, execution_id=execution_id)
+                    call_with_pruned_args(call_before_pass, execution_context=execution_id)
                     logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
                     next_pass_before += 1
 
             if call_before_time_step:
-                call_with_pruned_args(call_before_time_step, execution_id=execution_id)
+                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
             frozen_values = {}
             new_values = {}
@@ -2626,10 +2626,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.output_states[i].parameters.value.set(new_values[node][i], execution_id, override=True, skip_history=True, skip_log=True)
 
             if call_after_time_step:
-                call_with_pruned_args(call_after_time_step, execution_id=execution_id)
+                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
         if call_after_pass:
-            call_with_pruned_args(call_after_pass, execution_id=execution_id)
+            call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
         # extract result here
         if bin_execute:
@@ -2827,7 +2827,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for trial_num in range(num_trials):
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
-                call_with_pruned_args(call_before_trial, execution_id=execution_id)
+                call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_id=execution_id):
@@ -2911,7 +2911,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                                   )
 
             if call_after_trial:
-                call_with_pruned_args(call_after_trial, execution_id=execution_id)
+                call_with_pruned_args(call_after_trial, execution_context=execution_id)
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 
