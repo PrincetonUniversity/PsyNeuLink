@@ -361,7 +361,7 @@ class FunctionApproximator():
         owner : ModelFreeOptimizationControlMechanism
             `ModelFreeOptimizationControlMechanism` to which the `FunctionApproximator` belongs;  assigned as the
             `objective_function <OptimizationFunction.objective_function>` parameter of the `OptimizationFunction`
-            assigned as that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
+            assigned to that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
 
         parameterization_function : LearningFunction, function or method
             used to parameterize the FunctionApproximator;  its result is assigned as the
@@ -509,13 +509,13 @@ class FunctionApproximator():
         feature_values : 2d nparray
             arrays of features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
-        control_signal_variables : List[ControlSignal.variable]
-            list containing `variables <ControlSignal.variable>` of `ControlSignals <ControlSignal>`;
-            assigned as the `PV.C` term of `terms <PredictionVector.terms>`.
+        control_signals : List[ControlSignal]
+            list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;
+            the `variable <ControlSignal.variable>` of each is assigned as the `PV.C` term of `terms
+            <PredictionVector.terms>`.
 
         specified_terms : List[PV]
-            terms to include in `vector <PredictionVector.vector>`;
-            entries must be members of the `PV` Enum.
+            terms to include in `vector <PredictionVector.vector>`; entries must be members of the `PV` Enum.
 
         Attributes
         ----------
@@ -567,9 +567,8 @@ class FunctionApproximator():
                     if issubclass(c, ControlSignal):
                         v = c.class_defaults.variable
                     else:  # If a class other than ControlSignal was specified, typecheck should have found it
-                        raise ModelFreeOptimizationControlMechanismError("PROGRAM ERROR: unrecognized specification "
-                                                                         "for {} arg of {}: {}".
-                                                                         format(repr(CONTROL_SIGNALS), self.name, c))
+                        assert False, "PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".\
+                                                      format(repr(CONTROL_SIGNALS), self.name, c)
                 else:
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
                     v = state_spec_dict[VARIABLE]
@@ -1082,11 +1081,8 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
-    #     super()._instantiate_attributes_before_function(function=function, context=context)
-    #     self._instantiate_function_approximator()
-
     def _instantiate_attributes_after_function(self, context=None):
+        '''Instantiate ModelFreeOptimizationControlMechanism's function_approximator'''
         super()._instantiate_attributes_after_function(context=context)
         self._instantiate_function_approximator()
 
@@ -1131,7 +1127,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
-
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
         if self.allocation_policy is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
@@ -1163,8 +1158,16 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         return allocation_policy
 
     def evaluation_function(self, allocation_policy):
-        '''Compute outcome for a given allocation_policy.'''
-        # returns net_allocation_policy_outcomes
+        '''Compute outcome for a given allocation_policy.
+
+        Assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of the
+        `ObjectiveFunction` assigned to the ModelFreeOptimizationControlMechanism's `function
+        <ModelFreeOptimizationControlMechanism.function>`.
+
+        Returns a scalar that is the predicted outcome of the `function_approximator
+        <ModelFreeOptimizationControlMechanism.function_approximator>`.
+        '''
+
         num_samples = 1
         return self.function_approximator.make_prediction(allocation_policy,
                                                           num_samples,
