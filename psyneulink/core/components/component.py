@@ -1076,7 +1076,12 @@ class Parameters(ParamsTemplate):
         try:
             return getattr(self._parent, attr)
         except AttributeError:
-            raise AttributeError("No attribute '%s' exists in the parameter hierarchy" % attr) from None
+            try:
+                owner_string = ' of {0}'.format(self._owner)
+            except AttributeError:
+                owner_string = ''
+
+            raise AttributeError("No attribute '{0}' exists in the parameter hierarchy{1}".format(attr, owner_string)) from None
 
     def __setattr__(self, attr, value):
         # handles parsing: Param or ParamAlias housekeeping if assigned, or creation of a Param
