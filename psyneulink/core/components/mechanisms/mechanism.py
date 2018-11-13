@@ -953,8 +953,6 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
-import ctypes
-
 from psyneulink.core import llvm as pnlvm
 
 from llvmlite import ir
@@ -1474,7 +1472,7 @@ class Mechanism_Base(Mechanism):
         self._receivesProcessInput = False
         self.phaseSpec = None
 
-        self.__nv_state = None
+        self._nv_state = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2320,11 +2318,8 @@ class Mechanism_Base(Mechanism):
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         if bin_execute:
-            value = self._bin_execute(
-                variable=variable,
-                runtime_params=runtime_params,
-                context=context,
-            )
+            e = pnlvm.MechExecution(self)
+            value = e.execute(variable)
         else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
@@ -2761,42 +2756,8 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
 
-
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
-
-
-    def _bin_execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-
-
-        bf = self._llvmBinFunction
-
-        par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        if self.__nv_state is None:
-            initializer = self.get_context_initializer()
-            self.__nv_state = context_struct_ty(*initializer)
-
-        ct_context = self.__nv_state
-
-        ct_param = par_struct_ty(*self.get_param_initializer())
-
-        # convert to 3d. we always assume that:
-        # a) the input is vector of input states
-        # b) input states take vector of projection outputs
-        # c) projection output is a vector (even 1 element vector)
-        new_var = np.asfarray([np.atleast_2d(x) for x in variable])
-        ct_vi = vi_ty(*pnlvm._tupleize(new_var))
-
-        ct_vo = vo_ty()
-
-        bf(ctypes.byref(ct_param), ctypes.byref(ct_context),
-           ctypes.byref(ct_vi), ctypes.byref(ct_vo))
-
-        return pnlvm._convert_ctype_to_python(ct_vo)
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 

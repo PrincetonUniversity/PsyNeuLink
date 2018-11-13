@@ -12,11 +12,12 @@ from psyneulink.core.globals.utilities import CNodeRole
 
 import copy, ctypes
 from collections import defaultdict
+import numpy as np
 
 from .builder_context import *
 from . import helpers
 
-__all__ = ['CompExecution']
+__all__ = ['CompExecution', 'MechExecution']
 
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
@@ -36,6 +37,41 @@ def _tupleize(x):
         return tuple(_tupleize(y) for y in x)
     except TypeError:
         return x if x is not None else tuple()
+
+
+class MechExecution:
+
+    def __init__(self, mechanism):
+        self._mechanism = mechanism
+        self._bin_func = mechanism._llvmBinFunction
+
+        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
+
+        self.__param_struct = par_struct_ty(*mechanism.get_param_initializer())
+
+        if mechanism._nv_state is None:
+            self.__context_struct = context_struct_ty(*mechanism.get_context_initializer())
+        else:
+            self.__context_struct = mechanism._nv_state
+
+    def execute(self, variable):
+        # convert to 3d. we always assume that:
+        # a) the input is vector of input states
+        # b) input states take vector of projection outputs
+        # c) projection output is a vector (even 1 element vector)
+        new_var = np.asfarray([np.atleast_2d(x) for x in variable])
+        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
+        ct_vi = vi_ty(*_tupleize(new_var))
+        ct_vo = vo_ty()
+
+        self._bin_func(ctypes.byref(self.__param_struct),
+                       ctypes.byref(self.__context_struct),
+                       ctypes.byref(ct_vi), ctypes.byref(ct_vo))
+
+        # store updated context
+        self._mechanism._nv_state = self.__context_struct
+        return _convert_ctype_to_python(ct_vo)
+
 
 class CompExecution:
 
