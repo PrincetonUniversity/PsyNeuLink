@@ -15,10 +15,10 @@ from llvmlite import binding, ir
 from . import builtins
 from .builder_context import *
 from .execution import *
-from .execution import _tupleize, _convert_ctype_to_python
+from .execution import _tupleize
 from .jit_engine import cpu_jit_engine
 
-__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext', '_convert_ctype_to_python']
+__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _compiled_modules = set()
