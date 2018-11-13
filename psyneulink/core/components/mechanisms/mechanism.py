@@ -2580,22 +2580,22 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def get_param_initializer(self):
+    def _get_param_initializer(self):
         input_param_init_list = []
         for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer())
+            input_param_init_list.append(state._get_param_initializer())
         input_param_init = tuple(input_param_init_list)
 
-        function_param_init = self.function_object.get_param_initializer()
+        function_param_init = self.function_object._get_param_initializer()
 
         output_param_init_list = []
         for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer())
+            output_param_init_list.append(state._get_param_initializer())
         output_param_init = tuple(output_param_init_list)
 
         param_param_init_list = []
         for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer())
+            param_param_init_list.append(state._get_param_initializer())
         param_param_init = tuple(param_param_init_list)
 
         param_init_list = [input_param_init, function_param_init,
@@ -2606,7 +2606,6 @@ class Mechanism_Base(Mechanism):
             param_init_list.append(mech_params_init)
 
         return tuple(param_init_list)
-
 
     def _get_mech_params_init(self):
         pass

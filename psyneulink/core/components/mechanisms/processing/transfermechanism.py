@@ -1118,27 +1118,26 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
 
-
-    def get_param_initializer(self):
+    def _get_param_initializer(self):
         input_param_init_list = []
         for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer())
+            input_param_init_list.append(state._get_param_initializer())
         input_param_init = tuple(input_param_init_list)
 
-        function_param_list = [self.function_object.get_param_initializer()]
+        function_param_list = [self.function_object._get_param_initializer()]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function.get_param_initializer())
+            function_param_list.append(self.integrator_function._get_param_initializer())
         function_param_init = tuple(function_param_list)
 
         output_param_init_list = []
         for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer())
+            output_param_init_list.append(state._get_param_initializer())
         output_param_init = tuple(output_param_init_list)
 
         param_param_init_list = []
         for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer())
+            param_param_init_list.append(state._get_param_initializer())
         param_param_init = tuple(param_param_init_list)
 
         return tuple([input_param_init, function_param_init, output_param_init, param_param_init])

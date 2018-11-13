@@ -47,7 +47,7 @@ class FuncExecution:
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self.__param_struct = par_struct_ty(*function.get_param_initializer())
+        self.__param_struct = par_struct_ty(*function._get_param_initializer())
 
         self.__context_struct = context_struct_ty(*function.get_context_initializer())
     def execute(self, variable):
@@ -71,7 +71,7 @@ class MechExecution:
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self.__param_struct = par_struct_ty(*mechanism.get_param_initializer())
+        self.__param_struct = par_struct_ty(*mechanism._get_param_initializer())
 
         if mechanism._nv_state is None:
             self.__context_struct = context_struct_ty(*mechanism.get_context_initializer())
@@ -115,7 +115,7 @@ class CompExecution:
 
         # Params
         c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-        self.__param_struct = c_param(*self._composition.get_param_initializer())
+        self.__param_struct = c_param(*self._composition._get_param_initializer())
         # Data
         c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
         self.__data_struct = c_data(*self._composition._get_data_initializer())

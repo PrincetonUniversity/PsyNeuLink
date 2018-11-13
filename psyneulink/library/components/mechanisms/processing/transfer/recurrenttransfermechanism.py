@@ -1363,9 +1363,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         return_t = ctx.get_output_struct_type(self)
         return ir.LiteralStructType([transfer_t, projection_t, return_t])
 
-    def get_param_initializer(self):
-        transfer_params = super().get_param_initializer()
-        projection_params = self.recurrent_projection.get_param_initializer()
+    def _get_param_initializer(self):
+        transfer_params = super()._get_param_initializer()
+        projection_params = self.recurrent_projection._get_param_initializer()
         return tuple([transfer_params, projection_params])
 
     def get_context_initializer(self):

@@ -2116,8 +2116,8 @@ class State_Base(State):
     def _get_context_struct_type(self, ctx):
         return ctx.get_context_struct_type(self.function_object)
 
-    def get_param_initializer(self):
-        return self.function_object.get_param_initializer()
+    def _get_param_initializer(self):
+        return self.function_object._get_param_initializer()
 
     def get_context_initializer(self):
         return self.function_object.get_context_initializer()

@@ -934,7 +934,7 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def get_param_initializer(self):
+    def _get_param_initializer(self):
         return pnlvm._tupleize(self._get_param_values())
 
     def bin_function(self,
@@ -11224,10 +11224,10 @@ COMMENT
         transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
-    def get_param_initializer(self):
-        my_params = super().get_param_initializer()
-        metric_params = self._metric_fct.get_param_initializer()
-        transfer_params = self.transfer_fct.get_param_initializer() if self.transfer_fct is not None else tuple()
+    def _get_param_initializer(self):
+        my_params = super()._get_param_initializer()
+        metric_params = self._metric_fct._get_param_initializer()
+        transfer_params = self.transfer_fct._get_param_initializer() if self.transfer_fct is not None else tuple()
         return tuple([my_params, metric_params, transfer_params])
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
