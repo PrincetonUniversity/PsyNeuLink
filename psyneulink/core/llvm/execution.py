@@ -17,7 +17,7 @@ import numpy as np
 from .builder_context import *
 from . import helpers
 
-__all__ = ['CompExecution', 'MechExecution']
+__all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
 
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
@@ -37,6 +37,30 @@ def _tupleize(x):
         return tuple(_tupleize(y) for y in x)
     except TypeError:
         return x if x is not None else tuple()
+
+
+class FuncExecution:
+
+    def __init__(self, function):
+        self._function = function
+        self._bin_func = function._llvmBinFunction
+
+        par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
+
+        self.__param_struct = par_struct_ty(*function.get_param_initializer())
+
+        self.__context_struct = context_struct_ty(*function.get_context_initializer())
+    def execute(self, variable):
+        new_var = np.asfarray(variable)
+        _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
+        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = vo_ty()
+
+        self._bin_func(ctypes.byref(self.__param_struct),
+                       ctypes.byref(self.__context_struct),
+                       ct_vi, ctypes.byref(ct_vo))
+
+        return _convert_ctype_to_python(ct_vo)
 
 
 class MechExecution:

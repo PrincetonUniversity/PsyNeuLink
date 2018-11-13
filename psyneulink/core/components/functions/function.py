@@ -945,22 +945,8 @@ class Function_Base(Function):
         # TODO: Port this to llvm
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        bf = self._llvmBinFunction
-
-        # Covnert input to doubles
-        variable = np.asfarray(variable)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(*self.get_param_initializer())
-        ct_state = state_struct_ty(*self.get_context_initializer())
-
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = vo_ty()
-        bf(ctypes.byref(ct_param), ctypes.byref(ct_state), ct_vi,
-           ctypes.byref(ct_vo))
-
-        return pnlvm._convert_ctype_to_python(ct_vo)
+        e = pnlvm.FuncExecution(self)
+        return e.execute(variable)
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

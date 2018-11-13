@@ -14,7 +14,8 @@ from llvmlite import binding, ir
 
 from . import builtins
 from .builder_context import *
-from .execution import CompExecution, MechExecution, _tupleize, _convert_ctype_to_python
+from .execution import *
+from .execution import _tupleize, _convert_ctype_to_python
 from .jit_engine import cpu_jit_engine
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext', '_convert_ctype_to_python']
