@@ -3228,6 +3228,16 @@ class Component(object, metaclass=ComponentsMeta):
             )
         )
 
+        # KDM 11/12/18: parse an instance of a Function's .function method to itself
+        # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
+        # purposely not attempting to parse a class Function.function
+        if isinstance(function, types.MethodType):
+            try:
+                if isinstance(function.__self__, Function):
+                    function = function.__self__
+            except AttributeError:
+                pass
+
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(
                 default_variable=function_variable,
