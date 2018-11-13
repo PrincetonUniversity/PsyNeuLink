@@ -140,12 +140,11 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, SAMPLE, TARGET, \
-    OUTCOME, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_value_spec, iscompatible, \
-    kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
+from psyneulink.core.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
+from psyneulink.core.globals.utilities import safe_len
 
 __all__ = [
     'COMPARATOR_OUTPUT', 'ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE',
@@ -327,7 +326,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
-                                    FUNCTION: lambda x: np.sum(x*x)/len(x)}])
+                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
 
     @tc.typecheck
     def __init__(self,
