@@ -859,6 +859,7 @@ def run(obj,
 
             result = obj.execute(
                 input=execution_inputs,
+                target=execution_targets,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,

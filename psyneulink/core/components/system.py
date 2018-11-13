@@ -464,7 +464,7 @@ from psyneulink.core.globals.log import Log
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, call_with_pruned_args, convert_to_np_array, iscompatible
 from psyneulink.core.scheduling.condition import AtPass, AtTimeStep, Never
 from psyneulink.core.scheduling.scheduler import Always, Condition, Scheduler
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
@@ -2817,7 +2817,7 @@ class System(System_Base):
                 string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
             )
 
-            self._execute_learning(execution_id=execution_id, context=context)
+            self._execute_learning(target=target, execution_id=execution_id, context=context)
 
             self._assign_context_values(
                 execution_id,
@@ -2956,7 +2956,7 @@ class System(System_Base):
                 pass
             i += 1
 
-    def _execute_learning(self, execution_id=None, context=None):
+    def _execute_learning(self, target=None, execution_id=None, context=None):
         # Execute each LearningMechanism as well as LearningProjections in self.learning_execution_list
 
         # FIRST, if targets were specified as a function, call the function now
@@ -2966,19 +2966,22 @@ class System(System_Base):
 
         if not hasattr(self, "target"):
             self.target = self.targets
-        if isinstance(self.target, dict):
+        if target is None or len(target) == 0:
+            target = self.target
+        if isinstance(target, dict):
             for i in range(len(self.target_mechanisms)):
 
                 terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
-                target_value = self.current_targets[terminal_mechanism]
+                target_value = target[terminal_mechanism]
                 if callable(target_value):
-                    self.target_input_states[i].parameters.value.set(target_value(), execution_id, override=True)
+                    val = call_with_pruned_args(target_value, execution_context=execution_id, execution_id=execution_id, composition=self)
+                    self.target_input_states[i].parameters.value.set(val, execution_id, override=True)
                 else:
                     self.target_input_states[i].parameters.value.set(target_value, execution_id, override=True)
 
-        elif isinstance(self.target, (list, np.ndarray)):
+        elif isinstance(target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].parameters.value.set(self.current_targets[i], execution_id, override=True)
+                self.target_input_states[i].parameters.value.set(target[i], execution_id, override=True)
 
         # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
