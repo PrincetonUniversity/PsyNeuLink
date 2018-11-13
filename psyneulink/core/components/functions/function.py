@@ -909,7 +909,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def get_context_initializer(self):
+    def _get_context_initializer(self):
         return tuple([])
 
     def _get_param_ids(self):
@@ -7152,12 +7152,12 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def _get_context_struct_type(self, ctx):
         return ctx.get_output_struct_type(self)
 
-    def get_context_initializer(self, data=None):
+    def _get_context_initializer(self, data=None):
         if data is None:
             data = np.asfarray(self.previous_value).flatten().tolist()
-            if self.instance_defaults.value.ndim > 1:
-                return (tuple(data),)
-            return tuple(data)
+        if self.instance_defaults.value.ndim > 1:
+            return (tuple(data),)
+        return tuple(data)
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
@@ -8621,7 +8621,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
-    def get_context_initializer(self):
+    def _get_context_initializer(self):
         v = self.previous_v if np.isscalar(self.previous_v) else tuple(self.previous_v)
         w = self.previous_w if np.isscalar(self.previous_w) else tuple(self.previous_w)
         time = self.previous_time if np.isscalar(self.previous_time) else tuple(self.previous_time)

@@ -2863,9 +2863,9 @@ class Composition(Composition_Base):
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
-    def get_context_initializer(self):
-        mech_contexts = (tuple(m.get_context_initializer()) for m in self._all_nodes)
-        proj_contexts = (tuple(p.get_context_initializer()) for p in self.projections)
+    def _get_context_initializer(self):
+        mech_contexts = (tuple(m._get_context_initializer()) for m in self._all_nodes)
+        proj_contexts = (tuple(p._get_context_initializer()) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self):
