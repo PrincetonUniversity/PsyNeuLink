@@ -61,12 +61,12 @@ class MechExecution:
         # c) projection output is a vector (even 1 element vector)
         new_var = np.asfarray([np.atleast_2d(x) for x in variable])
         _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
-        ct_vi = vi_ty(*_tupleize(new_var))
+        ct_vi = new_var.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = vo_ty()
 
         self._bin_func(ctypes.byref(self.__param_struct),
                        ctypes.byref(self.__context_struct),
-                       ctypes.byref(ct_vi), ctypes.byref(ct_vo))
+                       ct_vi, ctypes.byref(ct_vo))
 
         # store updated context
         self._mechanism._nv_state = self.__context_struct
