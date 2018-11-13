@@ -11,8 +11,7 @@
 from psyneulink.core.globals.utilities import CNodeRole
 
 from collections import defaultdict
-import copy, ctypes, os
-import sys as _sys
+import copy, ctypes, os, sys
 
 from llvmlite import binding, ir
 
@@ -140,7 +139,7 @@ def _updateNativeBinaries(module, buffer):
         # One reference is held by the _binaries dict, second is held
         # by the k, v tuple here, third by this function, and 4th is the
         # one passed to getrefcount function
-        if _sys.getrefcount(v) == 4:
+        if sys.getrefcount(v) == 4:
             to_delete.append(k)
         else:
             new_ptr = _cpu_engine._engine.get_function_address(k)
