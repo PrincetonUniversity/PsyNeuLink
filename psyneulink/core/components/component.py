@@ -1076,7 +1076,12 @@ class Parameters(ParamsTemplate):
         try:
             return getattr(self._parent, attr)
         except AttributeError:
-            raise AttributeError("No attribute '%s' exists in the parameter hierarchy" % attr) from None
+            try:
+                owner_string = ' of {0}'.format(self._owner)
+            except AttributeError:
+                owner_string = ''
+
+            raise AttributeError("No attribute '{0}' exists in the parameter hierarchy{1}".format(attr, owner_string)) from None
 
     def __setattr__(self, attr, value):
         # handles parsing: Param or ParamAlias housekeeping if assigned, or creation of a Param
@@ -3222,6 +3227,16 @@ class Component(object, metaclass=ComponentsMeta):
                 context=ContextFlags.INSTANTIATE
             )
         )
+
+        # KDM 11/12/18: parse an instance of a Function's .function method to itself
+        # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
+        # purposely not attempting to parse a class Function.function
+        if isinstance(function, types.MethodType):
+            try:
+                if isinstance(function.__self__, Function):
+                    function = function.__self__
+            except AttributeError:
+                pass
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(
