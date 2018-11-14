@@ -564,10 +564,9 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_space = self.function_object.search_space
 
         if isinstance(self.agent_rep, FunctionApproximator):
-            self._instantiate_function_approximator()
-            self.evaluate_agent = self.agent_rep.make_prediction
+            self._instantiate_function_approximator_as_agent()
         else:
-            self.evaluate_agent = self.agent_rep.run_simulation
+            self._instantiate_composition_as_agent()
 
     def get_control_allocation_search_space(self):
 
@@ -598,13 +597,11 @@ class OptimizationControlMechanism(ControlMechanism):
             self.value = [c.instance_defaults.variable for c in self.control_signals]
         # FIX END
 
-        # # MODIFIED 11/13/18 OLD:
-        # self.feature_values = self.function_approximator.before_execution(context=self.context)
-        # FIX: MODEL_BASED
-        # self.predicted_input = self.composition.before_simulations()
-        # MODIFIED 11/13/18 NEW: [JDC]
         self.state_rep = self.agent_rep.get_state_rep(context=self.context)
-        # MODIFIED 11/13/18 END
+
+        # FIX: NEED TO DEAL WITH net_outcome ON FIRST EXECUTION (SINCE COSTS HAVE NOT YET BEEN DETERMINED
+        #      SEE HOW FunctionApproximator HANDLES THIS
+        self.update_agent(self.state_rep, self.control_allocation, self.net_outcome)
 
         # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -644,14 +641,17 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
+    def _instantiate_composition_as_agent(self):
+        self.evaluate_agent = self.agent_rep.run_simulation
+        # Model-based implementation does not need to update model of the agent, since Composition *is* the agent
+        self.update_agent = lambda x,y,z : None
+
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO ORIG MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
     # ******************************************************************************************************************
 
-    def _instantiate_function_approximator(self):
+    def _instantiate_function_approximator_as_agent(self):
         '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
-
-        self.feature_values = np.array(self.instance_defaults.variable[1:])
 
         # Assign parameters to learning_function
         if isinstance(self.agent_rep, type):
@@ -659,6 +659,11 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.agent_rep.initialize(owner=self)
 
+        self.evaluate_agent = self.agent_rep.make_prediction
+        # FIX: CAN GET RID OF THIS AND JUST CALL parameterization_fuction directly ONCE CONTROL SIGNALS ARE STATEFUL
+        self.update_agent = self.agent_rep.update_weights
+        # FIX: SHOULD BE THIS ZZZ
+        # self.update_agent = self.agent_rep.parameterization_function
 
     # FIX: THIS SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep

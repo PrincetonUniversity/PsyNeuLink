@@ -239,9 +239,11 @@ class FunctionApproximator():
         '''
 
         self.owner = owner
-        self.prediction_vector = self.PredictionVector(self.owner.feature_values,
-                                                       self.owner.control_signals,
-                                                       self.prediction_terms)
+        feature_values = np.array(self.owner.instance_defaults.variable[1:])
+        control_signals = self.owner.control_signals
+        prediction_terms = self.prediction_terms
+        self.prediction_vector = self.PredictionVector(feature_values, control_signals, prediction_terms)
+
         # Assign parameters to parameterization_function
         parameterization_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
         if isinstance(self.parameterization_function, type):
@@ -256,10 +258,16 @@ class FunctionApproximator():
         `make_prediction <FunctionApproximator.make_prediction>`.'''
 
         feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
+        return feature_values
+
+    # FIX: CAN GET RID OF THIS AND JUST CALL parameterization_fuction directly ONCE CONTROL SIGNALS ARE STATEFUL
+    def update_weights(self, feature_values, variable, outcome):
+
+        # FIX: HANDLE FIRST TRIAL IN OptimizationFunction (IT IS NOT FunctionApproximator's PROBLEM) ZZZ
         try:
             # Update prediction_weights
-            variable = self.owner.value
-            outcome = self.owner.net_outcome
+            # variable = self.owner.value
+            # outcome = self.owner.net_outcome
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
                                                                                outcome])
             # Update vector with owner's current variable and feature_values and  and store for next trial
@@ -270,10 +278,10 @@ class FunctionApproximator():
             # Initialize vector and control_signals on first trial
             # Note:  initialize vector to 1's so that learning_function returns specified priors
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            self.prediction_vector.reference_variable = self.owner.control_allocation
+            # self.prediction_vector.reference_variable = self.owner.control_allocation
+            self.prediction_vector.reference_variable = variable
             self._previous_state = np.full_like(self.prediction_vector.vector, 0)
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
-        return feature_values
 
     # def make_prediction(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
