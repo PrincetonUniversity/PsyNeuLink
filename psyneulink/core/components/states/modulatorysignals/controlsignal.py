@@ -207,7 +207,7 @@ ParameterState is unfamiliar, see `Parameter State documentation <ParameterState
 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
-evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
+evaluate an `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
@@ -466,7 +466,7 @@ class ControlSignal(ModulatorySignal):
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
     index : int : default SEQUENTIAL
-        specifies the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>`
+        specifies the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`
         used as the ControlSignal's `value <ControlSignal.value>`.
 
     function : Function or method : default Linear
@@ -493,7 +493,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
+        `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
@@ -536,7 +536,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
         set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>`.
+        `control_allocation <ControlMechanism.control_allocation>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -554,7 +554,7 @@ class ControlSignal(ModulatorySignal):
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
     index : int
-        the item of the owner ControlMechanism's `allocation_policy <ControlMechanism.allocation_policy>` used as the
+        the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>` used as the
         ControlSignal's `value <ControlSignal.value>`.
 
     control_signal : float
@@ -708,7 +708,7 @@ class ControlSignal(ModulatorySignal):
         # Note: assign is not currently used by ControlSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
 
-        # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
+        # If index has not been specified, but the owner has, control_allocation has been determined, so use that
         index = index or SEQUENTIAL
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

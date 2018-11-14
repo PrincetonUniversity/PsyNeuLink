@@ -14,7 +14,7 @@ Overview
 --------
 
 An AGTControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `AGTUtilityIntegrator`
-Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCControlMechanism`
+Function to regulate its `control_allocation <ControlMechanism.control_allocation>`.  When used with an `LCControlMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
 coeruleus-norepinephrine (LC-NE) system.
@@ -68,7 +68,7 @@ attribute.  They can be displayed using the AGTControlMechanism's `show <AGTCont
 
 An AGTControlMechanism uses the default function for a `ControlMechanism` (a default `Linear` Function), that simply passes
 its input to its output.  Thus, it is the output of the AGTControlMechanism's `objective_mechanism
-<AGTControlMechanism.objective_mechanism>` that determines its `allocation_policy <ControlMechanism.allocation_policy>`
+<AGTControlMechanism.objective_mechanism>` that determines its `control_allocation <ControlMechanism.control_allocation>`
 and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
 .. _AGTControlMechanism_Output:
@@ -123,8 +123,8 @@ Execution
 ---------
 
 An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
-its *OUTCOME* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
-<ITC.allocation_policy>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
+its *OUTCOME* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `control_allocation
+<ITC.control_allocation>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
 its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
 receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
@@ -198,7 +198,7 @@ class AGTControlMechanism(ControlMechanism):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         specifies the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
-        `allocation_policy <AGTControlMechanism.allocation_policy>`, that is used to assign the `allocation
+        `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the `allocation
         <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
     control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
@@ -250,14 +250,14 @@ class AGTControlMechanism(ControlMechanism):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         determines the Function used to convert the AGTControlMechanism's `input <AGTControlMechanism_Input>` into its
-        `allocation_policy <AGTControlMechanism.allocation_policy>`, that is used to assign the
+        `control_allocation <AGTControlMechanism.control_allocation>`, that is used to assign the
         `allocation <ControlSignal.allocation>` for its `ControlSignal(s) <ControlSignal>`.
 
-    allocation_policy : 2d np.array
+    control_allocation : 2d np.array
         contains the value(s) assigned as the `allocation <ControlSignal.allocation>` for the `ControlSignal(s)
         <ControlSignal>` listed in the `control_signals` attribute;  if the default `function <AGTControlMechanism.function>`
         is used, it contains a single value that is assigned as the `allocation <ControlSignal.allocation>` for
-        all of the AGTControlMechanism's `control_signals <AGTControlMechanism.control_signals>`. The AGTControlMechanism's allocation_policy
+        all of the AGTControlMechanism's `control_signals <AGTControlMechanism.control_signals>`. The AGTControlMechanism's control_allocation
         is the same as its `value <Mechanism_Base.value>` attribute).
 
     control_signals : List[ControlSignal]

@@ -20,7 +20,7 @@ by the ModelFreeOptimizationControlMechanism's `objective_mechanism
 <ModelFreeOptimizationControlMechanism.evaluation_function>`.  An example of its use is the Learned Value of Control
 model described in `Leider et al. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev
 =2>`_, which learns to select the value for its `control_signals <ControlMechanism.control_signals>` (i.e.,
-its `allocation_policy <ControlMechanism.allocation_policy>`) that maximzes its `EVC <OptimizationControlMechanism_EVC>`
+its `control_allocation <ControlMechanism.control_allocation>`) that maximzes its `EVC <OptimizationControlMechanism_EVC>`
 based on a set of `predictors <ModelFreeOptimizationControlMechanism_Feature_Predictors>`.
 
 .. _ModelFreeOptimizationControlMechanism_EVC:
@@ -30,16 +30,16 @@ based on a set of `predictors <ModelFreeOptimizationControlMechanism_Feature_Pre
 
 The `Expected Value of Control (EVC) <OptimizationControlMechanism_EVC>` is the predicted value of executing the
 `Components` montiored by the ModelFreeOptimizationControlMechanism's `objective_mechanism
-<ModelFreeOptimizationControlMechanism.objective_mechanism>`, and executed under a given `allocation_policy
-<ControlMechanism.allocation_policy>`, as determined by its `evaluation_function 
+<ModelFreeOptimizationControlMechanism.objective_mechanism>`, and executed under a given `control_allocation
+<ControlMechanism.control_allocation>`, as determined by its `evaluation_function
 <OptimizationControlMechanism_EVC.evaluaton_function>`.
 
 The ModelFreeOptimizationControlMechanism's `function_approximator 
 <ModelFreeOptimizationControlMechanism.function_approximator>` is parameterized, over `trials <trial>` to estimate the 
 `EVC <OptimizationControlMechanism_EVC>` from its current `feature_values
 <ModelFreeOptimizationControlMechanism.features_values>` (comprised of `feature_predictors
-<ModelFreeOptimizationControlMechanism.feature_predictors>`), an `allocation_policy
-<ControlMechanism.allocation_policy>`, interactions among these, and the `costs <ControlMechanism.costs> of its 
+<ModelFreeOptimizationControlMechanism.feature_predictors>`), an `control_allocation
+<ControlMechanism.control_allocation>`, interactions among these, and the `costs <ControlMechanism.costs> of its
 `control_signals <ControlMechanism.control_signals>`, by learning to predict the `net_outcome 
 <ControlMechanism.net_outcome>` of processing for experienced values of those factors.
 
@@ -53,8 +53,8 @@ Creating a ModelFreeOptimizationControlMechanism
  of its constructor are specific to the ModelFreeOptimizationControlMechanism:
 
   * **feature_predictors** -- takes the place of the standard **input_states** argument in the constructor for a
-    Mechanism`, and specifies the inputs that it learns to use to determine its `allocation_policy
-    <ControlMechanism.allocation_policy>` in each `trial` of execution.
+    Mechanism`, and specifies the inputs that it learns to use to determine its `control_allocation
+    <ControlMechanism.control_allocation>` in each `trial` of execution.
     It can be specified using any of the following, singly or combined in a list:
 
         * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
@@ -79,8 +79,8 @@ Creating a ModelFreeOptimizationControlMechanism
     for example to maintain a record of past values, or integrate them over trials.
 
   * **function_approximator** -- this specifies the `FunctionApproximator` that is parameterized over trials to
-    predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `allocation_policy
-    <ControlMechanism.allocation_policy>` from the terms specified in its **prediction_terms** argument.
+    predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `control_allocation
+    <ControlMechanism.control_allocation>` from the terms specified in its **prediction_terms** argument.
     
 
 .. _ModelFreeOptimizationControlMechanism_Structure:
@@ -143,24 +143,24 @@ ModelFreeOptimizationControlMechanism is a `FunctionApproximator` that it parame
 FunctionApproximator's `parameterization_function <FunctionApproximator.parameterization_function>`) to predict
 the `net_outcome <ControlMechanism.net_outcome>` of processing of the Components monitored by
 its `objective_mechanism <ModelFreeOptimizationControlMechanism.objective_mechanism>`, from
-combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
-<ControlMechanism.allocation_policy>` it has experienced.  By default, the `parameterization_function
+combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `control_allocation
+<ControlMechanism.control_allocation>` it has experienced.  By default, the `parameterization_function
 <FunctionApproximator.parameterization_function>` is `BayesGLM`. However, any function can be used that accepts a 2d
 array, the first item of which is an array of scalar values (the prediction terms) and the second that is a scalar
 value (the outcome to be predicted), and returns an array with the same shape as the first item.
 
 The FunctionApproximator's `make_prediction <FunctionApproximator.make_prediction>` function uses the current
 parameters of the `FunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
-a sample `allocation_policy <ControlMechanism.allocation_policy>`, given the current `feature_values
+a sample `control_allocation <ControlMechanism.control_allocation>`, given the current `feature_values
 <ModelFreeOptimizationControlMechanism.feature_values>` and the `costs <ControlMechanism.costs>` of the
-`allocation_policy <ControlMechanism.allocation_policy>`.
+`control_allocation <ControlMechanism.control_allocation>`.
 
 .. note::
   The ModelFreeOptimizationControlMechanism_Feature_Predictor's `function_approximator
   <ModelFreeOptimizationControlMechanism.function_approximator>` is provided the `feature_values
   <ModelFreeOptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
   *previous* trial to update its parameters.  Those are then used to estimate
-  (and implement) the `allocation_policy <ControlMechanism.allocation_policy>` that is predicted to generate the
+  (and implement) the `control_allocation <ControlMechanism.control_allocation>` that is predicted to generate the
   greatest `EVC <ModelFreeOptimizationControlMechanism_EVC>` based on the `feature_values
   <ModelFreeOptimizationControlMechanism.feature_values>` for the current trial.
 
@@ -171,12 +171,12 @@ a sample `allocation_policy <ControlMechanism.allocation_policy>`, given the cur
 
 The `function <ModelFreeOptimizationControlMechanism.function>` of a ModelFreeOptimizationControlMechanism uses the
 `make_prediction <FunctionApproximator.make_prediction>` method of its `function_approximator
-<ModelFreeOptimizationControlMechanism.function_approximator>`, to find the `allocation_policy
-<ControlMechanism.allocation_policy>` that yields the greatest predicted `EVC
+<ModelFreeOptimizationControlMechanism.function_approximator>`, to find the `control_allocation
+<ControlMechanism.control_allocation>` that yields the greatest predicted `EVC
 <ModelFreeOptimizationControlMechanism_EVC>` given the current `feature_values
 <ModelFreeOptimizationControlMechanism.feature_values>`. The default for `function
 <ModelFreeOptimizationControlMechanism.function>` is the `GradientOptimization` Function, which uses
-gradient ascent to select samples of `allocation_policy <ControlMechanism.allocation_policy>` that yield
+gradient ascent to select samples of `control_allocation <ControlMechanism.control_allocation>` that yield
 progessively better values of `EVC <ModelFreeOptimizationControlMechanism_EVC>`. However, any `OptimizationFunction`
 can be used in its place.  A custom function can also be used, however it must meet the requirements for the `function
 <OptimizationControlMechanism.function>` of an `OptimizationControlFunction`, as described `here
@@ -194,10 +194,10 @@ When a ModelFreeOptimizationControlMechanism is executed, its `function
 <ControlMechanism.net_outcome>` of the last `trial`.  It then uses the `make_prediction
 <FunctionApproximator.make_prediction>` of the `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>` to find the `allocadtion_policy
-<ControlMechanism.allocation_policy>` that predicts the greatet `EVC <ModelFreeOptimizationControlMechanism_EVC>`
+<ControlMechanism.control_allocation>` that predicts the greatet `EVC <ModelFreeOptimizationControlMechanism_EVC>`
 for the current `feature_values <ModelFreeOptimizationControlMechanism.feature_values>`, and implements that for the
 next `trial` of execution.  Specifically, it executes the following steps:
-The values in the `allocation_policy <ControlMechanism.allocation_policy>` returned by `function
+The values in the `control_allocation <ControlMechanism.control_allocation>` returned by `function
 <ModelFreeOptimizationControlMechanism.function>` are assigned as the `variables <ControlSignal.variables>` of its
 `control_signals <ControlMechanism.control_signals>`, from which they compute their `values <ControlSignal.value>`.
 
@@ -322,10 +322,10 @@ class FunctionApproximator():
     prediction_vector.
 
     When used with a ModelBasedOptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
-    `allocation_policy <ControlMechanism_allocation_policy>` (assigned to the variable field of the prediction_vector)
+    `control_allocation <ControlMechanism_control_allocation>` (assigned to the variable field of the prediction_vector)
     and its `feature_values <ModelBasedOptimizationControlMechanism.feature_values>` assigned to the
     features field of the prediction_vector).  The prediction vector may also contain fields for the `costs
-    ControlMechanism.costs` associated with the `allocation_policy <ControlMechanism.allocation_policy>` and
+    ControlMechanism.costs` associated with the `control_allocation <ControlMechanism.control_allocation>` and
     for interactions among those terms.
 
     [Placeholder for Composition with learning]
@@ -451,19 +451,19 @@ class FunctionApproximator():
             self.prediction_weights = self.parameterization_function.function([self._previous_state,
                                                                                outcome])
             # Update vector with owner's current variable and feature_values and  and store for next trial
-            # Note: self.owner.value = last allocation_policy used by owner
+            # Note: self.owner.value = last control_allocation used by owner
             self.prediction_vector.update_vector(variable, feature_values, variable)
             self._previous_state = self.prediction_vector.vector
         except AttributeError:
             # Initialize vector and control_signals on first trial
             # Note:  initialize vector to 1's so that learning_function returns specified priors
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            self.prediction_vector.reference_variable = self.owner.allocation_policy
+            self.prediction_vector.reference_variable = self.owner.control_allocation
             self._previous_state = np.full_like(self.prediction_vector.vector, 0)
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
         return feature_values
 
-    # def make_prediction(self, allocation_policy, num_samples, reinitialize_values, feature_values, context):
+    # def make_prediction(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
         '''Update terms of prediction_vector <FunctionApproximator.prediction_vector>` and then multiply by
         prediction_weights.
@@ -824,14 +824,14 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         <ControlMechanism.net_outcome>` of processing by the Components monitored by the
         ModelFreeOptimizationControlMechanism's `objective_mechanism
         <ModelFreeOptimizationControlMechanism.objective_mechanism>` from the `current
-        <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
-        <ControlMechanism.allocation_policy>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator` for
+        <ModelFreeOptimizationControlMechanism.feature_values>` and `control_allocation
+        <ControlMechanism.control_allocation>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator` for
         details).
 
     function : OptimizationFunction, function or method : default GradientOptimization
-        specifies the function used to find the `allocation_policy` that maximizes `EVC
+        specifies the function used to find the `control_allocation` that maximizes `EVC
         <ModelFreeOptimizationControlMechanism_EVC>`>`; must take as its sole argument an array with the same shape
-        as `allocation_policy <ControlMechanism.allocation_policy>`, and return a similar array (see `Function
+        as `control_allocation <ControlMechanism.control_allocation>`, and return a similar array (see `Function
         <ModelFreeOptimizationControlMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
@@ -856,16 +856,16 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
     function_approxmiator : FunctionApproximator
         used to predict `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `feature_values
-        <ModelFreeOptimizationControlMechanism.feature_values>` and `allocation_policy
-        <ControlMechanism.allocation_policy>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator`
+        <ModelFreeOptimizationControlMechanism.feature_values>` and `control_allocation
+        <ControlMechanism.control_allocation>` (see `ModelFreeOptimizationControlMechanism_Function_Approximator`
         for additional details).
 
     function : OptimizationFunction, function or method
-        takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer) and, using the current
+        takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer) and, using the current
         `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and the `make_prediction
         <FunctionApproximator.make_prediction>` method of the `function_approximator
         <ModelFreeOptimizationControlMechanism.function_approximator>`, returns an
-        `allocation_policy` that maximizes the `EVC <ModelFreeOptimizationControlMechanism_EVC>` (see `Function
+        `control_allocation` that maximizes the `EVC <ModelFreeOptimizationControlMechanism_EVC>` (see `Function
         <ModelFreeOptimizationControlMechanism_Function>` for additional details).
 
     name : str
@@ -1098,7 +1098,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
             self.function_approximator.initialize(owner=self)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        """Find allocation_policy that optimizes EVC.
+        """Find control_allocation that optimizes EVC.
 
         Items of variable should be:
 
@@ -1116,36 +1116,36 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
             - call super()._execute(), which calls the `OptimizationFunction` assigned as the
               ModelFreeOptimizationControlMechanism's `function <ModelFreeOptimizationControlMechanism.function>` that
-              finds the `allocation_policy <ControlMechanism.allocation_policy>` predictive of the greatest `EVC
+              finds the `control_allocation <ControlMechanism.control_allocation>` predictive of the greatest `EVC
               <ModelFreeOptimizationControlMechanism_EVC>`;
 
             - call `after_execution <FunctionApproximator.after_execution>` method of `function_approximator
               <ModelFreeOptimizationControlMechanism.function_approximator>`;
 
-            - return allocation_policy.
+            - return control_allocation.
         """
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
-        if self.allocation_policy is None:
+        if self.control_allocation is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
 
         self.feature_values = self.function_approximator.before_execution(context=self.context)
 
-        # Compute allocation_policy using ModelFreeOptimizationControlMechanism's optimization function
+        # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy, self.net_outcome_max, self.saved_samples, self.saved_values = \
-                                            super(ControlMechanism, self)._execute(variable=self.allocation_policy,
+        control_allocation, self.net_outcome_max, self.saved_samples, self.saved_values = \
+                                            super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                    runtime_params=runtime_params,
                                                                                    context=context)
         self.function_approximator.after_execution(context=context)
 
-        return allocation_policy
+        return control_allocation
 
-    def evaluation_function(self, allocation_policy):
-        '''Compute outcome for a given allocation_policy.
+    def evaluation_function(self, control_allocation):
+        '''Compute outcome for a given control_allocation.
 
         Assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of the
         `ObjectiveFunction` assigned to the ModelFreeOptimizationControlMechanism's `function
@@ -1156,7 +1156,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         '''
 
         num_samples = 1
-        return self.function_approximator.make_prediction(allocation_policy,
+        return self.function_approximator.make_prediction(control_allocation,
                                                           num_samples,
                                                           self.feature_values,
                                                           context=self.function_object.context)
@@ -1166,7 +1166,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 # Manual computation of derivatives
 
     # def gradient_ascent(self, control_signals, current_state, prediction_weights):
-    #     '''Determine the `allocation_policy <LVOCControlMechanism.allocation_policy>` that maximizes the `EVC
+    #     '''Determine the `control_allocation <LVOCControlMechanism.control_allocation>` that maximizes the `EVC
     #     <ModelFreeOptimizationControlMechanism_EVC>`.
     #
     #     Iterate over current_state; for each iteration: \n
@@ -1180,7 +1180,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
     #     <LearnAllocationPolicy.max_iterations>`.
     #
     #     Return control_signals field of current_state (used by LVOCControlMechanism as its `allocation_vector
-    #     <LVOCControlMechanism.allocation_policy>`).
+    #     <LVOCControlMechanism.control_allocation>`).
     #     '''
     #
     #     pv = current_state.vector

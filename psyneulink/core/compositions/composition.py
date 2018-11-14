@@ -3065,8 +3065,8 @@ class Composition(Composition_Base):
             if self.model_based_optimizer:
                 # self.model_based_optimizer.objective_mechanism.execute(context=context)
                 # KAM - temporary solution for assiging control signal values
-                allocation_policy = self.model_based_optimizer.execute(context=context)
-                self.model_based_optimizer.apply_control_signal_values(allocation_policy, runtime_params=None, context=None)
+                control_allocation = self.model_based_optimizer.execute(context=context)
+                self.model_based_optimizer.apply_control_signal_values(control_allocation, runtime_params=None, context=None)
 
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
@@ -3356,7 +3356,7 @@ class Composition(Composition_Base):
             node_values[node] = (node.value, node.output_values)
         return saved_state, node_values
 
-    def before_simulations(self, context=None):
+    def get_state_rep(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
         simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
@@ -3368,7 +3368,7 @@ class Composition(Composition_Base):
 
         return predicted_input
 
-    def after_simulations(self, context=None):
+    def after_optimization(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
         simulations are complete in order to reinstate the `Composition`'s pre-simulation values.
@@ -4004,15 +4004,15 @@ class Composition(Composition_Base):
         return adjusted_stimuli
 
     def run_simulation(self,
-                       allocation_policy=None,
+                       control_allocation=None,
                        num_trials=1,
                        predicted_input=None,
                        runtime_params=None,
                        context=None):
-        '''Runs a simulation of the `Composition`, with the specified allocation_policy, excluding its
+        '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
            `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
-           `model_based_optimizer <Composition.model_based_optimizer>` under that allocation_policy. All values are
+           `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
 
         # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
@@ -4025,14 +4025,14 @@ class Composition(Composition_Base):
         # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
-        if allocation_policy is not None:
-            self.model_based_optimizer.apply_control_signal_values(allocation_policy,
+        if control_allocation is not None:
+            self.model_based_optimizer.apply_control_signal_values(control_allocation,
                                                                    runtime_params=runtime_params,
                                                                    context=context)
 
         execution_id = self._get_unique_id()
 
-        net_allocation_policy_outcomes = []
+        net_control_allocation_outcomes = []
         # other_simulation_data = []
         for i in range(num_trials):
             inputs = {}
@@ -4059,10 +4059,10 @@ class Composition(Composition_Base):
             #     call_after_simulation_data = call_after_simulation()
 
             self.context.execution_phase = ContextFlags.PROCESSING
-            net_allocation_policy_outcomes.append(self.model_based_optimizer.net_outcome)
+            net_control_allocation_outcomes.append(self.model_based_optimizer.net_outcome)
             # other_simulation_data.append(call_after_simulation_data)
 
-        return net_allocation_policy_outcomes
+        return net_control_allocation_outcomes
 
     @property
     def input_states(self):

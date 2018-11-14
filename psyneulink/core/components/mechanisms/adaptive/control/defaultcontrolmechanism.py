@@ -163,9 +163,9 @@ class DefaultControlMechanism(ControlMechanism):
             raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterState".
                                                format(control_signal))
 
-        # Instantiate input_states and allocation_policy attribute for control_signal allocations
+        # Instantiate input_states and control_allocation attribute for control_signal allocations
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
-        self.allocation_policy = self.input_values
+        self.control_allocation = self.input_values
 
         # Call super to instantiate ControlSignal
         # Note: any params specified with ControlProjection for the control_signal

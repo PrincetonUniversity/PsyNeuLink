@@ -15,8 +15,8 @@ Overview
 
 A ModelBasedOptimizationControlMechanism is a subclass of `OptimizationControlMechanism <OptimizationControlMechanism>`
 that uses the Composition's `run_simulation <Composition.run_simulation>` method as the `evaluation_function
-<OptimizationFunction.evaluation_function>` of its `OptimizationFunction` in order to find an optimal `allocation_policy
-<ControlMechanism.allocation_policy>`.
+<OptimizationFunction.evaluation_function>` of its `OptimizationFunction` in order to find an optimal `control_allocation
+<ControlMechanism.control_allocation>`.
 
 .. _ModelBasedOptimizationControlMechanism_Creation:
 
@@ -154,29 +154,29 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
         `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a
         constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments
-        an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and an integer
+        an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and an integer
         (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return
-        an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>`.
+        an array with the same shape as `control_allocation <ControlMechanism.control_allocation>`.
 
     search_termination_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
         `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is
         specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its
-        arguments an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and two
+        arguments an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and two
         integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current
-        `allocation_policy <ControlMechanism.allocation_policy>`, and the second the current iteration of the
+        `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
         `optimization process <OptimizationFunction_Process>`;  it must return `True` or `False`.
 
     search_space : list or ndarray
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
-        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `allocation_policy
-        <ControlMechanism.allocation_policy>`.
+        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
+        <ControlMechanism.control_allocation>`.
 
     function : OptimizationFunction, function or method
-        specifies the function used to optimize the `allocation_policy <ControlMechanism.allocation_policy>`;
-        must take as its sole argument an array with the same shape as `allocation_policy
-        <ControlMechanism.allocation_policy>`, and return a similar array (see `Primary Function
+        specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
+        must take as its sole argument an array with the same shape as `control_allocation
+        <ControlMechanism.control_allocation>`, and return a similar array (see `Primary Function
         <OptimizationControlMechanism>` for additional details).
 
     composition : Composition : default None
@@ -211,9 +211,9 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         `OptimizationControlMechanism_Learning_Function` for additional details).
 
     function : OptimizationFunction, function or method
-        takes current `allocation_policy <ControlMechanism.allocation_policy>` (as initializer),
-        uses its `search_function <OptimizationFunction.search_function>` to select samples of `allocation_policy
-        <ControlMechanism.allocation_policy>` from its `search_space <OptimizationControlMechanism.search_space>`,
+        takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
+        uses its `search_function <OptimizationFunction.search_function>` to select samples of `control_allocation
+        <ControlMechanism.control_allocation>` from its `search_space <OptimizationControlMechanism.search_space>`,
         evaluates these using its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, and returns
         the one that yields the greatest `EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
         <OptimizationControlMechanism_Function>` for additional details).
@@ -227,8 +227,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
 
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function
-        <OptimizationControlMechanism.function>`; used to select samples of `allocation_policy
-        <ControlMechanism.allocation_policy>` to evaluate by `evaluation_function
+        <OptimizationControlMechanism.function>`; used to select samples of `control_allocation
+        <ControlMechanism.control_allocation>` to evaluate by `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
     search_termination_function : function or method
@@ -236,19 +236,19 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         `function <OptimizationControlMechanism.function>`;  determines when to terminate the
         `optimization process <OptimizationFunction_Process>`.
 
-    allocation_policy_search_space : list or ndarray
+    control_allocation_search_space : list or ndarray
         `search_space <OptimizationFunction.search_space>` assigned to `function
         <OptimizationControlMechanism.function>`;  determines the samples of
-        `allocation_policy <ControlMechanism.allocation_policy>` evaluated by the `evaluation_function
+        `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
     saved_samples : list
-        contains all values of `allocation_policy <ControlMechanism.allocation_policy>` sampled by `function
+        contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
         <OptimizationControlMechanism.function>` if its `save_samples <OptimizationFunction.save_samples>` parameter
         is `True`;  otherwise list is empty.
 
     saved_values : list
-        contains values of EVC associated with all samples of `allocation_policy <ControlMechanism.allocation_policy>`
+        contains values of EVC associated with all samples of `control_allocation <ControlMechanism.control_allocation>`
          evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values
          <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
 
@@ -316,38 +316,38 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                          name=name,
                          prefs=prefs)
 
-    def apply_control_signal_values(self, allocation_policy, runtime_params, context):
-        '''Assign specified allocation_policy'''
-        for i in range(len(allocation_policy)):
+    def apply_control_signal_values(self, control_allocation, runtime_params, context):
+        '''Assign specified control_allocation'''
+        for i in range(len(control_allocation)):
             if self.value is None:
                 self.value = self.instance_defaults.value
-            self.value[i] = np.atleast_1d(allocation_policy[i])
+            self.value[i] = np.atleast_1d(control_allocation[i])
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
-        '''Find allocation_policy that optimizes evaluation_function.'''
+        '''Find control_allocation that optimizes evaluation_function.'''
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         self.predicted_input = self.composition.before_simulations()
 
-        # Compute allocation_policy using MBOCM's optimization function
-        allocation_policy, self.evc_max, self.saved_samples, self.saved_values = \
-                                        super(ControlMechanism, self)._execute(variable=self.allocation_policy,
+        # Compute control_allocation using MBOCM's optimization function
+        control_allocation, self.evc_max, self.saved_samples, self.saved_values = \
+                                        super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
 
         self.composition.after_simulations()
 
-        return allocation_policy
+        return control_allocation
 
-    def evaluation_function(self, allocation_policy):
-        '''Compute outcome for a given allocation_policy.'''
-        # returns net_allocation_policy_outcomes
+    def evaluation_function(self, control_allocation):
+        '''Compute outcome for a given control_allocation.'''
+        # returns net_control_allocation_outcomes
         num_trials = 1
-        return self.composition.run_simulation(allocation_policy,
+        return self.composition.run_simulation(control_allocation,
                                                self.predicted_input,
                                                num_trials,
                                                context=self.function_object.context)
