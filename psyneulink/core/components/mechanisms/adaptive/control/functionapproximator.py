@@ -266,10 +266,7 @@ class FunctionApproximator():
         # FIX: HANDLE FIRST TRIAL IN OptimizationFunction (IT IS NOT FunctionApproximator's PROBLEM) ZZZ
         try:
             # Update prediction_weights
-            # variable = self.owner.value
-            # outcome = self.owner.net_outcome
-            self.prediction_weights = self.parameterization_function.function([self._previous_state,
-                                                                               outcome])
+            self.prediction_weights = self.parameterization_function.function([self._previous_state, outcome])
             # Update vector with owner's current variable and feature_values and  and store for next trial
             # Note: self.owner.value = last control_allocation used by owner
             self.prediction_vector.update_vector(variable, feature_values, variable)

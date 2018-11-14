@@ -599,9 +599,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self.state_rep = self.agent_rep.get_state_rep(context=self.context)
 
-        # FIX: NEED TO DEAL WITH net_outcome ON FIRST EXECUTION (SINCE COSTS HAVE NOT YET BEEN DETERMINED
-        #      SEE HOW FunctionApproximator HANDLES THIS
-        self.update_agent(self.state_rep, self.control_allocation, self.net_outcome)
+        try:
+            self.update_agent(self.state_rep, self.control_allocation, self.net_outcome)
+        except AttributeError:
+            self.update_agent(self.state_rep, self.control_allocation, [0])
+
 
         # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
