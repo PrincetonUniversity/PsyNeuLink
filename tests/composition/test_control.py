@@ -387,7 +387,20 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(
+        # comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(
+        #                                                 function=pnl.GridSearch(),
+        #                                                 control_signals=[("drift_rate", Decision),
+        #                                                                  ("threshold", Decision)],
+        #                                                 objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
+        #                                                                                                                 Decision.PROBABILITY_UPPER_THRESHOLD,
+        #                                                                                                                 (Decision.RESPONSE_TIME, -1, 1)]
+        #                                                                                            ),
+        #
+        #                                                 )
+        #                                )
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
+                                                        agent_rep=comp,
                                                         function=pnl.GridSearch(),
                                                         control_signals=[("drift_rate", Decision),
                                                                          ("threshold", Decision)],
@@ -574,14 +587,25 @@ class TestModelBasedOptimizationControlMechanisms:
         for path in pathways:
             comp.add_linear_processing_pathway(path)
 
-        comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(function=pnl.GridSearch(),
-                                                                                            control_signals=[(
-                                                                                                             "slope",
-                                                                                                             Target_Rep),
-                                                                                                             (
-                                                                                                             "slope",
-                                                                                                             Flanker_Rep)],
-                                                                                            objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[
+        # comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(function=pnl.GridSearch(),
+        #                                                                                     control_signals=[(
+        #                                                                                                      "slope",
+        #                                                                                                      Target_Rep),
+        #                                                                                                      (
+        #                                                                                                      "slope",
+        #                                                                                                      Flanker_Rep)],
+        #                                                                                     objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[
+
+        comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(function=pnl.GridSearch(),
+                                                                                  agent_rep=pnl.comp,
+                                                                                  control_signals=[(
+                                                                                      "slope",
+                                                                                      Target_Rep),
+                                                                                      (
+                                                                                          "slope",
+                                                                                          Flanker_Rep)],
+                                                                                  objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[
+
                 Reward,
                 (Decision.PROBABILITY_UPPER_THRESHOLD, 1, -1)
             ])))
