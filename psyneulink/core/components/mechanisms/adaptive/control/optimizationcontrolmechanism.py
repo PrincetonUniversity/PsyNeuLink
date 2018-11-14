@@ -221,6 +221,8 @@ Class Reference
 ---------------
 
 """
+from collections import Iterable
+
 import typecheck as tc
 
 import numpy as np
@@ -228,13 +230,20 @@ import numpy as np
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
     SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
     ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.adaptive.control.functionapproximator import FunctionApproximator
+from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.outputstate import OutputState
+
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
+from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.functions.function import Function
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, INTERNAL_ONLY, NAME, \
+    OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PARAMETER_STATES, FUNCTION, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -242,8 +251,14 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 
 __all__ = [
-    'OptimizationControlMechanism', 'OptimizationControlMechanismError'
+    'OptimizationControlMechanism', 'OptimizationControlMechanismError',
+    'AGENT_REP', 'FEATURE_PREDICTORS', 'SHADOW_EXTERNAL_INPUTS'
 ]
+
+AGENT_REP = 'agent_rep'
+FEATURE_PREDICTORS = 'feature_predictors'
+SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
+
 
 class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -255,9 +270,12 @@ class OptimizationControlMechanismError(Exception):
     
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                       \
+    agent_rep=None,                                        \
+    feature_predictors=None,                               \
+    feature_function=None,                                 \
     objective_mechanism=None,                              \
     learning_function=None,                                \
-    evaluation_function=None,                               \
+    evaluation_function=None,                              \
     search_function=None,                                  \
     search_termination_function=None,                      \
     search_space=None,                                     \
@@ -418,8 +436,12 @@ class OptimizationControlMechanism(ControlMechanism):
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
+
     @tc.typecheck
     def __init__(self,
+                 agent_rep=None,
+                 feature_predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
+                 feature_function:tc.optional(tc.any(is_function_type))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
@@ -439,12 +461,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 for i in kwargs.keys():
                     raise OptimizationControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                             format(self.__class__.__name__, repr(i)))
+        self.agent_rep = agent_rep
         self.search_function = search_function
         self.search_termination_function = search_termination_function
         self.search_space = search_space
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(origin_objective_mechanism=origin_objective_mechanism,
+        params = self._assign_args_to_param_dicts(input_states=feature_predictors,
+                                                  feature_function=feature_function,
+                                                  origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
                                                   params=params)
 
@@ -461,6 +486,43 @@ class OptimizationControlMechanism(ControlMechanism):
         '''Insure that specification of ObjectiveMechanism has projections to it'''
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        from psyneulink.core.compositions.composition import Composition
+        if self.agent_rep is None:
+            raise OptimizationControlMechanismError("The {} arg of an {} must be specified ({} or a {})".
+                                                    format(repr(AGENT_REP), self.__class__.__name__,
+                                                           Composition.__name__, FunctionApproximator.__name__))
+
+        elif not isinstance(self.agent_rep, (Composition, FunctionApproximator)):
+            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {} or a {}".
+                                                    format(repr(AGENT_REP), self.__class__.__name__,
+                                                    Composition.__name__, FunctionApproximator.__name__))
+
+        # if isinstance(self.agent_rep, FunctionApproximator) and self.feature_predictors is None:
+        #     raise OptimizationControlMechanismError("{} arg for {} must be specified".
+        #                                             format(repr(FEATURE_PREDICTORS),
+        #                                                    self.__class__.__name__))
+
+    def _instantiate_input_states(self, context=None):
+        """Instantiate input_states for Projections from features and objective_mechanism.
+
+        Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
+        InputState specifications generated in _parse_feature_specs from the **feature_predictors** and
+        **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
+        """
+
+        if isinstance(self.agent_rep, FunctionApproximator):
+            self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+
+            # Insert primary InputState for outcome from ObjectiveMechanism;
+            #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
+            self.input_states.insert(0, {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}),
+
+            # Configure default_variable to comport with full set of input_states
+            self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
+
+        super()._instantiate_input_states(context=context)
+
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -500,6 +562,25 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_function = self.function_object.search_function
         self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
+
+        if isinstance(self.agent_rep, FunctionApproximator):
+            self._instantiate_function_approximator()
+            self.optimize_control = self.agent_rep.make_prediction
+        else:
+            self.optimize_control = self.agent_rep.run_simulation
+
+
+    # FIX: THIS IS SPECIFIC TO ORIG MODEL_FREE APPROACH:
+    def _instantiate_function_approximator(self):
+        '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
+
+        self.feature_values = np.array(self.instance_defaults.variable[1:])
+
+        # Assign parameters to learning_function
+        if isinstance(self.agent_rep, type):
+            self.agent_rep = self.function_approximator(owner=self)
+        else:
+            self.agent_rep.initialize(owner=self)
 
     def get_control_allocation_search_space(self):
 
@@ -548,7 +629,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return control_allocation
 
-
     def evaluation_function(self, control_allocation):
         '''Compute metric for a given control_allocation.
         Assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of the
@@ -559,9 +639,121 @@ class OptimizationControlMechanism(ControlMechanism):
         <ModelFreeOptimizationControlMechanism.function_approximator>`.
         '''
         num_estimates = 1
-        return self.function_approximator.make_prediction(control_allocation,
-                                                          num_estimates,
-                                                          self.state_rep,
-                                                          context=self.function_object.context)
+        return self.optimize_control(control_allocation,
+                                     num_estimates,
+                                     self.state_rep,
+                                     context=self.function_object.context)
+
+    # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
+    def apply_control_signal_values(self, control_allocation, runtime_params, context):
+        '''Assign specified control_allocation'''
+        for i in range(len(control_allocation)):
+            if self.value is None:
+                self.value = self.instance_defaults.value
+            self.value[i] = np.atleast_1d(control_allocation[i])
+
+        self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+
+
+    # ******************************************************************************************************************
+
+    # FIX:  THE FOLLOWING IS SPECIFIC TO ORIG MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
+    #                       AND SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
+    #                       SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep
+
+    tc.typecheck
+    def add_features(self, feature_predictors):
+        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for feature_predictors used to
+        predict `net_outcome <ControlMechanism.net_outcome>`
+
+        **feature_predictors** argument can use any of the forms of specification allowed for InputState(s),
+            as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
+            list of `ORIGIN` Mechanisms and/or their InputStates as its value.
+        '''
+
+        feature_predictors = self._parse_feature_specs(feature_predictors=feature_predictors,
+                                                 context=ContextFlags.COMMAND_LINE)
+        self.add_states(InputState, feature_predictors)
+
+    @tc.typecheck
+    def _parse_feature_specs(self, feature_predictors, feature_function, context=None):
+        """Parse entries of feature_predictors into InputState spec dictionaries
+
+        For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
+            - Call _parse_shadow_input_spec
+
+        For standard InputState specs:
+            - Call _parse_state_spec
+            - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
+
+        Assign functions specified in **feature_function** to InputStates for all feature_predictors
+
+        Returns list of InputState specification dictionaries
+        """
+
+        parsed_features = []
+
+        if not isinstance(feature_predictors, list):
+            feature_predictors = [feature_predictors]
+
+        for spec in feature_predictors:
+
+            # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
+            if isinstance(spec, dict):
+                if SHADOW_EXTERNAL_INPUTS in spec:
+                    #  composition looks for node.shadow_external_inputs and uses it to set external_origin_sources
+                    self.shadow_external_inputs = spec[SHADOW_EXTERNAL_INPUTS]
+                    spec = self._parse_shadow_inputs_spec(spec, feature_function)
+                else:
+                    raise OptimizationControlMechanismError("Incorrect specification ({}) "
+                                                                     "in feature_predictors argument of {}."
+                                                                     .format(spec, self.name))
+            # e.g. Mechanism, OutputState
+            else:
+                spec = _parse_state_spec(state_type=InputState, state_spec=spec)    # returns InputState dict
+                spec[PARAMS][INTERNAL_ONLY] = True
+                if feature_function:
+                    spec[PARAMS][FUNCTION] = feature_function
+                spec = [spec]   # so that extend works below
+
+            parsed_features.extend(spec)
+
+        return parsed_features
+
+    @tc.typecheck
+    def _parse_shadow_inputs_spec(self, spec:dict, fct:tc.optional(Function)):
+        ''' Return a list of InputState specifications for the inputs specified in value of dict
+
+        For any other specification, specify an InputState with a Projection from the sender of any Projections
+            that project to the specified item
+        If FUNCTION entry, assign as Function for all InputStates specified in SHADOW_EXTERNAL_INPUTS
+        '''
+
+        input_state_specs = []
+
+        shadow_spec = spec[SHADOW_EXTERNAL_INPUTS]
+
+        if not isinstance(shadow_spec, list):
+            shadow_spec = [shadow_spec]
+        for item in shadow_spec:
+            if isinstance(item, Mechanism):
+                # Shadow all of the InputStates for the Mechanism
+                input_states = item.input_states
+            if isinstance(item, InputState):
+                # Place in a list for consistency of handling below
+                input_states = [item]
+            # Shadow all of the Projections to each specified InputState
+            input_state_specs.extend([
+                {
+                    #NAME:i.name + ' of ' + i.owner.name,
+                    VARIABLE: i.variable}
+                for i in input_states
+            ])
+        if fct:
+            for i in input_state_specs:
+                i.update({FUNCTION:fct})
+
+        return input_state_specs
+
 
 

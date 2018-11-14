@@ -51,29 +51,11 @@ from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.functions.function import BayesGLM
 from psyneulink.core.components.states.state import _parse_state_spec
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, NAME, \
-    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS, \
-    MODEL_FREE_OPTIMIZATION_CONTROL_MECHANISM
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import is_iterable, powerset, tensor_power
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, ALL
+from psyneulink.core.globals.utilities import powerset, tensor_power
 
 __all__ = [
     'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV', 'FunctionApproximator'
@@ -137,6 +119,11 @@ class PV(Enum):
     FCC =  6
     FFCC = 7
     COST = 8
+
+
+class FunctionApproximatorError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 
 class FunctionApproximator():
@@ -238,11 +225,9 @@ class FunctionApproximator():
         # MODIFIED 11/9/18 END
             for term in self.prediction_terms:
                 if not term in PV:
-                    raise ModelFreeOptimizationControlMechanismError("{} specified in {} arg of {} "
-                                                                     "is not a member of the {} enum".
-                                                                     format(repr(term.name),
-                                                                            repr(PREDICTION_TERMS),
-                                                                            self.__class__.__name__, PV.__name__))
+                    raise FunctionApproximatorError("{} specified in {} arg of {} is not a member of the {} enum".
+                                                    format(repr(term.name),repr(PREDICTION_TERMS),
+                                                           self.__class__.__name__, PV.__name__))
         else:
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
@@ -409,9 +394,9 @@ class FunctionApproximator():
 
             def error_for_too_few_terms(term):
                 spec_type = {'FF':'feature_predictors', 'CC':'control_signals'}
-                raise ModelFreeOptimizationControlMechanismError("Specification of {} for {} arg of {} "
-                                                                 "requires at least two {} be specified".
-                                format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                raise FunctionApproximatorError("Specification of {} for {} arg of {} "
+                                                "requires at least two {} be specified".
+                                                format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
             C = PV.C.value

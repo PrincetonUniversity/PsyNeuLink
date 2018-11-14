@@ -82,39 +82,73 @@ task_decision = pnl.DDM(name='Task Decision',
 #                                 )
 
 
-lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
-                                feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
-                                objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
-                                                                           monitored_output_states=[task_decision,
-                                                                                                    reward],
-                                                                           function=objective_function),
-                                function_approximator=pnl.FunctionApproximator(parameterization_function=pnl.BayesGLM,
-                                                                               prediction_terms=[pnl.PV.FC,
-                                                                                                 pnl.PV.COST]),
-                                terminal_objective_mechanism=True,
+# lvoc = pnl.ModelFreeOptimizationControlMechanism(name='LVOC ControlMechanism',
+#                                 feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
+#                                 objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
+#                                                                            monitored_output_states=[task_decision,
+#                                                                                                     reward],
+#                                                                            function=objective_function),
+#                                 function_approximator=pnl.FunctionApproximator(parameterization_function=pnl.BayesGLM,
+#                                                                                prediction_terms=[pnl.PV.FC,
+#                                                                                                  pnl.PV.COST]),
+#                                 terminal_objective_mechanism=True,
+#
+#                                 function=pnl.GradientOptimization(
+#                                         convergence_criterion=pnl.VALUE,
+#                                         convergence_threshold=0.001,
+#                                         step_size=1,
+#                                         annealing_function= lambda x,y : x / np.sqrt(y),
+#                                         # direction=pnl.ASCENT
+#                                 ),
+#                                 # function=pnl.GridSearch,
+#
+#                                 control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
+#                                                                                ('color_control', word_task)],
+#                                                                   # function=pnl.ReLU,
+#                                                                   function=pnl.Logistic,
+#                                                                   cost_options=[pnl.ControlSignalCosts.INTENSITY,
+#                                                                                 pnl.ControlSignalCosts.ADJUSTMENT],
+#                                                                   intensity_cost_function=pnl.Exponential(rate=0.25,
+#                                                                                                           bias=-3),
+#                                                                   adjustment_cost_function=pnl.Exponential(rate=0.25,
+#                                                                                                            bias=-3),
+#                                                                   allocation_samples=[i/2 for i in list(range(0,50,1))]
+#                                                                   )
+#                                 )
 
-                                function=pnl.GradientOptimization(
-                                        convergence_criterion=pnl.VALUE,
-                                        convergence_threshold=0.001,
-                                        step_size=1,
-                                        annealing_function= lambda x,y : x / np.sqrt(y),
-                                        # direction=pnl.ASCENT
-                                ),
-                                # function=pnl.GridSearch,
+lvoc = pnl.OptimizationControlMechanism(name='LVOC ControlMechanism',
+                                        feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
+                                        objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
+                                                                                   monitored_output_states=[task_decision,
+                                                                                                            reward],
+                                                                                   function=objective_function),
+                                        agent_rep=pnl.FunctionApproximator(parameterization_function=pnl.BayesGLM,
+                                                                           prediction_terms=[pnl.PV.FC,
+                                                                                             pnl.PV.COST]),
+                                        terminal_objective_mechanism=True,
 
-                                control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
-                                                                               ('color_control', word_task)],
-                                                                  # function=pnl.ReLU,
-                                                                  function=pnl.Logistic,
-                                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY,
-                                                                                pnl.ControlSignalCosts.ADJUSTMENT],
-                                                                  intensity_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                          bias=-3),
-                                                                  adjustment_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                           bias=-3),
-                                                                  allocation_samples=[i/2 for i in list(range(0,50,1))]
-                                                                  )
-                                )
+                                        function=pnl.GradientOptimization(
+                                                convergence_criterion=pnl.VALUE,
+                                                convergence_threshold=0.001,
+                                                step_size=1,
+                                                annealing_function= lambda x,y : x / np.sqrt(y),
+                                                # direction=pnl.ASCENT
+                                        ),
+                                        # function=pnl.GridSearch,
+
+                                        control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
+                                                                                       ('color_control', word_task)],
+                                                                          # function=pnl.ReLU,
+                                                                          function=pnl.Logistic,
+                                                                          cost_options=[pnl.ControlSignalCosts.INTENSITY,
+                                                                                        pnl.ControlSignalCosts.ADJUSTMENT],
+                                                                          intensity_cost_function=pnl.Exponential(rate=0.25,
+                                                                                                                  bias=-3),
+                                                                          adjustment_cost_function=pnl.Exponential(rate=0.25,
+                                                                                                                   bias=-3),
+                                                                          allocation_samples=[i/2 for i in list(range(0,50,1))]
+                                                                          )
+                                        )
 
 
 # lvoc.reportOutputPref=True
