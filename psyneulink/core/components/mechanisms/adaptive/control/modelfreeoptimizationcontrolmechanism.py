@@ -1127,18 +1127,12 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
+
         assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
         if self.allocation_policy is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
 
         self.feature_values = self.function_approximator.before_execution(context=self.context)
-
-        # TEST PRINT
-        print ('\n------------------------------------------------')
-        print ('BEFORE EXECUTION:')
-        print ('\tEXECUTION COUNT: ', self.current_execution_count)
-        print ('\tPREDICTION WEIGHTS', self.function_approximator.prediction_weights)
-        # TEST PRINT END
 
         # Compute allocation_policy using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -1146,13 +1140,6 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
                                             super(ControlMechanism, self)._execute(variable=self.allocation_policy,
                                                                                    runtime_params=runtime_params,
                                                                                    context=context)
-        # # TEST PRINT
-        print ('\nAFTER EXECUTION:')
-        print ('\tEXECUTION COUNT: ', self.current_execution_count)
-        print ('\tALLOCATION POLICY: ', allocation_policy)
-        print ('\tNET_OUTCOME MAX: ', self.net_outcome_max)
-        # # TEST PRINT END
-
         self.function_approximator.after_execution(context=context)
 
         return allocation_policy
