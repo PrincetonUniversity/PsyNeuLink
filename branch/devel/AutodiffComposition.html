@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+855.g14c98c8 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.4.8.0+894.ga6286dd documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+855.g14c98c8 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+894.ga6286dd documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Compositions.html"/>
         <link rel="next" title="Subsystems" href="Subystems.html"/>
         <link rel="prev" title="Compositions" href="Compositions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+855
+                0.4.8.0+894
               </div>
             
           
@@ -173,76 +173,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-psyneulink.library.compositions.autodiffcomposition">
-<span id="autodiffcomposition"></span><h1>AutodiffComposition<a class="headerlink" href="#module-psyneulink.library.compositions.autodiffcomposition" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>AutodiffComposition is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models more quickly by integrating with
-<a class="reference external" href="https://pytorch.org/">PyTorch</a>, a popular machine learning library. In situations with training,
-AutodiffComposition is used similarly to a Composition, but is much faster.</p>
-<p>The <code class="xref any docutils literal"><span class="pre">xor_in_psyneulink_and_pytorch.py</span></code> script (in the Scripts folder of the PsyNeuLink source code) is an example of
-how to use AutodiffComposition. The script also gives a comparison of runtimes.</p>
-</div>
-<div class="section" id="creating-an-autodiffcomposition">
-<span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
-<p>An AutodiffComposition can be created by calling the constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
-add methods of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. The most significant argument in initialization is
-<strong>param_init_from_pnl</strong>, which controls how parameters are set up for the internal PyTorch representation of the model.</p>
-<p>If set to True:</p>
-<ul class="simple">
-<li>Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they don’t exist for the autodiff composition’s mechanisms.</li>
-<li>The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the tensor of the parameter object corresponding to a particular projection not only has the same dimensionality as the projection’s matrix, it has the same exact values.</li>
-<li>Pytorch functions representing mechanism functions incorporate their scalar, untrainable biases.</li>
-</ul>
-<p>If set to False:</p>
-<ul class="simple">
-<li>Both weight parameters corresponding to projections and trainable bias parameters for mechanisms are created.</li>
-<li>Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those of the bias parameters - are sampled from a random distribution.</li>
-<li>Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar, untrainable biases.</li>
-</ul>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
-first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.</p>
-</div>
-<p>Two other initialization arguments are <strong>patience</strong> and <strong>min_delta</strong>, allow the model to halt training early. The
-model tracks how many consecutive ‘bad’ epochs of training have failed to significantly reduce the model’s loss. Once
-this number exceeds <strong>patience</strong>, the model stops training. By default, <strong>patience</strong> is <code class="docutils literal"><span class="pre">None</span></code>, and the model
-will train for the number of specified epochs and will not stop training early.</p>
-<p><strong>min_delta</strong> defines what threshold counts as a significant reduction in model loss. By default it is zero, in which
-case any reduction in loss counts as a significant reduction. If <strong>min_delta</strong> is large and positive, the model tends to
-stop earlier because it views fewer epochs as ‘good’.</p>
-</div>
-<div class="section" id="structure">
-<span id="autodiffcomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>AutodiffComposition has all the attributes of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, in addition to several more.</p>
-<p>The <code class="xref any docutils literal"><span class="pre">target_CIM</span></code> attribute is analogous to the <code class="xref any docutils literal"><span class="pre">input_CIM</span></code> of
-any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.</p>
-<p>The <code class="xref any docutils literal"><span class="pre">pytorch_representation</span></code> attribute holds the PyTorch representation
-of the PsyNeuLink model that AutodiffComposition contains. The <code class="xref any docutils literal"><span class="pre">losses</span></code> attribute tracks
-the average loss for each training epoch.</p>
-</div>
-<div class="section" id="execution">
-<span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Execute an AutodiffComposition with its <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. During training, both <strong>inputs</strong> and <strong>targets</strong> must be
-specified. If you wish to run the AutodiffComposition without training it, only specify <strong>inputs</strong>. Some arguments to an
-AutodiffComposition’s <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method (such as <strong>inputs</strong> and <strong>execution_id</strong>) are the same as in a Composition’s
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. There are several different arguments as well:</p>
-<p><strong>epochs</strong> specifies the number of times the entire input set will be run. This is in contrast to <strong>num_trials</strong> in
-Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, which specifies the number of inputs that will be run. For example, if
-your input set has size 3, setting <strong>epochs</strong> to 1 in AutodiffComposition is equivalent to setting <strong>num_trials</strong> to 3
-in Composition.</p>
-<p><strong>learning_rate</strong> specifies the learning rate for this run (default 0.001), which is passed to the <strong>optimizer</strong>
-argument. <strong>optimizer</strong> specifies the kind of optimizer used in training. The current options are ‘sgd’ (the default)
-or ‘adam’.</p>
-<p><strong>loss</strong> specifies the loss function for training. The current options are ‘mse’ (the default) and ‘crossentropy’.</p>
-<p><strong>randomize</strong> specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
-run, but if <strong>randomize</strong> is True then the order in which inputs are within an epoch is random.)</p>
-<p>If <strong>refresh_losses</strong> is set to True, the AutodiffComposition resets the self.losses attribute before running.</p>
-</div>
-<div class="section" id="class-reference">
-<span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-</div>
+  <div class="section" id="autodiffcomposition">
+<h1>AutodiffComposition<a class="headerlink" href="#autodiffcomposition" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -289,7 +221,7 @@ run, but if <strong>randomize</strong> is True then the order in which inputs ar
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+855.g14c98c8',
+            VERSION:'0.4.8.0+894.ga6286dd',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
