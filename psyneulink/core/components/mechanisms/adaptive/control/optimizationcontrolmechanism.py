@@ -558,29 +558,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                            SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
                                            SEARCH_SPACE: self.get_control_allocation_search_space()})
 
-        self.evaluation_function = self.function_object.objective_function
+        # self.evaluation_function = self.function_object.objective_function
         self.search_function = self.function_object.search_function
         self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
         if isinstance(self.agent_rep, FunctionApproximator):
             self._instantiate_function_approximator()
-            self.optimize_control = self.agent_rep.make_prediction
+            self.evaluate_agent = self.agent_rep.make_prediction
         else:
-            self.optimize_control = self.agent_rep.run_simulation
-
-
-    # FIX: THIS IS SPECIFIC TO ORIG MODEL_FREE APPROACH:
-    def _instantiate_function_approximator(self):
-        '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
-
-        self.feature_values = np.array(self.instance_defaults.variable[1:])
-
-        # Assign parameters to learning_function
-        if isinstance(self.agent_rep, type):
-            self.agent_rep = self.function_approximator(owner=self)
-        else:
-            self.agent_rep.initialize(owner=self)
+            self.evaluate_agent = self.agent_rep.run_simulation
 
     def get_control_allocation_search_space(self):
 
@@ -639,12 +626,15 @@ class OptimizationControlMechanism(ControlMechanism):
         <ModelFreeOptimizationControlMechanism.function_approximator>`.
         '''
         num_estimates = 1
-        return self.optimize_control(control_allocation,
-                                     num_estimates,
-                                     self.state_rep,
-                                     context=self.function_object.context)
+        return self.evaluate_agent(control_allocation,
+                                   num_estimates,
+                                   self.state_rep,
+                                   context=self.function_object.context)
 
+    # ******************************************************************************************************************
     # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
+    # ******************************************************************************************************************
+
     def apply_control_signal_values(self, control_allocation, runtime_params, context):
         '''Assign specified control_allocation'''
         for i in range(len(control_allocation)):
@@ -654,12 +644,24 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-
+    # ******************************************************************************************************************
+    # FIX:  THE FOLLOWING IS SPECIFIC TO ORIG MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
     # ******************************************************************************************************************
 
-    # FIX:  THE FOLLOWING IS SPECIFIC TO ORIG MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
-    #                       AND SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
-    #                       SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep
+    def _instantiate_function_approximator(self):
+        '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
+
+        self.feature_values = np.array(self.instance_defaults.variable[1:])
+
+        # Assign parameters to learning_function
+        if isinstance(self.agent_rep, type):
+            self.agent_rep = self.function_approximator(owner=self)
+        else:
+            self.agent_rep.initialize(owner=self)
+
+
+    # FIX: THIS SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
+    # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep
 
     tc.typecheck
     def add_features(self, feature_predictors):
