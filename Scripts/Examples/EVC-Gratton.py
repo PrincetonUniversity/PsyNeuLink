@@ -196,7 +196,7 @@ stim_list_dict = {
 
 mySystem.controller.reportOutputPref = True
 
-Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextFlags.CONTROL))
+Flanker_Rep.set_log_conditions(('mod_slope', pnl.ContextFlags.CONTROL))
 
 mySystem.run(
         num_trials=nTrials,
@@ -205,5 +205,5 @@ mySystem.run(
 )
 
 
-Flanker_Rep.log.print_entries()
+Flanker_Rep.log.print_entries(execution_ids=mySystem)
 

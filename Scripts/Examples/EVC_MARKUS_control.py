@@ -146,7 +146,7 @@ stim_list_dict = {
 }
 
 def x():
-    print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value)
+    print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].parameters.value.get(mySystem))
 
 mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
@@ -154,5 +154,5 @@ mySystem.run(num_trials=nTrials,
 
 # Flanker_Rep.log.print_entries()
 # Target_Rep.log.print_entries()
-Decision.log.print_entries()
+Decision.log.print_entries(execution_ids=mySystem)
 

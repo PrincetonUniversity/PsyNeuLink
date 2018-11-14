@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import psyneulink as pnl
 
 # This implements the horse race Figure shown in Cohen & Huston (1994).
@@ -166,18 +166,20 @@ Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
-def pass_threshold(response_layer, thresh):
-    results1 = response_layer.output_states.values[0][0] #red response
-    results2 = response_layer.output_states.values[0][1] #green response
+# execution_id is automatically passed into Conditions, and references the execution context in which they are being run,
+# which in this case is simply the Bidirectional_Stroop system
+def pass_threshold(response_layer, thresh, execution_id):
+    results1 = response_layer.get_output_values(execution_id)[0][0] #red response
+    results2 = response_layer.get_output_values(execution_id)[0][1] #green response
     if results1  >= thresh or results2 >= thresh:
         return True
     return False
 
 # 2nd threshold function
-def pass_threshold2(response_layer, thresh, terminate):
-    results1 = response_layer.output_states.values[0][0] #red response
-    results2 = response_layer.output_states.values[0][1] #green response
-    length = response_layer.log.nparray_dictionary()['value'].shape[0]
+def pass_threshold2(response_layer, thresh, terminate, execution_id):
+    results1 = response_layer.get_output_values(execution_id)[0][0] #red response
+    results2 = response_layer.get_output_values(execution_id)[0][1] #green response
+    length = response_layer.log.nparray_dictionary()[execution_id]['value'].shape[0]
     if results1  >= thresh or results2 >= thresh:
         return True
     if length ==terminate:
@@ -272,22 +274,22 @@ for cond in range(conditions):
 
     # Store values from run -----------------------------------------------------------------------------------------------
         r = response_layer.log.nparray_dictionary('value')       # Log response output from special logistic function
-        rr = r['value']
+        rr = r[Bidirectional_Stroop.name]['value']
         n_r = rr.shape[0]
         rrr = rr.reshape(n_r,2)
 
         response_all.append(rrr.shape[0])
 
         # Clear log & reinitialize ----------------------------------------------------------------------------------------
-        response_layer.log.clear_entries(delete_entry=False)
-        colors_hidden_layer.log.clear_entries(delete_entry=False)
-        words_hidden_layer.log.clear_entries(delete_entry=False)
-        task_layer.log.clear_entries(delete_entry=False)
+        response_layer.log.clear_entries()
+        colors_hidden_layer.log.clear_entries()
+        words_hidden_layer.log.clear_entries()
+        task_layer.log.clear_entries()
 
-        colors_hidden_layer.reinitialize([[0,0,0]])
-        words_hidden_layer.reinitialize([[0,0,0]])
-        response_layer.reinitialize([[0,0]])
-        task_layer.reinitialize([[0,0]])
+        colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
+        words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
+        response_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
+        task_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
 
     print('response_all: ', response_all)
 
@@ -309,19 +311,19 @@ for cond in range(conditions):
         # threshold in of of the response layer units is reached
         # Store values from run -----------------------------------------------------------------------------------------------
         r = response_layer.log.nparray_dictionary('value')       # Log response output from special logistic function
-        rr = r['value']
+        rr = r[Bidirectional_Stroop.name]['value']
         n_r = rr.shape[0]
         rrr = rr.reshape(n_r,2)
         response_all.append(rrr.shape[0])
         # Clear log & reinitialize ------------------------------------------------------------------------------------
-        response_layer.log.clear_entries(delete_entry=False)
-        colors_hidden_layer.log.clear_entries(delete_entry=False)
-        words_hidden_layer.log.clear_entries(delete_entry=False)
-        task_layer.log.clear_entries(delete_entry=False)
-        colors_hidden_layer.reinitialize([[0,0,0]])
-        words_hidden_layer.reinitialize([[0,0,0]])
-        response_layer.reinitialize([[0,0]])
-        task_layer.reinitialize([[0,0]])
+        response_layer.log.clear_entries()
+        colors_hidden_layer.log.clear_entries()
+        words_hidden_layer.log.clear_entries()
+        task_layer.log.clear_entries()
+        colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
+        words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
+        response_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
+        task_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
 #compute regression for model

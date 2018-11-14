@@ -132,6 +132,9 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
     componentType = ADAPTIVE_MECHANISM
 
+    class Params(Mechanism_Base.Params):
+        modulation = None
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically

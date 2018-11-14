@@ -374,26 +374,26 @@ Class Reference
 
 """
 
+import itertools
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Param, function_type
+from psyneulink.core.components.functions.function import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.shellclasses import Function, System_Base
+from psyneulink.core.components.states.modulatorysignals.controlsignal import COST_OPTIONS, ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, COST_OPTIONS, \
-    ControlSignal
-from psyneulink.core.components.shellclasses import Function, System_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, \
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM, PARAMS
+from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PARAMS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable
+from psyneulink.core.globals.utilities import is_iterable
 from psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
 
 __all__ = [
@@ -740,8 +740,8 @@ class EVCControlMechanism(ControlMechanism):
     componentType = EVC_MECHANISM
     initMethod = INIT_FUNCTION_METHOD_ONLY
 
-
     classPreferenceLevel = PreferenceLevel.SUBTYPE
+
     # classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
@@ -751,9 +751,24 @@ class EVCControlMechanism(ControlMechanism):
 
     class Params(ControlMechanism.Params):
         function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
+        value_function = Param(ValueFunction, stateful=False, loggable=False)
+        cost_function = Param(LinearCombination, stateful=False, loggable=False)
+        combine_outcome_and_cost_function = Param(LinearCombination, stateful=False, loggable=False)
+        save_all_values_and_policies = Param(False, stateful=False, loggable=False)
+
         simulation_ids = Param(list, user=False)
 
-    from psyneulink.core.components.functions.function import LinearCombination
+        modulation = ModulationParam.MULTIPLICATIVE
+
+        EVC_max = Param(None, read_only=True)
+        EVC_values = Param([], read_only=True)
+        EVC_policies = Param([], read_only=True)
+        EVC_max_state_values = Param(None, read_only=True)
+        EVC_max_policy = Param(None, read_only=True)
+        control_signal_costs = Param(None, read_only=True)
+        control_signal_search_space = Param(None, read_only=True)
+        predicted_input = Param(None, read_only=True)
+
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -848,6 +863,9 @@ class EVCControlMechanism(ControlMechanism):
             context:
         """
 
+        from psyneulink.core.components.process import ProcessInputState
+        from psyneulink.core.components.system import SystemInputState
+
         # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
         # If system's controller already has prediction_mechanisms, use those
         if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
@@ -926,9 +944,14 @@ class EVCControlMechanism(ControlMechanism):
             for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
                                                             prediction_mechanism.input_states):
                 for projection in orig_input_state.path_afferents:
-                    MappingProjection(sender=projection.sender,
+                    proj = MappingProjection(sender=projection.sender,
                                       receiver=prediction_input_state,
                                       matrix=projection.matrix)
+
+                    if isinstance(proj.sender, (ProcessInputState, SystemInputState)):
+                        proj._activate_for_compositions(proj.sender.owner)
+                    else:
+                        proj._activate_for_compositions(system)
 
             # Assign list of processes for which prediction_mechanism will provide input during the simulation
             # - used in _get_simulation_system_inputs()
@@ -1009,6 +1032,7 @@ class EVCControlMechanism(ControlMechanism):
     def _execute(
         self,
         variable=None,
+        execution_id=None,
         runtime_params=None,
         context=None
     ):
@@ -1024,7 +1048,7 @@ class EVCControlMechanism(ControlMechanism):
         """
 
         if context != ContextFlags.PROPERTY:
-            self._update_predicted_input()
+            self._update_predicted_input(execution_id=execution_id)
         # self.system._cache_state()
 
         # CONSTRUCT SEARCH SPACE
@@ -1036,14 +1060,17 @@ class EVCControlMechanism(ControlMechanism):
         num_control_signals = len(control_signals)
 
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        self.parameters.control_signal_search_space.set(
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals),
+            execution_id,
+            override=True
+        )
 
         # EXECUTE SEARCH
 
@@ -1052,10 +1079,11 @@ class EVCControlMechanism(ControlMechanism):
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         allocation_policy = super(ControlMechanism, self)._execute(
-                controller=self,
-                variable=variable,
-                runtime_params=runtime_params,
-                context=context
+            controller=self,
+            variable=variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
         )
 
         # IMPLEMENTATION NOTE:
@@ -1063,7 +1091,7 @@ class EVCControlMechanism(ControlMechanism):
 
         return allocation_policy
 
-    def _update_predicted_input(self):
+    def _update_predicted_input(self, execution_id=None):
         """Assign values of prediction mechanisms to predicted_input
 
         Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
@@ -1083,15 +1111,18 @@ class EVCControlMechanism(ControlMechanism):
         for origin_mech in self.system.origin_mechanisms:
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
+            self.parameters.predicted_input.get(execution_id)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value.get(execution_id)
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
-    def run_simulation(self,
-                       inputs,
-                       allocation_vector,
-                       runtime_params=None,
-                       reinitialize_values=None,
-                       context=None):
+    def run_simulation(
+        self,
+        inputs,
+        allocation_vector,
+        execution_id=None,
+        runtime_params=None,
+        reinitialize_values=None,
+        context=None
+    ):
         """
         Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
 
@@ -1114,38 +1145,39 @@ class EVCControlMechanism(ControlMechanism):
 
         """
 
-        if self.value is None:
+        if self.parameters.value.get(execution_id) is None:
             # Initialize value if it is None
-            self.value = np.empty(len(self.control_signals))
+            self.parameters.value.set(np.empty(len(self.control_signals)), execution_id, override=True)
 
         # Implement the current allocation_policy over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
-            self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, context=context)
+            self.parameters.value.get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION
 
         # Buffer System attributes
-        execution_id_buffer = self.system._execution_id
         animate_buffer = self.system._animate
 
         # Run simulation
-        self.system.context.execution_phase = ContextFlags.SIMULATION
-        self.system.run(inputs=inputs,
-                        reinitialize_values=reinitialize_values,
-                        animate=False,
-                        context=context)
-        self.system.context.execution_phase = ContextFlags.CONTROL
+        self.system.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.system.run(
+            inputs=inputs,
+            execution_id=execution_id,
+            reinitialize_values=reinitialize_values,
+            animate=False,
+            context=context
+        )
+        self.system.parameters.context.get(execution_id).execution_phase = ContextFlags.CONTROL
 
         # Restore System attributes
         self.system._animate = animate_buffer
-        self.system._execution_id = execution_id_buffer
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
+        monitored_states = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # # MODIFIED 9/18/18 OLD:
         # for i in range(len(self.control_signals)):
@@ -1155,9 +1187,11 @@ class EVCControlMechanism(ControlMechanism):
         #     if self.control_signal_costs[i].cost_options is not None:
         #         self.control_signal_costs[i] = self.control_signals[i].cost
         # MODIFIED 9/18/18 NEWER:
+        control_signal_costs = self.parameters.control_signal_costs.get(execution_id)
         for i, c in enumerate(self.control_signals):
-            if c.cost_options is not None:
-                self.control_signal_costs[i] = c.cost
+            if c.parameters.cost_options.get(execution_id) is not None:
+                control_signal_costs[i] = c.parameters.cost.get(execution_id)
+        self.parameters.control_signal_costs.set(control_signal_costs, execution_id, override=True)
         # MODIFIED 9/18/18 END
 
         return monitored_states
@@ -1213,3 +1247,12 @@ class EVCControlMechanism(ControlMechanism):
             self._combine_outcome_and_cost_function = udf
         else:
             self._combine_outcome_and_cost_function = value
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.value_function],
+            [self.cost_function],
+            [self.combine_outcome_and_cost_function],
+        ))

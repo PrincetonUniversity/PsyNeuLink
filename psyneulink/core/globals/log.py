@@ -126,7 +126,7 @@ that the `value <Mechanism_Base.value>` of ``my_mech`` be logged both during exe
     >>> my_mech = pnl.TransferMechanism()
     >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION | pnl.LogCondition.LEARNING)
     >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION + pnl.LogCondition.LEARNING)
-    >>> my_mech.set_log_conditions('value', [pnl.EXECUTION, LEARNING])
+    >>> my_mech.set_log_conditions('value', [pnl.EXECUTION, pnl.LEARNING])
 
 
 .. note::
@@ -389,9 +389,9 @@ from collections import OrderedDict, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.globals.context import ContextFlags, _get_context, _get_time
-from psyneulink.core.globals.keywords import ALL, COMMAND_LINE, CONTEXT, INITIALIZING, LEARNING, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
+from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.keywords import ALL, CONTEXT, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component, parse_execution_context
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -454,8 +454,19 @@ class LogCondition(aenum.IntFlag):
                     if condition & LogCondition.EXECUTION == ContextFlags.EXECUTION_PHASE_MASK:
                         continue
                 flagged_items.append(c)
-        string += ", ".join(flagged_items)
-        return string
+
+        if len(flagged_items) > 0:
+            string += ", ".join(flagged_items)
+            return string
+        else:
+            return 'invalid LogCondition'
+
+    @staticmethod
+    def from_string(string):
+        try:
+            return LogCondition[string.upper()]
+        except KeyError:
+            raise LogError("\'{}\' is not a value of {}".format(string, LogCondition))
 
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
@@ -668,6 +679,8 @@ class Log:
         of a Component, and the value is its currently assigned `LogCondition`.
 
     """
+    execution_id_header = 'Execution Context'
+    data_header = 'Data'
 
     def __init__(self, owner, entries=None):
         """Initialize Log with list of entries
@@ -684,6 +697,72 @@ class Log:
 
         if entries is None:
             return
+
+    @property
+    def parameter_items(self):
+        return self.owner._loggable_parameters
+
+    @property
+    def input_state_items(self):
+        try:
+            return self.owner.input_states.names
+        except AttributeError:
+            return []
+
+    @property
+    def output_state_items(self):
+        try:
+            return self.owner.output_states.names
+        except AttributeError:
+            return []
+
+    @property
+    def parameter_state_items(self):
+        try:
+            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_states.names]
+        except AttributeError:
+            return []
+
+    @property
+    def function_items(self):
+        try:
+            return [FUNCTION_PARAMETER_PREFIX + name for name in self.owner.function_object._loggable_parameters]
+        except AttributeError:
+            return []
+
+    @property
+    def all_items(self):
+        return sorted(self.parameter_items + self.input_state_items + self.output_state_items + self.parameter_state_items + self.function_items)
+
+    def _get_parameter_from_item_string(self, string):
+        # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
+        # no duplicates/changing
+        if string.startswith(MODULATED_PARAMETER_PREFIX):
+            try:
+                return self.owner.parameter_states[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+            except (AttributeError, TypeError):
+                pass
+
+        try:
+            return getattr(self.owner.parameters, string)
+        except AttributeError:
+            pass
+
+        try:
+            return self.owner.input_states[string].parameters.value
+        except (AttributeError, TypeError):
+            pass
+
+        try:
+            return self.owner.output_states[string].parameters.value
+        except (AttributeError, TypeError):
+            pass
+
+        if string.startswith(FUNCTION_PARAMETER_PREFIX):
+            try:
+                return getattr(self.owner.function_object.parameters, string[len(FUNCTION_PARAMETER_PREFIX):])
+            except AttributeError:
+                pass
 
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """Specifies items to be logged under the specified `LogCondition`\\(s).
@@ -719,32 +798,31 @@ class Log:
                 level = [level]
             levels = LogCondition.OFF
             for l in level:
-                try:
-                    l = LogCondition[l.upper()] if isinstance(l, str) else l
-                except KeyError:
-                    raise LogError("\'{}\' is not a value of {}".
-                                   format(l, LogCondition.__name__))
+                if isinstance(l, str):
+                    l = LogCondition.from_string(l)
                 levels |= l
             level = levels
 
             if not item in self.loggable_items:
+                # KDM 8/13/18: NOTE: add_entries is not defined anywhere
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
-            try:
-                component = next(c for c in self.loggable_components if self._alias_owner_name(c.name) == item)
-                component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
-            except AttributeError:
-                raise LogError("PROGRAM ERROR: Unable to set ContextFlags for {} of {}".format(item, self.owner.name))
+
+            self._get_parameter_from_item_string(item).log_condition = level
 
         if items is ALL:
             for component in self.loggable_components:
                 component.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
+
+            for item in self.all_items:
+                self._get_parameter_from_item_string(item).log_condition = log_condition
             # self.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
             return
 
         if not isinstance(items, list):
             items = [items]
 
+        # allow multiple sets of conditions to be set for multiple items with one call
         for item in items:
             if isinstance(item, (str, Component)):
                 if isinstance(item, Component):
@@ -754,11 +832,14 @@ class Log:
                 assign_log_condition(item[0], item[1])
 
     @tc.typecheck
-    def _log_value(self,
-                   value,
-                   time=None,
-                   condition:tc.optional(LogCondition)=None,
-                   context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None):
+    def _log_value(
+        self,
+        value,
+        time=None,
+        condition:tc.optional(LogCondition)=None,
+        context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None,
+        execution_id=None
+    ):
         """Add LogEntry to an entry in the Log
 
         If **value** is a LogEntry, it is assigned to the entry
@@ -793,8 +874,8 @@ class Log:
                 # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
                 if isinstance(self.owner, Function):
                     return
-                elif self.owner.context.flags:
-                    condition = self.owner.context.flags
+                elif self.owner.parameters.context.get(execution_id).flags:
+                    condition = self.owner.parameters.context.get(execution_id).flags
                 else:
                     raise LogError("PROGRAM ERROR: No condition or context specified in call to _log_value for "
                                    "{} and it has not context.flags".format(self.owner.name))
@@ -812,7 +893,7 @@ class Log:
             self.owner.prev_context = self.owner.context
 
     @tc.typecheck
-    def log_values(self, entries):
+    def log_values(self, entries, execution_context=None):
         """Log the value of one or more Components programmatically.
 
         This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
@@ -835,10 +916,42 @@ class Log:
 
         # Validate the Component field of each LogEntry
         for entry in entries:
-            self._log_value(value=self.loggable_components[self._dealias_owner_name(entry)].value,
-                            context=ContextFlags.COMMAND_LINE)
+            param = self._get_parameter_from_item_string(entry)
+            execution_id = parse_execution_context(execution_context)
+            param._log_value(param.get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
 
-    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
+    def get_logged_entries(self, entries=ALL, execution_ids=NotImplemented):
+        if entries is ALL:
+            entries = self.all_items
+
+        logged_entries = {}
+        for item in entries:
+            logged_entries[item] = {}
+            try:
+                # allow entries to be names of Components
+                item = item.name
+            except AttributeError:
+                pass
+
+            log = self._get_parameter_from_item_string(item).log
+            if execution_ids is NotImplemented:
+                eids = log.keys()
+            elif not isinstance(execution_ids, list):
+                eids = [execution_ids]
+            else:
+                eids = execution_ids
+            eids = [parse_execution_context(eid) for eid in eids]
+
+            for eid in eids:
+                if eid in log and len(log[eid]) > 0:
+                    logged_entries[item][eid] = log[eid]
+
+            if len(logged_entries[item]) == 0:
+                del logged_entries[item]
+
+        return logged_entries
+
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False, execution_ids=NotImplemented):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
@@ -880,13 +993,12 @@ class Log:
 
             # Clear entries
             for entry in entries:
-                self.logged_entries[entry]=[]
                 if delete_entry:
-                # Delete the entire entry from the log to which it belongs
-                    del self.loggable_components[entry].log.entries[entry]
+                    # Delete the entire entry from the log to which it belongs
+                    self._get_parameter_from_item_string(entry).clear_log(execution_ids)
                 else:
                     # Delete the data for the entry but leave the entry itself in the log to which it belongs
-                    del self.logged_entries[entry][0:]
+                    raise LogError('delete_entry=False currently unimplemented')
                 assert True
 
     @tc.typecheck
@@ -894,6 +1006,7 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      execution_ids=NotImplemented,
                       # long_context=False
                       ):
         """
@@ -973,8 +1086,10 @@ class Log:
         if option_flags & options.CONTEXT:
             c_width = 0
             for entry in entries:
-                for datum in self.logged_entries[entry]:
-                    c_width = max(c_width, len(datum.context))
+                logged_entries = self.get_logged_entries(execution_ids=execution_ids)[entry]
+                for eid in logged_entries:
+                    for datum in logged_entries[eid]:
+                        c_width = max(c_width, len(datum.context))
             context_width = min(context_width, c_width)
 
         # Set other widths based on options:
@@ -1016,46 +1131,49 @@ class Log:
         # for entry_name in self.logged_entries:
         for entry_name in entry_names_sorted:
             try:
-                datum = self.logged_entries[entry_name]
+                datum = self.get_logged_entries(execution_ids=execution_ids)[entry_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
             else:
                 import numpy as np
-                for i, item in enumerate(datum):
+                for eid in datum:
+                    print('{0}:'.format(eid))
+                    for i, item in enumerate(datum[eid]):
 
-                    time, context, value = item
+                        time, context, value = item
 
-                    entry_name = self._alias_owner_name(entry_name)
-                    data_str = repr(entry_name).ljust(item_name_width, spacer)
+                        entry_name = self._alias_owner_name(entry_name)
+                        data_str = repr(entry_name).ljust(item_name_width, spacer)
 
-                    if options.TIME & option_flags:
-                        time_str = _time_string(time)
-                        data_str = data_str + time_str.ljust(time_width)
+                        if options.TIME & option_flags:
+                            time_str = _time_string(time)
+                            data_str = data_str + time_str.ljust(time_width)
 
-                    if options.CONTEXT & option_flags:
-                        context = repr(context)
-                        if len(context) > context_width:
-                            context = context[:context_width-3] + "..."
-                        data_str = data_str + context.ljust(context_width, spacer)
+                        if options.CONTEXT & option_flags:
+                            context = repr(context)
+                            if len(context) > context_width:
+                                context = context[:context_width-3] + "..."
+                            data_str = data_str + context.ljust(context_width, spacer)
 
-                    if options.VALUE & option_flags:
-                        value = str(value).replace('\n',',')
-                        if len(value) > value_width:
-                            value = value[:value_width-3].rstrip() + "..."
-                        format_str = "{{:2.{0}}}".format(value_width)
-                        data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
+                        if options.VALUE & option_flags:
+                            value = str(value).replace('\n',',')
+                            if len(value) > value_width:
+                                value = value[:value_width-3].rstrip() + "..."
+                            format_str = "{{:2.{0}}}".format(value_width)
+                            data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
 
-                    print(data_str)
+                        print(data_str)
 
-                if len(datum) > 1:
-                    print("\n")
+                    if len(datum[eid]) > 1:
+                        print("\n")
 
     @tc.typecheck
     def nparray(self,
                 entries=None,
                 header:bool=True,
-                owner_name:bool=False
+                owner_name:bool=False,
+                execution_ids=NotImplemented,
                 ):
         """
         nparray(                 \
@@ -1128,48 +1246,56 @@ class Log:
 
         header = 1 if header is True else 0
 
-        time_values = self._parse_entries_for_time_values(entries)
+        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
 
-        npa = []
+        npa = [[self.execution_id_header]] if header else [[]]
 
-        # Create time rows (one for each time scale)
-        if time_values:
-            for i in range(NUM_TIME_SCALES):
-                row = [[t[i]] for t in time_values]
-                if header:
-                    time_header = [TIME_SCALE_NAMES[i].capitalize()]
-                    row = [time_header] + row
-                npa.append(row)
-        # If any time values are empty, revert to indexing the entries;
-        #    this requires that all entries have the same length
-        else:
-            max_len = max([len(self.logged_entries[self._dealias_owner_name(e)]) for e in entries])
+        npa.append([self.data_header] if header else [])
 
-            # If there are no time values, only support entries of the same length
-            # Must dealias both e and zeroth entry because either/both of these could be 'value'
-            if not all(len(self.logged_entries[self._dealias_owner_name(e)])==len(self.logged_entries[self._dealias_owner_name(entries[0])])for e in entries):
-                raise LogError("nparray output requires that all entries have time values or are of equal length")
+        for eid in sorted(execution_ids):
+            time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
+            npa[0].append(eid)
 
-            npa = np.arange(max_len).reshape(max_len,1).tolist()
-            if header:
-                npa = [["Index"] + npa]
+            data_entry = []
+            # Create time rows (one for each time scale)
+            if time_values:
+                for i in range(NUM_TIME_SCALES):
+                    row = [[t[i]] for t in time_values]
+                    if header:
+                        time_header = [TIME_SCALE_NAMES[i].capitalize()]
+                        row = [time_header] + row
+                    data_entry.append(row)
+            # If any time values are empty, revert to indexing the entries;
+            #    this requires that all entries have the same length
             else:
-                npa = [npa]
+                max_len = max([len(self.logged_entries[e][eid]) for e in entries])
 
-        for entry in entries:
-            row = self._assemble_entry_data(entry, time_values)
+                # If there are no time values, only support entries of the same length
+                # Must dealias both e and zeroth entry because either/both of these could be 'value'
+                if not all(len(self.logged_entries[e]) == len(self.logged_entries[entries[0]])for e in entries):
+                    raise LogError("nparray output requires that all entries have time values or are of equal length")
 
-            if header:
-                entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
-                row = [entry_header] + row
-            npa.append(row)
+                data_entry = np.arange(max_len).reshape(max_len, 1).tolist()
+                if header:
+                    data_entry = [["Index"] + data_entry]
+                else:
+                    data_entry = [data_entry]
+
+            for entry in entries:
+                row = self._assemble_entry_data(entry, time_values, eid)
+
+                if header:
+                    entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
+                    row = [entry_header] + row
+                data_entry.append(row)
+
+            npa[1].append(data_entry)
 
         npa = np.array(npa, dtype=object)
 
         return npa
 
-    def nparray_dictionary(self,
-                           entries=None):
+    def nparray_dictionary(self, entries=None, execution_ids=NotImplemented):
         """
         nparray_dictionary(                 \
             entries=None,        \
@@ -1229,34 +1355,40 @@ class Log:
         log_dict = OrderedDict()
         entries = self._validate_entries_arg(entries, logged=True)
 
-        if entries:
-            time_values = self._parse_entries_for_time_values(entries)
+        if not entries:
+            return log_dict
+
+        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
+
+        for eid in execution_ids:
+            time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
+            log_dict[eid] = OrderedDict()
 
             # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
             if time_values:
                 for i in range(NUM_TIME_SCALES):
                     row = [[t[i]] for t in time_values]
                     time_header = TIME_SCALE_NAMES[i].capitalize()
-                    log_dict[time_header] = row
+                    log_dict[eid][time_header] = row
 
             # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
             else:
                 # find number of values logged by zeroth component
-                num_indicies = len(self.logged_entries[self._dealias_owner_name(entries[0])])
+                num_indicies = len(self.logged_entries[entries[0]])
 
                 # If there are no time values, only support entries of the same length
-                if not all(len(self.logged_entries[self._dealias_owner_name(e)]) == num_indicies for e in entries):
+                if not all(len(self.logged_entries[e]) == num_indicies for e in entries):
                     raise LogError("nparray output requires that all entries have time values or are of equal length")
 
-                log_dict["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
+                log_dict[eid]["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
 
             for entry in entries:
-                log_dict[self._alias_owner_name(entry)] = np.array(self._assemble_entry_data(entry, time_values))
+                log_dict[eid][entry] = np.array(self._assemble_entry_data(entry, time_values, eid))
 
         return log_dict
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_ids=NotImplemented):
         """
         csv(                           \
             entries=None,              \
@@ -1311,30 +1443,47 @@ class Log:
             npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
         except LogError as e:
             raise LogError(e.args[0].replace('nparray', 'csv'))
+
         npaT = npa.T
 
-        if not quotes:
-            quotes = ''
-        elif quotes is True:
-            quotes = '\''
+        # execution context headers
+        csv = "'" + "', '".join([str(x) for x in npaT[0]]) + "\'" + "\n"
 
-        # Headers
-        csv = "\'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in npaT[0]) + "\'"
-        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
-        # Data
+        entries = self._validate_entries_arg(entries, logged=True)
+        execution_ids = self._parse_execution_ids_arg(execution_ids, entries)
+
         for i in range(1, len(npaT)):
-            csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
-                replace('[[',quotes).replace(']]',quotes).replace('[',quotes).replace(']',quotes)
-        csv += '\n'
+            # for each execution_id
+            execution_id = npaT[i][0]
+            data = np.array(npaT[i][1], dtype=object).T
+
+            if not quotes:
+                quotes = ''
+            elif quotes is True:
+                quotes = '\''
+
+            # Headers
+            next_eid_entry_data = "'{0}'".format(execution_id)
+            next_eid_entry_data += ", \'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in data[0]) + "\'"
+            next_eid_entry_data += '\n'
+
+            # Data
+            for i in range(1, len(data)):
+                next_eid_entry_data += ', ' + ', '.join([str(j) for j in [str(k).replace(',','') for k in data[i]]]).\
+                    replace('[[',quotes).replace(']]',quotes).replace('[',quotes).replace(']',quotes)
+                next_eid_entry_data += '\n'
+
+            csv += next_eid_entry_data
 
         return(csv)
 
     def _validate_entries_arg(self, entries, loggable=True, logged=False):
         from psyneulink.core.components.component import Component
 
+        logged_entries = self.logged_entries
         # If ALL, set entries to all entries in self.logged_entries
         if entries is ALL or entries is None:
-            entries = self.logged_entries.keys()
+            entries = logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, (str, Component)):
@@ -1349,12 +1498,31 @@ class Log:
                 if self._alias_owner_name(entry) not in self.loggable_items:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
-                if entry not in self.logged_entries and entry != 'value':
+                if entry not in logged_entries and entry != 'value':
                     # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                     #                format(repr(entry), self.owner.name))
                     print("\n{} is not currently being logged by {} or has not data (try using set_log_conditions)".
                           format(repr(entry), self.owner.name))
         return entries
+
+    def _parse_execution_ids_arg(self, execution_ids, entries):
+        if entries is None:
+            entries = []
+
+        if execution_ids is NotImplemented:
+            all_execution_ids = set()
+            for entry in entries:
+                log = self._get_parameter_from_item_string(entry).log
+                for eid in log.keys():
+                    # allow adding string to set using tuple
+                    all_execution_ids.add((eid,))
+            execution_ids = [eid[0] for eid in all_execution_ids]
+        elif not isinstance(execution_ids, list):
+            execution_ids = [execution_ids]
+
+        execution_ids = [parse_execution_context(eid) for eid in execution_ids]
+
+        return execution_ids
 
     def _alias_owner_name(self, name):
         """Alias name of owner Component to VALUE in loggable_items and logged_items
@@ -1388,12 +1556,11 @@ class Log:
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 
-    def _parse_entries_for_time_values(self, entries):
+    def _parse_entries_for_time_values(self, entries, execution_id=None):
         # Returns sorted list of SimpleTime tuples for all time points at which these entries logged values
 
         time_values = []
         for entry in entries:
-            entry = self._dealias_owner_name(entry)
             # OLD: finds duplicate time points within any one entry and modifies their values to be unique
             #
             # # collect all time values for this entry
@@ -1409,7 +1576,7 @@ class Log:
             #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
             time_values.extend([item.time
-                                for item in self.logged_entries[entry]
+                                for item in self.get_logged_entries(execution_ids=[execution_id])[entry][execution_id]
                                 if all(i is not None for i in item.time)])
 
         # Insure that all time values are assigned, get rid of duplicates, and sort
@@ -1418,14 +1585,14 @@ class Log:
 
         return time_values
 
-    def _assemble_entry_data(self, entry, time_values):
+    def _assemble_entry_data(self, entry, time_values, execution_id=None):
         # Assembles list of entry's (component's) value at each of the time points specified in time_values
         # If data was not recorded for this entry (component) for a given time point, it will be stored as None
 
-        entry = self._dealias_owner_name(entry)
+        # entry = self._dealias_owner_name(entry)
         row = []
         time_col = iter(time_values)
-        for datum in self.logged_entries[entry]:
+        for datum in self.logged_entries[entry][execution_id]:
             # iterate through log entry tuples:
             # check whether tuple's time value matches the time for which data is currently being recorded
             # if so, enter tuple's Component value in the entry's list
@@ -1462,13 +1629,14 @@ class Log:
         # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
 
         loggable_items = {}
-        for c in self.loggable_components:
-            name = self._alias_owner_name(c.name)
+        for item in self.all_items:
+            cond = self._get_parameter_from_item_string(item).log_condition
             try:
-                log_pref_names = LogCondition._get_log_condition_string(c.logPref)
-            except:
-                log_pref_names = None
-            loggable_items[name] = log_pref_names
+                # may be an actual LogCondition
+                loggable_items[item] = cond.name
+            except AttributeError:
+                loggable_items[item] = cond
+
         return loggable_items
 
     @property
@@ -1502,15 +1670,13 @@ class Log:
 
     @property
     def logged_entries(self):
-        entries = {}
-        for e in self.loggable_components:
-            entries.update(e.log.entries)
-        return entries
+        return self.get_logged_entries()
 
     # def save_log(self):
     #     print("Saved")
 
-def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+
+def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context, execution_id=None):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:
@@ -1523,7 +1689,7 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
                 #                  curr_condition,
                 #                  component.value)
                 # component.log._log_value(value=value, context=context)
-                component.log._log_value(value=component.value, condition=curr_condition.name)
+                component.log._log_value(value=component.parameters.value.get(execution_id), condition=curr_condition.name)
 
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
@@ -1534,8 +1700,7 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
-                    component.log._log_value(value=component.value, condition=curr_condition.name)
-
+                    component.log._log_value(value=component.parameters.value.get(execution_id), condition=curr_condition.name)
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:

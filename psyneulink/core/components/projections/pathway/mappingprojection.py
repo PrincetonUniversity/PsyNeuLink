@@ -283,6 +283,19 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
+def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
+    return owning_component.function_object.parameters.matrix.get(execution_id)
+
+
+def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+    owning_component.function_object.parameters.matrix.set(value, execution_id)
+    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
+    # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
+    owning_component.parameter_states["matrix"].function_object.parameters.previous_value.set(value, execution_id)
+
+    return value
+
+
 class MappingProjection(PathwayProjection_Base):
     """
     MappingProjection(             \
@@ -439,7 +452,7 @@ class MappingProjection(PathwayProjection_Base):
 
     class Params(PathwayProjection_Base.Params):
         function = Param(LinearMatrix, stateful=False, loggable=False)
-        matrix = Param(DEFAULT_MATRIX, modulable=True)
+        matrix = Param(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -545,7 +558,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # Compare length of MappingProjection output and receiver's variable to be sure matrix has proper dimensions
         try:
-            mapping_output_len = len(self.value)
+            mapping_output_len = len(self.defaults.value)
         except TypeError:
             mapping_output_len = 1
 
@@ -615,19 +628,20 @@ class MappingProjection(PathwayProjection_Base):
                 self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
-                self._update_value()
+                self._instantiate_value()
 
         super()._instantiate_receiver(context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.context.execution_phase = ContextFlags.PROCESSING
-        self.context.string = context
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context.get(execution_id).string = context
 
-        self._update_parameter_states(runtime_params=runtime_params, context=context)
+        self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         return super()._execute(
             variable=variable,
+            execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )

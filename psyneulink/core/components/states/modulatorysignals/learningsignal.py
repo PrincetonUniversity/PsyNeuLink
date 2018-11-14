@@ -168,8 +168,10 @@ Class Reference
 
 """
 
+import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Linear, ModulationParam, _is_modulation_param
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import PRIMARY
@@ -352,6 +354,7 @@ class LearningSignal(ModulatorySignal):
     #endregion
 
     class Params(ModulatorySignal.Params):
+        value = Param(np.array([0]), read_only=True, aliases=['learning_signal'])
         learning_rate = None
 
     @tc.typecheck

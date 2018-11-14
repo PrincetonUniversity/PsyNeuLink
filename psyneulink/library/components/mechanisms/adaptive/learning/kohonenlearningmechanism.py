@@ -86,7 +86,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.component import Param, parameter_keywords
 from psyneulink.core.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
@@ -283,6 +283,16 @@ class KohonenLearningMechanism(LearningMechanism):
     learning_type = LearningType.UNSUPERVISED
     learning_timing = LearningTiming.EXECUTION_PHASE
 
+    class Params(LearningMechanism.Params):
+        function = Param(Hebbian, stateful=False, loggable=False)
+
+        matrix = Param(None, modulable=True)
+        learning_rate = Param(None, modulable=True)
+
+        learning_type = LearningType.UNSUPERVISED
+        learning_timing = LearningTiming.EXECUTION_PHASE
+        modulation = ModulationParam.ADDITIVE
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -337,7 +347,7 @@ class KohonenLearningMechanism(LearningMechanism):
         """
 
         # Skip LearningMechanism._validate_variable in call to super(), as it requires variable to have 3 items
-        variable = self._update_variable(super(LearningMechanism, self)._validate_variable(variable, context))
+        variable = super(LearningMechanism, self)._validate_variable(variable, context)
 
         if np.array(variable).ndim != 2 or not is_numeric(variable):
             raise KohonenLearningMechanismError("Variable for {} ({}) must be a list with two items "
@@ -345,13 +355,14 @@ class KohonenLearningMechanism(LearningMechanism):
                                                         format(self.name, variable))
         return variable
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = variable.tolist()
-        variable.append(self.matrix.value.tolist())
+        variable.append(self.matrix.parameters.value.get(execution_id).tolist())
         return variable
 
     def _execute(self,
                  variable=None,
+                 execution_id=None,
                  runtime_params=None,
                  context=None
                  ):
@@ -365,30 +376,19 @@ class KohonenLearningMechanism(LearningMechanism):
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
 
-        self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
-                                                                       runtime_params=runtime_params,
-                                                                       context=context)
+        learning_signal = super(LearningMechanism, self)._execute(
+            variable=variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, learning_signal))
 
-        # TEST PRINT
-        if not self.context.initialization_status == ContextFlags.INITIALIZING:
-            if self.context.composition:
-                time = self.context.composition.scheduler_processing.clock.simple_time
-            else:
-                time = self.current_execution_time
-            print("\nEXECUTED KohonenLearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-                format(self.context.flags_string,
-                       time.trial,
-                       # self.pass_,
-                       time.time_step))
-            print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        return [learning_signal]
 
-        self.value = [self.learning_signal]
-        return self.value
-
-    def _update_output_states(self, runtime_params=None, context=None):
+    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         '''Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
@@ -397,9 +397,9 @@ class KohonenLearningMechanism(LearningMechanism):
 
         super()._update_output_states(runtime_params, context)
 
-        if self.context.composition:
-            self.learned_projection.execute(context=ContextFlags.LEARNING)
-            self.learned_projection.context.execution_phase = ContextFlags.IDLE
+        if self.parameters.context.get(execution_id).composition is not None:
+            self.learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
+            self.learned_projection.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property
     def learned_projection(self):

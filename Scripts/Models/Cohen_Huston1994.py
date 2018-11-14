@@ -258,7 +258,7 @@ print("\n\n\n\n")
 print(Bidirectional_Stroop.run(inputs=input_dict))
 
 for node in Bidirectional_Stroop.mechanisms:
-    print(node.name, " Value: ", node.output_values)
+    print(node.name, " Value: ", node.get_output_values(Bidirectional_Stroop))
 # # LOGGING:
 # colors_hidden_layer.set_log_conditions('value')
 # words_hidden_layer.set_log_conditions('value')

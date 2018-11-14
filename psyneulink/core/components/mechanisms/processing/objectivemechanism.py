@@ -327,7 +327,7 @@ Class Reference
 ---------------
 
 """
-import warnings
+import itertools
 
 from collections import Iterable
 
@@ -693,7 +693,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if len(self.input_states)==1 and self.input_state.name=='InputState-0' and not self.input_state.path_afferents:
             del self.input_states[0]
             self.instance_defaults.variable = []
-            self._update_variable(self.instance_defaults.variable)
 
         # Get reference value
         reference_value = []
@@ -774,12 +773,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function_object.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        for state in self.monitored_output_states:
-            state._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
-
     @property
     def monitored_output_states(self):
         if not isinstance(self.input_states, ContentAddressableList):
@@ -813,6 +806,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         exponents = [e[1] for e in weights_and_exponents_tuples]
         self._instantiate_weights_and_exponents(weights, exponents)
 
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            self.monitored_output_states,
+        ))
+
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
         if mech._role is role:
@@ -826,11 +826,14 @@ def _objective_mechanism_role(mech, role):
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
 # KAM commented out _instantiate_monitoring_projections 9/28/18 to avoid confusion because it never gets called
 # @tc.typecheck
-# def _instantiate_monitoring_projections(owner,
-#                                         sender_list:tc.any(list, ContentAddressableList),
-#                                         receiver_list:tc.any(list, ContentAddressableList),
-#                                         receiver_projection_specs:tc.optional(list)=None,
-#                                         context=None):
+# def _instantiate_monitoring_projections(
+#     owner,
+#     sender_list: tc.any(list, ContentAddressableList),
+#     receiver_list: tc.any(list, ContentAddressableList),
+#     receiver_projection_specs: tc.optional(list)=None,
+#     system=None,
+#     context=None
+# ):
 #
 #     from psyneulink.core.components.states.outputstate import OutputState
 #     from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -891,3 +894,4 @@ def _objective_mechanism_role(mech, role):
 #                                                     receiver=receiver,
 #                                                     matrix=projection_spec,
 #                                                     name=sender.name + ' monitor')
+#                 projection_spec._activate_for_compositions(system)

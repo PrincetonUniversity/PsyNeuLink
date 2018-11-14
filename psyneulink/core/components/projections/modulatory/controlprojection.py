@@ -128,6 +128,16 @@ class ControlProjectionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
+def _control_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _control_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override)
+    return value
+
+
 class ControlProjection(ModulatoryProjection_Base):
     """
     ControlProjection(           \
@@ -277,6 +287,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class Params(ModulatoryProjection_Base.Params):
         function = Param(Linear, stateful=False, loggable=False)
+        control_signal = Param(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -391,5 +402,3 @@ class ControlProjection(ModulatoryProjection_Base):
     @property
     def control_signal(self):
         return self.sender.value
-
-

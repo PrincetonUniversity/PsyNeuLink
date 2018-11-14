@@ -453,7 +453,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
+        learning_function = None
         function = None
+        search_function = None
+        search_termination_function = None
+
+        search_space = None
+        allocation_policy_search_space = None
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -537,29 +543,31 @@ class OptimizationControlMechanism(ControlMechanism):
                                            SEARCH_FUNCTION: self.search_function,
                                            SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
                                            SEARCH_SPACE: self.get_allocation_policy_search_space()})
-        
+
         self.evaluation_function = self.function_object.objective_function
         self.search_function = self.function_object.search_function
         self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
-    def get_allocation_policy_search_space(self):
+    def get_allocation_policy_search_space(self, execution_id=None):
 
         control_signal_sample_lists = []
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct allocation_policy_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.allocation_policy_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
+        allocation_policy_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
 
         # Insure that ControlSignal in each sample is in its own 1d array
-        re_shape = (self.allocation_policy_search_space.shape[0], self.allocation_policy_search_space.shape[1], 1)
+        re_shape = (allocation_policy_search_space.shape[0], allocation_policy_search_space.shape[1], 1)
 
-        return self.allocation_policy_search_space.reshape(re_shape)
+        allocation_policy_search_space = allocation_policy_search_space.reshape(re_shape)
+
+        self.parameters.allocation_policy_search_space.set(allocation_policy_search_space, execution_id, override=True)
+        return allocation_policy_search_space
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find allocation_policy that optimizes evaluation_function.'''

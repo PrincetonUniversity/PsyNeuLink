@@ -209,13 +209,13 @@ task.run(stim_list_dict, num_trials=trials)
 # This displays a diagram of the System
 # task.show_graph()
 
-LC_results = LC.log.nparray()        # get logged results
-LC_results_w = np.zeros([trials])    # get LC_results_w
+LC_results = LC.log.nparray()[1][1]        # get logged results
+LC_results_w = np.zeros([trials])          # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[4][i + 1][3][0]
-LC_results_v = np.zeros([trials])    # get LC_results_v
+    LC_results_w[i] = LC_results[4][i + 1][3][0][0]
+LC_results_v = np.zeros([trials])          # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[4][i + 1][2][0]
+    LC_results_v[i] = LC_results[4][i + 1][2][0][0]
 
 
 def h_v(v, C, d):                   # Compute h(v)

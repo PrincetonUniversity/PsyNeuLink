@@ -50,6 +50,7 @@ Class Reference
 
 """
 
+import itertools
 import logging
 import numbers
 import warnings
@@ -59,6 +60,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Kohonen, Linear, OneHot, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -67,7 +69,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
+from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.adaptive.learning.kohonenlearningmechanism import KohonenLearningMechanism
@@ -341,6 +343,15 @@ class KohonenMechanism(TransferMechanism):
 
     componentType = KOHONEN_MECHANISM
 
+    class Params(TransferMechanism.Params):
+        learning_function = Param(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
+
+        learning_rate = Param(None, modulable=True)
+
+        enable_learning = True
+        matrix = DEFAULT_MATRIX
+
+
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)
 
@@ -508,6 +519,8 @@ class KohonenMechanism(TransferMechanism):
                                                               LearningMechanism.className,
                                                               self.name))
 
+        # KDM 10/22/18: should below be aux_components?
+
         # Instantiate Projection from learned_projection's sender to LearningMechanism
         MappingProjection(sender=self.learned_projection.sender,
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
@@ -548,3 +561,11 @@ class KohonenMechanism(TransferMechanism):
             warnings.warn("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))
             return
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.learning_mechanism],
+            [self.learning_projection],
+        ))
