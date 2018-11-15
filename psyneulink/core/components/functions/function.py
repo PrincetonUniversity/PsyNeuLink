@@ -890,7 +890,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_initializer(self, execution_id=None):
+    def _get_context_initializer(self, execution_id):
         return tuple([])
 
     def _get_param_ids(self, execution_id=None):
@@ -7191,9 +7191,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def _get_context_struct_type(self, ctx):
         return ctx.get_output_struct_type(self)
 
-    def _get_context_initializer(self, data=None, execution_id=None):
-        if data is None:
-            data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
+    def _get_context_initializer(self, execution_id):
+        data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
         if self.instance_defaults.value.ndim > 1:
             return (tuple(data),)
         return tuple(data)
@@ -8733,7 +8732,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
-    def _get_context_initializer(self, execution_id=None):
+    def _get_context_initializer(self, execution_id):
         previous_v = self.parameters.previous_v.get(execution_id)
         previous_w = self.parameters.previous_w.get(execution_id)
         previous_time = self.parameters.previous_time.get(execution_id)

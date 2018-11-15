@@ -1453,9 +1453,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         projection_params = self.recurrent_projection._get_param_initializer(execution_id)
         return tuple([transfer_params, projection_params])
 
-    def _get_context_initializer(self, execution_id=None):
-        transfer_init = super()._get_context_initializer(execution_id=execution_id)
-        projection_init = self.recurrent_projection._get_context_initializer(execution_id=execution_id)
+    def _get_context_initializer(self, execution_id):
+        transfer_init = super()._get_context_initializer(execution_id)
+        projection_init = self.recurrent_projection._get_context_initializer(execution_id)
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.
