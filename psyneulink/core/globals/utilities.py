@@ -755,6 +755,49 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
     return __deepcopy__
 
 
+def copy_dict_or_list_with_shared(obj, shared_types=None):
+    try:
+        shared_types = tuple(shared_types)
+    except TypeError:
+        shared_types = ()
+
+    dict_types = (dict, collections.UserDict)
+    list_types = (list, collections.UserList)
+
+    if isinstance(obj, dict_types):
+        result = obj.__class__()
+        for (k, v) in obj.items():
+            # key can never be unhashable dict or list
+            new_k = k if isinstance(k, shared_types) else copy.deepcopy(k)
+
+            if isinstance(v, dict_types + list_types):
+                new_v = copy_dict_or_list_with_shared(v, shared_types)
+            elif isinstance(v, shared_types):
+                new_v = v
+            else:
+                new_v = copy.deepcopy(v)
+
+            try:
+                result[new_k] = new_v
+            except UtilitiesError:
+                # handle ReadOnlyOrderedDict
+                result.__additem__(new_k, new_v)
+    elif isinstance(obj, list_types):
+        result = obj.__class__()
+        for item in obj:
+            if isinstance(item, dict_types + list_types):
+                new_item = copy_dict_or_list_with_shared(item, shared_types)
+            elif isinstance(item, shared_types):
+                new_item = item
+            else:
+                new_item = copy.deepcopy(item)
+            result.append(new_item)
+    else:
+        raise TypeError
+
+    return result
+
+
 def get_alias_property_getter(name, attr=None):
     if attr is not None:
         def getter(obj):
@@ -1306,6 +1349,15 @@ class ContentAddressableList(UserList):
             list of list values of the `value <Component.value>` attributes of components in the list,
         """
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
+
+    def get_values_as_lists(self, execution_context=None):
+        """Return list of values of components in the list, each converted to a list.
+        Returns
+        -------
+        values :  list
+            list of list values of the `value <Component.value>` attributes of components in the list,
+        """
+        return [np.ndarray.tolist(item.parameters.value.get(execution_context)) for item in self.data]
 
 
 def is_value_spec(spec):

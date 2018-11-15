@@ -47,31 +47,30 @@ Class Reference
 """
 
 import collections
+import itertools
 import logging
 import numpy as np
 import typecheck as tc
 import uuid
 
 from collections import Iterable, OrderedDict
-
-from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
+from psyneulink.core import llvm as pnlvm
 
-from psyneulink.core.components.shellclasses import Composition_Base
-from psyneulink.core.components.shellclasses import Composition_Base
-from psyneulink.core.components.component import function_type
+from psyneulink.core.components.component import ComponentsMeta, Defaults, Param, Parameters, function_type
 from psyneulink.core.components.functions.function import InterfaceStateMap
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, NO_CLAMP, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import CNodeRole
+from psyneulink.core.globals.utilities import CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -86,6 +85,7 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
+
 class CompositionError(Exception):
 
     def __init__(self, error_value):
@@ -94,6 +94,7 @@ class CompositionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 class RunError(Exception):
 
     def __init__(self, error_value):
@@ -101,6 +102,7 @@ class RunError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
 
 class Vertex(object):
     '''
@@ -147,6 +149,7 @@ class Vertex(object):
 
     def __repr__(self):
         return '(Vertex {0} {1})'.format(id(self), self.component)
+
 
 class Graph(object):
     '''
@@ -328,7 +331,8 @@ class Graph(object):
 
         return list(self.comp_to_vertex[component].backward_sources)
 
-class Composition(Composition_Base):
+
+class Composition(Composition_Base, metaclass=ComponentsMeta):
     '''
         Composition
 
@@ -386,6 +390,13 @@ class Composition(Composition_Base):
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
 
+    class Params(Parameters):
+        results = Param([], loggable=False)
+
+    class _CompilationData(Parameters):
+        execution = None
+
+
     def __init__(self,
                  name=None,
                  controller=None,
@@ -415,7 +426,8 @@ class Composition(Composition_Base):
         self.output_CIM_states = {}
 
         self.enable_controller = enable_controller
-        self.execution_ids = []
+        self.default_execution_id = self.name
+        self.execution_ids = [self.default_execution_id]
         self.controller = controller
 
         self.projections = []
@@ -440,11 +452,11 @@ class Composition(Composition_Base):
         self.all_output_nodes = []
         self.target_nodes = []  # Do not need to track explicit as they must be explicit
 
-        # Reporting
-        self.results = []
-
         # TBI: update self.sched whenever something is added to the composition
-        self.sched = Scheduler(composition=self)
+        self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
+
+        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+        self.defaults = Defaults(owner=self)
 
         # Compiled resources
         self.__generated_wrappers = {}
@@ -452,7 +464,8 @@ class Composition(Composition_Base):
         self.__generated_execution = None
         self.__compiled_execution = None
         self.__compiled_run = None
-        self.__execution = None
+
+        self._compilation_data = self._CompilationData(owner=self)
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -480,7 +493,7 @@ class Composition(Composition_Base):
         '''
         if self.needs_update_scheduler_processing or self._scheduler_processing is None:
             old_scheduler = self._scheduler_processing
-            self._scheduler_processing = Scheduler(graph=self.graph_processing)
+            self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
                 self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
@@ -499,7 +512,7 @@ class Composition(Composition_Base):
         '''
         if self.needs_update_scheduler_learning or self._scheduler_learning is None:
             old_scheduler = self._scheduler_learning
-            # self._scheduler_learning = Scheduler(graph=self.graph)
+            # self._scheduler_learning = Scheduler(graph=self.graph, execution_id=self.default_execution_id)
 
             # if old_scheduler is not None:
             #     self._scheduler_learning.add_condition_set(old_scheduler.condition_set)
@@ -526,6 +539,7 @@ class Composition(Composition_Base):
                                               name="(" + interface_output_state.name + ") to ("
                                                    + node_input_state.owner.name + "-" + node_input_state.name + ")")
         self.projections.append(shadow_projection)
+        shadow_projection._activate_for_compositions(self)
 
     def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
@@ -671,6 +685,8 @@ class Composition(Composition_Base):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a sender specification. ".format(projection.name))
 
+        subcompositions = []
+
         sender_mechanism = sender
         graph_sender = sender
         if isinstance(sender, OutputState):
@@ -678,6 +694,7 @@ class Composition(Composition_Base):
             graph_sender = sender.owner
         elif isinstance(sender, Composition):
             sender_mechanism = sender.output_CIM
+            subcompositions.append(sender)
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -695,11 +712,13 @@ class Composition(Composition_Base):
 
         receiver_mechanism = receiver
         graph_receiver = receiver
+
         if isinstance(receiver, InputState):
             receiver_mechanism = receiver.owner
             graph_receiver = receiver.owner
         elif isinstance(receiver, Composition):
             receiver_mechanism = receiver.input_CIM
+            subcompositions.append(receiver)
 
         if projection not in [vertex.component for vertex in self.graph.vertices]:
 
@@ -717,7 +736,14 @@ class Composition(Composition_Base):
             self.needs_update_scheduler_learning = True
             self.projections.append(projection)
 
+            projection._activate_for_compositions(self)
+            for comp in subcompositions:
+                projection._activate_for_compositions(comp)
+
         return projection
+
+    def _add_projection(self, projection):
+        self.projections.append(projection)
 
     def add_pathway(self, path):
         '''
@@ -1190,8 +1216,8 @@ class Composition(Composition_Base):
                 if input_state not in set(self.input_CIM_states.keys()):
 
                     interface_input_state = InputState(owner=self.input_CIM,
-                                                       variable=input_state.value,
-                                                       reference_value=input_state.value,
+                                                       variable=input_state.defaults.value,
+                                                       reference_value=input_state.defaults.value,
                                                        name="INPUT_CIM_" + node.name + "_" + input_state.name)
 
                     interface_output_state = OutputState(owner=self.input_CIM,
@@ -1202,12 +1228,14 @@ class Composition(Composition_Base):
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
 
-                    self.projections.append(MappingProjection(
-                                                sender=interface_output_state,
-                                                receiver=input_state,
-                                                matrix= IDENTITY_MATRIX,
-                                                name="(" + interface_output_state.name + ") to (" +
-                                                input_state.owner.name + "-" + input_state.name + ")"))
+                    projection = MappingProjection(sender=interface_output_state,
+                                      receiver=input_state,
+                                      matrix= IDENTITY_MATRIX,
+                                      name="("+interface_output_state.name + ") to ("
+                                           + input_state.owner.name + "-" + input_state.name+")")
+                    projection._activate_for_compositions(self)
+                    if isinstance(node, Composition):
+                        projection._activate_for_compositions(node)
 
         # allow projections from CIM to ANY node listed in external_input_sources
         for node in self.external_input_sources:
@@ -1313,11 +1341,16 @@ class Composition(Composition_Base):
 
                     proj_name = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
 
-                    self.projections.append(MappingProjection(
-                                                sender=output_state,
-                                                receiver=interface_input_state,
-                                                matrix=IDENTITY_MATRIX,
-                                                name=proj_name))
+                    proj = MappingProjection(
+                        sender=output_state,
+                        receiver=interface_input_state,
+                        matrix=IDENTITY_MATRIX,
+                        name=proj_name
+                    )
+                    proj._activate_for_compositions(self)
+                    self._add_projection(proj)
+                    if isinstance(node, Composition):
+                        projection._activate_for_compositions(node)
 
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
@@ -1326,7 +1359,7 @@ class Composition(Composition_Base):
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
 
-    def _assign_values_to_input_CIM(self, inputs):
+    def _assign_values_to_input_CIM(self, inputs, execution_id=None):
         """
             Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
 
@@ -1356,29 +1389,39 @@ class Composition(Composition_Base):
 
             build_CIM_input.append(value)
 
-        self.input_CIM.execute(build_CIM_input)
+        self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
     def _assign_execution_ids(self, execution_id=None):
         '''
             assigns the same uuid to each Node in the composition's processing graph as well as the CIMs. The uuid is
-            either specified in the user's call to run(), or generated randomly at run time.
+            either specified in the user's call to run(), or from
+            the Composition's **default_execution_id**
         '''
 
         # Traverse processing graph and assign one uuid to all of its nodes
         if execution_id is None:
-            execution_id = self._get_unique_id()
+            execution_id = self.default_execution_id
 
         if execution_id not in self.execution_ids:
             self.execution_ids.append(execution_id)
 
-        for v in self._graph_processing.vertices:
-            v.component._execution_id = execution_id
-
-        self.input_CIM._execution_id = execution_id
-        self.output_CIM._execution_id = execution_id
-
-        self._execution_id = execution_id
+        self._assign_context_values(execution_id=None, composition=self)
         return execution_id
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for c_node in self.c_nodes:
+            c_node._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        for proj in self.projections:
+            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        self.input_CIM._assign_context_values(execution_id, base_execution_id, **kwargs)
+        for proj in self.input_CIM.efferents:
+            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        self.output_CIM._assign_context_values(execution_id, base_execution_id, **kwargs)
+        for proj in self.output_CIM.afferents:
+            proj._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
         # clamp type of this list is same as the one the user set for the whole composition; return all nodes
@@ -1477,6 +1520,7 @@ class Composition(Composition_Base):
                    prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
+                   execution_id=NotImplemented,
                    ):
         """Generate a display of the graph structure of Mechanisms and Projections in the System.
 
@@ -1713,6 +1757,10 @@ class Composition(Composition_Base):
 
         INITIAL_FRAME = "INITIAL_FRAME"
         ALL = "ALL"
+
+        if execution_id is NotImplemented:
+            execution_id = self.default_execution_id
+
         # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
         #     return
 
@@ -2262,21 +2310,22 @@ class Composition(Composition_Base):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
+                execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
-                elif self.context.execution_phase == ContextFlags.PROCESSING:
+                elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.clock.time
+                    time = self.scheduler_processing.get_clock(execution_id).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
-                elif self.context.execution_phase == ContextFlags.LEARNING:
-                    time = self.scheduler_learning.clock.time
+                elif execution_phase == ContextFlags.LEARNING:
+                    time = self.scheduler_learning.get_clock(execution_id).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Learning Phase - '
-                elif self.context.execution_phase == ContextFlags.CONTROL:
+                elif execution_phase == ContextFlags.CONTROL:
                     time_string = ''
                     phase_string = 'Control phase'
                 else:
@@ -2309,6 +2358,7 @@ class Composition(Composition_Base):
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
+
     def execute(
         self,
         inputs=None,
@@ -2321,6 +2371,7 @@ class Composition(Composition_Base):
         call_after_time_step=None,
         call_after_pass=None,
         execution_id=None,
+        base_execution_id=None,
         clamp_input=SOFT_CLAMP,
         targets=None,
         runtime_params=None,
@@ -2348,20 +2399,28 @@ class Composition(Composition_Base):
                 the scheduler object that owns the conditions that will instruct the Learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
 
-            execution_id : UUID
-                execution_id will typically be set to none and assigned randomly at runtime
+            execution_id
+                execution_id will be set to self.default_execution_id if unspecified
+
+            base_execution_id
+                the execution_id corresponding to the execution context from which this execution will be initialized, if
+                values currently do not exist for **execution_id**
 
             call_before_time_step : callable
                 will be called before each `TIME_STEP` is executed
+                will be passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_after_time_step : callable
                 will be called after each `TIME_STEP` is executed
+                will be passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_before_pass : callable
                 will be called before each `PASS` is executed
+                will be passed the current *execution_id* (but it is not necessary for your callable to take)
 
             call_after_pass : callable
                 will be called after each `PASS` is executed
+                will be passed the current *execution_id* (but it is not necessary for your callable to take)
 
             Returns
             ---------
@@ -2386,14 +2445,19 @@ class Composition(Composition_Base):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        if not nested:
+            self._initialize_from_context(execution_id, base_execution_id, override=False)
+
+        self._assign_context_values(execution_id, composition=self)
+
         if nested:
-            self.execution_id = self.input_CIM.path_afferents[0].sender.owner.composition._execution_id
-            self.input_CIM.context.execution_phase = ContextFlags.PROCESSING
-            self.input_CIM.execute(context=ContextFlags.PROCESSING)
+            self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+            self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         else:
             inputs = self._adjust_execution_stimuli(inputs)
-            self._assign_values_to_input_CIM(inputs)
+            self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
 
         if termination_processing is None:
             termination_processing = self.termination_processing
@@ -2413,10 +2477,11 @@ class Composition(Composition_Base):
 
         if bin_execute:
             try:
-                self.__bin_initialize()
+                self.__bin_initialize(execution_id)
                 if bin_execute == 'LLVMExec':
-                    self.__execution.execute(inputs)
-                    return self.__execution.extract_node_output(self.output_CIM)
+                    __execution = self._compilation_data.execution.get(execution_id)
+                    __execution.execute(inputs)
+                    return __execution.extract_node_output(self.output_CIM)
 
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
@@ -2436,35 +2501,35 @@ class Composition(Composition_Base):
                 bin_execute = False
 
         if bin_execute:
-            self.__execution.execute_node(self.input_CIM, inputs)
+            self._compilation_data.execution.get(execution_id).execute_node(self.input_CIM, inputs, execution_id=execution_id)
 
         if call_before_pass:
-            call_before_pass()
+            call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing, execution_id=execution_id):
             if call_after_pass:
                 if next_pass_after == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
                     logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
-                    call_after_pass()
+                    call_with_pruned_args(call_after_pass, execution_context=execution_id)
                     next_pass_after += 1
 
             if call_before_pass:
                 if next_pass_before == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
-                    call_before_pass()
+                    call_with_pruned_args(call_before_pass, execution_context=execution_id)
                     logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
                     next_pass_before += 1
 
             if call_before_time_step:
-                call_before_time_step()
+                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
             frozen_values = {}
             new_values = {}
             if bin_execute:
-                self.__execution.freeze_values()
+                self._compilation_data.execution.get(execution_id).freeze_values()
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
-                frozen_values[node] = node.output_values
+                frozen_values[node] = node.get_output_values(execution_id)
                 if node in origin_nodes:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
                     # a recurrent projection on the first time step (meaning, before its node has executed)
@@ -2479,10 +2544,11 @@ class Composition(Composition_Base):
                         if node in hard_clamp_inputs:
                             # clamp = HARD_CLAMP --> "turn off" recurrent projection
                             if hasattr(node, "recurrent_projection"):
-                                node.recurrent_projection.sender.value = [0.0]
+                                node.recurrent_projection.sender.parameters.value.set([0.0], execution_id, override=True)
                         elif node in no_clamp_inputs:
                             for input_state in node.input_states:
-                                self.input_CIM_states[input_state][1].value = 0.0
+                                self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id, override=True)
+                            # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
                 if isinstance(node, Mechanism):
 
@@ -2492,27 +2558,36 @@ class Composition(Composition_Base):
                         for param in runtime_params[node]:
                             if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
                                                                            # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                                execution_id=self._execution_id):
+                                                                                execution_id=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
+                    node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+
                     if bin_execute:
-                        self.__execution.execute_node(node)
+                        self._compilation_data.execution.get(execution_id).execute_node(node)
+                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
                     else:
-                        node.context.execution_phase = ContextFlags.PROCESSING
                         if node is not self.controller:
-                            node.execute(runtime_params=execution_runtime_params,
-                                         context=ContextFlags.COMPOSITION)
+                            node.execute(
+                                execution_id=execution_id,
+                                runtime_params=execution_runtime_params,
+                                context=ContextFlags.COMPOSITION
+                            )
 
-                        for key in node._runtime_params_reset:
-                            node._set_parameter_value(key, node._runtime_params_reset[key])
-                        node._runtime_params_reset = {}
+                        if execution_id in node._runtime_params_reset:
+                            for key in node._runtime_params_reset[execution_id]:
+                                node._set_parameter_value(key, node._runtime_params_reset[execution_id][key], execution_id)
+                        node._runtime_params_reset[execution_id] = {}
 
-                        for key in node.function_object._runtime_params_reset:
-                            node.function_object._set_parameter_value(key,
-                                                                      node.function_object._runtime_params_reset[
-                                                                           key])
-                        node.function_object._runtime_params_reset = {}
-                        node.context.execution_phase = ContextFlags.IDLE
+                        if execution_id in node.function_object._runtime_params_reset:
+                            for key in node.function_object._runtime_params_reset[execution_id]:
+                                node.function_object._set_parameter_value(
+                                    key,
+                                    node.function_object._runtime_params_reset[execution_id][key],
+                                    execution_id
+                                )
+                        node.function_object._runtime_params_reset[execution_id] = {}
+                        node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 elif isinstance(node, Composition):
                     if bin_execute:
@@ -2521,54 +2596,55 @@ class Composition(Composition_Base):
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
-                            data = self.__execution.extract_frozen_node_output(src_node)
+                            data = self._compilation_data.execution.get(execution_id).extract_frozen_node_output(src_node)
                             for i, v in enumerate(data):
                                 #This sets frozen values
-                                src_node.output_states[i].set_value_without_logging(v)
-
-                    ret = node.execute(execution_id=self._execution_id, bin_execute=bin_execute)
+                                src_node.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
+                    node._assign_context_values(execution_id, composition=node)
+                    ret = node.execute(execution_id=execution_id, bin_execute=bin_execute)
                     if bin_execute:
                         # Update result in binary data structure
-                        self.__execution.insert_node_output(node, ret)
+                        self._compilation_data.execution.get(execution_id).insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
-                            node.output_CIM.output_states[i].set_value_without_logging(v)
+                            node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True, skip_log=True, override=True)
 
                 if node in origin_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
                             for input_state in node.input_states:
                             # clamp = None --> "turn off" input node
-                                self.input_CIM_states[input_state][1].value = 0
-                new_values[node] = node.output_values
+                                self.input_CIM_states[input_state][1].parameters.value.set(0, execution_id, override=True)
+                new_values[node] = node.get_output_values(execution_id)
 
                 for i in range(len(node.output_states)):
-                    node.output_states[i].set_value_without_logging(frozen_values[node][i])
+                    node.output_states[i].parameters.value.set(frozen_values[node][i], execution_id, override=True, skip_history=True, skip_log=True)
 
             for node in next_execution_set:
 
                 for i in range(len(node.output_states)):
-                    node.output_states[i].set_value_without_logging(new_values[node][i])
+                    node.output_states[i].parameters.value.set(new_values[node][i], execution_id, override=True, skip_history=True, skip_log=True)
 
             if call_after_time_step:
-                call_after_time_step()
+                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
         if call_after_pass:
-            call_after_pass()
+            call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
         # extract result here
         if bin_execute:
-            self.__execution.freeze_values()
-            self.__execution.execute_node(self.output_CIM)
+            __execution = self._compilation_data.execution.get(execution_id)
+            __execution.freeze_values()
+            __execution.execute_node(self.output_CIM)
 
-            return self.__execution.extract_node_output(self.output_CIM)
+            return __execution.extract_node_output(self.output_CIM)
 
-        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(context=ContextFlags.PROCESSING)
+        self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
 
         output_values = []
         for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].value)
+            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
 
         # TBI control phase
 
@@ -2582,6 +2658,7 @@ class Composition(Composition_Base):
         termination_processing=None,
         termination_learning=None,
         execution_id=None,
+        base_execution_id=None,
         num_trials=None,
         call_before_time_step=None,
         call_after_time_step=None,
@@ -2615,8 +2692,12 @@ class Composition(Composition_Base):
                 the scheduler object that owns the conditions that will instruct the Learning execution of
                 this Composition. If not specified, the Composition will use its automatically generated scheduler.
 
-            execution_id : UUID
-                execution_id will typically be set to none and assigned randomly at runtime.
+            execution_id
+                execution_id will be set to self.default_execution_id if unspecified
+
+            base_execution_id
+                the execution_id corresponding to the execution context from which this execution will be initialized, if
+                values currently do not exist for **execution_id**
 
             num_trials : int
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -2683,7 +2764,7 @@ class Composition(Composition_Base):
                     raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
                                       format(node.name, self.name))
 
-
+        results = []
         self._analyze_graph()
 
         execution_id = self._assign_execution_ids(execution_id)
@@ -2724,18 +2805,29 @@ class Composition(Composition_Base):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        result = None
         if bin_execute == 'LLVMRun':
-            self.__bin_initialize()
-            self.results += self.__execution.run(inputs, num_trials, num_inputs_sets)
-            return self.results
+            # initialize from base context but don't overwrite any values already set for this execution_id
+            self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._assign_context_values(execution_id, composition=self)
+
+            self.__bin_initialize(execution_id)
+            results += self._compilation_data.execution.get(execution_id).run(inputs, num_trials, num_inputs_sets)
+
+            full_results = self.parameters.results.get(execution_id)
+            if full_results is None:
+                full_results = results
+            else:
+                full_results.extend(results)
+
+            self.parameters.results.set(full_results, execution_id)
+            return full_results
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
-                call_before_trial()
+                call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
                                                                   execution_id=execution_id):
@@ -2764,6 +2856,7 @@ class Composition(Composition_Base):
                                         call_after_time_step=call_after_time_step,
                                         call_after_pass=call_after_pass,
                                         execution_id=execution_id,
+                                        base_execution_id=base_execution_id,
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
                                         bin_execute=bin_execute)
@@ -2782,10 +2875,7 @@ class Composition(Composition_Base):
                 result_copy = trial_output.copy()
             else:
                 result_copy = trial_output
-            self.results.append(result_copy)
-
-            if trial_output is not None:
-                result = trial_output
+            results.append(result_copy)
 
         # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
@@ -2821,11 +2911,18 @@ class Composition(Composition_Base):
             #                                   )
 
             if call_after_trial:
-                call_after_trial()
+                call_with_pruned_args(call_after_trial, execution_context=execution_id)
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 
-        return self.results
+        full_results = self.parameters.results.get(execution_id)
+        if full_results is None:
+            full_results = results
+        else:
+            full_results.extend(results)
+
+        self.parameters.results.set(full_results, execution_id)
+        return full_results
 
     @property
     def _all_nodes(self):
@@ -2863,21 +2960,21 @@ class Composition(Composition_Base):
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
-    def _get_context_initializer(self):
-        mech_contexts = (tuple(m._get_context_initializer()) for m in self._all_nodes)
-        proj_contexts = (tuple(p._get_context_initializer()) for p in self.projections)
+    def _get_context_initializer(self, execution_id=None):
+        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes)
+        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def _get_param_initializer(self):
-        mech_params = (tuple(m._get_param_initializer()) for m in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer()) for p in self.projections)
+    def _get_param_initializer(self, execution_id=None):
+        mech_params = (tuple(m._get_param_initializer(execution_id=execution_id)) for m in self._all_nodes)
+        proj_params = (tuple(p._get_param_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
-    def _get_data_initializer(self):
-        output = ((os.value for os in m.output_states) for m in self._all_nodes)
+    def _get_data_initializer(self, execution_id=None):
+        output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
         data = [output]
         for node in self.c_nodes:
-            nested_data = node._get_data_initializer() if hasattr(node, '_get_data_initializer') else []
+            nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
 
@@ -2923,12 +3020,15 @@ class Composition(Composition_Base):
 
         return self.__compiled_run
 
-    def reinitialize(self):
-        self.__execution = None
+    def reinitialize(self, execution_context=NotImplemented):
+        if execution_context is NotImplemented:
+            execution_context = self.default_execution_id
 
-    def __bin_initialize(self):
-        if self.__execution is None:
-            self.__execution = pnlvm.CompExecution(self)
+        self._compilation_data.execution.set(None, execution_context)
+
+    def __bin_initialize(self, execution_id=None):
+        if self._compilation_data.execution.get(execution_id) is None:
+            self._compilation_data.execution.set(pnlvm.CompExecution(self, execution_id), execution_id)
 
     def __gen_node_wrapper(self, node):
         is_mech = isinstance(node, Mechanism)
@@ -3450,6 +3550,27 @@ class Composition(Composition_Base):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
+    # copied from Component, because Compositions are not Components but we want same behavior
+    def _initialize_from_context(self, execution_context, base_execution_context=None, override=True):
+        for param in self.stateful_parameters:
+            param._initialize_from_context(execution_context, base_execution_context, override)
+
+        for comp in self._dependent_components:
+            comp._initialize_from_context(execution_context, base_execution_context, override)
+
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        context_param = self.parameters.context.get(execution_id)
+        if context_param is None:
+            self.parameters.context._initialize_from_context(execution_id, base_execution_id)
+            context_param = self.parameters.context.get(execution_id)
+            context_param.execution_id = execution_id
+
+        for context_item, value in kwargs.items():
+            setattr(context_param, context_item, value)
+
+        for comp in self._dependent_components:
+            comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+
     @property
     def input_states(self):
         """Returns all InputStates that belong to the Input CompositionInterfaceMechanism"""
@@ -3463,10 +3584,10 @@ class Composition(Composition_Base):
     @property
     def output_values(self):
         """Returns values of all OutputStates that belong to the Output CompositionInterfaceMechanism"""
-        output_values = []
-        for state in self.output_CIM.output_states:
-            output_values.append(state.value)
-        return output_values
+        return self.get_output_values()
+
+    def get_output_values(self, execution_context=None):
+        return [output_state.parameters.value.get(execution_context) for output_state in self.output_CIM.output_states]
 
     @property
     def input_state(self):
@@ -3476,10 +3597,10 @@ class Composition(Composition_Base):
     @property
     def input_values(self):
         """Returns values of all InputStates that belong to the Input CompositionInterfaceMechanism"""
-        input_values = []
-        for state in self.input_CIM.input_states:
-            input_values.append(state.value)
-        return input_values
+        return self.get_input_values()
+
+    def get_input_values(self, execution_context=None):
+        return [input_state.parameters.value.get(execution_context) for input_state in self.input_CIM.input_states]
 
     #  For now, external_input_states == input_states and external_input_values == input_values
     #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
@@ -3508,9 +3629,30 @@ class Composition(Composition_Base):
         except (TypeError, AttributeError):
             return None
 
-
     @property
     def output_state(self):
         """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states[0]
 
+    @property
+    def results(self):
+        return self.parameters.results.get(self.default_execution_id)
+
+    @property
+    def class_parameters(self):
+        return self.__class__.parameters
+
+    @property
+    def stateful_parameters(self):
+        return [param for param in self.parameters if param.stateful]
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            self.c_nodes,
+            self.projections,
+            [self.input_CIM, self.output_CIM],
+            self.input_CIM.efferents,
+            self.output_CIM.afferents,
+        ))

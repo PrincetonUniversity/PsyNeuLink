@@ -715,6 +715,7 @@ class InputState(State_Base):
         weight = Param(None, modulable=True)
         exponent = Param(None, modulable=True)
         combine = None
+        internal_only = Param(False, stateful=False, loggable=False)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
@@ -810,9 +811,9 @@ class InputState(State_Base):
         proj_spec = _parse_connection_specs(InputState, self, projections)[0]
 
         if isinstance(proj_spec.projection, Projection):
-            variable = proj_spec.projection.value
+            variable = proj_spec.projection.defaults.value
         elif isinstance(proj_spec.state, OutputState):
-            variable = proj_spec.state.value
+            variable = proj_spec.state.defaults.value
         else:
             raise InputStateError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
 
@@ -913,7 +914,7 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
         If there were no PathwayProjections, ignore and return None
@@ -921,30 +922,32 @@ class InputState(State_Base):
 
         if variable is not None:
             return super()._execute(variable,
+                                    execution_id=execution_id,
                                     runtime_params=runtime_params,
                                     context=context)
         # If there were any PathwayProjections:
-        elif self._path_proj_values:
-            # Combine Projection values
-            # TODO: stateful - this seems dangerous with statefulness,
-            #       maybe safe when self.value is only passed or stateful
-            variable = np.asarray(self._path_proj_values)
-            # MODIFIED 5/4/18 OLD:
-            # self._update_variable(variable[0])
-            # MODIFIED 5/4/18 NEW:
-            self._update_variable(variable)
-            # MODIFIED 5/4/18 END
-            combined_values = super()._execute(variable=variable,
-                                               runtime_params=runtime_params,
-                                               context=context
-                                               )
-
-            return combined_values
-        # There were no Projections
         else:
-            # mark combined_values as none, so that (after being assigned to self.value)
-            #    it is ignored in execute method (i.e., not combined with base_value)
-            return None
+            path_proj_values = []
+            for pa in self.path_afferents:
+                if self.afferents_info[pa].is_active_in_composition(self.parameters.context.get(execution_id).composition):
+                    path_proj_values.append(pa.parameters.value.get(execution_id))
+
+            if len(path_proj_values) > 0:
+                # Combine Projection values
+                variable = np.asarray(path_proj_values)
+                # print('{0} ({2}): {1}'.format(self, variable, self.owner))
+                combined_values = super()._execute(variable=variable,
+                                                   execution_id=execution_id,
+                                                   runtime_params=runtime_params,
+                                                   context=context
+                                                   )
+
+                return combined_values
+            # There were no Projections
+            else:
+                # mark combined_values as none, so that (after being assigned to self.value)
+                #    it is ignored in execute method (i.e., not combined with base_value)
+                return None
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
@@ -1063,6 +1066,8 @@ class InputState(State_Base):
                         try:
                             sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
+                            # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
+                            # attr so these should be ok
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
                                 continue
@@ -1083,6 +1088,7 @@ class InputState(State_Base):
                         elif isinstance(projection, Projection):
                             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                 continue
+                            # possible needs to be projection.defaults.matrix?
                             matrix = projection.matrix
                         else:
                             raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
@@ -1227,10 +1233,14 @@ class InputState(State_Base):
 
     @property
     def label(self):
-        label_dictionary = {}
-        if hasattr(self.owner, "input_labels_dict"):
+        return self.get_label()
+
+    def get_label(self, execution_context=None):
+        try:
             label_dictionary = self.owner.input_labels_dict
-        return self._get_value_label(label_dictionary, self.owner.input_states)
+        except AttributeError:
+            label_dictionary = {}
+        return self._get_value_label(label_dictionary, self.owner.input_states, execution_context=execution_context)
 
     @property
     def position_in_mechanism(self):
@@ -1340,4 +1350,3 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             )
 
     return state_list
-

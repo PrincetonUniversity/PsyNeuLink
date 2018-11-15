@@ -314,7 +314,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     class Params(ObjectiveMechanism.Params):
         # By default, ComparatorMechanism compares two 1D np.array input_states
         variable = Param(np.array([[0], [0]]), read_only=True)
-        function = LinearCombination(weights=[[-1], [1]])
+        function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         sample = None
         target = None
 

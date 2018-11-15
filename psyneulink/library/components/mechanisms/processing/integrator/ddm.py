@@ -346,7 +346,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
+from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, parse_execution_context
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
@@ -715,6 +715,8 @@ class DDM(ProcessingMechanism_Base):
             stateful=False,
             loggable=False
         )
+        input_format = Param(SCALAR, stateful=False, loggable=False)
+
         initializer = np.array([[0]])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -863,7 +865,7 @@ class DDM(ProcessingMechanism_Base):
         # set initial values and threshold
         time_step = [0]
         position = [float(self.instance_defaults.variable)]
-        variable = self._update_variable(stimulus)
+        variable = stimulus
 
         # execute the mechanism once to begin the loop
         result_check = self.plot_function(variable, context="plot")[0][0]
@@ -984,6 +986,7 @@ class DDM(ProcessingMechanism_Base):
     def _execute(
         self,
         variable=None,
+        execution_id=None,
         runtime_params=None,
         context=None
     ):
@@ -1021,16 +1024,16 @@ class DDM(ProcessingMechanism_Base):
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self._update_variable(self.instance_defaults.variable)
+            variable = self.instance_defaults.variable
 
         variable = self._validate_variable(variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
-            result = super()._execute(variable, context=context)
+            result = super()._execute(variable, execution_id=execution_id, context=context)
 
-            if self.context.initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])
@@ -1040,6 +1043,7 @@ class DDM(ProcessingMechanism_Base):
 
             result = super()._execute(
                 variable=variable,
+                execution_id=execution_id,
                 runtime_params=runtime_params,
                 context=context
             )
@@ -1065,7 +1069,7 @@ class DDM(ProcessingMechanism_Base):
                                format(self.function_object.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function_object.get_current_function_param(THRESHOLD))
+            threshold = float(self.function_object.get_current_function_param(THRESHOLD, execution_id))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -1104,19 +1108,18 @@ class DDM(ProcessingMechanism_Base):
             #     """
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         from psyneulink.core.components.functions.function import Integrator
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function_object, Integrator):
-            new_values = self.function_object.reinitialize(*args)
-            self.value = np.array(new_values)
-            self._update_output_states(context="REINITIALIZING")
+            new_values = self.function_object.reinitialize(*args, execution_context=execution_context)
+            self.parameters.value.set(np.array(new_values), execution_context, override=True)
+            self._update_output_states(execution_id=parse_execution_context(execution_context), context="REINITIALIZING")
 
-    @property
-    def is_finished(self):
+    def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value
-        single_value = self.function_object.previous_value
+        single_value = self.function_object.get_previous_value(execution_context)
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
             while True:
@@ -1126,12 +1129,16 @@ class DDM(ProcessingMechanism_Base):
                     break
 
         if (
-            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
+            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD, execution_context)
             and isinstance(self.function.__self__, Integrator)
         ):
-            logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
-                                                                   self.function_object.get_current_function_param(
-                                                                       THRESHOLD)))
+            logger.info(
+                '{0} {1} has reached threshold {2}'.format(
+                    type(self).__name__,
+                    self.name,
+                    self.function_object.get_current_function_param(THRESHOLD, execution_context)
+                )
+            )
             return True
-        return self._is_finished
 
+        return False

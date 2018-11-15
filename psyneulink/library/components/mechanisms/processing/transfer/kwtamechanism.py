@@ -562,7 +562,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         if variable.dtype.char == "U":
             raise KWTAError(
                 "input ({0}) to {1} was a string, which is not supported for {2}".format(
@@ -570,7 +570,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                 )
             )
 
-        return self._kwta_scale(variable)
+        return self._kwta_scale(variable, context=context, execution_id=execution_id)
 
     # adds indexOfInhibitionInputState to the attributes of KWTAMechanism
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -582,12 +582,12 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
-    def _kwta_scale(self, current_input, context=None):
-        k_value = self.get_current_mechanism_param("k_value")
-        threshold = self.get_current_mechanism_param("threshold")
-        average_based = self.get_current_mechanism_param("average_based")
-        ratio = self.get_current_mechanism_param("ratio")
-        inhibition_only = self.get_current_mechanism_param("inhibition_only")
+    def _kwta_scale(self, current_input, context=None, execution_id=None):
+        k_value = self.get_current_mechanism_param("k_value", execution_id)
+        threshold = self.get_current_mechanism_param("threshold", execution_id)
+        average_based = self.get_current_mechanism_param("average_based", execution_id)
+        ratio = self.get_current_mechanism_param("ratio", execution_id)
+        inhibition_only = self.get_current_mechanism_param("inhibition_only", execution_id)
 
         try:
             int_k_value = int(k_value[0])

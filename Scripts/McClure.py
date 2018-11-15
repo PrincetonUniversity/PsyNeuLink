@@ -1,6 +1,7 @@
 import functools
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
+
 from matplotlib import pyplot as plt
 np.random.seed(2)
 
@@ -150,7 +151,7 @@ def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 
 
-def show_weights():
+def show_weights(system):
     # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
@@ -176,21 +177,21 @@ def show_weights():
           '\ncoherence C:                {} '
           '\nshort-long-term conflict:   {} '.
         format(
-            action_selection.value,
-            action_selection.output_state.value,
-            comparator.input_states[pnl.SAMPLE].value,
-            comparator.input_states[pnl.TARGET].value,
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
-            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0],
-            rrate.append(action_selection.output_states[1].value),
-            conflictK.append(action_selection.output_states[2].value),
-            coherence.append(LC_NE.parameter_states[35].value),
-            update.append(updateC.output_state.value),
-            cons.append(conflicts.output_state.value)
+            action_selection.parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system),
+            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_states[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0],
+            rrate.append(action_selection.output_states[1].parameters.value.get(system)),
+            conflictK.append(action_selection.output_states[2].parameters.value.get(system)),
+            coherence.append(LC_NE.parameter_states[35].parameters.value.get(system)),
+            update.append(updateC.output_state.parameters.value.get(system)),
+            cons.append(conflicts.output_state.parameters.value.get(system))
                 )
     )
 
@@ -222,6 +223,6 @@ DA_sys.run(
     num_trials=10,
     inputs=input_dict,
     targets=reward,
-    call_after_trial=show_weights
+    call_after_trial=functools.partial(show_weights, DA_sys)
 )
 

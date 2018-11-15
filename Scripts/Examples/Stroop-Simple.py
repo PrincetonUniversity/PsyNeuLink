@@ -94,22 +94,22 @@ mySystem.show_graph(
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
+    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
 
 
-def show_target():
+def show_target(execution_context):
     print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-          format(colors.input_states.values_as_lists, mySystem.targets))
+          format(colors.input_states.get_values_as_lists(execution_context), mySystem.targets))
     print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
           # format(word_reading_process.input, word_reading_process.target))
-          format(words.input_states.values_as_lists, mySystem.targets))
-    print('Response: \n', response.output_values[0])
+          format(words.input_states.get_values_as_lists(execution_context), mySystem.targets))
+    print('Response: \n', response.get_output_values(execution_context)[0])
     print('Hidden-Output:')
-    print(HO_Weights.matrix)
+    print(HO_Weights.get_mod_matrix(execution_context))
     print('Color-Hidden:')
-    print(CH_Weights.matrix)
+    print(CH_Weights.get_mod_matrix(execution_context))
     print('Word-Hidden:')
-    print(WH_Weights.matrix)
+    print(WH_Weights.get_mod_matrix(execution_context))
 
 
 stim_list_dict = {

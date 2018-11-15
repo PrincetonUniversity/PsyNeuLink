@@ -599,12 +599,12 @@ class ParameterState(State_Base):
 
         reference_value is the value of the parameter to which the ParameterState is assigned
         """
-        if reference_value is not None and not iscompatible(np.squeeze(reference_value), np.squeeze(self.value)):
-            iscompatible(np.squeeze(reference_value), np.squeeze(self.value))
+        if reference_value is not None and not iscompatible(np.squeeze(reference_value), np.squeeze(self.defaults.value)):
+            iscompatible(np.squeeze(reference_value), np.squeeze(self.defaults.value))
             name = self.name or ""
             raise ParameterStateError("Value specified for {} {} of {} ({}) is not compatible "
                                       "with its expected format ({})".
-                                      format(name, self.componentName, self.owner.name, self.value, reference_value))
+                                      format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -748,6 +748,7 @@ class ParameterState(State_Base):
                             # FIX:     USING _get_state_for_socket
                             # from psyneulink.core.components.projections.projection import _parse_projection_spec
 
+                            # defaults.value?
                             mod_signal_value = projection_spec.state.value \
                                 if isinstance(projection_spec.state, State_Base) else None
 
@@ -774,7 +775,7 @@ class ParameterState(State_Base):
                                                                      mod_projection, state_dict[NAME], owner.name))
                                 elif mod_projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
-                                mod_proj_value = mod_projection.value
+                                mod_proj_value = mod_projection.defaults.value
                             else:
                                 raise ParameterStateError("Unrecognized Projection specification for {} of {} ({})".
                                                       format(self.name, owner.name, projection_spec))
@@ -819,7 +820,7 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with current parameter value as the variable
 
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
@@ -827,11 +828,12 @@ class ParameterState(State_Base):
         """
 
         if variable is not None:
-            return super()._execute(variable, runtime_params=runtime_params, context=context)
+            return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         else:
-            variable = getattr(self.source, '_' + self.name)
+            variable = getattr(self.source.parameters, self.name).get(execution_id)
             return super()._execute(
                 variable=variable,
+                execution_id=execution_id,
                 runtime_params=runtime_params,
                 context=context
             )
@@ -1113,6 +1115,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
             if state:
                 owner._parameter_states[function_param_name] = state
                 # will be parsed on assignment of function
+                # FIX: if the function_object is manually changed after assignment,
+                # the source will remain pointing to the original Function
                 state.source = FUNCTION
 
     elif _is_legal_param_value(owner, param_value):

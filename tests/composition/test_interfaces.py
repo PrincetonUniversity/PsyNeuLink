@@ -198,9 +198,9 @@ class TestConnectCompositionsViaCIMS:
         res = comp3.run(inputs={comp1: [[5.]]}, bin_execute=mode)
         assert np.allclose(res, [[[180.0]]])
         if mode == 'Python':
-            assert np.allclose(comp1.output_state.value, [30.0])
-            assert np.allclose(comp2.output_state.value, [180.0])
-            assert np.allclose(comp3.output_state.value, [180.0])
+            assert np.allclose(comp1.output_state.parameters.value.get(comp3), [30.0])
+            assert np.allclose(comp2.output_state.parameters.value.get(comp3), [180.0])
+            assert np.allclose(comp3.output_state.parameters.value.get(comp3), [180.0])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -270,9 +270,9 @@ class TestConnectCompositionsViaCIMS:
 
         assert np.allclose(output, [[[180.], [1800.]]])
         if mode == 'Python':
-            assert np.allclose(inner_composition_1.output_values, [[30.], [300.]])
-            assert np.allclose(inner_composition_2.output_values, [[180.], [1800.]])
-            assert np.allclose(outer_composition.output_values, [[180.], [1800.]])
+            assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
+            assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
+            assert np.allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -347,15 +347,15 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(output, [[[36.]]])
 
         if mode == 'Python':
-            assert np.allclose(A.output_values, [[1.0]])
-            assert np.allclose(B.output_values, [[2.0]])
-            assert np.allclose(C.output_values, [[9.0]])
-            assert np.allclose(A2.output_values, [[3.0]])
-            assert np.allclose(B2.output_values, [[3.0]])
-            assert np.allclose(inner_composition_1.output_values, [[9.0]])
-            assert np.allclose(inner_composition_2.output_values, [[3.0]])
-            assert np.allclose(mechanism_d.output_values, [[36.0]])
-            assert np.allclose(outer_composition.output_values, [[36.0]])
+            assert np.allclose(A.get_output_values(outer_composition), [[1.0]])
+            assert np.allclose(B.get_output_values(outer_composition), [[2.0]])
+            assert np.allclose(C.get_output_values(outer_composition), [[9.0]])
+            assert np.allclose(A2.get_output_values(outer_composition), [[3.0]])
+            assert np.allclose(B2.get_output_values(outer_composition), [[3.0]])
+            assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[9.0]])
+            assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[3.0]])
+            assert np.allclose(mechanism_d.get_output_values(outer_composition), [[36.0]])
+            assert np.allclose(outer_composition.get_output_values(outer_composition), [[36.0]])
 
     @pytest.mark.nested
     @pytest.mark.composition
@@ -503,11 +503,11 @@ class TestConnectCompositionsViaCIMS:
                     scheduler_processing=sched)
 
         # level_0 output = 2.0 * (1.0 + 2.0) = 6.0
-        assert np.allclose(level_0.output_values, [6.0])
+        assert np.allclose(level_0.get_output_values(level_2), [6.0])
         # level_1 output = 2.0 * (1.0 + 6.0) = 14.0
-        assert np.allclose(level_1.output_values, [14.0])
+        assert np.allclose(level_1.get_output_values(level_2), [14.0])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
-        assert np.allclose(level_2.output_values, [34.0])
+        assert np.allclose(level_2.get_output_values(level_2), [34.0])
 
 
 class TestInputCIMOutputStateToOriginOneToMany:
@@ -526,9 +526,9 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]]})
 
-        assert np.allclose(A.value, [[1.23]])
-        assert np.allclose(B.value, [[1.23]])
-        assert np.allclose(C.value, [[1.23]])
+        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
+        assert np.allclose(B.parameters.value.get(comp), [[1.23]])
+        assert np.allclose(C.parameters.value.get(comp), [[1.23]])
 
     def test_non_origin_receiver(self):
         A = ProcessingMechanism(name='A')
@@ -545,9 +545,9 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]]})
 
-        assert np.allclose(A.value, [[1.23]])
-        assert np.allclose(B.value, [[2.46]])
-        assert np.allclose(C.value, [[1.23]])
+        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
+        assert np.allclose(B.parameters.value.get(comp), [[2.46]])
+        assert np.allclose(C.parameters.value.get(comp), [[1.23]])
 
     def test_incorrect_origin_input_source_spec(self):
         A = ProcessingMechanism(name='A')
@@ -581,9 +581,9 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]]})
 
-        assert np.allclose(A.value, [[1.23]])
-        assert np.allclose(B.value, [[1.23]])
-        assert np.allclose(C.value, [[4.56]])
+        assert np.allclose(A.parameters.value.get(comp), [[1.23]])
+        assert np.allclose(B.parameters.value.get(comp), [[1.23]])
+        assert np.allclose(C.parameters.value.get(comp), [[4.56]])
 
     def test_mix_and_match_input_sources(self):
         A = ProcessingMechanism(name='A')
@@ -609,9 +609,9 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.run(inputs=input_dict)
 
-        assert np.allclose(A.value, [[2.]])
-        assert np.allclose(B.value, [[3.], [1.]])
-        assert np.allclose(C.value, [[1.], [2.], [3.]])
+        assert np.allclose(A.parameters.value.get(comp), [[2.]])
+        assert np.allclose(B.parameters.value.get(comp), [[3.], [1.]])
+        assert np.allclose(C.parameters.value.get(comp), [[1.], [2.], [3.]])
 
     def test_mix_and_match_input_sources_invalid_shape(self):
         A = ProcessingMechanism(name='A')
@@ -707,7 +707,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.external_input_sources = {B: [None, A]}
         comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.input_values, [[2.46], [1.23]])
+        assert np.allclose(B.get_input_values(comp), [[2.46], [1.23]])
 
     def test_non_origin_too_many_input_states(self):
         A = ProcessingMechanism(name='A',
@@ -754,7 +754,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.add_linear_processing_pathway([A, B])
         comp.add_c_node(B, external_input_source=[None, A])
         comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.input_values, [[2.46], [1.23]])
+        assert np.allclose(B.get_input_values(comp), [[2.46], [1.23]])
 
     def test_specify_external_input_sources_on_mechanism_origin(self):
         A = ProcessingMechanism(name='A',
@@ -767,7 +767,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
         comp.add_c_node(B, external_input_source=A)
 
         comp.run(inputs={A: [[1.23]]})
-        assert np.allclose(B.input_values, [[1.23]])
+        assert np.allclose(B.get_input_values(comp), [[1.23]])
 
     def test_external_input_sources_ALL(self):
         from psyneulink.core.globals.keywords import ALL
@@ -786,7 +786,7 @@ class TestInputCIMOutputStateToOriginOneToMany:
 
         comp.run(inputs={A: [[1.23]],
                          C: [[4.0]]})
-        assert np.allclose(D.input_values, [[5.23], [4.0]])
+        assert np.allclose(D.get_input_values(comp), [[5.23], [4.0]])
 
 
 
@@ -810,9 +810,9 @@ class TestInputSpec:
         results_C = []
 
         def call_after_trial():
-            results_A.append(A.value)
-            results_B.append(B.value)
-            results_C.append(C.value)
+            results_A.append(A.parameters.value.get(comp))
+            results_B.append(B.parameters.value.get(comp))
+            results_C.append(C.parameters.value.get(comp))
 
         comp.run(inputs={A: inputs_to_A,
                          B: inputs_to_B},
@@ -840,9 +840,9 @@ class TestInputSpec:
         results_C = []
 
         def call_after_trial():
-            results_A.append(A.value)
-            results_B.append(B.value)
-            results_C.append(C.value)
+            results_A.append(A.parameters.value.get(comp))
+            results_B.append(B.parameters.value.get(comp))
+            results_C.append(C.parameters.value.get(comp))
 
         comp.run(inputs={B: inputs_to_B},
                  call_after_trial=call_after_trial)

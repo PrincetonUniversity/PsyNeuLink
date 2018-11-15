@@ -6,7 +6,6 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
-
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY
@@ -78,7 +77,6 @@ class TestReinitialize:
         assert np.allclose(D.output_states[1].value[0], 0.0)
 
 
-
 class TestThreshold:
     def test_threshold_param(self):
         D = DDM(name='DDM',
@@ -93,13 +91,13 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0))
         D.execute(2.0)  # 2.0 < 5.0
-        assert not D.is_finished
+        assert not D.is_finished()
 
         D.execute(2.0)  # 4.0 < 5.0
-        assert not D.is_finished
+        assert not D.is_finished()
 
         D.execute(2.0)   # 5.0 = threshold
-        assert D.is_finished
+        assert D.is_finished()
 
     def test_threshold_stops_accumulation(self):
         D = DDM(name='DDM',
@@ -163,9 +161,9 @@ class TestThreshold:
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
 
         # decision variable's value should match threshold
-        assert D.value[0] == 10.0
+        assert D.parameters.value.get(S)[0] == 10.0
         # it should have taken 5 executions (and time_step_size = 1.0)
-        assert D.value[1] == 5.0
+        assert D.parameters.value.get(S)[1] == 5.0
 
 
     # def test_is_finished_stops_mechanism(self):

@@ -405,7 +405,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list[comp._execution_id]
+            output = sched.execution_list[comp.default_execution_id]
 
             expected_output = [A, A, A, A, set()]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -426,7 +426,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list[comp._execution_id]
+            output = sched.execution_list[comp.default_execution_id]
 
             expected_output = [A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -447,7 +447,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list[comp._execution_id]
+            output = sched.execution_list[comp.default_execution_id]
 
             expected_output = [A, A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -585,9 +585,9 @@ class TestCondition:
     def test_WhenFinishedAny_1(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B.is_finished = True
+        B._is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
@@ -611,9 +611,9 @@ class TestCondition:
     def test_WhenFinishedAny_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B.is_finished = True
+        B._is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
@@ -656,10 +656,10 @@ class TestCondition:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
-                B.is_finished = True
+                A._is_finished = True
+                B._is_finished = True
             if i == 4:
-                C.is_finished = True
+                C._is_finished = True
             output.append(step)
             i += 1
         expected_output = [
@@ -670,9 +670,9 @@ class TestCondition:
     def test_WhenFinishedAll_1(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B.is_finished = True
+        B._is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
@@ -696,9 +696,9 @@ class TestCondition:
     def test_WhenFinishedAll_2(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-        B.is_finished = True
+        B._is_finished = True
         C = TransferMechanism(function=Linear(intercept=1.5), name='C')
         for m in [A, B, C]:
             comp.add_c_node(m)
@@ -741,10 +741,10 @@ class TestCondition:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
-                B.is_finished = True
+                A._is_finished = True
+                B._is_finished = True
             if i == 4:
-                C.is_finished = True
+                C._is_finished = True
             output.append(step)
             i += 1
         expected_output = [

@@ -98,23 +98,21 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.set_log_conditions(('matrix', PROCESSING))
-
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
 
     def show_target():
         i = s.input
-        t = s.target_input_states[0].value
+        t = s.target_input_states[0].parameters.value.get(s)
         print('\nOLD WEIGHTS: \n')
-        print('- Input Weights: \n', Input_Weights.mod_matrix)
-        print('- Middle Weights: \n', Middle_Weights.mod_matrix)
-        print('- Output Weights: \n', Output_Weights.mod_matrix)
+        print('- Input Weights: \n', Input_Weights.get_mod_matrix(s))
+        print('- Middle Weights: \n', Middle_Weights.get_mod_matrix(s))
+        print('- Output Weights: \n', Output_Weights.get_mod_matrix(s))
         print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
         print('ACTIVITY FROM OLD WEIGHTS: \n')
-        print('- Middle 1: \n', Hidden_Layer_1.value)
-        print('- Middle 2: \n', Hidden_Layer_2.value)
-        print('- Output:\n', Output_Layer.value)
+        print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(s))
+        print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(s))
+        print('- Output:\n', Output_Layer.parameters.value.get(s))
 
     s = System(
         processes=[p],
@@ -144,20 +142,20 @@ def test_multilayer():
             results_list.extend(nested_elem)
 
     expected_output = [
-        (Output_Layer.output_states.values, [np.array([0.22686074, 0.25270212, 0.91542149])]),
-        (objective_output_layer.output_states[MSE].value, np.array(0.04082589331852094)),
-        (Input_Weights.mod_matrix, np.array([
+        (Output_Layer.get_output_values(s), [np.array([0.22686074, 0.25270212, 0.91542149])]),
+        (objective_output_layer.output_states[MSE].parameters.value.get(s), np.array(0.04082589331852094)),
+        (Input_Weights.get_mod_matrix(s), np.array([
             [ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
             [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379],
         ])),
-        (Middle_Weights.mod_matrix, np.array([
+        (Middle_Weights.get_mod_matrix(s), np.array([
             [ 0.09490249, 0.10488719, 0.12074013, 0.1428774 ],
             [ 0.29677354, 0.30507726, 0.31949676, 0.3404652 ],
             [ 0.49857336, 0.50526254, 0.51830509, 0.53815062],
             [ 0.70029406, 0.70544225, 0.71717037, 0.73594383],
             [ 0.90192903, 0.90561554, 0.91609668, 0.93385292],
         ])),
-        (Output_Weights.mod_matrix, np.array([
+        (Output_Weights.get_mod_matrix(s), np.array([
             [-0.74447522, -0.71016859, 0.31575293],
             [-0.50885177, -0.47444784, 0.56676582],
             [-0.27333719, -0.23912033, 0.8178167 ],
@@ -186,9 +184,130 @@ def test_multilayer():
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
+
+def test_multilayer_log():
+    Input_Layer = TransferMechanism(
+        name='Input Layer',
+        function=Logistic,
+        default_variable=np.zeros((2,)),
+    )
+
+    Hidden_Layer_1 = TransferMechanism(
+        name='Hidden Layer_1',
+        function=Logistic(),
+        # default_variable=np.zeros((5,)),
+        size=5
+    )
+
+    Hidden_Layer_2 = TransferMechanism(
+        name='Hidden Layer_2',
+        function=Logistic(),
+        default_variable=[0, 0, 0, 0],
+    )
+
+    Output_Layer = TransferMechanism(
+        name='Output Layer',
+        function=Logistic,
+        default_variable=[0, 0, 0],
+    )
+
+    Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+    Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+    Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+
+    # TEST PROCESS.LEARNING WITH:
+    # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
+    # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+    # NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+
+    # This projection will be used by the process below by referencing it in the process' pathway;
+    #    note: sender and receiver args don't need to be specified
+    Input_Weights = MappingProjection(
+        name='Input Weights',
+        matrix=Input_Weights_matrix,
+    )
+
+    # This projection will be used by the process below by assigning its sender and receiver args
+    #    to mechanismss in the pathway
+    Middle_Weights = MappingProjection(
+        name='Middle Weights',
+        sender=Hidden_Layer_1,
+        receiver=Hidden_Layer_2,
+        matrix=Middle_Weights_matrix,
+    )
+
+    # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
+    Output_Weights = MappingProjection(
+        name='Output Weights',
+        sender=Hidden_Layer_2,
+        receiver=Output_Layer,
+        matrix=Output_Weights_matrix,
+    )
+
+    p = Process(
+        # default_variable=[0, 0],
+        size=2,
+        pathway=[
+            Input_Layer,
+            # The following reference to Input_Weights is needed to use it in the pathway
+            #    since it's sender and receiver args are not specified in its declaration above
+            Input_Weights,
+            Hidden_Layer_1,
+            # No projection specification is needed here since the sender arg for Middle_Weights
+            #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
+            # Middle_Weights,
+            Hidden_Layer_2,
+            # Output_Weights does not need to be listed for the same reason as Middle_Weights
+            # If Middle_Weights and/or Output_Weights is not declared above, then the process
+            #    will assign a default for missing projection
+            # Output_Weights,
+            Output_Layer
+        ],
+        clamp_input=SOFT_CLAMP,
+        learning=LEARNING,
+        learning_rate=1.0,
+        target=[0, 0, 1],
+        prefs={
+            VERBOSE_PREF: False,
+            REPORT_OUTPUT_PREF: False
+        },
+    )
+
+    Middle_Weights.set_log_conditions(('mod_matrix', PROCESSING))
+
+    stim_list = {Input_Layer: [[-1, 30]]}
+    target_list = {Output_Layer: [[0, 0, 1]]}
+
+    def show_target():
+        i = s.input
+        t = s.target_input_states[0].parameters.value.get(s)
+        print('\nOLD WEIGHTS: \n')
+        print('- Input Weights: \n', Input_Weights.get_mod_matrix(s))
+        print('- Middle Weights: \n', Middle_Weights.get_mod_matrix(s))
+        print('- Output Weights: \n', Output_Weights.get_mod_matrix(s))
+        print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
+        print('ACTIVITY FROM OLD WEIGHTS: \n')
+        print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(s))
+        print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(s))
+        print('- Output:\n', Output_Layer.parameters.value.get(s))
+
+    s = System(
+        processes=[p],
+        targets=[0, 0, 1],
+        learning_rate=1.0,
+    )
+
+    s.run(
+        num_trials=10,
+        inputs=stim_list,
+        targets=target_list,
+        call_after_trial=show_target,
+    )
+
     expected_log_val = np.array(
-            [
+        [
+            ['System-0'],
+            [[
                 [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
                 [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]],
                 [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
@@ -196,7 +315,8 @@ def test_multilayer():
                 [ [[ 0.05,  0.1 ,  0.15,  0.2 ],
                    [ 0.25,  0.3 ,  0.35,  0.4 ],
                    [ 0.45,  0.5 ,  0.55,  0.6 ],
-                   [ 0.65,  0.7 ,  0.75,  0.8 ],                   [ 0.85,  0.9 ,  0.95,  1.  ]],
+                   [ 0.65,  0.7 ,  0.75,  0.8 ],
+                   [ 0.85,  0.9 ,  0.95,  1.  ]],
                   [[ 0.04789907,  0.09413833,  0.14134241,  0.18938924],
                    [ 0.24780811,  0.29388455,  0.34096758,  0.38892985],
                    [ 0.44772121,  0.49364209,  0.54060947,  0.58849095],
@@ -242,54 +362,72 @@ def test_multilayer():
                    [ 0.49318268,  0.50159531,  0.51632339,  0.5377435 ],
                    [ 0.69471052,  0.70164382,  0.71511777,  0.73552215],
                    [ 0.8961628 ,  0.90169281,  0.91397691,  0.93341744]]]
-            ], dtype=object
+            ]]
+        ],
+        dtype=object
     )
+    log_val = Middle_Weights.log.nparray(entries='mod_matrix', header=False)
 
-    for i in range(len(log_val)):
+    assert log_val[0] == expected_log_val[0]
+
+    for i in range(1, len(log_val)):
         try:
-            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
-        except:
+            np.testing.assert_allclose(log_val[i], expected_log_val[i])
+        except TypeError:
             for j in range(len(log_val[i])):
-                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
-                                           atol=1e-08,
-                                           err_msg='Failed on test of logged values')
+                np.testing.assert_allclose(
+                    np.array(log_val[i][j][0]),
+                    np.array(expected_log_val[i][j][0]),
+                    atol=1e-08,
+                    err_msg='Failed on test item {0} of logged values'.format(i)
+                )
 
     Middle_Weights.log.print_entries()
 
     # Test Programatic logging
-    Hidden_Layer_2.log.log_values(VALUE)
+    Hidden_Layer_2.log.log_values(VALUE, s)
     log_val = Hidden_Layer_2.log.nparray(header=False)
     expected_log_val = np.array(
         [
-            [[1]],
-            [[0]],
-            [[0]],
-            [[0]],
-            [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
-        ], dtype=object
+            ['System-0'],
+            [[
+                [[1]],
+                [[0]],
+                [[0]],
+                [[0]],
+                [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
+            ]]
+        ],
+        dtype=object
     )
-    for i in range(len(log_val)):
-        try:
-            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
-        except:
-            for j in range(len(log_val[i])):
-                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
-                                           atol=1e-08,
-                                           err_msg='Failed on test of logged values')
-    Hidden_Layer_2.log.print_entries()
+    assert log_val[0] == expected_log_val[0]
 
+    for i in range(1, len(log_val)):
+        try:
+            np.testing.assert_allclose(log_val[i], expected_log_val[i])
+        except TypeError:
+            for j in range(len(log_val[i])):
+                np.testing.assert_allclose(
+                    np.array(log_val[i][j][0]),
+                    np.array(expected_log_val[i][j][0]),
+                    atol=1e-08,
+                    err_msg='Failed on test item {0} of logged values'.format(i)
+                )
+    Hidden_Layer_2.log.print_entries()
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
-    Middle_Weights.set_log_conditions(('matrix', LEARNING))
+    Middle_Weights.set_log_conditions(('mod_matrix', LEARNING))
     s.run(
-            num_trials=5,
-            inputs=stim_list,
-            targets=target_list,
+        num_trials=5,
+        inputs=stim_list,
+        targets=target_list,
     )
-    log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
+    log_val = Middle_Weights.log.nparray(entries='mod_matrix', header=False)
     expected_log_val = np.array(
-                [
+        [
+            ['System-0'],
+            [[
                     [[1], [1], [1], [1], [1]],  # RUN
                     [[0], [1], [2], [3], [4]],  # TRIAL
                     [[1], [1], [1], [1], [1]],  # PASS
@@ -319,15 +457,23 @@ def test_multilayer():
                        [0.5176666356203712, 0.5192429413004418, 0.5271516632648602, 0.5420683480396268],
                        [0.7200760707077265, 0.7199270072739019, 0.7263361597421493, 0.7400030122347587],
                        [0.922361699102421, 0.9205767427437028, 0.9255639970037588, 0.9380456963960624]]]
-        ], dtype=object
+            ]]
+        ],
+        dtype=object
     )
 
     assert log_val.shape == expected_log_val.shape
-    for i in range(len(log_val)):
+    assert log_val[0] == expected_log_val[0]
+    assert len(log_val[1]) == len(expected_log_val[1]) == 1
+
+    for i in range(len(log_val[1][0])):
         try:
-            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
-        except:
-            for j in range(len(log_val[i])):
-                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
-                                           atol=1e-08,
-                                           err_msg='Failed on test of logged values')
+            np.testing.assert_allclose(log_val[1][0][i], expected_log_val[1][0][i])
+        except TypeError:
+            for j in range(len(log_val[1][0][i])):
+                np.testing.assert_allclose(
+                    np.array(log_val[1][0][i][j]),
+                    np.array(expected_log_val[1][0][i][j]),
+                    atol=1e-08,
+                    err_msg='Failed on test item {0} of logged values'.format(i)
+                )
