@@ -604,7 +604,6 @@ class OptimizationControlMechanism(ControlMechanism):
         except AttributeError:
             self.update_agent(self.state_rep, self.control_allocation, [0])
 
-
         # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         control_allocation, self.metric_optimal, self.saved_samples, self.saved_values = \
