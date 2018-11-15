@@ -611,7 +611,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                         super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        self.agent_rep.after_execution(context=context)
+        # self.agent_rep.after_execution(context=context)
 
         return control_allocation
 
