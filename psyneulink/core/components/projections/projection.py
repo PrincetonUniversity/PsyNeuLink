@@ -985,8 +985,8 @@ class Projection_Base(Projection):
     def _get_context_struct_type(self, ctx):
         return ctx.get_context_struct_type(self.function_object)
 
-    def _get_param_initializer(self, execution_id=None):
-        return self.function_object._get_param_initializer(execution_id=execution_id)
+    def _get_param_initializer(self, execution_id):
+        return self.function_object._get_param_initializer(execution_id)
 
     def _get_context_initializer(self, execution_id=None):
         return self.function_object._get_context_initializer(execution_id=execution_id)

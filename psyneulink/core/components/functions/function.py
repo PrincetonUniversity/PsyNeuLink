@@ -915,7 +915,7 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def _get_param_initializer(self, execution_id=None):
+    def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
 
     def bin_function(self,
@@ -11374,10 +11374,10 @@ COMMENT
         transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
-    def _get_param_initializer(self, execution_id=None):
-        my_params = super()._get_param_initializer(execution_id=execution_id)
-        metric_params = self._metric_fct._get_param_initializer(execution_id=execution_id)
-        transfer_params = self.transfer_fct._get_param_initializer(execution_id=execution_id) if self.transfer_fct is not None else tuple()
+    def _get_param_initializer(self, execution_id):
+        my_params = super()._get_param_initializer(execution_id)
+        metric_params = self._metric_fct._get_param_initializer(execution_id)
+        transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
         return tuple([my_params, metric_params, transfer_params])
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):

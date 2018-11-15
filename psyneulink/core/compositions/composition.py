@@ -2965,9 +2965,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def _get_param_initializer(self, execution_id=None):
-        mech_params = (tuple(m._get_param_initializer(execution_id=execution_id)) for m in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer(execution_id=execution_id)) for p in self.projections)
+    def _get_param_initializer(self, execution_id):
+        mech_params = (tuple(m._get_param_initializer(execution_id)) for m in self._all_nodes)
+        proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, execution_id=None):

@@ -2558,22 +2558,22 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
-    def _get_param_initializer(self, execution_id=None):
+    def _get_param_initializer(self, execution_id):
         input_param_init_list = []
         for state in self.input_states:
-            input_param_init_list.append(state._get_param_initializer(execution_id=execution_id))
+            input_param_init_list.append(state._get_param_initializer(execution_id))
         input_param_init = tuple(input_param_init_list)
 
-        function_param_init = self.function_object._get_param_initializer(execution_id=execution_id)
+        function_param_init = self.function_object._get_param_initializer(execution_id)
 
         output_param_init_list = []
         for state in self.output_states:
-            output_param_init_list.append(state._get_param_initializer(execution_id=execution_id))
+            output_param_init_list.append(state._get_param_initializer(execution_id))
         output_param_init = tuple(output_param_init_list)
 
         param_param_init_list = []
         for state in self.parameter_states:
-            param_param_init_list.append(state._get_param_initializer(execution_id=execution_id))
+            param_param_init_list.append(state._get_param_initializer(execution_id))
         param_param_init = tuple(param_param_init_list)
 
         param_init_list = [input_param_init, function_param_init,
