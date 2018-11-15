@@ -927,7 +927,7 @@ class Function_Base(Function):
         # TODO: Port this to llvm
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        e = pnlvm.FuncExecution(self)
+        e = pnlvm.FuncExecution(self, execution_id)
         return e.execute(variable)
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

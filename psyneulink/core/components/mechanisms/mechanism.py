@@ -2304,7 +2304,7 @@ class Mechanism_Base(Mechanism):
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         if bin_execute:
-            e = pnlvm.MechExecution(self)
+            e = pnlvm.MechExecution(self, execution_id)
             value = e.execute(variable)
         else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed

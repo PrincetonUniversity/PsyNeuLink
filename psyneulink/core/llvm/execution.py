@@ -41,15 +41,16 @@ def _tupleize(x):
 
 class FuncExecution:
 
-    def __init__(self, function):
+    def __init__(self, function, execution_id):
         self._function = function
         self._bin_func = function._llvmBinFunction
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self.__param_struct = par_struct_ty(*function._get_param_initializer())
+        self.__param_struct = par_struct_ty(*function._get_param_initializer(execution_id))
 
-        self.__context_struct = context_struct_ty(*function._get_context_initializer())
+        self.__context_struct = context_struct_ty(*function._get_context_initializer(execution_id))
+
     def execute(self, variable):
         new_var = np.asfarray(variable)
         _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
@@ -65,17 +66,18 @@ class FuncExecution:
 
 class MechExecution:
 
-    def __init__(self, mechanism):
+    def __init__(self, mechanism, execution_id):
         self._mechanism = mechanism
         self._bin_func = mechanism._llvmBinFunction
 
         par_struct_ty, context_struct_ty, _, _ = self._bin_func.byref_arg_types
 
-        self.__param_struct = par_struct_ty(*mechanism._get_param_initializer())
+        self.__param_struct = par_struct_ty(*mechanism._get_param_initializer(execution_id))
 
         if mechanism._nv_state is None:
-            self.__context_struct = context_struct_ty(*mechanism._get_context_initializer())
+            self.__context_struct = context_struct_ty(*mechanism._get_context_initializer(execution_id))
         else:
+            # TODO: This should consider execution_id
             self.__context_struct = mechanism._nv_state
 
     def execute(self, variable):
@@ -93,6 +95,7 @@ class MechExecution:
                        ct_vi, ctypes.byref(ct_vo))
 
         # store updated context
+        # TODO: This should consider execution_id
         self._mechanism._nv_state = self.__context_struct
         return _convert_ctype_to_python(ct_vo)
 
@@ -111,14 +114,14 @@ class CompExecution:
 
         # Context
         c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
-        self.__context_struct = c_context(*composition._get_context_initializer())
+        self.__context_struct = c_context(*composition._get_context_initializer(execution_id))
 
         # Params
         c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-        self.__param_struct = c_param(*self._composition._get_param_initializer())
+        self.__param_struct = c_param(*self._composition._get_param_initializer(execution_id))
         # Data
         c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
-        self.__data_struct = c_data(*self._composition._get_data_initializer())
+        self.__data_struct = c_data(*self._composition._get_data_initializer(execution_id))
 
 
     @property
