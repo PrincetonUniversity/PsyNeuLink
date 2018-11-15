@@ -724,14 +724,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Initialize current_state and control_signals on first trial
             # Note:  initialize current_state to 1's so that learning_function returns specified priors
             previous_state = np.full_like(current_state.vector, 0)
-            prediction_weights = self.learning_function.function([previous_state, 0])
+            prediction_weights = self.learning_function.function([previous_state, 0], execution_id=execution_id)
         else:
             # Update prediction_weights
             costs = [c.compute_costs(c.parameters.variable.get(execution_id)) for c in self.control_signals]
             combined_costs = self.combine_costs(costs)
             # costs are assigned as negative in current_state.update, so add them here
             net_outcome = obj_mech_outcome - combined_costs
-            prediction_weights = self.learning_function.function([previous_state, net_outcome])
+            prediction_weights = self.learning_function.function([previous_state, net_outcome], execution_id=execution_id)
 
             # Update current_state with current feature_values and control_signals and store for next trial
             feature_values = np.array(np.array(variable[1:]).tolist())

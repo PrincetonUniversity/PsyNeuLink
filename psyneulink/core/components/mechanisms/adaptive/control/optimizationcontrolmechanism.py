@@ -181,11 +181,11 @@ Execution
 ---------
 
 When an OptimizationControlMechanism executes, it calls its `learning_function
-<OptimizationControlMechanism.learning_function>` if it has one, to udpate its `prediction_weights 
+<OptimizationControlMechanism.learning_function>` if it has one, to udpate its `prediction_weights
 <OptimizationControlMechanism.prediction_weights>`. It then calls its primary `function
-<OptimizationControlMechanism.function>` to find the `allocation_policy <ControlMechanism.allocation_policy>` that 
-yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The `function <OptimizationControlMechanism.function>` 
-does this by selecting a sample `allocation_policy <ControlMechanism.allocation_policy>` (usually using  
+<OptimizationControlMechanism.function>` to find the `allocation_policy <ControlMechanism.allocation_policy>` that
+yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The `function <OptimizationControlMechanism.function>`
+does this by selecting a sample `allocation_policy <ControlMechanism.allocation_policy>` (usually using
 `search_function <OptimizationControlMechanism.search_function>` to select one from `allocation_policy_search_space
 <OptimizationControlMechanism.allocation_policy_search_space>`), and evaluating the EVC for that `allocation_policy
 <ControlMechanism.allocation_policy>` using the `evaluation_function <OptimizationControlMechanism.evaluation_function>`.
@@ -245,20 +245,16 @@ Class Reference
 ---------------
 
 """
+import itertools
+import numpy as np
 import typecheck as tc
 
-import numpy as np
-
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
+from psyneulink.core.components.functions.function import Function_Base, ModulationParam, OBJECTIVE_FUNCTION, SEARCH_FUNCTION, SEARCH_SPACE, SEARCH_TERMINATION_FUNCTION, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, PARAMETER_STATES, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM, PARAMETER_STATES
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -274,7 +270,7 @@ class OptimizationControlMechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-    
+
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
@@ -302,7 +298,7 @@ class OptimizationControlMechanism(ControlMechanism):
     ---------
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the 
+        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
@@ -314,50 +310,50 @@ class OptimizationControlMechanism(ControlMechanism):
 
     evaluation_function : function or method
         specifies the function used to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
-        `allocation_policy <ControlMechanism.allocation_policy>`. It is assigned as the `objective_function 
-        <OptimizationFunction.objective_function>` parameter of `function  <OptimizationControlMechanism.function>`, 
-        unless that is specified in the constructor for an  OptimizationFunction assigned to the **function** 
-        argument of the OptimizationControlMechanism's constructor.  Often it is assigned directy to the 
-        OptimizationControlMechanism's `compute_EVC <OptimizationControlMechanism.compute_EVC>` method;  in some 
-        cases it may implement additional operations, but should always call `compute_EVC 
-        <OptimizationControlMechanism.compute_EVC>`. A custom function can be assigned, but it must take as its 
-        first argument an array with the same shape as the OptimizationControlMechanism's `allocation_policy 
-        <ControlMechanism.allocation_policy>`, and return the following four values: an array containing the 
+        `allocation_policy <ControlMechanism.allocation_policy>`. It is assigned as the `objective_function
+        <OptimizationFunction.objective_function>` parameter of `function  <OptimizationControlMechanism.function>`,
+        unless that is specified in the constructor for an  OptimizationFunction assigned to the **function**
+        argument of the OptimizationControlMechanism's constructor.  Often it is assigned directy to the
+        OptimizationControlMechanism's `compute_EVC <OptimizationControlMechanism.compute_EVC>` method;  in some
+        cases it may implement additional operations, but should always call `compute_EVC
+        <OptimizationControlMechanism.compute_EVC>`. A custom function can be assigned, but it must take as its
+        first argument an array with the same shape as the OptimizationControlMechanism's `allocation_policy
+        <ControlMechanism.allocation_policy>`, and return the following four values: an array containing the
         `allocation_policy <ControlMechanism.allocation_policy>` that generated the optimal `EVC
         <OptimizationControlMechanism_EVC>`; an array containing that EVC value;  a list containing each
-        `allocation_policy <ControlMechanism.allocation_policy>` sampled if `function 
-        <OptimizationControlMechanism.function>` has a `save_samples <OptimizationFunction.save_samples>` attribute 
-        and it is `True`, otherwise it should return an empty list; and a list containing the EVC values for each 
-        `allocation_policy <ControlMechanism.allocation_policy>` sampled if the function has a `save_values 
+        `allocation_policy <ControlMechanism.allocation_policy>` sampled if `function
+        <OptimizationControlMechanism.function>` has a `save_samples <OptimizationFunction.save_samples>` attribute
+        and it is `True`, otherwise it should return an empty list; and a list containing the EVC values for each
+        `allocation_policy <ControlMechanism.allocation_policy>` sampled if the function has a `save_values
         <OptimizationFunction.save_values>` attribute and it is `True`, otherwise it should return an empty list.
 
     search_function : function or method
-        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
-        `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a 
-        constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments 
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
+        `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a
+        constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments
         an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and an integer
-        (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return 
+        (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return
         an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>`.
 
     search_termination_function : function or method
-        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
-        `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is 
-        specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its 
-        arguments an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and two 
-        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current 
-        `allocation_policy <ControlMechanism.allocation_policy>`, and the second the current iteration of the 
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
+        `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is
+        specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its
+        arguments an array with the same shape as `allocation_policy <ControlMechanism.allocation_policy>` and two
+        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current
+        `allocation_policy <ControlMechanism.allocation_policy>`, and the second the current iteration of the
         `optimization process <OptimizationFunction_Process>`;  it must return `True` or `False`.
-        
+
     search_space : list or ndarray
-        specifies the `search_space <OptimizationFunction.search_space>` parameter for `function 
-        <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function 
-        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `allocation_policy 
+        specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
+        <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
+        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `allocation_policy
         <ControlMechanism.allocation_policy>`.
-        
+
     function : OptimizationFunction, function or method
-        specifies the function used to optimize the `allocation_policy <ControlMechanism.allocation_policy>`;  
-        must take as its sole argument an array with the same shape as `allocation_policy 
-        <ControlMechanism.allocation_policy>`, and return a similar array (see `Primary Function 
+        specifies the function used to optimize the `allocation_policy <ControlMechanism.allocation_policy>`;
+        must take as its sole argument an array with the same shape as `allocation_policy
+        <ControlMechanism.allocation_policy>`, and return a similar array (see `Primary Function
         <OptimizationControlMechanism>` for additional details).
 
     params : Dict[param keyword: param value] : default None
@@ -385,8 +381,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     learning_function : LearningFunction, function or method
         takes `current_state <OptimizationControlMechanism.current_state>` as its first argument, and
-        `net_outcome <ControlMechanism.net_outcome>` as its second argument, and returns an updated set of 
-        `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see  
+        `net_outcome <ControlMechanism.net_outcome>` as its second argument, and returns an updated set of
+        `prediction_weights <OptimizationControlMechanism.prediction_weights>` (see
         `OptimizationControlMechanism_Learning_Function` for additional details).
 
     function : OptimizationFunction, function or method
@@ -400,22 +396,22 @@ class OptimizationControlMechanism(ControlMechanism):
     evaluation_function : function or method
         assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of `function
         <OptimizationControlMechanism.function>`;  often this is simply the OptimizationControlMechanism's
-        `compute_EVC <OptimizationControlMechanism.compute_EVC>` method, but it should always call that.  
-        
+        `compute_EVC <OptimizationControlMechanism.compute_EVC>` method, but it should always call that.
+
     search_function : function or method
-        `search_function <OptimizationFunction.search_function>` assigned to `function 
-        <OptimizationControlMechanism.function>`; used to select samples of `allocation_policy 
+        `search_function <OptimizationFunction.search_function>` assigned to `function
+        <OptimizationControlMechanism.function>`; used to select samples of `allocation_policy
         <ControlMechanism.allocation_policy>` to evaluate by `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
     search_termination_function : function or method
         `search_termination_function <OptimizationFunction.search_termination_function>` assigned to
-        `function <OptimizationControlMechanism.function>`;  determines when to terminate the 
+        `function <OptimizationControlMechanism.function>`;  determines when to terminate the
         `optimization process <OptimizationFunction_Process>`.
-        
+
     allocation_policy_search_space : list or ndarray
-        `search_space <OptimizationFunction.search_space>` assigned to `function 
-        <OptimizationControlMechanism.function>`;  determines the samples of 
+        `search_space <OptimizationFunction.search_space>` assigned to `function
+        <OptimizationControlMechanism.function>`;  determines the samples of
         `allocation_policy <ControlMechanism.allocation_policy>` evaluated by the `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
@@ -425,8 +421,8 @@ class OptimizationControlMechanism(ControlMechanism):
         is `True`;  otherwise list is empty.
 
     saved_values : list
-        contains values of EVC associated with all samples of `allocation_policy <ControlMechanism.allocation_policy>` 
-         evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values 
+        contains values of EVC associated with all samples of `allocation_policy <ControlMechanism.allocation_policy>`
+         evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values
          <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
 
     name : str
@@ -586,3 +582,12 @@ class OptimizationControlMechanism(ControlMechanism):
         raise OptimizationControlMechanismError("PROGRAM ERROR: {} must implement an {} method".
                                                 format(self.__class__.__name__, repr('compute_EVC')))
 
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.objective_mechanism],
+            [self.learning_function] if isinstance(self.learning_function, Function_Base) else [],
+            [self.search_function] if isinstance(self.search_function, Function_Base) else [],
+            [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
+        ))
