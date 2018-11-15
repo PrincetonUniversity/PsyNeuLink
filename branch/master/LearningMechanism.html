@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.4.8.0+1.g11a64f9 documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.4.8.0+2.gd142858 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+1.g11a64f9 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+2.gd142858 documentation" href="index.html"/>
         <link rel="up" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/>
         <link rel="next" title="Control Mechanism" href="ControlMechanism.html"/>
         <link rel="prev" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+1
+                0.4.8.0+2
               </div>
             
           
@@ -314,7 +314,7 @@ and <a class="reference internal" href="#psyneulink.components.mechanisms.adapti
 <p>The <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a LearningMechanism uses the values received by the Mechanism’s
 InputStates (described <a class="reference internal" href="#learningmechanism-inputstates"><span class="std std-ref">above</span></a>) to calculate the value of its <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> attributes.</p>
 <ul class="simple" id="learningmechanism-learning-signal">
-<li><a class="reference internal" href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> - the set of changes to the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the
+<li><a class="reference internal" href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> - the set of changes to the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> being learned, calculated to reduce the summed value of the
 LearningMechanism’s <em>ERROR_SIGNAL</em> <a class="reference internal" href="#learningmechanism-input-error-signal"><span class="std std-ref">InputState(s)</span></a>.</li>
 </ul>
@@ -437,7 +437,7 @@ provided to the LearningMechanism’s <em>ERROR_SIGNAL(s)</em> <a class="referen
 LearningMechanism’s <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> (i.e. those for which it is not explicitly specified).
 This determines the way in which the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> is used to modify the
 <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learned_projections" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learned_projections"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projections</span></code></a>.  By default its value is
-Modulation.ADD, which causes the weight changes in the <a class="reference internal" href="LearningProjection.html#psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> to be added to the current value of the
+Modulation.ADD, which causes the weight changes in the <a class="reference internal" href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> to be added to the current value of the
 <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter (see <a class="reference internal" href="#learningmechanism-execution"><span class="std std-ref">Execution</span></a> for a description of how the
 modifications are executed).</li>
 </ul>
@@ -545,7 +545,7 @@ label beside a component indicates the attribute of the LearningMechanism with w
 learning</span></a>, this is the <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a> for the
 last MappingProjection in each learning sequence.  When learning is specified for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (i.e.,
 a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>), the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism(s)</span></a> that receive the <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a>  are identified and designated as <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms,
-and are listed in the Composition’s <a class="reference internal" href="System.html#psyneulink.components.system.System.target_mechanisms" title="psyneulink.components.system.System.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute. If a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Composition receives a
+and are listed in the Composition’s <a class="reference internal" href="Process.html#psyneulink.components.process.Process.target_mechanisms" title="psyneulink.components.process.Process.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute. If a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Composition receives a
 MappingProjection that is specified for learning, then it always projects to a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in that Composition.
 It is important to note, in this context, the status of a Mechanism in a System takes precedence over its status in any
 of the Processes to which it belongs. This means that even if a Mechanism is the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a particular Process, if
@@ -861,7 +861,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+1.g11a64f9',
+            VERSION:'0.4.8.0+2.gd142858',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
