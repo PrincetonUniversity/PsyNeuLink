@@ -280,7 +280,9 @@ class AutodiffComposition(Composition):
     def _build_pytorch_representation(self):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
+        if self.ordered_execution_sets is None:
             self.ordered_execution_sets = list(self.scheduler.run())
+        if self.pytorch_representation is None:
             self.pytorch_representation = PytorchModelCreator(self.graph_processing,
                                                               self.param_init_from_pnl,
                                                               self.ordered_execution_sets)
@@ -483,6 +485,7 @@ class AutodiffComposition(Composition):
                 call_after_time_step=None,
                 call_after_pass=None,
                 execution_id=None,
+                base_execution_id=None,
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
@@ -490,7 +493,7 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         if self.learning_enabled:
-
+            # TBI: How are we supposed to use base_execution_id and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
             self._build_pytorch_representation()
@@ -519,6 +522,7 @@ class AutodiffComposition(Composition):
                                                         call_after_time_step=call_after_time_step,
                                                         call_after_pass=call_after_pass,
                                                         execution_id=execution_id,
+                                                        base_execution_id=base_execution_id,
                                                         clamp_input=clamp_input,
                                                         targets=targets,
                                                         runtime_params=runtime_params,
