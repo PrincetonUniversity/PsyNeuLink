@@ -454,7 +454,7 @@ class AutodiffComposition(Composition):
             if self.parameters.patience.get(execution_id) is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
-                    logger.info('Stopped training early after {} epochs'.format(epoch))
+                    logger.warning('Stopped training early after {} epochs'.format(epoch))
                     if self.randomize:
                         outputs_list = [None] * len(outputs)
                         for i in range(len(outputs)):
@@ -548,6 +548,9 @@ class AutodiffComposition(Composition):
         runtime_params=None):
         # TBI: Handle trials, timesteps, etc
         if self.learning_enabled:
+
+            self._analyze_graph()
+
             if self.refresh_losses:
                 self.losses = []
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
