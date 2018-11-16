@@ -229,7 +229,7 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
-                 learning_rate=0.001,
+                 learning_rate=0.5,
                  learning_enabled=True,
                  optimizer_type=None,
                  loss_type=None,
@@ -250,11 +250,10 @@ class AutodiffComposition(Composition):
         self.loss_type = loss_type
         self.randomize = randomize
         self.refresh_losses = refresh_losses
-        self.learning_rate = learning_rate
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
-        self.learning_rate = self.defaults.learning_rate
+        self.learning_rate = learning_rate
         self.optimizer = None
         self.loss = self.defaults.loss
 
