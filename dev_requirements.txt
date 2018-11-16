@@ -1,4 +1,4 @@
-pytest
+pytest<4
 pytest-benchmark
 pytest-cov
 pytest-profiling
