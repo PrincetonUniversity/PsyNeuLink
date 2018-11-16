@@ -177,7 +177,7 @@ autodiff_total_time = time.time() - autodiff_start_time
 
 print('Output of AutodiffComposition after at most', num_epochs,
       'epochs of training, on inputs [0, 0], [0, 1], [1, 0], [1, 1]:')
-print(result[0])
+print(result)
 print('Initializing and training AutodiffComposition took ', autodiff_total_time, ' seconds.')
 print('\n')
 
