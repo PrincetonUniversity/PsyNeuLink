@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing Mechanisms &mdash; PsyNeuLink 0.4.8.0+894.ga6286dd documentation</title>
+  <title>Processing Mechanisms &mdash; PsyNeuLink 0.4.8.0+895.gb37376a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+894.ga6286dd documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+895.gb37376a documentation" href="index.html"/>
         <link rel="up" title="Mechanisms" href="Mechanism.html"/>
         <link rel="next" title="TransferMechanism" href="TransferMechanism.html"/>
         <link rel="prev" title="Mechanisms" href="Mechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+894
+                0.4.8.0+895
               </div>
             
           
@@ -208,7 +208,7 @@ ProcessingMechanism have more specialized features, and often have restrictions 
 <p>The output of a ProcessingMechanism may also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
-AdaptiveMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+AdaptiveMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
@@ -286,7 +286,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default</em> – the input to Mechanism’s <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.AdaptiveIntegrator.function" title="psyneulink.core.components.functions.function.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>value: default</em> – the input to Mechanism’s <a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -352,7 +352,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+894.ga6286dd',
+            VERSION:'0.4.8.0+895.gb37376a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
