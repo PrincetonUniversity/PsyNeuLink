@@ -30,34 +30,33 @@ class PytorchModelCreator(torch.nn.Module):
         super(PytorchModelCreator, self).__init__()
 
         self.ordered_execution_sets = ordered_execution_sets  # saved for use in the forward method
-        self.node_to_forward_info = {}  # dict mapping PNL nodes to their forward computation information
+        self.component_to_forward_info = {}  # dict mapping PNL nodes to their forward computation information
         self.projections_to_pytorch_weights = {}  # dict mapping PNL projections to Pytorch weights
         self.mechanisms_to_pytorch_biases = {}  # dict mapping PNL mechanisms to Pytorch biases
         self.params = nn.ParameterList()  # list that Pytorch optimizers will use to keep track of parameters
 
         for i in range(len(self.ordered_execution_sets)):
-            for j in range(len(self.ordered_execution_sets[i])):
+            for component in self.ordered_execution_sets[i]:
 
-                node = self.ordered_execution_sets[i][j]
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
-                function = self.function_creator(node, execution_id)  # the node's function
+                function = self.function_creator(component, execution_id)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
-                if len(node.parents) > 0:
+                if i != 0:
 
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
-                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].parameters.value.get(execution_id))).double())
+                        biases = nn.Parameter(torch.zeros(len(component.input_states[0].parameters.value.get(execution_id))).double())
                         self.params.append(biases)
-                        self.mechanisms_to_pytorch_biases[node.component] = biases
+                        self.mechanisms_to_pytorch_biases[component] = biases
 
                     # iterate over incoming projections and set up pytorch weights for them
-                    for k in range(len(node.component.path_afferents)):
+                    for k in range(len(component.path_afferents)):
 
                         # get projection, sender node for projection
-                        mapping_proj = node.component.path_afferents[k]
+                        mapping_proj = component.path_afferents[k]
                         input_component = mapping_proj.sender.owner
                         input_node = processing_graph.comp_to_vertex[input_component]
 
@@ -73,41 +72,40 @@ class PytorchModelCreator(torch.nn.Module):
 
                 node_forward_info = [value, biases, function, afferents]
 
-                self.node_to_forward_info[node] = node_forward_info
+                self.component_to_forward_info[component] = node_forward_info
 
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None):
 
-        outputs = []  # list for storing values of terminal (output) nodes
+        outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i in range(len(self.ordered_execution_sets)):
-            for j in range(len(self.ordered_execution_sets[i])):
+            for component in self.ordered_execution_sets[i]:
 
-                # get forward computation info for current node
-                node = self.ordered_execution_sets[i][j]
-                biases = self.node_to_forward_info[node][1]
-                function = self.node_to_forward_info[node][2]
-                afferents = self.node_to_forward_info[node][3]
+                # get forward computation info for current component
+                biases = self.component_to_forward_info[component][1]
+                function = self.component_to_forward_info[component][2]
+                afferents = self.component_to_forward_info[component][3]
 
                 # forward computation if we have origin node
-                if (i == 0):
-                    value = function(inputs[j])
+                if i == 0:
+                    value = function(inputs[component])
 
                 # forward computation if we do not have origin node
                 else:
-                    value = torch.zeros(len(node.component.input_states[0].parameters.value.get(execution_id))).double()
+                    value = torch.zeros(len(component.input_states[0].parameters.value.get(execution_id))).double()
                     for input_node, weights in afferents.items():
-                        value += torch.matmul(self.node_to_forward_info[input_node][0], weights)
+                        value += torch.matmul(self.component_to_forward_info[input_node.component][0], weights)
                     if biases is not None:
                         value = value + biases
                     value = function(value)
 
                 # store the current value of the node
-                self.node_to_forward_info[node][0] = value
+                self.component_to_forward_info[component][0] = value
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.ordered_execution_sets) - 1:
-                    outputs.append(value)
+                    outputs[component] = value
 
         return outputs
 
@@ -115,14 +113,14 @@ class PytorchModelCreator(torch.nn.Module):
     # parameters and uses them to create a function object representing the function, then returns it
     def function_creator(self, node, execution_id=None):
         def get_fct_param_value(param_name):
-            return float(node.component.function_object.get_current_function_param(param_name, execution_id))
+            return float(node.function_object.get_current_function_param(param_name, execution_id))
 
-        if isinstance(node.component.function_object, Linear):
+        if isinstance(node.function_object, Linear):
             slope = get_fct_param_value('slope')
             intercept = get_fct_param_value('intercept')
             return lambda x: x * slope + intercept
 
-        elif isinstance(node.component.function_object, Logistic):
+        elif isinstance(node.function_object, Logistic):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')

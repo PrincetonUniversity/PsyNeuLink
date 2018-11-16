@@ -115,6 +115,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.composition import RunError
 from psyneulink.core.globals.keywords import OWNER_VALUE, SOFT_CLAMP
+from psyneulink.core.scheduling.scheduler import Scheduler
 
 import numpy as np
 
@@ -272,10 +273,14 @@ class AutodiffComposition(Composition):
 
         self.min_delta = min_delta
 
+        # CW 11/1/18: maybe we should make scheduler a property, like in Composition
+        self.scheduler = None
+
     # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
     def _build_pytorch_representation(self):
-        # set up pytorch representation of the autodiff composition's model
-        if self.pytorch_representation is None:
+        if self.scheduler is None:  # if learning_enabled has never been run yet
+            self.scheduler = Scheduler(graph=self.graph_processing)
+            self.ordered_execution_sets = list(self.scheduler.run())
             self.pytorch_representation = PytorchModelCreator(self.graph_processing,
                                                               self.param_init_from_pnl,
                                                               self.ordered_execution_sets)
@@ -308,8 +313,9 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
 
     def _reshape_for_autodiff(self, stimuli):
-        order = {"inputs": self.ordered_execution_sets[0],
-                 "targets": self.ordered_execution_sets[len(self.ordered_execution_sets)-1]}
+        TEMP = self.get_ordered_exec_sets(self.graph_processing)
+        order = {"inputs": TEMP[0],
+                 "targets": TEMP[-1]}
         pytorch_stimuli = {}
         for stimulus_type in order:
             pytorch_list = []
@@ -358,6 +364,13 @@ class AutodiffComposition(Composition):
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
     def autodiff_training(self, inputs, targets, epochs, execution_id=None):
+
+        # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
+        # the input for an origin component equals the number of desired trials. We could clean this up
+        # by perhaps using modular arithmetic on t, or by being more explicit about number of desired trials
+        first_input_value = list(inputs.values())[0]
+        num_inputs = len(first_input_value)
+
         patience = self.parameters.patience.get(execution_id)
 
         if patience is not None:
@@ -371,8 +384,8 @@ class AutodiffComposition(Composition):
         # get total number of output neurons from the dimensionality of targets on the first trial
         # (this is for computing average loss across neurons on each trial later)
         out_size = 0
-        for i in range(len(targets[0])):
-            out_size += len(targets[0][i])
+        for target in targets.values():
+            out_size += len(target)
 
         # iterate over epochs
         for epoch in range(epochs):
@@ -384,21 +397,24 @@ class AutodiffComposition(Composition):
                 rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
 
             # set up array to keep track of losses on epoch
-            curr_losses = np.zeros(len(inputs))
+            curr_losses = np.zeros(num_inputs)
 
             # reset temporary list to keep track of most recent outputs
             outputs = []
 
             # iterate over inputs, targets
-            for t in range(len(inputs)):
+            for t in range(num_inputs):
 
-                # get current inputs, targets
                 if self.randomize:
-                    curr_tensor_inputs = inputs[rand_train_order[t]]
-                    curr_tensor_targets = targets[rand_train_order[t]]
-                else:
-                    curr_tensor_inputs = inputs[t]
-                    curr_tensor_targets = targets[t]
+                    raise Exception  # TODO: implement randomization later
+                curr_tensor_inputs = {}
+                curr_tensor_targets = {}
+                for component in inputs.keys():
+                    input = inputs[component][t]
+                    curr_tensor_inputs[component] = torch.tensor(input).double()
+                for component in targets.keys():
+                    target = targets[component][t]
+                    curr_tensor_targets[component] = torch.tensor(target).double()
 
                 # do forward computation on current inputs
                 curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(
@@ -408,8 +424,8 @@ class AutodiffComposition(Composition):
 
                 # compute total loss across output neurons for current trial
                 curr_loss = torch.zeros(1).double()
-                for i in range(len(curr_tensor_outputs)):
-                    curr_loss += self.loss(curr_tensor_outputs[i], curr_tensor_targets[i])
+                for component in curr_tensor_outputs.keys():
+                    curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
 
                 # save average loss across all output neurons on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
@@ -424,8 +440,8 @@ class AutodiffComposition(Composition):
 
                 # save outputs of model if this is final epoch
                 curr_output_list = []
-                for i in range(len(curr_tensor_outputs)):
-                    curr_output_list.append(curr_tensor_outputs[i].detach().numpy().copy())
+                for component in curr_tensor_outputs.keys():
+                    curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
 
             # save average loss on the current epoch
@@ -471,9 +487,6 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         if self.learning_enabled:
-            # set up mechanism execution order
-            if self.ordered_execution_sets is None:
-                self.ordered_execution_sets = self.get_ordered_exec_sets(self.graph_processing)
 
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
@@ -482,9 +495,8 @@ class AutodiffComposition(Composition):
             if execution_id is None:
                 execution_id = self._assign_execution_ids(execution_id)
 
-            autodiff_stimuli = self._reshape_for_autodiff(inputs)
-            autodiff_inputs = autodiff_stimuli["inputs"]
-            autodiff_targets = autodiff_stimuli["targets"]
+            autodiff_inputs = inputs["inputs"]
+            autodiff_targets = inputs["targets"]
             autodiff_epochs = 1
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
