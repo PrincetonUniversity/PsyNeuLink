@@ -215,7 +215,7 @@ class AutodiffComposition(Composition):
         loss = Param(nn.MSELoss(reduction='sum'), stateful=False, loggable=False)
 
         optimizer = None
-        learning_rate = .001
+        learning_rate = .5
         losses = None
         patience = None
         min_delta = 0
@@ -226,6 +226,7 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
+                 learning_rate=0.5,
                  name="autodiff_composition"):
 
         self.learning_enabled = True
@@ -233,20 +234,12 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
-        self.name = name
-
         # since this does not pass params argument, defaults will not be automatically set..
         super(AutodiffComposition, self).__init__()
 
-        # set up target CIM
-        self.target_CIM = CompositionInterfaceMechanism(name=self.name + " Target_CIM",
-                                                        composition=self)
-        self.target_CIM_states = {}
-
-        # prevent CIM's from printing their input & output whenever an autodiff composition is run
-        self.input_CIM.reportOutputPref = False
-        self.output_CIM.reportOutputPref = False
-        self.target_CIM.reportOutputPref = False
+        self.learning_CIM = CompositionInterfaceMechanism(name=self.name + "Learning_CIM",
+                                                          composition=self)
+        self.learning_rate = learning_rate
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
@@ -269,59 +262,23 @@ class AutodiffComposition(Composition):
 
         self.min_delta = min_delta
 
-    # similar function to _assign_values_to_input_CIM from the normal composition - however, this
-    # assigns values to the input or target CIM of autodiff composition,
-    # executes the CIM's, and puts the values in appropriate form for pytorch
-    def _throw_through_input_CIM(self, stimuli, inputs_or_targets, execution_id=None):
-
-        # set up some variables to use based on whether we have inputs or targets
-        if inputs_or_targets == 'inputs':
-            CIM = self.input_CIM
-            states = self.input_CIM_states
-            order = self.ordered_execution_sets[0]
-        else:
-            CIM = self.target_CIM
-            states = self.target_CIM_states
-            order = self.ordered_execution_sets[len(self.ordered_execution_sets)-1]
-
-        # set up list that will hold values for CIM
-        CIM_list = []
-
-        # add values to CIM list in correct order
-        for input_state in CIM.input_states:
-
-            for key in states:
-                if states[key][0] == input_state:
-                    node_state = key
-                    node = key.owner
-                    index = node.input_states.index(node_state)
-
-                    if node in stimuli:
-                        value = stimuli[node][index]
-
-                    else:
-                        value = node.instance_defaults.variable[index]
-
-            CIM_list.append(value)
-
-        # execute CIM
-        CIM.execute(CIM_list, execution_id=execution_id)
-
-        # set up list that will hold values for pytorch
-        pytorch_list = []
-
-        # iterate over nodes in pytorch's desired order, add corresponding inputs from CIM
-        # output to pytorch list in that order. convert them to torch tensors in the process
-        for i in range(len(order)):
-
-            # get output state corresponding to ith node in pytorch's desired order, add
-            # the value of the output state to pytorch list at position i
-            node = order[i]
-            value = states[node.component.input_states[0]][1].parameters.value.get(execution_id)
-            value_for_pytorch = torch.from_numpy(np.asarray(value).copy()).double()
-            pytorch_list.append(value_for_pytorch)
-
-        return pytorch_list
+    def _reshape_for_autodiff(self, stimuli):
+        order = {"inputs": self.ordered_execution_sets[0],
+                 "targets": self.ordered_execution_sets[len(self.ordered_execution_sets)-1]}
+        pytorch_stimuli = {}
+        for stimulus_type in order:
+            pytorch_list = []
+            # iterate over nodes in pytorch's desired order, add corresponding inputs from CIM
+            # output to pytorch list in that order. convert them to torch tensors in the process
+            for i in range(len(order[stimulus_type])):
+                # get output state corresponding to ith node in pytorch's desired order, add
+                # the value of the output state to pytorch list at position i
+                node = order[stimulus_type][i].component
+                value = stimuli[stimulus_type][node]
+                value_for_pytorch = torch.from_numpy(np.asarray(value).copy()).double()
+                pytorch_list.append(value_for_pytorch)
+            pytorch_stimuli[stimulus_type] = pytorch_list
+        return pytorch_stimuli
 
     # similar function to _throw_through_input_CIM - however, this gets pytorch output from execute,
     # assigns it to the output CIM of autodiff composition, executes the CIM, and sends
@@ -475,6 +432,8 @@ class AutodiffComposition(Composition):
                 call_after_time_step=None,
                 call_after_pass=None,
                 execution_id=None,
+                optimizer=None,
+                loss=None,
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
@@ -482,13 +441,46 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         if self.learning_enabled:
+            # set up mechanism execution order
+            if self.ordered_execution_sets is None:
+                self.ordered_execution_sets = self.get_ordered_exec_sets(self.graph_processing)
+             # set up pytorch representation of the autodiff composition's model
+            if self.pytorch_representation is None:
+                self.pytorch_representation = PytorchModelCreator(self.graph_processing, self.param_init_from_pnl,
+                                                                  self.ordered_execution_sets)
+             if optimizer is None:
+                if self.optimizer is None:
+                    self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+            else:
+                if optimizer not in ['sgd', 'adam']:
+                    raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                                   "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                                   "optimizers (specified as 'sgd' or 'adam').")
+                if optimizer == 'sgd':
+                    self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+                else:
+                    self.optimizer = optim.Adam(self.pytorch_representation.parameters(), lr=self.learning_rate)
+             if loss is None:
+                if self.loss is None:
+                    self.loss = nn.MSELoss(reduction='sum')
+            else:
+                if loss not in ['mse', 'crossentropy']:
+                    raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                                   "Currently, Mean Squared Error and Cross Entropy are the only "
+                                                   "available loss functions (specified as 'mse' or 'crossentropy').")
+                if loss == 'mse':
+                    self.loss = nn.MSELoss(reduction='sum')
+                else:
+                    self.loss = nn.CrossEntropyLoss(reduction='sum')
+
             if execution_id is None:
                 execution_id = self._assign_execution_ids(execution_id)
-            autodiff_inputs = self.reshape_for_autodiff(inputs["inputs"])
-            autodiff_targets = self.reshape_for_autodiff(inputs["targets"])
-            autodiff_epochs = inputs["epochs"]
-            autodiff_randomize = inputs["randomize"]
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, epochs, randomize)
+
+            autodiff_stimuli = self._reshape_for_autodiff(inputs)
+            autodiff_inputs = autodiff_stimuli["inputs"]
+            autodiff_targets = autodiff_stimuli["targets"]
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, inputs["epochs"], inputs["randomize"])
+            
             return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
