@@ -733,6 +733,9 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
     except TypeError:
         shared_types = ()
 
+    if shared_keys is None:
+        shared_keys = []
+
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
