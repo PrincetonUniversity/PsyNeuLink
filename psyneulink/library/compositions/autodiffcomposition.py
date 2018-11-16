@@ -337,7 +337,7 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError("Invalid input specification.")
             elif isinstance(inputs, list):
                 for input_dict in inputs:
-                    if self._has_required_keys(input_dict):
+                    if not self._has_required_keys(input_dict):
                         raise AutodiffCompositionError("Invalid input specification.")
                 return inputs
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
