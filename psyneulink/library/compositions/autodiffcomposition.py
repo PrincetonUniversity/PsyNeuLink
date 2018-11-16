@@ -292,7 +292,7 @@ class AutodiffComposition(Composition):
                 self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
             else:
                 self.optimizer = optim.Adam(self.pytorch_representation.parameters(), lr=self.learning_rate)
-         if self.loss_type is None:
+        if self.loss_type is None:
             if self.loss is None:
                 self.loss = nn.MSELoss(reduction='sum')
         else:
@@ -304,7 +304,7 @@ class AutodiffComposition(Composition):
                 self.loss = nn.MSELoss(reduction='sum')
             else:
                 self.loss = nn.CrossEntropyLoss(reduction='sum')
-         if not isinstance(self.learning_rate, (int, float)):
+        if not isinstance(self.learning_rate, (int, float)):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
 
     def _reshape_for_autodiff(self, stimuli):
