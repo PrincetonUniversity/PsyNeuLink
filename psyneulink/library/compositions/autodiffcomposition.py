@@ -379,7 +379,7 @@ class AutodiffComposition(Composition):
 
         # if training over trial sets in random order, set up array for mapping random order back to original order
         if self.randomize:
-            rand_train_order_reverse = np.zeros(len(inputs))
+            rand_train_order_reverse = np.zeros(num_inputs)
 
         # get total number of output neurons from the dimensionality of targets on the first trial
         # (this is for computing average loss across neurons on each trial later)
@@ -393,8 +393,8 @@ class AutodiffComposition(Composition):
             # if training in random order, generate random order and set up mapping
             # from random order back to original order
             if self.randomize:
-                rand_train_order = np.random.permutation(len(inputs))
-                rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
+                rand_train_order = np.random.permutation(num_inputs)
+                rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
 
             # set up array to keep track of losses on epoch
             curr_losses = np.zeros(num_inputs)
@@ -406,14 +406,16 @@ class AutodiffComposition(Composition):
             for t in range(num_inputs):
 
                 if self.randomize:
-                    raise Exception  # TODO: implement randomization later
+                    input_index = rand_train_order[t]
+                else:
+                    input_index = t
                 curr_tensor_inputs = {}
                 curr_tensor_targets = {}
                 for component in inputs.keys():
-                    input = inputs[component][t]
+                    input = inputs[component][input_index]
                     curr_tensor_inputs[component] = torch.tensor(input).double()
                 for component in targets.keys():
-                    target = targets[component][t]
+                    target = targets[component][input_index]
                     curr_tensor_targets[component] = torch.tensor(target).double()
 
                 # do forward computation on current inputs
@@ -452,6 +454,7 @@ class AutodiffComposition(Composition):
             if self.parameters.patience.get(execution_id) is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
+                    logger.info('Stopped training early after {} epochs'.format(epoch))
                     if self.randomize:
                         outputs_list = [None] * len(outputs)
                         for i in range(len(outputs)):
