@@ -545,9 +545,9 @@ class AutodiffComposition(Composition):
         randomize=False,
         refresh_losses=False
     ):
-        adjusted_stimuli = self._adjust_stimulus_dict(inputs)
         # TBI: Handle trials, timesteps, etc
         if self.learning_enabled:
+            adjusted_stimuli = self._adjust_stimulus_dict(inputs)
             if num_trials is not None:
                 for trial_num in range(num_trials):
                     stimulus_index = trial_num % len(adjusted_stimuli)
