@@ -94,9 +94,6 @@ or 'adam'.
 
 **loss** specifies the loss function for training. The current options are 'mse' (the default) and 'crossentropy'.
 
-**randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
-run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
-
 If **refresh_losses** is set to True, the AutodiffComposition resets the self.losses attribute before running.
 
 .. _Composition_Class_Reference:
@@ -156,7 +153,8 @@ class AutodiffComposition(Composition):
     AutodiffComposition(            \
     param_init_from_pnl=True,       \
     patience=None,                  \
-    min_delta=0,
+    min_delta=0,                    \
+    randomize=False,                \
     name="autodiff_composition")
 
     Subclass of `Composition` that trains models more quickly by integrating with PyTorch.
@@ -177,6 +175,10 @@ class AutodiffComposition(Composition):
     min_delta : float : default 0
         the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
         Used for early stopping of training, in combination with **patience**.
+
+    randomize: boolean : default False
+        specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
+        if **randomize** is True then the order of inputs within an epoch is random.)
 
     Attributes
     ----------
@@ -226,7 +228,12 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
-                 learning_rate=0.5,
+                 learning_rate=0.001,
+                 learning_enabled=True,
+                 optimizer_type=None,
+                 loss_type=None,
+                 randomize=None,
+                 refresh_losses=False,
                  name="autodiff_composition"):
 
         self.learning_enabled = True
@@ -235,10 +242,13 @@ class AutodiffComposition(Composition):
                                            '`pip install torch` or `pip3 install torch`')
 
         # since this does not pass params argument, defaults will not be automatically set..
-        super(AutodiffComposition, self).__init__()
+        super(AutodiffComposition, self).__init__(name=name)
 
-        self.learning_CIM = CompositionInterfaceMechanism(name=self.name + "Learning_CIM",
-                                                          composition=self)
+        self.learning_enabled = learning_enabled
+        self.optimizer_type = optimizer_type
+        self.loss_type = loss_type
+        self.randomize = randomize
+        self.refresh_losses = refresh_losses
         self.learning_rate = learning_rate
 
         # pytorch representation of model and associated training parameters
@@ -261,6 +271,41 @@ class AutodiffComposition(Composition):
         self.patience = patience
 
         self.min_delta = min_delta
+
+    # CLEANUP: move some of what's done in the method below to a "validate_params" type of method
+    def _build_pytorch_representation(self):
+        # set up pytorch representation of the autodiff composition's model
+        if self.pytorch_representation is None:
+            self.pytorch_representation = PytorchModelCreator(self.graph_processing,
+                                                              self.param_init_from_pnl,
+                                                              self.ordered_execution_sets)
+         # Set up optimizer function
+        if self.optimizer_type is None:
+            if self.optimizer is None:
+                self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+        else:
+            if self.optimizer_type not in ['sgd', 'adam']:
+                raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
+                                               "Currently, Stochastic Gradient Descent and Adam are the only available "
+                                               "optimizers (specified as 'sgd' or 'adam').")
+            if self.optimizer_type == 'sgd':
+                self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
+            else:
+                self.optimizer = optim.Adam(self.pytorch_representation.parameters(), lr=self.learning_rate)
+         if self.loss_type is None:
+            if self.loss is None:
+                self.loss = nn.MSELoss(reduction='sum')
+        else:
+            if self.loss_type not in ['mse', 'crossentropy']:
+                raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
+                                               "Currently, Mean Squared Error and Cross Entropy are the only "
+                                               "available loss functions (specified as 'mse' or 'crossentropy').")
+            if self.loss_type == 'mse':
+                self.loss = nn.MSELoss(reduction='sum')
+            else:
+                self.loss = nn.CrossEntropyLoss(reduction='sum')
+         if not isinstance(self.learning_rate, (int, float)):
+            raise AutodiffCompositionError("Learning rate must be an integer or float value.")
 
     def _reshape_for_autodiff(self, stimuli):
         order = {"inputs": self.ordered_execution_sets[0],
@@ -297,35 +342,6 @@ class AutodiffComposition(Composition):
                 return inputs
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
-    # similar function to _throw_through_input_CIM - however, this gets pytorch output from execute,
-    # assigns it to the output CIM of autodiff composition, executes the CIM, and sends
-    # its output in a list back to execute
-    def _throw_through_output_CIM(self, outputs, execution_id=None):
-
-        order = self.ordered_execution_sets[len(self.ordered_execution_sets)-1]
-
-        output_CIM_list = []
-
-        # iterate over CIM input states - for each CIM input state, find mechanism in final execution set
-        # whose output state maps to the CIM input state, add pytorch output for this mechanism
-        # to output CIM list
-        for input_state in self.output_CIM.input_states:
-
-            for i in range(len(order)):
-                node = order[i]
-                if self.output_CIM_states[node.component.output_states[0]][0] == input_state:
-                    value = outputs[i]
-
-            output_CIM_list.append(value)
-
-        self.output_CIM.execute(output_CIM_list, execution_id=execution_id)
-
-        output_values = []
-        for i in range(len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
-
-        return output_values
-
     # performs forward computation for one input
     def autodiff_processing(self, inputs, execution_id=None):
         pytorch_representation = self.parameters.pytorch_representation.get(execution_id)
@@ -341,7 +357,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, randomize, execution_id=None):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None):
         patience = self.parameters.patience.get(execution_id)
 
         if patience is not None:
@@ -349,7 +365,7 @@ class AutodiffComposition(Composition):
             early_stopper = EarlyStopping(patience=patience, min_delta=self.parameters.min_delta.get(execution_id))
 
         # if training over trial sets in random order, set up array for mapping random order back to original order
-        if randomize:
+        if self.randomize:
             rand_train_order_reverse = np.zeros(len(inputs))
 
         # get total number of output neurons from the dimensionality of targets on the first trial
@@ -363,7 +379,7 @@ class AutodiffComposition(Composition):
 
             # if training in random order, generate random order and set up mapping
             # from random order back to original order
-            if randomize:
+            if self.randomize:
                 rand_train_order = np.random.permutation(len(inputs))
                 rand_train_order_reverse[rand_train_order] = np.arange(len(inputs))
 
@@ -377,7 +393,7 @@ class AutodiffComposition(Composition):
             for t in range(len(inputs)):
 
                 # get current inputs, targets
-                if randomize:
+                if self.randomize:
                     curr_tensor_inputs = inputs[rand_train_order[t]]
                     curr_tensor_targets = targets[rand_train_order[t]]
                 else:
@@ -420,7 +436,7 @@ class AutodiffComposition(Composition):
             if self.parameters.patience.get(execution_id) is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
-                    if randomize:
+                    if self.randomize:
                         outputs_list = [None] * len(outputs)
                         for i in range(len(outputs)):
                             outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
@@ -428,7 +444,7 @@ class AutodiffComposition(Composition):
                     else:
                         return outputs
 
-        if randomize:  # save outputs in a list in correct order, return them
+        if self.randomize:  # save outputs in a list in correct order, return them
             outputs_list = [None] * len(outputs)
             for i in range(len(outputs)):
                 outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
@@ -458,39 +474,10 @@ class AutodiffComposition(Composition):
             # set up mechanism execution order
             if self.ordered_execution_sets is None:
                 self.ordered_execution_sets = self.get_ordered_exec_sets(self.graph_processing)
-             # set up pytorch representation of the autodiff composition's model
-            if self.pytorch_representation is None:
-                self.pytorch_representation = PytorchModelCreator(self.graph_processing, self.param_init_from_pnl,
-                                                                  self.ordered_execution_sets)
-            # FIX: pass optimizer?
-            optimizer = None
-            if optimizer is None:
-                if self.optimizer is None:
-                    self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
-            else:
-                if optimizer not in ['sgd', 'adam']:
-                    raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
-                                                   "Currently, Stochastic Gradient Descent and Adam are the only available "
-                                                   "optimizers (specified as 'sgd' or 'adam').")
-                if optimizer == 'sgd':
-                    self.optimizer = optim.SGD(self.pytorch_representation.parameters(), lr=self.learning_rate)
-                else:
-                    self.optimizer = optim.Adam(self.pytorch_representation.parameters(), lr=self.learning_rate)
 
-            # FIX: pass loss?
-            loss = None
-            if loss is None:
-                if self.loss is None:
-                    self.loss = nn.MSELoss(reduction='sum')
-            else:
-                if loss not in ['mse', 'crossentropy']:
-                    raise AutodiffCompositionError("Invalid loss specified. Loss argument must be a string. "
-                                                   "Currently, Mean Squared Error and Cross Entropy are the only "
-                                                   "available loss functions (specified as 'mse' or 'crossentropy').")
-                if loss == 'mse':
-                    self.loss = nn.MSELoss(reduction='sum')
-                else:
-                    self.loss = nn.CrossEntropyLoss(reduction='sum')
+            # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
+            # model may be modified between runs?
+            self._build_pytorch_representation()
 
             if execution_id is None:
                 execution_id = self._assign_execution_ids(execution_id)
@@ -498,10 +485,15 @@ class AutodiffComposition(Composition):
             autodiff_stimuli = self._reshape_for_autodiff(inputs)
             autodiff_inputs = autodiff_stimuli["inputs"]
             autodiff_targets = autodiff_stimuli["targets"]
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, inputs["epochs"], inputs["randomize"])
+            autodiff_epochs = 1
+            if "epochs" in inputs:
+                autodiff_epochs = inputs["epochs"]
+
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs)
             
             return output
 
+        # learning not enabled. execute as a normal composition
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
                                                         scheduler_learning=scheduler_learning,
@@ -538,15 +530,11 @@ class AutodiffComposition(Composition):
         targets=None,
         bin_execute=False,
         initial_values=None,
-        runtime_params=None,
-        learning_rate=None,
-        optimizer=None,
-        loss=None,
-        randomize=False,
-        refresh_losses=False
-    ):
+        runtime_params=None):
         # TBI: Handle trials, timesteps, etc
         if self.learning_enabled:
+            if self.refresh_losses:
+                self.losses = []
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
             if num_trials is not None:
                 for trial_num in range(num_trials):
@@ -555,7 +543,24 @@ class AutodiffComposition(Composition):
             else:
                 for stimulus in adjusted_stimuli:
                     return self.execute(inputs=stimulus)
-        return super(AutodiffComposition, self).run()
+        return super(AutodiffComposition, self).run(inputs=inputs,
+                                                    scheduler_processing=scheduler_processing,
+                                                    scheduler_learning=scheduler_learning,
+                                                    termination_processing=termination_processing,
+                                                    termination_learning=termination_learning,
+                                                    execution_id=execution_id,
+                                                    num_trials=num_trials,
+                                                    call_before_time_step=call_before_time_step,
+                                                    call_after_time_step=call_after_time_step,
+                                                    call_before_pass=call_before_pass,
+                                                    call_after_pass=call_after_pass,
+                                                    call_before_trial=call_before_trial,
+                                                    call_after_trial=call_after_trial,
+                                                    clamp_input=clamp_input,
+                                                    targets=targets,
+                                                    bin_execute=bin_execute,
+                                                    initial_values=initial_values,
+                                                    runtime_params=runtime_params)
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
