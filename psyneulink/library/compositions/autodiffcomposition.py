@@ -106,7 +106,6 @@ Class Reference
 
 """
 
-from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import InterfaceStateMap
 from psyneulink.core.components.functions.function import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -118,6 +117,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.composition import RunError
 from psyneulink.core.globals.keywords import OWNER_VALUE
+from psyneulink.core.globals.parameters import Param
 
 import numpy as np
 

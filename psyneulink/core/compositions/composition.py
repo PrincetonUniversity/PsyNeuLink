@@ -57,7 +57,7 @@ from collections import Iterable, OrderedDict
 from llvmlite import ir
 from psyneulink.core import llvm as pnlvm
 
-from psyneulink.core.components.component import ComponentsMeta, Defaults, Param, Parameters, function_type
+from psyneulink.core.components.component import ComponentsMeta, function_type
 from psyneulink.core.components.functions.function import InterfaceStateMap
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -69,6 +69,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, BOLD, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, LABELS, MATRIX_KEYWORD_VALUES, NO_CLAMP, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES
+from psyneulink.core.globals.parameters import Defaults, Param, Parameters
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import CNodeRole, call_with_pruned_args
 from psyneulink.core.scheduling.condition import All, Always, EveryNCalls
