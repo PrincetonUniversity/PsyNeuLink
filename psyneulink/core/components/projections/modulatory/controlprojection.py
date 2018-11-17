@@ -101,7 +101,7 @@ import inspect
 
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
+from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import Linear
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -109,6 +109,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 

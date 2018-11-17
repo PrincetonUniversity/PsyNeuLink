@@ -459,7 +459,7 @@ from collections import UserList, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, Defaults, Param, function_type
+from psyneulink.core.components.component import Component, function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -472,6 +472,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.core.globals.parameters import Defaults, Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category

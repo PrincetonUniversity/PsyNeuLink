@@ -443,7 +443,7 @@ import typecheck as tc
 
 from toposort import toposort, toposort_flatten
 
-from psyneulink.core.components.component import Component, Defaults, Param
+from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
@@ -456,11 +456,9 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Sys
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, \
-    FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, \
-    MONITOR_FOR_CONTROL, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, \
-    TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
+from psyneulink.core.globals.keywords import ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.core.globals.log import Log
+from psyneulink.core.globals.parameters import Defaults, Param
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.core.globals.registry import register_category

@@ -557,6 +557,7 @@ Class Reference
 """
 
 import datetime
+import types
 import warnings
 
 from collections import Iterable
@@ -565,7 +566,6 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
@@ -750,7 +750,7 @@ def run(obj,
             else:
                 raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
-        elif isinstance(targets, function_type):
+        elif isinstance(targets, types.FunctionType):
             if len(obj.target_mechanisms) == 1:
                 targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
                 targets, num_targets = _adjust_target_dict(obj, targets)
@@ -841,7 +841,7 @@ def run(obj,
             # Assign targets:
             if targets is not None:
 
-                if isinstance(targets, function_type):
+                if isinstance(targets, types.FunctionType):
                     obj.target = targets
                 else:
                     for mech in targets:

@@ -17,12 +17,12 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Buffer, Function_Base, Integrator, Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 

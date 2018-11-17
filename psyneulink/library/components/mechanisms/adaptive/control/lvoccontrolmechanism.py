@@ -230,38 +230,33 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 import warnings
+
 from collections import Iterable, deque
 from itertools import product
-import typecheck as tc
 # from aenum import AutoNumberEnum, auto
 from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.functions.function import BayesGLM, GradientOptimization, ModulationParam, OBJECTIVE_FUNCTION, SEARCH_SPACE, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Function
+from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, \
-    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS
+from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, LVOC_CONTROL_MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared, is_iterable, powerset, tensor_power
 
 __all__ = [
