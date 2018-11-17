@@ -54,7 +54,7 @@ import numpy as np
 from psyneulink.core.components.functions.function import BayesGLM
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, ALL
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, ALL, CONTROL_SIGNALS, VARIABLE
 from psyneulink.core.globals.utilities import powerset, tensor_power
 
 __all__ = [
@@ -135,7 +135,7 @@ class FunctionApproximator():
     and the `make_prediction <FunctionApproximator.make_prediction>` method is used to predict the outcome from the
     prediction_vector.
 
-    When used with a ModelBasedOptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
+    When used with an OptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
     `control_allocation <ControlMechanism_control_allocation>` (assigned to the variable field of the prediction_vector)
     and its `feature_values <ModelBasedOptimizationControlMechanism.feature_values>` assigned to the
     features field of the prediction_vector).  The prediction vector may also contain fields for the `costs
@@ -145,7 +145,7 @@ class FunctionApproximator():
     [Placeholder for Composition with learning]
 
     '''
-    def __init__(self, owner=None,
+    def __init__(self,
                  parameterization_function=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
         '''
@@ -200,8 +200,6 @@ class FunctionApproximator():
 
         self.parameterization_function = parameterization_function
         self._instantiate_prediction_terms(prediction_terms)
-        if owner:
-            self.initialize(owner=owner)
 
     def _instantiate_prediction_terms(self, prediction_terms):
 
@@ -231,18 +229,16 @@ class FunctionApproximator():
         else:
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
-    def initialize(self, owner):
+    # def initialize(self, owner):
+    def initialize(self, features_array, control_signals):
         '''Assign owner and instantiate `prediction_vector <FunctionApproximator.prediction_vector>`
 
         Must be called before FunctionApproximator's methods can be used if its `owner <FunctionApproximator.owner>`
         was not specified in its constructor.
         '''
 
-        self.owner = owner
-        feature_values = np.array(self.owner.instance_defaults.variable[1:])
-        control_signals = self.owner.control_signals
         prediction_terms = self.prediction_terms
-        self.prediction_vector = self.PredictionVector(feature_values, control_signals, prediction_terms)
+        self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
 
         # Assign parameters to parameterization_function
         parameterization_function_default_variable = [self.prediction_vector.vector, np.zeros(1)]
@@ -253,40 +249,29 @@ class FunctionApproximator():
             self.parameterization_function.reinitialize({DEFAULT_VARIABLE:
                                                              parameterization_function_default_variable})
 
-    def get_state_rep(self, context):
-        '''Call `parameterization_function <FunctionApproximator.parameterization_function>` prior to calls to
-        `make_prediction <FunctionApproximator.make_prediction>`.'''
+    def adapt(self, feature_values, control_allocation, outcome):
 
-        feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
-        return feature_values
-
-    # FIX: CAN GET RID OF THIS AND JUST CALL parameterization_fuction directly ONCE CONTROL SIGNALS ARE STATEFUL
-    def update_weights(self, feature_values, variable, outcome):
-
-        # FIX: HANDLE FIRST TRIAL IN OptimizationFunction (IT IS NOT FunctionApproximator's PROBLEM) ZZZ
         try:
             # Update prediction_weights
             self.prediction_weights = self.parameterization_function.function([self._previous_state, outcome])
-            # Update vector with owner's current variable and feature_values and  and store for next trial
-            # Note: self.owner.value = last control_allocation used by owner
-            self.prediction_vector.update_vector(variable, feature_values, variable)
+            # Update vector with current feature_values and control_allocation and store for next trial
+            self.prediction_vector.update_vector(control_allocation, feature_values, control_allocation)
             self._previous_state = self.prediction_vector.vector
         except AttributeError:
             # Initialize vector and control_signals on first trial
             # Note:  initialize vector to 1's so that learning_function returns specified priors
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            # self.prediction_vector.reference_variable = self.owner.control_allocation
-            self.prediction_vector.reference_variable = variable
+            self.prediction_vector.reference_variable = control_allocation
             self._previous_state = np.full_like(self.prediction_vector.vector, 0)
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
 
+    # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def make_prediction(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def make_prediction(self, variable, num_samples, feature_values, context):
-        '''Update terms of prediction_vector <FunctionApproximator.prediction_vector>` and then multiply by
-        prediction_weights.
+    def make_prediction(self, control_allocation, num_samples, feature_values, context):
+        '''Update prediction_vector <FunctionApproximator.prediction_vector>`, then multiply by prediction_weights.
 
-        Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>`
-        together with values of **variable** and **feature_values** arguments to generate a predicted outcome.
+        Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>` together with
+        values of **control_allocation** and **feature_values** arguments to generate a predicted outcome.
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
@@ -296,7 +281,7 @@ class FunctionApproximator():
         predicted_outcome=0
         for i in range(num_samples):
             terms = self.prediction_terms
-            vector = self.prediction_vector.compute_terms(variable )
+            vector = self.prediction_vector.compute_terms(control_allocation )
             weights = self.prediction_weights
             net_outcome = 0
 
@@ -372,8 +357,8 @@ class FunctionApproximator():
 
         def __init__(self, feature_values, control_signals, specified_terms):
 
-            # Get variable for control_signals specified in contructor
-            control_signal_variables = []
+            # Get variable for control_signals specified in constructor
+            control_allocation = []
             for c in control_signals:
                 if isinstance(c, ControlSignal):
                     try:
@@ -390,7 +375,7 @@ class FunctionApproximator():
                     state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
                     v = state_spec_dict[VARIABLE]
                     v = v or ControlSignal.class_defaults.variable
-                control_signal_variables.append(v)
+                control_allocation.append(v)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]
 
@@ -430,14 +415,14 @@ class FunctionApproximator():
             self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
 
             # Placemarker until control_signals are instantiated
-            self.terms[C] = c = np.array([[0]] * len(control_signal_variables))
+            self.terms[C] = c = np.array([[0]] * len(control_allocation))
             self.num[C] = len(c)
             self.num_elems[C] = len(c.reshape(-1))
-            self.labels[C] = ['c'+str(i) for i in range(0,len(control_signal_variables))]
+            self.labels[C] = ['c'+str(i) for i in range(0,len(control_allocation))]
 
             # Costs
             # Placemarker until control_signals are instantiated
-            self.terms[COST] = cst = np.array([[0]] * len(control_signal_variables))
+            self.terms[COST] = cst = np.array([[0]] * len(control_allocation))
             self.num[COST] = self.num[C]
             self.num_elems[COST] = len(cst.reshape(-1))
             self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
@@ -540,7 +525,7 @@ class FunctionApproximator():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_signal_variables, ref_variables=None):
+        def compute_terms(self, control_allocation, ref_variables=None):
             '''Calculate interaction terms.
 
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -558,8 +543,8 @@ class FunctionApproximator():
             computed_terms[PV.F] = f = self.terms[PV.F.value]
 
             # Compute value of each control_signal from its variable
-            c = [None] * len(control_signal_variables)
-            for i, var in enumerate(control_signal_variables):
+            c = [None] * len(control_allocation)
+            for i, var in enumerate(control_allocation):
                 c[i] = self.control_signal_functions[i](var)
             computed_terms[PV.C] = c = np.array(c)
 

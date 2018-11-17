@@ -599,10 +599,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self.state_rep = self.agent_rep.get_state_rep(context=self.context)
 
+        # FIX: CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
         try:
-            self.update_agent(self.state_rep, self.control_allocation, self.net_outcome)
+            net_outcome = self.net_outcome
         except AttributeError:
-            self.update_agent(self.state_rep, self.control_allocation, [0])
+            net_outcome = [0]
+        self.agent_rep.adapt(self.state_rep, self.control_allocation, net_outcome)
 
         # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -630,9 +632,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                    context=self.function_object.context)
 
     # ******************************************************************************************************************
-    # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
+    # FIX:  THE FOLLOWING IS SPECIFIC TO MODEL-BASED (COMPOSITION) IMPLEMENTATION
     # ******************************************************************************************************************
 
+    def _instantiate_composition_as_agent(self):
+        self.evaluate_agent = self.agent_rep.run_simulation
+        # Model-based implementation does not need to update model of the agent, since Composition *is* the agent
+        self.agent_rep.adapt = lambda x,y,z : None
+
+    # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
     def apply_control_signal_values(self, control_allocation, runtime_params, context):
         '''Assign specified control_allocation'''
         for i in range(len(control_allocation)):
@@ -642,13 +650,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-    def _instantiate_composition_as_agent(self):
-        self.evaluate_agent = self.agent_rep.run_simulation
-        # Model-based implementation does not need to update model of the agent, since Composition *is* the agent
-        self.update_agent = lambda x,y,z : None
-
     # ******************************************************************************************************************
-    # FIX:  THE FOLLOWING IS SPECIFIC TO ORIG MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
+    # FIX:  THE FOLLOWING IS SPECIFIC TO MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
     # ******************************************************************************************************************
 
     def _instantiate_function_approximator_as_agent(self):
@@ -656,15 +659,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign parameters to learning_function
         if isinstance(self.agent_rep, type):
-            self.agent_rep = self.function_approximator(owner=self)
+            self.agent_rep = self.function_approximator(features_array=np.array(self.instance_defaults.variable[1:]),
+                                                        control_signals = self.control_signals)
         else:
-            self.agent_rep.initialize(owner=self)
+            self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
+                                      control_signals = self.control_signals)
 
         self.evaluate_agent = self.agent_rep.make_prediction
-        # FIX: CAN GET RID OF THIS AND JUST CALL parameterization_fuction directly ONCE CONTROL SIGNALS ARE STATEFUL
-        self.update_agent = self.agent_rep.update_weights
-        # FIX: SHOULD BE THIS ZZZ
-        # self.update_agent = self.agent_rep.parameterization_function
+
+        self.agent_rep.get_state_rep = lambda context : np.array(np.array(self.variable[1:]).tolist())
 
     # FIX: THIS SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep
