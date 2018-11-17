@@ -378,7 +378,7 @@ import itertools
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, function_type
+from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.function import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
@@ -391,6 +391,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PARAMS, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable

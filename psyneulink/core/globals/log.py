@@ -391,7 +391,7 @@ import typecheck as tc
 
 from psyneulink.core.globals.context import ContextFlags, _get_time
 from psyneulink.core.globals.keywords import ALL, CONTEXT, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component, parse_execution_context
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -894,6 +894,7 @@ class Log:
 
     @tc.typecheck
     def log_values(self, entries, execution_context=None):
+        from psyneulink.core.globals.parameters import parse_execution_context
         """Log the value of one or more Components programmatically.
 
         This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
@@ -921,6 +922,7 @@ class Log:
             param._log_value(param.get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
 
     def get_logged_entries(self, entries=ALL, execution_ids=NotImplemented):
+        from psyneulink.core.globals.parameters import parse_execution_context
         if entries is ALL:
             entries = self.all_items
 
@@ -1506,6 +1508,7 @@ class Log:
         return entries
 
     def _parse_execution_ids_arg(self, execution_ids, entries):
+        from psyneulink.core.globals.parameters import parse_execution_context
         if entries is None:
             entries = []
 

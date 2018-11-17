@@ -93,11 +93,11 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, kwPreferenceSetName
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 

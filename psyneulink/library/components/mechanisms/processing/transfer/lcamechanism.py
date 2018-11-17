@@ -139,11 +139,11 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import LCAIntegrator, Logistic, SelectionFunction, max_vs_avg, max_vs_next
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
