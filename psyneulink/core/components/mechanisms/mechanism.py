@@ -2523,24 +2523,38 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_type(self):
         pass
 
+    def _get_input_context_struct_type(self, ctx):
+        gen = (ctx.get_context_struct_type(state) for state in self.input_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_param_context_struct_type(self, ctx):
+        gen = (ctx.get_context_struct_type(state) for state in self.parameter_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_output_context_struct_type(self, ctx):
+        gen = (ctx.get_context_struct_type(state) for state in self.output_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_function_context_struct_type(self, ctx):
+        return ctx.get_context_struct_type(self.function_object)
+
     def _get_context_struct_type(self, ctx):
-        input_context_list = []
-        for state in self.input_states:
-            input_context_list.append(ctx.get_context_struct_type(ctx))
-        input_context_struct = ir.LiteralStructType(input_context_list)
+        input_context_struct = self._get_input_context_struct_type(ctx)
+        output_context_struct = self._get_output_context_struct_type(ctx)
+        param_context_struct = self._get_param_context_struct_type(ctx)
+        function_context_struct = self._get_function_context_struct_type(ctx)
 
-        output_context_list = []
-        for state in self.output_states:
-            output_context_list.append(ctx.get_context_struct_type(state))
-        output_context_struct = ir.LiteralStructType(output_context_list)
+        context_list = [input_context_struct, function_context_struct,
+                        output_context_struct, param_context_struct]
 
-        parameter_context_list = []
-        for state in self.parameter_states:
-            parameter_context_list.append(ctx.get_context_struct_type(state))
-        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
+        mech_context = self._get_mech_context_type()
+        if mech_context is not None:
+            context_list.append(mech_context)
 
-        return ir.LiteralStructType([input_context_struct, ctx.get_context_struct_type(self.function_object), output_context_struct, parameter_context_struct])
+        return ir.LiteralStructType(context_list)
 
+    def _get_mech_context_type(self):
+        pass
 
     def _get_output_struct_type(self, ctx):
         output_type_list = []
