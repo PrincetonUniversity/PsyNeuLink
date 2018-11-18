@@ -2559,23 +2559,26 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(ir.LiteralStructType(state_input_type_list))
         return ir.LiteralStructType(input_type_list)
 
+    def _get_input_param_initializer(self, execution_id):
+        gen = (state._get_param_initializer(execution_id) for state in self.input_states)
+        return tuple(gen)
+
+    def _get_param_param_initializer(self, execution_id):
+        gen = (state._get_param_initializer(execution_id) for state in self.parameter_states)
+        return tuple(gen)
+
+    def _get_output_param_initializer(self, execution_id):
+        gen = (state._get_param_initializer(execution_id) for state in self.output_states)
+        return tuple(gen)
+
+    def _get_function_param_initializer(self, execution_id):
+        return self.function_object._get_param_initializer(execution_id)
+
     def _get_param_initializer(self, execution_id):
-        input_param_init_list = []
-        for state in self.input_states:
-            input_param_init_list.append(state._get_param_initializer(execution_id))
-        input_param_init = tuple(input_param_init_list)
-
-        function_param_init = self.function_object._get_param_initializer(execution_id)
-
-        output_param_init_list = []
-        for state in self.output_states:
-            output_param_init_list.append(state._get_param_initializer(execution_id))
-        output_param_init = tuple(output_param_init_list)
-
-        param_param_init_list = []
-        for state in self.parameter_states:
-            param_param_init_list.append(state._get_param_initializer(execution_id))
-        param_param_init = tuple(param_param_init_list)
+        input_param_init = self._get_input_param_initializer(execution_id)
+        function_param_init = self._get_function_param_initializer(execution_id)
+        output_param_init = self._get_output_param_initializer(execution_id)
+        param_param_init = self._get_param_param_initializer(execution_id)
 
         param_init_list = [input_param_init, function_param_init,
                            output_param_init, param_param_init]
