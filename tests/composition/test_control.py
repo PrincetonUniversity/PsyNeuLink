@@ -600,7 +600,7 @@ class TestModelBasedOptimizationControlMechanisms:
         #                                                                                     objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(function=pnl.GridSearch(),
-                                                                                  agent_rep=pnl.comp,
+                                                                                  agent_rep=comp,
                                                                                   control_signals=[(
                                                                                       "slope",
                                                                                       Target_Rep),

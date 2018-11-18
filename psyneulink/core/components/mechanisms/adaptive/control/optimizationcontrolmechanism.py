@@ -596,7 +596,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return defaultControlAllocation
 
         # FIX: WAS NEEDED FOR MODEL_FREE;  OK FOR MODEL_BASED?
-        assert variable == self.variable, 'PROGRAM ERROR: variable != self.variable for MFOCM'
+        assert all(variable == self.variable), 'PROGRAM ERROR: variable != self.variable for OCM'
         if self.control_allocation is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
         # FIX END
