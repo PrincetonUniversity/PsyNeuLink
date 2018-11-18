@@ -2592,25 +2592,31 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_init(self):
         pass
 
+    def _get_input_context_initializer(self, execution_id):
+        gen = (state._get_context_initializer(execution_id) for state in self.input_states)
+        return tuple(gen)
+
+    def _get_param_context_initializer(self, execution_id):
+        gen = (state._get_context_initializer(execution_id) for state in self.parameter_states)
+        return tuple(gen)
+
+    def _get_output_context_initializer(self, execution_id):
+        gen = (state._get_context_initializer(execution_id) for state in self.output_states)
+        return tuple(gen)
+
+    def _get_function_context_initializer(self, execution_id):
+        return self.function_object._get_context_initializer(execution_id)
+
     def _get_context_initializer(self, execution_id):
-        input_context_init_list = []
-        for state in self.input_states:
-            input_context_init_list.append(state._get_context_initializer(execution_id))
-        input_context_init = tuple(input_context_init_list)
+        input_context_init = self._get_input_context_initializer(execution_id)
+        function_context_init = self._get_function_context_initializer(execution_id)
+        output_context_init = self._get_output_context_initializer(execution_id)
+        param_context_init = self._get_param_context_initializer(execution_id)
 
-        function_context_init = self.function_object._get_context_initializer(execution_id)
+        context_init_list = [input_context_init, function_context_init,
+                             output_context_init, param_context_init]
 
-        output_context_init_list = []
-        for state in self.output_states:
-            output_context_init_list.append(state._get_context_initializer(execution_id))
-        output_context_init = tuple(output_context_init_list)
-
-        parameter_context_init_list = []
-        for state in self.parameter_states:
-            parameter_context_init_list.append(state._get_context_initializer(execution_id))
-        parameter_context_init = tuple(parameter_context_init_list)
-
-        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
+        return tuple(context_init_list)
 
     def _gen_llvm_input_states(self, ctx, builder, params, context, si):
         # Allocate temporary storage. We rely on the fact that series
