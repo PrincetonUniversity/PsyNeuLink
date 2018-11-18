@@ -2484,7 +2484,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     __execution.execute(inputs)
                     return __execution.extract_node_output(self.output_CIM)
 
-                mechanisms = [n for n in self.c_nodes + [self.input_CIM, self.output_CIM] if isinstance(n, Mechanism)]
+                mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
@@ -2594,7 +2594,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if bin_execute:
                         # Values pf node with compiled wrappers are
                         # in binary data structure
-                        srcs = set([proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers])
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if proj.sender.owner in self.__generated_wrappers)
                         for src_node in srcs:
                             assert src_node in self.c_nodes or src_node is self.input_CIM
                             data = self._compilation_data.execution.get(execution_id).extract_frozen_node_output(src_node)
@@ -2933,18 +2933,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.output_CIM
 
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = [ctx.get_param_struct_type(m) for m in self._all_nodes]
-        proj_param_type_list = [ctx.get_param_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_param_type_list),
-            ir.LiteralStructType(proj_param_type_list)])
+            ir.LiteralStructType(proj_param_type_list)))
 
     def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = [ctx.get_context_struct_type(m) for m in self._all_nodes]
-        proj_ctx_type_list = [ctx.get_context_struct_type(p) for p in self.projections]
-        return ir.LiteralStructType([
+        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
+        proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
+        return ir.LiteralStructType((
             ir.LiteralStructType(mech_ctx_type_list),
-            ir.LiteralStructType(proj_ctx_type_list)])
+            ir.LiteralStructType(proj_ctx_type_list)))
 
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.input_CIM)
@@ -2953,7 +2953,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = [ctx.get_output_struct_type(m) for m in self._all_nodes]
+        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
 
         data = [ir.LiteralStructType(output_type_list)]
         for node in self.c_nodes:
@@ -2961,18 +2961,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return ir.LiteralStructType(data)
 
-    def get_context_initializer(self, execution_id=None):
-        mech_contexts = [tuple(m.get_context_initializer(execution_id=execution_id)) for m in self._all_nodes]
-        proj_contexts = [tuple(p.get_context_initializer(execution_id=execution_id)) for p in self.projections]
+    def _get_context_initializer(self, execution_id=None):
+        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id)) for m in self._all_nodes)
+        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def get_param_initializer(self, execution_id=None):
-        mech_params = [tuple(m.get_param_initializer(execution_id=execution_id)) for m in self._all_nodes]
-        proj_params = [tuple(p.get_param_initializer(execution_id=execution_id)) for p in self.projections]
+    def _get_param_initializer(self, execution_id):
+        mech_params = (tuple(m._get_param_initializer(execution_id)) for m in self._all_nodes)
+        proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, execution_id=None):
-        output = [[os.parameters.value.get(execution_id) for os in m.output_states] for m in self._all_nodes]
+        output = ((os.parameters.value.get(execution_id) for os in m.output_states) for m in self._all_nodes)
         data = [output]
         for node in self.c_nodes:
             nested_data = node._get_data_initializer(execution_id=execution_id) if hasattr(node, '_get_data_initializer') else []

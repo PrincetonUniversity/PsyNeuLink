@@ -891,7 +891,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def get_context_initializer(self, execution_id=None):
+    def _get_context_initializer(self, execution_id):
         return tuple([])
 
     def _get_param_ids(self, execution_id=None):
@@ -906,11 +906,6 @@ class Function_Base(Function):
                     params.append(pc)
         return params
 
-    def get_param_ptr(self, ctx, builder, params_ptr, param_name):
-        idx = ctx.int32_ty(self._get_param_ids().index(param_name))
-        ptr = builder.gep(params_ptr, [ctx.int32_ty(0), idx])
-        return ptr, builder
-
     def _get_param_values(self, execution_id=None):
         param_init = []
         for p in self._get_param_ids():
@@ -921,7 +916,7 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def get_param_initializer(self, execution_id=None):
+    def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
 
     def bin_function(self,
@@ -933,23 +928,8 @@ class Function_Base(Function):
         # TODO: Port this to llvm
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        bf = self._llvmBinFunction
-
-        # Covnert input to doubles
-        variable = np.asfarray(variable)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(*self.get_param_initializer(execution_id=execution_id))
-        ct_state = state_struct_ty(*self.get_context_initializer(execution_id=execution_id))
-
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = vo_ty()
-        bf(ctypes.byref(ct_param), ctypes.byref(ct_state), ct_vi,
-           ctypes.byref(ct_vo))
-
-        return pnlvm._convert_ctype_to_python(ct_vo)
-
+        e = pnlvm.FuncExecution(self, execution_id)
+        return e.execute(variable)
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -2443,7 +2423,7 @@ class LinearCombination(
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
         scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, ir.ArrayType):
             if len(scale_type) == 1:
@@ -2451,7 +2431,7 @@ class LinearCombination(
             else:
                 scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
-        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
         offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, ir.ArrayType):
             if len(offset_type) == 1:
@@ -2459,7 +2439,7 @@ class LinearCombination(
             else:
                 offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
-        exponent_param_ptr, builder = self.get_param_ptr(ctx, builder, params, EXPONENTS)
+        exponent_param_ptr, builder = ctx.get_param_ptr(self, builder, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
         scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
@@ -3645,8 +3625,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr, builder = self.get_param_ptr(ctx, builder, params, SLOPE)
-        intercept_ptr, builder = self.get_param_ptr(ctx, builder, params, INTERCEPT)
+        slope_ptr, builder = ctx.get_param_ptr(self, builder, params, SLOPE)
+        intercept_ptr, builder = ctx.get_param_ptr(self, builder, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -3858,10 +3838,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr, builder = self.get_param_ptr(ctx, builder, params, RATE)
-        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
-        scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
-        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+        rate_ptr, builder = ctx.get_param_ptr(self, builder, params, RATE)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -4067,10 +4047,10 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
-        bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
-        x_0_ptr, builder = self.get_param_ptr(ctx, builder, params, X_0)
-        offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -4436,10 +4416,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
     #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
     #
-    #     variance_ptr, builder = self.get_param_ptr(ctx, builder, params, VARIANCE)
-    #     bias_ptr, builder = self.get_param_ptr(ctx, builder, params, BIAS)
-    #     scale_ptr, builder = self.get_param_ptr(ctx, builder, params, SCALE)
-    #     offset_ptr, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+    #     variance_ptr, builder = ctx.get_param_ptr(self, builder, params, VARIANCE)
+    #     bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+    #     scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
+    #     offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
     #
     #     variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
     #     bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -4707,7 +4687,7 @@ class SoftMax(TransferFunction):
         builder.store(ctx.float_ty(float('-inf')), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
-        gain_ptr, builder = self.get_param_ptr(ctx, builder, params, GAIN)
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
@@ -5324,7 +5304,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Restrict to 1d arrays
         assert self.instance_defaults.variable.ndim == 1
 
-        matrix, builder = self.get_param_ptr(ctx, builder, params, MATRIX)
+        matrix, builder = ctx.get_param_ptr(self, builder, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -7212,21 +7192,20 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
     def _get_context_struct_type(self, ctx):
         return ctx.get_output_struct_type(self)
 
-    def get_context_initializer(self, data=None, execution_id=None):
-        if data is None:
-            data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
-            if self.instance_defaults.value.ndim > 1:
-                return (tuple(data),)
-            return tuple(data)
+    def _get_context_initializer(self, execution_id):
+        data = np.asfarray(self.parameters.previous_value.get(execution_id)).flatten().tolist()
+        if self.instance_defaults.value.ndim > 1:
+            return (tuple(data),)
+        return tuple(data)
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-        rate_p, builder = self.get_param_ptr(ctx, builder, params, RATE)
-        offset_p, builder = self.get_param_ptr(ctx, builder, params, OFFSET)
+        rate_p, builder = ctx.get_param_ptr(self, builder, params, RATE)
+        offset_p, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_p)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_p)
 
-        noise_p, builder = self.get_param_ptr(ctx, builder, params, NOISE)
+        noise_p, builder = ctx.get_param_ptr(self, builder, params, NOISE)
         if isinstance(noise_p.type.pointee, ir.ArrayType) and noise_p.type.pointee.count > 1:
             noise_p = builder.gep(noise_p, [ctx.int32_ty(0), index])
 
@@ -8754,7 +8733,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
         return context_type
 
-    def get_context_initializer(self, execution_id=None):
+    def _get_context_initializer(self, execution_id):
         previous_v = self.parameters.previous_v.get(execution_id)
         previous_w = self.parameters.previous_w.get(execution_id)
         previous_time = self.parameters.previous_time.get(execution_id)
@@ -8786,7 +8765,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # Load parameters
         param_vals = {}
         for p in self._get_param_ids():
-            param_ptr, builder = self.get_param_ptr(ctx, builder, params, p)
+            param_ptr, builder = ctx.get_param_ptr(self, builder, params, p)
             param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
                                             builder, param_ptr)
 
@@ -11395,17 +11374,17 @@ COMMENT
         transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else ir.LiteralStructType([])
         return ir.LiteralStructType([my_params, metric_params, transfer_params])
 
-    def get_param_initializer(self, execution_id=None):
-        my_params = super().get_param_initializer(execution_id=execution_id)
-        metric_params = self._metric_fct.get_param_initializer(execution_id=execution_id)
-        transfer_params = self.transfer_fct.get_param_initializer(execution_id=execution_id) if self.transfer_fct is not None else tuple()
+    def _get_param_initializer(self, execution_id):
+        my_params = super()._get_param_initializer(execution_id)
+        metric_params = self._metric_fct._get_param_initializer(execution_id)
+        transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
         return tuple([my_params, metric_params, transfer_params])
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
         my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix, builder = self.get_param_ptr(ctx, builder, my_params, MATRIX)
+        matrix, builder = ctx.get_param_ptr(self, builder, my_params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
