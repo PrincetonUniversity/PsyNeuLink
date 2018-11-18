@@ -2490,27 +2490,29 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(np.atleast_1d(value), execution_context, override=True)
         self._update_output_states(execution_id=execution_context, context="INITIAL_VALUE")
 
+    def _get_input_param_struct_type(self, ctx):
+        gen = (ctx.get_param_struct_type(state) for state in self.input_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_param_param_struct_type(self, ctx):
+        gen = (ctx.get_param_struct_type(state) for state in self.parameter_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_output_param_struct_type(self, ctx):
+        gen = (ctx.get_param_struct_type(state) for state in self.output_states)
+        return ir.LiteralStructType(gen)
+
+    def _get_function_param_struct_type(self, ctx):
+        return ctx.get_param_struct_type(self.function_object)
 
     def _get_param_struct_type(self, ctx):
-        input_param_list = []
-        for state in self.input_states:
-            input_param_list.append(ctx.get_param_struct_type(state))
-        input_param_struct = ir.LiteralStructType(input_param_list)
+        input_param_struct = self._get_input_param_struct_type(ctx)
+        output_param_struct = self._get_output_param_struct_type(ctx)
+        param_param_struct = self._get_param_param_struct_type(ctx)
+        function_param_struct = self._get_function_param_struct_type(ctx)
 
-        output_param_list = []
-        for state in self.output_states:
-            output_param_list.append(ctx.get_param_struct_type(state))
-        output_param_struct = ir.LiteralStructType(output_param_list)
-
-        param_param_list = []
-        for state in self.parameter_states:
-            param_param_list.append(ctx.get_param_struct_type(state))
-        param_param_struct = ir.LiteralStructType(param_param_list)
-
-        param_list = [input_param_struct,
-                      ctx.get_param_struct_type(self.function_object),
-                      output_param_struct,
-                      param_param_struct]
+        param_list = [input_param_struct, function_param_struct,
+                      output_param_struct, param_param_struct]
 
         mech_params = self._get_mech_params_type()
         if mech_params is not None:
@@ -2518,10 +2520,8 @@ class Mechanism_Base(Mechanism):
 
         return ir.LiteralStructType(param_list)
 
-
     def _get_mech_params_type(self):
         pass
-
 
     def _get_context_struct_type(self, ctx):
         input_context_list = []
