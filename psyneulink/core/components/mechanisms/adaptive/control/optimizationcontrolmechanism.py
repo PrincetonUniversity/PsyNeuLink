@@ -493,7 +493,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     format(repr(AGENT_REP), self.__class__.__name__,
                                                            Composition.__name__, FunctionApproximator.__name__))
 
-        elif not isinstance(self.agent_rep, (Composition, FunctionApproximator)):
+        elif not (isinstance(self.agent_rep, (Composition, FunctionApproximator))
+                  or (isinstance(self.agent_rep, type)
+                      and issubclass(self.agent_rep, (Composition, FunctionApproximator)))):
             raise OptimizationControlMechanismError("The {} arg of an {} must be either a {} or a {}".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
                                                     Composition.__name__, FunctionApproximator.__name__))
@@ -563,7 +565,8 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
-        if isinstance(self.agent_rep, FunctionApproximator):
+        if (isinstance(self.agent_rep, FunctionApproximator)
+                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, FunctionApproximator))):
             self._instantiate_function_approximator_as_agent()
         else:
             self._instantiate_composition_as_agent()
@@ -659,11 +662,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign parameters to learning_function
         if isinstance(self.agent_rep, type):
-            self.agent_rep = self.function_approximator(features_array=np.array(self.instance_defaults.variable[1:]),
-                                                        control_signals = self.control_signals)
-        else:
-            self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
-                                      control_signals = self.control_signals)
+            # self.agent_rep = FunctionApproximator(features_array=np.array(self.instance_defaults.variable[1:]),
+            #                                       control_signals = self.control_signals)
+            self.agent_rep = FunctionApproximator()
+        # else:
+        self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
+                                  control_signals = self.control_signals)
 
         self.evaluate_agent = self.agent_rep.make_prediction
 
