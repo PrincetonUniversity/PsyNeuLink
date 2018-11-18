@@ -8,8 +8,6 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
-import functools
-
 from llvmlite import ir
 from psyneulink.core.llvm import helpers
 

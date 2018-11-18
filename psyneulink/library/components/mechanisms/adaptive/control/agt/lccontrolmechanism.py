@@ -268,7 +268,6 @@ Class Reference
 ---------------
 
 """
-import functools
 import typecheck as tc
 
 from llvmlite import ir
