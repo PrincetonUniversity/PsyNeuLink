@@ -513,7 +513,8 @@ class OptimizationControlMechanism(ControlMechanism):
         **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
         """
 
-        if isinstance(self.agent_rep, FunctionApproximator):
+        if (isinstance(self.agent_rep, FunctionApproximator)
+                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, FunctionApproximator))):
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
 
             # Insert primary InputState for outcome from ObjectiveMechanism;
