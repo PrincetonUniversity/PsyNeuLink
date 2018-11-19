@@ -2559,7 +2559,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for param in runtime_params[node]:
                             if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
                                                                            # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                                execution_id=execution_id):
+                                                                                execution_context=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
@@ -2831,7 +2831,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
             if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
-                                                                  execution_id=execution_id):
+                                                                  execution_context=execution_id):
                 break
 
         # PROCESSING ------------------------------------------------------------------------

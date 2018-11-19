@@ -291,9 +291,9 @@ PCTC.show_graph(show_dimensions=pnl.ALL)  # ,show_mechanism_structure=pnl.VALUES
 # Create threshold function -------------------------------------------------------------------------------------------
 
 
-def pass_threshold(response_layer, thresh, execution_id):
-    results1 = response_layer.get_output_values(execution_id)[0][0]  # red response
-    results2 = response_layer.get_output_values(execution_id)[0][1]  # green response
+def pass_threshold(response_layer, thresh, execution_context):
+    results1 = response_layer.get_output_values(execution_context)[0][0]  # red response
+    results2 = response_layer.get_output_values(execution_context)[0][1]  # green response
     # print(results1)
     # print(results2)
     if results1 >= thresh or results2 >= thresh:

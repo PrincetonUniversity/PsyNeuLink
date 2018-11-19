@@ -2893,7 +2893,7 @@ class System(System_Base):
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
-                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, execution_id=execution_id):
+                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, execution_context=execution_id):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                 mechanism.parameters.context.get(execution_id).execution_phase = self.parameters.context.get(execution_id).execution_phase

@@ -45,8 +45,8 @@ Creating Conditions
 `Pre-specified Conditions <Condition_Pre-Specified_List>` can be instantiated and added to a `Scheduler` at any time,
 and take effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more
 arguments that must be specified to achieve the desired behavior. Many Conditions are also associated with an
-`owner <Condition.owner>` attribute (a `Component` to which the Condition belongs). `Scheduler`\ s maintain the data
-used to test for satisfaction of Condition, independent in different `execution_id` contexts. The Scheduler is generally
+`owner <Condition.owner>` attribute (a `Component` to which the Condition belongs). `Scheduler`\\ s maintain the data
+used to test for satisfaction of Condition, independent in different `execution context`\\ s. The Scheduler is generally
 responsible for ensuring that Conditions have access to the necessary data.
 When pre-specified Conditions are instantiated within a call to the `add` method of a `Scheduler` or `ConditionSet`,
 the Condition's `owner <Condition.owner>` is determined through
@@ -405,7 +405,7 @@ class Condition(object):
         logger.debug('Condition ({0}) setting owner to {1}'.format(type(self).__name__, value))
         self._owner = value
 
-    def is_satisfied(self, *args, **kwargs):
+    def is_satisfied(self, *args, execution_context=None, **kwargs):
         '''
         the function called to determine satisfaction of this Condition.
 
@@ -424,9 +424,12 @@ class Condition(object):
             True - if the Condition is satisfied
             False - if the Condition is not satisfied
         '''
+        execution_context = parse_execution_context(execution_context)
+
         # update so that kwargs can override self.kwargs
         kwargs_to_pass = self.kwargs.copy()
         kwargs_to_pass.update(kwargs)
+        kwargs_to_pass.update({'execution_context': execution_context})
 
         return call_with_pruned_args(self.func, *(self.args + args), **kwargs_to_pass)
 
@@ -640,19 +643,19 @@ class NWhen(Condition):
     def owner(self, value):
         self.condition.owner = value
 
-    def satis(self, condition, n, *args, scheduler=None, execution_id=None, **kwargs):
-        if execution_id is None:
+    def satis(self, condition, n, *args, scheduler=None, execution_context=None, **kwargs):
+        if execution_context is None:
             if scheduler is not None:
-                execution_id = scheduler.default_execution_id
-        # if no execution_id or scheduler is provided technically this will still work
+                execution_context = scheduler.default_execution_context
+        # if no execution_context or scheduler is provided technically this will still work
         # indexed on None, but that's a bit weird honestly
 
-        if execution_id not in self.satisfactions:
-            self.satisfactions[execution_id] = 0
+        if execution_context not in self.satisfactions:
+            self.satisfactions[execution_context] = 0
 
-        if self.satisfactions[execution_id] < n:
-            if call_with_pruned_args(condition.is_satisfied, *args, scheduler=scheduler, execution_id=execution_id, **kwargs):
-                self.satisfactions[execution_id] += 1
+        if self.satisfactions[execution_context] < n:
+            if call_with_pruned_args(condition.is_satisfied, *args, scheduler=scheduler, execution_context=execution_context, **kwargs):
+                self.satisfactions[execution_context] += 1
                 return True
         return False
 
@@ -682,9 +685,9 @@ class BeforeTimeStep(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) < n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) < n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -712,9 +715,9 @@ class AtTimeStep(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, scheduler=None, execution_id=None):
+        def func(n, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) == n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) == n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -741,9 +744,9 @@ class AfterTimeStep(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) > n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) > n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -766,9 +769,9 @@ class AfterNTimeSteps(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) >= n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) >= n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -795,9 +798,9 @@ class BeforePass(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, time_scale) < n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) < n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -825,9 +828,9 @@ class AtPass(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, scheduler=None, execution_id=None):
+        def func(n, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, time_scale) == n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -854,9 +857,9 @@ class AfterPass(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, time_scale) > n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) > n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -879,9 +882,9 @@ class AfterNPasses(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, time_scale) >= n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) >= n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -906,9 +909,9 @@ class EveryNPasses(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, time_scale) % n == 0
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) % n == 0
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -935,9 +938,9 @@ class BeforeTrial(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_id=None):
+        def func(n, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TRIAL, time_scale) < n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) < n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -964,9 +967,9 @@ class AtTrial(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_id=None):
+        def func(n, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -994,9 +997,9 @@ class AfterTrial(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_id=None):
+        def func(n, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TRIAL, time_scale) > n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) > n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -1018,9 +1021,9 @@ class AfterNTrials(Condition):
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
-        def func(n, time_scale, scheduler=None, execution_id=None):
+        def func(n, time_scale, scheduler=None, execution_context=None):
             try:
-                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TRIAL, time_scale) >= n
+                return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) >= n
             except AttributeError as e:
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -1051,9 +1054,9 @@ class BeforeNCalls(Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
-        def func(dependency, n, scheduler=None, execution_id=None):
+        def func(dependency, n, scheduler=None, execution_context=None):
             try:
-                num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
+                num_calls = scheduler.counts_total[execution_context][time_scale][dependency]
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls < n
             except AttributeError as e:
@@ -1087,9 +1090,9 @@ class AtNCalls(Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
-        def func(dependency, n, scheduler=None, execution_id=None):
+        def func(dependency, n, scheduler=None, execution_context=None):
             try:
-                num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
+                num_calls = scheduler.counts_total[execution_context][time_scale][dependency]
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls == n
             except AttributeError as e:
@@ -1117,9 +1120,9 @@ class AfterCall(Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
-        def func(dependency, n, scheduler=None, execution_id=None):
+        def func(dependency, n, scheduler=None, execution_context=None):
             try:
-                num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
+                num_calls = scheduler.counts_total[execution_context][time_scale][dependency]
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls > n
             except AttributeError as e:
@@ -1147,9 +1150,9 @@ class AfterNCalls(Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
-        def func(dependency, n, scheduler=None, execution_id=None):
+        def func(dependency, n, scheduler=None, execution_context=None):
             try:
-                num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
+                num_calls = scheduler.counts_total[execution_context][time_scale][dependency]
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls >= n
             except AttributeError as e:
@@ -1181,15 +1184,15 @@ class AfterNCallsCombined(Condition):
     def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
         logger.debug('{0} args: deps {1}, n {2}, ts {3}'.format(type(self).__name__, dependencies, n, time_scale))
 
-        def func(*dependencies, n=None, scheduler=None, execution_id=None):
+        def func(*dependencies, n=None, scheduler=None, execution_context=None):
             if n is None:
                 raise ConditionError('{0}: required keyword argument n is None'.format(type(self).__name__))
             count_sum = 0
             for d in dependencies:
                 try:
-                    count_sum += scheduler.counts_total[execution_id][time_scale][d]
+                    count_sum += scheduler.counts_total[execution_context][time_scale][d]
                     logger.debug('{0} has reached {1} num_calls in {2}'.
-                                 format(d, scheduler.counts_total[execution_id][time_scale][d], time_scale.name))
+                                 format(d, scheduler.counts_total[execution_context][time_scale][d], time_scale.name))
                 except AttributeError as e:
                     raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
@@ -1234,9 +1237,9 @@ class EveryNCalls(Condition):
 
     """
     def __init__(self, dependency, n):
-        def func(dependency, n, scheduler=None, execution_id=None):
+        def func(dependency, n, scheduler=None, execution_context=None):
             try:
-                num_calls = scheduler.counts_useable[execution_id][dependency][self.owner]
+                num_calls = scheduler.counts_useable[execution_context][dependency][self.owner]
                 logger.debug('{0} has reached {1} num_calls'.format(dependency, num_calls))
                 return num_calls >= n
             except AttributeError as e:
@@ -1264,12 +1267,12 @@ class JustRan(Condition):
 
     """
     def __init__(self, dependency):
-        def func(dependency, scheduler=None, execution_id=None):
+        def func(dependency, scheduler=None, execution_context=None):
             logger.debug('checking if {0} in previous execution step set'.format(dependency))
             try:
-                return dependency in scheduler.execution_list[execution_id][-1]
+                return dependency in scheduler.execution_list[execution_context][-1]
             except TypeError:
-                return dependency == scheduler.execution_list[execution_id][-1]
+                return dependency == scheduler.execution_list[execution_context][-1]
         super().__init__(func, dependency)
 
 
@@ -1290,21 +1293,21 @@ class AllHaveRun(Condition):
 
     """
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
-        def func(*dependencies, scheduler=None, execution_id=None):
+        def func(*dependencies, scheduler=None, execution_context=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if scheduler.counts_total[execution_id][time_scale][d] < 1:
+                    if scheduler.counts_total[execution_context][time_scale][d] < 1:
                         return False
                 except AttributeError as e:
                     raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
                 except KeyError as e:
                     raise ConditionError(
-                        '{0}: execution_id ({1}) must both be specified, and execution_id must be in scheduler.counts_total (scheduler: {2}): {3}'.format(
+                        '{0}: execution_context ({1}) must both be specified, and execution_context must be in scheduler.counts_total (scheduler: {2}): {3}'.format(
                             type(self).__name__,
                             scheduler,
-                            execution_id,
+                            execution_context,
                             e,
                         )
                     )
@@ -1331,9 +1334,9 @@ class WhenFinished(Condition):
 
     """
     def __init__(self, dependency):
-        def func(dependency, execution_id=None):
+        def func(dependency, execution_context=None):
             try:
-                return dependency.is_finished(execution_id)
+                return dependency.is_finished(execution_context)
             except AttributeError as e:
                 raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.
                                      format(type(dependency), e))
@@ -1364,12 +1367,12 @@ class WhenFinishedAny(Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None, execution_id=None):
+        def func(*dependencies, scheduler=None, execution_context=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if d.is_finished(execution_id):
+                    if d.is_finished(execution_context):
                         return True
                 except AttributeError as e:
                     raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
@@ -1401,12 +1404,12 @@ class WhenFinishedAll(Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None, execution_id=None):
+        def func(*dependencies, scheduler=None, execution_context=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if not d.is_finished(execution_id):
+                    if not d.is_finished(execution_context):
                         return False
                 except AttributeError as e:
                     raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(d), e))

@@ -466,9 +466,9 @@ class TestModels:
 
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
-        def pass_threshold(mech1, mech2, thresh, execution_id=None):
-            results1 = mech1.output_states[0].parameters.value.get(execution_id)
-            results2 = mech2.output_states[0].parameters.value.get(execution_id)
+        def pass_threshold(mech1, mech2, thresh, execution_context=None):
+            results1 = mech1.output_states[0].parameters.value.get(execution_context)
+            results2 = mech2.output_states[0].parameters.value.get(execution_context)
             for val in results1:
                 if val >= thresh:
                     return True
@@ -790,9 +790,9 @@ class TestModels:
         for pathway in composition_pathways:
             PCTC.add_linear_processing_pathway(pathway)
 
-        def pass_threshold(response_layer, thresh, execution_id=None):
-            results1 = response_layer.output_state.parameters.value.get(execution_id)[0]  # red response
-            results2 = response_layer.output_state.parameters.value.get(execution_id)[1]  # green response
+        def pass_threshold(response_layer, thresh, execution_context=None):
+            results1 = response_layer.output_state.parameters.value.get(execution_context)[0]  # red response
+            results2 = response_layer.output_state.parameters.value.get(execution_context)[1]  # green response
             if results1 >= thresh or results2 >= thresh:
                 return True
             return False

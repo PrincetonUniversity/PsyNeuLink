@@ -743,8 +743,8 @@ class Scheduler(object):
         self._reset_counts_total(TimeScale.TRIAL, execution_id)
 
         while (
-            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
+            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
         ):
             self._reset_counts_total(TimeScale.PASS, execution_id)
 
@@ -753,8 +753,8 @@ class Scheduler(object):
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_id=execution_id)
-                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
+                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -780,7 +780,7 @@ class Scheduler(object):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.condition_set.conditions[current_node].is_satisfied(scheduler=self, execution_id=execution_id):
+                            if self.condition_set.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
                                 logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
@@ -822,7 +822,7 @@ class Scheduler(object):
 
         self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
-        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_id=execution_id):
+        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id):
             self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list[execution_id]
