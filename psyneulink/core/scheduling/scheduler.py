@@ -396,10 +396,7 @@ class Scheduler(object):
         '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet()
 
-        self.default_execution_id = execution_id
         # stores the in order list of self.run's yielded outputs
-        self.execution_list = {self.default_execution_id: []}
-        self.clocks = {self.default_execution_id: Clock()}
         self.consideration_queue = []
         self.default_termination_conds = {
             TimeScale.RUN: Never(),
@@ -410,9 +407,13 @@ class Scheduler(object):
         if system is not None:
             self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
+            if execution_id is None:
+                execution_id = system.default_execution_id
         elif composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
+            if execution_id is None:
+                execution_id = composition.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -427,6 +428,9 @@ class Scheduler(object):
             raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) '
                                  'or a graph dependency dict (kwarg graph)')
 
+        self.default_execution_id = execution_id
+        self.execution_list = {self.default_execution_id: []}
+        self.clocks = {self.default_execution_id: Clock()}
         self.counts_total = {}
         self.counts_useable = {}
         self._init_counts(execution_id=self.default_execution_id)
