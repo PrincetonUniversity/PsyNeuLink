@@ -267,7 +267,8 @@ Class Reference
 
 import logging
 
-from psyneulink.core.globals.utilities import prune_unused_args
+from psyneulink.core.globals.parameters import parse_execution_context
+from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -423,13 +424,11 @@ class Condition(object):
             True - if the Condition is satisfied
             False - if the Condition is not satisfied
         '''
-        args_to_pass = self.args + args
+        # update so that kwargs can override self.kwargs
         kwargs_to_pass = self.kwargs.copy()
         kwargs_to_pass.update(kwargs)
 
-        args_to_pass, kwargs_to_pass = prune_unused_args(self.func, args_to_pass, kwargs_to_pass)
-
-        return self.func(*args_to_pass, **kwargs_to_pass)
+        return call_with_pruned_args(self.func, *(self.args + args), **kwargs_to_pass)
 
 #########################################################################################################
 # Included Conditions
@@ -466,8 +465,7 @@ class WhileNot(Condition):
     """
     def __init__(self, func, *args, **kwargs):
         def inner_func(*args, **kwargs):
-            args_to_pass, kwargs_to_pass = prune_unused_args(func, args, kwargs)
-            return not func(*args_to_pass, **kwargs_to_pass)
+            return not call_with_pruned_args(func, *args, **kwargs)
         super().__init__(inner_func, *args, **kwargs)
 
 ######################################################################
@@ -610,7 +608,6 @@ class Not(Condition):
         self.condition = condition
 
         def inner_func(*args, **kwargs):
-            # args_to_pass, kwargs_to_pass = prune_unused_args(condition.func, args, kwargs)
             return not condition.is_satisfied(*args, **kwargs)
         super().__init__(inner_func)
 
@@ -654,8 +651,7 @@ class NWhen(Condition):
             self.satisfactions[execution_id] = 0
 
         if self.satisfactions[execution_id] < n:
-            args_to_pass, kwargs_to_pass = prune_unused_args(condition.is_satisfied, args, kwargs)
-            if condition.is_satisfied(*args_to_pass, scheduler=scheduler, execution_id=execution_id, **kwargs_to_pass):
+            if call_with_pruned_args(condition.is_satisfied, *args, scheduler=scheduler, execution_id=execution_id, **kwargs):
                 self.satisfactions[execution_id] += 1
                 return True
         return False
