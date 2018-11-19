@@ -3058,6 +3058,15 @@ class Composition(Composition_Base):
 
             return self.__execution.extract_node_output(self.output_CIM)
 
+        # MODIFIED 11/19/18 NEW: [JDC]
+        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
+        self.output_CIM.execute(context=ContextFlags.PROCESSING)
+
+        output_values = []
+        for i in range(0, len(self.output_CIM.output_states)):
+            output_values.append(self.output_CIM.output_states[i].value)
+        # MODIFIED 11/19/18 END
+
         # control phase
         if self.context.execution_phase != ContextFlags.INITIALIZING \
                 and self.context.execution_phase != ContextFlags.SIMULATION \
@@ -3068,13 +3077,14 @@ class Composition(Composition_Base):
                 control_allocation = self.model_based_optimizer.execute(context=context)
                 self.model_based_optimizer.apply_control_signal_values(control_allocation, runtime_params=None, context=None)
 
-        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(context=ContextFlags.PROCESSING)
-
-        output_values = []
-
-        for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].value)
+        # # MODIFIED 11/19/19 OLD:
+        # self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
+        # self.output_CIM.execute(context=ContextFlags.PROCESSING)
+        #
+        # output_values = []
+        # for i in range(0, len(self.output_CIM.output_states)):
+        #     output_values.append(self.output_CIM.output_states[i].value)
+        # MODIFIED 11/19/19 END
 
         return output_values
 
@@ -3296,6 +3306,7 @@ class Composition(Composition_Base):
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
                                         bin_execute=bin_execute)
+            assert True
 
         # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
