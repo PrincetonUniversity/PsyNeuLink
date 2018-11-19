@@ -252,11 +252,11 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'FEATURE_PREDICTORS', 'SHADOW_EXTERNAL_INPUTS'
+    'AGENT_REP', 'FEATURES', 'SHADOW_EXTERNAL_INPUTS'
 ]
 
 AGENT_REP = 'agent_rep'
-FEATURE_PREDICTORS = 'feature_predictors'
+FEATURES = 'features'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 
 
@@ -269,21 +269,21 @@ class OptimizationControlMechanismError(Exception):
 
     
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(                       \
-    agent_rep=None,                                        \
-    feature_predictors=None,                               \
-    feature_function=None,                                 \
-    objective_mechanism=None,                              \
-    learning_function=None,                                \
-    evaluation_function=None,                              \
-    search_function=None,                                  \
-    search_termination_function=None,                      \
-    search_space=None,                                     \
-    function=None,                                         \
-    control_signals=None,                                  \
-    modulation=ModulationParam.MULTIPLICATIVE,             \
-    params=None,                                           \
-    name=None,                                             \
+    """OptimizationControlMechanism(            \
+    agent_rep=None,                             \
+    features=None,                              \
+    feature_function=None,                      \
+    objective_mechanism=None,                   \
+    learning_function=None,                     \
+    evaluation_function=None,                   \
+    search_function=None,                       \
+    search_termination_function=None,           \
+    search_space=None,                          \
+    function=None,                              \
+    control_signals=None,                       \
+    modulation=ModulationParam.MULTIPLICATIVE,  \
+    params=None,                                \
+    name=None,                                  \
     prefs=None)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
@@ -352,9 +352,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <OptimizationControlMechanism.learning_function>`, and/or a custom function and its parameters.  Values
-        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor.
+        Mechanism, its `learning_function <OptimizationControlMechanism.learning_function>`, and/or a custom function
+        and its parameters.  Values specified for parameters in the dictionary override any assigned to those
+        parameters in arguments of the constructor.
 
     name : str : default see `name <OptimizationControlMechanism.name>`
         specifies the name of the OptimizationControlMechanism.
@@ -440,8 +440,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 prediction_mechanisms=None,
-                 feature_predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
+                 features:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  feature_function:tc.optional(tc.any(is_function_type))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
@@ -468,7 +467,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.search_space = search_space
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(input_states=feature_predictors,
+        params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
@@ -501,16 +500,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     format(repr(AGENT_REP), self.__class__.__name__,
                                                     Composition.__name__, FunctionApproximator.__name__))
 
-        # if isinstance(self.agent_rep, FunctionApproximator) and self.feature_predictors is None:
+        # if isinstance(self.agent_rep, FunctionApproximator) and self.features is None:
         #     raise OptimizationControlMechanismError("{} arg for {} must be specified".
-        #                                             format(repr(FEATURE_PREDICTORS),
+        #                                             format(repr(FEATURES),
         #                                                    self.__class__.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
 
         Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
-        InputState specifications generated in _parse_feature_specs from the **feature_predictors** and
+        InputState specifications generated in _parse_feature_specs from the **features** and
         **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
         """
 
@@ -597,27 +596,36 @@ class OptimizationControlMechanism(ControlMechanism):
             return defaultControlAllocation
 
         # FIX: WAS NEEDED FOR MODEL_FREE;  OK FOR MODEL_BASED?
-        assert all(variable == self.variable), 'PROGRAM ERROR: variable != self.variable for OCM'
+        try:
+            assert variable==self.variable
+        except ValueError:
+            assert all(variable == self.variable), 'PROGRAM ERROR: variable != self.variable for OCM'
         if self.control_allocation is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
         # FIX END
 
         self.state_rep = self.agent_rep.get_state_rep(context=self.context)
 
-        # FIX: CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
         try:
             net_outcome = self.net_outcome
         except AttributeError:
             net_outcome = [0]
-        self.agent_rep.adapt(self.state_rep, self.control_allocation, net_outcome)
 
-        # Compute control_allocation using ModelFreeOptimizationControlMechanism's optimization function
+        try:
+            self.agent_rep.adapt(self.state_rep, self.control_allocation, net_outcome)
+        except AttributeError as e:
+            # If error is due to absence of adapt method, OK; otherwise, raise exception
+            if not 'has no attribute \'adapt\'' in e.args[0]:
+                raise AttributeError(e.args[0])
+
+        # Compute control_allocation using OptimizationControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         control_allocation, self.metric_optimal, self.saved_samples, self.saved_values = \
                                         super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        # self.agent_rep.after_execution(context=context)
+        self.agent_rep.after_agent_rep_execution(context=context)
 
         return control_allocation
 
@@ -643,7 +651,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_composition_as_agent(self):
         self.evaluate_agent = self.agent_rep.run_simulation
         # Model-based implementation does not need to update model of the agent, since Composition *is* the agent
-        self.agent_rep.adapt = lambda x,y,z : None
+        # self.agent_rep.adapt = lambda x,y,z : None
 
     # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
     def apply_control_signal_values(self, control_allocation, runtime_params, context):
@@ -662,12 +670,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_function_approximator_as_agent(self):
         '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
 
-        # Assign parameters to learning_function
         if isinstance(self.agent_rep, type):
-            # self.agent_rep = FunctionApproximator(features_array=np.array(self.instance_defaults.variable[1:]),
-            #                                       control_signals = self.control_signals)
             self.agent_rep = FunctionApproximator()
-        # else:
+        # FunctionApproximator needs to have access to control_signals to:
+        # - to construct allocation_search_space from their allocation_samples attributes
+        # - compute their values and costs for samples of control_allocations from allocatio_search_space
         self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
                                   control_signals = self.control_signals)
 
@@ -679,22 +686,22 @@ class OptimizationControlMechanism(ControlMechanism):
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_state_rep
 
     tc.typecheck
-    def add_features(self, feature_predictors):
-        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for feature_predictors used to
+    def add_features(self, features):
+        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
-        **feature_predictors** argument can use any of the forms of specification allowed for InputState(s),
+        **features** argument can use any of the forms of specification allowed for InputState(s),
             as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
             list of `ORIGIN` Mechanisms and/or their InputStates as its value.
         '''
 
-        feature_predictors = self._parse_feature_specs(feature_predictors=feature_predictors,
+        features = self._parse_feature_specs(features=features,
                                                  context=ContextFlags.COMMAND_LINE)
-        self.add_states(InputState, feature_predictors)
+        self.add_states(InputState, features)
 
     @tc.typecheck
-    def _parse_feature_specs(self, feature_predictors, feature_function, context=None):
-        """Parse entries of feature_predictors into InputState spec dictionaries
+    def _parse_feature_specs(self, features, feature_function, context=None):
+        """Parse entries of features into InputState spec dictionaries
 
         For InputState specs in SHADOW_EXTERNAL_INPUTS ("shadowing" an Origin InputState):
             - Call _parse_shadow_input_spec
@@ -703,17 +710,17 @@ class OptimizationControlMechanism(ControlMechanism):
             - Call _parse_state_spec
             - Set INTERNAL_ONLY entry of params dict of InputState spec dictionary to True
 
-        Assign functions specified in **feature_function** to InputStates for all feature_predictors
+        Assign functions specified in **feature_function** to InputStates for all features
 
         Returns list of InputState specification dictionaries
         """
 
         parsed_features = []
 
-        if not isinstance(feature_predictors, list):
-            feature_predictors = [feature_predictors]
+        if not isinstance(features, list):
+            features = [features]
 
-        for spec in feature_predictors:
+        for spec in features:
 
             # e.g. {SHADOW_EXTERNAL_INPUTS: [A]}
             if isinstance(spec, dict):
@@ -723,7 +730,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = self._parse_shadow_inputs_spec(spec, feature_function)
                 else:
                     raise OptimizationControlMechanismError("Incorrect specification ({}) "
-                                                                     "in feature_predictors argument of {}."
+                                                                     "in features argument of {}."
                                                                      .format(spec, self.name))
             # e.g. Mechanism, OutputState
             else:

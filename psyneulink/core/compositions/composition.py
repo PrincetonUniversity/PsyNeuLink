@@ -3379,7 +3379,7 @@ class Composition(Composition_Base):
 
         return predicted_input
 
-    def after_optimization(self, context=None):
+    def after_agent_rep_execution(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
         simulations are complete in order to reinstate the `Composition`'s pre-simulation values.

@@ -117,7 +117,7 @@ task_decision = pnl.DDM(name='Task Decision',
 #                                 )
 
 lvoc = pnl.OptimizationControlMechanism(name='LVOC ControlMechanism',
-                                        feature_predictors={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
+                                        features={pnl.SHADOW_EXTERNAL_INPUTS:[color_stim, word_stim]},
                                         objective_mechanism=pnl.ObjectiveMechanism(name='LVOC ObjectiveMechanism',
                                                                                    monitored_output_states=[task_decision,
                                                                                                             reward],
