@@ -440,6 +440,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
+                 prediction_mechanisms=None,
                  feature_predictors:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  feature_function:tc.optional(tc.any(is_function_type))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
