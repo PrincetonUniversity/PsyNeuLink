@@ -13,7 +13,7 @@
 # FIX: SHOULD BE IMPLEMENTED AS ABSTRACT BASE CLASS (ABC)
 
 Composition Function Approximator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
 <CompositionFunctionApproximator.adapt>` method, parameterizes it `function <Composition.function>` to predict the
@@ -25,6 +25,15 @@ Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `func
 <ControlMechanism.net_outcome>` for a given set of `feature_values
 <OptimizationControlMechanism.feature_values>`, `control_allocation <ControlMechanism.control_allocation>` and
 `num_estimates <OptimizationControlMechanism.num_estimates>`
+
+COMMENT:
+.. note::
+  The CompositionFunctionApproximator's `adapt <CompositionFunctionApproximator.adapt>` method is provided the
+  `feature_values <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>`
+  from the *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
+  <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
+  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
+COMMENT
 
 
 """
@@ -48,7 +57,7 @@ class CompositionFunctionApproximatorError(Exception):
 
 
 class CompositionFunctionApproximator(Composition):
-    '''Parameterizes a `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
+    '''Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
     <Controlmechanism.net_outcome>` for a set of `feature_values
     <OptimizationControlmechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
     provided by an `OptimizationControlmechanism`.
