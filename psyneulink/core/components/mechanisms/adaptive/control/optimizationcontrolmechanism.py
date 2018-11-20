@@ -783,7 +783,7 @@ class OptimizationControlMechanism(ControlMechanism):
             net_outcome = [0]
         # FIX: END
 
-        # Give the agent_rep a chance to apapt itself based on last trial's feature_values and control_allocation
+        # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
             self.agent_rep.adapt(self.feature_values, self.control_allocation, net_outcome)
         except AttributeError as e:
