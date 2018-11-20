@@ -821,13 +821,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                        self.feature_values,
                                        context=self.function_object.context)
 
-    # ******************************************************************************************************************
-    # FIX:  THE FOLLOWING IS SPECIFIC TO MODEL-BASED (COMPOSITION) IMPLEMENTATION
-    # ******************************************************************************************************************
-
-    # FIX: THIS IS FROM ORIG MODEL_BASED IMPLEMENTATION
-    def apply_control_signal_values(self, control_allocation, runtime_params, context):
-        '''Assign specified control_allocation'''
+    def apply_control_allocation(self, control_allocation, runtime_params, context):
+        '''Update ControlSignal values based on specified control_allocation'''
         for i in range(len(control_allocation)):
             if self.value is None:
                 self.value = self.instance_defaults.value

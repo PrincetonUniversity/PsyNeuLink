@@ -3075,7 +3075,7 @@ class Composition(Composition_Base):
                 # self.model_based_optimizer.objective_mechanism.execute(context=context)
                 # KAM - temporary solution for assiging control signal values
                 control_allocation = self.model_based_optimizer.execute(context=context)
-                self.model_based_optimizer.apply_control_signal_values(control_allocation, runtime_params=None, context=None)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, runtime_params=None, context=None)
 
         # # MODIFIED 11/19/19 OLD:
         # self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
@@ -4034,10 +4034,12 @@ class Composition(Composition_Base):
         reinitialize_values = self.sim_reinitialize_values
 
         # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
+        #      (i.e., DOES IT ASSIGN THE SAME CONTROLSIGNAL VALUES FOR ALL SIMULATIONS?)
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
+        # Assign control_allocation current being sampled
         if control_allocation is not None:
-            self.model_based_optimizer.apply_control_signal_values(control_allocation,
+            self.model_based_optimizer.apply_control_allocation(control_allocation,
                                                                    runtime_params=runtime_params,
                                                                    context=context)
 

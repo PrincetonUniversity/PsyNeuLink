@@ -316,7 +316,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                          name=name,
                          prefs=prefs)
 
-    def apply_control_signal_values(self, control_allocation, runtime_params, context):
+    def apply_control_allocation(self, control_allocation, runtime_params, context):
         '''Assign specified control_allocation'''
         for i in range(len(control_allocation)):
             if self.value is None:
