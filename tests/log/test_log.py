@@ -170,7 +170,7 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
-        T_1.log.print_entries(execution_ids=PS)
+        T_1.log.print_entries(execution_contexts=PS)
 
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
