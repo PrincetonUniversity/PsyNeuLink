@@ -295,9 +295,6 @@ class RegressionCFA(CompositionFunctionApproximator):
         predicted_outcome/=num_estimates
         return predicted_outcome
 
-    def after_execution(self, context):
-        pass
-
     class PredictionVector():
         '''Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
         `specified_terms <PredictionVector.specified_terms>`.
