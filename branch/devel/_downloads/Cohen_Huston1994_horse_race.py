@@ -166,20 +166,20 @@ Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
-# execution_id is automatically passed into Conditions, and references the execution context in which they are being run,
+# execution_context is automatically passed into Conditions, and references the execution context in which they are being run,
 # which in this case is simply the Bidirectional_Stroop system
-def pass_threshold(response_layer, thresh, execution_id):
-    results1 = response_layer.get_output_values(execution_id)[0][0] #red response
-    results2 = response_layer.get_output_values(execution_id)[0][1] #green response
+def pass_threshold(response_layer, thresh, execution_context):
+    results1 = response_layer.get_output_values(execution_context)[0][0] #red response
+    results2 = response_layer.get_output_values(execution_context)[0][1] #green response
     if results1  >= thresh or results2 >= thresh:
         return True
     return False
 
 # 2nd threshold function
-def pass_threshold2(response_layer, thresh, terminate, execution_id):
-    results1 = response_layer.get_output_values(execution_id)[0][0] #red response
-    results2 = response_layer.get_output_values(execution_id)[0][1] #green response
-    length = response_layer.log.nparray_dictionary()[execution_id]['value'].shape[0]
+def pass_threshold2(response_layer, thresh, terminate, execution_context):
+    results1 = response_layer.get_output_values(execution_context)[0][0] #red response
+    results2 = response_layer.get_output_values(execution_context)[0][1] #green response
+    length = response_layer.log.nparray_dictionary()[execution_context]['value'].shape[0]
     if results1  >= thresh or results2 >= thresh:
         return True
     if length ==terminate:
