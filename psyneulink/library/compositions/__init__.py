@@ -6,11 +6,18 @@ try:
 
     from . import autodiffcomposition
     from . import pytorchmodelcreator
+    from . import regressioncfa
+    from . import regressioncfa
 
     from .autodiffcomposition import *
     from .pytorchmodelcreator import *
+    from .regressioncfa import *
 
     __all__ = list(autodiffcomposition.__all__)
     __all__.extend(pytorchmodelcreator.__all__)
+    __all__.extend(regressioncfa.__all__)
+
 except ImportError:
-    pass
+    from . import regressioncfa
+    from .regressioncfa import *
+    __all__.extend(regressioncfa.__all__)

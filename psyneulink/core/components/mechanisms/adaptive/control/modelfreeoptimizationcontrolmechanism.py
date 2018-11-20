@@ -13,7 +13,7 @@
 Overview
 --------
 
-A ModelFreeOptimizationControlMechanism is an `OptimizationControlMechanism` that uses a `FunctionApproximator`
+A ModelFreeOptimizationControlMechanism is an `OptimizationControlMechanism` that uses a `CompositionFunctionApproximator`
 to regulate its `ControlSignals <ControlSignal>` in order to optimize the processing of the `Components` monitored
 by the ModelFreeOptimizationControlMechanism's `objective_mechanism
 <ModelFreeOptimizationControlMechanism.objective_mechanism>`, as evaluated by its `evaluation_function
@@ -78,7 +78,7 @@ Creating a ModelFreeOptimizationControlMechanism
     <ModelFreeOptimizationControlMechanism.function_approximator>`.  However, other functions can be assigned,
     for example to maintain a record of past values, or integrate them over trials.
 
-  * **function_approximator** -- this specifies the `FunctionApproximator` that is parameterized over trials to
+  * **function_approximator** -- this specifies the `CompositionFunctionApproximator` that is parameterized over trials to
     predict the `EVC <ModelFreeOptimizationControlMechanism_EVC>` for a given `control_allocation
     <ControlMechanism.control_allocation>` from the terms specified in its **prediction_terms** argument.
     
@@ -139,18 +139,18 @@ Function Approximator
 ^^^^^^^^^^^^^^^^^^^^^
 
 The `function_approximator <ModelFreeOptimizationControlMechanism.function_approximator>` attribute of a
-ModelFreeOptimizationControlMechanism is a `FunctionApproximator` that it parameterizes over trials (using the
-FunctionApproximator's `parameterization_function <FunctionApproximator.parameterization_function>`) to predict
+ModelFreeOptimizationControlMechanism is a `CompositionFunctionApproximator` that it parameterizes over trials (using the
+CompositionFunctionApproximator's `parameterization_function <CompositionFunctionApproximator.parameterization_function>`) to predict
 the `net_outcome <ControlMechanism.net_outcome>` of processing of the Components monitored by
 its `objective_mechanism <ModelFreeOptimizationControlMechanism.objective_mechanism>`, from
 combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `control_allocation
 <ControlMechanism.control_allocation>` it has experienced.  By default, the `parameterization_function
-<FunctionApproximator.parameterization_function>` is `BayesGLM`. However, any function can be used that accepts a 2d
+<CompositionFunctionApproximator.parameterization_function>` is `BayesGLM`. However, any function can be used that accepts a 2d
 array, the first item of which is an array of scalar values (the prediction terms) and the second that is a scalar
 value (the outcome to be predicted), and returns an array with the same shape as the first item.
 
-The FunctionApproximator's `evaluate <FunctionApproximator.evaluate>` function uses the current
-parameters of the `FunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
+The CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` function uses the current
+parameters of the `CompositionFunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
 a sample `control_allocation <ControlMechanism.control_allocation>`, given the current `feature_values
 <ModelFreeOptimizationControlMechanism.feature_values>` and the `costs <ControlMechanism.costs>` of the
 `control_allocation <ControlMechanism.control_allocation>`.
@@ -170,7 +170,7 @@ a sample `control_allocation <ControlMechanism.control_allocation>`, given the c
 ^^^^^^^^^^
 
 The `function <ModelFreeOptimizationControlMechanism.function>` of a ModelFreeOptimizationControlMechanism uses the
-`evaluate <FunctionApproximator.evaluate>` method of its `function_approximator
+`evaluate <CompositionFunctionApproximator.evaluate>` method of its `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>`, to find the `control_allocation
 <ControlMechanism.control_allocation>` that yields the greatest predicted `EVC
 <ModelFreeOptimizationControlMechanism_EVC>` given the current `feature_values
@@ -192,7 +192,7 @@ When a ModelFreeOptimizationControlMechanism is executed, its `function
 <ModelFreeOptimizationControlMechanism.function_approximator>` to update its parameters based on the
 `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `net_outcome
 <ControlMechanism.net_outcome>` of the last `trial`.  It then uses the `evaluate
-<FunctionApproximator.evaluate>` of the `function_approximator
+<CompositionFunctionApproximator.evaluate>` of the `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>` to find the `allocadtion_policy
 <ControlMechanism.control_allocation>` that predicts the greatet `EVC <ModelFreeOptimizationControlMechanism_EVC>`
 for the current `feature_values <ModelFreeOptimizationControlMechanism.feature_values>`, and implements that for the
@@ -313,12 +313,12 @@ class PV(Enum):
 
 
 class FunctionApproximator():
-    '''Parameterizes a `parameterization_function <FunctionApproximator.parameterization_function>` to predict an
+    '''Parameterizes a `parameterization_function <CompositionFunctionApproximator.parameterization_function>` to predict an
     outcome from an input.
 
     The input is represented in the `vector <PredictionVector.vector>` attribute of a `PredictionVector`
-    (assigned to the FunctionApproximator`s `prediction_vector <FunctionApproximator.prediction_vector>`) attribute,
-    and the `evaluate <FunctionApproximator.evaluate>` method is used to predict the outcome from the
+    (assigned to the CompositionFunctionApproximator`s `prediction_vector <CompositionFunctionApproximator.prediction_vector>`) attribute,
+    and the `evaluate <CompositionFunctionApproximator.evaluate>` method is used to predict the outcome from the
     prediction_vector.
 
     When used with a ModelBasedOptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
@@ -340,18 +340,18 @@ class FunctionApproximator():
         ---------
 
         owner : ModelFreeOptimizationControlMechanism : default None
-            ModelFreeOptimizationControlMechanism to which the FunctionApproximator is assiged.
+            ModelFreeOptimizationControlMechanism to which the CompositionFunctionApproximator is assiged.
 
         parameterization_function : LearningFunction, function or method : default BayesGLM
-            used to parameterize the FunctionApproximator.  It must take a 2d array as its first argument,
+            used to parameterize the CompositionFunctionApproximator.  It must take a 2d array as its first argument,
             the first item of which is an array the same length of the `vector <PredictionVector.prediction_vector>`
-            attribute of its `prediction_vector <FunctionApproximator.prediction_vector>`, and the second item a
+            attribute of its `prediction_vector <CompositionFunctionApproximator.prediction_vector>`, and the second item a
             1d array containing a scalar value that it tries predict.
 
         prediction_terms : List[PV] : default [PV.F, PV.C, PV.COST]
             terms to be included in (and thereby determines the length of) the `vector
             <PredictionVector.prediction_vector>` attribute of the  `prediction_vector
-            <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the default is [`F
+            <CompositionFunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the default is [`F
             <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].  if `None` is specified, the default
             values will automatically be assigned.
 
@@ -359,29 +359,29 @@ class FunctionApproximator():
         ----------
 
         owner : ModelFreeOptimizationControlMechanism
-            `ModelFreeOptimizationControlMechanism` to which the `FunctionApproximator` belongs;  assigned as the
+            `ModelFreeOptimizationControlMechanism` to which the `CompositionFunctionApproximator` belongs;  assigned as the
             `objective_function <OptimizationFunction.objective_function>` parameter of the `OptimizationFunction`
             assigned to that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
 
         parameterization_function : LearningFunction, function or method
-            used to parameterize the FunctionApproximator;  its result is assigned as the
-            `prediction_weights <FunctionApproximator.prediction_weights>` attribute.
+            used to parameterize the CompositionFunctionApproximator;  its result is assigned as the
+            `prediction_weights <CompositionFunctionApproximator.prediction_weights>` attribute.
 
         prediction_terms : List[PV]
             terms included in `vector <PredictionVector.prediction_vector>` attribute of the
-            `prediction_vector <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the
+            `prediction_vector <CompositionFunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the
             default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
 
         prediction_vector : PredictionVector
             represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
-            `evaluate <FunctionApproximator.evaluate>`, along with `prediction_weights
-            <FunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
+            `evaluate <CompositionFunctionApproximator.evaluate>`, along with `prediction_weights
+            <CompositionFunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
             the `vector <PredictionVector.vector>` attribute are determined by `prediction_terms
-            <FunctionApproximator.prediction_terms>`.
+            <CompositionFunctionApproximator.prediction_terms>`.
 
         prediction_weights : 1d array
-            result of `parameterization_function <FunctionApproximator.parameterization_function>, used by
-            `evaluate <FunctionApproximator.evaluate>` method to generate its prediction.
+            result of `parameterization_function <CompositionFunctionApproximator.parameterization_function>, used by
+            `evaluate <CompositionFunctionApproximator.evaluate>` method to generate its prediction.
         '''
 
         self.parameterization_function = parameterization_function
@@ -420,9 +420,9 @@ class FunctionApproximator():
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
     def initialize(self, owner):
-        '''Assign owner and instantiate `prediction_vector <FunctionApproximator.prediction_vector>`
+        '''Assign owner and instantiate `prediction_vector <CompositionFunctionApproximator.prediction_vector>`
 
-        Must be called before FunctionApproximator's methods can be used if its `owner <FunctionApproximator.owner>`
+        Must be called before CompositionFunctionApproximator's methods can be used if its `owner <CompositionFunctionApproximator.owner>`
         was not specified in its constructor.
         '''
 
@@ -440,8 +440,8 @@ class FunctionApproximator():
                                                              parameterization_function_default_variable})
 
     def before_execution(self, context):
-        '''Call `parameterization_function <FunctionApproximator.parameterization_function>` prior to calls to
-        `evaluate <FunctionApproximator.evaluate>`.'''
+        '''Call `parameterization_function <CompositionFunctionApproximator.parameterization_function>` prior to calls to
+        `evaluate <CompositionFunctionApproximator.evaluate>`.'''
 
         feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
         try:
@@ -465,10 +465,10 @@ class FunctionApproximator():
 
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
-        '''Update terms of prediction_vector <FunctionApproximator.prediction_vector>` and then multiply by
+        '''Update terms of prediction_vector <CompositionFunctionApproximator.prediction_vector>` and then multiply by
         prediction_weights.
 
-        Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>`
+        Uses the current values of `prediction_weights <CompositionFunctionApproximator.prediction_weights>`
         together with values of **variable** and **feature_values** arguments to generate a predicted outcome.
 
         .. note::
@@ -701,7 +701,7 @@ class FunctionApproximator():
         def update_vector(self, variable, feature_values=None, reference_variable=None):
             '''Update vector with flattened versions of values returned from the `compute_terms
             <PredictionVector.compute_terms>` method of the `prediction_vector
-            <FunctionApproximator.prediction_vector>`.
+            <CompositionFunctionApproximator.prediction_vector>`.
 
             Updates `vector <PredictionVector.vector>` with current values of variable and, optionally,
             and feature_values.
@@ -787,7 +787,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
     objective_mechanism=None,                                                                  \
     origin_objective_mechanism=False,                                                          \
     terminal_objective_mechanism=False,                                                        \
-    function_approximator=FunctionApproximator(parameterization_function=BayesGLM,             \
+    function_approximator=CompositionFunctionApproximator(parameterization_function=BayesGLM,             \
                                                prediction_terms=[PV.F, PV.C, PV.FC, PV.COST]), \
     num_samples=1,                                                                             \
     function=GradientOptimization,                                                             \
@@ -819,8 +819,8 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    function_approximator : FunctionApproximator : default FunctionApproximator(parameterization_function=BayesGLM)
-        specifies the FunctionApproximator that is parameterized to predict the `net_outcome
+    function_approximator : CompositionFunctionApproximator : default CompositionFunctionApproximator(parameterization_function=BayesGLM)
+        specifies the CompositionFunctionApproximator that is parameterized to predict the `net_outcome
         <ControlMechanism.net_outcome>` of processing by the Components monitored by the
         ModelFreeOptimizationControlMechanism's `objective_mechanism
         <ModelFreeOptimizationControlMechanism.objective_mechanism>` from the `current
@@ -863,7 +863,7 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer) and, using the current
         `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and the `evaluate
-        <FunctionApproximator.evaluate>` method of the `function_approximator
+        <CompositionFunctionApproximator.evaluate>` method of the `function_approximator
         <ModelFreeOptimizationControlMechanism.function_approximator>`, returns an
         `control_allocation` that maximizes the `EVC <ModelFreeOptimizationControlMechanism_EVC>` (see `Function
         <ModelFreeOptimizationControlMechanism_Function>` for additional details).
@@ -1110,16 +1110,16 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
         Executes the following steps:
 
-            - call `before_execution <FunctionApproximator.before_execution>` method of `function_approximator
+            - call `before_execution <CompositionFunctionApproximator.before_execution>` method of `function_approximator
               <ModelFreeOptimizationControlMechanism.function_approximator>`, which calls its `parameterization_function
-              <FunctionApproximator.parameterization_function>` to update its parameters;
+              <CompositionFunctionApproximator.parameterization_function>` to update its parameters;
 
             - call super()._execute(), which calls the `OptimizationFunction` assigned as the
               ModelFreeOptimizationControlMechanism's `function <ModelFreeOptimizationControlMechanism.function>` that
               finds the `control_allocation <ControlMechanism.control_allocation>` predictive of the greatest `EVC
               <ModelFreeOptimizationControlMechanism_EVC>`;
 
-            - call `after_execution <FunctionApproximator.after_execution>` method of `function_approximator
+            - call `after_execution <CompositionFunctionApproximator.after_execution>` method of `function_approximator
               <ModelFreeOptimizationControlMechanism.function_approximator>`;
 
             - return control_allocation.

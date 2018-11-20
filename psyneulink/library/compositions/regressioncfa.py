@@ -6,22 +6,22 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************  FunctionApproximator ***************************************************
+# ********************************************  RegressionCFA ***************************************************
 
 """
 
-Function Approximator
-^^^^^^^^^^^^^^^^^^^^^
+RegressionCFA
+^^^^^^^^^^^^^
 
-A `FunctionApproximator` is an abstract subclass of `Composition` that parameterizes itself over trials to predict the
+A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that parameterizes itself over trials to predict the
 `net_outcome <ControlMechanism.net_outcome>` for a `Composition` (or part of one) controlled by an
 `OptimizationControlMechanism`.
 
-It uses its `adapt <FunctionApproximator.adapt>` method to parameterize itself, based on `feature_values
+It uses its `adapt <CompositionFunctionApproximator.adapt>` method to parameterize itself, based on `feature_values
 <OptimizationControlMechanism.feature_values>`, a `control_allocation <ControlMechanism.control_allocation>`,
 and a `net_outcome <ControlMechanism.net_outcome>` passed to it from the OptimizationControlMechanism.
 
-It uses its `evaluate <FunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
+It uses its `evaluate <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
 <ControlMechanism.net_outcome>` for a given set of `feature_values  <OptimizationControlMechanism.feature_values>`
 and `control_allocation <ControlMechanism.control_allocation>`.
 
@@ -37,8 +37,6 @@ COMMENT:
 COMMENT
 
 """
-import warnings
-from collections import Iterable, deque
 from itertools import product
 import typecheck as tc
 # from aenum import AutoNumberEnum, auto
@@ -51,11 +49,10 @@ from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, ALL, CONTROL_SIGNALS, VARIABLE
 from psyneulink.core.globals.utilities import powerset, tensor_power
-from psyneulink.core.components.mechanisms.adaptive.control.functionapproximator import FunctionApproximator
+from psyneulink.core.compositions.compositionfunctionapproximator import \
+    CompositionFunctionApproximator
 
-__all__ = [
-    'PREDICTION_TERMS', 'PV', 'RegressionCFA'
-]
+__all__ = ['PREDICTION_TERMS', 'PV', 'RegressionCFA']
 
 PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 PREDICTION_TERMS = 'prediction_terms'
@@ -120,13 +117,13 @@ class RegressionCFAError(Exception):
         self.error_value = error_value
 
 
-class RegressionCFA():
-    '''Parameterizes a `parameterization_function <FunctionApproximator.parameterization_function>` to predict an
+class RegressionCFA(CompositionFunctionApproximator):
+    '''Parameterizes a `parameterization_function <CompositionFunctionApproximator.parameterization_function>` to predict an
     outcome from an input.
 
     The input is represented in the `vector <PredictionVector.vector>` attribute of a `PredictionVector`
-    (assigned to the FunctionApproximator`s `prediction_vector <FunctionApproximator.prediction_vector>`) attribute,
-    and the `evaluate <FunctionApproximator.evaluate>` method is used to predict the outcome from the
+    (assigned to the CompositionFunctionApproximator`s `prediction_vector <CompositionFunctionApproximator.prediction_vector>`) attribute,
+    and the `evaluate <CompositionFunctionApproximator.evaluate>` method is used to predict the outcome from the
     prediction_vector.
 
     When used with an OptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
@@ -148,18 +145,18 @@ class RegressionCFA():
         ---------
 
         owner : ModelFreeOptimizationControlMechanism : default None
-            ModelFreeOptimizationControlMechanism to which the FunctionApproximator is assiged.
+            ModelFreeOptimizationControlMechanism to which the CompositionFunctionApproximator is assiged.
 
         parameterization_function : LearningFunction, function or method : default BayesGLM
-            used to parameterize the FunctionApproximator.  It must take a 2d array as its first argument,
+            used to parameterize the CompositionFunctionApproximator.  It must take a 2d array as its first argument,
             the first item of which is an array the same length of the `vector <PredictionVector.prediction_vector>`
-            attribute of its `prediction_vector <FunctionApproximator.prediction_vector>`, and the second item a
+            attribute of its `prediction_vector <CompositionFunctionApproximator.prediction_vector>`, and the second item a
             1d array containing a scalar value that it tries predict.
 
         prediction_terms : List[PV] : default [PV.F, PV.C, PV.COST]
             terms to be included in (and thereby determines the length of) the `vector
             <PredictionVector.prediction_vector>` attribute of the  `prediction_vector
-            <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the default is [`F
+            <CompositionFunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the default is [`F
             <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].  if `None` is specified, the default
             values will automatically be assigned.
 
@@ -167,29 +164,29 @@ class RegressionCFA():
         ----------
 
         owner : ModelFreeOptimizationControlMechanism
-            `ModelFreeOptimizationControlMechanism` to which the `FunctionApproximator` belongs;  assigned as the
+            `ModelFreeOptimizationControlMechanism` to which the `CompositionFunctionApproximator` belongs;  assigned as the
             `objective_function <OptimizationFunction.objective_function>` parameter of the `OptimizationFunction`
             assigned to that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
 
         parameterization_function : LearningFunction, function or method
-            used to parameterize the FunctionApproximator;  its result is assigned as the
-            `prediction_weights <FunctionApproximator.prediction_weights>` attribute.
+            used to parameterize the CompositionFunctionApproximator;  its result is assigned as the
+            `prediction_weights <CompositionFunctionApproximator.prediction_weights>` attribute.
 
         prediction_terms : List[PV]
             terms included in `vector <PredictionVector.prediction_vector>` attribute of the
-            `prediction_vector <FunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the
+            `prediction_vector <CompositionFunctionApproximator.prediction_vector>`;  items are members of the `PV` enum; the
             default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
 
         prediction_vector : PredictionVector
             represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
-            `evaluate <FunctionApproximator.evaluate>`, along with `prediction_weights
-            <FunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
+            `evaluate <CompositionFunctionApproximator.evaluate>`, along with `prediction_weights
+            <CompositionFunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
             the `vector <PredictionVector.vector>` attribute are determined by `prediction_terms
-            <FunctionApproximator.prediction_terms>`.
+            <CompositionFunctionApproximator.prediction_terms>`.
 
         prediction_weights : 1d array
-            result of `parameterization_function <FunctionApproximator.parameterization_function>, used by
-            `evaluate <FunctionApproximator.evaluate>` method to generate its prediction.
+            result of `parameterization_function <CompositionFunctionApproximator.parameterization_function>, used by
+            `evaluate <CompositionFunctionApproximator.evaluate>` method to generate its prediction.
         '''
 
         self.parameterization_function = parameterization_function
@@ -225,9 +222,9 @@ class RegressionCFA():
 
     # def initialize(self, owner):
     def initialize(self, features_array, control_signals):
-        '''Assign owner and instantiate `prediction_vector <FunctionApproximator.prediction_vector>`
+        '''Assign owner and instantiate `prediction_vector <CompositionFunctionApproximator.prediction_vector>`
 
-        Must be called before FunctionApproximator's methods can be used if its `owner <FunctionApproximator.owner>`
+        Must be called before CompositionFunctionApproximator's methods can be used if its `owner <CompositionFunctionApproximator.owner>`
         was not specified in its constructor.
         '''
 
@@ -263,10 +260,10 @@ class RegressionCFA():
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_samples, context):
-        '''Update prediction_vector <FunctionApproximator.prediction_vector>`, then multiply by prediction_weights.
+    def evaluate(self, feature_values, control_allocation, num_estimates, context):
+        '''Update prediction_vector <CompositionFunctionApproximator.prediction_vector>`, then multiply by prediction_weights.
 
-        Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>` together with
+        Uses the current values of `prediction_weights <CompositionFunctionApproximator.prediction_weights>` together with
         values of **control_allocation** and **feature_values** arguments to generate a predicted outcome.
 
         .. note::
@@ -275,7 +272,7 @@ class RegressionCFA():
         '''
 
         predicted_outcome=0
-        for i in range(num_samples):
+        for i in range(num_estimates):
             terms = self.prediction_terms
             vector = self.prediction_vector.compute_terms(control_allocation )
             weights = self.prediction_weights
@@ -287,7 +284,7 @@ class RegressionCFA():
                     item_idx = self.prediction_vector.idx[pv_enum_val]
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
             predicted_outcome+=net_outcome
-        predicted_outcome/=num_samples
+        predicted_outcome/=num_estimates
         return predicted_outcome
 
     def after_execution(self, context):
@@ -499,7 +496,7 @@ class RegressionCFA():
         def update_vector(self, variable, feature_values=None, reference_variable=None):
             '''Update vector with flattened versions of values returned from the `compute_terms
             <PredictionVector.compute_terms>` method of the `prediction_vector
-            <FunctionApproximator.prediction_vector>`.
+            <CompositionFunctionApproximator.prediction_vector>`.
 
             Updates `vector <PredictionVector.vector>` with current values of variable and, optionally,
             and feature_values.

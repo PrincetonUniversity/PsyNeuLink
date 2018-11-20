@@ -388,12 +388,11 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import \
     ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE, SEARCH_FUNCTION, SEARCH_TERMINATION_FUNCTION
+    SEARCH_SPACE
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
-from psyneulink.core.components.mechanisms.adaptive.control.functionapproximator import FunctionApproximator
+    ObjectiveMechanism
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 
@@ -402,7 +401,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, INTERNAL_ONLY, NAME, \
-    OBJECTIVE_MECHANISM, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PARAMETER_STATES, FUNCTION, VARIABLE
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PARAMETER_STATES, FUNCTION, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -675,19 +674,20 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if self.agent_rep is None:
             raise OptimizationControlMechanismError("The {} arg of an {} must be specified ({} or a {})".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
-                                                           Composition.__name__, FunctionApproximator.__name__))
+                                                           Composition.__name__, CompositionFunctionApproximator.__name__))
 
-        elif not (isinstance(self.agent_rep, (Composition, FunctionApproximator))
+        elif not (isinstance(self.agent_rep, (Composition, CompositionFunctionApproximator))
                   or (isinstance(self.agent_rep, type)
-                      and issubclass(self.agent_rep, (Composition, FunctionApproximator)))):
+                      and issubclass(self.agent_rep, (Composition, CompositionFunctionApproximator)))):
             raise OptimizationControlMechanismError("The {} arg of an {} must be either a {} or a {}".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
-                                                    Composition.__name__, FunctionApproximator.__name__))
+                                                           Composition.__name__, CompositionFunctionApproximator.__name__))
 
-        # if isinstance(self.agent_rep, FunctionApproximator) and self.features is None:
+        # if isinstance(self.agent_rep, CompositionFunctionApproximator) and self.features is None:
         #     raise OptimizationControlMechanismError("{} arg for {} must be specified".
         #                                             format(repr(FEATURES),
         #                                                    self.__class__.__name__))
@@ -700,8 +700,9 @@ class OptimizationControlMechanism(ControlMechanism):
         **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
         """
 
-        if (isinstance(self.agent_rep, FunctionApproximator)
-                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, FunctionApproximator))):
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+        if (isinstance(self.agent_rep, CompositionFunctionApproximator)
+                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, CompositionFunctionApproximator))):
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
 
             # Insert primary InputState for outcome from ObjectiveMechanism;
@@ -753,8 +754,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
-        if (isinstance(self.agent_rep, FunctionApproximator)
-                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, FunctionApproximator))):
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+        if (isinstance(self.agent_rep, CompositionFunctionApproximator)
+                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, CompositionFunctionApproximator))):
             self._instantiate_function_approximator_as_agent()
 
     def _get_control_allocation_search_space(self):
@@ -860,9 +862,10 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_function_approximator_as_agent(self):
         '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
 
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if isinstance(self.agent_rep, type):
-            self.agent_rep = FunctionApproximator()
-        # FunctionApproximator needs to have access to control_signals to:
+            self.agent_rep = CompositionFunctionApproximator()
+        # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from allocatio_search_space
         self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),

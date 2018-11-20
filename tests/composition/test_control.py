@@ -11,7 +11,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.FunctionApproximator,
+        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.CompositionFunctionApproximator,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                                 objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                                 terminal_objective_mechanism=True,
@@ -38,7 +38,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.FunctionApproximator,
+        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.CompositionFunctionApproximator,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                                 terminal_objective_mechanism=True,
@@ -59,7 +59,7 @@ class TestControlMechanisms:
         c.add_c_node(m1, required_roles=pnl.CNodeRole.ORIGIN)
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.FunctionApproximator,
+        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.CompositionFunctionApproximator,
                                                 features=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                                 feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
