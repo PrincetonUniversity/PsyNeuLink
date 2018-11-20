@@ -24,7 +24,7 @@ combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_v
 array, the first item of which is an array of scalar values (the prediction terms) and the second that is a scalar
 value (the outcome to be predicted), and returns an array with the same shape as the first item.
 
-The FunctionApproximator's `make_prediction <FunctionApproximator.make_prediction>` function uses the current
+The FunctionApproximator's `evaluate <FunctionApproximator.evaluate>` function uses the current
 parameters of the `FunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
 a sample `control_allocation <ControlMechanism.control_allocation>`, given the current `feature_values
 <ModelFreeOptimizationControlMechanism.feature_values>` and the `costs <ControlMechanism.costs>` of the
@@ -132,7 +132,7 @@ class FunctionApproximator():
 
     The input is represented in the `vector <PredictionVector.vector>` attribute of a `PredictionVector`
     (assigned to the FunctionApproximator`s `prediction_vector <FunctionApproximator.prediction_vector>`) attribute,
-    and the `make_prediction <FunctionApproximator.make_prediction>` method is used to predict the outcome from the
+    and the `evaluate <FunctionApproximator.evaluate>` method is used to predict the outcome from the
     prediction_vector.
 
     When used with an OptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
@@ -188,14 +188,14 @@ class FunctionApproximator():
 
         prediction_vector : PredictionVector
             represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
-            `make_prediction <FunctionApproximator.make_prediction>`, along with `prediction_weights
+            `evaluate <FunctionApproximator.evaluate>`, along with `prediction_weights
             <FunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
             the `vector <PredictionVector.vector>` attribute are determined by `prediction_terms
             <FunctionApproximator.prediction_terms>`.
 
         prediction_weights : 1d array
             result of `parameterization_function <FunctionApproximator.parameterization_function>, used by
-            `make_prediction <FunctionApproximator.make_prediction>` method to generate its prediction.
+            `evaluate <FunctionApproximator.evaluate>` method to generate its prediction.
         '''
 
         self.parameterization_function = parameterization_function
@@ -266,8 +266,8 @@ class FunctionApproximator():
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def make_prediction(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def make_prediction(self, control_allocation, num_samples, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
+    def evaluate(self, control_allocation, num_samples, feature_values, context):
         '''Update prediction_vector <FunctionApproximator.prediction_vector>`, then multiply by prediction_weights.
 
         Uses the current values of `prediction_weights <FunctionApproximator.prediction_weights>` together with

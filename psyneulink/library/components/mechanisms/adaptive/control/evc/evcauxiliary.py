@@ -207,7 +207,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     the `Cartesian product <https://en.wikipedia.org/wiki/Cartesian_product>`_ of the `allocation
     <ControlSignal.allocation>` values specified by the `allocation_samples` attribute of each ControlSignal).  The
     full set of allocation policies is stored in the EVCControlMechanism's `control_signal_search_space` attribute.
-    The EVCControlMechanism's `run_simulation` method is used to simulate its `system <EVCControlMechanism.system>`
+    The EVCControlMechanism's `evaluate` method is used to simulate its `system <EVCControlMechanism.system>`
     under each `control_allocation` in `control_signal_search_space`, calculate the EVC for each of those policies,
     and return the policy with the greatest EVC. By default, only the maximum EVC is saved and returned.  However,
     setting the `save_all_values_and_policies` attribute to `True` saves each policy and its EVC for each simulation
@@ -223,7 +223,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     * Simulate performance:
 
         execute the `system <EVCControlMechanism.system>` under the selected `control_allocation` using the
-        EVCControlMechanism's `run_simulation <EVCControlMechanism.run_simulation>` method, and the `value
+        EVCControlMechanism's `evaluate <EVCControlMechanism.evaluate>` method, and the `value
         <PredictionMechanism.value>`\\s of its `prediction_mechanisms <EVCControlMechanism.prediction_mechanisms>` as
         the input to the corresponding `ORIGIN` Mechanisms of the `system <EVCControlMechanism.system>` it controls;
         the values of all :ref:`stateful attributes` of 'Components` in the System are :ref:`re-initialized` to the
@@ -574,11 +574,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
 
-        outcome = ctlr.run_simulation(inputs=inputs,
-                                      allocation_vector=allocation_vector,
-                                      runtime_params=runtime_params,
-                                      reinitialize_values=reinitialization_values,
-                                      context=context)
+        outcome = ctlr.evaluate(inputs=inputs,
+                                allocation_vector=allocation_vector,
+                                runtime_params=runtime_params,
+                                reinitialize_values=reinitialization_values,
+                                context=context)
 
         EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                                   outcome=outcome,
@@ -704,8 +704,8 @@ class PredictionMechanism(IntegratorMechanism):
     **Execution**
 
     A PredictionMechanism is executed each time its `system <PredictionMechanism>` is run; however, it is **not**
-    executed when that System is simulated (that is, it is run using the EVCControlMechanism's `run_simulation
-    <EVCControlMechanism.run_simulation>` method).  Thus, its inputs are updated only once per *actual* run of the
+    executed when that System is simulated (that is, it is run using the EVCControlMechanism's `evaluate
+    <EVCControlMechanism.evaluate>` method).  Thus, its inputs are updated only once per *actual* run of the
     System, and each simulated run (i.e., the simulation for each `control_allocation
     <EVCControlMechanism.control_allocation>`; see `EVCControlMechanism Execution <EVCControlMechanism_Execution>`)
     uses the *exact same* set of inputs -- the value of the PredictionMechanisms resulting from the last actual run

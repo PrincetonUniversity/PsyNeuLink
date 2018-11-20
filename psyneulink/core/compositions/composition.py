@@ -672,7 +672,7 @@ class Composition(Composition_Base):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
         <Composition.model_based_optimizer>` of the Composition, which gives the Mechanism access to the
-        `Composition`'s `run_simulation <Composition.run_simulation>` method. This allows the
+        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
         `ModelBasedOptimizationControlMechanism` to use simulations to determine an optimal Control policy.
         """
 
@@ -3367,7 +3367,7 @@ class Composition(Composition_Base):
             node_values[node] = (node.value, node.output_values)
         return saved_state, node_values
 
-    def get_state_rep(self, context=None):
+    def get_feature_values(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
         simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
@@ -4014,12 +4014,12 @@ class Composition(Composition_Base):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def run_simulation(self,
-                       control_allocation=None,
-                       num_trials=1,
-                       predicted_input=None,
-                       runtime_params=None,
-                       context=None):
+    def evaluate(self,
+                 control_allocation=None,
+                 num_trials=1,
+                 predicted_input=None,
+                 runtime_params=None,
+                 context=None):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
            `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
