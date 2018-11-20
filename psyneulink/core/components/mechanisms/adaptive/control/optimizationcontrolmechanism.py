@@ -17,7 +17,7 @@ Overview
 An OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an `OptimizationFunction` to find
 an `control_allocation <ControlMechanism.control_allocation>` that maximizes the `Expected Value of Control (EVC)
 <OptimizationControlMechanism_EVC>` for a given `state <OptimizationControlMechanism_State>`. The `OptimizationFunction`
-uses the OptimizationControlMechanism's `evaluate_function` <OptimizationControlMechanism.evalutate_function>` to
+uses the OptimizationControlMechanism's `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to
 evaluate the `EVC <OptimizationControlMechanism_EVC>` for samples of `control_allocation
 <ControlMechanism.control_allocation>`, and then implements the one that yields the greatest EVC for the next
 execution of the `Composition` (or part of one) that the OptimizationControlMechanism controls.
@@ -27,19 +27,21 @@ execution of the `Composition` (or part of one) that the OptimizationControlMech
 **Expected Value of Control**
 
 All OptimizationControlMechanisms compute the `Expected Value of Control (EVC)
-<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ for a control_allocation <ControlMechanism.control_allocation>`
---  a cost-benefit analysis that weighs the `costs <ControlMechanism.costs>` of the `control_signals
-<ControlMechanism.control_signals>` for the `control_allocation <ControlMechanism.control_allocation>` against the
-`outcome <ControlMechanism.outcome>` expected to result from it.  The costs are computed based on the
+<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ for a `control_allocation <ControlMechanism.control_allocation>`
+--  a cost-benefit analysis that weighs the `costs <ControlMechanism.costs>` of the ControlSignal `values
+<ControlSignal.value>` specified by a `control_allocation <ControlMechanism.control_allocation>`
+against the `outcome <ControlMechanism.outcome>` expected to result from it.  The costs are computed based on the
 `cost_options <ControlSignal.cost_options>` specified for each of the OptimizationControlMechanism's `control_signals
 <ControlMechanism.control_signals>` and its `combine_costs <ControlMechanism.combine_costs>` function.  The EVC is
-determined by its `compute_net_outcome <OptimizationControlMechanism.compute_net_outcome>` function (assigned to
+determined by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function (assigned to
 its `net_outcome <ControlMechanism.net_outcome>` attribute), which is computed for a given `state
-<OptimizationControlMechanism_State>` by the OptimizationControlMechanism's `evaluate_function`
-<OptimizationControlMechanism.evalutate_function>`.
+<OptimizationControlMechanism_State>` by the OptimizationControlMechanism's `evaluation_function
+<OptimizationControlMechanism.evalutation_function>`.
 
+COMMENT:
 The table `below <OptimizationControlMechanism_Examples>` lists different
 parameterizations of OptimizationControlMechanism that implement various models of EVC Optimization.
+COMMENT
 
 .. _OptimizationControlMechanism_Agent_Representation_Types:
 
@@ -66,9 +68,9 @@ In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is giv
 parameters in order to improve its prediction of the EVC for the Composition to which the OptimizationControlMechanism
 belongs (based on the `state <OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
 the prior trial).  The agent_rep is then used to predict the `net_outcome <ControlMechanism.net_outcome>` of
-processing on the upcoming trial, based on the current or (expected) `features <OptimizationControlMechanism.features>`
-for that trial, in order to find the <ControlMechanism.control_allocation>` that yields the greatest `EVC
-<OptimizationControlMechanism_EVC>` for that trial.
+processing on the upcoming trial, based on the current or (expected) `feature_values
+<OptimizationControlMechanism.feature_values>` for that trial, in order to find the `control_allocation
+<ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Based:
 
@@ -77,7 +79,7 @@ for that trial, in order to find the <ControlMechanism.control_allocation>` that
 This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which
 the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each
 `trial`, that Composition itself is used to simulate the `outcome <ControlMechanism.outcome>` of processing on the
-upcoming trial, based on the current or (expected) values of the `features <OptimizationControlMechanism.features>`
+upcoming trial, based on the current or (expected) `feature_values <OptimizationControlMechanism.feature_values>`
 for that trial, in order to find the <ControlMechanism.control_allocation>` that yields the greatest `EVC
 <OptimizationControlMechanism_EVC>` for that trial.
 
@@ -89,42 +91,44 @@ Creating an OptimizationControlMechanism
 An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
-  * **features** -- takes the place of the standard **input_states** argument in the constructor for a
-    Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a
-    `control_allocation <ControlMechanism.control_allocation>`, to calculate an `EVC
-    <OptimizationControlMechanism_EVC>`.  Features can be specified using any of the following, singly or combined in a
-    list:
+* **features** -- takes the place of the standard **input_states** argument in the constructor for a
+  Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a
+  `control_allocation <ControlMechanism.control_allocation>`, to calculate an `EVC
+  <OptimizationControlMechanism_EVC>`.  Features can be specified using any of the following, singly or combined in a
+  list:
 
-        * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
-          InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
-          and are connected to the corresponding input_CIM OutputStates by projections. The external input values
-          that are passed through the input_CIM are used as the `feature_predictors
-          <ModelFreeOptimizationControlMechanism_Feature>`. If a Mechanism is included in the list, it refers to all
-          of its InputStates.
-        |
-        * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
-          that resolves to an OutputState from which the InputState receives a Projection;  the `value
-          <OutputState.value>` of that OutputState is used as the feature. Each of these InputStates is marked as
-          `internal_only <InputStates.internal_only>` = `True`.
+  * {*SHADOW_EXTERNAL_INPUTS*: <`ORIGIN` Mechanism, InputState for one, or list with either or both>} --
+    InputStates of the same shapes as those listed are created on the ModelFreeOptimizationControlMechanism,
+    and are connected to the corresponding input_CIM OutputStates by projections. The external input values
+    that are passed through the input_CIM are used as the `features <ModelFreeOptimizationControlMechanism_Feature>`.
+    If a Mechanism is included in the list, it refers to all of its InputStates.
+  |
+  * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
+    that resolves to an OutputState from which the InputState receives a Projection;  the `value
+    <OutputState.value>` of that OutputState is used as the feature. Each of these InputStates is marked as
+    `internal_only <InputStates.internal_only>` = `True`.
 
-    Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
-    **features** argument is not specified, then the `input <Composition.input>` to the `Composition` on the last
-    trial of its execution is used to calculate the EVC <OptimizationControlMechanism_EVC>` for the upcoming trial.
+  Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
+  **features** argument is not specified, then the `input <Composition.input>` to the `Composition` on the last
+  trial of its execution is used to calculate the `EVC <OptimizationControlMechanism_EVC>` for the upcoming trial.
 
-  * **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
-    **feature_predictors**.  By default, this is the identity function, that assigns the current value of the feature
-    to the OptimizationControlMechanism's `feature_values <OptimizationControlMechanism.feature_values>` attribute.
-    However, other functions can be assigned, for example to maintain a record of past values, or integrate them over
-    trials.
+.. _OptimizationControlMechanism_Feature_Function:
 
-  * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
-    <OptimizationControlMechanism.evaluation_function>` to calculate the EVC <OptimizationControlMechanism_EVC>`
-    (see `below <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
-    `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
-    is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
-    <OptimizationControlMechanism_Model_Based>` optimization.  If it is another Composition, it must conform to the
-    specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as described `below`
-    <OptimizationControlMechanism_Agent_Rep>`.
+* **feature_function** -- specifies `function <InputState>` of the InputState created for each item listed in
+  **features**.  By default, this is the identity function, that assigns the current value of the feature
+  to the OptimizationControlMechanism's `feature_values <OptimizationControlMechanism.feature_values>` attribute.
+  However, other functions can be assigned, for example to maintain a record of past values, or integrate them over
+  trials.
+
+* **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
+  <OptimizationControlMechanism.evaluation_function>` to calculate the `EVC <OptimizationControlMechanism_EVC>`
+  (see `below <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
+  `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
+  is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
+  <OptimizationControlMechanism_Model_Based>` optimization.  If that Composition already has a `controller
+  <Composition.controller>` specified, the OptimizationControlMechanism is disable. If another Composition is
+  specified, it must conform to the specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as
+  described `below <OptimizationControlMechanism_Agent_Rep>`.
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -138,8 +142,8 @@ other constiuents, as described below.
 
 .. _OptimizationControlMechanism_ObjectiveMechanism:
 
-ObjectiveMechanism
-^^^^^^^^^^^^^^^^^^
+*ObjectiveMechanism*
+^^^^^^^^^^^^^^^^^^^^
 
 Like any `ControlMechanism`, an OptimizationControlMechanism has an associated `objective_mechanism
 <ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial and pass
@@ -151,13 +155,13 @@ and by the `evaluation` method of the OptimizationControlMechanism's `agent_rep
 <OptimizationControlMechanism.agent_rep>` to carry out the `EVC <OptimizationControlMechanism_EVC>` calculation.
 
 .. note::
-    The `objective_mechanism is distinct from, and should not be confused with the `objective_function
-    <OptimizationFunction.objective_function>` parameter of the OptimizationControlMechanism's `function
-    <OptimizationControlMechanism.function>`.  The `objective_mechanism
-    <OptimizationControlMechanism.objective_mechanism>` evaluates the `outcome <ControlMechanism.outcome>` of processing
+    The `objective_mechanism <ControlMechanism.objective_mechanism>` is distinct from, and should not be
+    confused with the `objective_function <OptimizationFunction.objective_function>` parameter of the
+    OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.  The `objective_mechanism
+    <ControlMechanism.objective_mechanism>` evaluates the `outcome <ControlMechanism.outcome>` of processing
     without taking into account the `costs <ControlMechanism.costs>` of the OptimizationControlMechanism's
-    `control_signals <ControlMechanism.control_signals>`.  In contrast, its `evaluate_function
-    <OptimizationControlMechanism.evaluate_function>`, which is assigned as the
+    `control_signals <ControlMechanism.control_signals>`.  In contrast, its `evaluation_function
+    <OptimizationControlMechanism.evaluation_function>`, which is assigned as the
     `objective_function` parameter of its `function <OptimizationControlMechanism.function>`, takes the `costs
     <ControlMechanism.costs>` of the OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`
     into account when calculating its `net_outcome` and corresponding `EVC <OptimizationControlMechanism_EVC>`.
@@ -165,37 +169,37 @@ and by the `evaluation` method of the OptimizationControlMechanism's `agent_rep
 .. _OptimizationControlMechanism_Features:
 
 *Features*
-~~~~~~~~~~
+^^^^^^^^^^
 
 In addition to its `primary InputState <InputState_Primary>` (which receives a projection from the *OUTCOME*
-OutpuState of the `objective_mechanism <OptimizationControlMechanism.objective_mechanism>`,
-an OptimizationControlMechanism also has an `InputState` for each of its `features
-<OptimizationControlMechanism.fetures>`.  By default, these are the current `input <Composition.input>` for the
-Composition to which the OptimizationControlMechanism belongs.  However, different values can be specified, as
-can a `feature_function <OptimizationControlMechanism.feature_function>`that transforms these.  For
-OptimizationControlMechanisms that implement `model-free <OptimizationControlMechanism_Model_Free>` optimization,
-its `features <OptimizationControlMechanism.features>` are used by its `evaluate_function
-<OptimizationControlMechanism.evaluate_function>` to predict the `EVC <OptimizationControlMechanism_EVC>` for a given
+OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
+an OptimizationControlMechanism also has an `InputState` for each of its features. By default, these are the current
+`input <Composition.input>` for the Composition to which the OptimizationControlMechanism belongs.  However,
+different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
+transforms these.  For OptimizationControlMechanisms that implement `model-free
+<OptimizationControlMechanism_Model_Free>` optimization, its `feature_values
+<OptimizationControlMechanism.feature_values>` are used by its `evaluation_function
+<OptimizationControlMechanism.evaluation_function>` to predict the `EVC <OptimizationControlMechanism_EVC>` for a given
 `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
-`model-based <OptimizationControlMechanism_Model_Based>` optimization, the `features
-<OptimizationControlMechanism.features>` are used as the Composition's `input <Composition.input>` when it is
+`model-based <OptimizationControlMechanism_Model_Based>` optimization, the `feature_values
+<OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input>` when it is
 executed to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
 `control_allocation<ControlMechanism.control_allocation>`.
 
 Features can be of two types:
 
-* *Input Feature* -- this is a value received as input by an `ORIGIN` Mechanism in the `Composition`.
-    These are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
-    `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
-    the value of which is one or more `ORIGIN` Mechanisms and/or their `InputStates
-    <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
-    Projection from the Composition's `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of
-    the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
-
-* *Output Feature* -- this is the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
-    Composition.  These too are specified in the **feature_predictors** argument of the OptimizationControlMechanism's
-    constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
-    OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
+* *Input Features* -- these are values received as input by `ORIGIN` Mechanisms of the `Composition`.
+  They are specified in the **features** argument of the OptimizationControlMechanism's constructor (see
+  `OptimizationControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry,
+  the value of which is one or more `ORIGIN` Mechanisms and/or their `InputStates
+  <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
+  Projection from the Composition's `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of
+  the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
+|
+* *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
+  Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
+  constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
+  OutputState(s) to the InputState of the OptimizationControlMechanism for that feature.
 
 The current `value <InputState.value>` of the InputStates for the features are listed in the `feature_values
 <OptimizationControlMechanism.feature_values>` attribute.
@@ -211,6 +215,7 @@ and a `control_allocation <ControlMechanism.control_allocation>`.
 .. _OptimizationControlMechanism_Agent_Rep:
 
 *Agent Representation*
+^^^^^^^^^^^^^^^^^^^^^^
 
 The defining feature of an OptimizationControlMechanism is its agent representation, specified in the **agent_rep**
 argument of its constructor and assigned to its `agent_rep <OptimizationControlMechanism.agent_rep>` attribute.
@@ -226,7 +231,7 @@ requirem,ents:
       values that correspond in shape to  the `feature_values <OptimizationControlMechanism.feature_values>`,
       `control_allocation <ControlMechanism.control_allocation>` and `num_estimates
       <OptimizationControlMechanism.num_estimates>` attributes of the OptimizationControlMechanism, respectively.
-
+    |
     * If it has an `adapt <Composition.adapt>` method, that must accept as its first three arguments, in order,
       values that corresopnd to the shape of the `feature_values <OptimizationControlMechanism.feature_values>`,
       `control_allocation <ControlMechanism.control_allocation>` and `net_outcome
@@ -243,8 +248,8 @@ The `function <OptimizationControlMechanism.function>` of an OptimizationControl
 It is generally an `OptimizationFunction`, which in turn has `objective_function
 <OptimizationFunction.objective_function>`, `search_function <OptimizationFunction.search_function>`
 and `search_termination_function <OptimizationFunction.search_termination_function>` methods, as well as a `search_space
-<OptimizationFunction.search_space>` attribute.  The OptimizationControlMechanism's `evaluate_function
-<OptimizationControlMechanism.evaluate_function>` is automatically assigned as the
+<OptimizationFunction.search_space>` attribute.  The OptimizationControlMechanism's `evaluation_function
+<OptimizationControlMechanism.evaluation_function>` is automatically assigned as the
 OptimizationFunction's `objective_function <OptimizationFunction.objective_function>`, and is used to
 evaluate each `control_allocation <ControlMechanism.control_allocation>` sampled from the `search_space
 <OptimizationFunction.search_space>` by the `search_function `search_function <OptimizationFunction.search_function>`
@@ -254,11 +259,11 @@ OptimizationControlMechanism, however it must meet the following requirements:
 
 .. _OptimizationControlMechanism_Custom_Funtion:
 
-    - it must accept as its first argument and return as its result an array with the same shape as the
-      OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
-
-    - it must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
-      implements an attribute with the same name.
+  - it must accept as its first argument and return as its result an array with the same shape as the
+    OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
+  |
+  - it must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
+    implements an attribute with the same name.
 
     COMMENT:
     - it must implement a `reinitialize` method that accepts as keyword arguments **objective_function**,
@@ -293,23 +298,23 @@ Execution
 
 When an OptimizationControlMechanism is executed, it carries out the following steps:
 
-  * It calls the `adapt` method of its `agent_rep <OptimizationControlMechanism.agent_rep>` to give that a chance to
+  * Calls `adapt` method of its `agent_rep <OptimizationControlMechanism.agent_rep>` to give that a chance to
     modify its parameters in order to better predict the `EVC <OptimizationControlMechanism_EVC>` for a given `state
     <OptimizationControlMechanism_State>`, based the state and `net_outcome <ControlMechanism.net_outcome>` of the
     previous trial.
-
-  * It then calls its `function <OptimizationControlMechanism.function>` to find the `control_allocation
+  |
+  * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
     <ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The
     way in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
     the type of `OptimzationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
-    that it evaluates each one is determined by the OptimizationControlMechanism's `evaluate_function`
-    <OptimizationControlMechanism.evalutate_function>`.  More specifically:
+    that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function`
+    <OptimizationControlMechanism.evalutation_function>`.  More specifically:
 
     * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
       <ControlMechanism.control_allocation>` (using its `search_function <OptimizationFunction.search_function>`
       to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the EVC for that
       `control_allocation <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's
-      `evaluate_function` <OptimizationControlMechanism.evalutate_function>` and the current `feature_values
+      `evaluation_function` <OptimizationControlMechanism.evalutation_function>` and the current `feature_values
       <OptimizationControlMechanism.feature_values>`.
 
     * It continues to evaluate the `EVC <OptimizationControlMechanism_EVC>` for `control_allocation
@@ -322,7 +327,7 @@ When an OptimizationControlMechanism is executed, it carries out the following s
       <OptimizationControlMechanism.search_function>` to select one from `control_allocation_search_space
       <OptimizationControlMechanism.control_allocation_search_space>`), and evaluates the EVC for that
       `control_allocation <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's
-      `evaluate_function` <OptimizationControlMechanism.evalutate_function>` and the current `feature_values
+      `evaluation_function` <OptimizationControlMechanism.evalutate_function>` and the current `feature_values
       <OptimizationControlMechanism.feature_values>`.
 
     * It continues to evaluate the `EVC <OptimizationControlMechanism_EVC>` for `control_allocation
@@ -456,17 +461,26 @@ class OptimizationControlMechanism(ControlMechanism):
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
-    features : Mechanism, OutputState, Projection, dict, or list containing any of these
+    features : Mechanism, OutputState, Projection, dict, or list containing any of these : default
+    {SHADOW_EXTERNAL_INPUTS : ALL}
         specifies Components, the values of which are assigned to `feature_values
         <OptimizationControlMechanism.feature_values>` and used to estimate `EVC <OptimizationControlMechanism_EVC>`.
         Any `InputState specification <InputState_Specification>` can be used that resolves to an `OutputState` that
         projects to the InputState. In addition, a dictionary with a *SHADOW_EXTERNAL_INPUTS* entry can be used to
-        shadow inputs to the Composition's `ORIGIN` Mechanism(s) (see  OptimizationControlMechanism_Creation` for
-        details).
+        shadow inputs to the Composition's `ORIGIN` Mechanism(s) (see `above <OptimizationControlMechanism_Creation>`
+        for details).
 
     feature_function : Function or function : default None
-        specifies the `function <InputState.function>` for the `InputState` assigned to each `feature_predictor
-        <OptimizationControlMechanism_Feature_Predictors>`.
+        specifies the `function <InputState.function>` for the `InputState` assigned to each `feature
+        <OptimizationControlMechanism_Features>`.
+
+    agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
+        specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
+        to determine the `EVC <OptimizationControlMechanism_EVC>`.  If a Composition other than the default is assigned,
+        it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
+        If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
+        <Composition.controller>` unless one has already been assigned, in which case the
+        OptimizationControlMechanismit is disabled
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
@@ -499,7 +513,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <OptimizationControlMechanism.learning_function>`, and/or a custom function
+        OptimizationControlMechanism, its `function <OptimizationControlMechanism.function>`, and/or a custom function
         and its parameters.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
 
@@ -515,12 +529,17 @@ class OptimizationControlMechanism(ControlMechanism):
 
     feature_values : 2d array
         the current value of each of the OptimizationControlMechanism's `features
-        <OptimizationControlMechanism.features>` (each of which is a 1d array).
+        <OptimizationControlMechanism_Features>` (each of which is a 1d array).
+
+    agent_rep : Composition
+        determines the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
+        to determine the `EVC <OptimizationControlMechanism_EVC>` (see `above <OptimizationControlMechanism_Agent_Rep>`
+        for additional details).
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
         uses its `search_function <OptimizationFunction.search_function>` to select samples of `control_allocation
-        <ControlMechanism.control_allocation>` from its `search_space <OptimizationControlMechanism.search_space>`,
+        <ControlMechanism.control_allocation>` from its `search_space <OptimizationFunction.search_space>`,
         evaluates these using its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, and returns
         the one that yields the greatest `EVC <OptimizationControlMechanism_EVC>`  (see `Primary Function
         <OptimizationControlMechanism_Function>` for additional details).
@@ -532,8 +551,8 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>`, and calls the `evaluate` method of the OptimizationControlMechanism's
         `agent_rep <OptimizationControlMechanism.agent_rep>` with a `control_allocation
         <ControlMechanism.control_allocation>`, the OptimizationControlMechanism's `num_estimates
-        <OptimizationControlMechanism.num_estimates>` attribute, and the current value of its `feature
-        <OptimizationControlMechanism.features>`.
+        <OptimizationControlMechanism.num_estimates>` attribute, and the current `feature_values
+        <OptimizationControlMechanism.feature_values>`.
 
     COMMENT:
     evaluation_function : function or method
@@ -560,7 +579,7 @@ class OptimizationControlMechanism(ControlMechanism):
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function 
         <OptimizationControlMechanism.function>`; used to select samples of `control_allocation
-        <ControlMechanism.control_allocation>` to evaluate by `evaluate_function
+        <ControlMechanism.control_allocation>` to evaluate by `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
     search_termination_function : function or method
@@ -571,13 +590,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
     control_allocation_search_space : list or ndarray
         `search_space <OptimizationFunction.search_space>` assigned by default to `function
-        <OptimizationControlMechanism.function, that determines the samples of
+        <OptimizationControlMechanism.function>`, that determines the samples of
         `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.  This is a proprety that, unless overridden,
         returns a list containing every possible `control_allocation <ControlMechanism.control_allocation>`, as
         determined by the `Cartesian product <HTML REF>`_ of the `allocation_samples
-        <ControlSignal.allocation_samples>` specified for each of the `OptimizationControlMechanism's
-        `control_signals <ControlMechanism.control_signals>`).
+        <ControlSignal.allocation_samples>` specified for each of the OptimizationControlMechanism's
+        `control_signals <ControlMechanism.control_signals>`.
 
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
@@ -586,8 +605,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     saved_values : list
         contains values of EVC associated with all samples of `control_allocation <ControlMechanism.control_allocation>`
-         evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values 
-         <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
+        evaluated by by `function <OptimizationControlMechanism.function>` if its `save_values
+        <OptimizationFunction.save_samples>` parameter is `True`;  otherwise list is empty.
 
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -629,6 +648,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
                  function:tc.optional(tc.any(is_function_type))=None,
+                 num_estimates:int=1,
                  search_function:tc.optional(tc.any(is_function_type))=None,
                  search_termination_function:tc.optional(tc.any(is_function_type))=None,
                  search_space:tc.optional(tc.any(list, np.ndarray))=None,
@@ -654,6 +674,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   feature_function=feature_function,
                                                   origin_objective_mechanism=origin_objective_mechanism,
                                                   terminal_objective_mechanism=terminal_objective_mechanism,
+                                                  num_estimates=num_estimates,
                                                   params=params)
 
         super().__init__(system=None,
@@ -821,22 +842,28 @@ class OptimizationControlMechanism(ControlMechanism):
         return optimal_control_allocation
 
     def evaluation_function(self, control_allocation):
-        '''Compute metric for a given control_allocation.
-        Assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of the
-        `ObjectiveFunction` assigned to the OptimizationControlMechanism's `function
-        <OptimizationControlMechanism.function>`.
+        '''Compute `EVC <OptimizationControlMechanism_EVC>` for current set of `feature_values
+        <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
+        <ControlMechanism.control_allocation>`.
 
-        Returns a scalar that is the predicted outcome of the `function_approximator
-        <ModelFreeOptimizationControlMechanism.function_approximator>`.
+        Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
+        OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.
+
+        Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
+
+        Returns a scalar that is the predicted `EVC <OptimizationControlMechanism_EVC>` (`net_outcome
+        <ControlMechanism.net_outcome>`) for the current `feature_values <OptimizationControlMechanism.feature_values>`
+        and specified `control_allocation <ControlMechanism.control_allocation>`.
+
         '''
-        self.num_estimates = 1
         return self.agent_rep.evaluate(self.feature_values,
                                        control_allocation,
                                        self.num_estimates,
                                        context=self.function_object.context)
 
     def apply_control_allocation(self, control_allocation, runtime_params, context):
-        '''Update ControlSignal values based on specified control_allocation'''
+        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
+        specified `control_allocation <ControlMechanism.control_allocation>`.'''
         for i in range(len(control_allocation)):
             if self.value is None:
                 self.value = self.instance_defaults.value
@@ -860,8 +887,8 @@ class OptimizationControlMechanism(ControlMechanism):
         predict `net_outcome <ControlMechanism.net_outcome>`
 
         **features** argument can use any of the forms of specification allowed for InputState(s),
-            as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
-            list of `ORIGIN` Mechanisms and/or their InputStates as its value.
+        as well as a dictionary containing an entry with *SHADOW_EXTERNAL_INPUTS* as its key and a
+        list of `ORIGIN` Mechanisms and/or their InputStates as its value.
         '''
 
         if features:

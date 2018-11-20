@@ -283,6 +283,9 @@ class RegressionCFA(CompositionFunctionApproximator):
         for i in range(num_estimates):
             terms = self.prediction_terms
             vector = self.prediction_vector.compute_terms(control_allocation )
+            # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
+            #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
+            #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
             weights = self.regression_weights
             net_outcome = 0
 
