@@ -54,9 +54,7 @@ class CompositionFunctionApproximator(Composition):
     provided by an `OptimizationControlmechanism`.
 
     '''
-    def __init__(self,
-                 function=None
-                 ):
+    def __init__(self, name=None):
         '''
 
         Arguments
@@ -86,7 +84,8 @@ class CompositionFunctionApproximator(Composition):
             <ControlMechanism.control_allocation>`.
 
         '''
-        self.function = function
+        # self.function = function
+        super().__init__(name=name)
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         '''Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target

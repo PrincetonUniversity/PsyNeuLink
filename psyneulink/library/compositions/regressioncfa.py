@@ -137,6 +137,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     '''
     def __init__(self,
+                 name=None,
                  parameterization_function=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
         '''
@@ -163,11 +164,6 @@ class RegressionCFA(CompositionFunctionApproximator):
         Attributes
         ----------
 
-        owner : ModelFreeOptimizationControlMechanism
-            `ModelFreeOptimizationControlMechanism` to which the `CompositionFunctionApproximator` belongs;  assigned as the
-            `objective_function <OptimizationFunction.objective_function>` parameter of the `OptimizationFunction`
-            assigned to that Mechanism's `function <ModelFreeOptimizationControlMechanism.function>`.
-
         parameterization_function : LearningFunction, function or method
             used to parameterize the CompositionFunctionApproximator;  its result is assigned as the
             `prediction_weights <CompositionFunctionApproximator.prediction_weights>` attribute.
@@ -191,6 +187,8 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         self.parameterization_function = parameterization_function
         self._instantiate_prediction_terms(prediction_terms)
+
+        super().__init__(name=name)
 
     def _instantiate_prediction_terms(self, prediction_terms):
 
