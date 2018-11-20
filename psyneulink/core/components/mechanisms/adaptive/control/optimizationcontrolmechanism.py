@@ -748,9 +748,11 @@ class OptimizationControlMechanism(ControlMechanism):
         # self.search_termination_function = self.function_object.search_termination_function
         self.search_space = self.function_object.search_space
 
+        if isinstance(self.agent_rep, type):
+            self.agent_rep = self.agent_rep()
+
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if (isinstance(self.agent_rep, CompositionFunctionApproximator)
-                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, CompositionFunctionApproximator))):
+        if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._instantiate_function_approximator_as_agent()
 
     def _get_control_allocation_search_space(self):
@@ -856,8 +858,6 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_function_approximator_as_agent(self):
         '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
 
-        if isinstance(self.agent_rep, type):
-            self.agent_rep = self.agent_rep()
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from control_allocation_search_space
