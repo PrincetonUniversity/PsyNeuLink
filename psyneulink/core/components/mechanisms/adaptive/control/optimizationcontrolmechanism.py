@@ -692,7 +692,12 @@ class OptimizationControlMechanism(ControlMechanism):
                                         super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        self.agent_rep.after_agent_rep_execution(context=context)
+        try:
+            self.agent_rep.after_agent_rep_execution(context=context)
+        except AttributeError as e:
+            # If error is due to absence of adapt method, OK; otherwise, raise exception
+            if not 'has no attribute \'after_agent_rep_execution\'' in e.args[0]:
+                raise AttributeError(e.args[0])
 
         return control_allocation
 
