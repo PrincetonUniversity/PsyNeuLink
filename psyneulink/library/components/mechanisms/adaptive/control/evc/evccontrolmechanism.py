@@ -1086,12 +1086,12 @@ class EVCControlMechanism(ControlMechanism):
             self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
-    def run_simulation(self,
-                       inputs,
-                       allocation_vector,
-                       runtime_params=None,
-                       reinitialize_values=None,
-                       context=None):
+    def evaluate(self,
+                 inputs,
+                 allocation_vector,
+                 runtime_params=None,
+                 reinitialize_values=None,
+                 context=None):
         """
         Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
 
