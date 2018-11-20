@@ -766,17 +766,16 @@ class OptimizationControlMechanism(ControlMechanism):
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        # FIX: WAS NEEDED FOR MODEL_FREE;  OK FOR MODEL_BASED?
-        try:
-            assert variable==self.variable
-        except ValueError:
-            assert all(variable == self.variable), 'PROGRAM ERROR: variable != self.variable for OCM'
-        if self.control_allocation is None:
-            self.value = [c.instance_defaults.variable for c in self.control_signals]
-        # FIX: END
-
+        # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
+        # FIX: SHOULD get_feature_values BE A METHOD OF THE agent_rep OR THE OCM?
+        # Get feature_values based on agent_rep
         self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
+        # Assign default control_allocation if it is not yet specified (presumably first trial)
+        if self.control_allocation is None:
+            self.value = [c.instance_defaults.variable for c in self.control_signals]
+
+        # Assign default net_outcome if it is not yet specified (presumably first trial)
         # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
         try:
             net_outcome = self.net_outcome
@@ -784,6 +783,7 @@ class OptimizationControlMechanism(ControlMechanism):
             net_outcome = [0]
         # FIX: END
 
+        # Give the agent_rep a chance to apapt itself based on last trial's feature_values and control_allocation
         try:
             self.agent_rep.adapt(self.feature_values, self.control_allocation, net_outcome)
         except AttributeError as e:
@@ -791,12 +791,13 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'adapt\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
-        # Compute control_allocation using OptimizationControlMechanism's optimization function
+        # Get control_allocation that optmizes EVC using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        control_allocation, self.metric_optimal, self.saved_samples, self.saved_values = \
+        optimal_control_allocation, self.optimal_EVC, self.saved_samples, self.saved_values = \
                                         super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
+        # Give agent_rep a chance to clean-up
         try:
             self.agent_rep.after_agent_rep_execution(context=context)
         except AttributeError as e:
@@ -804,7 +805,8 @@ class OptimizationControlMechanism(ControlMechanism):
             if not 'has no attribute \'after_agent_rep_execution\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
-        return control_allocation
+        # Return optimal control_allocation
+        return optimal_control_allocation
 
     def evaluation_function(self, control_allocation):
         '''Compute metric for a given control_allocation.
