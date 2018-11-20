@@ -729,7 +729,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function_object.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
-                                           OBJECTIVE_FUNCTION: self._evaluation_function,
+                                           OBJECTIVE_FUNCTION: self.evaluation_function,
                                            # SEARCH_FUNCTION: self.search_function,
                                            # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
                                            SEARCH_SPACE: self.control_allocation_search_space
@@ -806,7 +806,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return control_allocation
 
-    def _evaluation_function(self, control_allocation):
+    def evaluation_function(self, control_allocation):
         '''Compute metric for a given control_allocation.
         Assigned as the `objective_function <OptimizationFunction.objective_function>` parameter of the
         `ObjectiveFunction` assigned to the OptimizationControlMechanism's `function
