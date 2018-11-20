@@ -766,10 +766,10 @@ class OptimizationControlMechanism(ControlMechanism):
         if (self.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        # FIX: SHOULD get_feature_values BE A METHOD OF THE agent_rep OR THE OCM?
-        # Get feature_values based on agent_rep
-        self.feature_values = self.agent_rep.get_feature_values(context=self.context)
+        # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
+        # # FIX: SHOULD get_feature_values BE A METHOD OF THE agent_rep OR THE OCM?
+        # # Get feature_values based on agent_rep
+        # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         if self.control_allocation is None:
@@ -797,12 +797,12 @@ class OptimizationControlMechanism(ControlMechanism):
                                         super(ControlMechanism, self)._execute(variable=self.control_allocation,
                                                                                runtime_params=runtime_params,
                                                                                context=context)
-        # Give agent_rep a chance to clean-up
+        # Give agent_rep a chance to clean up
         try:
-            self.agent_rep.after_agent_rep_execution(context=context)
+            self.agent_rep._after_agent_rep_execution(context=context)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
-            if not 'has no attribute \'after_agent_rep_execution\'' in e.args[0]:
+            if not 'has no attribute \'_after_agent_rep_execution\'' in e.args[0]:
                 raise AttributeError(e.args[0])
 
         # Return optimal control_allocation
@@ -832,6 +832,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
+    @property
+    def feature_values(self):
+        if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
+            return self.agent_rep._get_predicted_input()
+        else:
+            return np.array(np.array(self.variable[1:]).tolist())
+
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
     # ******************************************************************************************************************
@@ -846,8 +853,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # - compute their values and costs for samples of control_allocations from allocatio_search_space
         self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
                                   control_signals = self.control_signals)
-
-        self.agent_rep.get_feature_values = lambda context : np.array(np.array(self.variable[1:]).tolist())
 
     # FIX: THIS SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values

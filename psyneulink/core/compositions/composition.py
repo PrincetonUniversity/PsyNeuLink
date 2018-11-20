@@ -3088,7 +3088,7 @@ class Composition(Composition_Base):
 
         return output_values
 
-    def update_predicted_input(self, context=None):
+    def _update_predicted_input(self, context=None):
         predicted_input = {}
         for prediction_mechanism in self.prediction_mechanisms:
             origin_node = self.prediction_origin_pairs[prediction_mechanism]
@@ -3367,19 +3367,19 @@ class Composition(Composition_Base):
             node_values[node] = (node.value, node.output_values)
         return saved_state, node_values
 
-    def get_feature_values(self, context=None):
+    def _get_predicted_input(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
         simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
         after all simulations are complete, and (3) set the number of trials of simulations.
         """
 
-        predicted_input = self.update_predicted_input()
+        predicted_input = self._update_predicted_input()
         self.sim_reinitialize_values, self.sim_node_values = self._save_state()
 
         return predicted_input
 
-    def after_agent_rep_execution(self, context=None):
+    def _after_agent_rep_execution(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
         simulations are complete in order to reinstate the `Composition`'s pre-simulation values.
