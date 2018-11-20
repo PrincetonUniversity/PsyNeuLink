@@ -1036,10 +1036,10 @@ class PredictionVector():
             # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
             costs = [None] * len(c)
             for i, val in enumerate(c):
-                # # MODIFIED 11/9/19 OLD:
-                # costs[i] = -(self._compute_costs[i](val))
-                # MODIFIED 11/9/19 NEW: [JDC]
-                costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
+                # MODIFIED 11/9/19 OLD:
+                costs[i] = -(self._compute_costs[i](val))
+                # # MODIFIED 11/9/19 NEW: [JDC]
+                # costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
                 # MODIFIED 11/9/19 END
             computed_terms[PV.COST] = np.array(costs)
 
