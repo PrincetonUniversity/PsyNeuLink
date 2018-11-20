@@ -119,7 +119,7 @@ The following arguments of its constructor are specific to the OptimizationContr
   to the OptimizationControlMechanism's `feature_values <OptimizationControlMechanism.feature_values>` attribute.
   However, other functions can be assigned, for example to maintain a record of past values, or integrate them over
   trials.
-
+..
 * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
   <OptimizationControlMechanism.evaluation_function>` to calculate the `EVC <OptimizationControlMechanism_EVC>`
   (see `below <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
@@ -195,7 +195,7 @@ Features can be of two types:
   <InputState>` to be shadowed.  For each, a `Projection` is automatically created that parallels ("shadows") the
   Projection from the Composition's `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of
   the InputCIM to the InputState of the ModelFreeOptimizationControlMechanism assigned to that feature_predictor.
-|
+..
 * *Output Features* -- these are the `value <OutputState.value>` of an `OutputState` of some other `Mechanism` in the
   Composition.  These too are specified in the **features** argument of the OptimizationControlMechanism's
   constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a `Projection` from the specified
@@ -207,6 +207,7 @@ The current `value <InputState.value>` of the InputStates for the features are l
 .. _OptimizationControlMechanism_State:
 
 *State*
+^^^^^^^
 
 The state of the Composition (or part of one) controlled by an OptimizationControlMechanism is defined by a combination
 of `feature_values <OptimizationControlMechanism.feature_values>` (see `above <OptimizationControlMechanism_Features>`)
@@ -231,7 +232,7 @@ requirem,ents:
       values that correspond in shape to  the `feature_values <OptimizationControlMechanism.feature_values>`,
       `control_allocation <ControlMechanism.control_allocation>` and `num_estimates
       <OptimizationControlMechanism.num_estimates>` attributes of the OptimizationControlMechanism, respectively.
-    |
+    ..
     * If it has an `adapt <Composition.adapt>` method, that must accept as its first three arguments, in order,
       values that corresopnd to the shape of the `feature_values <OptimizationControlMechanism.feature_values>`,
       `control_allocation <ControlMechanism.control_allocation>` and `net_outcome
@@ -259,10 +260,10 @@ OptimizationControlMechanism, however it must meet the following requirements:
 
 .. _OptimizationControlMechanism_Custom_Funtion:
 
-  - it must accept as its first argument and return as its result an array with the same shape as the
+  - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
-  |
-  - it must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
+  ..
+  - It must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
     implements an attribute with the same name.
 
     COMMENT:
@@ -302,12 +303,12 @@ When an OptimizationControlMechanism is executed, it carries out the following s
     modify its parameters in order to better predict the `EVC <OptimizationControlMechanism_EVC>` for a given `state
     <OptimizationControlMechanism_State>`, based the state and `net_outcome <ControlMechanism.net_outcome>` of the
     previous trial.
-  |
+  ..
   * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
     <ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>`.  The
     way in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
     the type of `OptimzationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
-    that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function`
+    that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function
     <OptimizationControlMechanism.evalutation_function>`.  More specifically:
 
     * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
@@ -316,7 +317,7 @@ When an OptimizationControlMechanism is executed, it carries out the following s
       `control_allocation <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's
       `evaluation_function` <OptimizationControlMechanism.evalutation_function>` and the current `feature_values
       <OptimizationControlMechanism.feature_values>`.
-
+    ..
     * It continues to evaluate the `EVC <OptimizationControlMechanism_EVC>` for `control_allocation
       <ControlMechanism.control_allocation>` samples until its `search_termination_function
       <OptimizationFunction.search_termination_function>` returns `True`.
@@ -334,7 +335,7 @@ When an OptimizationControlMechanism is executed, it carries out the following s
       <ControlMechanism.control_allocation>` samples until the `search_termination_function
       <OptimizationControlMechanism.search_termination_function>` returns `True`.
     COMMENT
-
+    ..
     * Finally, it implements the `control_allocation <ControlMechanism.control_allocation>` that yielded the greates
       `EVC <OptimizationControlMechanism_EVC>`.  This is used by the OptimizationControlMechanism's `control_signals
       <ControlMechanism.control_signals>` to compute their `values <ControlSignal.value>` which, in turn, are used by
