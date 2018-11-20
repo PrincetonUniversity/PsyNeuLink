@@ -672,7 +672,7 @@ class Composition(Composition_Base):
         """
         Adds a `ModelBasedOptimizationControlMechanism` as the `model_based_optimizer
         <Composition.model_based_optimizer>` of the Composition, which gives the Mechanism access to the
-        `Composition`'s `run_simulation <Composition.run_simulation>` method. This allows the
+        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
         `ModelBasedOptimizationControlMechanism` to use simulations to determine an optimal Control policy.
         """
 
@@ -3075,7 +3075,7 @@ class Composition(Composition_Base):
                 # self.model_based_optimizer.objective_mechanism.execute(context=context)
                 # KAM - temporary solution for assiging control signal values
                 control_allocation = self.model_based_optimizer.execute(context=context)
-                self.model_based_optimizer.apply_control_signal_values(control_allocation, runtime_params=None, context=None)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, runtime_params=None, context=None)
 
         # # MODIFIED 11/19/19 OLD:
         # self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
@@ -3367,7 +3367,7 @@ class Composition(Composition_Base):
             node_values[node] = (node.value, node.output_values)
         return saved_state, node_values
 
-    def get_state_rep(self, context=None):
+    def get_feature_values(self, context=None):
         """
         Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
         simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
@@ -4014,12 +4014,12 @@ class Composition(Composition_Base):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def run_simulation(self,
-                       control_allocation=None,
-                       num_trials=1,
-                       predicted_input=None,
-                       runtime_params=None,
-                       context=None):
+    def evaluate(self,
+                 control_allocation=None,
+                 num_trials=1,
+                 predicted_input=None,
+                 runtime_params=None,
+                 context=None):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
            `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
@@ -4034,10 +4034,12 @@ class Composition(Composition_Base):
         reinitialize_values = self.sim_reinitialize_values
 
         # FIX: DOES THIS TREAT THE ControlSignals AS STATEFUL W/IN THE SIMULATION?
+        #      (i.e., DOES IT ASSIGN THE SAME CONTROLSIGNAL VALUES FOR ALL SIMULATIONS?)
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
+        # Assign control_allocation current being sampled
         if control_allocation is not None:
-            self.model_based_optimizer.apply_control_signal_values(control_allocation,
+            self.model_based_optimizer.apply_control_allocation(control_allocation,
                                                                    runtime_params=runtime_params,
                                                                    context=context)
 

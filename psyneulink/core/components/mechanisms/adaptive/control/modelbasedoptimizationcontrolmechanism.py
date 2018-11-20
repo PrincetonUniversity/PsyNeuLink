@@ -14,7 +14,7 @@ Overview
 --------
 
 A ModelBasedOptimizationControlMechanism is a subclass of `OptimizationControlMechanism <OptimizationControlMechanism>`
-that uses the Composition's `run_simulation <Composition.run_simulation>` method as the `evaluation_function
+that uses the Composition's `evaluate <Composition.evaluate>` method as the `evaluation_function
 <OptimizationFunction.evaluation_function>` of its `OptimizationFunction` in order to find an optimal `control_allocation
 <ControlMechanism.control_allocation>`.
 
@@ -30,8 +30,8 @@ The only constraints are:
         of its constructor.
 
     (2) the `evaluation_function <OptimizationControlMechanism.evaluation_function>` must be the
-        `composition's <ModelBasedOptimizationControlMechanism.composition>` `run_simulation
-        <Composition.run_simulation>` method.
+        `composition's <ModelBasedOptimizationControlMechanism.composition>` `evaluate
+        <Composition.evaluate>` method.
 
 In addition, a **learning_function** can be specified (see `Optimization Control Mechanism Learning Function
 <OptimizationControlMechanism_Learning_Function>`)
@@ -53,7 +53,7 @@ As a result, a ModelBasedOptimizationControlMechanism differs from an `Optimizat
       it belongs
 
     - its `evaluation_function <OptimizationControlMechanism.evaluation_function>` is or includes its `composition's
-      <ModelBasedOptimizationControlMechanism.composition>` `run_simulation <Composition.run_simulation>` method
+      <ModelBasedOptimizationControlMechanism.composition>` `evaluate <Composition.evaluate>` method
 
 .. _ModelBasedOptimizationControlMechanism_Execution:
 
@@ -132,8 +132,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
     name=None,                                             \
     prefs=None)
 
-    Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `run_simulation
-    <ModelBasedOptimizationControlMechanism.run_simulation>` method in order to adjusts its `ControlSignals
+    Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `evaluate
+    <ModelBasedOptimizationControlMechanism.evaluate>` method in order to adjusts its `ControlSignals
     <ControlSignal>` and optimize performance of the `Composition` to which it belongs.
 
     Arguments
@@ -222,8 +222,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         the `Composition` to which this ModelBasedOptimizationControlMechanism belongs
 
     evaluation_function : function or method
-        calls the `composition's <ModelBasedOptimizationControlMechanism.composition>` `run_simulation
-        <Composition.run_simulation>` method in order to evaluate a particular allocation policy
+        calls the `composition's <ModelBasedOptimizationControlMechanism.composition>` `evaluate
+        <Composition.evaluate>` method in order to evaluate a particular allocation policy
 
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function
@@ -289,8 +289,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                  name=None,
                  prefs: is_pref_set = None,
                  **kwargs):
-        '''Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `run_simulation
-           <ModelBasedOptimizationControlMechanism.run_simulation>` method in order to adjusts its `ControlSignals
+        '''Subclass of `OptimizationControlMechanism <OptimizationControlMechanism>` that uses a `evaluate
+           <ModelBasedOptimizationControlMechanism.evaluate>` method in order to adjusts its `ControlSignals
            <ControlSignal>` and optimize performance of the `Composition` to which it belongs.'''
 
         if kwargs:
@@ -316,7 +316,7 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
                          name=name,
                          prefs=prefs)
 
-    def apply_control_signal_values(self, control_allocation, runtime_params, context):
+    def apply_control_allocation(self, control_allocation, runtime_params, context):
         '''Assign specified control_allocation'''
         for i in range(len(control_allocation)):
             if self.value is None:
@@ -347,8 +347,8 @@ class ModelBasedOptimizationControlMechanism(OptimizationControlMechanism):
         '''Compute outcome for a given control_allocation.'''
         # returns net_control_allocation_outcomes
         num_trials = 1
-        return self.composition.run_simulation(control_allocation,
-                                               self.predicted_input,
-                                               num_trials,
-                                               context=self.function_object.context)
+        return self.composition.evaluate(control_allocation,
+                                         self.predicted_input,
+                                         num_trials,
+                                         context=self.function_object.context)
 

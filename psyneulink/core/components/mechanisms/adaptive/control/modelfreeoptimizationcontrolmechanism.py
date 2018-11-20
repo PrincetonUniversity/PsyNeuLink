@@ -149,7 +149,7 @@ combinations of `feature_values <ModelFreeOptimizationControlMechanism.feature_v
 array, the first item of which is an array of scalar values (the prediction terms) and the second that is a scalar
 value (the outcome to be predicted), and returns an array with the same shape as the first item.
 
-The FunctionApproximator's `make_prediction <FunctionApproximator.make_prediction>` function uses the current
+The FunctionApproximator's `evaluate <FunctionApproximator.evaluate>` function uses the current
 parameters of the `FunctionApproximator` to predict the `net_outcome <ControlMechanism.net_outcome>` of processing for
 a sample `control_allocation <ControlMechanism.control_allocation>`, given the current `feature_values
 <ModelFreeOptimizationControlMechanism.feature_values>` and the `costs <ControlMechanism.costs>` of the
@@ -170,7 +170,7 @@ a sample `control_allocation <ControlMechanism.control_allocation>`, given the c
 ^^^^^^^^^^
 
 The `function <ModelFreeOptimizationControlMechanism.function>` of a ModelFreeOptimizationControlMechanism uses the
-`make_prediction <FunctionApproximator.make_prediction>` method of its `function_approximator
+`evaluate <FunctionApproximator.evaluate>` method of its `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>`, to find the `control_allocation
 <ControlMechanism.control_allocation>` that yields the greatest predicted `EVC
 <ModelFreeOptimizationControlMechanism_EVC>` given the current `feature_values
@@ -191,8 +191,8 @@ When a ModelFreeOptimizationControlMechanism is executed, its `function
 <ModelFreeOptimizationControlMechanism.function>` first calls its `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>` to update its parameters based on the
 `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and `net_outcome
-<ControlMechanism.net_outcome>` of the last `trial`.  It then uses the `make_prediction
-<FunctionApproximator.make_prediction>` of the `function_approximator
+<ControlMechanism.net_outcome>` of the last `trial`.  It then uses the `evaluate
+<FunctionApproximator.evaluate>` of the `function_approximator
 <ModelFreeOptimizationControlMechanism.function_approximator>` to find the `allocadtion_policy
 <ControlMechanism.control_allocation>` that predicts the greatet `EVC <ModelFreeOptimizationControlMechanism_EVC>`
 for the current `feature_values <ModelFreeOptimizationControlMechanism.feature_values>`, and implements that for the
@@ -318,7 +318,7 @@ class FunctionApproximator():
 
     The input is represented in the `vector <PredictionVector.vector>` attribute of a `PredictionVector`
     (assigned to the FunctionApproximator`s `prediction_vector <FunctionApproximator.prediction_vector>`) attribute,
-    and the `make_prediction <FunctionApproximator.make_prediction>` method is used to predict the outcome from the
+    and the `evaluate <FunctionApproximator.evaluate>` method is used to predict the outcome from the
     prediction_vector.
 
     When used with a ModelBasedOptimizationControlMechanism, the input is the ModelBasedOptimizationControlMechanism's
@@ -374,14 +374,14 @@ class FunctionApproximator():
 
         prediction_vector : PredictionVector
             represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
-            `make_prediction <FunctionApproximator.make_prediction>`, along with `prediction_weights
+            `evaluate <FunctionApproximator.evaluate>`, along with `prediction_weights
             <FunctionApproximator.prediction_weights>` to make its prediction.  The values contained in
             the `vector <PredictionVector.vector>` attribute are determined by `prediction_terms
             <FunctionApproximator.prediction_terms>`.
 
         prediction_weights : 1d array
             result of `parameterization_function <FunctionApproximator.parameterization_function>, used by
-            `make_prediction <FunctionApproximator.make_prediction>` method to generate its prediction.
+            `evaluate <FunctionApproximator.evaluate>` method to generate its prediction.
         '''
 
         self.parameterization_function = parameterization_function
@@ -441,7 +441,7 @@ class FunctionApproximator():
 
     def before_execution(self, context):
         '''Call `parameterization_function <FunctionApproximator.parameterization_function>` prior to calls to
-        `make_prediction <FunctionApproximator.make_prediction>`.'''
+        `evaluate <FunctionApproximator.evaluate>`.'''
 
         feature_values = np.array(np.array(self.owner.variable[1:]).tolist())
         try:
@@ -463,7 +463,7 @@ class FunctionApproximator():
             self.prediction_weights = self.parameterization_function.function([self._previous_state, 0])
         return feature_values
 
-    # def make_prediction(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def make_prediction(self, variable, num_samples, feature_values, context):
         '''Update terms of prediction_vector <FunctionApproximator.prediction_vector>` and then multiply by
         prediction_weights.
@@ -862,8 +862,8 @@ class ModelFreeOptimizationControlMechanism(OptimizationControlMechanism):
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer) and, using the current
-        `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and the `make_prediction
-        <FunctionApproximator.make_prediction>` method of the `function_approximator
+        `feature_values <ModelFreeOptimizationControlMechanism.feature_values>` and the `evaluate
+        <FunctionApproximator.evaluate>` method of the `function_approximator
         <ModelFreeOptimizationControlMechanism.function_approximator>`, returns an
         `control_allocation` that maximizes the `EVC <ModelFreeOptimizationControlMechanism_EVC>` (see `Function
         <ModelFreeOptimizationControlMechanism_Function>` for additional details).

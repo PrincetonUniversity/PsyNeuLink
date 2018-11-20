@@ -231,8 +231,8 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
 
   * **Implement the policy and simulate the System** - assign the `allocation <ControlSignal.allocation>` that the
     selected `control_allocation` specifies for each ControlSignal, and then simulate the `system
-    <EVCControlMechanism.system>` using the corresponding parameter values by calling the System's `run_simulation
-    <System.run_simulation>` method; this uses the `value <PredictionMechanism.value>` of eacah of the
+    <EVCControlMechanism.system>` using the corresponding parameter values by calling the System's `evaluate
+    <System.evaluate>` method; this uses the `value <PredictionMechanism.value>` of eacah of the
     EVCControlMechanism's `prediction_mechanisms <EVCControlMechanism.prediction_mechanisms>` as input to the
     corresponding `ORIGIN` Mechanisms of its `system <EVCControlMechanism.system>` (see `PredictionMechanism`).  The
     values of all :ref:`stateful attributes` of 'Components` in the System are :ref:`re-initialized` to the same value
@@ -322,7 +322,7 @@ the following steps (described in greater detailed `above <EVCControlMechanism_D
   `control_allocation`, it:
 
   * Runs a simulation of the EVCControlMechanism's `system <EVCControlMechanism.system>` with the parameter values
-    specified by that `control_allocation`, by calling the system's  `run_simulation <System.run_simulation>` method;
+    specified by that `control_allocation`, by calling the system's  `evaluate <System.evaluate>` method;
     each simulation uses inputs provided by the EVCControlMechanism's `prediction_mechanisms
     <EVCControlMechanism.prediction_mechanisms>` and includes execution of its `objective_mechanism`, which provides
     its result to the EVCControlMechanism.
@@ -605,7 +605,7 @@ class EVCControlMechanism(ControlMechanism):
         determines the `control_allocation` to use for the next round of the System's
         execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its ControlSignals (and contained in its
-        `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
+        `control_signal_search_space` attribute), by executing the System (using `evaluate`) for each
         combination, evaluating the result using `value_function`, and returning the `control_allocation` that yielded
         the greatest `EVC <EVCControlMechanism_EVC>` value (see `EVCControlMechanism_Default_Configuration` for
         additional details). If a custom function is specified, it must accommodate a **controller** argument that

@@ -12082,7 +12082,7 @@ class OptimizationFunction(Function_Base):
 
         current_sample = sample
 
-        # KAM HACK - "INITIALIZING" signals to run_simulation that this simulation result should NOT be recorded
+        # KAM HACK - "INITIALIZING" signals to evaluate that this simulation result should NOT be recorded
         original_initialization_status = self.context.initialization_status
         self.context.initialization_status = ContextFlags.INITIALIZING
         current_value = self.objective_function(current_sample)
