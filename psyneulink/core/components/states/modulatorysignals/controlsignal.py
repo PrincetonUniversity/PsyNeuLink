@@ -1005,7 +1005,7 @@ class ControlSignal(ModulatorySignal):
         cost_options = self.parameters.cost_options.get(execution_id)
 
         try:
-            intensity_change = self.parameters.intensity.get_delta(execution_id)
+            intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
         except TypeError:
             intensity_change = [0]
 
