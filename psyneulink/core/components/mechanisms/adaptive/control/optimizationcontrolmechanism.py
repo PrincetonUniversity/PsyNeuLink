@@ -222,17 +222,15 @@ another one that is used to estimate the EVC for that Composition (see `above
 <OptimizationControlMechanism_Agent_Representation_Types>`).  If it is another Composition, it must meet the following
 requirem,ents:
 
-    * Its `evaluate <Composition.evaluate>` method must accept three keyword arguments named **feature_values**,
-      **control_allocation**, and **num_estimates** that correspond in shape to the
-      `feature_values <OptimizationControlMechanism.feature_values>`, `control_allocation
-      <ControlMechanism.control_allocation>` and `num_estimates <OptimizationControlMechanism.num_estimates>`
-      attributes of the OptimizationControlMechanism.
+    * Its `evaluate <Composition.evaluate>` method must accept as its first three arguments, in order,
+      values that correspond in shape to  the `feature_values <OptimizationControlMechanism.feature_values>`,
+      `control_allocation <ControlMechanism.control_allocation>` and `num_estimates
+      <OptimizationControlMechanism.num_estimates>` attributes of the OptimizationControlMechanism, respectively.
 
-    * If it has an `adapt <Composition.adapt>` method, that  must accept three keyword arguments named
-      **feature_values**, **control_allocation**, and **net_outcome** that correspond in shape to the
-      `feature_values <OptimizationControlMechanism.feature_values>`, `control_allocation
-      <ControlMechanism.control_allocation>` and `net_outcome <OptimizationControlMechanism.net_outcome>`
-      attributes of the OptimizationControlMechanism.
+    * If it has an `adapt <Composition.adapt>` method, that must accept as its first three arguments, in order,
+      values that corresopnd to the shape of the `feature_values <OptimizationControlMechanism.feature_values>`,
+      `control_allocation <ControlMechanism.control_allocation>` and `net_outcome
+      <OptimizationControlMechanism.net_outcome>` attributes of the OptimizationControlMechanism. respectively.
 
 .. _OptimizationControlMechanism_Function:
 
@@ -674,23 +672,16 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if self.agent_rep is None:
-            raise OptimizationControlMechanismError("The {} arg of an {} must be specified ({} or a {})".
+            raise OptimizationControlMechanismError("The {} arg of an {} must specify a {}".
                                                     format(repr(AGENT_REP), self.__class__.__name__,
-                                                           Composition.__name__, CompositionFunctionApproximator.__name__))
+                                                           Composition.__name__))
 
-        elif not (isinstance(self.agent_rep, (Composition, CompositionFunctionApproximator))
-                  or (isinstance(self.agent_rep, type)
-                      and issubclass(self.agent_rep, (Composition, CompositionFunctionApproximator)))):
-            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {} or a {}".
-                                                    format(repr(AGENT_REP), self.__class__.__name__,
-                                                           Composition.__name__, CompositionFunctionApproximator.__name__))
-
-        # if isinstance(self.agent_rep, CompositionFunctionApproximator) and self.features is None:
-        #     raise OptimizationControlMechanismError("{} arg for {} must be specified".
-        #                                             format(repr(FEATURES),
-        #                                                    self.__class__.__name__))
+        elif not (isinstance(self.agent_rep, Composition)
+                  or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
+            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {}".
+                                                    format(repr(AGENT_REP),self.__class__.__name__,
+                                                           Composition.__name__))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
@@ -700,17 +691,20 @@ class OptimizationControlMechanism(ControlMechanism):
         **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
         """
 
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if (isinstance(self.agent_rep, CompositionFunctionApproximator)
-                or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, CompositionFunctionApproximator))):
-            self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
+        # Specify *OUTCOME* InputState;  receives Projection from *OUTCOME* OutputState of objective_mechanism
+        outcome_input_state = {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}
 
+        # If any features were specified (assigned to self.input_states in __init__):
+        if self.input_states:
+            self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
-            self.input_states.insert(0, {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}),
+            self.input_states.insert(0, outcome_input_state),
+        else:
+            self.input_states = [outcome_input_state]
 
-            # Configure default_variable to comport with full set of input_states
-            self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
+        # Configure default_variable to comport with full set of input_states
+        self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
 
@@ -834,9 +828,9 @@ class OptimizationControlMechanism(ControlMechanism):
         <ModelFreeOptimizationControlMechanism.function_approximator>`.
         '''
         self.num_estimates = 1
-        return self.agent_rep.evaluate(feature_values=self.feature_values,
-                                       control_allocation=control_allocation,
-                                       num_estimates=self.num_estimates,
+        return self.agent_rep.evaluate(self.feature_values,
+                                       control_allocation,
+                                       self.num_estimates,
                                        context=self.function_object.context)
 
     def apply_control_allocation(self, control_allocation, runtime_params, context):
@@ -862,12 +856,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_function_approximator_as_agent(self):
         '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
 
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if isinstance(self.agent_rep, type):
-            self.agent_rep = CompositionFunctionApproximator()
+            self.agent_rep = self.agent_rep()
         # CompositionFunctionApproximator needs to have access to control_signals to:
-        # - to construct allocation_search_space from their allocation_samples attributes
-        # - compute their values and costs for samples of control_allocations from allocatio_search_space
+        # - to construct control_allocation_search_space from their allocation_samples attributes
+        # - compute their values and costs for samples of control_allocations from control_allocation_search_space
         self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
                                   control_signals = self.control_signals)
 
@@ -884,8 +877,9 @@ class OptimizationControlMechanism(ControlMechanism):
             list of `ORIGIN` Mechanisms and/or their InputStates as its value.
         '''
 
-        features = self._parse_feature_specs(features=features,
-                                                 context=ContextFlags.COMMAND_LINE)
+        if features:
+            features = self._parse_feature_specs(features=features,
+                                                     context=ContextFlags.COMMAND_LINE)
         self.add_states(InputState, features)
 
     @tc.typecheck
