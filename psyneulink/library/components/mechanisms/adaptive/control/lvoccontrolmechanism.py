@@ -737,7 +737,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             feature_values = np.array(np.array(variable[1:]).tolist())
             self.parameters.feature_values.set(feature_values, execution_id)
 
-            current_state.update_vector(self.parameters.allocation_policy.get(execution_id), feature_values)
+            current_state.update_vector(self.parameters.allocation_policy.get(execution_id), feature_values, execution_id=execution_id)
             previous_state = current_state.vector
 
         self._set_multiple_parameter_values(
@@ -969,7 +969,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         __deepcopy__ = get_deepcopy_with_shared(shared_keys=_deepcopy_shared_keys)
 
-        def update_vector(self, variable, feature_values=None):
+        def update_vector(self, variable, feature_values=None, execution_id=None):
             '''Update vector with flattened versions of values returned from `compute_terms
             <LVOCControlMechanism.PredictionVector.compute_terms>`.
 
@@ -984,14 +984,14 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
-            computed_terms = self.compute_terms(np.array(variable))
+            computed_terms = self.compute_terms(np.array(variable), execution_id=execution_id)
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_signal_variables):
+        def compute_terms(self, control_signal_variables, execution_id=None):
             '''Calculate interaction terms.
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
             Values of entries are nd arrays.
@@ -1006,7 +1006,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             # Compute value of each control_signal from its variable
             c = [None] * len(control_signal_variables)
             for i, var in enumerate(control_signal_variables):
-                c[i] = self.control_signal_functions[i](var)
+                c[i] = self.control_signal_functions[i](var, execution_id=execution_id)
             computed_terms[PV.C] = c = np.array(c)
 
             # Compute costs for new control_signal values
@@ -1015,7 +1015,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
-                    costs[i] = -(self._compute_costs[i](val))
+                    costs[i] = -(self._compute_costs[i](val, execution_id=execution_id))
                 computed_terms[PV.COST] = np.array(costs)
 
             # Compute terms interaction that are used
@@ -1051,7 +1051,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         current_state = self.parameters.current_state.get(execution_id)
 
         terms = self.prediction_terms
-        vector = current_state.compute_terms(variable)
+        vector = current_state.compute_terms(variable, execution_id=execution_id)
         weights = self.parameters.prediction_weights.get(execution_id)
         evc = 0
 
