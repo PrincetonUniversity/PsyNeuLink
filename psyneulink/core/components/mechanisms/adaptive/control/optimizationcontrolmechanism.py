@@ -753,7 +753,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
-            self._instantiate_function_approximator_as_agent()
+            self._initialize_composition_function_approximator()
 
     def _get_control_allocation_search_space(self):
 
@@ -851,20 +851,7 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             return np.array(np.array(self.variable[1:]).tolist())
 
-    # ******************************************************************************************************************
-    # FIX:  THE FOLLOWING IS SPECIFIC TO MODEL-FREE (FUNCTION_APPROXIMATOR) IMPLEMENTATION
-    # ******************************************************************************************************************
-
-    def _instantiate_function_approximator_as_agent(self):
-        '''Instantiate attributes for ModelFreeOptimizationControlMechanism's function_approximator'''
-
-        # CompositionFunctionApproximator needs to have access to control_signals to:
-        # - to construct control_allocation_search_space from their allocation_samples attributes
-        # - compute their values and costs for samples of control_allocations from control_allocation_search_space
-        self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
-                                  control_signals = self.control_signals)
-
-    # FIX: THIS SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
+    # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
     tc.typecheck
@@ -966,6 +953,19 @@ class OptimizationControlMechanism(ControlMechanism):
     def control_allocation_search_space(self):
         return self._get_control_allocation_search_space()
 
+
+    # ******************************************************************************************************************
+    # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep
+    # ******************************************************************************************************************
+
+    def _initialize_composition_function_approximator(self):
+        '''Initialize CompositionFunctionApproximator'''
+
+        # CompositionFunctionApproximator needs to have access to control_signals to:
+        # - to construct control_allocation_search_space from their allocation_samples attributes
+        # - compute their values and costs for samples of control_allocations from control_allocation_search_space
+        self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
+                                  control_signals = self.control_signals)
 
 
 
