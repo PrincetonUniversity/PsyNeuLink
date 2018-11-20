@@ -122,8 +122,9 @@ The following arguments of its constructor are specific to the OptimizationContr
     (see `below <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
     `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
     is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
-    <OptimizationControlMechanism_Model_Based>` optimization.
-
+    <OptimizationControlMechanism_Model_Based>` optimization.  If it is another Composition, it must conform to the
+    specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as described `below`
+    <OptimizationControlMechanism_Agent_Rep>`.
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -218,7 +219,20 @@ that is used to evaluate sample `control_allocations <ControlMechanism.control_a
 that optimizes the `EVC <OptimizationControlMechanism_EVC>`. The `agent_rep  <OptimizationControlMechanism.agent_rep>`
 is always itself a `Composition`, that can be either the same one that the OptimizationControlMechanism controls or
 another one that is used to estimate the EVC for that Composition (see `above
-<OptimizationControlMechanism_Agent_Representation_Types>`).
+<OptimizationControlMechanism_Agent_Representation_Types>`).  If it is another Composition, it must meet the following
+requirem,ents:
+
+    * Its `evaluate <Composition.evaluate>` method must accept three keyword arguments named **feature_values**,
+      **control_allocation**, and **num_estimates** that correspond in shape to the
+      `feature_values <OptimizationControlMechanism.feature_values>`, `control_allocation
+      <ControlMechanism.control_allocation>` and `num_estimates <OptimizationControlMechanism.num_estimates>`
+      attributes of the OptimizationControlMechanism.
+
+    * If it has an `adapt <Composition.adapt>` method, that  must accept three keyword arguments named
+      **feature_values**, **control_allocation**, and **net_outcome** that correspond in shape to the
+      `feature_values <OptimizationControlMechanism.feature_values>`, `control_allocation
+      <ControlMechanism.control_allocation>` and `net_outcome <OptimizationControlMechanism.net_outcome>`
+      attributes of the OptimizationControlMechanism.
 
 .. _OptimizationControlMechanism_Function:
 
@@ -817,10 +831,10 @@ class OptimizationControlMechanism(ControlMechanism):
         Returns a scalar that is the predicted outcome of the `function_approximator
         <ModelFreeOptimizationControlMechanism.function_approximator>`.
         '''
-        num_estimates = 1
-        return self.agent_rep.evaluate(control_allocation,
-                                       num_estimates,
-                                       self.feature_values,
+        self.num_estimates = 1
+        return self.agent_rep.evaluate(feature_values=self.feature_values,
+                                       control_allocation=control_allocation,
+                                       num_estimates=self.num_estimates,
                                        context=self.function_object.context)
 
     def apply_control_allocation(self, control_allocation, runtime_params, context):

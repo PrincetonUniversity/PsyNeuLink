@@ -4015,9 +4015,9 @@ class Composition(Composition_Base):
         return adjusted_stimuli
 
     def evaluate(self,
+                 predicted_input=None,
                  control_allocation=None,
                  num_trials=1,
-                 predicted_input=None,
                  runtime_params=None,
                  context=None):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
