@@ -11,16 +11,14 @@
 
 """
 
-`ModelFreeOptimizationControlMechanism`
-`ModelBasedOptimizationControlMechanism`
-
 Overview
 --------
 
-OptimizationControlMechanism is an abstract class for defining subclasses of `ControlMechanism <ControlMechanism>` that
-use an `OptimizationFunction` to find an `control_allocation <ControlMechanism.control_allocation>` that maximizes the
-Expected Value of Control (EVC) for a given state.  The `OptimizationFunction` uses the OptimizationControlMechanism's
-`evaluation_function <OptimizationControlMechanism.evaluation_function>` to evaluate the EVC for samples of
+OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an `OptimizationFunction` to find
+an `control_allocation <ControlMechanism.control_allocation>` that maximizes the `Expected Value of Control (EVC)
+<OptimizationControlMechanism_EVC>` for a given state (as defined by the current or expected input to the `Composition`
+it controls.  The `OptimizationFunction` uses the OptimizationControlMechanism's `evaluation_function
+<OptimizationControlMechanism.evaluation_function>` to evaluate the EVC for samples of
 `control_allocation <ControlMechanism.control_allocation>`, and retuns the one that yields the greatest EVC.
 
 .. _OptimizationControlMechanism_EVC:
@@ -28,53 +26,87 @@ Expected Value of Control (EVC) for a given state.  The `OptimizationFunction` u
 **Expected Value of Control**
 
 All OptimizationControlMechanisms compute the `Expected Value of Control (EVC)
-<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ --  a cost-benefit analysis that weighs the `costs
-<ControlMechanism.costs>` of the `control_signals <ControlMechanism.control_signals>` for a given `control_allocation
-<ControlMechanism.control_allocation>` against the `outcome <ControlMechanism.outcome>` expected to result from that
-policy.  The EVC for an `control_allocation <ControlMechanism.control_allocation>` is computed by the
-OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`, using some
-combination of the `costs <ControlMechanism.costs>` associated with the `control_allocation
-<ControlMechanism.control_allocation>` and the current state, depending on the particular subclass.  The table `below
-<OptimizationControlMechanism_Examples>` lists different
-types of OptimizationControlMechanisms, followed by a list of models that implement examples of these.
+<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_ for a control_allocation <ControlMechanism.control_allocation>`
+--  a cost-benefit analysis that weighs the `costs <ControlMechanism.costs>` of the `control_signals
+<ControlMechanism.control_signals>` for the `control_allocation <ControlMechanism.control_allocation>` against the
+`outcome <ControlMechanism.outcome>` expected to result from it.  The costs are computed based on the
+`cost_options <ControlSignal.cost_options>` specified for each of the OptimizationControlMechanism's `control_signals
+<ControlMechanism.control_signals>` and its `combine_costs <ControlMechanism.combine_costs>` function.  The EVC is
+determined by its `compute_net_outcome <OptimizationControlMechanism.compute_net_outcome>` function, and assigned to
+its `net_outcome <ControlMechanism.net_outcome>` attribute.  This value is computed for sample control_allocations
+by the OCM for the current state (`features <OptimizationControlMechanism.features>`) using its `agent representation
+<OptimizationControlMechanism_Agent_Representation>` and `evaluation_function
+<OptimizationControlMechanism.evaluation_function>`, and the `control_allocation <ControlMechanism.control_allocation>`
+associated with the greatest predicted EVC is assigned for use on the net trial fo processing
+
+The table `below <OptimizationControlMechanism_Examples>` lists different
+parameterizations of OptimizationControlMechanism that implement various models of EVC Optimization.
+
+.. _OptimizationControlMechanism_Agent_Representation:
+
+**Agent Representation**
+
+The defining feature of an OptimizationControlMechanism is its agent representation, specified in the **agent_rep**
+argument of its constructor and assigned to its `agent_rep <OptimizationControlMechanism.agent_rep>` attribute.
+This designates a representation of the `Composition` (or parts of one) that the OptimizationControlMechanism controls,
+that is used to evaluate sample `control_allocations <ControlMechanism.control_allocation>` in order to find the one
+that optimizes the `EVC <OptimizationControlMechanism_EVC>`. The `agent_rep  <OptimizationControlMechanism.agent_rep>`
+is always itself a `Composition`, that can be either the same one that the OptimizationControlMechanism controls or
+another one that is used to estimate the EVC for that Composition.  This distinction corresponds closely to the
+distnction between *model-based* and *model-free* optimization in the `machine learning <HTML REF>`_ and `cognitive
+neuroscience <HTM REF>`_ literatures, as described below.
 
 .. _OptimizationControlMechanism_Model_Free_Model_Based:
 
-**Model-Free and Model-Based OptimizationControlMechanisms**
+.. _OptimizationControlMechanism_Model_Free:
 
-There are two classes of OptimizationControlMechanisms -- "model-free" (`ModelFreeOptimizationControlMechanism`) and
-"model-based" (`ModelBasedOptimizationControlMechanism`).  In broad terms, the `model-free
-<ModelFreeOptimizationControlMechanism>` class parameterizes a `FunctionApproximator` over the course of `trials
-<trial>` to predict the EVC based on previously experienced combinations of input and `control_allocation
-<ControlMechanism.control_allocation>` and, within a given trial, uses the FunctionApproximator's `make_prediction
-<FunctionApproximator.make_prediction>` method to test `allocation_policies <ControlMechanism.control_allocation>`
-and find the one that is predicted to yield the greatest EVC for the current (or expected) input.  In contrast,
-the `model-based <ModelBasedOptimizationControlMechanism>` class finds the `control_allocation
-<ControlMechanism.control_allocation>` that yields the greatest EVC by actually testing them within a trial,
-using the `run_simuation <Composition.run_simulation>` method of its Composition (i.e., the one that it `controls
-<Composition.controller>`) to evaluate the actual outcome generated by each
+*Model-Free Optimization*
 
+This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` a Composition other than the
+one to which the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`).
+In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to adapt, by adjusting its
+parameters in order to improve its prediction of the EVC for the Composition to which the OptimizationControlMechanism
+belongs (based on the state and outcome of the prior trial).  The agent_rep is then used to predict the `outcome
+<ControlMechanism.outcome>` of processing on the upcoming trial, based on the current or (expected) state state (
+values of the `features <OptimizationControlMechanism.features>`) for that trial, in order to find the
+<ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
+
+.. _OptimizationControlMechanism_Model_Based:
+
+*Model-Based Optimization*
+
+This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which
+the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`).
+In each `trial`, that Composition itself is used to simulate the `outcome <ControlMechanism.outcome>` of
+processing on the upcoming trial, based on the current or (expected) state state (values of
+the `features <OptimizationControlMechanism.features>`) for that trial, in order to find the
+<ControlMechanism.control_allocation>` that yields the greatest `EVC <OptimizationControlMechanism_EVC>` for that trial.
 
 .. _OptimizationControlMechanism_Creation:
 
 Creating an OptimizationControlMechanism
 ----------------------------------------
 
-An OptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  The only
-constraint is that an `OptimizationFunction` (or a function that has the same structure as one) must be specified as
-the **function** argument of its constructor.  In addition, a `ModelFreeOptimizationControlMechanism`
-must be assigned a `FunctionApproximator`, while a `ModelBasedOptimizationControlMechanism` must be assigned as the
-`controller <Composition.controller>` of a `Composition`.
+An OptimizationControlMechanism can be created in the same was as any `ControlMechanism <ControlMechanism>`.  If the
+**agent_rep** argument is not specified, the `Composition` to which it belongs is assigned,
+and the OptimizationControlMechanism is assigned as that Composition's `controller <Composition.controller>`,
+implementing `model-based <OptimizationControlMechanism_Model_Based>` optimization.  If the **function**
+argument is not specified, the `GridSearch` `OptimiziationFunction` is assigned, which evaluates the `EVC
+<OptimizationControlMechanism_EVC>` for every possible `control_allocation <ControlMechanism.control_allocation>`
+(as determined by the `allocation_samples <ControlSignal.allocation_samples>` specified for each of the
+`OptimizationControlMechanism's `control_signals <ControlMechanism.control_signals>`).  If the **features** argument
+is not specified, then the `input <Composition.input>` to the `Composition` on the last trial of its execution is
+used to calculate the EVC <OptimizationControlMechanism_EVC>` for the upcoming trial.
 
 .. _OptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-An OptimizationControlMechanism has the same structure as a `ControlMechanism`, including a `Projection <Projection>`
+In addition to the standard Components associated with a `ControlMechanism`, including a `Projection <Projection>`
 to its *OUTCOME* InputState from its `objective_mechanism <ControlMechanism.objective_mechanism>`, and a
-`function <OptimizationControlMechanism.function>` used to carry out the optimization process, both of which are
-described below.
+`function <OptimizationControlMechanism.function>` used to carry out the optimization process, it has several
+other constiuents, as described below.
 
 .. _OptimizationControlMechanism_ObjectiveMechanism:
 
@@ -84,9 +116,11 @@ ObjectiveMechanism
 Like any `ControlMechanism`, an OptimizationControlMechanism has an associated `objective_mechanism
 <ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial and pass
 the result to the OptimizationControlMechanism, which it places in its `outcome <OptimizationControlMechanism.outcome>`
-attribute.  This is used by its `evaluation_function <OptimizationControlMechanism.evaluation_function>`, together with
-the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to carry out the
-`EVC <OptimizationControlMechanism_EVC>` calculation.
+attribute.  This is used by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function, together with
+the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to compute the
+`net_outcome <ControlMechanism.net_outcome>` of processing for a given state, and by the OptimizationControlMechanism's
+evaluation_function <OptimizationControlMechanism.evaluation_function>` to carry out the `EVC
+<OptimizationControlMechanism_EVC>` calculation.
 
 .. note::
     The `objective_mechanism is distinct from, and should not be confused with the OptimizationControlMechanism's
@@ -97,6 +131,22 @@ the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.c
     <ControlMechanism.control_signals>`, whereas the its `evaluation_function
     <ControlMechanismOptimizationControlMechanism.evaluation_function>` takes these into account in calculating the
     `EVC <OptimizationControlMechanism_EVC>`.
+
+
+.. _OptimizationControlMechanism_Features:
+
+Model-Free:
+Set of values, aloong with the contrl signals and their costs, used to predict the net_outcome of processing
+
+
+Model_Based:
+
+By default, simply the inputs (or some estimate of them) to the Composition for which the OCM is the
+controller.
+
+.. _OptimizationControlMechanism_Agent_Rep:
+
+The defining feature of an OptimizationControlMechanism is its `agent_representation <agent_representation>
 
 
 .. _OptimizationControlMechanism_Function:
@@ -442,6 +492,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  agent_rep=None,
                  features:tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState))=None,
                  feature_function:tc.optional(tc.any(is_function_type))=None,
+                 # monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  origin_objective_mechanism=False,
                  terminal_objective_mechanism=False,
@@ -474,6 +525,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   params=params)
 
         super().__init__(system=None,
+                         # monitor_for_control=monitor_for_control,
                          objective_mechanism=objective_mechanism,
                          function=function,
                          control_signals=control_signals,
@@ -602,7 +654,7 @@ class OptimizationControlMechanism(ControlMechanism):
             assert all(variable == self.variable), 'PROGRAM ERROR: variable != self.variable for OCM'
         if self.control_allocation is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
-        # FIX END
+        # FIX: END
 
         self.state_rep = self.agent_rep.get_state_rep(context=self.context)
 
@@ -611,6 +663,7 @@ class OptimizationControlMechanism(ControlMechanism):
             net_outcome = self.net_outcome
         except AttributeError:
             net_outcome = [0]
+        # FIX: END
 
         try:
             self.agent_rep.adapt(self.state_rep, self.control_allocation, net_outcome)
