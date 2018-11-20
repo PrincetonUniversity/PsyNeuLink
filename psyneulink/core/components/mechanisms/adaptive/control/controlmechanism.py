@@ -392,7 +392,7 @@ class ControlMechanismError(Exception):
 
 def _control_mechanism_costs_getter(owning_component=None, execution_id=None):
     try:
-        return [c.compute_costs(c.parameters.variable.get(execution_id)) for c in owning_component.control_signals]
+        return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
     except TypeError:
         return None
 
