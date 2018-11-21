@@ -109,7 +109,7 @@ The following arguments of its constructor are specific to the OptimizationContr
     `internal_only <InputStates.internal_only>` = `True`.
 
   Features can also be added to an existing OptimizationControlMechanism using its `add_features` method.  If the
-  **features** argument is not specified, then the `input <Composition.input>` to the `Composition` on the last
+  **features** argument is not specified, then the `input <Composition.input_values>` to the `Composition` on the last
   trial of its execution is used to calculate the `EVC <OptimizationControlMechanism_EVC>` for the upcoming trial.
 
 .. _OptimizationControlMechanism_Feature_Function:
@@ -174,7 +174,7 @@ and by the `evaluation` method of the OptimizationControlMechanism's `agent_rep
 In addition to its `primary InputState <InputState_Primary>` (which receives a projection from the *OUTCOME*
 OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
 an OptimizationControlMechanism also has an `InputState` for each of its features. By default, these are the current
-`input <Composition.input>` for the Composition to which the OptimizationControlMechanism belongs.  However,
+`input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
 transforms these.  For OptimizationControlMechanisms that implement `model-free
 <OptimizationControlMechanism_Model_Free>` optimization, its `feature_values
@@ -182,8 +182,8 @@ transforms these.  For OptimizationControlMechanisms that implement `model-free
 <OptimizationControlMechanism.evaluation_function>` to predict the `EVC <OptimizationControlMechanism_EVC>` for a given
 `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that implement
 `model-based <OptimizationControlMechanism_Model_Based>` optimization, the `feature_values
-<OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input>` when it is
-executed to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
+<OptimizationControlMechanism.feature_values>` are used as the Composition's `input <Composition.input_values>` when
+it is executed to evaluate the `EVC <OptimizationControlMechanism_EVC>` for a given
 `control_allocation<ControlMechanism.control_allocation>`.
 
 Features can be of two types:
