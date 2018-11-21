@@ -574,11 +574,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
 
-        outcome = ctlr.evaluate(inputs=inputs,
-                                allocation_vector=allocation_vector,
-                                runtime_params=runtime_params,
-                                reinitialize_values=reinitialization_values,
-                                context=context)
+        outcome = ctlr.run_simulation(inputs=inputs,
+                                        allocation_vector=allocation_vector,
+                                        runtime_params=runtime_params,
+                                        reinitialize_values=reinitialization_values,
+                                        context=context)
 
         EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                                   outcome=outcome,
