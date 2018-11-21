@@ -568,7 +568,6 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
 
         reinitialization_values[mechanism] = reinitialization_value
 
-
     # Run simulation trial by trial in order to get EVC for each trial
     # IMPLEMENTATION NOTE:  Consider calling execute rather than run (for efficiency)
     for i in range(num_trials):
