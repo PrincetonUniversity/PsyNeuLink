@@ -1050,10 +1050,13 @@ class DDM(ProcessingMechanism_Base):
             )
 
             if isinstance(self.function.__self__, BogaczEtAl):
-                return_value = np.array([[0.0], [0.0], [0.0], [0.0]])
-                return_value[self.RESPONSE_TIME_INDEX], return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result
+                return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
+                return_value[self.RESPONSE_TIME_INDEX] = result[0]
+                return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[1]
                 return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = \
                                                                1 - return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]
+                return_value[self.RT_CORRECT_MEAN_INDEX] = result[3]
+                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[5]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])

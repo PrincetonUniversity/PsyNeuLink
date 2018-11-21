@@ -10154,7 +10154,91 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
-        return rt, er
+        # Compute moments (mean, variance, skew) of condiational response time distributions
+        moments = BogaczEtAl._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
+
+        return rt, er, \
+               moments['mean_rt_plus'], moments['mean_rt_minus'], \
+               moments['var_rt_plus'], moments['var_rt_minus'], \
+               moments['skew_rt_plus'], moments['skew_rt_minus']
+
+    @staticmethod
+    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
+        """
+        This is a helper function for computing the conditional decison time moments for the DDM.
+        It is based completely off of Matlab\DDMFunctions\ddm_metrics_cond_Mat.m.
+
+        :param drift_rate: The drift rate of the DDM
+        :param noise: The diffusion rate.
+        :param threshold: The symmetric threshold of the DDM
+        :param starting_point: The initial condition.
+        :param t0: The non decision time.
+        :return: A dictionary containing the following key value pairs:
+         mean_rt_plus: The mean RT of positive responses.
+         mean_rt_minus: The mean RT of negative responses.
+         var_rt_plus: The variance of RT of positive responses.
+         var_rt_minus: The variance of RT of negative responses.
+         skew_rt_plus: The skew of RT of positive responses.
+         skew_rt_minus: The skew of RT of negative responses.
+        """
+
+        #  transform starting point to be centered at 0
+        starting_point = (starting_point - 0.5) * 2.0 * threshold
+
+        if abs(drift_rate) < 0.01:
+            drift_rate = 0.01
+
+        X = drift_rate * starting_point / noise**2
+        Z = drift_rate * threshold / noise**2
+
+        X = max(-100, min(100, X))
+
+        Z = max(-100, min(100, Z))
+
+        if abs(Z) < 0.0001:
+            Z = 0.0001
+
+        def coth(x):
+            return 1/np.tanh(x)
+
+        def csch(x):
+            return 1 / np.sinh(x)
+
+        moments = {}
+
+        moments["mean_rt_plus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
+
+        moments["mean_rt_minus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
+
+        moments["var_rt_plus"] = noise**4. / (drift_rate**4) * \
+                              (4 * Z**2. * (csch(2 * Z))**2 + 2 * Z * coth(2 * Z) - (Z + X)**2. *
+                               (csch(Z + X))**2 - (Z + X) * coth(Z + X))
+
+        moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
+                               (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z*coth(2 * Z) - (Z - X)**2. *
+                                (csch(Z - X))**2 - (Z - X) * coth(Z - X))
+
+        moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
+                               (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
+                                (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z + X)**2. *
+                                (csch(Z + X))**2 - 2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 *
+                                (Z + X) * coth(Z + X))
+
+        moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
+                                (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
+                                 (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z - X)**2. *
+                                 (csch(Z - X))**2 - 2 * (Z - X)**3. * coth(Z - X) *
+                                 (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
+
+        # divide third central moment by var_rt**1.5 to get skewness
+        moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+        moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
+
+        # Add the non-decision time to the mean RTs
+        moments['mean_rt_plus'] += t0
+        moments['mean_rt_minus'] += t0
+
+        return moments
 
     def derivative(self, output=None, input=None, execution_id=None):
         """
@@ -10431,7 +10515,7 @@ class NavarroAndFuss(IntegratorFunction):  # -----------------------------------
 
         results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
-        return self.convert_output_type(results)
+        return results
 
 
 # region ************************************   DISTRIBUTION FUNCTIONS   ***********************************************
