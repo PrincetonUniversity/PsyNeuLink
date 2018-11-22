@@ -2658,7 +2658,8 @@ class Component(object, metaclass=ComponentsMeta):
             - self.value == value[0] returned by self.execute
 
         """
-        from psyneulink.core.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         from psyneulink.core.components.shellclasses import Function
 
         function_variable = copy.deepcopy(

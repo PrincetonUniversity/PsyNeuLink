@@ -1229,7 +1229,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @cost_function.setter
     def cost_function(self, value):
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._cost_function = udf
@@ -1242,7 +1242,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @combine_outcome_and_cost_function.setter
     def combine_outcome_and_cost_function(self, value):
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._combine_outcome_and_cost_function = udf

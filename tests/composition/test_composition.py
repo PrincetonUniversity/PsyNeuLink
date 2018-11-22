@@ -8,7 +8,8 @@ import pytest
 
 from itertools import product
 
-from psyneulink.core.components.functions.function import AdaptiveIntegrator, Linear, Logistic, ModulationParam, SimpleIntegrator, UserDefinedFunction
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, Linear, Logistic, ModulationParam, SimpleIntegrator
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

@@ -23,6 +23,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import iscompatible, call_with_pruned_args
 from psyneulink.core.globals.preferences import is_pref_set
 
+__all__ = ['UserDefinedFunction']
 
 class UserDefinedFunction(Function_Base):
     """

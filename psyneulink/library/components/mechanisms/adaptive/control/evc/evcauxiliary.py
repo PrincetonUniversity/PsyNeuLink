@@ -182,7 +182,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         cost_function = controller.paramsCurrent[COST_FUNCTION]
         combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
