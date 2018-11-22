@@ -179,7 +179,8 @@ from types import MethodType
 
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.functions.function import Distance, Function, Hebbian, Linear, LinearCombination, Stability, get_matrix, is_function_type
+from psyneulink.core.components.functions.function import Distance, Function, Hebbian, Linear, Stability, get_matrix, is_function_type
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism

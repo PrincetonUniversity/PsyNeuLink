@@ -1,6 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.combinationfunctions
 
 
 class TestControlMechanisms:
@@ -51,7 +52,8 @@ class TestControlMechanisms:
         c.add_c_node(m2, required_roles=pnl.CNodeRole.ORIGIN)
         c._analyze_graph()
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
-                                        feature_function=pnl.LinearCombination(offset=10.0),
+                                        feature_function=psyneulink.core.components.functions.combinationfunctions
+                                        .LinearCombination(offset=10.0),
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
                                         function=pnl.GradientOptimization(max_iterations=1),

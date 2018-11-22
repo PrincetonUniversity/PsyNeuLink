@@ -346,7 +346,8 @@ import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base

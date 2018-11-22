@@ -336,7 +336,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import method_type
-from psyneulink.core.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
+from psyneulink.core.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, \
+    STARTING_POINT, THRESHOLD
+from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base

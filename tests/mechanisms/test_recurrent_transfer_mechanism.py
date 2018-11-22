@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
+from psyneulink.core.components.functions.function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, \
+    Reinforcement, get_matrix
+from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
