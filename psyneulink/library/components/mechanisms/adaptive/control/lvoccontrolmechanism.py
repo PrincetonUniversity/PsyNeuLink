@@ -727,7 +727,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             prediction_weights = self.learning_function.function([previous_state, 0], execution_id=execution_id)
         else:
             # Update prediction_weights
-            costs = [c.compute_costs(c.parameters.variable.get(execution_id)) for c in self.control_signals]
+            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
             combined_costs = self.combine_costs(costs)
             # costs are assigned as negative in current_state.update, so add them here
             net_outcome = obj_mech_outcome - combined_costs
