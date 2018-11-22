@@ -106,7 +106,7 @@ Class Reference
 
 """
 
-from psyneulink.core.components.functions.function import InterfaceStateMap
+from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.function import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
