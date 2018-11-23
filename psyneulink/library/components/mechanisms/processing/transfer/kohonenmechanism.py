@@ -60,7 +60,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Kohonen, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.learningfunctions import Kohonen
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism

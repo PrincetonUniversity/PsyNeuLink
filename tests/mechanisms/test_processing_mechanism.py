@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import BackPropagation, FunctionError, Hebbian, \
-    Reinforcement, TDLearning
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
 from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
     ExponentialDist, \

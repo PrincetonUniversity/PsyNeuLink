@@ -18,7 +18,7 @@ Selection Functions:
   COMMENT
 '''
 
-__all__ = ['SelectionFunction', 'OneHot']
+__all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
 import numpy as np
 import typecheck as tc
@@ -34,6 +34,24 @@ from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+
+
+MAX_VS_NEXT = 'max_vs_next'
+MAX_VS_AVG = 'max_vs_avg'
+
+# FIX: IMPLEMENT AS Functions
+def max_vs_next(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    next = x_part[-2]
+    return max_val - next
+
+
+def max_vs_avg(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    others = x_part[:-1]
+    return max_val - np.mean(others)
 
 
 class SelectionFunction(Function_Base):

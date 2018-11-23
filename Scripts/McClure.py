@@ -5,6 +5,7 @@ import psyneulink as pnl
 from matplotlib import pyplot as plt
 
 import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.selectionfunctions
 import psyneulink.core.components.functions.transferfunctions
@@ -91,7 +92,8 @@ conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states
 decision_process = pnl.Process(default_variable=[0, 0],
                                pathway=[input_layer,
                                         action_selection],
-                               learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(
+                               learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions
+                                   .learningfunctions.Reinforcement(
                                    learning_rate=0.03)), # if learning rate set to .3 output state values annealing to [0., 0.]
                                # which leads to error in reward function
                                target=0

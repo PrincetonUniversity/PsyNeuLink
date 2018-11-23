@@ -18,6 +18,7 @@ using a version of the `Learned Value of Control Model
 import psyneulink as pnl
 import numpy as np
 
+import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.optimizationfunctions
 import psyneulink.core.components.functions.transferfunctions
 
@@ -60,7 +61,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 terminal_objective_mechanism=True,
 
                                 # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
-                                learning_function=pnl.BayesGLM,
+                                learning_function=psyneulink.core.components.functions.learningfunctions.BayesGLM,
 
                                 # function=pnl.GradientOptimization(
                                 #         convergence_criterion=pnl.VALUE,

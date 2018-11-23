@@ -305,7 +305,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ContrastiveHebbian, Hebbian, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.learningfunctions import Hebbian, ContrastiveHebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import Reinforcement
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.integratorfunctions import ConstantIntegrator, AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
 from psyneulink.core.components.functions.combinationfunctions import Reduce

@@ -8,6 +8,7 @@ from . import integratorfunctions
 from . import distributionfunctions
 from . import objectivefunctions
 from . import optimizationfunctions
+from . import learningfunctions
 
 from .function import *
 from .userdefinedfunction import *
@@ -19,6 +20,7 @@ from .integratorfunctions import *
 from .distributionfunctions import *
 from .objectivefunctions import *
 from .optimizationfunctions import *
+from .learningfunctions import *
 
 __all__ = list(function.__all__)
 __all__.extend(userdefinedfunction.__all__)
@@ -30,3 +32,4 @@ __all__.extend(integratorfunctions.__all__)
 __all__.extend(distributionfunctions.__all__)
 __all__.extend(objectivefunctions.__all__)
 __all__.extend(optimizationfunctions.__all__)
+__all__.extend(learningfunctions.__all__)

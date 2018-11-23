@@ -542,7 +542,8 @@ import typecheck as tc
 from enum import Enum
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

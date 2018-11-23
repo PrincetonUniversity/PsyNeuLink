@@ -1,6 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 input_layer = pnl.TransferMechanism(
@@ -20,7 +21,8 @@ action_selection = pnl.TransferMechanism(
 p = pnl.Process(
     default_variable=[0, 0, 0],
     pathway=[input_layer, action_selection],
-    learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.05)),
+    learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions.learningfunctions
+                                    .Reinforcement(learning_rate=0.05)),
     target=0
 )
 
