@@ -1077,9 +1077,3 @@ class ArgumentTherapy(Function_Base):
         return self.convert_output_type(value)
 
 
-
-# MATRIX = 1             # w
-
-
-# Argument names:
-
