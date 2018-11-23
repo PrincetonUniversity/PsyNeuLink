@@ -7,7 +7,9 @@ from psyneulink.core.components.functions.integratorfunctions import ConstantInt
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, UniformToNormalDist, WaldDist
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
+    ExponentialDist, \
+    UniformDist, GammaDist, WaldDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism

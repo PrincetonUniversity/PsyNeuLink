@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 # Define Variables ----------------------------------------------------------------------------------------------------
 
 # Weights & Biases:
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 b_decision = 0.00   # Bias on decision units (not biased)
@@ -68,7 +69,7 @@ decision_layer = pnl.LCAMechanism(
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_decision),
-    noise=pnl.NormalDist(standard_deviation=SD).function,
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='DECISION LAYER'
 )
@@ -83,7 +84,7 @@ response_layer = pnl.LCAMechanism(
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_response),
-    noise=pnl.NormalDist(standard_deviation=SD).function,
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='RESPONSE'
 )

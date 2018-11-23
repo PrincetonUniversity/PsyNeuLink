@@ -325,8 +325,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import Distance, DistributionFunction, Function, \
+from psyneulink.core.components.functions.function import Distance, Function, \
     is_function_type
+from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction

@@ -3,7 +3,8 @@ import pytest
 import typecheck
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import FunctionError, NormalDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator, BogaczEtAl
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System

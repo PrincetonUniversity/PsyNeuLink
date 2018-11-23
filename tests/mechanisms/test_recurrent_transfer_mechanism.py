@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import ExponentialDist, FunctionError, NormalDist, \
-    Reinforcement
+from psyneulink.core.components.functions.function import FunctionError, Reinforcement
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist
 from psyneulink.core.components.functions.integratorfunctions import ConstantIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, get_matrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce

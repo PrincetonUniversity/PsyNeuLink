@@ -2,6 +2,7 @@ import numpy as np
 import psyneulink as pnl
 
 #  INPUT LAYER
+import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 ci = pnl.TransferMechanism(size=2, function=psyneulink.core.components.functions.transferfunctions.Linear, name='COLOR INPUT')
@@ -16,14 +17,14 @@ processing_rate = 0.1
 ch = pnl.TransferMechanism(size=2,
                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                            integrator_mode=False,
-                           noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                           noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                            integration_rate=processing_rate,
                            name='COLORS HIDDEN')
 
 wh = pnl.TransferMechanism(size=2,
                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                            integrator_mode=False,
-                           noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                           noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                            integration_rate=processing_rate,
                            name='WORDS HIDDEN')
 
@@ -31,7 +32,7 @@ wh = pnl.TransferMechanism(size=2,
 r = pnl.TransferMechanism(size=2,
                           function=psyneulink.core.components.functions.transferfunctions.Logistic,
                           integrator_mode=False,
-                          noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                          noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                           integration_rate=processing_rate,
                           name='RESPONSE')
 
