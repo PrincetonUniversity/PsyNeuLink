@@ -1136,10 +1136,6 @@ class ArgumentTherapy(Function_Base):
 
 
 
-# • why does integrator return a 2d array?
-# • are rate and noise converted to 1d np.array?  If not, correct docstring
-# • can noise and initializer be an array?  If so, validated in validate_param?
-
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 # NOISE = 'noise' -- Defined in Keywords
