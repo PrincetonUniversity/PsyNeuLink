@@ -4218,6 +4218,7 @@ STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
 NON_DECISION_TIME = 't0'
+# DDM solution options:
 kwBogaczEtAl = "BogaczEtAl"
 kwNavarrosAndFuss = "NavarroAndFuss"
 
