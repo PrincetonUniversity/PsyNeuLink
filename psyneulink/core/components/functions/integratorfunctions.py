@@ -4229,6 +4229,7 @@ def _BogaczEtAl_bias_getter(owning_component=None, execution_id=None):
     return (starting_point + threshold) / (2 * threshold)
 
 
+# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 class BogaczEtAl(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     BogaczEtAl(                 \

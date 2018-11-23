@@ -1134,15 +1134,6 @@ class ArgumentTherapy(Function_Base):
 # region ****************************************   FUNCTIONS   ********************************************************
 # endregion
 
-
-
-
-# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
-
-
-# Results from Navarro and Fuss DDM solution (indices for return value tuple)
-
-
 # region ************************************   DISTRIBUTION FUNCTIONS   ***********************************************
 
 class DistributionFunction(Function_Base):
