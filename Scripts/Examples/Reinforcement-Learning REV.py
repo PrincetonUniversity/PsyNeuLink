@@ -1,6 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.selectionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 input_layer = pnl.TransferMechanism(
@@ -15,7 +16,7 @@ action_selection = pnl.TransferMechanism(
                 gain=1.0),
         output_states={pnl.NAME: 'SELECTED ACTION',
                        pnl.VARIABLE:[(pnl.INPUT_STATE_VARIABLES, 0), (pnl.OWNER_VALUE, 0)],
-                       pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.OneHot(mode=pnl.PROB).function},
+                       pnl.FUNCTION: psyneulink.core.components.functions.selectionfunctions.OneHot(mode=pnl.PROB).function},
     # output_states={pnl.NAME: "SOFT_MAX",
     #                pnl.VARIABLE: (pnl.OWNER_VALUE,0),
     #                pnl.FUNCTION: pnl.SoftMax(output=pnl.PROB,gain=1.0)},

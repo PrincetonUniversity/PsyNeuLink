@@ -327,7 +327,8 @@ import typecheck as tc
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.function import AdaptiveIntegrator, Distance, DistributionFunction, Function, \
     is_function_type
-from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic, SelectionFunction
+from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
+from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError

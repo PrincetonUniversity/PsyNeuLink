@@ -4,6 +4,7 @@ import psyneulink as pnl
 
 from matplotlib import pyplot as plt
 
+import psyneulink.core.components.functions.selectionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 np.random.seed(2)
@@ -43,7 +44,7 @@ action_selection = pnl.TransferMechanism(size=2,
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
                                                          pnl.FUNCTION: psyneulink.core.components.functions
-                                         .transferfunctions.OneHot(mode=pnl.PROB_INDICATOR).function},
+                                         .selectionfunctions.OneHot(mode=pnl.PROB_INDICATOR).function},
                                                         {pnl.NAME: 'REWARD RATE',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
