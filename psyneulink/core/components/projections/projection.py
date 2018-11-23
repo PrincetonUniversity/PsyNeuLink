@@ -1827,7 +1827,7 @@ def _validate_connection_request(
 
 def _get_projection_value_shape(sender, matrix):
     """Return shape of a Projection's value given its sender and matrix"""
-    from psyneulink.core.components.functions.function import get_matrix
+    from psyneulink.core.components.functions.transferfunctions import get_matrix
     matrix = get_matrix(matrix)
     return np.zeros(matrix.shape[sender.value.ndim :])
 

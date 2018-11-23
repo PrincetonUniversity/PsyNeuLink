@@ -1112,7 +1112,7 @@ class DDM(ProcessingMechanism_Base):
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
     def reinitialize(self, *args, execution_context=None):
-        from psyneulink.core.components.functions.function import Integrator
+        from psyneulink.core.components.functions.integratorfunctions import Integrator
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function_object, Integrator):
