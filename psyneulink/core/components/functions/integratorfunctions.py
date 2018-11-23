@@ -4209,6 +4209,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         return value
 
 
+# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD = 'threshold'

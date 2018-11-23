@@ -1137,7 +1137,6 @@ class ArgumentTherapy(Function_Base):
 
 
 
-# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 # NOISE = 'noise' -- Defined in Keywords
 
 # DDM solution options:
