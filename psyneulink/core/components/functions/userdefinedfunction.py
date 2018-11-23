@@ -8,9 +8,6 @@
 #
 #
 # *****************************************  USER-DEFINED FUNCTION  ****************************************************
-'''
-* `UserDefinedFunction`
-'''
 
 import typecheck as tc
 
@@ -26,20 +23,18 @@ from psyneulink.core.globals.preferences import is_pref_set
 __all__ = ['UserDefinedFunction']
 
 class UserDefinedFunction(Function_Base):
-    """
-    UserDefinedFunction(        \
-         custom_function=None,  \
-         default_variable=None, \
-         params=None,           \
-         owner=None,            \
-         name=None,             \
-         prefs=None             \
-    )
+    """UserDefinedFunction(  \
+    custom_function=None,    \
+    default_variable=None,   \
+    params=None,             \
+    owner=None,              \
+    name=None,               \
+    prefs=None)
 
     .. _UDF_Description:
 
     A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
-    as a PsyNeuLink `Function`, so that it can be used as the `function <Component.function>` of a `Component
+    as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a `Component
     <Component>`.  This is done automatically if a Python function or method is assigned as the `function
     <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
     by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
@@ -354,8 +349,8 @@ class UserDefinedFunction(Function_Base):
         the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
     """
+
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 

@@ -277,7 +277,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
     learning_function=None,                                \
-    evaluation_function=None,                               \
+    evaluation_function=None,                              \
     search_function=None,                                  \
     search_termination_function=None,                      \
     search_space=None,                                     \

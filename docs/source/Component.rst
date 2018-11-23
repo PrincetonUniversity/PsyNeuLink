@@ -7,7 +7,7 @@ Component
    Mechanisms <Mechanism>
    Projections <Projection>
    States <State>
-   Functions <Function>
+   Functions <Functions>
 
 .. automodule:: psyneulink.core.components.component
    :members:
