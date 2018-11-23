@@ -16,7 +16,7 @@ from . import builtins
 from .builder_context import *
 from .execution import *
 from .execution import _tupleize
-from .jit_engine import cpu_jit_engine
+from .jit_engine import *
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 
@@ -71,6 +71,11 @@ class LLVMBinaryFunction:
         self.name = name
         self.__ptr = None
 
+        self.__c_func = None
+        self.__c_func_type = None
+        self.__byref_arg_types = None
+
+    def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
         assert(isinstance(f, ir.Function))
@@ -91,9 +96,6 @@ class LLVMBinaryFunction:
             params.append(param_type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
-        # Binary pointer.
-        self.ptr = _cpu_engine._engine.get_function_address(name)
-
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
 
@@ -106,20 +108,33 @@ class LLVMBinaryFunction:
     # This will be useful for non-native targets
     @property
     def ptr(self):
+        if self.__ptr is None:
+            # Binary pointer and recreate ctype function
+            self.ptr = _cpu_engine._engine.get_function_address(self.name)
         return self.__ptr
 
     @ptr.setter
     def ptr(self, ptr):
         if self.__ptr != ptr:
             self.__ptr = ptr
-            self.__c_func = self.__c_func_type(self.__ptr)
+            self.__c_func = self._c_func_type(self.__ptr)
 
     @property
     def byref_arg_types(self):
+        if self.__byref_arg_types is None:
+            self._init_host_func_type()
         return self.__byref_arg_types
 
     @property
+    def _c_func_type(self):
+        if self.__c_func_type is None:
+            self._init_host_func_type()
+        return self.__c_func_type
+
+    @property
     def c_func(self):
+        if self.__c_func is None:
+            self.__c_func = self._c_func_type(self.ptr)
         return self.__c_func
 
     @staticmethod
