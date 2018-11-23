@@ -1,7 +1,7 @@
 import numpy as np
 
 from collections import deque
-from psyneulink.core.components.functions.function import Buffer
+from psyneulink.core.components.functions.integratorfunctions import Buffer
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System

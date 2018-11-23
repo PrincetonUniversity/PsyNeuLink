@@ -146,7 +146,8 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import AGTUtilityIntegrator, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.integratorfunctions import AGTUtilityIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base

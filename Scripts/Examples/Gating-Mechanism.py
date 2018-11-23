@@ -1,6 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
@@ -62,7 +63,7 @@ Middle_Weights = pnl.MappingProjection(
     receiver=Hidden_Layer_2,
     matrix={
         pnl.VALUE: Middle_Weights_matrix,
-        pnl.FUNCTION: pnl.ConstantIntegrator,
+        pnl.FUNCTION: psyneulink.core.components.functions.integratorfunctions.ConstantIntegrator,
         pnl.FUNCTION_PARAMS: {
             pnl.INITIALIZER: Middle_Weights_matrix,
             pnl.RATE: Middle_Weights_matrix

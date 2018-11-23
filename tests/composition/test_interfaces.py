@@ -6,7 +6,7 @@ from timeit import timeit
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import SimpleIntegrator
+from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.interfacefunctions import Identity
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism

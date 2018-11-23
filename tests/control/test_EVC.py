@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import BogaczEtAl, DRIFT_RATE, THRESHOLD
+from psyneulink.core.components.functions.integratorfunctions import DRIFT_RATE, THRESHOLD, BogaczEtAl
 from psyneulink.core.components.functions.transferfunctions import Linear, Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process

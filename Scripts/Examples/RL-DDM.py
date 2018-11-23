@@ -10,6 +10,7 @@ import random
 # np.random.seed(seed)
 
 # CONSTRUCTION:
+import psyneulink.core.components.functions.integratorfunctions
 
 input_layer = pnl.TransferMechanism(
     size=2,
@@ -26,7 +27,7 @@ input_layer = pnl.TransferMechanism(
 #        response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
-        function=pnl.BogaczEtAl(
+        function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
                 starting_point=pnl.CONTROL,

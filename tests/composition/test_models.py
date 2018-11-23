@@ -2,6 +2,7 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.utilities
 
@@ -235,7 +236,7 @@ class TestModels:
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=(1.0),
                 threshold=(10.0),
                 starting_point=0.0,
@@ -244,14 +245,14 @@ class TestModels:
         )
 
         myMechanism_2 = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=2.0,
                 threshold=20.0),
             name='My_DDM_2'
         )
 
         myMechanism_3 = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=3.0,
                 threshold=30.0
             ),
@@ -340,14 +341,15 @@ class TestModels:
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                             standard_deviation=accumulator_noise).function,
-                                                                                        rate=0.1),
+        respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions
+                                                          .integratorfunctions.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                                                                                  standard_deviation=accumulator_noise).function,
+                                                                                                                                             rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                               standard_deviation=accumulator_noise).function,
-                                                                                          rate=0.1),
+        respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                                                                                    standard_deviation=accumulator_noise).function,
+                                                                                                                                               rate=0.1),
                                                             name='respond_green_accumulator')
 
         #   LOGGING

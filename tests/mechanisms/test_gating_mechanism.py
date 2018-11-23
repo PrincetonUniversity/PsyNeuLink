@@ -2,7 +2,7 @@ import numpy as np
 import psyneulink as pnl
 import psyneulink.core.components.functions.transferfunctions
 
-from psyneulink.core.components.functions.function import ConstantIntegrator
+from psyneulink.core.components.functions.integratorfunctions import ConstantIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism

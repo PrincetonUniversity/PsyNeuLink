@@ -3,6 +3,7 @@ import psyneulink as pnl
 
 
 # Preferences:
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 mechanism_prefs = pnl.ComponentPreferenceSet(
@@ -62,7 +63,7 @@ Automatic_Component = pnl.TransferMechanism(
 
 # Decision Mechanisms
 Decision = pnl.DDM(
-    function=pnl.BogaczEtAl(
+    function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
         drift_rate=(1.0),
         threshold=(0.2645),
         noise=(0.5),

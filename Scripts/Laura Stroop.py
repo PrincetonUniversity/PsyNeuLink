@@ -14,6 +14,7 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=2,
@@ -73,12 +74,13 @@ response_layer = pnl.TransferMechanism(size=2,
 #sigma = noise = 0.1
 #noise will be
 # squareroot(time_step_size * noise) * a random sample from a normal distribution
-respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.1,
-                                                                               rate=0.1),
+respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.integratorfunctions
+                                                  .SimpleIntegrator(noise=0.1,
+                                                                                                                                     rate=0.1),
                                                   name='respond_red_accumulator')
 #   Respond green accumulator
-respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=0.1,
-                                                                               rate=0.1),
+respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator(noise=0.1,
+                                                                                                                                       rate=0.1),
                                                     name='respond_green_accumulator')
 
 #   add logging

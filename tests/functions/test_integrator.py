@@ -1,6 +1,7 @@
 
 import numpy as np
 import psyneulink.core.components.functions.function as Function
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -20,10 +21,10 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     return val
 
 test_data = [
-    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
+    (psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
+    (psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
+    (psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
+    (psyneulink.core.components.functions.integratorfunctions.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
 ]
 
 # use list, naming function produces ugly names

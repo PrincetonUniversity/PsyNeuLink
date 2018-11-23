@@ -1,6 +1,7 @@
 import psyneulink as pnl
 import pytest
 
+import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.components.functions.transferfunctions
 from psyneulink.core.globals.utilities import unproxy_weakproxy
 
@@ -9,8 +10,8 @@ ancestor_child_data = [
     (pnl.Component, pnl.TransferMechanism, False),
     (pnl.Component, pnl.OutputState, False),
     (pnl.Component, pnl.InputState, True),
-    (pnl.Component, pnl.SimpleIntegrator, False),
-    (pnl.Function_Base, pnl.SimpleIntegrator, True),
+    (pnl.Component, psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator, False),
+    (pnl.Function_Base, psyneulink.core.components.functions.integratorfunctions.SimpleIntegrator, True),
     (pnl.TransferMechanism, pnl.RecurrentTransferMechanism, True)
 ]
 

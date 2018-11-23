@@ -56,7 +56,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
 from psyneulink.core.llvm import helpers
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'ReLU', 'Gaussian', 'SoftMax',
-           'get_matrix']
+           'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
