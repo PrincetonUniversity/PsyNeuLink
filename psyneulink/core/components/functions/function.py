@@ -1137,7 +1137,6 @@ class ArgumentTherapy(Function_Base):
 
 
 
-# NOISE = 'noise' -- Defined in Keywords
 
 # DDM solution options:
 

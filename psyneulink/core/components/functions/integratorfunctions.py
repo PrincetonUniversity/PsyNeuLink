@@ -4216,6 +4216,7 @@ THRESHOLD = 'threshold'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
+# NOISE = 'noise' -- Defined in Keywords
 NON_DECISION_TIME = 't0'
 kwBogaczEtAl = "BogaczEtAl"
 kwNavarrosAndFuss = "NavarroAndFuss"
