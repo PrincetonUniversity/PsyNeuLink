@@ -139,7 +139,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import LCAIntegrator, Logistic, SelectionFunction, max_vs_avg, max_vs_next
+from psyneulink.core.components.functions.function import LCAIntegrator, max_vs_avg, max_vs_next
+from psyneulink.core.components.functions.transferfunctions import Logistic, SelectionFunction
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE

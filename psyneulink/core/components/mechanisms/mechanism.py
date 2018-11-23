@@ -941,7 +941,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, function_type, method_type
-from psyneulink.core.components.functions.function import FunctionOutputType, Linear
+from psyneulink.core.components.functions.function import FunctionOutputType
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec

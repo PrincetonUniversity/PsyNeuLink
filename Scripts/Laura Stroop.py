@@ -14,12 +14,14 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.transferfunctions
+
 colors_input_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=2,
-                                          function=pnl.Linear,
+                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
@@ -28,7 +30,7 @@ words_input_layer = pnl.TransferMechanism(size=2,
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                             # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                             integrator_mode=False,
                                             noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,
@@ -37,7 +39,7 @@ colors_hidden_layer = pnl.TransferMechanism(size=2,
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            # function=pnl.Logistic(gain=1.0, offset=-4.0),
                                            integrator_mode=False,
                                            noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,
@@ -53,14 +55,14 @@ words_hidden_layer.set_log_conditions('RESULTS')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=pnl.Linear,
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear,
                                    name='TASK')
 
 #   Response layer, responses: ('red', 'green')
 #tau = 0.1 (here, smoothing factor)
 #should be randomly distributed noise to the net input of each unit (except input unit)
 response_layer = pnl.TransferMechanism(size=2,
-                                       function=pnl.Logistic,
+                                       function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                        name='RESPONSE',
                                        integrator_mode=True,
                                        noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function,

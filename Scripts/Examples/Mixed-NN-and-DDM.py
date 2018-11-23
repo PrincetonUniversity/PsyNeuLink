@@ -1,15 +1,16 @@
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 myInputLayer = pnl.TransferMechanism(
     name='Input Layer',
-    function=pnl.Linear(),
+    function=psyneulink.core.components.functions.transferfunctions.Linear(),
     default_variable=[0, 0]
 )
 
 myHiddenLayer = pnl.TransferMechanism(
     name='Hidden Layer 1',
-    function=pnl.Logistic(gain=1.0, x_0=0),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=0),
     default_variable=np.zeros((5,))
 )
 
@@ -27,7 +28,7 @@ myProcess = pnl.Process(
     default_variable=[0, 0],
     pathway=[
         myInputLayer,
-        pnl.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
+        psyneulink.core.components.functions.transferfunctions.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
         myHiddenLayer,
         pnl.FULL_CONNECTIVITY_MATRIX,
         myDDM

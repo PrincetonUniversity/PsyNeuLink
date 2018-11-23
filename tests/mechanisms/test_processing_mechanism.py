@@ -2,8 +2,9 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.function import AGTUtilityIntegrator, AccumulatorIntegrator, AdaptiveIntegrator, BackPropagation, BogaczEtAl, \
-    ConstantIntegrator, Distance, DriftDiffusionIntegrator, Exponential, ExponentialDist, FHNIntegrator, FunctionError, GammaDist, Hebbian, Integrator, Linear, \
-    LinearMatrix, Logistic, NavarroAndFuss, NormalDist, OrnsteinUhlenbeckIntegrator, Reinforcement, SimpleIntegrator, SoftMax, Stability, TDLearning, UniformDist, UniformToNormalDist, WaldDist
+    ConstantIntegrator, Distance, DriftDiffusionIntegrator, ExponentialDist, FHNIntegrator, FunctionError, GammaDist, Hebbian, Integrator, \
+    NavarroAndFuss, NormalDist, OrnsteinUhlenbeckIntegrator, Reinforcement, SimpleIntegrator, Stability, TDLearning, UniformDist, UniformToNormalDist, WaldDist
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 

@@ -295,7 +295,7 @@ class AGTControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    from psyneulink.core.components.functions.function import Linear
+    from psyneulink.core.components.functions.transferfunctions import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None

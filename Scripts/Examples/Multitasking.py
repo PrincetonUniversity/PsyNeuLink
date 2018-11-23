@@ -1,9 +1,10 @@
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 stimulus_layer = pnl.TransferMechanism(size=4)
 task_layer = pnl.TransferMechanism(size=4)
-hidden_layer = pnl.TransferMechanism(size=4, function=pnl.Logistic)
-output_layer = pnl.TransferMechanism(size=4, function=pnl.Logistic)
+hidden_layer = pnl.TransferMechanism(size=4, function=psyneulink.core.components.functions.transferfunctions.Logistic)
+output_layer = pnl.TransferMechanism(size=4, function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 network_process = pnl.Process(pathway=[stimulus_layer, hidden_layer, output_layer])
 hidden_control_process = pnl.Process(pathway=[task_layer, hidden_layer])

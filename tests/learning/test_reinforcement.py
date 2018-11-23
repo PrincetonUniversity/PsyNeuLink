@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.function import PROB
-from psyneulink.core.components.functions.function import Reinforcement, SoftMax
+from psyneulink.core.components.functions.function import Reinforcement
+from psyneulink.core.components.functions.transferfunctions import SoftMax
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection

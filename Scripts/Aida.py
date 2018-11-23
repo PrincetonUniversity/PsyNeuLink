@@ -15,11 +15,13 @@ import numpy as np
 # CA3 = pnl.KWTA(size=80, function=pnl.Linear)
 # CA1 = pnl.KWTA(size=100, function=pnl.Linear)
 # ECout = pnl.KWTA(size=8, function=pnl.Linear)
-ECin = pnl.TransferMechanism(size=8, function=pnl.Linear(), name='ECin')
-DG = pnl.TransferMechanism(size=400, function=pnl.Logistic(), name='DG')
-CA3 = pnl.TransferMechanism(size=80, function=pnl.Logistic(), name='CA3')
-CA1 = pnl.TransferMechanism(size=100, function=pnl.Linear(), name='CA1')
-ECout = pnl.TransferMechanism(size=8, function=pnl.Logistic(), name='ECout')
+import psyneulink.core.components.functions.transferfunctions
+
+ECin = pnl.TransferMechanism(size=8, function=psyneulink.core.components.functions.transferfunctions.Linear(), name='ECin')
+DG = pnl.TransferMechanism(size=400, function=psyneulink.core.components.functions.transferfunctions.Logistic(), name='DG')
+CA3 = pnl.TransferMechanism(size=80, function=psyneulink.core.components.functions.transferfunctions.Logistic(), name='CA3')
+CA1 = pnl.TransferMechanism(size=100, function=psyneulink.core.components.functions.transferfunctions.Linear(), name='CA1')
+ECout = pnl.TransferMechanism(size=8, function=psyneulink.core.components.functions.transferfunctions.Logistic(), name='ECout')
 
 
 # In[3]:

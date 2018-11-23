@@ -1,7 +1,9 @@
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
-from psyneulink.core.components.functions.function import ConstantIntegrator, Logistic
+from psyneulink.core.components.functions.function import ConstantIntegrator
+from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
@@ -211,13 +213,13 @@ def test_gating_with_UDF():
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
         default_variable=np.zeros((2,)),
-        function=pnl.Logistic
+        function=psyneulink.core.components.functions.transferfunctions.Logistic
     )
 
     Output_Layer = pnl.TransferMechanism(
         name='Output_Layer',
         default_variable=[0, 0, 0],
-        function=pnl.Linear,
+        function=psyneulink.core.components.functions.transferfunctions.Linear,
         # function=pnl.Logistic,
         # output_states={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
@@ -225,7 +227,7 @@ def test_gating_with_UDF():
         output_states={
             pnl.NAME: 'RESULTS USING UDF',
             # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-            pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
+            pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
             # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
             # pnl.FUNCTION: my_linear_fct
             # pnl.FUNCTION: my_exp_fct

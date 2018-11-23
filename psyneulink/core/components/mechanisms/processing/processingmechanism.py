@@ -93,7 +93,7 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Linear
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, kwPreferenceSetName

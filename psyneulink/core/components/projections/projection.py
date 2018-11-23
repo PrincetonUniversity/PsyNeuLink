@@ -390,7 +390,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.functions.function import LinearMatrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
@@ -1060,7 +1060,6 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     if include_matrix_spec:
         if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
             return True
-        from psyneulink.core.components.functions.function import get_matrix
         if get_matrix(spec) is not None:
             return True
     if isinstance(spec, tuple) and len(spec) == 2:

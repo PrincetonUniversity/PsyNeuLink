@@ -1,5 +1,7 @@
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestStroop:
     def test_lauras_cohen_1990_model(self):
@@ -7,16 +9,16 @@ class TestStroop:
 
         #  colors: ('red', 'green'), words: ('RED','GREEN')
         colors_input_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Linear,
+                                                   function=psyneulink.core.components.functions.transferfunctions.Linear,
                                                    name='COLORS_INPUT')
 
         words_input_layer = pnl.TransferMechanism(size=2,
-                                                  function=pnl.Linear,
+                                                  function=psyneulink.core.components.functions.transferfunctions.Linear,
                                                   name='WORDS_INPUT')
 
         #   Task layer, tasks: ('name the color', 'read the word')
         task_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='TASK')
 
         #   HIDDEN LAYER UNITS
@@ -27,7 +29,8 @@ class TestStroop:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                                    function=psyneulink.core.components.functions.transferfunctions
+                                                    .Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
                                                     noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
@@ -35,7 +38,7 @@ class TestStroop:
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
                                                    noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                    integration_rate=0.1,
@@ -47,7 +50,7 @@ class TestStroop:
         #   time averaging = tau = 0.1
         #   randomly distributed noise to the net input
         response_layer = pnl.TransferMechanism(size=2,
-                                               function=pnl.Logistic,
+                                               function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                                name='RESPONSE',
                                                integrator_mode=True,
                                                noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,

@@ -1,6 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import BogaczEtAl, Linear, Logistic
+from psyneulink.core.components.functions.function import BogaczEtAl
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection

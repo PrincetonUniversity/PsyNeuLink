@@ -135,7 +135,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import BackPropagation, Hebbian, Linear, Reinforcement, TDLearning
+from psyneulink.core.components.functions.function import BackPropagation, Hebbian, Reinforcement, TDLearning
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism

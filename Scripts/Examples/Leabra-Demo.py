@@ -23,6 +23,8 @@ import time
 import warnings
 
 # suppress warning as described above
+import psyneulink.core.components.functions.transferfunctions
+
 warnings.filterwarnings("ignore", message=r".*numpy.dtype size changed.*")
 
 random_seed_value = 1  # feel free to change this value
@@ -60,8 +62,9 @@ L = pnl.LeabraMechanism(
 )
 
 
-T1 = pnl.TransferMechanism(name='T1', size=input_size, function=pnl.Linear)
-T2 = pnl.TransferMechanism(name='T2', size=output_size, function=pnl.Linear)
+T1 = pnl.TransferMechanism(name='T1', size=input_size, function=psyneulink.core.components.functions
+                           .transferfunctions.Linear)
+T2 = pnl.TransferMechanism(name='T2', size=output_size, function=psyneulink.core.components.functions.transferfunctions.Linear)
 
 p1 = pnl.Process(pathway=[T1, L])
 proj = pnl.MappingProjection(sender=T2, receiver=L.input_states[1])

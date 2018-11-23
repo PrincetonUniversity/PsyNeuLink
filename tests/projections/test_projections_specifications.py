@@ -2,6 +2,9 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
+import psyneulink.core.components.functions.transferfunctions
+
+
 class TestProjectionSpecificationFormats:
 
     def test_multiple_modulatory_projection_specs(self):
@@ -186,7 +189,7 @@ class TestProjectionSpecificationFormats:
                 C2 = (C2[0], pnl.ControlProjection())
 
             R = pnl.RecurrentTransferMechanism(noise=C1,
-                                               function=pnl.Logistic(gain=C2))
+                                               function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=C2))
             assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
             assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \

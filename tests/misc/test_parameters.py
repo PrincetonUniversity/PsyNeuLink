@@ -1,6 +1,7 @@
 import psyneulink as pnl
 import pytest
 
+import psyneulink.core.components.functions.transferfunctions
 from psyneulink.core.globals.utilities import unproxy_weakproxy
 
 # (ancestor, child, should_override)
@@ -15,8 +16,8 @@ ancestor_child_data = [
 
 # (obj, param_name, alias_name)
 param_alias_data = [
-    (pnl.Linear, 'slope', 'multiplicative_param'),
-    (pnl.Linear, 'intercept', 'additive_param'),
+    (psyneulink.core.components.functions.transferfunctions.Linear, 'slope', 'multiplicative_param'),
+    (psyneulink.core.components.functions.transferfunctions.Linear, 'intercept', 'additive_param'),
     (pnl.ControlMechanism, 'value', 'allocation_policy'),
 ]
 
@@ -96,14 +97,14 @@ def test_aliases_set_alias(obj, param_name, alias_name):
 
 
 def test_parameter_getter():
-    f = pnl.Linear()
+    f = psyneulink.core.components.functions.transferfunctions.Linear()
     f.parameters.slope.getter = lambda x: x ** 2
 
     assert f.parameters.slope.get(x=3) == 9
 
 
 def test_parameter_setter():
-    f = pnl.Linear()
+    f = psyneulink.core.components.functions.transferfunctions.Linear()
     f.parameters.slope.setter = lambda x: x ** 2
 
     f.parameters.slope.set(3)

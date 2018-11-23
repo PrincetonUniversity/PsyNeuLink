@@ -1,29 +1,30 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
     default_variable=np.zeros((2,)),
-    function=pnl.Logistic
+    function=psyneulink.core.components.functions.transferfunctions.Logistic
 )
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
     default_variable=np.zeros((5,)),
-    function=pnl.Logistic()
+    function=psyneulink.core.components.functions.transferfunctions.Logistic()
 )
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
     default_variable=[0, 0, 0, 0],
-    function=pnl.Logistic()
+    function=psyneulink.core.components.functions.transferfunctions.Logistic()
 )
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
     default_variable=[0, 0, 0],
-    function=pnl.Logistic
+    function=psyneulink.core.components.functions.transferfunctions.Logistic
 )
 
 Gating_Mechanism = pnl.GatingMechanism(

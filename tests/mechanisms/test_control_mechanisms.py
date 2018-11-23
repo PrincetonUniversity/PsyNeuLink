@@ -3,6 +3,8 @@ import psyneulink as pnl
 import pytest
 import functools
 
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestLCControlMechanism:
 
@@ -16,8 +18,8 @@ class TestLCControlMechanism:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
+        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
         # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
         P = pnl.Process(pathway=[A, B])
@@ -29,7 +31,7 @@ class TestLCControlMechanism:
             base_level_gain=G,
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[B],
                 name='LC ObjectiveMechanism'
             )

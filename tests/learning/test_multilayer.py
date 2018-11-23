@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import Logistic
+from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

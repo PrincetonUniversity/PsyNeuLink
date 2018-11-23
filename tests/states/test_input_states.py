@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 import psyneulink.core.components.functions.combinationfunctions
+import psyneulink.core.components.functions.transferfunctions
 
 
 class TestInputStates:
@@ -59,13 +60,14 @@ class TestInputStates:
 
     def test_combine_param_conflicting_function_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear(), combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions
+                                                                  .transferfunctions.Linear(), combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear Function" in str(error_text.value)
 
     def test_combine_param_conflicting_fct_class_spec(self):
         with pytest.raises(pnl.InputStateError) as error_text:
-            t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear, combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_states=pnl.InputState(function=psyneulink.core.components.functions.transferfunctions.Linear, combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputState" in str(error_text.value)
 

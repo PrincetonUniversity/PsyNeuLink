@@ -4,12 +4,14 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.transferfunctions
+
 colors_input_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=2,
-                                          function=pnl.Linear,
+                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 # Specify signalSearchRange for control_signal_params (not sure if needed)
@@ -17,7 +19,7 @@ words_input_layer = pnl.TransferMechanism(size=2,
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=pnl.Logistic(
+                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(
                                        gain=(1.0, pnl.ControlProjection(  # receiver= response_layer.output_states[1],
                                            # 'DECISION_ENERGY'
                                            # modulation=pnl.ModulationParam.OVERRIDE,#what to implement here
@@ -33,16 +35,16 @@ task_layer.loggable_items
 #should be randomly distributed noise to the net input of each unit (except input unit)
 #should have tau = integration_rate = 0.1
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                             integrator_mode=True,
-                                          #  noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
+                                            #  noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
-                                       #    noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
+                                           #    noise=pnl.NormalDist(mean=0.0, standard_deviation=.005).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -64,17 +66,17 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 
 # Now a RecurrentTransferMechanism compared to Lauda's Stroop model!
 response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
-                         function=pnl.Logistic,#pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
-                         name='RESPONSE',
-                         output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                function=psyneulink.core.components.functions.transferfunctions.Logistic,  #pnl.Stability(matrix=np.matrix([[0.0, -1.0], [-1.0, 0.0]])),
+                                                name='RESPONSE',
+                                                output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                            pnl.FUNCTION: pnl.Stability(default_variable=np.array([0.0, -1.0]),
                                                                        metric=pnl.ENERGY,
                                                                        matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
-                         integrator_mode=True,#)
-                        # noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function)
-                         integration_rate=0.1)
+                                                integrator_mode=True,  #)
+                                                # noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function)
+                                                integration_rate=0.1)
 
 #response_layer.set_log_conditions('value')
 #response_layer.set_log_conditions('gain')

@@ -3,6 +3,9 @@ import numpy as np
 import psyneulink as pnl
 
 from matplotlib import pyplot as plt
+
+import psyneulink.core.components.functions.transferfunctions
+
 np.random.seed(2)
 
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
@@ -32,14 +35,15 @@ input_layer = pnl.TransferMechanism(size=2,
 
 
 action_selection = pnl.TransferMechanism(size=2,
-                                         function=pnl.SoftMax(
+                                         function=psyneulink.core.components.functions.transferfunctions.SoftMax(
                                            output=pnl.ALL,
                                            gain=1.0),
                                          output_states=[{pnl.NAME: 'SELECTED ACTION',
                                                          pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
-                                                         pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB_INDICATOR).function},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .transferfunctions.OneHot(mode=pnl.PROB_INDICATOR).function},
                                                         {pnl.NAME: 'REWARD RATE',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],

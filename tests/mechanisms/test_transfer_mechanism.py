@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Exponential, Linear, Logistic, ReLU, \
-    Reinforcement, SoftMax
+from psyneulink.core.components.functions.function import AdaptiveIntegrator, ConstantIntegrator, Reinforcement
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, UniformToNormalDist, WaldDist
