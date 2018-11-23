@@ -1433,6 +1433,7 @@ class BayesGLM(LearningFunction):
         return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
 
+# Argument names:
 ERROR_MATRIX = 'error_matrix'
 WT_MATRIX_SENDERS_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
