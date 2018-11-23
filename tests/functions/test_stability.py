@@ -9,7 +9,7 @@ import pytest
 SIZE=10
 # Some metrics (CROSS_ENTROPY) don't like 0s
 test_var = np.random.rand(SIZE) + Function.EPSILON
-hollow_matrix= psyneulink.core.components.functions.transferfunctions.get_matrix(Function.HOLLOW_MATRIX, SIZE, SIZE)
+hollow_matrix= psyneulink.core.components.functions.transferfunctions.get_matrix(kw.HOLLOW_MATRIX, SIZE, SIZE)
 v1 = test_var
 v2 = np.dot(hollow_matrix * hollow_matrix, v1)
 norm = len(v1)

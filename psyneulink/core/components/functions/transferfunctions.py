@@ -38,7 +38,6 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type
-from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.globals.keywords import \
     PER_ITEM, TRANSFER_FUNCTION_TYPE,  \
     LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
@@ -1270,6 +1269,7 @@ class SoftMax(TransferFunction):
         bounds = None
 
         if not output_type is ALL:
+            from psyneulink.core.components.functions.selectionfunctions import OneHot
             self.one_hot_function = OneHot(mode=output_type).function
 
         super()._instantiate_function(function, function_params=function_params, context=context)

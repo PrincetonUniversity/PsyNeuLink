@@ -18,7 +18,7 @@ Interface Functions:
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions import Function_Base
+from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.keywords import \
     IDENTITY_FUNCTION, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
     PARAMETER_STATE_PARAMS, kwPreferenceSetName

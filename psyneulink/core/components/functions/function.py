@@ -160,11 +160,9 @@ from psyneulink.core.globals.utilities import object_has_single_value, parameter
 __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'get_param_value_for_function', 'get_param_value_for_keyword',
-    'is_Function', 'is_function_type',
-    'max_vs_avg', 'max_vs_next', 'ModulatedParam',
-    'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
-    'MultiplicativeParam', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
+    'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
+    'ModulatedParam','ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM','MultiplicativeParam',
+    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
 ]
 
 
