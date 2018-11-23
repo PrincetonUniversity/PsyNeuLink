@@ -4534,6 +4534,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         return [dRR_dZ, dRR_dA]
 
 
+# Results from Navarro and Fuss DDM solution (indices for return value tuple)
 class NF_Results(IntEnum):
     MEAN_ER = 0
     MEAN_RT = 1
