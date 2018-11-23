@@ -2,6 +2,7 @@ import functools
 import numpy as np
 import psyneulink as pnl
 import psyneulink.core.components.functions.combinationfunctions
+import psyneulink.core.components.functions.optimizationfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 
@@ -17,7 +18,7 @@ class TestControlMechanisms:
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GridSearch(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -36,7 +37,7 @@ class TestControlMechanisms:
         lvoc = pnl.LVOCControlMechanism(feature_predictors=[{pnl.SHADOW_EXTERNAL_INPUTS: [m1, m2]}, m2],
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GridSearch(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions.GridSearch(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -57,7 +58,8 @@ class TestControlMechanisms:
                                         .LinearCombination(offset=10.0),
                                         objective_mechanism=pnl.ObjectiveMechanism(monitored_output_states=[m1, m2]),
                                         terminal_objective_mechanism=True,
-                                        function=pnl.GradientOptimization(max_iterations=1),
+                                        function=psyneulink.core.components.functions.optimizationfunctions
+                                        .GradientOptimization(max_iterations=1),
                                         control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}

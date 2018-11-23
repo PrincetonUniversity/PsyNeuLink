@@ -18,6 +18,7 @@ using a version of the `Learned Value of Control Model
 import psyneulink as pnl
 import numpy as np
 
+import psyneulink.core.components.functions.optimizationfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 np.random.seed(0)
@@ -69,7 +70,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 #         # direction=pnl.ASCENT
                                 # ),
 
-                                function=pnl.GridSearch,
+                                function=psyneulink.core.components.functions.optimizationfunctions.GridSearch,
 
                                 # function=pnl.OptimizationFunction,
 
