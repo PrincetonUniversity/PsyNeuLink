@@ -1137,10 +1137,6 @@ class ArgumentTherapy(Function_Base):
 
 
 
-
-# DDM solution options:
-
-
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 
 
