@@ -17,6 +17,7 @@ import psyneulink as pnl
 # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
 # Linear input layer
 # colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=3,
@@ -65,7 +66,8 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                  {pnl.NAME: 'DECISION_ENERGY',
                                                                   pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                                                  pnl.FUNCTION: pnl.Stability(
+                                                                  pnl.FUNCTION: psyneulink.core.components.functions
+                                                .objectivefunctions.Stability(
                                                                       default_variable = np.array([0.0, 0.0]),
                                                                       metric = pnl.ENERGY,
                                                                       matrix = np.array([[0.0, -4.0],

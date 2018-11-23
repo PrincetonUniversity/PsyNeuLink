@@ -4,6 +4,7 @@ import psyneulink as pnl
 
 # SET UP MECHANISMS
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=2,
@@ -71,9 +72,10 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                                                 output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                           pnl.FUNCTION: pnl.Stability(default_variable=np.array([0.0, -1.0]),
-                                                                       metric=pnl.ENERGY,
-                                                                       matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
+                                           pnl.FUNCTION: psyneulink.core.components.functions.objectivefunctions
+                                                .Stability(default_variable=np.array([0.0, -1.0]),
+                                                                                                                           metric=pnl.ENERGY,
+                                                                                                                           matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
                                                 integrator_mode=True,  #)
                                                 # noise=pnl.NormalDist(mean=0.0, standard_deviation=.01).function)
                                                 integration_rate=0.1)

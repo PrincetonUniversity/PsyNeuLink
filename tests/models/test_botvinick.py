@@ -14,6 +14,7 @@ import pytest
 # Note that this script implements a slightly different Figure than in the original Figure in the paper.
 # However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 # conflict monitoring simulations.
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.transferfunctions
 
 
@@ -79,7 +80,8 @@ def test_botvinick_model(benchmark, mode, reps):
                                                     output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                      {pnl.NAME: 'DECISION_ENERGY',
                                                                       pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                                                      pnl.FUNCTION: pnl.Stability(
+                                                                      pnl.FUNCTION: psyneulink.core.components
+                                                    .functions.objectivefunctions.Stability(
                                                                           default_variable = np.array([0.0, 0.0]),
                                                                           metric = pnl.ENERGY,
                                                                           matrix = np.array([[0.0, -4.0],

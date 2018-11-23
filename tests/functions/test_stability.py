@@ -1,6 +1,7 @@
 
 import numpy as np
 import psyneulink.core.components.functions.function as Function
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.keywords as kw
 import pytest
@@ -33,7 +34,7 @@ names = [
 @pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(variable, metric, normalize, expected, benchmark):
-    f = Function.Stability(default_variable=variable, metric=metric, normalize=normalize)
+    f = psyneulink.core.components.functions.objectivefunctions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -45,7 +46,7 @@ def test_basic(variable, metric, normalize, expected, benchmark):
 @pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(variable, metric, normalize, expected, benchmark):
-    f = Function.Stability(default_variable=variable, metric=metric, normalize=normalize)
+    f = psyneulink.core.components.functions.objectivefunctions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)

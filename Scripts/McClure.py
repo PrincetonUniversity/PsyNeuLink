@@ -5,6 +5,7 @@ import psyneulink as pnl
 from matplotlib import pyplot as plt
 
 import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.selectionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
@@ -56,9 +57,10 @@ action_selection = pnl.TransferMechanism(size=2,
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                           #Jon said this should also work and would be safer: [(pnl.OWNER_VALUE, 0),
                                           #(pnl.OWNER_VALUE, 1)], but it doesn't work (maybe I did sth wrong)
-                                                         pnl.FUNCTION: pnl.Stability(default_variable=[0,0],
-                                                                                     metric=pnl.ENERGY,
-                                                                                     normalize=True)},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .objectivefunctions.Stability(default_variable=[0, 0],
+                                                                                                                                         metric=pnl.ENERGY,
+                                                                                                                                         normalize=True)},
                                                         ],
                                                             #as stated in the paper 'Response conflict was calculated as a normalized                                                                   measure of the energy in the response units during the trial'
                                          name='Action Selection')

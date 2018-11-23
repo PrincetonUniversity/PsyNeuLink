@@ -1,4 +1,5 @@
 import psyneulink as pnl
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.components.functions.transferfunctions
 
 trials=200
@@ -34,7 +35,8 @@ output_layer=pnl.TransferMechanism(size=1, function=psyneulink.core.components.f
 # case it is the error_function, that we will set to CROSS_ENTROPY (using PsyNeulink's Distance Function):
 
 net2l=pnl.Process(pathway=[input_layer,output_layer],
-                  learning=pnl.LearningProjection(error_function=pnl.Distance(metric=pnl.CROSS_ENTROPY))
+                  learning=pnl.LearningProjection(error_function=psyneulink.core.components.functions
+                                                  .objectivefunctions.Distance(metric=pnl.CROSS_ENTROPY))
                   )
 
 #The pathway argument specifies in which order to execute the layers. THis way, the output of one will be mapped to the input of
