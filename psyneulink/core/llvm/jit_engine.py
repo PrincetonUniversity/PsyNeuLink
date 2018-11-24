@@ -207,20 +207,29 @@ class cpu_jit_engine(jit_engine):
 
 class ptx_jit_engine(jit_engine):
     class cuda_engine():
-        def __init__(self):
-            self._modules= []
+        def __init__(self, tm):
+            self._modules = {}
+            self._target_machine = tm
 
         def set_object_cache(cache):
             pass
 
         def add_module(self, module):
-            self._modules.append(module)
+            try:
+                ptx = self._target_machine.emit_assembly(module)
+                ptx_mod = pycuda.driver.module_from_buffer(ptx.encode())
+            except Exception as e:
+                print("FAILED to generate PTX:", e)
+                print(ptx)
+                return None
+
+            self._modules[module] = ptx_mod
 
         def finalize_object(self):
             pass
 
         def remove_module(self, module):
-            self._modules.remove(module)
+            self._modules.pop(module, None)
 
     def __init__(self, object_cache = None):
         super().__init__()
@@ -232,4 +241,4 @@ class ptx_jit_engine(jit_engine):
         assert self._target_machine is None
 
         self._jit_pass_manager, self._target_machine = _ptx_jit_constructor()
-        self._jit_engine = ptx_jit_engine.cuda_engine()
+        self._jit_engine = ptx_jit_engine.cuda_engine(self._target_machine)
