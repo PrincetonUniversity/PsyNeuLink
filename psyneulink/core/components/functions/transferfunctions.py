@@ -68,8 +68,8 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.llvm import helpers
 
-__all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU', 'Normal',
-           'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
+__all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
+           'Gaussian', 'Normal', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
@@ -348,6 +348,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         derivative(input)
 
+        Derivative of `function <Linear.function>` at **input**.
+
         Arguments
         ---------
 
@@ -357,7 +359,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Returns
         -------
 
-        Slope of function :  number
+        Slope of function :  number or array
 
         """
 
@@ -569,12 +571,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
         input : number
             value of the input to the Exponential transform at which derivative is to be taken.
 
-        Derivative of `function <Exponential.function>`.
+        Derivative of `function <Exponential.function>` at **input**.
 
         Returns
         -------
 
-        derivative :  number
+        derivative :  number or array
 
 
         """
@@ -795,6 +797,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         derivative(input=None, output=None)
 
+        Derivative of `function <Exponential.function>` at either **input** or **output**.
+
         Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
         an error is generated if **output** does not correspond to `function <Logistic.function>`\(**input**).
@@ -811,7 +815,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Returns
         -------
 
-        Deriviative of logistic transform at output:  number
+        Deriviative of logistic transform at output:  number or array
 
         """
         if output is not None and input is not None and self.prefs.paramValidationPref:
@@ -1052,7 +1056,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         Returns
         -------
-        derivative :  number
+        derivative :  number or array
 
         """
         gain = self.get_current_function_param(GAIN, execution_id)
@@ -1219,7 +1223,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Returns
         -------
-        derivative :  number
+        derivative :  number or array
 
         """
         gain = self.get_current_function_param(GAIN, execution_id)
@@ -1248,7 +1252,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     `function <Gaussian.function>` returns Gaussian transform of `variable <Logistic.variable>`:
 
     .. math::
-      scale*\\frac{e^{\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
+      scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
 
     and:
 
@@ -1422,14 +1426,17 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
 
         from math import e, pi, sqrt
-        g = e**((variable-bias)**2/(2*standard_deviation**2)) / sqrt(2*pi*standard_deviation)
+        g = e**(-(variable-bias)**2/(2*standard_deviation**2)) / sqrt(2*pi*standard_deviation)
         result = scale * g + offset
 
         return self.convert_output_type(result)
 
     def derivative(self, input, output=None, execution_id=None):
         """
-        derivative(input):
+        derivative(input)
+
+        Derivative of `function <Gaussian.function>` at **input**.
+
 
         Arguments
         ---------
@@ -1449,7 +1456,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         from math import e, pi, sqrt
         adjusted_input = input-bias
-        result = -adjusted_input * e**(-(adjusted_input**2)/sqrt(2*sigma**2)) / sqrt(2*pi*sigma**3)
+        result = (-adjusted_input * e**(-(adjusted_input**2/(2*sigma**2)))) / sqrt(2*pi*sigma**3)
 
         return self.convert_output_type(result)
 
