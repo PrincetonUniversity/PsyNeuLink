@@ -49,6 +49,8 @@ class LLVMBinaryFunction:
         self.__c_func_type = None
         self.__byref_arg_types = None
 
+        self.__cuda_kernel = None
+
     def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
@@ -97,6 +99,15 @@ class LLVMBinaryFunction:
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self._c_func_type(ptr)
         return self.__c_func
+
+    @property
+    def _cuda_kernel(self):
+        if self.__cuda_kernel is None:
+            self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
+        return self.__cuda_kernel
+
+    def cuda_call(self, *args):
+        self._cuda_kernel(*args, block=(1,1,1))
 
     @staticmethod
     def get(name):

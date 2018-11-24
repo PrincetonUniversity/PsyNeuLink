@@ -138,6 +138,22 @@ def _find_llvm_function(name, mods = _all_modules):
         raise ValueError("No such function: {}".format(name))
     return f
 
+def _gen_cuda_kernel_wrapper_module(function):
+    module = ir.Module(name="wrapper_"  + function.name)
+
+    decl_f = ir.Function(module, function.type.pointee, function.name)
+    assert decl_f.is_declaration
+    kernel_func = ir.Function(module, function.type.pointee, function.name + "_cuda_kernel")
+    block = kernel_func.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.call(decl_f, kernel_func.args)
+    builder.ret_void()
+
+    # Add kernel mark metadata
+    module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
+
+    return module
+
 _field_count = 0
 _struct_count = 0
 

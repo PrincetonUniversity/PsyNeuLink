@@ -7,6 +7,10 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
+try:
+    import pycuda
+except:
+    pycuda = False
 
 
 DIM_X=1000
@@ -16,7 +20,9 @@ TST_MAX=3.0
 vector = np.random.rand(DIM_X)
 
 @pytest.mark.llvm
-def test_helper_fclamp():
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.skipif(pycuda is False, reason="pyCUDA not found"))])
+def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
         local_vec = copy.deepcopy(vector)
@@ -41,16 +47,22 @@ def test_helper_fclamp():
 
     ref = np.clip(vector, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-    ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
-    ct_vec = local_vec.ctypes.data_as(ct_ty)
+    if mode == 'CPU':
+        ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+        ct_vec = local_vec.ctypes.data_as(ct_ty)
 
-    bin_f(ct_vec, DIM_X)
+        bin_f(ct_vec, DIM_X)
+    else:
+        local_param = pycuda.driver.InOut(local_vec)
+        bin_f.cuda_call(local_param, np.int32(DIM_X))
 
     assert np.array_equal(local_vec, ref)
 
 
 @pytest.mark.llvm
-def test_helper_fclamp_const():
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.skipif(pycuda is False, reason="pyCUDA not found"))])
+def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
         local_vec = copy.deepcopy(vector)
@@ -75,9 +87,13 @@ def test_helper_fclamp_const():
 
     ref = np.clip(vector, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-    ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
-    ct_vec = local_vec.ctypes.data_as(ct_ty)
+    if mode == 'CPU':
+        ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+        ct_vec = local_vec.ctypes.data_as(ct_ty)
 
-    bin_f(ct_vec, DIM_X)
+        bin_f(ct_vec, DIM_X)
+    else:
+        local_param = pycuda.driver.InOut(local_vec)
+        bin_f.cuda_call(local_param, np.int32(DIM_X))
 
     assert np.array_equal(local_vec, ref)

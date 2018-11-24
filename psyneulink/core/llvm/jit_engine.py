@@ -12,6 +12,8 @@ from llvmlite import binding
 
 import os
 
+from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module
+
 try:
     import pycuda
     from pycuda import autoinit as pycuda_default
@@ -231,6 +233,15 @@ class ptx_jit_engine(jit_engine):
         def remove_module(self, module):
             self._modules.pop(module, None)
 
+        def _find_kernel(self, name):
+            function = None
+            for m in self._modules.values():
+                try:
+                    function = m.get_function(name)
+                except pycuda._driver.LogicError:
+                    pass
+            return function
+
     def __init__(self, object_cache = None):
         super().__init__()
         self._object_cache = object_cache
@@ -242,3 +253,13 @@ class ptx_jit_engine(jit_engine):
 
         self._jit_pass_manager, self._target_machine = _ptx_jit_constructor()
         self._jit_engine = ptx_jit_engine.cuda_engine(self._target_machine)
+
+    def get_kernel(self, name):
+        kernel = self._engine._find_kernel(name + "_cuda_kernel")
+        if kernel is None:
+            function = _find_llvm_function(name);
+            wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
+            self.compile_modules([wrapper_mod], set())
+            kernel = self._engine._find_kernel(name + "_cuda_kernel")
+
+        return kernel
