@@ -27,34 +27,41 @@ def test_helper_fclamp(mode):
     with pnlvm.LLVMBuilderContext() as ctx:
         local_vec = copy.deepcopy(vector)
         double_ptr_ty = ctx.float_ty.as_pointer()
-        func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
+        func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty,
+                                                  double_ptr_ty))
 
         # Create clamp function
         custom_name = ctx.get_unique_name("clamp")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
-        vec, count = function.args
+        vec, count, bounds = function.args
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
+
+        tst_min = builder.load(builder.gep(bounds, [ctx.int32_ty(0)]))
+        tst_max = builder.load(builder.gep(bounds, [ctx.int32_ty(1)]))
 
         index = None
         with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (builder, index):
             val_ptr = builder.gep(vec, [index])
             val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp(builder, val, ctx.float_ty(TST_MIN), ctx.float_ty(TST_MAX))
+            val = pnlvm.helpers.fclamp(builder, val, tst_min, tst_max)
             builder.store(val, val_ptr)
 
         builder.ret_void()
 
     ref = np.clip(vector, TST_MIN, TST_MAX)
+    bounds = np.asfarray([TST_MIN, TST_MAX])
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
         ct_vec = local_vec.ctypes.data_as(ct_ty)
+        ct_bounds = bounds.ctypes.data_as(ct_ty)
 
-        bin_f(ct_vec, DIM_X)
+        bin_f(ct_vec, DIM_X, ct_bounds)
     else:
-        local_param = pycuda.driver.InOut(local_vec)
-        bin_f.cuda_call(local_param, np.int32(DIM_X))
+        cuda_vec = pycuda.driver.InOut(local_vec)
+        cuda_bounds = pycuda.driver.In(bounds)
+        bin_f.cuda_call(cuda_vec, np.int32(DIM_X), cuda_bounds)
 
     assert np.array_equal(local_vec, ref)
 
