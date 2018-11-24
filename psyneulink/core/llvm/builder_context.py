@@ -58,7 +58,7 @@ class LLVMBuilderContext:
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
-        return name + '-' + str(LLVMBuilderContext.uniq_counter)
+        return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
         if hasattr(name, '_llvm_symbol_name'):
