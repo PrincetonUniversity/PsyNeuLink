@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 import ctypes, os, sys
+import numpy as np
 
 from llvmlite import ir
 
@@ -108,6 +109,10 @@ class LLVMBinaryFunction:
 
     def cuda_call(self, *args):
         self._cuda_kernel(*args, block=(1,1,1))
+
+    def cuda_wrap_call(self, *args):
+        wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
+        self.cuda_call(*wrap_args)
 
     @staticmethod
     def get(name):

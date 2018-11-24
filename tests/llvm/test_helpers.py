@@ -7,10 +7,6 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
-try:
-    import pycuda
-except:
-    pycuda = False
 
 
 DIM_X=1000
@@ -21,7 +17,7 @@ vector = np.random.rand(DIM_X)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(pycuda is False, reason="pyCUDA not found"))])
+                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
 def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
@@ -59,16 +55,14 @@ def test_helper_fclamp(mode):
 
         bin_f(ct_vec, DIM_X, ct_bounds)
     else:
-        cuda_vec = pycuda.driver.InOut(local_vec)
-        cuda_bounds = pycuda.driver.In(bounds)
-        bin_f.cuda_call(cuda_vec, np.int32(DIM_X), cuda_bounds)
+        bin_f.cuda_wrap_call(local_vec, np.int32(DIM_X), bounds)
 
     assert np.array_equal(local_vec, ref)
 
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.skipif(pycuda is False, reason="pyCUDA not found"))])
+                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
 def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
@@ -100,7 +94,6 @@ def test_helper_fclamp_const(mode):
 
         bin_f(ct_vec, DIM_X)
     else:
-        local_param = pycuda.driver.InOut(local_vec)
-        bin_f.cuda_call(local_param, np.int32(DIM_X))
+        bin_f.cuda_wrap_call(local_vec, np.int32(DIM_X))
 
     assert np.array_equal(local_vec, ref)
