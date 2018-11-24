@@ -10,7 +10,7 @@
 
 import ctypes, os, sys
 
-from llvmlite import binding, ir
+from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
@@ -24,36 +24,10 @@ __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _compiled_modules = set()
 _binary_generation = 0
 
-def _try_parse_module(module):
-    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(module)
-
-    # IR module is not the same as binding module.
-    # "assembly" in this case is LLVM IR assembly.
-    # This is intentional design decision to ease
-    # compatibility between LLVM versions.
-    try:
-        mod = binding.parse_assembly(str(module))
-        mod.verify()
-    except Exception as e:
-        print("ERROR: llvm parsing failed: {}".format(e))
-        mod = None
-
-    return mod
 
 def _llvm_build():
-    # Parse generated modules and link them
-    mod_bundle = binding.parse_assembly("")
-    for m in _modules:
-        new_mod = _try_parse_module(m)
-        if new_mod is not None:
-            mod_bundle.link_in(new_mod)
-            _compiled_modules.add(m)
-
+    _cpu_engine.compile_modules(_modules, _compiled_modules)
     _modules.clear()
-
-    # Add the new module to jit engine
-    _cpu_engine.opt_and_append_bin_module(mod_bundle)
 
     global _binary_generation
     if __dumpenv is not None and __dumpenv.find("compile") != -1:

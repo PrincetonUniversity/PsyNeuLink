@@ -14,6 +14,8 @@ import os
 
 __all__ = ['cpu_jit_engine']
 
+__dumpenv = os.environ.get("PNL_LLVM_DUMP")
+
 # Compiler binding
 __initialized = False
 def _binding_initialize():
@@ -24,7 +26,7 @@ def _binding_initialize():
 
 
 def _cpu_jit_constructor():
-    _binding_initialize()    
+    _binding_initialize()
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
@@ -58,6 +60,24 @@ def _cpu_jit_constructor():
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
+
+
+def _try_parse_module(module):
+    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
+        print(module)
+
+    # IR module is not the same as binding module.
+    # "assembly" in this case is LLVM IR assembly.
+    # This is intentional design decision to ease
+    # compatibility between LLVM versions.
+    try:
+        mod = binding.parse_assembly(str(module))
+        mod.verify()
+    except Exception as e:
+        print("ERROR: llvm parsing failed: {}".format(e))
+        mod = None
+
+    return mod
 
 
 class jit_engine:
@@ -95,6 +115,7 @@ class jit_engine:
             self.__mod = module
         else:
             self._remove_bin_module(self.__mod)
+            # Linking here invalidates 'module'
             self.__mod.link_in(module)
 
         self.opt_and_add_bin_module(self.__mod)
@@ -112,6 +133,20 @@ class jit_engine:
             self._init()
 
         return self._jit_pass_manager
+
+    # Unfortunately, this needs to be done for every jit_engine.
+    # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
+    # so it can't be linked mutliple times (in multiple engines).
+    def compile_modules(self, modules, compiled_modules):
+        # Parse generated modules and link them
+        mod_bundle = binding.parse_assembly("")
+        for m in modules:
+            new_mod = _try_parse_module(m)
+            if new_mod is not None:
+                mod_bundle.link_in(new_mod)
+                compiled_modules.add(m)
+
+        self.opt_and_append_bin_module(mod_bundle)
 
 
 class cpu_jit_engine(jit_engine):
