@@ -12,7 +12,9 @@
 * `Linear`
 * `Exponential`
 * `Logistic`
+* `TanH`
 * `ReLU`
+* `Gaussian`
 * `SoftMax`
 * `LinearMatrix`
 
@@ -575,7 +577,21 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     .. _Logistic_Function:
 
-    Logistically transform `variable <Logistic.variable>`.
+    `function <Logistic.function>` returns logistic transform of `variable <Logistic.variable>`:
+
+    .. math::
+        \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
+
+    .. note::
+        The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
+        accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
+        form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
+
+
+    `derivative <Logistic.derivative>` returns the derivative of the Logistic:
+
+    .. math::
+        output * (1-output)
 
     Arguments
     ---------
@@ -719,16 +735,240 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  context=None):
         """
+
+        Arguments
+        ---------
+
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        Logistic transformation of variable : number or np.array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        gain = self.get_current_function_param(GAIN, execution_id)
+        bias = self.get_current_function_param(BIAS, execution_id)
+        x_0 = self.get_current_function_param(X_0, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+
+        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        from math import e
+        result = 1. / (1 + e**(-gain * (variable + bias - x_0) + offset))
+
+        return self.convert_output_type(result)
+
+
+    def derivative(self, input=None, output=None, execution_id=None):
+        """
+        derivative(output)
+
+        Either **input** or **ouput** must be provided.  If **output** is not provided, it is computed from input.
+
+        Arguments
+        ---------
+
+        input : number
+            value of the input of the Logistic transform at which derivative is to be taken.
+
+        output : number
+            value of the output of a Logistic transform at which derivative is to be taken.
+
+        Returns
+        -------
+
+        Deriviative of logistic transform at **output**:  number
+
+
+        """
+
+        if output is None:
+            output = self.function(input)
+
+        return output * (1 - output)
+
+
+class TanH(TransferFunction):  # ------------------------------------------------------------------------------------
+    """
+    TanH(                  \
+         default_variable, \
+         gain=1.0,         \
+         bias=0.0,         \
+         x_0=0.0,          \
+         scale=1.0,        \
+         offset=0.0,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _TanH_Function:
+
+    Sigmoidally transform `variable <TanH.variable>`
+
+    .. note::
+
+       This is identical to the the `Logistic` function, centered on origin and not restricted to the [0,1] interval.
+       The parameters used here have the same meaning as those used for the `Logistic` Function.
+
+    Arguments
+    ---------
+
+    default_variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <TanH.variable>` before logistic transformation
+
+    bias : float : default 0.0
+        specifies a value to add to each element of `variable <TanH.variable>` before applying `gain <TanH.gain>`
+        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        specifies a value to subtract from each element of `variable <TanH.variable>` before applying `gain <TanH.gain>`
+        and before logistic transformation. This argument is identical to bias, with the opposite sign.
+
+    offset : float : default 0.0
+        specifies a value to add to each element of `variable <TanH.variable>` after applying `gain <TanH.gain>`
+        but before logistic transformation.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    gain : float : default 1.0
+        value by which each element of `variable <TanH.variable>` is multiplied before applying the
+        `bias <TanH.bias>` (if it is specified).
+
+    bias : float : default 0.0
+        value added to each element of `variable <TanH.variable>` before applying the `gain <TanH.gain>`
+        (if it is specified). This attribute is identical to x_0, with the opposite sign.
+
+    x_0 : float : default 0.0
+        value subtracted from each element of `variable <TanH.variable>` before applying the `gain <TanH.gain>`
+        (if it is specified). This attribute is identical to bias, with the opposite sign.
+
+    offset : float : default 0.0
+        value to added to each element of `variable <TanH.variable>` after applying `gain <TanH.gain>`
+        but before logistic transformation.
+
+    bounds : (0,1)
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = LOGISTIC_FUNCTION
+    parameter_keywords.update({GAIN, BIAS, OFFSET})
+
+    bounds = (0, 1)
+    multiplicative_param = GAIN
+    additive_param = BIAS
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    class Params(TransferFunction.Params):
+        gain = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        x_0 = Param(0.0, modulable=True)
+        bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Param(0.0, modulable=True)
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 gain: parameter_spec = 1.0,
+                 x_0=0.0,
+                 bias=0.0,
+                 offset: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  x_0=x_0,
+                                                  bias=bias,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
+        bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
+        x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
+        offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fadd(val, bias)
+        val = builder.fsub(val, x_0)
+        val = builder.fmul(val, gain)
+        val = builder.fsub(offset, val)
+        val = builder.call(exp_f, [val])
+        val = builder.fadd(ctx.float_ty(1), val)
+        val = builder.fdiv(ctx.float_ty(1), val)
+
+        builder.store(val, ptro)
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """
         Return:
 
         .. math::
 
             \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
-
-        .. note::
-            The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
-            accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
-            form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
 
         Arguments
         ---------
@@ -755,28 +995,32 @@ class Logistic(TransferFunction):  # -------------------------------------------
         x_0 = self.get_current_function_param(X_0, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
+        # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+        #   (since np.exp doesn't work)
+        # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
-        result = 1. / (1 + e**(-gain * (variable + bias - x_0) + offset))
+        exponent = -2*(-gain * (variable + bias - x_0) + offset)
+        result = (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
 
 
-    def derivative(self, output, input=None, execution_id=None):
-        """
-        derivative(output)
+    # def derivative(self, output, input=None, execution_id=None):
+    #     """
+    #     derivative(output)
+    #
+    #     Derivative of `function <TanH.function>`.
+    #
+    #     Returns
+    #     -------
+    #
+    #     derivative :  number
+    #         CosH = 1 + e**exponent / 2*e**(exponent/2)
+    #         1/CosH**2x;
+    #
+    #     """
+    #     return output * (1 - output)
 
-        Derivative of `function <Logistic.function>`.
-
-        Returns
-        -------
-
-        derivative :  number
-            output * (1 - output).
-
-        """
-        return output * (1 - output)
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -1078,6 +1322,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -1117,20 +1362,33 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         return self.convert_output_type(result)
 
-    # def derivative(self, output, input=None):
+    # def derivative(self, output, input=None, execution_id=None):
     #     """
-    #     derivative(output)
+    #     derivative(output, input):
     #
-    #     Derivative of `function <Logistic.function>`.
+    #     Derivative of `function <Logistic.function>`:
+    #
+    #         -input/:math:`{variance^3}*\\sqrt{2\\pi}`
+    #
     #
     #     Returns
     #     -------
     #
-    #     derivative :  number
-    #         output * (1 - output).
+    #     Derivative of Guassian of variable :  number or np.array
     #
     #     """
-    #     return output * (1 - output)
+    #     variance = self.get_current_function_param(VARIANCE, execution_id)
+    #     bias = self.get_current_function_param(BIAS, execution_id)
+    #     scale = self.get_current_function_param(SCALE, execution_id)
+    #     offset = self.get_current_function_param(OFFSET, execution_id)
+    #
+    #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
+    #     f = scale * np.random.normal(input+bias, variance) + offset
+    #
+    #     # FIX: SHOULD THIS BE variance**1.5 (since variance = sd**2 and term below is supposed to be sd**3)??
+    #     df = -input(variance**3 * np.sqrt(2 * np.pi))
+    #
+    #     return self.convert_output_type(df*f)
 
 
 class SoftMax(TransferFunction):
