@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import copy
 import ctypes
 import numpy as np
 import pytest
@@ -23,7 +22,7 @@ x, y = matrix.shape
 def test_recompile():
     # The original builtin mxv function
     binf = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
-    orig_res = copy.deepcopy(llvm_res)
+    orig_res = np.empty_like(llvm_res)
     ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     binf.c_func(ct_vec, ct_mat, x, y, ct_res)
@@ -32,7 +31,7 @@ def test_recompile():
     # This is not a public API
     pnlvm._llvm_build()
 
-    rebuild_res = copy.deepcopy(llvm_res)
+    rebuild_res = np.empty_like(llvm_res)
     ct_res = rebuild_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     binf.c_func(ct_vec, ct_mat, x, y, ct_res)
@@ -40,13 +39,13 @@ def test_recompile():
 
     # Get a new pointer
     binf2 = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
-    new_res = copy.deepcopy(llvm_res)
+    new_res = np.empty_like(llvm_res)
     ct_res = new_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     binf.c_func(ct_vec, ct_mat, x, y, ct_res)
     assert np.array_equal(rebuild_res, new_res)
 
-    callable_res = copy.deepcopy(llvm_res)
+    callable_res = np.empty_like(llvm_res)
     ct_res = callable_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     binf(ct_vec, ct_mat, x, y, ct_res)
