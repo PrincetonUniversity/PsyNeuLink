@@ -123,9 +123,7 @@ def test_llvm_lite_ptx_pycuda():
     builder.ret_void()
 
     # Add kernel mark metadata
-    func_sig = ir.MetaDataString(module, func.name)
     module.add_named_metadata("nvvm.annotations",[func, "kernel", ir.IntType(32)(1)])
-
 
     # Uncomment to print the module IR. This prints LLVM IR assembly.
 #    print("LLVM IR:\n", module)
