@@ -21,7 +21,7 @@ from .jit_engine import *
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 
-__dumpenv = os.environ.get("PNL_LLVM_DUMP")
+__dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 _compiled_modules = set()
 _binary_generation = 0
 
@@ -32,7 +32,7 @@ def _llvm_build():
     _modules.clear()
 
     global _binary_generation
-    if __dumpenv is not None and __dumpenv.find("compile") != -1:
+    if __dumpenv.find("compile") != -1:
         global _binary_generation
         print("COMPILING GENERATION: {} -> {}".format(_binary_generation, LLVMBuilderContext._llvm_generation))
 

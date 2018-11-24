@@ -14,7 +14,7 @@ import os
 
 from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module
 
-_dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
+_dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 
 try:
     import pycuda

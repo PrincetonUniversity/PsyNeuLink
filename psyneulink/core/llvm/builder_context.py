@@ -22,7 +22,7 @@ _all_modules = set()
 
 @atexit.register
 def module_count():
-    if str(os.environ.get("PNL_LLVM_DUMP")).find("mod_count") != -1:
+    if str(os.environ.get("PNL_LLVM_DEBUG")).find("mod_count") != -1:
         print("Total LLVM modules: ", len(_all_modules))
 
 # TODO: Should this be selectable?
