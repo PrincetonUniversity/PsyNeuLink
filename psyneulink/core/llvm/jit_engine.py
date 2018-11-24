@@ -101,7 +101,7 @@ class jit_engine:
         # This prints generated x86 assembly
         if self.__dumpenv.find("isa") != -1:
             print("ISA assembly:")
-            print(self._target_machine.emit_assembly(self.__mod))
+            print(self._target_machine.emit_assembly(module))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
