@@ -65,8 +65,8 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.llvm import helpers
 
-__all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'ReLU', 'Gaussian', 'SoftMax',
-           'get_matrix', 'BOUNDS', 'MODE']
+__all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'TanH', 'ReLU', 'Gaussian',
+           'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
@@ -582,7 +582,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     .. math::
         \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
 
-    (see `TanH` for same function centered on origin).
+    (this is an offset and scaled version of the `TanH`, which is centered on origin).
 
     .. note::
         The **bias** and **x_0** arguments are identical, apart from opposite signs: **bias** is included to
@@ -770,7 +770,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         return self.convert_output_type(result)
 
-
     def derivative(self, input=None, output=None, execution_id=None):
         """
         derivative(input=None, output=None)
@@ -800,6 +799,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     "does not match the value expected for specified {} ({})".
                                     format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
                                            repr('input'), input))
+        # FIX: ASSUMES ALL PARAMETERS ARE DEFAULTS (IN PARTICULAR, bias AND offset, AND THEIR INTERACTION WITH gain)
         if output is None:
             output = self.function(input)
 
@@ -827,25 +827,17 @@ class TanH(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2x}}{1 + e^{-2x}}
-
-    where:
-        x = **gain** * (`variable <Logistic.variable>` + **bias** - **x_0** ) + **offset**
-
-        gain*(variable+bias-x\_0)+offset
+        \\frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}
 
     .. note::
 
-       This is identical to the the `Logistic` function, centered on origin and not restricted to the [0,1] interval.
+       The `Logistic` function is an offset and scaled version of this function.
        The parameters used here have the same meaning as those used for the `Logistic` Function.
 
-    `derivative <TanH.derivative>` returns the derivative of the hyperbolic tangent at **input**:
+    `derivative <TanH.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{1}{(\\frac{1+e^{-2x}}{2e^{-x}})^2}
-
-    where x is as defined above.
-
+        \\frac{1}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(variable+bias-x\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1025,22 +1017,26 @@ class TanH(TransferFunction):  # -----------------------------------------------
         return self.convert_output_type(result)
 
 
-    # def derivative(self, output, input=None, execution_id=None):
-    #     """
-    #     derivative(output)
-    #
-    #     Derivative of `function <TanH.function>`.
-    #
-    #     Returns
-    #     -------
-    #
-    #     derivative :  number
-    #         CosH = 1 + e**exponent / 2*e**(exponent/2)
-    #         1/CosH**2x;
-    #
-    #     """
-    #     return output * (1 - output)
+    def derivative(self, input, execution_id=None):
+        """
+        derivative(input)
 
+        Derivative of `function <TanH.function>` at **input**.
+
+        Returns
+        -------
+        derivative :  number
+
+        """
+        gain = self.get_current_function_param(GAIN, execution_id)
+        bias = self.get_current_function_param(BIAS, execution_id)
+        x_0 = self.get_current_function_param(X_0, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+
+        from math import e
+        exponent = -2*(-gain * (input + bias - x_0) + offset)
+        cosh = 1 + e**exponent / 2*e**(exponent/2)
+        return 1 / cosh**2
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -1056,9 +1052,18 @@ class ReLU(TransferFunction):  # -----------------------------------------------
          prefs=None        \
          )
     .. _Relu:
-    Perform rectified linear transformation on `variable <ReLU.variable>`.
+
+    `function <ReLU.function>` returns rectified linear tranform of `variable <ReLU.variable>`:
+
+    .. math::
+        gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
+
+    `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
+
+    .. math::
+        gain\ if\ input > 0,\ leak\ otherwise
 
     Arguments
     ---------
@@ -1150,9 +1155,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  context=None):
         """
-        Return:
-
-            :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
 
         Arguments
         ---------
@@ -1176,19 +1178,21 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         result = np.maximum(gain * (variable - bias), bias, leak * (variable - bias))
         return self.convert_output_type(result)
 
-    def derivative(self, output, execution_id=None):
+    def derivative(self, input, execution_id=None):
         """
-        derivative(output)
-        Derivative of `function <ReLU.function>`.
+        derivative(input)
+
+        Derivative of `function <ReLU.function>` at **input**.
+
         Returns
         -------
         derivative :  number
-            gain if output > 0, leak otherwise
+
         """
         gain = self.get_current_function_param(GAIN, execution_id)
         leak = self.get_current_function_param(LEAK, execution_id)
 
-        if (output > 0): return gain
+        if (input > 0): return gain
         else: return leak
 
 
