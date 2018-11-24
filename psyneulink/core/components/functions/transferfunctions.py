@@ -582,13 +582,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
     .. math::
         \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
 
+    (see `TanH` for same function centered on origin).
+
     .. note::
-        The bias and x_0 arguments are identical, apart from opposite signs. Bias is included in order to
-        accomodate the convention in the Machine Learning community, while x_0 is included to match the `standard
+        The **bias** and **x_0** arguments are identical, apart from opposite signs: **bias** is included to
+        accomodate the convention in the machine learning community; **x_0** is included to match the `standard
         form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
 
 
-    `derivative <Logistic.derivative>` returns the derivative of the Logistic:
+    `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
         output * (1-output)
@@ -771,9 +773,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     def derivative(self, input=None, output=None, execution_id=None):
         """
-        derivative(output)
+        derivative(input=None, output=None)
 
-        Either **input** or **ouput** must be provided.  If **output** is not provided, it is computed from input.
+        Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
+        If both are specified, **input** is ignored unless paramValidationPref is set, in which case
+        an error is generated if **output** does not correspond to `function <Logistic.function>`\(**input**).
 
         Arguments
         ---------
@@ -782,16 +786,20 @@ class Logistic(TransferFunction):  # -------------------------------------------
             value of the input of the Logistic transform at which derivative is to be taken.
 
         output : number
-            value of the output of a Logistic transform at which derivative is to be taken.
+            value of the output of the Logistic transform at which derivative is to be taken.
 
         Returns
         -------
 
-        Deriviative of logistic transform at **output**:  number
-
+        Deriviative of logistic transform at output:  number
 
         """
-
+        if output is not None and input is not None and self.prefs.paramValidationPref:
+            if output != self.function(input):
+                raise FunctionError("Value of {} arg passed to {} ({}) "
+                                    "does not match the value expected for specified {} ({})".
+                                    format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
+                                           repr('input'), input))
         if output is None:
             output = self.function(input)
 
@@ -815,12 +823,29 @@ class TanH(TransferFunction):  # -----------------------------------------------
 
     .. _TanH_Function:
 
-    Sigmoidally transform `variable <TanH.variable>`
+    `function <Logistic.function>` returns hyperbolic tangent of `variable <Logistic.variable>`:
+
+    .. math::
+
+        \\frac{1 - e^{-2x}}{1 + e^{-2x}}
+
+    where:
+        x = **gain** * (`variable <Logistic.variable>` + **bias** - **x_0** ) + **offset**
+
+        gain*(variable+bias-x\_0)+offset
 
     .. note::
 
        This is identical to the the `Logistic` function, centered on origin and not restricted to the [0,1] interval.
        The parameters used here have the same meaning as those used for the `Logistic` Function.
+
+    `derivative <TanH.derivative>` returns the derivative of the hyperbolic tangent at **input**:
+
+    .. math::
+        \\frac{1}{(\\frac{1+e^{-2x}}{2e^{-x}})^2}
+
+    where x is as defined above.
+
 
     Arguments
     ---------
@@ -964,11 +989,6 @@ class TanH(TransferFunction):  # -----------------------------------------------
                  params=None,
                  context=None):
         """
-        Return:
-
-        .. math::
-
-            \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
 
         Arguments
         ---------
@@ -985,7 +1005,7 @@ class TanH(TransferFunction):  # -----------------------------------------------
         Returns
         -------
 
-        logistic transformation of variable : number or np.array
+        hyperbolic tangent of variable : number or np.array
 
         """
 
