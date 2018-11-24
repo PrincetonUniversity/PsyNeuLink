@@ -14,12 +14,12 @@ import os
 
 from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module
 
-__dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
+_dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
 
 try:
     import pycuda
     from pycuda import autoinit as pycuda_default
-    ptx_enabled = __dumpenv.find("nocuda") == -1
+    ptx_enabled = _dumpenv.find("nocuda") == -1
 except:
     ptx_enabled = False
 
@@ -107,7 +107,7 @@ def _ptx_jit_constructor():
 
 
 def _try_parse_module(module):
-    if __dumpenv.find("llvm") != -1:
+    if _dumpenv.find("llvm") != -1:
         print(module)
 
     # IR module is not the same as binding module.
@@ -131,7 +131,9 @@ class jit_engine:
         self._target_machine = None
         self.__mod = None
         self.__opt_modules = 0
-        self.__dumpenv = str(os.environ.get("PNL_LLVM_DUMP"))
+        # Add an extra reference to make sure it's not destroyed before
+        # instances of jit_engine
+        self.__dumpenv = _dumpenv
 
     def __del__(self):
         if self.__dumpenv.find("mod_count") != -1:
