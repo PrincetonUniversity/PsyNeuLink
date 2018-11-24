@@ -24,9 +24,10 @@ __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _compiled_modules = set()
 _binary_generation = 0
 
-
 def _llvm_build():
     _cpu_engine.compile_modules(_modules, _compiled_modules)
+    if ptx_enabled:
+        _ptx_engine.compile_modules(_modules, set())
     _modules.clear()
 
     global _binary_generation
@@ -137,6 +138,8 @@ def _updateNativeBinaries(module, buffer):
         del _binaries[d]
 
 _cpu_engine = cpu_jit_engine(_updateNativeBinaries)
+if ptx_enabled:
+    _ptx_engine = ptx_jit_engine()
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:

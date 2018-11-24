@@ -12,7 +12,19 @@ from llvmlite import binding
 
 import os
 
-__all__ = ['cpu_jit_engine']
+try:
+    import pycuda
+    from pycuda import autoinit as pycuda_default
+    ptx_enabled = True
+except:
+    ptx_enabled = False
+
+
+__all__ = ['cpu_jit_engine', 'ptx_enabled']
+
+if ptx_enabled:
+    __all__.append('ptx_jit_engine')
+
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 
@@ -22,6 +34,14 @@ def _binding_initialize():
     global __initialized
     if not __initialized:
         binding.initialize()
+        if not ptx_enabled:
+            # native == currently running CPU. ASM printer includes opcode emission
+            binding.initialize_native_target()
+            binding.initialize_native_asmprinter()
+        else:
+            binding.initialize_all_targets()
+            binding.initialize_all_asmprinters()
+
         __initialized = True
 
 
@@ -34,10 +54,6 @@ def _cpu_jit_constructor():
     __pass_manager_builder.loop_vectorize = True
     __pass_manager_builder.slp_vectorize = True
     __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
-
-    # native == currently running CPU. ASM printer includes opcode emission
-    binding.initialize_native_target()
-    binding.initialize_native_asmprinter()
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -60,6 +76,31 @@ def _cpu_jit_constructor():
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
+
+
+def _ptx_jit_constructor():
+    _binding_initialize()
+
+    # PassManagerBuilder can be shared
+    __pass_manager_builder = binding.PassManagerBuilder()
+    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
+    __pass_manager_builder.loop_vectorize = True
+    __pass_manager_builder.slp_vectorize = True
+    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+
+    # Use default device
+    # TODO: Add support for multiple devices
+    __compute_capability = pycuda_default.device.compute_capability()
+    __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
+    # Create compilation target, use 64bit triple
+    __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=3, codemodel='small')
+
+    __ptx_pass_manager = binding.ModulePassManager()
+    __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
+#    __pass_manager_builder.populate(__ptx_pass_manager)
+
+    return __ptx_pass_manager, __ptx_target_machine
 
 
 def _try_parse_module(module):
@@ -163,3 +204,32 @@ class cpu_jit_engine(jit_engine):
         self._jit_engine, self._jit_pass_manager, self._target_machine = _cpu_jit_constructor()
         if self._object_cache is not None:
              self._jit_engine.set_object_cache(self._object_cache)
+
+class ptx_jit_engine(jit_engine):
+    class cuda_engine():
+        def __init__(self):
+            self._modules= []
+
+        def set_object_cache(cache):
+            pass
+
+        def add_module(self, module):
+            self._modules.append(module)
+
+        def finalize_object(self):
+            pass
+
+        def remove_module(self, module):
+            self._modules.remove(module)
+
+    def __init__(self, object_cache = None):
+        super().__init__()
+        self._object_cache = object_cache
+
+    def _init(self):
+        assert self._jit_engine is None
+        assert self._jit_pass_manager is None
+        assert self._target_machine is None
+
+        self._jit_pass_manager, self._target_machine = _ptx_jit_constructor()
+        self._jit_engine = ptx_jit_engine.cuda_engine()
