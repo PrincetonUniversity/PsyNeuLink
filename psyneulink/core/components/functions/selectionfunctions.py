@@ -9,13 +9,17 @@
 #
 # *******************************************  SELECTION FUNCTIONS *****************************************************
 '''
-Selection Functions:
-  * `OneHot`
-  COMMENT:
-  * TBI Threshold
-  * TBI MaxVal
-  * `KWTA`
-  COMMENT
+
+* `OneHot`
+
+COMMENT:
+* TBI Threshold
+* TBI MaxVal
+* `KWTA`
+COMMENT
+
+Functions that selects a subset of elements to maintain or transform, while nulling the others.
+
 '''
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
@@ -55,7 +59,7 @@ def max_vs_avg(x):
 
 
 class SelectionFunction(Function_Base):
-    """Function that adjusts a set of values
+    """Functions that selects a particular value to maintain or transform, while nulling the others.
     """
     componentType = SELECTION_FUNCTION_TYPE
 

@@ -9,11 +9,23 @@
 #
 # *****************************************  COMBINATION FUNCTIONS  ****************************************************
 
-'''Combination Functions:
-  * `Reduce`
-  * `LinearCombination`
-  * `CombineMeans`
-  * `PredictionErrorDeltaFunction`
+'''
+* `Reduce`
+* `LinearCombination`
+* `CombineMeans`
+* `PredictionErrorDeltaFunction`
+
+Overview
+--------
+
+Functions that combine multiple items, yielding a result with the same shape as a single operand
+
+All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
+each of which is assigned the name of one of the function's parameters;
+this is for use by ModulatoryProjections (and, in particular, GatingProjections,
+when the CombinationFunction is used as the function of an InputState or OutputState).
+
+
 '''
 
 import functools

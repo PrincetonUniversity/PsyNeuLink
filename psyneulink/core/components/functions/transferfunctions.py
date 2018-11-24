@@ -8,23 +8,32 @@
 #
 #
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
-'''
-Transfer Functions:
-  * `Linear`
-  * `Exponential`
-  * `Logistic`
-  * `ReLU`
-  * `SoftMax`
-  * `LinearMatrix`
+"""
+* `Linear`
+* `Exponential`
+* `Logistic`
+* `ReLU`
+* `SoftMax`
+* `LinearMatrix`
 
-Selection Functions:
-  * `OneHot`
-  COMMENT:
-  * TBI Threshold
-  * TBI MaxVal
-  * `KWTA`
-  COMMENT
-'''
+Overview
+--------
+
+Functions that transform their variable but maintain its shape
+
+All TransferFunctions have the following attributes:
+
+* **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+  `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
+  respectively, with `None` as the entry for no bound.
+..
+* **multiplicative_param** and **additive_param**:
+  each of these is assigned the name of one of the function's
+  parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
+  TransferFunction's function (see `Function_Modulatory_Params`).
+
+
+"""
 
 import functools
 import numbers
@@ -64,7 +73,7 @@ MODE = 'mode'
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
 
-    All TransferFunctions must have the following attributes:
+    All TransferFunctions MUST have the following attributes:
 
     `bounds` -- specifies the lower and upper limits of the result;  if there are none, the attribute is set to
     `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
@@ -200,7 +209,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : None
+    bounds : Tuple or None
+        determines the lower and upper limits of the result;  if at least one bound is specified, the attribute is
+        a tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

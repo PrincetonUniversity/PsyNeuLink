@@ -9,20 +9,26 @@
 #
 # *****************************************  INTEGRATOR FUNCTIONS ******************************************************
 '''
-Integrator Functions:
-  * `Integrator`
-  * `SimpleIntegrator`
-  * `ConstantIntegrator`
-  * `Buffer`
-  * `AdaptiveIntegrator`
-  * `DriftDiffusionIntegrator`
-  * `OrnsteinUhlenbeckIntegrator`
-  * `AccumulatorIntegrator`
-  * `LCAIntegrator`
-  * `FHNIntegrator`
-  * `AGTUtilityIntegrator`
-  * `BogaczEtAl`
-  * `NavarroAndFuss`
+
+* `Integrator`
+* `SimpleIntegrator`
+* `ConstantIntegrator`
+* `Buffer`
+* `AdaptiveIntegrator`
+* `DriftDiffusionIntegrator`
+* `OrnsteinUhlenbeckIntegrator`
+* `AccumulatorIntegrator`
+* `LCAIntegrator`
+* `FHNIntegrator`
+* `AGTUtilityIntegrator`
+* `BogaczEtAl`
+* `NavarroAndFuss`
+
+Overview
+--------
+
+Functions that integrate their input.
+
 '''
 
 import functools

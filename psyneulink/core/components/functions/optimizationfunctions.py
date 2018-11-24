@@ -9,10 +9,16 @@
 #
 # ******************************************   OPTIMIZATION FUNCTIONS **************************************************
 '''
-Optimization Functions:
-  * `OptimizationFunction`
-  * `GradientOptimization`
-  * `GridSearch`
+
+* `OptimizationFunction`
+* `GradientOptimization`
+* `GridSearch`
+
+Overview
+--------
+
+Functions that return the sample of a variable yielding the optimized value of an objective_function.
+
 '''
 
 import warnings
@@ -40,16 +46,19 @@ DIRECTION = 'direction'
 
 
 class OptimizationFunction(Function_Base):
-    """OptimizationFunction( \
-         default_variable, objective_function, search_function, search_space, search_termination_function, \
-         save_samples, save_values, max_iterations, params, owner, prefs, context)
-
-    Abstract class of `Function <Function>` that returns the sample of a variable yielding the optimized value
-    of an `objective_function <OptimizationFunction.objective_function>`.
-
-    .. note::
-       This information is for reference only -- OptimizationFunction cannot be called directly;
-       only subclasses can be called.
+    """
+    OptimizationFunction(                            \
+    default_variable=None,                           \
+    objective_function=lambda x:0,                   \
+    search_function=lambda x:x,                      \
+    search_space=[0],                                \
+    search_termination_function=lambda x,y,z:True,   \
+    save_samples=False,                              \
+    save_values=False,                               \
+    max_iterations=None,                             \
+    params=Nonse,                                    \
+    owner=Nonse,                                     \
+    prefs=None)
 
     Provides an interface to subclasses and external optimization functions. The default `function
     <OptimizationFunction.function>` executes iteratively, evaluating samples from `search_space
@@ -422,8 +431,9 @@ class GradientOptimization(OptimizationFunction):
         prefs=None                   \
         )
 
-    Return sample that yields optimized value of `objective_function
-    <GradientOptimization.objective_function>`.
+    Sample variable by following gradient with respect to the value of `objective_function
+    <GradientOptimization.objective_function>` it generates, and return the sample that generates either the
+    highest (**direction=*ASCENT*) or lowest (**direction=*DESCENT*) value.
 
     .. _GradientOptimization_Process:
 

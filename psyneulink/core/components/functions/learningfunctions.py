@@ -9,14 +9,17 @@
 #
 # *******************************************   LEARNING FUNCTIONS *****************************************************
 '''
-Learning Functions:
-  * `Kohonen`
-  * `Hebbian`
-  * `ContrastiveHebbian`
-  * `Reinforcement`
-  * `BayesGLM`
-  * `BackPropagation`
-  * `TDLearning`
+
+* `Kohonen`
+* `Hebbian`
+* `ContrastiveHebbian`
+* `Reinforcement`
+* `BayesGLM`
+* `BackPropagation`
+* `TDLearning`
+
+Functions that parameterize a function.
+
 '''
 
 from collections.__init__ import namedtuple

@@ -9,13 +9,19 @@
 #
 # ****************************************   DISTRIBUTION FUNCTIONS   **************************************************
 '''
-Distribution Functions:
-  * `NormalDist`
-  * `UniformToNormalDist`
-  * `ExponentialDist`
-  * `UniformDist`
-  * `GammaDist`
-  * `WaldDist`
+
+* `NormalDist`
+* `UniformToNormalDist`
+* `ExponentialDist`
+* `UniformDist`
+* `GammaDist`
+* `WaldDist`
+
+Overview
+--------
+
+Functions that return one or more samples from a distribution.
+
 '''
 
 import numpy as np

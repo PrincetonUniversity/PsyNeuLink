@@ -10,9 +10,12 @@
 # *********************************************  INTERFACE FUNCTIONS ***************************************************
 
 '''
-Interface Functions:
-  * Identity
-  * InterfaceStateMap
+
+* Identity
+* InterfaceStateMap
+
+
+
 '''
 
 import numpy as np

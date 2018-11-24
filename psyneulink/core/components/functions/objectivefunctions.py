@@ -9,9 +9,12 @@
 #
 # *****************************************  OBJECTIVE FUNCTIONS *******************************************************
 '''
-Objective Functions:
-  * `Stability`
-  * `Distance`
+
+* `Stability`
+* `Distance`
+
+Functions that return a scalar evaluation of their input.
+
 '''
 
 import functools
