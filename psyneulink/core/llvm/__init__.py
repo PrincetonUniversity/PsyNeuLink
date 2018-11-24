@@ -44,7 +44,6 @@ _binaries = {}
 class LLVMBinaryFunction:
     def __init__(self, name):
         self.name = name
-        self.__ptr = None
 
         self.__c_func = None
         self.__c_func_type = None
@@ -80,20 +79,6 @@ class LLVMBinaryFunction:
         cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
         self(*tuple(cargs))
 
-    # This will be useful for non-native targets
-    @property
-    def ptr(self):
-        if self.__ptr is None:
-            # Binary pointer and recreate ctype function
-            self.ptr = _cpu_engine._engine.get_function_address(self.name)
-        return self.__ptr
-
-    @ptr.setter
-    def ptr(self, ptr):
-        if self.__ptr != ptr:
-            self.__ptr = ptr
-            self.__c_func = self._c_func_type(self.__ptr)
-
     @property
     def byref_arg_types(self):
         if self.__byref_arg_types is None:
@@ -109,7 +94,8 @@ class LLVMBinaryFunction:
     @property
     def c_func(self):
         if self.__c_func is None:
-            self.__c_func = self._c_func_type(self.ptr)
+            ptr = _cpu_engine._engine.get_function_address(self.name)
+            self.__c_func = self._c_func_type(ptr)
         return self.__c_func
 
     @staticmethod
