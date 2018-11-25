@@ -10,6 +10,9 @@ import psyneulink as pnl
 # needed for 3d plotting in full_experiment and response_extinction
 from mpl_toolkits import mplot3d
 
+import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 
 def model_training():
     """
@@ -23,7 +26,7 @@ def model_training():
 
     action_selection = pnl.TransferMechanism(
         default_variable=np.zeros(60),
-        function=pnl.Linear(slope=1.0, intercept=0.01),
+        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=0.01),
         name='Action Selection'
     )
 
@@ -52,7 +55,7 @@ def model_training():
         matrix=np.full((60, 60), 0.0)
     )
     learning_projection = pnl.LearningProjection(
-        learning_function=pnl.TDLearning(learning_rate=0.3)
+        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
     )
 
     p = pnl.Process(
@@ -122,7 +125,7 @@ def model_training_full_experiment():
 
     action_selection = pnl.TransferMechanism(
         default_variable=np.zeros(60),
-        function=pnl.Linear(slope=1.0, intercept=1.0),
+        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=1.0),
         name='Action Selection'
     )
 
@@ -151,7 +154,7 @@ def model_training_full_experiment():
     )
 
     learning_projection = pnl.LearningProjection(
-        learning_function=pnl.TDLearning(learning_rate=0.3)
+        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
     )
 
     p = pnl.Process(
@@ -218,7 +221,7 @@ def model_training_response_extinction():
 
     action_selection = pnl.TransferMechanism(
         default_variable=np.zeros(60),
-        function=pnl.Linear(slope=1.0, intercept=1.0),
+        function=psyneulink.core.components.functions.transferfunctions.Linear(slope=1.0, intercept=1.0),
         name='Action Selection'
     )
 
@@ -244,7 +247,7 @@ def model_training_response_extinction():
     )
 
     learning_projection = pnl.LearningProjection(
-        learning_function=pnl.TDLearning(learning_rate=0.3)
+        learning_function=psyneulink.core.components.functions.learningfunctions.TDLearning(learning_rate=0.3)
     )
 
     p = pnl.Process(

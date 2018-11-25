@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.4.8.0+935.g10bcf2c documentation</title>
+  <title>States &mdash; PsyNeuLink 0.4.8.0+936.g8af090e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+935.g10bcf2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+936.g8af090e documentation" href="index.html"/>
         <link rel="up" title="Component" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
         <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+935
+                0.4.8.0+936
               </div>
             
           
@@ -106,7 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
@@ -223,7 +223,7 @@ used to send ModulatoryProjections), as summarized in the table below:</p>
 <td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> constructor;
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
 <td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or
@@ -246,7 +246,7 @@ parameter value is
 <td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> constructor;
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 constructor or its
-<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></td>
 <td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a></td>
@@ -549,7 +549,7 @@ Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this aggregates the values of the Projections that the
-State receives (the default is <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.LinearCombination" title="psyneulink.core.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
+State receives (the default is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, it determines the value of the associated parameter, under the potential
 influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputState, it conveys the result  of the Mechanism’s function to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
@@ -575,7 +575,7 @@ assigns one of its parameters as its <em>ADDITIVE_PARAM</em> and another as its 
 <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a ModulatorySignal determines which of these to modify when the
 State uses it <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to calculate its <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  However, the
 ModulatorySignal can also be configured to override the State’s <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (i.e., assign it directly),
-or to disable modulation, using one of the values of <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.ModulationParam" title="psyneulink.core.components.functions.function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a> for its
+or to disable modulation, using one of the values of <code class="xref any docutils literal"><span class="pre">ModulationParam</span></code> for its
 <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed discussion).</p>
 </div>
 </div>
@@ -585,7 +585,7 @@ or to disable modulation, using one of the values of <a class="reference interna
 ParameterStates belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputStates are
 updated after the Mechanism’s function is called.  When a State is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.all_afferents" title="psyneulink.core.components.states.state.State_Base.all_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.path_afferents" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.path_afferents" title="psyneulink.core.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.core.components.states.state.State_Base.function" title="psyneulink.core.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
@@ -605,8 +605,8 @@ TransferMechanism:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>automatically creates an InputState, ParameterStates for its parameters, including the <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear.slope" title="psyneulink.core.components.functions.function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> and
-<a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear.intercept" title="psyneulink.core.components.functions.function.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> parameters of its <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> (its default <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>), and an OutputState (named <em>RESULT</em>):</p>
+<p>automatically creates an InputState, ParameterStates for its parameters, including the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> and
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> parameters of its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> (its default <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>), and an OutputState (named <em>RESULT</em>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">input_states</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="p">[(</span><span class="n">InputState</span> <span class="n">InputState</span><span class="o">-</span><span class="mi">0</span><span class="p">)]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_states</span><span class="p">)</span>
@@ -725,7 +725,7 @@ specifies that the InputState of <code class="docutils literal"><span class="pre
 </div>
 <p id="state-modulatory-projections-examples">Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more States that it modulates.  In
 the following example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> is created that sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the
-<a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.BogaczEtAl.drift_rate" title="psyneulink.core.components.functions.function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.BogaczEtAl.threshold" title="psyneulink.core.components.functions.function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> ParameterStates of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism:</p>
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.drift_rate" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> and <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold" title="psyneulink.core.components.functions.integratorfunctions.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> ParameterStates of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
 <span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL&#39;</span><span class="p">,</span>
                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_states</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">],</span>
@@ -982,7 +982,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+935.g10bcf2c',
+            VERSION:'0.4.8.0+936.g8af090e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Stroop GRAIN model (Cohen &amp; Huston, 1994) &mdash; PsyNeuLink 0.4.8.0+935.g10bcf2c documentation</title>
+  <title>Stroop GRAIN model (Cohen &amp; Huston, 1994) &mdash; PsyNeuLink 0.4.8.0+936.g8af090e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+935.g10bcf2c documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.8.0+936.g8af090e documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.8.0+935
+                0.4.8.0+936
               </div>
             
           
@@ -195,20 +195,20 @@ Below the Graph of the model is shown.</p>
 <div class="section" id="system">
 <h3>System<a class="headerlink" href="#system" title="Permalink to this headline">¶</a></h3>
 <p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one element for the input to each color in the
-<em>HIDDEN COLOR LAYER</em>, respectively), and assigned a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+<em>HIDDEN COLOR LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>WORD INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one element for the input to each word in the
-<em>HIDDEN WORD LAYER</em>, respectively), and assigned a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+<em>HIDDEN WORD LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>TASK INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 2 (one element for the input to each task in the
-<em>TASK LAYER</em>, respectively), and assigned a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
+<em>TASK LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>HIDDEN COLOR LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> Mechanism of <strong>size</strong> = 3 (one element each for the color units),
-and assigned a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Logistic" title="psyneulink.core.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a bias = 4.0 and intercept = 0.0.  Each element is connected to every other
+and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a bias = 4.0 and intercept = 0.0.  Each element is connected to every other
 element by mutually inhibitory connections with a weight specified by <strong>hetero</strong> = -2.0.  An integrator mechanism is
 specified by setting the <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.1.</p>
 <p><strong>HIDDEN WORD LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> specified as the <em>HIDDEN COLOR LAYER</em> with <strong>size</strong> = 3,
-a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Logistic" title="psyneulink.core.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a <strong>bias</strong> = 4.0 and <strong>intercept</strong> = 0.0, mutually inhibitory connections with a weight specified by
+a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a <strong>bias</strong> = 4.0 and <strong>intercept</strong> = 0.0, mutually inhibitory connections with a weight specified by
 <strong>hetero</strong> = -2.0, <strong>integrator_mode</strong> = <code class="xref any docutils literal"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.1..</p>
 <p><strong>RESPONSE LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> specified as the <em>HIDDEN COLOR LAYER</em> with the only difference of
-changing the bias to 0 in the <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Logistic" title="psyneulink.core.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function, and the size of 2.</p>
+changing the bias to 0 in the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function, and the size of 2.</p>
 <p><strong>TASK LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> specified as the <em>RESPONSE LAYER</em>.</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
 The projections for colors are as follows:
@@ -242,7 +242,7 @@ the <em>HIDDEN COLOR LAYER</em> and the <em>HIDDEN WORD LAYER</em> receive input
 INPUT LAYER</em> and <em>WORD INPUT LAYER</em>,
 respectively.
 The system is executed until one of the two response units hit a threshold. This is specified in the
-<code class="xref any docutils literal"><span class="pre">termination_processing</span></code> parameter in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> command.</p>
+<code class="xref any docutils literal"><span class="pre">termination_processing</span></code> parameter in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> command.</p>
 <p>The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of the <em>RESPONSE LAYER</em>. The cyles until a threshold is reached
 is used for the regression we used here to transfer cycles to milliseconds. We used the regression <code class="xref any docutils literal"><span class="pre">cycles*5</span> <span class="pre">+</span> <span class="pre">115</span></code> to
 produce the plot below.</p>
@@ -312,7 +312,7 @@ original model.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+935.g10bcf2c',
+            VERSION:'0.4.8.0+936.g8af090e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -10,7 +10,7 @@ import psyneulink as pnl
 # Now, we set the global variables, weights and initial values as in the paper.
 # WATCH OUT !!! In the paper the weight "Mutual inhibition among response units" is not defined, but needs to be set to
 # 0 in order to reproduce the paper.
-
+import psyneulink.core.components.functions.transferfunctions
 
 SD = 0.15       # noise determined by standard deviation (SD)
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
@@ -64,7 +64,7 @@ decision_layer = pnl.LCAMechanism(
     leak=-1.0,                         # Sets off diagonals to negative values
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
-    function=pnl.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
     # noise=pnl.UniformToNormalDist(standard_deviation = SD).function, # The UniformToNormalDist function will
     integrator_mode=True,               # set the noise with a seed generator that is compatible with
     name='DECISION LAYER'               # MATLAB random seed generator 22 (rsg=22)
@@ -84,7 +84,7 @@ response_layer = pnl.LCAMechanism(
     leak=-1.0,                                     # Sets off diagonals to negative values
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
-    function=pnl.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
     # noise=pnl.UniformToNormalDist(standard_deviation = SD).function,
     integrator_mode=True,
     name='RESPONSE LAYER'
@@ -146,7 +146,7 @@ LC = pnl.LCControlMechanism(
     initial_v_FHN=initial_v,          # Initialize v
     initial_w_FHN=initial_w,          # Initialize w
     objective_mechanism=pnl.ObjectiveMechanism(
-        function=pnl.Linear,
+        function=psyneulink.core.components.functions.transferfunctions.Linear,
         monitored_output_states=[(
             decision_layer,  # Project output of T1 and T2 but not distractor from decision layer to LC
             np.array([[lcwt], [lcwt], [0.0]])

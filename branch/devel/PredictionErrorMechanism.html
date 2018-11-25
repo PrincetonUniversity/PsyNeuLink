@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.8.0+935.g10bcf2c documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.8.0+936.g8af090e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+935.g10bcf2c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+936.g8af090e documentation" href="index.html"/>
         <link rel="up" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="next" title="LeabraMechanism" href="LeabraMechanism.html"/>
         <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+935
+                0.4.8.0+936
               </div>
             
           
@@ -204,7 +204,7 @@ values (the difference between the actual and predicted reward) in its <em>OUTCO
 <div class="section" id="creating-a-predictionerrormechanism">
 <span id="predictionerrormechanism-creation"></span><h2>Creating a PredictionErrorMechanism<a class="headerlink" href="#creating-a-predictionerrormechanism" title="Permalink to this headline">¶</a></h2>
 <p>A PredictionErrorMechanism is usually created automatically when a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
-<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">is created</span></a> using the <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.TDLearning" title="psyneulink.core.components.functions.function.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a> function).
+<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">is created</span></a> using the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a> function).
 A PredictionErrorMechanism can also be created directly by calling its constructor.
 Its <strong>sample</strong> and <strong>target</strong>  arguments are used to specify the OutputStates
 that provide the sample and target inputs, respectively (see
@@ -250,7 +250,7 @@ from which they receive their projections (specified in the <strong>sample</stro
 <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code>
 attribute. The PredictionErrorMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates the difference between the
 predicted reward and the true reward at each timestep in <strong>SAMPLE</strong>. By
-default, it uses a <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.function.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal"><span class="pre">PredictionErrorDeltaFunction</span></code></a>. However, the
+default, it uses a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal"><span class="pre">PredictionErrorDeltaFunction</span></code></a>. However, the
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be customized, so long as it
 is replaced with one that takes two arrays with the same format as its inputs
 and generates a similar array as its result. The result is assigned as the
@@ -269,10 +269,10 @@ Mechanism’s <code class="xref any docutils literal"><span class="pre">output_v
 for the SAMPLE and/or TARGET InputStates of a PredictionErrorMechanism. This
 can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For
-example, for <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.TDLearning" title="psyneulink.core.components.functions.function.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code></a>, a
+example, for <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code></a>, a
 PredictionErrorMechanism is used to compare the predicted reward from the
 sample with the true reward (the target). In the example below, the sample
-Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Linear" title="psyneulink.core.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function to output
+Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function to output
 the sample values. Because the output is a vector, specifying it as the
 PredictionErrorMechanism’s <strong>sample</strong> argument will generate a corresponding
 InputState with a vector as its value. This should match the reward
@@ -310,7 +310,7 @@ array representing a full time series as an experiment. See
 the function</li>
 <li><strong>target</strong> (<a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the TARGET InputState, which will be used by the function to
 evaluate the sample</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.core.components.functions.function.Logistic.function" title="psyneulink.core.components.functions.function.Logistic.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance.function" title="psyneulink.core.components.functions.objectivefunctions.Distance.function"><em>function</em></a><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the sample and target inputs.</li>
 <li><strong>output_states</strong> (<em>str</em><em>, </em><em>Iterable : default OUTCOME</em>) – by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>)
 OutputState of the PredictionErrorMechanism.</li>
 <li><strong>learning_rate</strong> (<em>Number : default 0.3</em>) – controls the weight of later timesteps compared to earlier ones. Higher
@@ -416,7 +416,7 @@ duplicate names).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+935.g10bcf2c',
+            VERSION:'0.4.8.0+936.g8af090e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
