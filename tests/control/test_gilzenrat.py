@@ -1,6 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import FHNIntegrator, Linear
+from psyneulink.core.components.functions.integratorfunctions import FHNIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System

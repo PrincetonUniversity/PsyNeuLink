@@ -231,7 +231,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Linear, _is_modulation_param
+from psyneulink.core.components.functions.function import _is_modulation_param
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.core.components.states.state import State_Base

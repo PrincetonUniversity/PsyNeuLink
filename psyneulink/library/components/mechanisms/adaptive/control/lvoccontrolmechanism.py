@@ -240,7 +240,10 @@ from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import BayesGLM, GradientOptimization, ModulationParam, OBJECTIVE_FUNCTION, SEARCH_SPACE, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, \
+    GradientOptimization
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -727,7 +730,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             prediction_weights = self.learning_function.function([previous_state, 0], execution_id=execution_id)
         else:
             # Update prediction_weights
-            costs = [c.compute_costs(c.parameters.variable.get(execution_id)) for c in self.control_signals]
+            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
             combined_costs = self.combine_costs(costs)
             # costs are assigned as negative in current_state.update, so add them here
             net_outcome = obj_mech_outcome - combined_costs

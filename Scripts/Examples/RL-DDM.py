@@ -10,6 +10,8 @@ import random
 # np.random.seed(seed)
 
 # CONSTRUCTION:
+import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.learningfunctions
 
 input_layer = pnl.TransferMechanism(
     size=2,
@@ -26,7 +28,7 @@ input_layer = pnl.TransferMechanism(
 #        response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
-        function=pnl.BogaczEtAl(
+        function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
                 starting_point=pnl.CONTROL,
@@ -46,7 +48,8 @@ p = pnl.Process(
     default_variable=[0, 0],
     # pathway=[input_layer, np.array([[1],[-1]]), action_selection],
     pathway=[input_layer, pnl.IDENTITY_MATRIX, action_selection],
-    learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.5)),
+    learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions.learningfunctions
+                                    .Reinforcement(learning_rate=0.5)),
     target=0
 )
 

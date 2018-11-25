@@ -333,7 +333,7 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import LinearCombination
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, standard_output_states

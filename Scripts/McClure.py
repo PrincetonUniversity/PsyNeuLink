@@ -3,6 +3,13 @@ import numpy as np
 import psyneulink as pnl
 
 from matplotlib import pyplot as plt
+
+import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.objectivefunctions
+import psyneulink.core.components.functions.selectionfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 np.random.seed(2)
 
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
@@ -32,26 +39,29 @@ input_layer = pnl.TransferMechanism(size=2,
 
 
 action_selection = pnl.TransferMechanism(size=2,
-                                         function=pnl.SoftMax(
+                                         function=psyneulink.core.components.functions.transferfunctions.SoftMax(
                                            output=pnl.ALL,
                                            gain=1.0),
                                          output_states=[{pnl.NAME: 'SELECTED ACTION',
                                                          pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
                                                          # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
-                                                         pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB_INDICATOR).function},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .selectionfunctions.OneHot(mode=pnl.PROB_INDICATOR).function},
                                                         {pnl.NAME: 'REWARD RATE',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
-                                                         pnl.FUNCTION: pnl.AdaptiveIntegrator(rate=0.2)},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .integratorfunctions.AdaptiveIntegrator(rate=0.2)},
                                                         {pnl.NAME: 'CONFLICT K',
                                                          # pnl.VARIABLE: [pnl.OWNER_VALUE],
                                                          pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                           #Jon said this should also work and would be safer: [(pnl.OWNER_VALUE, 0),
                                           #(pnl.OWNER_VALUE, 1)], but it doesn't work (maybe I did sth wrong)
-                                                         pnl.FUNCTION: pnl.Stability(default_variable=[0,0],
-                                                                                     metric=pnl.ENERGY,
-                                                                                     normalize=True)},
+                                                         pnl.FUNCTION: psyneulink.core.components.functions
+                                         .objectivefunctions.Stability(default_variable=[0, 0],
+                                                                                                                                         metric=pnl.ENERGY,
+                                                                                                                                         normalize=True)},
                                                         ],
                                                             #as stated in the paper 'Response conflict was calculated as a normalized                                                                   measure of the energy in the response units during the trial'
                                          name='Action Selection')
@@ -73,16 +83,17 @@ action_selection = pnl.TransferMechanism(size=2,
 #                           name='K')
 
 conflicts = pnl.IntegratorMechanism(input_states=[action_selection.output_states[2]],
-                                    function=pnl.AGTUtilityIntegrator(short_term_gain=6.0,
-                                                                      long_term_gain=6.0,
-                                                                      short_term_rate=0.05,
-                                                                      long_term_rate=0.2),
+                                    function=psyneulink.core.components.functions.integratorfunctions.AGTUtilityIntegrator(short_term_gain=6.0,
+                                                                                                                           long_term_gain=6.0,
+                                                                                                                           short_term_rate=0.05,
+                                                                                                                           long_term_rate=0.2),
                                     name='Short- and Long-term conflict')
 
 decision_process = pnl.Process(default_variable=[0, 0],
                                pathway=[input_layer,
                                         action_selection],
-                               learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(
+                               learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions
+                                   .learningfunctions.Reinforcement(
                                    learning_rate=0.03)), # if learning rate set to .3 output state values annealing to [0., 0.]
                                # which leads to error in reward function
                                target=0

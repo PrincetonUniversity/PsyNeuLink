@@ -2658,7 +2658,8 @@ class Component(object, metaclass=ComponentsMeta):
             - self.value == value[0] returned by self.execute
 
         """
-        from psyneulink.core.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         from psyneulink.core.components.shellclasses import Function
 
         function_variable = copy.deepcopy(
@@ -2800,7 +2801,7 @@ class Component(object, metaclass=ComponentsMeta):
             effectively begins the function's accumulation over again at the specified value, and may update related
             values on the component, depending on the component type.
         """
-        from psyneulink.core.components.functions.function import Integrator
+        from psyneulink.core.components.functions.integratorfunctions import Integrator
         if hasattr(self, "function_object"):
             if isinstance(self.function_object, Integrator):
                 new_value = self.function_object.reinitialize(*args, execution_context=execution_context)

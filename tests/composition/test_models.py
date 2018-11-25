@@ -2,6 +2,9 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
+import psyneulink.core.components.functions.distributionfunctions
+import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.utilities
 
 
@@ -27,26 +30,26 @@ class TestModels:
 
         colors_input_layer = pnl.TransferMechanism(
             size=3,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='COLORS_INPUT'
         )
 
         words_input_layer = pnl.TransferMechanism(
             size=3,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='WORDS_INPUT'
         )
 
         task_input_layer = pnl.TransferMechanism(
             size=2,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='TASK_INPUT'
         )
 
         #   Task layer, tasks: ('name the color', 'read the word')
         task_layer = pnl.RecurrentTransferMechanism(
             size=2,
-            function=pnl.Logistic(),
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(),
             hetero=-2,
             integrator_mode=True,
             integration_rate=0.1,
@@ -56,7 +59,7 @@ class TestModels:
         #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
         colors_hidden_layer = pnl.RecurrentTransferMechanism(
             size=3,
-            function=pnl.Logistic(x_0=4.0),
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
             integrator_mode=True,
             hetero=-2.0,
             # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0).function,
@@ -66,7 +69,7 @@ class TestModels:
 
         words_hidden_layer = pnl.RecurrentTransferMechanism(
             size=3,
-            function=pnl.Logistic(x_0=4.0),
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
             hetero=-2,
             integrator_mode=True,
             # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05).function,
@@ -76,7 +79,7 @@ class TestModels:
         #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
         response_layer = pnl.RecurrentTransferMechanism(
             size=2,
-            function=pnl.Logistic(),
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(),
             hetero=-2.0,
             integrator_mode=True,
             integration_rate=0.1,
@@ -234,7 +237,7 @@ class TestModels:
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=(1.0),
                 threshold=(10.0),
                 starting_point=0.0,
@@ -243,14 +246,14 @@ class TestModels:
         )
 
         myMechanism_2 = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=2.0,
                 threshold=20.0),
             name='My_DDM_2'
         )
 
         myMechanism_3 = pnl.DDM(
-            function=pnl.BogaczEtAl(
+            function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
                 drift_rate=3.0,
                 threshold=30.0
             ),
@@ -288,16 +291,17 @@ class TestModels:
 
         #  colors: ('red', 'green'), words: ('RED','GREEN')
         colors_input_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Linear,
+                                                   function=psyneulink.core.components.functions.transferfunctions
+                                                   .Linear,
                                                    name='COLORS_INPUT')
 
         words_input_layer = pnl.TransferMechanism(size=2,
-                                                  function=pnl.Linear,
+                                                  function=psyneulink.core.components.functions.transferfunctions.Linear,
                                                   name='WORDS_INPUT')
 
         #   Task layer, tasks: ('name the color', 'read the word')
         task_layer = pnl.TransferMechanism(size=2,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='TASK')
 
         #   HIDDEN LAYER UNITS
@@ -308,17 +312,18 @@ class TestModels:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
-                                                    noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                                    noise=psyneulink.core.components.functions.distributionfunctions
+                                                    .NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                     integration_rate=0.1,
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
+                                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
-                                                   noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                                   noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                    integration_rate=0.1,
                                                    name='WORDS HIDDEN')
 
@@ -328,24 +333,26 @@ class TestModels:
         #   time averaging = tau = 0.1
         #   randomly distributed noise to the net input
         response_layer = pnl.TransferMechanism(size=2,
-                                               function=pnl.Logistic,
+                                               function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                                name='RESPONSE',
                                                integrator_mode=True,
-                                               noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                               noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                integration_rate=0.1)
         #   Respond red accumulator
         #   alpha = rate of evidence accumlation = 0.1
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                             standard_deviation=accumulator_noise).function,
-                                                                                        rate=0.1),
+        respond_red_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions
+                                                          .integratorfunctions.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
+                                                                                                                                                                            standard_deviation=accumulator_noise).function,
+                                                                                                                                             rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
-                                                                                                               standard_deviation=accumulator_noise).function,
-                                                                                          rate=0.1),
+        respond_green_accumulator = pnl.IntegratorMechanism(function=psyneulink.core.components.functions
+                                                            .integratorfunctions.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
+                                                                                                                                                                                                                           standard_deviation=accumulator_noise).function,
+                                                                                                                                               rate=0.1),
                                                             name='respond_green_accumulator')
 
         #   LOGGING
@@ -501,7 +508,7 @@ class TestModels:
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
-            switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_deviation=unit_noise).function)
+            switch_noise(mechanisms, psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
             my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.While(pass_threshold,
                                                                                respond_red_accumulator,
@@ -555,25 +562,25 @@ class TestModels:
         # 4 Input layers for color, word, task & bias
         colors_input_layer = pnl.TransferMechanism(
             size=2,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='COLORS_INPUT'
         )
 
         words_input_layer = pnl.TransferMechanism(
             size=2,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='WORDS_INPUT'
         )
 
         task_input_layer = pnl.TransferMechanism(
             size=2,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='PROACTIVE_CONTROL'
         )
 
         bias_input = pnl.TransferMechanism(
             size=2,
-            function=pnl.Linear,
+            function=psyneulink.core.components.functions.transferfunctions.Linear,
             name='BIAS'
         )
 
@@ -596,7 +603,7 @@ class TestModels:
         # Create color feature layer, word feature layer, task demand layer and response layer
         color_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -610,7 +617,7 @@ class TestModels:
         # The word_feature_layer is set up as the color_feature_layer
         word_feature_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -624,7 +631,7 @@ class TestModels:
         # The response_layer is set up as the color_feature_layer & the word_feature_layer
         response_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
@@ -640,7 +647,7 @@ class TestModels:
         # and a differnet inhibition weight on the hetero
         task_demand_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
-            function=pnl.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),  # to 4 & bias to 1
             integrator_mode=True,  # Set Integrator mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition_task,  # Inhibition among units within a layer

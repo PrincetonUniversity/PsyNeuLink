@@ -460,7 +460,9 @@ import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Function, Linear, LinearCombination, Reduce
+from psyneulink.core.components.functions.function import Function
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags

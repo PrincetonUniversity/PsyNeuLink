@@ -18,6 +18,10 @@ using a version of the `Learned Value of Control Model
 import psyneulink as pnl
 import numpy as np
 
+import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.optimizationfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 np.random.seed(0)
 
 def w_fct(stim, color_control):
@@ -57,7 +61,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 terminal_objective_mechanism=True,
 
                                 # learning_function=pnl.BayesGLM(mu_0=0, sigma_0=0.1),
-                                learning_function=pnl.BayesGLM,
+                                learning_function=psyneulink.core.components.functions.learningfunctions.BayesGLM,
 
                                 # function=pnl.GradientOptimization(
                                 #         convergence_criterion=pnl.VALUE,
@@ -67,7 +71,7 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 #         # direction=pnl.ASCENT
                                 # ),
 
-                                function=pnl.GridSearch,
+                                function=psyneulink.core.components.functions.optimizationfunctions.GridSearch,
 
                                 # function=pnl.OptimizationFunction,
 
@@ -83,13 +87,14 @@ lvoc = pnl.LVOCControlMechanism(name='LVOC ControlMechanism',
                                 control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, color_task),
                                                                                ('color_control', word_task)],
                                                                   # function=pnl.ReLU,
-                                                                  function=pnl.Logistic,
+                                                                  function=psyneulink.core.components.functions
+                                                                  .transferfunctions.Logistic,
                                                                   cost_options=[pnl.ControlSignalCosts.INTENSITY,
                                                                                 pnl.ControlSignalCosts.ADJUSTMENT],
-                                                                  intensity_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                          bias=-3),
-                                                                  adjustment_cost_function=pnl.Exponential(rate=0.25,
-                                                                                                           bias=-3),
+                                                                  intensity_cost_function=psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.25,
+                                                                                                                                                             bias=-3),
+                                                                  adjustment_cost_function=psyneulink.core.components.functions.transferfunctions.Exponential(rate=0.25,
+                                                                                                                                                              bias=-3),
                                                                   allocation_samples=[i/2 for i in list(range(0,50,1))]
                                                                   )
                                 )
