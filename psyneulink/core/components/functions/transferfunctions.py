@@ -172,11 +172,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     `function <Logistic.function>` returns linear transform of `variable <Linear.variable>`:
 
-        slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>
+    .. math::
 
-    Note: default values for `Linear.slope` and `Linear.intercept` implement the *IDENTITY_FUNCTION*.
+        slope * variable + intercept
 
-    `derivative <Linear.derivative>` returns the derivative of the Linear function returns `slope <Linear.slope>`.
+    Note: default values for `slope <Linear.slope>` and `intercept <Linear.intercept>` implement the
+    *IDENTITY_FUNCTION*.
+
+    `derivative <Linear.derivative>` returns `slope <Linear.slope>`.
 
     Arguments
     ---------
@@ -1730,8 +1733,27 @@ class SoftMax(TransferFunction):
 
     .. _SoftMax:
 
-    SoftMax transform of `variable <Softmax.variable>` (see `The Softmax function and its derivative
+    SoftMax transform of `variable <Softmax.variable>`
+
+    `function <SoftMax.function>` returns SoftMax transform of `variable <Softmax.variable>`:
+
+    .. math::
+
+        \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
+
+    filtered by `ouptput <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+    `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
+    is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
+    others):
+
+    .. math::
+        D_jS_i = S_i(\\delta_{i,j} - S_j),\ where\ \\delta_{i,j}=1\ if\ i=j\ and\ \\delta_{i,j}=0\ if\ i≠j.
+
+    If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
+    value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
+    (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
     Arguments
     ---------
@@ -1980,13 +2002,6 @@ class SoftMax(TransferFunction):
                  params=None,
                  context=None):
         """
-        Return:
-
-        .. math::
-
-            \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
-
-        filtered by `ouptput <SoftMax.output>` specification.
 
         Arguments
         ---------
@@ -2002,7 +2017,7 @@ class SoftMax(TransferFunction):
         Returns
         -------
 
-        SoftMax transformation of variable : number or np.array
+        SoftMax transformation of variable : number or array
 
         """
 
@@ -2027,23 +2042,10 @@ class SoftMax(TransferFunction):
         """
         derivative(output)
 
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
-            COMMENT:
-                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
-            COMMENT
-            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
-            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
-
         Returns
         -------
 
-        derivative of values returns by SoftMax :  1d or 2d array (depending on OUTPUT_TYPE of SoftMax)
-
-
+        derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
         output_type = self.params[OUTPUT_TYPE]
