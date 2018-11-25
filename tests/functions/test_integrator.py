@@ -1,8 +1,10 @@
 
 import numpy as np
+import pytest
+
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.globals.keywords as kw
-import pytest
+import psyneulink.core.llvm as pnlvm
 
 SIZE=1000
 test_var = np.random.rand(SIZE)
@@ -57,16 +59,12 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
-    f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
-    if not hasattr(f, 'bin_function'):
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.skip("not implemented")
-        return
-    f.bin_function(variable)
-    f.bin_function(variable)
-    res = benchmark(f.bin_function, variable)
+    f = func(default_variable=variable, **params)
+    m = pnlvm.execution.FuncExecution(f, None)
+    m.execute(variable)
+    m.execute(variable)
+    res = benchmark(m.execute, variable)
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
     assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
