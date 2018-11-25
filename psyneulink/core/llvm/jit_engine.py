@@ -19,7 +19,7 @@ _dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 try:
     import pycuda
     from pycuda import autoinit as pycuda_default
-    ptx_enabled = _dumpenv.find("nocuda") == -1
+    ptx_enabled = _dumpenv.find("cuda") != -1
 except:
     ptx_enabled = False
 
