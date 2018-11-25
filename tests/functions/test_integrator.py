@@ -20,10 +20,10 @@ def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
     return val
 
 test_data = [
-    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, None, AdaptiveIntFun),
-    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, None, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':RAND2, 'offset':RAND3}, AdaptiveIntFun),
+    (Function.AdaptiveIntegrator, test_var, {'initializer':test_initializer, 'rate':RAND0_1, 'noise':test_noise_arr, 'offset':RAND3}, AdaptiveIntFun),
 ]
 
 # use list, naming function produces ugly names
@@ -38,15 +38,9 @@ GROUP_PREFIX="Integrator "
 
 @pytest.mark.function
 @pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.xfail(fail)
-        return
+def test_basic(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
     f.function(variable)
@@ -60,15 +54,9 @@ def test_basic(func, variable, params, fail, expected, benchmark):
 @pytest.mark.llvm
 @pytest.mark.function
 @pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_llvm(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.xfail(fail)
-        return
+def test_llvm(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
     if not hasattr(f, 'bin_function'):
