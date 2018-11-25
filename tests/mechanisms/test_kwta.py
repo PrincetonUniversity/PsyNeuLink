@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System

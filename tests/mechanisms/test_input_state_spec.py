@@ -2,7 +2,7 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.core.components.functions.function import LinearCombination, Reduce
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism

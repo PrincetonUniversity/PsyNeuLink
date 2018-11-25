@@ -3,6 +3,8 @@ import psyneulink as pnl
 
 from collections import OrderedDict
 
+import psyneulink.core.components.functions.transferfunctions
+
 
 class TestLog:
 
@@ -441,7 +443,7 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=2.0),
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=2.0),
                                    size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
@@ -682,7 +684,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
@@ -735,7 +737,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=pnl.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         SYS = pnl.System(name='log_test_SYS', processes=[PS])
 

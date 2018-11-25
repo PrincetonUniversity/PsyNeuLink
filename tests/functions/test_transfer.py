@@ -1,6 +1,7 @@
 
 import numpy as np
 import psyneulink.core.components.functions.function as Function
+import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -19,16 +20,16 @@ softmax_helper = softmax_helper - np.max(softmax_helper)
 softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 
 test_data = [
-    (Function.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
-    (Function.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var) ),
-    (Function.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1/ (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3)) ),
-    (Function.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
-    (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
-    (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
+    (psyneulink.core.components.functions.transferfunctions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
+    (psyneulink.core.components.functions.transferfunctions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
+    (psyneulink.core.components.functions.transferfunctions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
+    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
+    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
+    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
     ### Skip probabilistic since it has no-deterministic result ###
-    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
-    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
-    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
+    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
+    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
+    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
 ]
 
 # use list, naming function produces ugly names

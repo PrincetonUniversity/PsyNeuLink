@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 
 np.set_printoptions(suppress=True)
 

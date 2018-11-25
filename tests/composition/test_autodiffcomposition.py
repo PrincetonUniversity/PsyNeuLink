@@ -7,7 +7,7 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.components.functions.function import Logistic
+from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process

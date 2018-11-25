@@ -13,6 +13,9 @@ from matplotlib import pyplot as plt
 # Define Variables ----------------------------------------------------------------------------------------------------
 
 # Weights & Biases:
+import psyneulink.core.components.functions.distributionfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 b_decision = 0.00   # Bias on decision units (not biased)
 b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
@@ -65,8 +68,8 @@ decision_layer = pnl.LCAMechanism(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=pnl.Logistic(x_0=b_decision),
-    noise=pnl.NormalDist(standard_deviation=SD).function,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_decision),
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='DECISION LAYER'
 )
@@ -80,8 +83,8 @@ response_layer = pnl.LCAMechanism(
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=pnl.Logistic(x_0=b_response),
-    noise=pnl.NormalDist(standard_deviation=SD).function,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_response),
+    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
     integrator_mode=True,
     name='RESPONSE'
 )
@@ -136,7 +139,7 @@ LC = pnl.LCControlMechanism(
         initial_v_FHN=initial_v,
         initial_w_FHN=initial_u,
         objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 monitored_output_states=[(
                     decision_layer,
                     None,

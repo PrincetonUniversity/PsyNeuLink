@@ -17,7 +17,9 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import Buffer, Function_Base, Integrator, Linear
+from psyneulink.core.components.functions.function import Function_Base
+from psyneulink.core.components.functions.integratorfunctions import Integrator, Buffer
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
@@ -182,7 +184,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         cost_function = controller.paramsCurrent[COST_FUNCTION]
         combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):

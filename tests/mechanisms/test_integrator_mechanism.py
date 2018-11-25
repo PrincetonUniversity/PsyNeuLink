@@ -5,9 +5,12 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
-from psyneulink.core.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, Linear, NormalDist, SimpleIntegrator
-from psyneulink.core.components.functions.function import FunctionError, LCAIntegrator
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, ConstantIntegrator, \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
+    LCAIntegrator, AGTUtilityIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.process import Process

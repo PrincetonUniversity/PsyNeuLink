@@ -240,7 +240,10 @@ from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import BayesGLM, GradientOptimization, ModulationParam, OBJECTIVE_FUNCTION, SEARCH_SPACE, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, \
+    GradientOptimization
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
