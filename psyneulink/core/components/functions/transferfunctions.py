@@ -590,8 +590,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
-         scale=1.0,        \
          offset=0.0,       \
+         scale=1.0,        \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -610,8 +610,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
     .. note::
         The **bias** and **x_0** arguments are identical, apart from opposite signs: **bias** is included to
         accomodate the convention in the machine learning community; **x_0** is included to match the `standard
-        form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_.
-
+        form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain**
+        corresponds to the *k* parameter and **scale** corresponds to the *L* parameter).
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
@@ -625,19 +625,22 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Logistic.variable>` before logistic transformation
+        specifies value by which to multiply `variable <Logistic.variable>` before logistic transformation
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
         and before logistic transformation. This argument is identical to x_0, with the opposite sign.
 
     x_0 : float : default 0.0
-        specifies a value to subtract from each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
+        specifies value to subtract from each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`
         and before logistic transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
-        specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
+        specifies value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
+
+    scale : float : default 0.0
+        specifies value by which each element is multiplied after applying the logistic transformation.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -675,6 +678,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         value to added to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
+    scale : float : default 0.0
+        value by which each element is multiplied after applying the Logistic transform.
+
     bounds : (0,1)
 
     owner : Component
@@ -704,6 +710,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         x_0 = Param(0.0, modulable=True)
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Param(0.0, modulable=True)
+        scale = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -712,6 +719,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  x_0=0.0,
                  bias=0.0,
                  offset: parameter_spec = 0.0,
+                 scale: parameter_spec = 1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -720,6 +728,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                                   x_0=x_0,
                                                   bias=bias,
                                                   offset=offset,
+                                                  scale=scale,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -735,12 +744,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain_ptr, builder = ctx.get_param_ptr(self, builder, params, GAIN)
         bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
         x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
         offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -749,6 +760,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fmul(val, gain)
         val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
+        val = builder.fmul(val, scale)
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
 
@@ -785,11 +797,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         from math import e
-        result = 1. / (1 + e**(-gain * (variable + bias - x_0) + offset))
+        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
 
@@ -828,7 +841,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     "does not match the value expected for specified {} ({})".
                                     format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
                                            repr('input'), input))
-        # FIX: ASSUMES ALL PARAMETERS ARE DEFAULTS (IN PARTICULAR, bias AND offset, AND THEIR INTERACTION WITH gain)
         if output is None:
             output = self.function(input)
 
@@ -842,8 +854,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
-         scale=1.0,        \
          offset=0.0,       \
+         scale=1.0,        \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -872,22 +884,25 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     ---------
 
     default_variable : number or np.array : default ClassDefaults.variable
-        specifies a template for the value to be transformed.
+        specifies template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Tanh.variable>` before logistic transformation
+        specifies value by which to multiply `variable <Tanh.variable>` before logistic transformation
 
     bias : float : default 0.0
-        specifies a value to add to each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
+        specifies value to add to each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
         and before logistic transformation. This argument is identical to x_0, with the opposite sign.
 
     x_0 : float : default 0.0
-        specifies a value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
+        specifies value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
         and before logistic transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
-        specifies a value to add to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
+        specifies value to add to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
         but before logistic transformation.
+
+    scale : float : default 1.0
+        specifies value by which to multiply each element after applying Tanh transform.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -925,6 +940,9 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         value to added to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
         but before logistic transformation.
 
+    scale : float : default 1.0
+        value by which element is multiplied after applying Tanh transform.
+
     bounds : (0,1)
 
     owner : Component
@@ -954,6 +972,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         x_0 = Param(0.0, modulable=True)
         bias = Param(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Param(0.0, modulable=True)
+        scale = Param(1.0, modulable=True)
 
     @tc.typecheck
     def __init__(self,
@@ -962,6 +981,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  x_0=0.0,
                  bias=0.0,
                  offset: parameter_spec = 0.0,
+                 scale: parameter_spec = 1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -970,6 +990,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                                                   x_0=x_0,
                                                   bias=bias,
                                                   offset=offset,
+                                                  scale=scale,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -986,11 +1007,13 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr, builder = ctx.get_param_ptr(self, builder, params, BIAS)
         x_0_ptr, builder = ctx.get_param_ptr(self, builder, params, X_0)
         offset_ptr, builder = ctx.get_param_ptr(self, builder, params, OFFSET)
+        scale_ptr, builder = ctx.get_param_ptr(self, builder, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -999,6 +1022,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         val = builder.fmul(val, gain)
         val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
+        val = builder.fmul(val, scale)
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
 
@@ -1040,7 +1064,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
-        exponent = -2*(-gain * (variable + bias - x_0) + offset)
+        exponent = -2*(gain * (variable + bias - x_0) + offset)
         result = (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
@@ -1068,8 +1092,9 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         x_0 = self.get_current_function_param(X_0, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
 
+        # FIX: ASSUMES ALL SCALE IS DEFAULT;  MULTIPLY BY SCALE?
         from math import e
-        return 1 / ((1 + e**(-2*gain*(input+bias-x_0))) / (2 * e**(-gain*(input+bias-x_0))))**2
+        return 1 / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -1278,11 +1303,11 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     bias : float : default 0.0
         value to add to each element after applying height and before applying Gaussian transform.
 
-    scale : float : default 1.0
-        value by which to multiply each element after applying Gaussian transform.
-
     offset : float : default 0.0
         value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
+
+    scale : float : default 1.0
+        value by which to multiply each element after applying Gaussian transform.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
