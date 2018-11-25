@@ -11,7 +11,7 @@
 import atexit
 import ctypes
 import numpy as np
-import os
+import os, re
 
 from llvmlite import ir
 
@@ -58,6 +58,7 @@ class LLVMBuilderContext:
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
+        name = re.sub(r"[- ]", "_", name)
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
     def get_llvm_function(self, name):
