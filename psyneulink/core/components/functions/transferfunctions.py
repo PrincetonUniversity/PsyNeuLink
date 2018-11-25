@@ -1069,9 +1069,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
 
         from math import e
-        exponent = -2*(-gain * (input + bias - x_0) + offset)
-        cosh = 1 + e**exponent / 2*e**(exponent/2)
-        return 1 / cosh**2
+        return 1 / ((1 + e**(-2*gain*(input+bias-x_0))) / (2 * e**(-gain*(input+bias-x_0))))**2
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
