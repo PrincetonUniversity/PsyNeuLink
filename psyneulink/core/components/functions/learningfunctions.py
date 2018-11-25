@@ -1440,7 +1440,8 @@ class BayesGLM(LearningFunction):
 ERROR_MATRIX = 'error_matrix'
 WT_MATRIX_SENDERS_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
-
+ACTIVATION_INPUT = 'activation_input'
+ACTIVATION_OUTPUT = 'activation_output'
 
 class BackPropagation(LearningFunction):
     """
@@ -1823,14 +1824,14 @@ class BackPropagation(LearningFunction):
             learning_rate = self.defaults.learning_rate
 
         # make activation_input a 1D row array
-        activation_input = self.get_current_function_param('activation_input', execution_id)
+        activation_input = self.get_current_function_param(ACTIVATION_INPUT, execution_id)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         dE_dA = np.dot(error_matrix, self.get_current_function_param('error_signal', execution_id))
 
         # Derivative of the output activity
-        activation_output = self.get_current_function_param('activation_output', execution_id)
+        activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
         # FIX: THIS ASSUMES DERIVATIVE CAN BE COMPUTED FROM output OF FUNCTION (AS IT CAN FOR THE Logistic)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output)
 
