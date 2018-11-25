@@ -68,3 +68,19 @@ def test_llvm(func, variable, params, expected, benchmark):
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
     assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+
+@pytest.mark.llvm
+@pytest.mark.function
+@pytest.mark.integrator_function
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.benchmark
+def test_ptx_cuda(func, variable, params, expected, benchmark):
+    benchmark.group = GROUP_PREFIX + func.componentName;
+    f = func(default_variable=variable, **params)
+    m = pnlvm.execution.FuncExecution(f, None)
+    m.cuda_execute(variable)
+    m.cuda_execute(variable)
+    res = benchmark(m.cuda_execute, variable)
+    # This is rather hacky. it might break with pytest benchmark update
+    iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
+    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
