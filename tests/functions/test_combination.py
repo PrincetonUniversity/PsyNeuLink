@@ -1,19 +1,19 @@
 import numpy as np
-import psyneulink as pnl
-import psyneulink.core.components.functions.combinationfunctions
-import psyneulink.core.components.functions.function as Function
-import psyneulink.core.globals.keywords as kw
 import pytest
 
 from itertools import product
+
+import psyneulink as pnl
+import psyneulink.core.llvm as pnlvm
+import psyneulink.core.globals.keywords as kw
 
 class TestReduce:
 
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_single_array(self):
-        R_function = psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
                                               default_variable=[[1, 2, 3, 4, 5]],
                                               name="R_mechanism")
 
@@ -30,8 +30,8 @@ class TestReduce:
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_column_vector(self):
-        R_function = psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
                                               default_variable=[[1], [2], [3], [4], [5]],
                                               name="R_mechanism")
 
@@ -45,8 +45,8 @@ class TestReduce:
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_matrix(self):
-        R_function = psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=psyneulink.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
                                               default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                               name="R_mechanism")
 
@@ -83,39 +83,39 @@ RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
 test_linear_combination_data = [
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.SUM}, test_var),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.SUM}, test_var),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_V),
 
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.PRODUCT}, test_var),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_S),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.PRODUCT}, test_var),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_V),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_V),
 
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_S),
 # TODO: enable vector scale/offset when the validation is fixed
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_V),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_S),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'exponents':2., 'operation':pnl.SUM}, (test_var2[0] ** 2) + (test_var2[1] ** 2)),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'exponents':2., 'operation':pnl.SUM}, (test_var2[0] ** 2) + (test_var2[1] ** 2)),
 
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_S),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_S),
 # TODO: enable vector scale/offset when the validation is fixed
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
-    (psyneulink.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'exponents': -1., 'operation': pnl.SUM}, 1 / test_var2[0] + 1 / test_var2[1]),
+    (pnl.core.components.functions.combinationfunctions.LinearCombination, test_var2, {'exponents': -1., 'operation': pnl.SUM}, 1 / test_var2[0] + 1 / test_var2[1]),
 ]
 
 # pytest naming function produces ugly names
@@ -145,7 +145,8 @@ def test_linear_combination_function(func, variable, params, expected, bin_execu
     f = func(default_variable=variable, **params)
     benchmark.group = "LinearCombinationFunction " + func.componentName;
     if (bin_execute == 'LLVM'):
-        res = benchmark(f.bin_function, variable)
+        e = pnlvm.execution.FuncExecution(f, None)
+        res = benchmark(e.execute, variable)
     else:
         res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -229,9 +230,9 @@ linear_comb_names_2 = [
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
 @pytest.mark.benchmark
 def test_linear_combination_function_in_mechanism(operation, input, size, input_states, scale, offset, expected, benchmark):
-    f = psyneulink.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
+    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
-    benchmark.group = "CombinationFunction " + psyneulink.core.components.functions.combinationfunctions\
+    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions\
         .LinearCombination.componentName + "in Mechanism"
     res = benchmark(f.execute, input)
     if expected is None:
@@ -248,10 +249,11 @@ def test_linear_combination_function_in_mechanism(operation, input, size, input_
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
 @pytest.mark.benchmark
 def test_linear_combination_function_in_mechanism_llvm(operation, input, size, input_states, scale, offset, expected, benchmark):
-    f = psyneulink.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
+    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
-    benchmark.group = "CombinationFunction " + psyneulink.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
-    res = benchmark(f.bin_function, input)
+    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(e.execute, input)
     if expected is None:
         if operation == pnl.SUM:
             expected = np.sum(input, axis=0) * scale + offset
