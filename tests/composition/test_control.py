@@ -384,7 +384,6 @@ class TestModelBasedOptimizationControlMechanisms:
         )
 
         comp = pnl.Composition(name="evc")
-
         comp.add_c_node(Reward, required_roles=[pnl.CNodeRole.TERMINAL])
         comp.add_c_node(Decision, required_roles=[pnl.CNodeRole.TERMINAL])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
@@ -403,6 +402,7 @@ class TestModelBasedOptimizationControlMechanisms:
         #                                )
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
+                                                        features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
                                                         agent_rep=comp,
                                                         function=pnl.GridSearch(),
                                                         control_signals=[("drift_rate", Decision),
@@ -418,23 +418,17 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.enable_model_based_optimizer = True
 
         # Stimuli
+        comp._analyze_graph()
+
         stim_list_dict = {
             Input: [0.5, 0.123],
             Reward: [20, 20]
         }
+        # print("run")
         # comp.show_graph()
         comp.run(
             inputs=stim_list_dict,
         )
-
-
-        # Prediction Mechanisms (Values after last trial)
-        prediction_mechanisms_expected_values = {Input: np.array(0.1865),
-                                                 Reward: np.array(15.0)}
-
-        for origin_node in prediction_mechanisms_expected_values:
-            assert np.allclose(comp.origin_prediction_pairs[origin_node].output_states[0].value,
-                               prediction_mechanisms_expected_values[origin_node])
 
         expected_sim_results_array = [
             [[10.], [10.0], [0.0], [-0.1], [0.48999867], [0.50499983]],
@@ -470,45 +464,20 @@ class TestModelBasedOptimizationControlMechanisms:
             [[15.], [15.0], [0.0], [0.7], [2.24934228], [0.7396981]],
             [[15.], [15.0], [0.0], [1.], [3.84279648], [0.81637827]]
         ]
-        np.allclose(expected_sim_results_array, comp.simulation_results)
-        print(comp.simulation_results)
-        # Resetting to pre-simulation values changed all of these value:
-        expected_output = [
-            # Decision Output | Second Trial
-            # (Decision.output_states[0].value, np.array(1.0)),
+        #
+        # print("simulation results = ")
+        # print(comp.simulation_results)
 
-            # --- Decision Mechanism ---
-            #    Output State Values
-            #       decision variable
-            # (Decision.output_states[pnl.DECISION_VARIABLE].value, np.array([1.0])),
-            # #       response time
-            # (Decision.output_states[pnl.RESPONSE_TIME].value, np.array([3.84279648])),
-            # #       upper bound
-            # (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
-
-        # 'DDM_probability_lowerBound' output state does not exist
-            #       lower bound
-            # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
-            # --- Reward Mechanism ---
-            #    Output State Values
-            #       transfer mean
-            # (Reward.output_states[pnl.RESULT].value, np.array([15.])),
-            # #       transfer_result
-            # (Reward.output_states[pnl.MEAN].value, np.array(15.0)),
-            # #       transfer variance
-            # (Reward.output_states[pnl.VARIANCE].value, np.array(0.0)),
-
-        ]
-
-        for i in range(len(expected_output)):
-            val, expected = expected_output[i]
-            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(expected_sim_results_array[simulation], comp.simulation_results[simulation])
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
             [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
         ]
 
+        # print("results = ")
+        # print(comp.results)
         for trial in range(len(expected_results_array)):
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(trial))
 
@@ -617,16 +586,16 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.model_based_optimizer.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
         comp.model_based_optimizer.control_signals[1].intensity_cost_function = pnl.Exponential(rate=0.8046).function
 
-        for mech in comp.prediction_mechanisms:
-            if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
-                # when you find a key mechanism (transfer mechanism) with the correct name, print its name
-                # print(mech.name)
-                mech.function_object.rate = 1.0
-
-            if 'Reward' in mech.name:
-                # print(mech.name)
-                mech.function_object.rate = 1.0
-                # comp.model_based_optimizer.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+        # for mech in comp.prediction_mechanisms:
+            # if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
+            #     # when you find a key mechanism (transfer mechanism) with the correct name, print its name
+            #     # print(mech.name)
+            #     mech.function_object.rate = 1.0
+            #
+            # if 'Reward' in mech.name:
+            #     # print(mech.name)
+            #     mech.function_object.rate = 1.0
+            #     # comp.model_based_optimizer.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
         print('new rate of integration mechanisms before System execution:')
         # for mech in comp.model_based_optimizer.prediction_mechanisms.keys():

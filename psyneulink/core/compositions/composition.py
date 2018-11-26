@@ -442,6 +442,7 @@ class Composition(Composition_Base):
         self.model_based_optimizer = model_based_optimizer
 
         self.projections = []
+        self.shadow_projections = {}
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -476,40 +477,40 @@ class Composition(Composition_Base):
         self.__compiled_run = None
         self.__execution = None
 
-    def _instantiate_prediction_mechanisms(self, context=None):
+    # def _instantiate_prediction_mechanisms(self, context=None):
+    #
+    #     if self.model_based_optimizer:
+    #         if hasattr(self, "prediction_mechanisms"):
+    #             for mechanism in self.prediction_mechanisms:
+    #                 del mechanism
+    #         self.prediction_mechanisms = []
+    #         self.prediction_projections = {}
+    #         self.prediction_origin_pairs = {}
+    #         self.origin_prediction_pairs = {}
+    #         for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
+    #             new_prediction_mechanism = IntegratorMechanism(name=node.name + " " + PREDICTION_MECHANISM,
+    #                                                            default_variable=node.external_input_values)
+    #             self.prediction_mechanisms.append(new_prediction_mechanism)
+    #             self.prediction_origin_pairs[new_prediction_mechanism] = node
+    #             self.origin_prediction_pairs[node] = new_prediction_mechanism
+    #
+    #             for i in range(len(node.external_input_states)):
+    #                 input_state = node.external_input_states[i]
+    #                 input_cim_output_state = self.input_CIM_states[input_state][1]
+    #                 new_projection = MappingProjection(sender=input_cim_output_state,
+    #                                                    receiver=new_prediction_mechanism._input_states[i])
+    #
+    #                 self.prediction_projections[node] = new_projection
 
-        if self.model_based_optimizer:
-            if hasattr(self, "prediction_mechanisms"):
-                for mechanism in self.prediction_mechanisms:
-                    del mechanism
-            self.prediction_mechanisms = []
-            self.prediction_projections = {}
-            self.prediction_origin_pairs = {}
-            self.origin_prediction_pairs = {}
-            for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
-                new_prediction_mechanism = IntegratorMechanism(name=node.name + " " + PREDICTION_MECHANISM,
-                                                               default_variable=node.external_input_values)
-                self.prediction_mechanisms.append(new_prediction_mechanism)
-                self.prediction_origin_pairs[new_prediction_mechanism] = node
-                self.origin_prediction_pairs[node] = new_prediction_mechanism
-
-                for i in range(len(node.external_input_states)):
-                    input_state = node.external_input_states[i]
-                    input_cim_output_state = self.input_CIM_states[input_state][1]
-                    new_projection = MappingProjection(sender=input_cim_output_state,
-                                                       receiver=new_prediction_mechanism._input_states[i])
-
-                    self.prediction_projections[node] = new_projection
-
-    def _execute_prediction_mechanisms(self, context=None):
-
-        for prediction_mechanism in self.prediction_mechanisms:
-            for proj in prediction_mechanism.path_afferents:
-                proj.context.execution_phase = ContextFlags.PROCESSING
-            prediction_mechanism.context.execution_phase = ContextFlags.PROCESSING
-            prediction_mechanism.execute(context=context)
-
-        self.__compiled_execution = None
+    # def _execute_prediction_mechanisms(self, context=None):
+    #
+    #     for prediction_mechanism in self.prediction_mechanisms:
+    #         for proj in prediction_mechanism.path_afferents:
+    #             proj.context.execution_phase = ContextFlags.PROCESSING
+    #         prediction_mechanism.context.execution_phase = ContextFlags.PROCESSING
+    #         prediction_mechanism.execute(context=context)
+    #
+    #     self.__compiled_execution = None
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -575,14 +576,6 @@ class Composition(Composition_Base):
 
     def _get_unique_id(self):
         return uuid.uuid4()
-
-    def shadow_interface_mechanism_connection(self, node_input_state, cim_rep_input_state):
-        interface_output_state = self.input_CIM_states[cim_rep_input_state][1]
-        shadow_projection = MappingProjection(sender=interface_output_state,
-                                              receiver=node_input_state,
-                                              name="(" + interface_output_state.name + ") to ("
-                                                   + node_input_state.owner.name + "-" + node_input_state.name + ")")
-        self.projections.append(shadow_projection)
 
     def add_c_node(self, node, required_roles=None, external_input_source=None):
         '''
@@ -681,6 +674,8 @@ class Composition(Composition_Base):
         # if monitor_for_control:
         #     self.model_based_optimizer.objective_mechanism.add_monitored_output_states(monitor_for_control)
         self.add_c_node(self.model_based_optimizer.objective_mechanism)
+        if hasattr(self.model_based_optimizer, "shadow_external_inputs"):
+            self.external_input_sources[self.model_based_optimizer] = self.model_based_optimizer.shadow_external_inputs
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
         self._analyze_graph()
@@ -1620,6 +1615,7 @@ class Composition(Composition_Base):
         redirected_inputs = set()
         origin_node_pairs = {}
         for node in origin_nodes:
+
             if node in self.external_input_sources:
                 if self.external_input_sources[node] == True:
                     pass
@@ -1689,8 +1685,10 @@ class Composition(Composition_Base):
                                                 name="(" + interface_output_state.name + ") to (" +
                                                 input_state.owner.name + "-" + input_state.name + ")"))
 
+        new_shadow_projections = {}
         # allow projections from CIM to ANY node listed in external_input_sources
         for node in self.external_input_sources:
+
             if node not in origin_nodes or node in redirected_inputs:
 
                 cim_rep = self.external_input_sources[node]
@@ -1745,8 +1743,27 @@ class Composition(Composition_Base):
 
                 for i in range(len(expanded_cim_rep)):
                     if expanded_cim_rep[i]:
-                        self.shadow_interface_mechanism_connection(node.external_input_states[i],
-                                                                   expanded_cim_rep[i])
+                        new_shadow_projections[(self.input_CIM_states[expanded_cim_rep[i]][1],
+                                                node.external_input_states[i])] = None
+
+        for shadow_projection_pair in self.shadow_projections:
+            # if this projection is also in new projections, move it to new projections
+            if shadow_projection_pair in new_shadow_projections:
+                new_shadow_projections[shadow_projection_pair] = self.shadow_projections[shadow_projection_pair]
+            # otherwise, it's no longer valid and should be removed from self.projections and self.shadow_projections
+            else:
+                self.projections.remove(self.shadow_projections[shadow_projection_pair])
+                del self.shadow_projections[shadow_projection_pair]
+
+        # for any entirely new shadow_projections, create a MappingProjection object and add to projections
+        for output_state, input_state in new_shadow_projections:
+            if new_shadow_projections[(output_state, input_state)] is None:
+                shadow_projection = MappingProjection(sender=output_state,
+                                                      receiver=input_state,
+                                                      name="(" + output_state.name + ") to ("
+                                                           + input_state.owner.name + "-" + input_state.name + ")")
+                self.shadow_projections[(output_state, input_state)] = shadow_projection
+                self.projections.append(shadow_projection)
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
@@ -1807,8 +1824,8 @@ class Composition(Composition_Base):
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
 
-        if origins_changed:     # only update prediction mechanisms if the origin node(s) changed
-            self._instantiate_prediction_mechanisms(context=context)
+        # if origins_changed:     # only update prediction mechanisms if the origin node(s) changed
+        #     self._instantiate_prediction_mechanisms(context=context)
 
     def _assign_values_to_input_CIM(self, inputs):
         """
@@ -1863,9 +1880,9 @@ class Composition(Composition_Base):
 
         self._execution_id = execution_id
 
-        if hasattr(self, "prediction_mechanisms"):
-            for prediction_mechanism in self.prediction_mechanisms:
-                prediction_mechanism._execution_id = execution_id
+        # if hasattr(self, "prediction_mechanisms"):
+        #     for prediction_mechanism in self.prediction_mechanisms:
+        #         prediction_mechanism._execution_id = execution_id
 
         if hasattr(self, "model_based_optimizer"):
             if self.model_based_optimizer:
@@ -2890,8 +2907,8 @@ class Composition(Composition_Base):
         if termination_processing is None:
             termination_processing = self.termination_processing
 
-        if hasattr(self, "prediction_mechanisms"):
-            self._execute_prediction_mechanisms(context=context)
+        # if hasattr(self, "prediction_mechanisms"):
+        #     self._execute_prediction_mechanisms(context=context)
 
         next_pass_before = 1
         next_pass_after = 1
@@ -3088,15 +3105,15 @@ class Composition(Composition_Base):
 
         return output_values
 
-    def _update_predicted_input(self, context=None):
-        predicted_input = {}
-        for prediction_mechanism in self.prediction_mechanisms:
-            origin_node = self.prediction_origin_pairs[prediction_mechanism]
-            node_output = []
-            for output_state in prediction_mechanism.output_states:
-                node_output.append(output_state.value)
-            predicted_input[origin_node] = node_output
-        return predicted_input
+    # def _update_predicted_input(self, context=None):
+    #     predicted_input = {}
+    #     for prediction_mechanism in self.prediction_mechanisms:
+    #         origin_node = self.prediction_origin_pairs[prediction_mechanism]
+    #         node_output = []
+    #         for output_state in prediction_mechanism.output_states:
+    #             node_output.append(output_state.value)
+    #         predicted_input[origin_node] = node_output
+    #     return predicted_input
 
     def reinitialize(self, values):
         for i in range(self.stateful_nodes):
@@ -3340,9 +3357,9 @@ class Composition(Composition_Base):
         # return trial_output
         return trial_output
 
-    def _save_state(self):
+    def save_state(self):
         saved_state = {}
-        for node in self.stateful_nodes + self.prediction_mechanisms:
+        for node in self.stateful_nodes:
             # "save" the current state of each stateful mechanism by storing the values of each of its stateful
             # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
             # the reinitialize method on each stateful mechanism.
@@ -3365,19 +3382,20 @@ class Composition(Composition_Base):
         node_values = {}
         for node in self.c_nodes:
             node_values[node] = (node.value, node.output_values)
+
+        self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
         return saved_state, node_values
 
-    def _get_predicted_input(self, context=None):
-        """
-        Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
-        simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
-        after all simulations are complete, and (3) set the number of trials of simulations.
-        """
-
-        predicted_input = self._update_predicted_input()
-        self.sim_reinitialize_values, self.sim_node_values = self._save_state()
-
-        return predicted_input
+    # def _get_predicted_input(self, context=None):
+    #     """
+    #     Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
+    #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
+    #     after all simulations are complete, and (3) set the number of trials of simulations.
+    #     """
+    #
+    #     predicted_input = self._update_predicted_input()
+    #
+    #     return predicted_input
 
     def _after_agent_rep_execution(self, context=None):
         """
@@ -4044,13 +4062,12 @@ class Composition(Composition_Base):
                                                                    context=context)
 
         execution_id = self._get_unique_id()
-
         net_control_allocation_outcomes = []
         # other_simulation_data = []
         for i in range(num_trials):
             inputs = {}
-            for node in predicted_input:
-                inputs[node] = predicted_input[node][i]
+            for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
+                inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
 
             self.context.execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:

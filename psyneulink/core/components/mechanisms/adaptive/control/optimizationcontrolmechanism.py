@@ -805,6 +805,13 @@ class OptimizationControlMechanism(ControlMechanism):
         # # Get feature_values based on agent_rep
         # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
+        # Save state before any simulations
+        if hasattr(self.agent_rep, "save_state"):
+            self.agent_rep.save_state()
+
+        # Get predicted inputs
+        self.feature_values = np.array(np.array(self.variable[1:]).tolist())
+
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         if self.control_allocation is None:
             self.value = [c.instance_defaults.variable for c in self.control_signals]
@@ -872,12 +879,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
-    @property
-    def feature_values(self):
-        if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-            return self.agent_rep._get_predicted_input()
-        else:
-            return np.array(np.array(self.variable[1:]).tolist())
+    # @property
+    # def feature_values(self):
+    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
+    #         return self.agent_rep._get_predicted_input()
+    #     else:
+    #         return np.array(np.array(self.variable[1:]).tolist())
 
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
