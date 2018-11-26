@@ -842,10 +842,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     "does not match the value expected for specified {} ({})".
                                     format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
                                            repr('input'), input))
+
+        gain = self.get_current_function_param(GAIN, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
+
         if output is None:
             output = self.function(input)
 
-        return output * (1 - output)
+        return gain * scale * output * (1 - output)
 
 
 class Tanh(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -1091,10 +1095,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
 
         # FIX: ASSUMES ALL SCALE IS DEFAULT;  MULTIPLY BY SCALE?
         from math import e
-        return 1 / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
+        return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
