@@ -544,7 +544,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
@@ -786,7 +785,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
 
         Returns
         -------
@@ -1049,7 +1047,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
@@ -1219,14 +1216,17 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Arguments
         ---------
+
         variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
+
         Returns
         -------
+
         ReLU transformation of variable : number or array
         """
 
@@ -1253,6 +1253,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Returns
         -------
+
         derivative :  number or array
 
         """
@@ -2550,6 +2551,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  params=None,
                  context=None):
         """
+
         Arguments
         ---------
         variable : list or 1d array
@@ -2559,7 +2561,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
 
         Returns
         ---------

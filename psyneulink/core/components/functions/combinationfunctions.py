@@ -121,10 +121,10 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     .. _Reduce:
 
-    Combine values in each of one or more arrays into a single value for each array, with optional weighting and/or
-    exponentiation of each item within an array prior to combining, and scaling and/or offset of result.
+    Combines values in each of one or more arrays into a single value for each array, with optional weighting and/or
+    exponentiation of each item within an array prior to combining, and scaling and/or offset of result after combining.
 
-    Returns a scalar value for each array of the input.
+    `function <Reduce.function>` returns an array of scalar values, one for each array in `variable <Reduce.variable>`.
 
     COMMENT:
         IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
@@ -309,8 +309,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  params=None,
                  context=None):
         """
-        Calculate sum or product of the elements for each array in `variable <Reduce.variable>`,
-        apply `scale <Reduce.scale>` and/or `offset <Reduce.offset>`, and return array of resulting values.
 
         Arguments
         ---------
@@ -327,7 +325,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         Returns
         -------
 
-        Sum or product of arrays in variable : np.array
+        Sum or product of arrays in variable : array
             in an array that is one dimension less than `variable <Reduce.variable>`.
 
 
@@ -393,12 +391,15 @@ class LinearCombination(
 
     .. _LinearCombination:
 
-    Linearly combine arrays of values, with optional weighting and/or exponentiation of each array prior to combining,
-    and scaling and/or offset of result.
+    Linearly combine arrays of values, optionally weighting and/or exponentiating each array prior to combining,
+    and scaling and/or offsetting after combining.
 
-    Combines the arrays in the items of the `variable <LinearCombination.variable>` argument.  Each array can be
-    individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
-    array can be multiplicatively transformed and/or additively offset.
+    `function <LinearCombination.function>` combines the arrays in the outermost dimension (axis 0) of `variable
+    <LinearCombination.variable>` either additively or multiplicatively (as specified by `operation
+    <LinearCombination.operation>`), applying `weights <LinearCombination.weights>` and/or `exponents
+    <LinearCombination.exponents>` (if specified) to each array prior to combining them, and applying `scale
+    <LinearCombination.scale>` and/or `offeset <LinearCombination.offset>` (if specified) to the result after
+    combining, and returns an array of the same length as the operand arrays.
 
     COMMENT:
         Description:
@@ -715,15 +716,6 @@ class LinearCombination(
                  params=None,
                  context=None):
         """
-        Apply `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
-        arrays in `variable <LinearCombination.variable>`, then take their sum or product (as specified by
-        `operation <LinearCombination.operation>`), apply `scale <LinearCombination.scale>` and/or `offset
-        <LinearCombination.offset>`, and return the resulting array.
-
-        COMMENT: [SHORTER VERSION]
-            Linearly combine multiple arrays, optionally weighted and/or exponentiated, and return optionally scaled
-            and/or offset array (see :ref:`above <LinearCombination>` for details of param specifications`).
-        COMMENT
 
         Arguments
         ---------
@@ -740,7 +732,7 @@ class LinearCombination(
         Returns
         -------
 
-        combined array : 1d np.array
+        combined array : 1d array
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
@@ -955,12 +947,15 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     .. _CombineMeans:
 
-    Linearly combines the means of one or more arrays of values with optional scaling and/or offset applied to result.
+    Calculate and combine mean(s) for arrays of values, optionally weighting and/or exponentiating each mean prior to
+    combining, and scaling and/or offsetting after combining.
 
-    Takes the mean of the array in each item of its `variable <CombineMeans.variable>` argument, and combines them
-    as specified by the `operation <CombineMeans.operation>` parameter, taking either their sum (the default) or their
-    product.  The mean of each array can be individually weighted and/or exponentiated prior to being combined,
-    and the resulting scalar can be multiplicatively transformed and/or additively offset.
+    `function <CombineMeans.function>` takes the mean of each array in the outermost dimension (axis 0) of `variable
+    <CombineMeans.variable>`, and combines them either additively or multiplicatively (as specified by `operation
+    <CombineMeans.operation>`), applying `weights <LinearCombination.weights>` and/or `exponents
+    <LinearCombination.exponents>` (if specified) to each mean prior to combining them, and applying `scale
+    <LinearCombination.scale>` and/or `offeset <LinearCombination.offset>` (if specified) to the result after combining,
+    and returns a scalar value.
 
     COMMENT:
         Description:
@@ -1244,14 +1239,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  execution_id=None,
                  params=None,
                  context=None):
-        """Calculate and combine means of items in `variable <CombineMean.variable>`.
-
-        Take mean of each item of `variable <CombineMean.variable>`;
-        Apply `weights <CombineMeans.weights>` and/or `exponents <CombineMeanss.weights>` (if specified) to the means;
-        Take their sum or product, as specified by `operation <CombineMeans.operation>`;
-        Apply `scale <CombineMeans.scale>` (if specified) multiplicatively to the result;
-        Apply `offset <CombineMeans.offset>` (if specified) to the result;
-        Return scalar
+        """
 
         Arguments
         ---------
@@ -1268,8 +1256,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         Returns
         -------
 
-        combined array : 1d np.array
-            the result of linearly combining the arrays in `variable <CombineMeans.variable>`.
+        combined means : number
+            the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
 
@@ -1359,7 +1347,14 @@ GAMMA = 'gamma'
 
 class PredictionErrorDeltaFunction(CombinationFunction):
     """
-    Function that calculates the temporal difference prediction error
+    Calculate temporal difference prediction error.
+
+    `function <PredictionErrorDeltaFunction.function>` returns the prediction error using arrays in `variable
+    <PredictionErrorDeltaFunction.variable>`:
+
+    .. math::
+        \\delta(t) = r(t) + \\gamma sample(t) - sample(t - 1)
+
     """
     componentName = PREDICTION_ERROR_DELTA_FUNCTION
 
@@ -1476,11 +1471,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  params=None,
                  context=None):
         """
-        Calculates the prediction error using the arrays in `variable
-        <PredictionErrorDeltaFunction.variable>` and returns the resulting
-        array.
 
-        Parameters
+        Arguments
         ----------
         variable : 2d np.array : default ClassDefaults.variable
             a 2d array representing the sample and target values to be used to
@@ -1497,8 +1489,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         Returns
         -------
         delta values : 1d np.array
-            the result of
-                :math: `\\delta(t) = r(t) + \\gamma sample(t) - sample(t - 1)`
 
         """
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
