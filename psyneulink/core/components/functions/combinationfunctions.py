@@ -562,9 +562,10 @@ class LinearCombination(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(CombinationFunction.Params):
-        weights = None
-        exponents = None
         operation = SUM
+
+        weights = Param(None, modulable=True)
+        exponents = Param(None, modulable=True)
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
