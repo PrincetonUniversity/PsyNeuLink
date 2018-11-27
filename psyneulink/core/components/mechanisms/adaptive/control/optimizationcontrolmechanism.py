@@ -419,6 +419,10 @@ FEATURES = 'features'
 SHADOW_EXTERNAL_INPUTS = 'SHADOW_EXTERNAL_INPUTS'
 
 
+def _parse_feature_values_from_variable(variable):
+    return np.array(np.array(variable[1:]).tolist())
+
+
 class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -636,6 +640,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         agent_rep = Param(None, stateful=False, loggable=False)
 
+        feature_values = Param(_parse_feature_values_from_variable([defaultControlAllocation]), user=False)
+
         features = None
         num_estimates = 1
         search_space = None
@@ -814,6 +820,8 @@ class OptimizationControlMechanism(ControlMechanism):
         # # Get feature_values based on agent_rep
         # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
+        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
+
         # Save state before any simulations
         if hasattr(self.agent_rep, "save_state"):
             self.agent_rep.save_state()
@@ -835,7 +843,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
-            self.agent_rep.adapt(self.get_feature_values(variable, execution_id), control_allocation, net_outcome, execution_id=execution_id)
+            self.agent_rep.adapt(_parse_feature_values_from_variable(variable), control_allocation, net_outcome, execution_id=execution_id)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'adapt\'' in e.args[0]:
@@ -876,7 +884,7 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
-        return self.agent_rep.evaluate(self.get_feature_values(control_allocation, execution_id),
+        return self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                        control_allocation,
                                        self.parameters.num_estimates.get(execution_id),
                                        context=self.function_object.parameters.context.get(execution_id))
@@ -897,13 +905,6 @@ class OptimizationControlMechanism(ControlMechanism):
     #         return self.agent_rep._get_predicted_input()
     #     else:
     #         return np.array(np.array(self.variable[1:]).tolist())
-
-    def get_feature_values(self, variable=None, execution_id=None):
-        try:
-            var = variable[1:]
-        except TypeError:
-            var = self.parameters.variable.get(execution_id)[1:]
-        return np.array(np.array(var).tolist())
 
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
