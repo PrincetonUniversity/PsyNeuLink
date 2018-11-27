@@ -131,7 +131,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
     builder.ret(builder.call(intrinsic, function.args))
 
 def _generate_cpu_builtins_module(_float_ty):
-    """ Generate functin wrappers for log, exp, and pow intrinsics. """
+    """ Generate function wrappers for log, exp, and pow intrinsics. """
     module = ir.Module(name="cpu_builtins")
     for intrinsic in ('exp', 'log'):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])

@@ -10,7 +10,7 @@
 
 from llvmlite import binding
 
-import os
+import os, re
 
 from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
 from .builtins import _generate_cpu_builtins_module
@@ -20,6 +20,7 @@ _dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 try:
     import pycuda
     from pycuda import autoinit as pycuda_default
+    import pycuda.compiler
     ptx_enabled = _dumpenv.find("cuda") != -1
 except:
     ptx_enabled = False
@@ -208,11 +209,24 @@ class cpu_jit_engine(jit_engine):
         if self._object_cache is not None:
              self._jit_engine.set_object_cache(self._object_cache)
 
+_ptx_builtin_source = """
+__device__ __noinline__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
+__device__ __noinline__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
+__device__ __noinline__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
+__global__ void __dummy_log ({type} *a) {{ a[0] = __pnl_builtin_log(a[0]); }}
+__global__ void __dummy_exp ({type} *a) {{ a[0] = __pnl_builtin_exp(a[0]); }}
+__global__ void __dummy_pow ({type} *a) {{ a[0] = __pnl_builtin_pow(a[0], a[1]); }}
+"""
+
 class ptx_jit_engine(jit_engine):
     class cuda_engine():
         def __init__(self, tm):
             self._modules = {}
             self._target_machine = tm
+
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='ptx').decode()
+            # Remove directives. This will be appended to llvm generated code
+            self._generated_builtins = re.sub(r"\.(version|target|address_size).*","", self._generated_builtins)
 
         def set_object_cache(cache):
             pass
@@ -220,6 +234,10 @@ class ptx_jit_engine(jit_engine):
         def add_module(self, module):
             try:
                 ptx = self._target_machine.emit_assembly(module)
+                # Remove extern directive. log, exp, and pow are implemented
+                # in the generated ptx. Ideally these would be linked,
+                # but linker is not yet avialable in pycuda
+                ptx = re.sub(r"\.extern", ".visible", ptx + self._generated_builtins)
                 ptx_mod = pycuda.driver.module_from_buffer(ptx.encode())
             except Exception as e:
                 print("FAILED to generate PTX:", e)
