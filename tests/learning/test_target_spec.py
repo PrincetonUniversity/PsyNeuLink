@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import NormalDist
+from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System

@@ -89,14 +89,16 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
-from psyneulink.core.components.functions.function import FunctionOutputType, Linear
+from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.function import FunctionOutputType
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -114,6 +116,15 @@ class GatingProjectionError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _gating_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _gating_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override=override)
+    return value
 
 
 class GatingProjection(ModulatoryProjection_Base):
@@ -264,6 +275,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     class Params(ModulatoryProjection_Base.Params):
         function = Param(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
+        gating_signal = Param(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

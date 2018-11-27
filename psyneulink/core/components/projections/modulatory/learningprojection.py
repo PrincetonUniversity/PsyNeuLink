@@ -165,8 +165,11 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
-from psyneulink.core.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
+from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -178,6 +181,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
@@ -202,6 +206,15 @@ class LearningProjectionError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _learning_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _learning_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override=override)
+    return value
 
 
 class LearningProjection(ModulatoryProjection_Base):
@@ -405,10 +418,12 @@ class LearningProjection(ModulatoryProjection_Base):
         receiver=[PARAMETER_STATE]
 
     class Params(ModulatoryProjection_Base.Params):
+        value = Param(np.array([0]), read_only=True, aliases=['weight_change_matrix'])
         function = Param(Linear, stateful=False, loggable=False)
         error_function = Param(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         learning_function = Param(BackPropagation, stateful=False, loggable=False)
         learning_rate = Param(None, modulable=True)
+        learning_signal = Param(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -559,7 +574,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.value, self.receiver.instance_defaults.variable):
+        if not iscompatible(self.defaults.value, self.receiver.instance_defaults.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,
@@ -569,11 +584,11 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Insure that learning_signal has the same shape as the receiver's weight matrix
         try:
-            receiver_weight_matrix_shape = np.array(self.receiver.value).shape
+            receiver_weight_matrix_shape = np.array(self.receiver.defaults.value).shape
         except TypeError:
             receiver_weight_matrix_shape = 1
         try:
-            learning_signal_shape = np.array(self.value).shape
+            learning_signal_shape = np.array(self.defaults.value).shape
         except TypeError:
             learning_signal_shape = 1
 
@@ -606,7 +621,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
-    def _execute(self, variable, runtime_params=None, context=None):
+    def _execute(self, variable, execution_id=None, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -614,14 +629,14 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.context.initialization_status
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.parameters.context.get(execution_id).initialization_status
 
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.value
-        matrix = self.receiver.value
+            learning_signal = self.sender.parameters.value.get(execution_id)
+        matrix = self.receiver.parameters.value.get(execution_id)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -649,19 +664,21 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
-        self.weight_change_matrix = super(ShellClass, self)._execute(
+        value = super(ShellClass, self)._execute(
             variable=learning_signal,
+            execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )
 
-        if self.learning_rate is not None:
-            self.weight_change_matrix *= self.learning_rate
+        learning_rate = self.parameters.learning_rate.get(execution_id)
+        if learning_rate is not None:
+            value *= learning_rate
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
+        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
-        return self.value
+        return value
 
     @property
     def learning_signal(self):

@@ -8,7 +8,10 @@ import pytest
 
 from itertools import product
 
-from psyneulink.core.components.functions.function import AdaptiveIntegrator, Linear, Logistic, ModulationParam, SimpleIntegrator, UserDefinedFunction
+from psyneulink.core.components.functions.function import ModulationParam
+from psyneulink.core.components.functions.integratorfunctions import SimpleIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -33,8 +36,21 @@ logger = logging.getLogger(__name__)
 # see http://doc.pytest.org/en/latest/skipping.html
 
 
+def record_values(d, time_scale, *mechs, comp=None):
+    if time_scale not in d:
+        d[time_scale] = {}
+    for mech in mechs:
+        if mech not in d[time_scale]:
+            d[time_scale][mech] = []
+        mech_value = mech.parameters.value.get(comp)
+        if mech_value is None:
+            d[time_scale][mech].append(np.nan)
+        else:
+            d[time_scale][mech].append(mech_value[0])
+
 # Unit tests for each function of the Composition class #######################
 # Unit tests for Composition.Composition(
+
 
 class TestConstructor:
 
@@ -213,9 +229,9 @@ class TestAddProjection:
         comp.add_c_node(B)
         proj = comp.add_projection(weights, A, B)
         comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
-        assert np.allclose(A.value, [[1.1, 1.2, 1.3]])
-        assert np.allclose(B.input_values, [[11.2,  14.8]])
-        assert np.allclose(B.value, [[22.4,  29.6]])
+        assert np.allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
+        assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
+        assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix, weights)
 
     def test_linear_processing_pathway_weights_only(self):
@@ -228,9 +244,9 @@ class TestAddProjection:
         weights = [[1., 2.], [3., 4.], [5., 6.]]
         comp.add_linear_processing_pathway([A, weights, B])
         comp.run(inputs={A: [[1.1, 1.2, 1.3]]})
-        assert np.allclose(A.value, [[1.1, 1.2, 1.3]])
-        assert np.allclose(B.input_values, [[11.2,  14.8]])
-        assert np.allclose(B.value, [[22.4,  29.6]])
+        assert np.allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
+        assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
+        assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
 
     def test_add_conflicting_projection_object(self):
         comp = Composition()
@@ -458,7 +474,7 @@ class TestExecutionOrder:
                             D: 6.0,
                             E: 6.0}
 
-        assert all(expected_results[mech] == mech.value for mech in expected_results)
+        assert all(expected_results[mech] == mech.parameters.value.get(comp) for mech in expected_results)
 
         comp.run(inputs={A: 1.0})
 
@@ -468,7 +484,7 @@ class TestExecutionOrder:
                               D: 150.0,
                               E: 150.0}
 
-        assert all(expected_results_2[mech] == mech.value for mech in expected_results_2)
+        assert all(expected_results_2[mech] == mech.parameters.value.get(comp) for mech in expected_results_2)
 
     def test_feedback_projection_spec(self):
         A = ProcessingMechanism(name="A")
@@ -493,7 +509,7 @@ class TestExecutionOrder:
                             D: 6.0,
                             E: 6.0}
 
-        assert all(expected_results[mech] == mech.value for mech in expected_results)
+        assert all(expected_results[mech] == mech.parameters.value.get(comp) for mech in expected_results)
 
         comp.run(inputs={A: 1.0})
 
@@ -503,7 +519,7 @@ class TestExecutionOrder:
                               D: 150.0,
                               E: 150.0}
 
-        assert all(expected_results_2[mech] == mech.value for mech in expected_results_2)
+        assert all(expected_results_2[mech] == mech.parameters.value.get(comp) for mech in expected_results_2)
 
     def test_outer_feedback_inner_loop(self):
         A = ProcessingMechanism(name="A")
@@ -620,7 +636,7 @@ class TestExecutionOrder:
                            E: 3.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values[node], node.value)
+            assert np.allclose(expected_values[node], node.parameters.value.get(comp))
 
         comp.run(inputs={A: [1.0]})
         expected_values_2 = {A: 1.0,
@@ -631,7 +647,7 @@ class TestExecutionOrder:
 
         print(D.log.nparray_dictionary(["OutputState-0"]))
         for node in expected_values:
-            assert np.allclose(expected_values_2[node], node.value)
+            assert np.allclose(expected_values_2[node], node.parameters.value.get(comp))
 
 
 
@@ -665,7 +681,7 @@ class TestExecutionOrder:
                            E: 5.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values[node], node.value)
+            assert np.allclose(expected_values[node], node.parameters.value.get(comp))
 
         comp.run(inputs={A: [1.0]})
         expected_values_2 = {A: 1.0,
@@ -676,7 +692,7 @@ class TestExecutionOrder:
                              E: 10.0}
 
         for node in expected_values:
-            assert np.allclose(expected_values_2[node], node.value)
+            assert np.allclose(expected_values_2[node], node.parameters.value.get(comp))
 
     def test_two_overlapping_loops(self):
         A = ProcessingMechanism(name="A")
@@ -2326,7 +2342,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_timestep():
 
-                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
+                arr.append(scheduler.clocks[comp.default_execution_id].get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
 
             return record_timestep
 
@@ -2334,7 +2350,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_pass():
 
-                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
+                arr.append(scheduler.clocks[comp.default_execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
 
             return record_pass
 
@@ -2342,7 +2358,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_trial():
 
-                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
+                arr.append(scheduler.clocks[comp.default_execution_id].get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
 
             return record_trial
 
@@ -2354,18 +2370,6 @@ class TestCallBeforeAfterTimescale:
         assert pass_array == [0, 1, 2, 3]
 
     def test_call_beforeafter_values_onepass(self):
-
-        def record_values(d, time_scale, *mechs):
-            if time_scale not in d:
-                d[time_scale] = {}
-            for mech in mechs:
-                if mech not in d[time_scale]:
-                    d[time_scale][mech] = []
-                if mech.value is None:
-                    d[time_scale][mech].append(np.nan)
-                else:
-                    d[time_scale][mech].append(mech.value[0])
-
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -2410,13 +2414,16 @@ class TestCallBeforeAfterTimescale:
             },
         }
 
-        comp.run(inputs=inputs_dict, scheduler_processing=sched,
-                 call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
-                 call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
-                 call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
-                 call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
-                 call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
-                 call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B))
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
+        )
 
         for ts in before_expected:
             for mech in before_expected[ts]:
@@ -2433,18 +2440,6 @@ class TestCallBeforeAfterTimescale:
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
     def test_call_beforeafter_values_twopass(self):
-
-        def record_values(d, time_scale, *mechs):
-            if time_scale not in d:
-                d[time_scale] = {}
-            for mech in mechs:
-                if mech not in d[time_scale]:
-                    d[time_scale][mech] = []
-                if mech.value is None:
-                    d[time_scale][mech].append(np.nan)
-                else:
-                    d[time_scale][mech].append(mech.value[0])
-
         comp = Composition()
 
         A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
@@ -2514,13 +2509,16 @@ class TestCallBeforeAfterTimescale:
             },
         }
 
-        comp.run(inputs=inputs_dict, scheduler_processing=sched,
-                 call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
-                 call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
-                 call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
-                 call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
-                 call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
-                 call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B))
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
+        )
 
         for ts in before_expected:
             for mech in before_expected[ts]:
@@ -2571,7 +2569,7 @@ class TestCallBeforeAfterTimescale:
     #         default_variable=[0, 0, 0, 0],
     #     )
     #
-    #     Output_Layer = TransferMechanism(
+    #     Output_Layerrecord_values = TransferMechanism(
     #         name='Output Layer',
     #         function=Logistic,
     #         default_variable=[0, 0, 0],
@@ -2882,18 +2880,6 @@ class TestSystemComposition:
         assert np.allclose(125, output[0][0])
 
     def test_call_beforeafter_values_onepass(self):
-
-        def record_values(d, time_scale, *mechs):
-            if time_scale not in d:
-                d[time_scale] = {}
-            for mech in mechs:
-                if mech not in d[time_scale]:
-                    d[time_scale][mech] = []
-                if mech.value is None:
-                    d[time_scale][mech].append(np.nan)
-                else:
-                    d[time_scale][mech].append(mech.value)
-
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -2902,7 +2888,7 @@ class TestSystemComposition:
         comp.add_c_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp._analyze_graph()
-        inputs_dict = {A: [[1],[ 2], [3], [4]]}
+        inputs_dict = {A: [[1], [2], [3], [4]]}
         sched = Scheduler(composition=comp)
 
         before = {}
@@ -2938,13 +2924,16 @@ class TestSystemComposition:
             },
         }
 
-        comp.run(inputs=inputs_dict, scheduler_processing=sched,
-                 call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
-                 call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
-                 call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
-                 call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
-                 call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
-                 call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B))
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
+        )
 
         for ts in before_expected:
             for mech in before_expected[ts]:
@@ -2956,24 +2945,12 @@ class TestSystemComposition:
                 comp = []
                 for x in after[ts][mech]:
                     try:
-                        comp.append(x[0][0])
+                        comp.append(x[0])
                     except TypeError:
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
     def test_call_beforeafter_values_twopass(self):
-
-        def record_values(d, time_scale, *mechs):
-            if time_scale not in d:
-                d[time_scale] = {}
-            for mech in mechs:
-                if mech not in d[time_scale]:
-                    d[time_scale][mech] = []
-                if mech.value is None:
-                    d[time_scale][mech].append(np.nan)
-                else:
-                    d[time_scale][mech].append(mech.value)
-
         comp = Composition()
 
         A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
@@ -3043,13 +3020,16 @@ class TestSystemComposition:
             },
         }
 
-        comp.run(inputs=inputs_dict, scheduler_processing=sched,
-                 call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
-                 call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
-                 call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
-                 call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
-                 call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
-                 call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B))
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
+        )
 
         for ts in before_expected:
             for mech in before_expected[ts]:
@@ -3060,7 +3040,7 @@ class TestSystemComposition:
                 comp = []
                 for x in after[ts][mech]:
                     try:
-                        comp.append(x[0][0])
+                        comp.append(x[0])
                     except TypeError:
                         comp.append(x)
                 np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
@@ -3802,6 +3782,33 @@ class TestNestedCompositions:
         assert np.allclose(16, output)
 
 
+class TestOverloadedCompositions:
+    def test_mechanism_different_inputs(self):
+        a = TransferMechanism(name='a', function=Linear(slope=2))
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c', function=Linear(slope=3))
+        p = MappingProjection(sender=a, receiver=b)
+
+        comp = Composition()
+        comp2 = Composition()
+
+        comp.add_c_node(a)
+        comp.add_c_node(b)
+        comp.add_projection(p, a, b)
+
+        comp2.add_c_node(a)
+        comp2.add_c_node(b)
+        comp2.add_c_node(c)
+        comp2.add_projection(p, a, b)
+        comp2.add_projection(MappingProjection(sender=c, receiver=b), c, b)
+
+        comp.run({a: 1})
+        comp2.run({a: 1, c: 1})
+
+        np.testing.assert_allclose(comp.results, [[np.array([2])]])
+        np.testing.assert_allclose(comp2.results, [[np.array([5])]])
+
+
 class TestCompositionInterface:
 
     def test_one_input_state_per_origin_two_origins(self):
@@ -4002,9 +4009,9 @@ class TestCompositionInterface:
 
         output = comp.run(inputs=inputs_dict2, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.])
-        assert np.allclose(A.input_states[1].value, [4.])
-        assert np.allclose(A.variable, [[2.], [4.]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
         assert np.allclose(output, np.array([[2.], [4.]]))
 
     def test_two_input_states_new_origin_second_trial(self):
@@ -4039,9 +4046,9 @@ class TestCompositionInterface:
 
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
-        assert np.allclose(A.input_states[0].value, [5.])
-        assert np.allclose(A.input_states[1].value, [5.])
-        assert np.allclose(A.variable, [[5.], [5.]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [5.])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [5.])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[5.], [5.]])
         assert np.allclose(output, [[50.]])
 
         # A --> B --> C
@@ -4067,13 +4074,13 @@ class TestCompositionInterface:
         inputs_dict2 = {A: [[2.], [4.]],
                         D: [[2.], [4.]]}
         output2 = comp.run(inputs=inputs_dict2, scheduler_processing=sched)
-        assert np.allclose(A.input_states[0].value, [2.])
-        assert np.allclose(A.input_states[1].value, [4.])
-        assert np.allclose(A.variable, [[2.], [4.]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
-        assert np.allclose(D.input_states[0].value, [2.])
-        assert np.allclose(D.input_states[1].value, [4.])
-        assert np.allclose(D.variable, [[2.], [4.]])
+        assert np.allclose(D.input_states[0].parameters.value.get(comp), [2.])
+        assert np.allclose(D.input_states[1].parameters.value.get(comp), [4.])
+        assert np.allclose(D.parameters.variable.get(comp.default_execution_id), [[2.], [4.]])
 
         assert np.allclose(np.array([[40.]]), output2)
 
@@ -4163,8 +4170,7 @@ class TestCompositionInterface:
         out = comp.output_CIM
 
         assert np.allclose(np.shape(out.instance_defaults.variable), (2,1))
-        assert np.allclose(np.shape(out.variable), (2, 1))
-        assert np.allclose(out.variable, [[1.0], [2.0]])
+        assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0]])
 
         C = ProcessingMechanism(name='C')
         comp.add_c_node(C)
@@ -4176,8 +4182,7 @@ class TestCompositionInterface:
         out = comp.output_CIM
 
         assert np.allclose(np.shape(out.instance_defaults.variable), (3, 1))
-        assert np.allclose(np.shape(out.variable), (3, 1))
-        assert np.allclose(out.variable, [[1.0], [2.0], [3.0]])
+        assert np.allclose(out.parameters.variable.get(comp), [[1.0], [2.0], [3.0]])
 
         T = ProcessingMechanism(name='T')
         comp.add_linear_processing_pathway([A, T])
@@ -4193,8 +4198,8 @@ class TestCompositionInterface:
         print(out.variable)
         print(out.instance_defaults.variable)
         assert np.allclose(np.shape(out.instance_defaults.variable), (1, 1))
-        assert np.allclose(np.shape(out.variable), (1, 1))
-        assert np.allclose(out.variable, [[6.0]])
+        assert np.allclose(out.parameters.variable.get(comp), [[6.0]])
+
 
 class TestInputStateSpecifications:
 
@@ -4220,9 +4225,9 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs_dict, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.0])
-        assert np.allclose(A.input_states[1].value, [4.0])
-        assert np.allclose(A.variable, [[2.0], [4.0]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_states_created_first_with_deferred_init(self):
         comp = Composition()
@@ -4253,9 +4258,9 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.0])
-        assert np.allclose(A.input_states[1].value, [4.0])
-        assert np.allclose(A.variable, [[2.0], [4.0]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_states_created_with_keyword(self):
         comp = Composition()
@@ -4279,9 +4284,9 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.0])
-        assert np.allclose(A.input_states[1].value, [4.0])
-        assert np.allclose(A.variable, [[2.0], [4.0]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
         assert np.allclose([[2], [4]], output)
 
@@ -4308,9 +4313,9 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.0])
-        assert np.allclose(A.input_states[1].value, [4.0])
-        assert np.allclose(A.variable, [[2.0], [4.0]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
     def test_two_input_states_created_with_values(self):
         comp = Composition()
@@ -4334,9 +4339,9 @@ class TestInputStateSpecifications:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
 
-        assert np.allclose(A.input_states[0].value, [2.0])
-        assert np.allclose(A.input_states[1].value, [4.0])
-        assert np.allclose(A.variable, [[2.0], [4.0]])
+        assert np.allclose(A.input_states[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_states[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
 
 class TestInputSpecifications:
@@ -4455,10 +4460,10 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler_processing=sched)[0]
 
-        assert np.allclose(A.output_values, [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.output_values, [[3., 6., 9.]])
-        assert np.allclose(C.output_values, [[0.]])
-        assert np.allclose(D.output_values, [[4.]])
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
 
     def test_some_inputs_not_specified_origin_node_is_composition(self):
 
@@ -4492,11 +4497,11 @@ class TestInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler_processing=sched)[0]
 
-        assert np.allclose(A.output_values, [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(compA.output_values, [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.output_values, [[3., 6., 9.]])
-        assert np.allclose(C.output_values, [[0.]])
-        assert np.allclose(D.output_values, [[4.]])
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
 
 class TestProperties:
     @pytest.mark.composition
@@ -4528,7 +4533,7 @@ class TestAuxComponents:
 
         comp.run(inputs={A: [[1.0]]})
 
-        assert np.allclose(B.value, [[1.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[1.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 1.0 | Output = 1.0
@@ -4538,7 +4543,7 @@ class TestAuxComponents:
         # Input to A = 2.0 | Output = 2.0
         # Input to B = 2.0 | Output = 2.0
 
-        assert np.allclose(B.value, [[2.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
 
     def test_two_transfer_mechanisms_with_feedback_proj(self):
         A = TransferMechanism(name='A')
@@ -4552,7 +4557,7 @@ class TestAuxComponents:
         comp.run(inputs={A: [[1.0]],
                          B: [[2.0]]})
 
-        assert np.allclose(B.value, [[2.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 2.0 | Output = 2.0
@@ -4563,7 +4568,7 @@ class TestAuxComponents:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 2.0 + 1.0 | Output = 3.0
 
-        assert np.allclose(B.value, [[3.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[3.0]])
 
     def test_required_c_node_roles(self):
         A = TransferMechanism(name='A')
@@ -4595,7 +4600,7 @@ class TestAuxComponents:
 
         comp.run(inputs={A: [[1.0]]})
 
-        assert np.allclose(B.value, [[1.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[1.0]])
         # First Run:
         # Input to A = 1.0 | Output = 1.0
         # Input to B = 1.0 | Output = 1.0
@@ -4605,11 +4610,11 @@ class TestAuxComponents:
         # Input to A = 2.0 | Output = 2.0
         # Input to B = 2.0 | Output = 2.0
 
-        assert np.allclose(B.value, [[2.0]])
+        assert np.allclose(B.parameters.value.get(comp), [[2.0]])
 
         assert B in comp.get_c_nodes_by_role(CNodeRole.TERMINAL)
-        assert np.allclose(C.value, [[4.0]])
-        assert np.allclose(comp.output_values, [[2.0], [4.0]])
+        assert np.allclose(C.parameters.value.get(comp), [[4.0]])
+        assert np.allclose(comp.get_output_values(comp), [[2.0], [4.0]])
 
     def test_stateful_nodes(self):
         A = TransferMechanism(name='A')

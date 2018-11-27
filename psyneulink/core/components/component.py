@@ -403,35 +403,33 @@ import logging
 import numbers
 import types
 import warnings
-import weakref
 
-from collections import Iterable, OrderedDict, UserDict, deque
+from collections import Iterable, OrderedDict, UserDict
 from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
-from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
-from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
+from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.parameters import Defaults, Param, ParamAlias, Parameters
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ParamsTemplate, ReadOnlyOrderedDict, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_np_array, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, parse_execution_context, prune_unused_args
-from psyneulink.core.scheduling.condition import AtTimeStep, Never
-
-from psyneulink.core import llvm as pnlvm
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args
+from psyneulink.core.scheduling.condition import Never
 
 from llvmlite import ir
+from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
-    'DefaultsFlexibility', 'DeferredInitRegistry', 'make_property', 'parameter_keywords', 'ParameterError', 'ParamsDict', 'ResetMode',
+    'DefaultsFlexibility', 'DeferredInitRegistry', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 
 logger = logging.getLogger(__name__)
 
-# Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -500,36 +498,6 @@ class DefaultsFlexibility(Enum):
     RIGID = 1
     INCREASE_DIMENSION = 2
 
-
-class Defaults(ParamsTemplate):
-    def __init__(self, owner, **kwargs):
-        super().__init__(owner)
-
-        try:
-            vals = sorted(self.values(show_all=True).items())
-            for k, v in vals:
-                try:
-                    setattr(self, k, kwargs[k])
-                except KeyError:
-                    pass
-        except AttributeError:
-            # this may occur if this ends up being assigned to a "base" parameters object
-            # in this case it's not necessary to support kwargs assignment
-            pass
-
-    def __getattr__(self, attr):
-        return getattr(self._owner.parameters, attr).default_value
-
-    def __setattr__(self, attr, value):
-        if (attr[:1] != '_'):
-            param = getattr(self._owner.parameters, attr)
-            param._inherited = False
-            param.default_value = value
-        else:
-            super().__setattr__(attr, value)
-
-    def values(self, show_all=False):
-        return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -600,580 +568,6 @@ parameter_keywords = set()
 #     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
 
-# KDM 6/29/18: consider assuming that ALL parameters are stateful
-#   and that anything that you would want to set as not stateful
-#   are actually just "settings" or "preferences", like former prefs,
-#   PROJECTION_TYPE, PROJECTION_SENDER
-# classifications:
-#   stateful = False : Preference
-#   read_only = True : "something", computationally relevant but just for information
-#   user = False     : not something the user cares about but uses same infrastructure
-#
-# only current candidate for separation seems to be on stateful
-# for now, leave everything together. separate later if necessary
-class Param(types.SimpleNamespace):
-    # The values of these attributes will never be inherited from parent Params
-    # KDM 7/12/18: consider inheriting ONLY default_value?
-    _uninherited_attrs = {'name', 'values', 'history', 'log'}
-
-    # for user convenience - these attributes will be hidden from the repr
-    # display if the function is True based on the value of the attribute
-    _hidden_if_unset_attrs = {'aliases', 'getter', 'setter'}
-    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default'}
-    _hidden_when = {
-        **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
-        **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
-        **{k: lambda self, val: self.loggable is False or self.log_condition is LogCondition.OFF for k in ['log', 'log_condition']}
-    }
-
-    # for user convenience - these "properties" (see note below in _set_history_max_length)
-    # will be included as "param attrs" - the attributes of a Param that may be of interest to/settable by users
-    # To add an additional property-like param attribute, add its name here, and a _set_<param_name> method
-    # (see _set_history_max_length)
-    _additional_param_attr_properties = {'history_max_length', 'log_condition'}
-
-    def __init__(
-        self,
-        default_value=None,
-        name=None,
-        stateful=True,
-        modulable=False,
-        read_only=False,
-        aliases=None,
-        user=True,
-        values=None,
-        getter=None,
-        setter=None,
-        loggable=True,
-        log=None,
-        log_condition=LogCondition.OFF,
-        history=None,
-        history_max_length=1,
-        fallback_default=False,
-        _owner=None,
-        _inherited=False
-    ):
-        if isinstance(aliases, str):
-            aliases = [aliases]
-
-        if values is None:
-            values = {}
-
-        if history is None:
-            history = {}
-
-        if loggable and log is None:
-            log = {}
-
-        super().__init__(
-            default_value=default_value,
-            name=name,
-            stateful=stateful,
-            modulable=modulable,
-            read_only=read_only,
-            aliases=aliases,
-            user=user,
-            values=values,
-            getter=getter,
-            setter=setter,
-            loggable=loggable,
-            log=log,
-            log_condition=log_condition,
-            history=history,
-            history_max_length=history_max_length,
-            fallback_default=fallback_default,
-            _inherited=_inherited
-        )
-
-        if _owner is None:
-            self._owner = None
-        else:
-            try:
-                self._owner = weakref.proxy(_owner)
-            except TypeError:
-                self._owner = _owner
-
-        self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
-            + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
-        self._inherited_attrs_cache = {}
-        self.__inherited = False
-        self._inherited = _inherited
-
-    def __repr__(self):
-        # modified from types.SimpleNamespace to exclude _-prefixed attrs
-        try:
-            items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in self._param_attrs
-                if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
-            )
-
-            return "{}(\n\t\t{}\n\t)".format(type(self).__name__, "\n\t\t".join(items))
-        except AttributeError:
-            return super().__repr__()
-
-    def __deepcopy__(self, memo):
-        result = Param(**{k: copy.deepcopy(getattr(self, k)) for k in self._param_attrs}, _owner=self._owner, _inherited=self._inherited)
-        memo[id(self)] = result
-
-        return result
-
-    def __getattr__(self, attr):
-        # runs when the object doesn't have an attr attribute itself
-        # attempt to get from its parent, which is also a Param
-        try:
-            return getattr(self._parent, attr)
-        except AttributeError:
-            raise AttributeError("Param '%s' has no attribute '%s'" % (self.name, attr)) from None
-
-    def __setattr__(self, attr, value):
-        if attr in self._additional_param_attr_properties:
-            try:
-                getattr(self, '_set_{0}'.format(attr))(value)
-            except AttributeError:
-                super().__setattr__(attr, value)
-        else:
-            super().__setattr__(attr, value)
-
-    def reset(self):
-        # try to reset this to the value to the value specified explicitly
-        # by its Params class. otherwise, inherit
-        try:
-            self.default_value = self._owner.__class__.__dict__[self.name].default_value
-        except (AttributeError, KeyError):
-            try:
-                self.default_value = self._owner.__class__.__dict__[self.name]
-            except KeyError:
-                if self._parent is not None:
-                    self._inherited = True
-                else:
-                    raise ComponentError(
-                        'Param {0} cannot be reset, as it does not have a default specification '
-                        'or a parent. This may occur if it was added dynamically rather than in an'
-                        'explict Params inner class on a Component'
-                    )
-
-    def _register_alias(self, name):
-        if self.aliases is None:
-            self.aliases = [name]
-        elif name not in self.aliases:
-            self.aliases.append(name)
-
-    @property
-    def _inherited(self):
-        return self.__inherited
-
-    @_inherited.setter
-    def _inherited(self, value):
-        if value is not self._inherited:
-            if value:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
-            else:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        setattr(self, attr, self._inherited_attrs_cache[attr])
-            self.__inherited = value
-
-    def _cache_inherited_attrs(self):
-        for attr in self._param_attrs:
-            if attr not in self._uninherited_attrs:
-                self._inherited_attrs_cache[attr] = getattr(self, attr)
-
-    @property
-    def _parent(self):
-        try:
-            return getattr(self._owner._parent, self.name)
-        except AttributeError:
-            return None
-
-    @property
-    def _default_getter_kwargs(self):
-        # self._owner: the Params object it belongs to
-        # self._owner._owner: the Component the Params object belongs to
-        # self._owner._owner.owner: that Component's owner if it exists
-        kwargs = {
-            'self': self,
-            'owning_component': self._owner._owner
-        }
-        try:
-            kwargs['owner'] = self._owner._owner.owner
-        except AttributeError:
-            pass
-
-        return kwargs
-
-    @property
-    def _default_setter_kwargs(self):
-        return self._default_getter_kwargs
-
-    def get(self, execution_context=None, **kwargs):
-        '''
-            Gets the value of this `Param` in the context of **execution_context**
-            If no execution_context is specified, attributes on the associated `Component` will be used
-
-            Arguments
-            ---------
-
-                execution_context : UUID, Composition
-                    the execution_id for which the value is stored; if a Composition,
-                    uses **execution_context**.default_execution_id
-                kwargs
-                    any additional arguments to be passed to this `Param`'s `getter` if it is set
-        '''
-        try:
-            owning_component = self._owner._owner
-        except AttributeError:
-            raise ComponentError(
-                'Unable to find an owning Component for {0}. Ensure that this Param belongs to a '
-                'Params instance that belongs to a Component'.format(self)
-            )
-
-        execution_id = parse_execution_context(execution_context)
-
-        if self.getter is not None:
-            kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
-            value = call_with_pruned_args(self.getter, **kwargs)
-            if self.stateful:
-                self._set_value(value, execution_id)
-            return value
-        else:
-            try:
-                if execution_id is None or not self.stateful:
-                    return getattr(owning_component, self.name)
-                else:
-                    return self.values[execution_id]
-            except (AttributeError, KeyError):
-                logger.info('Param \'{0}\' has no value for execution_id {1}'.format(self.name, execution_id))
-                if self.fallback_default:
-                    return self.default_value
-                else:
-                    return None
-
-    def get_previous(self, execution_context=None):
-        try:
-            return self.history[execution_context][-1]
-        except (KeyError, IndexError):
-            return None
-
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
-        if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=2)
-
-        execution_id = parse_execution_context(execution_context)
-
-        if self.setter is not None:
-            kwargs = {
-                **self._default_setter_kwargs,
-                **{
-                    'execution_id': execution_id,
-                    'override': override,
-                },
-                **kwargs
-            }
-            value = call_with_pruned_args(self.setter, value, **kwargs)
-
-        if not self.stateful:
-            execution_id = None
-
-        self._set_value(value, execution_id, skip_history=skip_history, skip_log=skip_log)
-
-    def _set_value(self, value, execution_id=None, skip_history=False, skip_log=False):
-        if execution_id is None:
-            try:
-                owning_component = self._owner._owner
-            except AttributeError:
-                raise ComponentError(
-                    'Unable to find an owning Component for {0}. Ensure that this Param belongs to a '
-                    'Params instance that belongs to a Component'.format(self)
-                )
-
-            try:
-                setattr(owning_component, self.name, value)
-            except AttributeError:
-                # if unsettable, continue
-                pass
-
-        # store history
-        if not skip_history:
-            if execution_id in self.values:
-                try:
-                    self.history[execution_id].append(self.values[execution_id])
-                except KeyError:
-                    self.history[execution_id] = deque([self.values[execution_id]], maxlen=self.history_max_length)
-
-        # log value
-        if not skip_log and self.loggable:
-            self._log_value(value, execution_id)
-
-        # set value
-        self.values[execution_id] = value
-
-    def _log_value(self, value, execution_id=None):
-        if self.log_condition is None or self.log_condition is LogCondition.OFF:
-            return
-
-        try:
-            context = self._owner.context.get(execution_id)
-        except AttributeError:
-            logger.warning('Attempted to log {0} but has no context attribute'.format(self))
-            context = None
-
-        if context is not None:
-            if (self.log_condition | ContextFlags.COMMAND_LINE) & context.flags:
-                if execution_id not in self.log:
-                    self.log[execution_id] = deque([])
-
-                self.log[execution_id].append(
-                    LogEntry(
-                        _get_time(self._owner._owner, context.execution_phase, execution_id),
-                        ContextFlags._get_context_string(context.execution_phase),
-                        value
-                    )
-                )
-
-    def clear_log(self, execution_ids=NotImplemented):
-        if execution_ids is NotImplemented:
-            eids = list(self.log.keys())
-        elif not isinstance(execution_ids, list):
-            eids = [execution_ids]
-        else:
-            eids = execution_ids
-
-        for eid in eids:
-            if eid in self.log:
-                del self.log[eid]
-
-    def _initialize_from_context(self, execution_context=None, base_execution_context=None):
-        try:
-            self.set(value=copy.deepcopy(self.get(base_execution_context)), execution_context=execution_context, override=True, skip_history=True, skip_log=True)
-        except ComponentError as e:
-            raise ComponentError('Error when attempting to initialize from {0}: {1}'.format(base_execution_context, e))
-
-    # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
-    # in the interface for user simplicity: that is, inheritable (by this Param's children or from its parent),
-    # visible in a Param's repr, and easily settable by the user
-    def _set_history_max_length(self, value):
-        super().__setattr__('history_max_length', value)
-        for execution_id in self.history:
-            self.history[execution_id] = deque(self.history[execution_id], maxlen=value)
-
-    def _set_log_condition(self, value):
-        if not isinstance(value, LogCondition):
-            try:
-                value = LogCondition.from_string(value)
-            except (AttributeError, LogError):
-                try:
-                    value = LogCondition(value)
-                except ValueError:
-                    # if this fails, value can't be interpreted as a LogCondition
-                    raise
-
-        super().__setattr__('log_condition', value)
-
-
-class _ParamAliasMeta(type):
-    # these will not be taken from the source
-    _unshared_attrs = ['name', 'aliases']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for k in Param().__dict__:
-            if k not in self._unshared_attrs:
-                setattr(
-                    self,
-                    k,
-                    property(
-                        fget=get_alias_property_getter(k, attr='source'),
-                        fset=get_alias_property_setter(k, attr='source')
-                    )
-                )
-
-
-# TODO: may not completely work with history/history_max_length
-class ParamAlias(types.SimpleNamespace, metaclass=_ParamAliasMeta):
-    def __init__(self, source=None, name=None):
-        super().__init__(name=name)
-        try:
-            self.source = weakref.proxy(source)
-        except TypeError:
-            # source is already a weakref proxy, coming from another ParamAlias
-            self.source = source
-
-        try:
-            source._register_alias(name)
-        except AttributeError:
-            pass
-
-    def __getattr__(self, attr):
-        return self.source.__getattr__(attr)
-
-    def reset(self):
-        self.source.reset()
-
-    @property
-    def _inherited(self):
-        return self.source._inherited
-
-    @_inherited.setter
-    def _inherited(self, value):
-        self.source._inherited = value
-
-    def _cache_inherited_attrs(self):
-        self.source._cache_inherited_attrs()
-
-    @property
-    def _parent(self):
-        return self.source._parent
-
-    def get(self, execution_context=None, **kwargs):
-        self.source.get(execution_context, **kwargs)
-
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, **kwargs):
-        self.source.set(value, execution_context, override, skip_history, skip_log, **kwargs)
-
-
-class Parameters(ParamsTemplate):
-    _parsing_method_prefix = '_parse_'
-    _validation_method_prefix = '_validate_'
-
-    def __init__(self, owner, parent=None):
-        super().__init__(owner=owner, parent=parent)
-
-        aliases_to_create = set()
-        for param_name, param_value in self.values(show_all=True).items():
-            if (
-                param_name in self.__class__.__dict__
-                and (
-                    param_name not in self._parent.__class__.__dict__
-                    or self._parent.__class__.__dict__[param_name] is not self.__class__.__dict__[param_name]
-                )
-            ):
-                # KDM 6/25/18: NOTE: this may need special handling if you're creating a ParamAlias directly
-                # in a class's Params class
-                setattr(self, param_name, param_value)
-            else:
-                if isinstance(getattr(self._parent, param_name), ParamAlias):
-                    # store aliases we need to create here and then create them later, because
-                    # the param that the alias is going to refer to may not have been created yet
-                    # (the alias then may refer to the parent Param instead of the Param associated with this
-                    # Params class)
-                    aliases_to_create.add(param_name)
-                else:
-                    new_param = Param(name=param_name, _owner=self, _inherited=True)
-                    # store the parent's values as the default "uninherited" attr values
-                    new_param._cache_inherited_attrs()
-                    setattr(self, param_name, new_param)
-
-        for alias_name in aliases_to_create:
-            setattr(self, alias_name, ParamAlias(name=alias_name, source=getattr(self, alias_name).source))
-
-        for param, value in self.values(show_all=True).items():
-            self._validate(param, value.default_value)
-
-    def __getattr__(self, attr):
-        try:
-            return getattr(self._parent, attr)
-        except AttributeError:
-            raise AttributeError("No attribute '%s' exists in the parameter hierarchy" % attr) from None
-
-    def __setattr__(self, attr, value):
-        # handles parsing: Param or ParamAlias housekeeping if assigned, or creation of a Param
-        # if just a value is assigned
-        if not self._is_parameter(attr):
-            super().__setattr__(attr, value)
-        else:
-            if isinstance(value, Param):
-                self._validate(attr, value.default_value)
-
-                if value.name is None:
-                    value.name = attr
-
-                value._owner = self
-                super().__setattr__(attr, value)
-
-                if value.aliases is not None:
-                    for alias in value.aliases:
-                        if not hasattr(self, alias) or getattr(self, alias)._owner is not self:
-                            super().__setattr__(alias, ParamAlias(source=getattr(self, attr), name=alias))
-                            self._register_parameter(alias)
-
-            elif isinstance(value, ParamAlias):
-                if value.name is None:
-                    value.name = attr
-                if isinstance(value.source, str):
-                    try:
-                        value.source = getattr(self, value.source)
-                        value.source._register_alias(attr)
-                    except AttributeError:
-                        # developer error
-                        raise ComponentError(
-                            '{0}: Attempted to create an alias named {1} to {2} but attr {2} does not exist'.format(
-                                self, attr, value.source
-                            )
-                        )
-                super().__setattr__(attr, value)
-            else:
-                self._validate(attr, value)
-                # assign value to default_value
-                if hasattr(self, attr) and isinstance(getattr(self, attr), Param):
-                    current_param = getattr(self, attr)
-                    # construct a copy because the original may be used as a base for reset()
-                    new_param = copy.deepcopy(current_param)
-                    # set _inherited before default_value because it will
-                    # restore from cache
-                    new_param._inherited = False
-                    new_param.default_value = value
-                else:
-                    new_param = Param(name=attr, default_value=value, _owner=self)
-
-                super().__setattr__(attr, new_param)
-
-            self._register_parameter(attr)
-
-    def _get_prefixed_method(self, parse=False, validate=False, parameter_name=None):
-        """
-            Returns the method named **prefix**\\ **parameter_name**, used to simplify
-            pluggable methods for parsing and validation of `Param`\\ s
-        """
-        if parse:
-            prefix = self._parsing_method_prefix
-        elif validate:
-            prefix = self._validation_method_prefix
-        else:
-            return None
-
-        return getattr(self, '{0}{1}'.format(prefix, parameter_name))
-
-    def _validate(self, attr, value):
-        try:
-            validation_method = self._get_prefixed_method(validate=True, parameter_name=attr)
-            err_msg = validation_method(value)
-            if err_msg is False:
-                err_msg = '{0} returned False'.format(validation_method)
-            elif err_msg is True:
-                err_msg = None
-
-            if err_msg is not None:
-                raise ParameterError(
-                    "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
-                        value,
-                        attr,
-                        self._owner,
-                        err_msg
-                    )
-                )
-        except AttributeError:
-            # parameter does not have a validation method
-            pass
-
-    def _parse_variable(self, variable):
-        return variable
-
-    def _validate_variable(self, variable):
-        return None
-
 class dummy_class:
     def dummy_method(self):
         pass
@@ -1195,10 +589,6 @@ class ComponentError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-
-class ParameterError(Exception):
-    pass
 
 
 # *****************************************   COMPONENT CLASS  ********************************************************
@@ -1349,7 +739,6 @@ class Component(object, metaclass=ComponentsMeta):
         # + parameter_validation
         + user_params
         +._runtime_params_reset
-        + recording
 
     Instance methods:
         + function (implementation is optional; aliased to params[FUNCTION] by default)
@@ -1410,8 +799,6 @@ class Component(object, metaclass=ComponentsMeta):
         variable = Param(np.array([0]), read_only=True)
         value = Param(np.array([0]), read_only=True)
         context = Param(None, user=False)
-
-        function = Param(None, stateful=False)
 
         def _parse_variable(self, variable):
             return variable
@@ -1495,9 +882,31 @@ class Component(object, metaclass=ComponentsMeta):
 
         self.context.initialization_status = ContextFlags.INITIALIZING
 
-        defaults = self.ClassDefaults.values().copy()
+        self.parameters = self.Params(owner=self, parent=self.class_parameters)
+
+        # assign defaults based on pass in params and class defaults
+        defaults = self.ClassDefaults.values(show_all=True).copy()
+        try:
+            function_params = param_defaults[FUNCTION_PARAMS]
+        except KeyError:
+            function_params = None
+
         if param_defaults is not None:
-            defaults.update(param_defaults)
+            # Exclude any function_params from the items to set on this Component
+            # because these should just be pointers to the parameters of the same
+            # name on this Component's function_object
+            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
+            d = {
+                k: v for (k, v) in param_defaults.items()
+                if (
+                    k not in defaults
+                    or (
+                        (function_params is None or k not in function_params)
+                        and v is not None
+                    )
+                )
+            }
+            defaults.update(d)
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
@@ -1506,7 +915,6 @@ class Component(object, metaclass=ComponentsMeta):
             default_variable = v
             defaults[VARIABLE] = default_variable
 
-        self.parameters = self.Params(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, **defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
@@ -1538,11 +946,15 @@ class Component(object, metaclass=ComponentsMeta):
         # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
+        try:
+            # assign log conditions from preferences
+            self.parameters.value.log_condition = self.prefs._log_pref.setting
+        except AttributeError:
+            pass
 
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
         self.log = Log(owner=self)
-        self.recording = False
         # Used by run to store return value of execute
         self.results = []
 
@@ -1585,11 +997,11 @@ class Component(object, metaclass=ComponentsMeta):
             if FUNCTION in param_defaults and param_defaults[FUNCTION] is not None:
                 function = param_defaults[FUNCTION]
             else:
-                function = self.ClassDefaults.function
-        try:
-            function_params = param_defaults[FUNCTION_PARAMS]
-        except KeyError:
-            function_params = None
+                try:
+                    function = self.ClassDefaults.function
+                except AttributeError:
+                    # assume function is a method on self
+                    pass
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
@@ -2253,26 +1665,27 @@ class Component(object, metaclass=ComponentsMeta):
                     # create property
                     setattr(self.__class__, arg_name, make_property(arg_name))
                 # assign default value
-                setattr(self,  "_"+arg_name, arg_value)
-                    # setattr(self, "_"+arg_name, arg_value)
+                setattr(self, "_" + arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
                 setattr(self, arg_name, arg_value)
 
-    def _set_parameter_value(self, param, val):
-        setattr(self, param, val)
+    def _set_parameter_value(self, param, val, execution_id=None):
+        getattr(self.parameters, param).set(val, execution_id, override=True)
         if hasattr(self, "parameter_states"):
             if param in self.parameter_states:
-                new_state_value = self.parameter_states[param].execute(context=ContextFlags.EXECUTING)
-                self.parameter_states[param].value = new_state_value
+                new_state_value = self.parameter_states[param].execute(execution_id=execution_id, context=ContextFlags.EXECUTING)
+                self.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_states"):
                 if param in self.owner.parameter_states:
                     new_state_value = self.owner.parameter_states[param].execute(
-                        context=ContextFlags.EXECUTING)
-                    self.owner.parameter_states[param].value = new_state_value
+                        execution_id=execution_id,
+                        context=ContextFlags.EXECUTING
+                    )
+                    self.owner.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
 
-    def _check_args(self, variable=None, params=None, target_set=None, context=None):
+    def _check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
 
         Called by functions to validate variable and params
@@ -2298,22 +1711,24 @@ class Component(object, metaclass=ComponentsMeta):
         if variable is None:
             try:
                 # assigned by the Function class init when initializing
-                variable = self._update_variable(self.instance_defaults.variable)
+                variable = self.instance_defaults.variable
             except AttributeError:
-                variable = self._update_variable(self.ClassDefaults.variable)
+                variable = self.ClassDefaults.variable
 
         # If the variable is a function, call it
         if callable(variable):
-            variable = self._update_variable(variable())
+            variable = variable()
 
         # Validate variable if parameter_validation is set and the function was called with a variable
         # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
-            if self.context.string:
-                self.context.string = self.context.string + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
-            else:
-                self.context.string = FUNCTION_CHECK_ARGS
-            variable = self._update_variable(self._validate_variable(variable, context=context))
+            try:
+                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
+            except AttributeError:
+                self._assign_context_values(execution_id)
+                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
+
+            variable = self._validate_variable(variable, context=context)
 
         # PARAMS ------------------------------------------------------------
 
@@ -2329,9 +1744,10 @@ class Component(object, metaclass=ComponentsMeta):
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
         # reset any runtime params that were leftover from a direct call to .execute (atypical)
-        for key in self._runtime_params_reset:
-            self._set_parameter_value(key, self._runtime_params_reset[key])
-        self._runtime_params_reset = {}
+        if execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[execution_id]:
+                self._set_parameter_value(key, self._runtime_params_reset[execution_id][key], execution_id)
+        self._runtime_params_reset[execution_id] = {}
 
         # If params have been passed, treat as runtime params
         runtime_params = params
@@ -2343,11 +1759,14 @@ class Component(object, metaclass=ComponentsMeta):
                 if hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
-                    self._runtime_params_reset[param_name] = getattr(self, param_name)
-                    self._set_parameter_value(param_name, runtime_params[param_name])
+                    if execution_id not in self._runtime_params_reset:
+                        self._runtime_params_reset[execution_id] = {}
+                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
+                    self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
         elif runtime_params:    # not None
             raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
 
+        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
         return variable
 
     def _instantiate_defaults(self,
@@ -2429,13 +1848,13 @@ class Component(object, metaclass=ComponentsMeta):
                         format(self.name, self.shape, np.array(variable).shape))
             # Variable is not specified, so set to array of zeros with specified shape
             else:
-                variable = self._update_variable(np.zeros(self.shape))
+                variable = np.zeros(self.shape)
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
         if not (context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
-            variable = self._update_variable(self._validate_variable(variable, context=context))
+            variable = self._validate_variable(variable, context=context)
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:
@@ -2742,15 +2161,41 @@ class Component(object, metaclass=ComponentsMeta):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
+    def _initialize_from_context(self, execution_context, base_execution_context=None, override=True):
+        for comp in self._dependent_components:
+            comp._initialize_from_context(execution_context, base_execution_context, override)
+
+        for param in [p for p in self.stateful_parameters if p.setter is None and not isinstance(p, ParamAlias)]:
+            param._initialize_from_context(execution_context, base_execution_context, override)
+
+        # attempt to initialize any params with setters (some params with setters may depend on the
+        # initialization of other params)
+        # this pushes the problem down one level so that if there are two such that they depend on each other,
+        # it will still fail. in this case, it is best to resolve the problem in the setter with a default
+        # initialization value
+        for param in [p for p in self.stateful_parameters if p.setter is not None and not isinstance(p, ParamAlias)]:
+            param._initialize_from_context(execution_context, base_execution_context, override)
+
     def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        try:
-            context_param = self.parameters.context.get(execution_id)
-        except ComponentError:
+        context_param = self.parameters.context.get(execution_id)
+        if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
             context_param = self.parameters.context.get(execution_id)
+            context_param.execution_id = execution_id
 
         for context_item, value in kwargs.items():
             setattr(context_param, context_item, value)
+
+        for comp in self._dependent_components:
+            comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+    def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
+        """
+            Unnecessary, but can simplify multiple parameter assignments at once
+            For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
+        """
+        for (k, v) in kwargs.items():
+            getattr(self.parameters, k).set(v, execution_id, override=override)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2787,7 +2232,7 @@ class Component(object, metaclass=ComponentsMeta):
     # Misc parsers
     # ---------------------------------------------------------
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         """
             Parses the **variable** passed in to a Component into a function_variable that can be used with the
             Function associated with this Component
@@ -2860,13 +2305,13 @@ class Component(object, metaclass=ComponentsMeta):
         # Note: check for list is necessary since function references must be passed wrapped in a list so that they are
         #       not called before being passed
         if isinstance(variable, list) and callable(variable[0]):
-            variable = self._update_variable(variable[0]())
+            variable = variable[0]()
         # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
         # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
         # Note: this insures that variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
-        variable = self._update_variable(convert_to_np_array(variable, 1))
+        variable = convert_to_np_array(variable, 1)
 
         # If self.ClassDefaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
@@ -3213,7 +2658,8 @@ class Component(object, metaclass=ComponentsMeta):
             - self.value == value[0] returned by self.execute
 
         """
-        from psyneulink.core.components.functions.function import UserDefinedFunction, Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         from psyneulink.core.components.shellclasses import Function
 
         function_variable = copy.deepcopy(
@@ -3222,6 +2668,16 @@ class Component(object, metaclass=ComponentsMeta):
                 context=ContextFlags.INSTANTIATE
             )
         )
+
+        # KDM 11/12/18: parse an instance of a Function's .function method to itself
+        # (not sure how worth it this is, but it existed in Scripts/Examples/Reinforcement-Learning REV)
+        # purposely not attempting to parse a class Function.function
+        if isinstance(function, types.MethodType):
+            try:
+                if isinstance(function.__self__, Function):
+                    function = function.__self__
+            except AttributeError:
+                pass
 
         if isinstance(function, types.FunctionType) or isinstance(function, types.MethodType):
             self.function_object = UserDefinedFunction(
@@ -3313,6 +2769,7 @@ class Component(object, metaclass=ComponentsMeta):
         if hasattr(self, "_parameter_states"):
             for param_state in self._parameter_states:
                 setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
+                setattr(self.__class__, "get_mod_" + param_state.name, make_stateful_getter_mod(param_state.name))
 
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
@@ -3327,7 +2784,7 @@ class Component(object, metaclass=ComponentsMeta):
         if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
 
-        self.value = value
+        self.parameters.value.set(value, override=True)
         try:
             # Could be mutable, so assign copy
             self.instance_defaults.value = value.copy()
@@ -3335,20 +2792,20 @@ class Component(object, metaclass=ComponentsMeta):
             # Immutable, so just assign value
             self.instance_defaults.value = value
 
-    def initialize(self):
+    def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         """
             If the component's execute method involves execution of an `Integrator` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
             values on the component, depending on the component type.
         """
-        from psyneulink.core.components.functions.function import Integrator
+        from psyneulink.core.components.functions.integratorfunctions import Integrator
         if hasattr(self, "function_object"):
             if isinstance(self.function_object, Integrator):
-                new_value = self.function_object.reinitialize(*args)
-                self.value = np.atleast_2d(new_value)
+                new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
+                self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
             else:
                 raise ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
                                "(It does not have an accumulator to reinitialize).".format(self.name))
@@ -3357,37 +2814,44 @@ class Component(object, metaclass=ComponentsMeta):
                            "(It does not have an accumulator to reinitialize).".format(self.name))
         assert True
 
-    def execute(self, variable=None, runtime_params=None, context=None):
-        return self._execute(variable=variable, runtime_params=runtime_params, context=context)
+    def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+        # initialize context for this execution_id if not done already
+        if execution_id is not None:
+            self._assign_context_values(execution_id)
 
-    def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
+        value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
+        self.parameters.value.set(value, execution_context=execution_id, override=True)
+        return value
 
-        # GET/SET CONTEXT
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
         from psyneulink.core.components.functions.function import Function
+
+        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
+
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.parameters.context.get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
-            self._update_current_execution_time(context=context)
+            self._update_current_execution_time(context=context, execution_id=execution_id)
 
         # If Component has a Function (function_object), assign Component's execution_phase to its context
         try:
-            fct_context_attrib = self.function_object.context
-            # curr_context = self.context.execution_phase
-            curr_context = self.context.flags
+            fct_context_attrib = self.function_object.parameters.context.get(execution_id)
+            # curr_context = self.parameters.context.get(execution_id).execution_phase
+            curr_context = self.parameters.context.get(execution_id).flags
         except AttributeError:
             # Otherwise if Component *is* a Function, assign its owner's execution_phase to its context
             try:
-                fct_context_attrib = self.context
-                # curr_context = self.owner.context.execution_phase
-                curr_context = self.owner.context.flags
+                fct_context_attrib = self.parameters.context.get(execution_id)
+                # curr_context = self.owner.parameters.context.get(execution_id).execution_phase
+                curr_context = self.owner.parameters.context.get(execution_id).flags
             except AttributeError:
                 # Otherwise assign ContextFlags.PROCESSING as its execution_phase context
-                fct_context_attrib = self.context
+                fct_context_attrib = self.parameters.context.get(execution_id)
                 # curr_context = ContextFlags.PROCESSING
                 fct_context_attrib.execution_phase = ContextFlags.PROCESSING
-                curr_context = self.context.flags
+                curr_context = self.parameters.context.get(execution_id).flags
         # fct_context_attrib.execution_phase = curr_context
         fct_context_attrib.flags = curr_context
 
@@ -3396,8 +2860,12 @@ class Component(object, metaclass=ComponentsMeta):
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        function_variable = self._parse_function_variable(variable, context)
-        value = self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
+        function_variable = self._parse_function_variable(variable, execution_id=execution_id, context=context)
+        value = self.function(variable=function_variable, execution_id=execution_id, params=runtime_params, context=context, **kwargs)
+        try:
+            self.function_object.parameters.value.set(value, execution_id, override=True)
+        except AttributeError:
+            pass
         fct_context_attrib.execution_phase = ContextFlags.IDLE
 
         return value
@@ -3438,29 +2906,21 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             self._update_current_execution_time(self.context.string)
 
-    def _get_current_execution_time(self, context):
-        from psyneulink.core.globals.log import _get_context
-        return _get_time(self, context_flags=_get_context(context))
+    def get_current_execution_time(self, execution_context=None):
+        if execution_context is None:
+            return self.current_execution_time
+        else:
+            try:
+                return self.parameters.context.get(execution_context).composition.scheduler_processing.get_clock(execution_context).time
+            except AttributeError:
+                return None
 
-    def _update_current_execution_time(self, context):
-        self._current_execution_time = self._get_current_execution_time(context=context)
+    def _get_current_execution_time(self, context, execution_id=None):
+        from psyneulink.core.globals.context import _get_context
+        return _get_time(self, context_flags=_get_context(context), execution_id=execution_id)
 
-    def _update_value(self, context=None):
-        """Evaluate execute method
-        """
-        self.value = self.execute(context=context)
-
-    def _update_variable(self, value):
-        '''
-            Used to mirror assignments to local variable in an attribute
-            Knowingly not threadsafe
-        '''
-        self._variable = value
-        return value
-
-    @property
-    def variable(self):
-        return self._variable
+    def _update_current_execution_time(self, context, execution_id=None):
+        self._current_execution_time = self._get_current_execution_time(context=context, execution_id=execution_id)
 
     def _change_function(self, to_function):
         pass
@@ -3510,8 +2970,8 @@ class Component(object, metaclass=ComponentsMeta):
             try:
                 pref_set.owner = self
             except:
-                pass
             # MODIFIED 6/1/16 END
+                pass
             self._prefs = pref_set
             if self.prefs.verbosePref:
                 warnings.warn('PreferenceSet {0} assigned to {1}'.format(pref_set.name, self.name))
@@ -3526,9 +2986,6 @@ class Component(object, metaclass=ComponentsMeta):
         else:
             raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
-
-    def set_value_without_logging(self, assignment):
-        self._value = assignment
 
     @property
     def params(self):
@@ -3692,6 +3149,10 @@ class Component(object, metaclass=ComponentsMeta):
         return self.log.logged_items
 
     @property
+    def _loggable_parameters(self):
+        return [param.name for param in self.parameters if param.loggable and param.user]
+
+    @property
     def has_initializers(self):
         return self._has_initializers
 
@@ -3708,7 +3169,6 @@ class Component(object, metaclass=ComponentsMeta):
         if hasattr(self, "owner"):
             if self.owner is not None:
                 self.owner.has_initializers = True
-
 
     @property
     def _default_variable_flexibility(self):
@@ -3785,6 +3245,10 @@ class Component(object, metaclass=ComponentsMeta):
         return self.__class__.parameters
 
     @property
+    def stateful_parameters(self):
+        return [param for param in self.parameters if param.stateful]
+
+    @property
     def function_parameters(self):
         try:
             return self.function_object.parameters
@@ -3801,6 +3265,8 @@ class Component(object, metaclass=ComponentsMeta):
     def ClassDefaults(self):
         return self.class_defaults
 
+    # left in for backwards compatibility
+    # DEPRECATED
     @property
     def instance_defaults(self):
         return self.defaults
@@ -3813,8 +3279,16 @@ class Component(object, metaclass=ComponentsMeta):
             self._is_pnl_inherent = False
             return self._is_pnl_inherent
 
+    @property
+    def _dependent_components(self):
+        """
+            Returns a set of Components that will be executed if this Component is executed
+        """
+        return []
+
 
 COMPONENT_BASE_CLASS = Component
+
 
 def make_property(name):
     backing_field = '_' + name
@@ -3823,7 +3297,14 @@ def make_property(name):
         return getattr(self, backing_field)
 
     def setter(self, val):
-        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+        if (
+            hasattr(self, '_prefs')
+            and self.paramValidationPref
+            and hasattr(self, PARAMS_CURRENT)
+            and hasattr(self, 'user_params_for_instantiation')
+            and hasattr(self, 'user_params')
+            and hasattr(self, 'paramInstanceDefaults')
+        ):
             self._assign_params(request_set={name:val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, backing_field, val)
@@ -3835,7 +3316,7 @@ def make_property(name):
         # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
         from psyneulink.core.components.functions.function import Function_Base
-        if isinstance(self, Function_Base) and self.owner:
+        if isinstance(self, Function_Base) and hasattr(self, 'owner') and self.owner is not None:
             param_state_owner = self.owner
             # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
@@ -3863,6 +3344,7 @@ def make_property(name):
     # prop.__doc__ = docs[name]
     return prop
 
+
 def make_property_mod(param_name):
 
     def getter(self):
@@ -3879,3 +3361,15 @@ def make_property_mod(param_name):
     prop = property(getter).setter(setter)
 
     return prop
+
+
+def make_stateful_getter_mod(param_name):
+
+    def getter(self, execution_context=None):
+        try:
+            return self._parameter_states[param_name].parameters.value.get(execution_context)
+        except TypeError:
+            raise ComponentError("{} does not have a '{}' ParameterState."
+                                 .format(self.name, param_name))
+
+    return getter

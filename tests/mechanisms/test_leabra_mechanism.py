@@ -8,7 +8,7 @@ try:
 except ImportError:
     leabra_available = False
 
-from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -261,8 +261,8 @@ class TestLeabraMechPrecision:
         # set all learning rules false
         for conn in leabra_net.connections:
             conn.spec.lrule = None
-        L_net.training_flag = False
-        L_spec.training_flag = False
+        L_net.parameters.training_flag.set(False, s_net)
+        L_spec.parameters.training_flag.set(False, s_spec)
 
         for i in range(num_trials):  # non-training round
             out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})

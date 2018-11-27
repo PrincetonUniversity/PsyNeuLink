@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import BogaczEtAl
+from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl
 from psyneulink.core.components.process import Process
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
@@ -46,12 +46,12 @@ def test_DDM():
     result = z.execute([[30], [10]])
 
     expected_output = [
-        (myMechanism.input_states[0].value, np.array([40.])),
-        (myMechanism.output_states[0].value, np.array([10.])),
-        (myMechanism_2.input_states[0].value, np.array([10.])),
-        (myMechanism_2.output_states[0].value, np.array([20.])),
-        (myMechanism_3.input_states[0].value, np.array([20.])),
-        (myMechanism_3.output_states[0].value, np.array([30.])),
+        (myMechanism.input_states[0].parameters.value.get(z), np.array([40.])),
+        (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.input_states[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.input_states[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
         (result, np.array([30.])),
     ]
 

@@ -1,6 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
+import psyneulink.core.components.functions.transferfunctions
 
 
 def my_linear_fct(x,
@@ -37,20 +38,20 @@ def my_sinusoidal_fct(input,
 Input_Layer = pnl.TransferMechanism(
     name='Input_Layer',
     default_variable=np.zeros((2,)),
-    function=pnl.Logistic
+    function=psyneulink.core.components.functions.transferfunctions.Logistic
 )
 
 Output_Layer = pnl.TransferMechanism(
         name='Output_Layer',
         default_variable=[0, 0, 0],
-        function=pnl.Linear,
+        function=psyneulink.core.components.functions.transferfunctions.Linear,
         # function=pnl.Logistic,
         # output_states={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
                        # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
+                       pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
                        # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
                        # pnl.FUNCTION: my_linear_fct
                        # pnl.FUNCTION: my_exp_fct
@@ -97,17 +98,17 @@ stim_list = {
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
+    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
 
 
-def show_target():
+def show_target(execution_context=None):
     print('Gated: ',
           Gating_Mechanism.gating_signals[0].efferents[0].receiver.owner.name,
           Gating_Mechanism.gating_signals[0].efferents[0].receiver.name)
-    print('- Input_Layer.value:                  ', Input_Layer.value)
-    print('- Output_Layer.value:                 ', Output_Layer.value)
-    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.variable)
-    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.value)
+    print('- Input_Layer.value:                  ', Input_Layer.parameters.value.get(execution_context))
+    print('- Output_Layer.value:                 ', Output_Layer.parameters.value.get(execution_context))
+    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.parameters.variable.get(execution_context))
+    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.parameters.value.get(execution_context))
 
 mySystem = pnl.System(processes=[p, g])
 

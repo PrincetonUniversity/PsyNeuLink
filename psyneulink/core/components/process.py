@@ -449,6 +449,7 @@ Class Reference
 """
 
 import inspect
+import itertools
 import numbers
 import re
 import warnings
@@ -458,7 +459,8 @@ from collections import UserList, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, Defaults, function_type
+from psyneulink.core.components.component import Component, function_type
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -470,6 +472,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.core.globals.parameters import Defaults, Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -822,6 +825,7 @@ class Process(Process_Base):
 
     class Params(Process_Base.Params):
         variable = None
+        input = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -853,6 +857,7 @@ class Process(Process_Base):
                  context=None):
 
         pathway = pathway or []
+        self.projections = []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
@@ -876,6 +881,8 @@ class Process(Process_Base):
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
             default_variable = pathway[0].instance_defaults.variable
+
+        self.default_execution_id = self.name
 
         super(Process, self).__init__(default_variable=default_variable,
                                       size=size,
@@ -1115,6 +1122,13 @@ class Process(Process_Base):
                 self._mechs.append(pathway[i])
             # self.mechanism_names.append(mech.name)
 
+            try:
+                # previously this was only getting called for ControlMechanisms, but GatingMechanisms
+                # need to activate their projections too! This is not being tested for anywhere
+                mech._activate_projections_for_compositions(self)
+            except AttributeError:
+                pass
+
             # FIX: ADD RECURRENT PROJECTION AND MECHANISM
             # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW SELF-RECURRENT MECHANISMS IN THE CURRENT SYSTEM
             #                       SHOULD BE HANDLED MORE APPROPRIATELY IN COMPOSITION
@@ -1244,11 +1258,14 @@ class Process(Process_Base):
                         else:
                             if not learning_projections:
                                 # Add learningProjection to Projection if it doesn't have one
-                                _add_projection_to(
+                                projs = _add_projection_to(
                                     preceding_item,
                                     preceding_item._parameter_states[MATRIX],
                                     projection_spec=self.learning
                                 )
+                                for proj in projs:
+                                    proj._activate_for_compositions(self)
+                                    self._add_projection(proj)
                     continue
 
                 # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
@@ -1262,6 +1279,8 @@ class Process(Process_Base):
                 projection_found = False
                 for projection in projection_list:
                     # Current mechanism DOES receive a Projection from the preceding item
+                    # DEPRECATED: this allows any projection existing between A->B to automatically be added
+                    # to this process
                     if preceding_item == projection.sender.owner:
                         projection_found = True
                         if self.learning:
@@ -1305,15 +1324,29 @@ class Process(Process_Base):
                                         for projection in matrix_param_state.mod_afferents
                                     )
                                 ):
-                                    _add_projection_to(
+                                    projs = _add_projection_to(
                                         projection,
                                         matrix_param_state,
                                         projection_spec=self.learning
                                     )
+                                    for p in projs:
+                                        p._activate_for_compositions(self)
 
                             if self.prefs.verbosePref:
                                 print("LearningProjection added to Projection from Mechanism {0} to Mechanism {1} "
                                       "in pathway of {2}".format(preceding_item.name, item.name, self.name))
+
+                        # remove this to enforce that projections need to be explicitly added to Compositions
+                        # left in for backwards compatibility
+                        # DEPRECATED
+                        projection._activate_for_compositions(self)
+                        # warnings.warn(
+                        #     'The ability for Process to associate with itself all projections between '
+                        #     'subsequent mechanisms implicitly is deprecated. In the future, you must '
+                        #     'explicitly state the projections you want included in any Composition.',
+                        #     FutureWarning
+                        # )
+
                         break
 
                 if not projection_found:
@@ -1340,6 +1373,7 @@ class Process(Process_Base):
                         #     from the preceding Mechanism in the pathway
                         # if not any(projection.sender.owner is preceding_item
                         #            for projection in item.objective_mechanism.input_state.path_afferents):
+                        item._objective_projection._activate_for_compositions(self)
                         if (
                             not any(
                                 any(
@@ -1354,17 +1388,26 @@ class Process(Process_Base):
 
                         else:
                             # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                            for input_state in item.objective_mechanism.input_states:
+                                for projection in input_state.path_afferents:
+                                    if projection.sender.owner is preceding_item:
+                                        projection._activate_for_compositions(self)
                             continue
                     else:
                         receiver = item
                     # MODIFIED 9/19/17 END
 
-                    MappingProjection(
+                    projection = MappingProjection(
                         sender=preceding_item,
                         receiver=receiver,
                         params=projection_params,
                         name='{} from {} to {}'.format(MAPPING_PROJECTION, preceding_item.name, item.name)
                     )
+
+                    projection._activate_for_compositions(self)
+                    for mod_proj in itertools.chain.from_iterable([p.mod_afferents for p in projection.parameter_states]):
+                        mod_proj._activate_for_compositions(self)
+
                     if self.prefs.verbosePref:
                         print("MappingProjection added from Mechanism {0} to Mechanism {1}"
                               " in pathway of {2}".format(preceding_item.name, item.name, self.name))
@@ -1513,7 +1556,6 @@ class Process(Process_Base):
 
                     if projection.has_learning_projection:
                         self.learning = True
-
                     # TEST
                     # if params:
                     #     projection.matrix = params
@@ -1560,6 +1602,8 @@ class Process(Process_Base):
                 #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                 # IMPLEMENTATION NOTE:  params is currently ignored
                 pathway[i] = projection
+
+                projection._activate_for_compositions(self)
 
         if learning_projection_specified:
             self.learning = LEARNING
@@ -1715,9 +1759,10 @@ class Process(Process_Base):
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
-                MappingProjection(sender=self.process_input_states[i],
+                proj = MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],
                                   name=self.name+'_Input Projection')
+                proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -1738,16 +1783,17 @@ class Process(Process_Base):
                                            format(j, process_input[j], self.name,
                                                   mechanism.instance_defaults.variable[i], i, mechanism.name))
                     # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
-                    MappingProjection(sender=self.process_input_states[j],
+                    proj = MappingProjection(sender=self.process_input_states[j],
                             receiver=mechanism.input_states[i],
                             name=self.name+'_Input Projection')
+                    proj._activate_for_compositions(self)
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
 
         mechanism._receivesProcessInput = True
 
-    def _assign_input_values(self, input, context=None):
+    def _assign_input_values(self, input, execution_id=None, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of input
@@ -1765,7 +1811,7 @@ class Process(Process_Base):
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
             if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
-                                                self.context.initializaton_status == ContextFlags.INITIALIZING)):
+                                                self.parameters.context.get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1785,7 +1831,7 @@ class Process(Process_Base):
 
         # Assign items in input to value of each process_input_state
         for i in range(len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+            self.process_input_states[i].parameters.value.set(input[i], execution_id, override=True)
 
         return input
 
@@ -1826,6 +1872,7 @@ class Process(Process_Base):
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
+                            self._add_projection(projection)
                     except AttributeError:
                         pass
                 self._instantiate__deferred_init_projections(projections, context=context)
@@ -1925,10 +1972,12 @@ class Process(Process_Base):
                                 lc._activation_mech_input_projection,
                                 lc._activation_mech_output_projection,
                             ]:
-                                proj._enable_for_compositions(self)
+                                proj._activate_for_compositions(self)
+                                self._add_projection(proj)
 
                             for proj in lc.learning_mechanism.projections:
-                                proj._enable_for_compositions(self)
+                                proj._activate_for_compositions(self)
+                                self._add_projection(proj)
                         except AttributeError:
                             pass
 
@@ -2071,27 +2120,29 @@ class Process(Process_Base):
 
             # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=target_input_state,
+            proj = MappingProjection(sender=target_input_state,
                     receiver=target_mech_target,
                     name=self.name+'_Input Projection to '+target_mech_target.name)
+            proj._activate_for_compositions(self)
     # MODIFIED 8/14/17 END
 
 
 
-    def initialize(self):
+    def initialize(self, execution_context=None):
         """Assign the values specified for each Mechanism in the process' `initial_values` attribute.  This usually
         occurs at the beginning of one or a series of executions invoked by a call to the Process` `execute
         <Process.execute>` or `run <Process.run>` methods.
         """
         # FIX:  INITIALIZE PROCESS INPUTS??
         for mech, value in self.initial_values.items():
-            mech.initialize(value)
+            mech.initialize(value, execution_context)
 
     def execute(
         self,
         input=None,
         target=None,
         execution_id=None,
+        base_execution_id=None,
         runtime_params=None,
         termination_processing=None,
         termination_learning=None,
@@ -2157,30 +2208,42 @@ class Process(Process_Base):
 
         if not context:
             context = ContextFlags.COMPOSITION
-            self.context.execution_phase = ContextFlags.PROCESSING
-            self.context.source = context
-            self.context.string = EXECUTING + " " + PROCESS + " " + self.name
-        from psyneulink.core.globals.environment import _get_unique_id
-        self._execution_id = execution_id or _get_unique_id()
+            self._assign_context_values(
+                execution_id,
+                execution_phase=ContextFlags.PROCESSING,
+                source=context,
+                string=EXECUTING + " " + PROCESS + " " + self.name
+            )
+
+        if execution_id is None:
+            execution_id = self.default_execution_id
+
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
+            mech._assign_context_values(execution_id, composition=self)
+
+        for proj in self.projections:
+            proj._assign_context_values(execution_id, composition=self)
+
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and self.context.initialization_status == ContextFlags.INITIALIZED
+        report_output = self.prefs.reportOutputPref and self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-        self.input = self._assign_input_values(input=input, context=context)
+        variable = self._assign_input_values(input=input, execution_id=execution_id, context=context)
 
-        self._check_args(self.input, runtime_params)
+        self._check_args(variable, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
-        variable = self._update_variable(self.input)
+        self.parameters.input.set(variable, execution_id)
 
         # Generate header and report input
         if report_output:
-            self._report_process_initiation(separator=True)
+            self._report_process_initiation(input=variable, separator=True)
 
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism in self._mechs:
@@ -2190,10 +2253,10 @@ class Process(Process_Base):
 
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.context.execution_phase = ContextFlags.PROCESSING
+            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             context = ContextFlags.PROCESS
-            mechanism.execute(context=context)
-            mechanism.context.execution_phase = ContextFlags.IDLE
+            mechanism.execute(execution_id=execution_id, context=context)
+            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2202,20 +2265,20 @@ class Process(Process_Base):
             if mechanism is self.first_mechanism and not self.clamp_input:
                 # Zero self.input to first mechanism after first run
                 #     in case it is repeated in the pathway or receives a recurrent Projection
-                variable = self._update_variable(variable * 0)
+                variable = variable * 0
 
         # Execute LearningMechanisms
         if self._learning_enabled:
-            self._execute_learning(target=target, context=context)
+            self._execute_learning(execution_id=execution_id, target=target, context=context)
 
         if report_output:
-            self._report_process_completion(separator=True)
+            self._report_process_completion(separator=True, execution_context=execution_id)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.value
+        return self.output_state.parameters.value.get(execution_id)
         # return self.output
 
-    def _execute_learning(self, target=None, context=None):
+    def _execute_learning(self, execution_id=None, target=None, context=None):
 
         """ Update each LearningProjection for mechanisms in _mechs of process
 
@@ -2228,24 +2291,26 @@ class Process(Process_Base):
         # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
         #
         if target is not None:
-            self.target = np.atleast_2d(target)
+            target = np.atleast_2d(target)
+        else:
+            target = self.target
 
         # If targets were specified as a function in call to Run() or in System (and assigned to self.targets),
         #  call the function now (i.e., after execution of the pathways, but before learning)
         #  and assign value to self.target (that will be used below to assign values to target_input_states)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        elif isinstance(self.targets, function_type):
-            self.target = self.targets()
+        if isinstance(target, function_type):
+            target = target()
 
         # If target itself is callable, call that now
-        if callable(self.target):
-            self.target = self.target()
+        if callable(target):
+            target = target()
 
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.value = self.target[i]
+            target_input_state.parameters.value.set(target[i], execution_id, override=True)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
@@ -2258,15 +2323,17 @@ class Process(Process_Base):
         # THEN, execute ComparatorMechanism and LearningMechanism
 
         for mechanism in self._learning_mechs:
-            mechanism.context.execution_phase = ContextFlags.LEARNING
-            mechanism.execute(context=context)
-            mechanism.context.execution_phase = ContextFlags.IDLE
+            mechanism._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
+            mechanism.execute(execution_id=execution_id, context=context)
+            mechanism._assign_context_values(execution_id, execution_phase=ContextFlags.IDLE)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
-
-            mech.context.execution_phase = ContextFlags.LEARNING
-            mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+            mech._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
+            mech._assign_context_values(
+                execution_id,
+                string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
+            )
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
@@ -2290,8 +2357,11 @@ class Process(Process_Base):
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                    projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
-                    projection.context.execution_phase = ContextFlags.LEARNING
+                    projection._assign_context_values(
+                        execution_id,
+                        string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
+                        execution_phase=ContextFlags.LEARNING
+                    )
 
                     # For each parameter_state of the Projection
                     try:
@@ -2304,7 +2374,7 @@ class Process(Process_Base):
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context)
+                            parameter_state.update(execution_id=execution_id, context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
@@ -2316,11 +2386,13 @@ class Process(Process_Base):
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
 
-                    projection.context.execution_phase = ContextFlags.IDLE
+                    projection._assign_context_values(execution_id, execution_phase=ContextFlags.IDLE)
 
-            mech.context.execution_phase = ContextFlags.IDLE
-            mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
-
+            mech._assign_context_values(
+                execution_id,
+                execution_phase=ContextFlags.IDLE,
+                string=self.parameters.context.get(execution_id).string.replace(LEARNING, EXECUTING)
+            )
 
     def run(self,
             inputs,
@@ -2462,11 +2534,11 @@ class Process(Process_Base):
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
 
-    def _report_process_completion(self, separator=False):
+    def _report_process_completion(self, execution_context=None, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
+                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.parameters.value.get(execution_context)]))))
 
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
@@ -2474,7 +2546,7 @@ class Process(Process_Base):
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].value)))
+                      format(float(mech.output_states[MSE].parameters.value.get(execution_context))))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2519,6 +2591,9 @@ class Process(Process_Base):
 
         print ("\n---------------------------------------------------------")
 
+    def _add_projection(self, projection):
+        self.projections.append(projection)
+
     @property
     def function(self):
         return self.execute
@@ -2553,6 +2628,14 @@ class Process(Process_Base):
     def numPhases(self):
         return self._phaseSpecMax + 1
 
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            self._mechs,
+            self.projections,
+        ))
+
 
 class ProcessInputState(OutputState):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run
@@ -2585,6 +2668,11 @@ class ProcessInputState(OutputState):
     COMMENT
 
     """
+    class Params(OutputState.Params):
+        # just grabs input from the process
+        variable = Param(np.array([0]), read_only=True)
+        value = Param(np.array([0]), read_only=True)
+
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
@@ -2597,10 +2685,11 @@ class ProcessInputState(OutputState):
         self.prefs = prefs
         self.efferents = []
         self.owner = owner
-        self.value = variable
 
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
+
+        self.parameters.value.set(variable, override=True)
 
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value
@@ -2617,6 +2706,12 @@ class ProcessInputState(OutputState):
     def value(self, assignment):
         self._value = assignment
         self.owner._update_input()
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            self.efferents,
+        ))
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')
 

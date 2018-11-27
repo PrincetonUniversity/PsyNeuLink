@@ -1,6 +1,8 @@
 import pytest
 
 import psyneulink as pnl
+import psyneulink.core.components.functions.integratorfunctions
+
 
 class TestNaming:
     # ------------------------------------------------------------------------------------------------
@@ -163,20 +165,26 @@ class TestNaming:
         D2 = pnl.DDM(name='D2')
 
         # ControlSignal with one ControlProjection
-        C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[pnl.DRIFT_RATE]])
+        C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[
+                                                       psyneulink.core.components.functions.integratorfunctions.DRIFT_RATE]])
         assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
         assert C1.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
-        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
-                                                                     D1.parameter_states[pnl.THRESHOLD]]}])
+        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[
+                                                                         psyneulink.core.components.functions
+                                  .integratorfunctions.DRIFT_RATE],
+                                                                     D1.parameter_states[
+                                                                         psyneulink.core.components.functions.integratorfunctions.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
         assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'
 
         # ControlSignal with two ControlProjection to two parameters of different Mechanisms
-        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[pnl.DRIFT_RATE],
-                                                                     D2.parameter_states[pnl.DRIFT_RATE]]}])
+        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[
+                                                                         psyneulink.core.components.functions.integratorfunctions.DRIFT_RATE],
+                                                                     D2.parameter_states[
+                                                                         psyneulink.core.components.functions.integratorfunctions.DRIFT_RATE]]}])
         assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
         assert C3.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C3.control_signals[0].efferents[1].name == 'ControlProjection for D2[drift_rate]'

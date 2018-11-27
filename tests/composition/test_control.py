@@ -1,3 +1,4 @@
+import functools
 import numpy as np
 import pytest
 import psyneulink as pnl
@@ -20,14 +21,7 @@ class TestControlMechanisms:
         c.add_c_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
-
         c.run(inputs=input_dict)
-
-        # for state in lvoc.input_states:
-        #     print("\n", state.name, " receives: ", state.path_afferents, " | internal only? ", state.internal_only)
-        #
-        #
-        # c.show_graph()
 
         assert len(lvoc.input_states) == 4
 
@@ -76,7 +70,6 @@ class TestControlMechanisms:
         for i in range(1,5):
             assert lvoc.input_states[i].function_object.offset == 10.0
 
-
     def test_default_lc_control_mechanism(self):
         G = 1.0
         k = 0.5
@@ -116,18 +109,18 @@ class TestControlMechanisms:
         B_value = []
         LC_value = []
 
-        def report_trial():
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
-            mod_gain_assigned_to_A.append(A.mod_gain)
-            mod_gain_assigned_to_B.append(B.mod_gain)
-            base_gain_assigned_to_A.append(A.function_object.gain)
-            base_gain_assigned_to_B.append(B.function_object.gain)
-            A_value.append(A.value)
-            B_value.append(B.value)
-            LC_value.append(LC.value)
+        def report_trial(system):
+            gain_created_by_LC_output_state_1.append(LC.output_state.parameters.value.get(system)[0])
+            mod_gain_assigned_to_A.append(A.get_mod_gain(system))
+            mod_gain_assigned_to_B.append(B.get_mod_gain(system))
+            base_gain_assigned_to_A.append(A.function_object.parameters.gain.get())
+            base_gain_assigned_to_B.append(B.function_object.parameters.gain.get())
+            A_value.append(A.parameters.value.get(system))
+            B_value.append(B.parameters.value.get(system))
+            LC_value.append(LC.parameters.value.get(system))
 
         result = S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-                      call_after_trial=report_trial)
+                      call_after_trial=functools.partial(report_trial, S))
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
         assert mod_gain_assigned_to_A[0] == starting_value_LC

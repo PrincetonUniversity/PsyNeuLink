@@ -2,18 +2,22 @@ import numpy as np
 import psyneulink as pnl
 
 # Control Parameters
+import psyneulink.core.components.functions.integratorfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 signalSearchRange = np.arange(0.8, 2.0, 0.2) # why 0.8 to 2.0 in increments of 0.2
 
 
 # test_mech = pnl.TransferMechanism(size=3)
 
 # Stimulus Mechanisms
-Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=pnl.Linear)
-Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=pnl.Linear)
+Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=psyneulink.core.components.functions
+                                    .transferfunctions.Linear)
+Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=psyneulink.core.components.functions.transferfunctions.Linear)
 
 # Processing Mechanisms (Control)
 Target_Rep = pnl.TransferMechanism(name='Target Representation',
-                                   function=pnl.Linear(
+                                   function=psyneulink.core.components.functions.transferfunctions.Linear(
                                        slope=(1.0, pnl.ControlProjection(
                                            control_signal_params={
                                                pnl.ALLOCATION_SAMPLES: signalSearchRange}))))
@@ -21,19 +25,19 @@ Target_Rep.set_log_conditions('value') # Log Target_Rep
 Target_Rep.loggable_items
 
 Flanker_Rep = pnl.TransferMechanism(name='Flanker Representation',
-                                    function=pnl.Linear(
+                                    function=psyneulink.core.components.functions.transferfunctions.Linear(
                                         slope=(1.0, pnl.ControlProjection(
                                             control_signal_params={
                                                 pnl.ALLOCATION_SAMPLES: signalSearchRange}))))
 Flanker_Rep.set_log_conditions('value') # Log Flanker_Rep
 Flanker_Rep.loggable_items
 # Processing Mechanism (Automatic)
-Automatic_Component = pnl.TransferMechanism(name='Automatic Component',function=pnl.Linear)
+Automatic_Component = pnl.TransferMechanism(name='Automatic Component', function=psyneulink.core.components.functions.transferfunctions.Linear)
 Automatic_Component.loggable_items
 Automatic_Component.set_log_conditions('value')
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=pnl.BogaczEtAl(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.integratorfunctions.BogaczEtAl(
         drift_rate=(0.5),
         threshold=(1.0),
         # noise=(0.8),
@@ -47,7 +51,7 @@ Decision = pnl.DDM(function=pnl.BogaczEtAl(
         {
             pnl.NAME: 'OFFSET RT',
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
-            pnl.FUNCTION: pnl.Linear(0, slope=1.0, intercept=1)
+            pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(0, slope=1.0, intercept=1)
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 Decision.set_log_conditions('DECISION_VARIABLE')
@@ -146,7 +150,7 @@ stim_list_dict = {
 }
 
 def x():
-    print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value)
+    print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].parameters.value.get(mySystem))
 
 mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
@@ -154,5 +158,5 @@ mySystem.run(num_trials=nTrials,
 
 # Flanker_Rep.log.print_entries()
 # Target_Rep.log.print_entries()
-Decision.log.print_entries()
+Decision.log.print_entries(execution_ids=mySystem)
 

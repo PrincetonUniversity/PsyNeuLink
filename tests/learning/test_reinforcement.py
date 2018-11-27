@@ -2,12 +2,13 @@ import functools
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import PROB
-from psyneulink.core.components.functions.function import Reinforcement, SoftMax
+from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.transferfunctions import SoftMax
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.system import System
+from psyneulink.core.globals.keywords import PROB
 
 
 def test_reinforcement():
@@ -47,7 +48,7 @@ def test_reinforcement():
         print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].mod_matrix)
+        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].get_mod_matrix(s))
         print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_state.value)[0][0],
             action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
@@ -85,13 +86,13 @@ def test_reinforcement():
     reward_prediction_weights = action_selection.input_states[0].path_afferents[0]
 
     expected_output = [
-        (input_layer.output_states.values, [np.array([1., 1., 1.])]),
-        (action_selection.output_states.values, [np.array([0.      , 0.      , 2.283625])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([7.716375]), np.array(59.542443140625004)])),
-        (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray([
+        (input_layer.get_output_values(s), [np.array([1., 1., 1.])]),
+        (action_selection.get_output_values(s), [np.array([0.      , 0.      , 2.283625])]),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.get_output_values(s)), pytest.helpers.expand_np_ndarray([np.array([7.716375]), np.array(59.542443140625004)])),
+        (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.get_output_values(s)), pytest.helpers.expand_np_ndarray([
             [np.array([0.        , 0.        , 0.38581875]), np.array([0.        , 0.        , 0.38581875])]
         ])),
-        (reward_prediction_weights.mod_matrix, np.array([
+        (reward_prediction_weights.get_mod_matrix(s), np.array([
             [1.,         0.,         0.        ],
             [0.,         3.38417298, 0.        ],
             [0.,         0.,         2.66944375],

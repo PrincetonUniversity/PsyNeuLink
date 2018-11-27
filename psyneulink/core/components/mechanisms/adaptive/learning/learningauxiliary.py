@@ -135,7 +135,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import BackPropagation, Hebbian, Linear, PredictionErrorDeltaFunction, Reinforcement, TDLearning
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -645,14 +647,14 @@ def _instantiate_error_signal_projection(sender, receiver):
         raise LearningAuxiliaryError("Receiver of the error signal Projection "
                                      "{} must be a LearningMechanism".format(receiver))
 
-    if len(sender.value) != len(receiver.value):
+    if len(sender.defaults.value) != len(receiver.defaults.value):
         raise LearningAuxiliaryError("The length of the OutputState ({}) for "
                                      "the sender ({}) of the error signal "
                                      "Projection does not match the length of "
                                      "the InputState ({}) for the receiver "
-                                     "({})".format(len(sender.value),
+                                     "({})".format(len(sender.defaults.value),
                                                    sender.owner.name,
-                                                   len(receiver.value),
+                                                   len(receiver.defaults.value),
                                                    receiver.owner.name))
 
     return MappingProjection(sender=sender,
@@ -776,6 +778,9 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
                                              name=ERROR_SIGNAL,
                                              context=ContextFlags.METHOD),
                                   context=ContextFlags.METHOD)
+
+        for projection in aff_lm.projections:
+            projection._activate_for_compositions(system)
 
         if not aff_lm.systems:
             aff_lm._add_system(system, LEARNING)

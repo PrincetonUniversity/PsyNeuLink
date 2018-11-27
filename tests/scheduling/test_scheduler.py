@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import uuid
 
-from psyneulink.core.components.functions.function import DriftDiffusionIntegrator, Linear
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -66,7 +67,7 @@ class TestScheduler:
             scheduler_processing=sched,
             termination_processing=termination_conds
         )
-        output = sched.execution_list[comp1._execution_id]
+        output = sched.execution_list[comp1.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -79,7 +80,7 @@ class TestScheduler:
             scheduler_processing=sched,
             termination_processing=termination_conds
         )
-        output = sched.execution_list[comp2._execution_id]
+        output = sched.execution_list[comp2.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -369,7 +370,7 @@ class TestLinear:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
         )
-        output = sched.execution_list[comp._execution_id]
+        output = sched.execution_list[comp.default_execution_id]
 
         expected_output = [
             A, A, A, A, A, B, C, B, C, B, C,
@@ -441,7 +442,7 @@ class TestLinear:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 
@@ -451,7 +452,7 @@ class TestLinear:
     def test_9b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_c_node(m)
@@ -473,7 +474,7 @@ class TestLinear:
     def test_10(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -496,7 +497,7 @@ class TestLinear:
     def test_10b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -519,7 +520,7 @@ class TestLinear:
     def test_10c(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = True
+        A._is_finished = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -542,7 +543,7 @@ class TestLinear:
     def test_10d(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A.is_finished = False
+        A._is_finished = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -778,7 +779,7 @@ class TestBranching:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 
@@ -810,7 +811,7 @@ class TestBranching:
         i = 0
         for step in sched.run(termination_conds=termination_conds):
             if i == 10:
-                A.is_finished = True
+                A._is_finished = True
             output.append(step)
             i += 1
 

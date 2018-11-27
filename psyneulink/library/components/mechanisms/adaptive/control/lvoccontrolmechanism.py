@@ -44,8 +44,8 @@ of its `feature_predictors <LVOCControlMechanism.feature_preditors>`, by using i
 LVOCControlMechanism.prediction_weights` (i.e., the LVOC) to estimate the EVC for samples of `control_allocation
 <ControlMechanism.control_allocation>`, and returning the one that maximizes the EVC for the current `feature_predictors
 <LVOCControlMechanism.feature_preditors>`.
-  
-  
+
+
 .. _LVOCControlMechanism_Creation:
 
 Creating an LVOCControlMechanism
@@ -80,9 +80,9 @@ Creating an LVOCControlMechanism
   * **learning_function** -- specifies `LearningFunction` that learns to predict the `EVC <LVOCControlMechanism_EVC>`
     for a given `control_allocation <ControlMechanism.control_allocation>` from the terms specified in the
     **prediction_terms** argument.
-    
+
   * **prediction_terms** -- specifies the terms used by the `learning_function <LVOCControlMechanism.learning_function>`
-    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the 
+    and by the LVOCControlMechanism's primary `function <LVOCControlMechanism.function>` to determine the
     `control_allocation <ControlMechanism.control_allocation>` that maximizes the `EVC <LVOCControlMechanism_EVC>`.
 
 
@@ -118,17 +118,17 @@ Feature_Predictors can be of two types:
 * *Input Feature Predictor* -- this is a value received as input by an `ORIGIN` Mechanism in the `Composition`.
     These are specified in the **feature_predictors** argument of the LVOCControlMechanism's constructor (see
     `LVOCControlMechanism_Creation`), in a dictionary containing a *SHADOW_EXTERNAL_INPUTS* entry, the value of
-    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each, 
-    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's 
-    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState 
+    which is one or more `ORIGIN` Mechanisms and/or their `InputStates <InputState>` to be shadowed.  For each,
+    a `Projection` is automatically created that parallels ("shadows") the Projection from the Composition's
+    `InputCIM` to the `ORIGIN` Mechanism, projecting from the same `OutputState` of the InputCIM to the InputState
     of the LVOCControlMechanism assigned to that feature_predictor.
 
 * *Output Feature Predictor* -- this is the `value <OutputState.value>` of an OutputState of some other Mechanism
     in the Composition.  These too are specified in the **feature_predictors** argument of the LVOCControlMechanism's
-    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified 
+    constructor (see `LVOCControlMechanism_Creation`), and each is assigned a Projection from the specified
     OutputState(s) to the InputState of the LVOCControlMechanism for that feature.
 
-The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the 
+The current `values <InputState.value>` of the InputStates for the feature_predictors are listed in the
 `feature_values <LVOCControlMechanism.feature_values>` attribute.
 
 *Functions*
@@ -230,38 +230,37 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 import warnings
+
 from collections import Iterable, deque
 from itertools import product
-import typecheck as tc
 # from aenum import AutoNumberEnum, auto
 from enum import Enum
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, BayesGLM, is_function_type, GradientOptimization, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE, \
+    GradientOptimization
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, MONITORED_OUTPUT_STATES
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
-from psyneulink.core.components.shellclasses import Function
+from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, INTERNAL_ONLY, PARAMS, LVOC_CONTROL_MECHANISM, NAME, \
-    PARAMETER_STATES, VARIABLE, OBJECTIVE_MECHANISM, OUTCOME, FUNCTION, ALL, CONTROL_SIGNALS
+from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, LVOC_CONTROL_MECHANISM, NAME, OBJECTIVE_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, powerset, tensor_power
+from psyneulink.core.globals.utilities import get_deepcopy_with_shared, is_iterable, powerset, tensor_power
 
 __all__ = [
     'LVOC', 'LVOCControlMechanism', 'LVOCError', 'SHADOW_EXTERNAL_INPUTS', 'PREDICTION_TERMS', 'PV'
@@ -389,8 +388,8 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its 
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in 
+        Mechanism, its `learning_function <LVOCControlMechanism.learning_function>`, and/or a custom function and its
+        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
     name : str : default see `name <LVOCControlMechanism.name>`
@@ -462,8 +461,26 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     #     kp<pref>: <setting>...}
 
     # FIX: ADD OTHER Params() HERE??
-    class Params(ControlMechanism.Params):
-        function = GradientOptimization
+    class Params(OptimizationControlMechanism.Params):
+        function = Param(GradientOptimization, stateful=False, loggable=False)
+        feature_function = Param(None, stateful=False, loggable=False)
+        learning_function = Param(BayesGLM, stateful=False, loggable=False)
+
+        # no parameter states so not modulable=True
+        update_rate = 0.1
+        convergence_criterion = 0.001
+        max_iterations = 1000
+        feature_predictors = None
+        feature_values = None
+        modulation = ModulationParam.MULTIPLICATIVE
+
+        current_state = Param(None, read_only=True)
+        previous_state = Param(None, user=False)
+        prediction_weights = Param(None, read_only=True)
+        evc_max = Param(None, read_only=True)
+        saved_samples = Param(None, read_only=True)
+        saved_values = Param(None, read_only=True)
+        control_signal_search_space = Param(None, read_only=True)
 
     paramClassDefaults = OptimizationControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -680,7 +697,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             self.learning_function.reinitialize({DEFAULT_VARIABLE: learning_function_default_variable})
 
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Find control_allocation that optimizes EVC.
 
         Items of variable should be:
@@ -696,49 +713,67 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         - return control_allocation
         """
 
-        if (self.context.initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
-        if not self.current_execution_count:
+        # This is the value received from the objective_mechanism's OUTCOME OutputState:
+        obj_mech_outcome = variable[0]
+
+        current_state = self.parameters.current_state.get(execution_id)
+        previous_state = self.parameters.previous_state.get(execution_id)
+
+        if previous_state is None:
             # Initialize current_state and control_signals on first trial
             # Note:  initialize current_state to 1's so that learning_function returns specified priors
-            self._previous_state = np.full_like(self.current_state.vector, 0)
-            self.prediction_weights = self.learning_function.function([self._previous_state, 0])
+            previous_state = np.full_like(current_state.vector, 0)
+            prediction_weights = self.learning_function.function([previous_state, 0], execution_id=execution_id)
         else:
             # Update prediction_weights
-            self.prediction_weights = self.learning_function.function([self._previous_state,
-                                                                       self.net_outcome])
+            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
+            combined_costs = self.combine_costs(costs)
+            # costs are assigned as negative in current_state.update, so add them here
+            net_outcome = obj_mech_outcome - combined_costs
+            prediction_weights = self.learning_function.function([previous_state, net_outcome], execution_id=execution_id)
 
             # Update current_state with current feature_values and control_signals and store for next trial
-            self.feature_values = np.array(np.array(variable[1:]).tolist())
-            # # MODIFIED 11/9/18 OLD:
-            # self.current_state.update_vector(self.control_allocation, self.feature_values)
-            # MODIFIED 11/9/18 NEW: [JDC]
-            self.current_state.update_vector(self.control_allocation, self.feature_values, self.control_allocation)
-            # MODIFIED 11/9/18 END
-            self._previous_state = self.current_state.vector
+            feature_values = np.array(np.array(variable[1:]).tolist())
+            self.parameters.feature_values.set(feature_values, execution_id)
 
-        # TEST PRINT
-        print ('\n------------------------------------------------')
-        print ('BEFORE EXECUTION:')
-        print ('\tEXECUTION COUNT: ', self.current_execution_count)
-        print ('\tPREDICTION WEIGHTS', self.prediction_weights)
-        # TEST PRINT END
+            allocation_policy = self.parameters.allocation_policy.get(execution_id)
+            current_state.update_vector(allocation_policy, feature_values, allocation_policy, execution_id=execution_id)
+            previous_state = current_state.vector
+
+        self._set_multiple_parameter_values(
+            execution_id,
+            current_state=current_state,
+            previous_state=previous_state,
+            prediction_weights=prediction_weights,
+            override=True
+        )
 
         # Compute control_allocation using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        control_allocation, self.evc_max, self.saved_samples, self.saved_values = \
-                                        super(ControlMechanism, self)._execute(variable=self.control_allocation,
-                                                                               runtime_params=runtime_params,
-                                                                               context=context)
-        # # TEST PRINT
-        print ('\nAFTER EXECUTION:')
-        print ('EXECUTION COUNT: ', self.current_execution_count)
-        print ('ALLOCATION POLICY: ', control_allocation)
-        print ('EVC_MAX: ', self.evc_max)
-        # # TEST PRINT END
+        allocation_policy, evc_max, saved_samples, saved_values = super(ControlMechanism, self)._execute(
+            variable=self.allocation_policy,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
 
-        return control_allocation
+        self._set_multiple_parameter_values(
+            execution_id,
+            evc_max=evc_max,
+            saved_samples=saved_samples,
+            saved_values=saved_values,
+            override=True
+        )
+
+        # # # TEST PRINT
+        # print ('EXECUTION COUNT: ', self.current_execution_count)
+        # print ('ALLOCATION POLICY: ', allocation_policy)
+        # print ('ALLOCATION POLICY: ', self.evc_max)
+        # print ('\n------------------------------------------------')
+        # # # TEST PRINT END
 
 
     def evaluation_function(self, variable):
@@ -756,15 +791,17 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             <https://github.com/HIPS/autograd>`_\\.grad().
         '''
 
+        current_state = self.parameters.current_state.get(execution_id)
+
         terms = self.prediction_terms
-        vector = self.current_state.compute_terms(variable)
-        weights = self.prediction_weights
+        vector = current_state.compute_terms(variable, execution_id=execution_id)
+        weights = self.parameters.prediction_weights.get(execution_id)
         evc = 0
 
         for term_label, term_value in vector.items():
             if term_label in terms:
                 pv_enum_val = term_label.value
-                item_idx = self.current_state.idx[pv_enum_val]
+                item_idx = current_state.idx[pv_enum_val]
                 evc += np.sum(term_value.reshape(-1) * weights[item_idx])
 
         return evc
@@ -825,6 +862,7 @@ class PredictionVector():
         <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
 
     '''
+    _deepcopy_shared_keys = ['control_signal_functions', '_compute_costs']
 
     def __init__(self, feature_values, control_signals, specified_terms):
 
@@ -965,11 +1003,9 @@ class PredictionVector():
 
         self.vector = np.zeros(i)
 
-    # # MODIFIED 11/9/18 OLD:
-    # def update_vector(self, variable, feature_values=None):
-    # MODIFIED 11/9/18 NEW: [JDC]
-    def update_vector(self, variable, feature_values=None, reference_variable=None):
-    # MODIFIED 11/9/18 END
+    __deepcopy__ = get_deepcopy_with_shared(shared_keys=_deepcopy_shared_keys)
+
+    def update_vector(self, variable, feature_values=None, reference_variable=None, execution_id=None):
         '''Update vector with flattened versions of values returned by `compute_terms <PredictionVector.compute_terms>`.
 
         Updates `vector <PredictionVector.vector>`, with current values of variable (i.e., `variable
@@ -990,9 +1026,9 @@ class PredictionVector():
         if feature_values is not None:
             self.terms[PV.F.value] = np.array(feature_values)
         # # MODIFIED 11/9/18 OLD:
-        # computed_terms = self.compute_terms(np.array(variable))
+        # computed_terms = self.compute_terms(np.array(variable), execution_id=execution_id)
         # MODIFIED 11/9/18 NEW: [JDC]
-        computed_terms = self.compute_terms(np.array(variable), self.reference_variable)
+        computed_terms = self.compute_terms(np.array(variable), self.reference_variable, execution_id=execution_id)
         # MODIFIED 11/9/18 END
 
         # Assign flattened versions of specified terms to vector
@@ -1000,11 +1036,7 @@ class PredictionVector():
             if k in self.specified_terms:
                 self.vector[self.idx[k.value]] = v.reshape(-1)
 
-    # # MODIFIED 11/9/18 OLD:
-    # def compute_terms(self, control_signal_variables):
-    # MODIFIED 11/9/18 NEW: [JDC]
-    def compute_terms(self, variables, ref_variables=None):
-    # MODIFIED 11/9/18 END
+    def compute_terms(self, variables, ref_variables=None, execution_id=None):
         '''Calculate interaction terms.
 
         Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -1027,7 +1059,7 @@ class PredictionVector():
         # Compute value of each control_signal from its variable
         c = [None] * len(variables)
         for i, var in enumerate(variables):
-            c[i] = self.control_signal_functions[i](var)
+            c[i] = self.control_signal_functions[i](var, execution_id=execution_id)
         computed_terms[PV.C] = c = np.array(c)
 
         # Compute costs for new control_signal values
@@ -1036,11 +1068,7 @@ class PredictionVector():
             # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
             costs = [None] * len(c)
             for i, val in enumerate(c):
-                # MODIFIED 11/9/19 OLD:
-                costs[i] = -(self._compute_costs[i](val))
-                # # MODIFIED 11/9/19 NEW: [JDC]
-                # costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
-                # MODIFIED 11/9/19 END
+                costs[i] = -(self._compute_costs[i](val, execution_id=execution_id))
             computed_terms[PV.COST] = np.array(costs)
 
         # Compute terms interaction that are used

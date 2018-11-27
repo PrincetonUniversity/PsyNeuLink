@@ -386,31 +386,26 @@ Class Reference
 """
 from collections import Iterable
 
+import itertools
+import numpy as np
 import typecheck as tc
 
-import numpy as np
-
-from psyneulink.core.components.functions.function import \
-    ModulationParam, _is_modulation_param, is_function_type, OBJECTIVE_FUNCTION, \
-    SEARCH_SPACE
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.functions.function import Function, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
-
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignalCosts, ControlSignal
 from psyneulink.core.components.states.state import _parse_state_spec
-from psyneulink.core.components.functions.function import Function
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PARAMETER_STATES, FUNCTION, VARIABLE
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.defaults import defaultControlAllocation
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.defaults import defaultControlAllocation
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -457,7 +452,7 @@ class OptimizationControlMechanism(ControlMechanism):
     ---------
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the 
+        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
         <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
@@ -484,28 +479,27 @@ class OptimizationControlMechanism(ControlMechanism):
         OptimizationControlMechanismit is disabled
 
     search_function : function or method
-        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
-        `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a 
-        constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments 
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
+        `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a
+        constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments
         an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and an integer
-        (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return 
+        (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return
         an array with the same shape as `control_allocation <ControlMechanism.control_allocation>`.
 
     search_termination_function : function or method
-        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its 
-        `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is 
-        specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its 
+        specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
+        `search_termination_function <OptimizationFunction.search_termination_function>` parameter, unless that is
+        specified in a constructor for `function <OptimizationControlMechanism.function>`.  It must take as its
         arguments an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and two
-        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current 
+        integers (the first representing the `EVC <OptimizationControlMechanism_EVC>` value for the current
         `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
         `optimization process <OptimizationFunction_Process>`;  it must return `True` or `False`.
-        
+
     search_space : list or ndarray
-        specifies the `search_space <OptimizationFunction.search_space>` parameter for `function 
-        <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function 
+        specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
+        <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
         <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
         <ControlMechanism.control_allocation>`.
-        
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
@@ -578,14 +572,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
     COMMENT:
     search_function : function or method
-        `search_function <OptimizationFunction.search_function>` assigned to `function 
+        `search_function <OptimizationFunction.search_function>` assigned to `function
         <OptimizationControlMechanism.function>`; used to select samples of `control_allocation
         <ControlMechanism.control_allocation>` to evaluate by `evaluation_function
         <OptimizationControlMechanism.evaluation_function>`.
 
     search_termination_function : function or method
         `search_termination_function <OptimizationFunction.search_termination_function>` assigned to
-        `function <OptimizationControlMechanism.function>`;  determines when to terminate the 
+        `function <OptimizationControlMechanism.function>`;  determines when to terminate the
         `optimization process <OptimizationFunction_Process>`.
     COMMENT
 
@@ -633,7 +627,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
+        learning_function = None
         function = None
+        search_function = None
+        search_termination_function = None
+
+        search_space = None
+        control_allocation_search_space = None
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
@@ -777,22 +777,25 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
-    def _get_control_allocation_search_space(self):
+    def _get_control_allocation_search_space(self, execution_id=None):
 
         control_signal_sample_lists = []
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id))
 
         # Construct control_allocation_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        control_allocation_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,len(self.control_signals))
+        control_allocation_search_space = np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1, len(self.control_signals))
 
         # Insure that ControlSignal in each sample is in its own 1d array
         re_shape = (control_allocation_search_space.shape[0], control_allocation_search_space.shape[1], 1)
-        return control_allocation_search_space.reshape(re_shape)
+
+        control_allocation_search_space = control_allocation_search_space.reshape(re_shape)
+
+        self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
+        return control_allocation_search_space
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
@@ -1004,3 +1007,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
 
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.objective_mechanism],
+            [self.learning_function] if isinstance(self.learning_function, Function_Base) else [],
+            [self.search_function] if isinstance(self.search_function, Function_Base) else [],
+            [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
+        ))

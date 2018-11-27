@@ -316,6 +316,7 @@ Class Reference
 
 """
 import inspect
+import itertools
 import numbers
 
 from collections import Iterable
@@ -324,17 +325,22 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.function import AdaptiveIntegrator, Distance, DistributionFunction, Function, Linear, SelectionFunction, TransferFunction, UserDefinedFunction, is_function_type
+from psyneulink.core.components.functions.function import Function, \
+    is_function_type
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import TransferFunction, Linear, Logistic
+from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
-    INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, \
-    OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, OUTPUT_STD_DEV, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, OUTPUT_VARIANCE, DISTRIBUTION_FUNCTION_TYPE
+from psyneulink.core.globals.keywords import DIFFERENCE, DISTRIBUTION_FUNCTION_TYPE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import append_type_to_name, iscompatible
@@ -344,8 +350,6 @@ __all__ = [
     'INITIAL_VALUE', 'CLIP', 'INTEGRATION_RATE', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
     'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
-
-import functools
 
 from psyneulink.core import llvm as pnlvm
 
@@ -434,6 +438,27 @@ class TransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _integrator_mode_setter(value, owning_component=None, execution_id=None):
+    if value is True:
+        if (
+            not owning_component.parameters.integrator_mode.get(execution_id)
+            and owning_component.parameters.has_integrated.get(execution_id)
+        ):
+            if owning_component.integrator_function is not None:
+                if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+                    owning_component.reinitialize(owning_component.parameters.value.get(execution_id), execution_context=execution_id)
+                elif owning_component.on_resume_integrator_mode == REINITIALIZE:
+                    owning_component.reinitialize(execution_context=execution_id)
+        owning_component.parameters.has_initializers.set(True, execution_id)
+    elif value is False:
+        owning_component.parameters.has_initializers.set(False, execution_id)
+        if not hasattr(owning_component, "reinitialize_when"):
+            owning_component.reinitialize_when = Never()
+
+    return value
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
@@ -781,8 +806,22 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     class Params(ProcessingMechanism_Base.Params):
         initial_value = None
+        previous_value = Param(None, read_only=True)
         clip = None
-        noise = 0.0
+        noise = Param(0.0, modulable=True)
+        convergence_criterion = Param(0.01, modulable=True)
+        integration_rate = Param(0.5, modulable=True)
+        integrator_mode = Param(False, setter=_integrator_mode_setter)
+        integrator_function_value = Param([[0]], read_only=True)
+        has_integrated = Param(False, user=False)
+
+        max_passes = Param(1000, stateful=False)
+        on_resume_integrator_mode = Param(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
+        convergence_function = Param(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+
+        def _validate_integrator_mode(self, integrator_mode):
+            if not isinstance(integrator_mode, bool):
+                return 'may only be True or False.'
 
     @tc.typecheck
     def __init__(self,
@@ -998,7 +1037,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_parameter_states(self, function=None, context=None):
 
-        from psyneulink.core.components.functions.function import Logistic
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
@@ -1038,9 +1076,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param("integration_rate")
+        integration_rate = self.get_current_mechanism_param("integration_rate", execution_id)
 
         if not self.integrator_function:
 
@@ -1051,12 +1089,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                           owner=self)
 
             self.has_integrated = True
-        current_input = self.integrator_function.execute(function_variable,
-                                                         # Should we handle runtime params?
-                                                         runtime_params={INITIALIZER: initial_value,
-                                                                         NOISE: noise,
-                                                                         RATE: integration_rate},
-                                                         context=context)
+        current_input = self.integrator_function.execute(
+            function_variable,
+            execution_id=execution_id,
+            # Should we handle runtime params?
+            runtime_params={
+                INITIALIZER: initial_value,
+                NOISE: noise,
+                RATE: integration_rate
+            },
+            context=context
+        )
 
         return current_input
 
@@ -1068,105 +1111,34 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _get_param_struct_type(self, ctx):
-        input_param_list = []
-        for state in self.input_states:
-            input_param_list.append(ctx.get_param_struct_type(state))
-        input_param_struct = ir.LiteralStructType(input_param_list)
-
+    def _get_function_param_struct_type(self, ctx):
         param_type_list = [ctx.get_param_struct_type(self.function_object)]
         if self.integrator_mode:
             assert self.integrator_function is not None
             param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        function_param_struct = ir.LiteralStructType(param_type_list)
+        return ir.LiteralStructType(param_type_list)
 
-        output_param_list = []
-        for state in self.output_states:
-            output_param_list.append(ctx.get_param_struct_type(state))
-        output_param_struct = ir.LiteralStructType(output_param_list)
-
-        param_param_list = []
-        for state in self.parameter_states:
-            param_param_list.append(ctx.get_param_struct_type(state))
-        param_param_struct = ir.LiteralStructType(param_param_list)
-
-        return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct, param_param_struct])
-
-
-    def _get_context_struct_type(self, ctx):
-        input_context_list = []
-        for state in self.input_states:
-            input_context_list.append(ctx.get_context_struct_type(state))
-        input_context_struct = ir.LiteralStructType(input_context_list)
-
+    def _get_function_context_struct_type(self, ctx):
         context_type_list = [ctx.get_context_struct_type(self.function_object)]
         if self.integrator_mode:
            assert self.integrator_function is not None
            context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
 
-        function_context_struct = ir.LiteralStructType(context_type_list)
+        return ir.LiteralStructType(context_type_list)
 
-        output_context_list = []
-        for state in self.output_states:
-            output_context_list.append(ctx.get_context_struct_type(state))
-        output_context_struct = ir.LiteralStructType(output_context_list)
-
-        parameter_context_list = []
-        for state in self.parameter_states:
-            parameter_context_list.append(ctx.get_context_struct_type(state))
-        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
-
-        return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct, parameter_context_struct])
-
-
-    def get_param_initializer(self):
-        input_param_init_list = []
-        for state in self.input_states:
-            input_param_init_list.append(state.get_param_initializer())
-        input_param_init = tuple(input_param_init_list)
-
-        function_param_list = [self.function_object.get_param_initializer()]
+    def _get_function_param_initializer(self, execution_id):
+        function_param_list = [self.function_object._get_param_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function.get_param_initializer())
-        function_param_init = tuple(function_param_list)
+            function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
+        return tuple(function_param_list)
 
-        output_param_init_list = []
-        for state in self.output_states:
-            output_param_init_list.append(state.get_param_initializer())
-        output_param_init = tuple(output_param_init_list)
-
-        param_param_init_list = []
-        for state in self.parameter_states:
-            param_param_init_list.append(state.get_param_initializer())
-        param_param_init = tuple(param_param_init_list)
-
-        return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
-
-
-    def get_context_initializer(self):
-        input_context_init_list = []
-        for state in self.input_states:
-            input_context_init_list.append(state.get_context_initializer())
-        input_context_init = tuple(input_context_init_list)
-
-        context_list = [self.function_object.get_context_initializer()]
+    def _get_function_context_initializer(self, execution_id):
+        context_list = [self.function_object._get_context_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function.get_context_initializer())
-        function_context_init = tuple(context_list)
-
-        output_context_init_list = []
-        for state in self.output_states:
-            output_context_init_list.append(state.get_context_initializer())
-        output_context_init = tuple(output_context_init_list)
-
-        parameter_context_init_list = []
-        for state in self.parameter_states:
-            parameter_context_init_list.append(state.get_context_initializer())
-        parameter_context_init = tuple(parameter_context_init_list)
-
-        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
+            context_list.append(self.integrator_function._get_context_initializer(execution_id))
+        return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         is_out, builder = self._gen_llvm_input_states(ctx, builder, params, context, arg_in)
@@ -1218,9 +1190,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         return func_in, builder
 
     def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+        variable=None,
+        execution_id=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -1261,57 +1235,58 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.instance_defaults.variable to initialize state of input
 
-        # # MODIFIED 7/14/18 OLD:
-        # self._update_previous_value()
-        # # MODIFIED 7/14/18 NEW:
-
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
         # Clip outputs
-        clip = self.get_current_mechanism_param("clip")
+        clip = self.get_current_mechanism_param("clip", execution_id)
 
         value = super(Mechanism, self)._execute(variable=variable,
+                                                execution_id=execution_id,
                                                 runtime_params=runtime_params,
                                                 context=context
                                                 )
         value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
-        self._current_value = np.atleast_2d(value)
+        # self.parameters.value.set(np.atleast_2d(value), execution_id, override=True, skip_history=True, skip_log=True)
 
         return value
 
-    def reinitialize(self, *args):
-        super().reinitialize(*args)
-        self.previous_value = None
+    def reinitialize(self, *args, execution_context=None):
+        super().reinitialize(*args, execution_context=execution_context)
+        self.parameters.previous_value.set(None, execution_context, override=True)
 
-    def _update_previous_value(self):
-        if self.integrator_mode:
-            try:
-                self.previous_value = self.value
-            except:
-                self.previous_value = None
+    def _update_previous_value(self, execution_id=None):
+        if self.parameters.integrator_mode.get(execution_id):
+            value = self.parameters.value.get(execution_id)
+            if value is None:
+                value = self.defaults.value
+            self.parameters.previous_value.set(value, execution_id, override=True)
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         if context is ContextFlags.INSTANTIATE:
 
-            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
+            return super(TransferMechanism, self)._parse_function_variable(variable=variable, execution_id=execution_id, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.integrator_mode
-        noise = self.get_current_mechanism_param("noise")
+        integrator_mode = self.parameters.integrator_mode.get(execution_id)
+        noise = self.get_current_mechanism_param("noise", execution_id)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self.get_current_mechanism_param("initial_value")
+            initial_value = self.get_current_mechanism_param("initial_value", execution_id)
 
-            self.integrator_function_value = self._get_integrated_function_input(variable,
-                                                                                 initial_value,
-                                                                                 noise,
-                                                                                 context)
-            return self.integrator_function_value
+            value = self._get_integrated_function_input(
+                variable,
+                initial_value,
+                noise,
+                context,
+                execution_id=execution_id
+            )
+            self.parameters.integrator_function_value.set(value, execution_id, override=True)
+            return value
 
         else:
             return self._get_instantaneous_function_input(variable, noise)
@@ -1337,9 +1312,10 @@ class TransferMechanism(ProcessingMechanism_Base):
     def clip(self, value):
         self._clip = value
 
-    @property
-    def delta(self):
-        return self.convergence_function([self._current_value[0], self.previous_value[0]])
+    def delta(self, value=NotImplemented, execution_id=None):
+        if value is NotImplemented:
+            value = self.parameters.value.get(execution_id)
+        return self.convergence_function([value[0], self.parameters.previous_value.get(execution_id)[0]])
 
     @property
     def integrator_mode(self):
@@ -1366,21 +1342,29 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
 
-    @property
-    def is_converged(self):
+    def is_converged(self, value=NotImplemented, execution_id=None):
         # Check for convergence
-        if (self.convergence_criterion is not None and
-                self.previous_value is not None and
-                self.context.initialization_status != ContextFlags.INITIALIZING):
-            if self.delta <= self.convergence_criterion:
+        if (
+            self.convergence_criterion is not None
+            and self.parameters.previous_value.get(execution_id) is not None
+            and self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING
+        ):
+            if self.delta(value, execution_id) <= self.convergence_criterion:
                 return True
-            elif self.current_execution_time.pass_ >= self.max_passes:
+            elif self.get_current_execution_time(execution_id).pass_ >= self.max_passes:
                 raise TransferError("Maximum number of executions ({}) has occurred before reaching "
                                     "convergence_criterion ({}) for {} in trial {} of run {}".
                                     format(self.max_passes, self.convergence_criterion, self.name,
-                                           self.current_execution_time.trial, self.current_execution_time.run))
+                                           self.get_current_execution_time(execution_id).trial, self.get_current_execution_time(execution_id).run))
             else:
                 return False
         # Otherwise just return True
         else:
             return None
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.integrator_function] if self.integrator_function is not None else [],
+        ))

@@ -1,4 +1,5 @@
-from psyneulink.core.components.functions.function import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+
 try:
     import torch
     from torch import nn
@@ -21,7 +22,7 @@ __all__ = ['PytorchModelCreator']
 class PytorchModelCreator(torch.nn.Module):
 
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets):
+    def __init__(self, processing_graph, param_init_from_pnl, ordered_execution_sets, execution_id=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -41,7 +42,7 @@ class PytorchModelCreator(torch.nn.Module):
                 node = self.ordered_execution_sets[i][j]
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
-                function = self.function_creator(node)  # the node's function
+                function = self.function_creator(node, execution_id)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
@@ -49,7 +50,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
-                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].value)).double())
+                        biases = nn.Parameter(torch.zeros(len(node.component.input_states[0].parameters.value.get(execution_id))).double())
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[node.component] = biases
 
@@ -64,9 +65,9 @@ class PytorchModelCreator(torch.nn.Module):
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl:
-                            weights = nn.Parameter(torch.tensor(mapping_proj.matrix.copy()).double())
+                            weights = nn.Parameter(torch.tensor(mapping_proj.parameters.matrix.get(execution_id).copy()).double())
                         else:
-                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.matrix)).double())
+                            weights = nn.Parameter(torch.rand(np.shape(mapping_proj.parameters.matrix.get(execution_id))).double())
                         afferents[input_node] = weights
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
@@ -76,7 +77,7 @@ class PytorchModelCreator(torch.nn.Module):
                 self.node_to_forward_info[node] = node_forward_info
 
     # performs forward computation for the model
-    def forward(self, inputs):
+    def forward(self, inputs, execution_id=None):
 
         outputs = []  # list for storing values of terminal (output) nodes
 
@@ -95,7 +96,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # forward computation if we do not have origin node
                 else:
-                    value = torch.zeros(len(node.component.input_states[0].value)).double()
+                    value = torch.zeros(len(node.component.input_states[0].parameters.value.get(execution_id))).double()
                     for input_node, weights in afferents.items():
                         value += torch.matmul(self.node_to_forward_info[input_node][0], weights)
                     if biases is not None:
@@ -113,23 +114,25 @@ class PytorchModelCreator(torch.nn.Module):
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
-    def function_creator(self, node):
+    def function_creator(self, node, execution_id=None):
+        def get_fct_param_value(param_name):
+            return float(node.component.function_object.get_current_function_param(param_name, execution_id))
 
         if isinstance(node.component.function_object, Linear):
-            slope = node.component.function_object.params['slope']
-            intercept = node.component.function_object.params['intercept']
+            slope = get_fct_param_value('slope')
+            intercept = get_fct_param_value('intercept')
             return lambda x: x * slope + intercept
 
         elif isinstance(node.component.function_object, Logistic):
-            gain = node.component.function_object.params['gain']
-            bias = node.component.function_object.params['bias']
-            offset = node.component.function_object.params['offset']
+            gain = get_fct_param_value('gain')
+            bias = get_fct_param_value('bias')
+            offset = get_fct_param_value('offset')
             return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
 
         else:  # if we have relu function (the only other kind of function allowed by the autodiff composition)
-            gain = node.component.function_object.params['gain']
-            bias = node.component.function_object.params['bias']
-            leak = node.component.function_object.params['leak']
+            gain = get_fct_param_value('gain')
+            bias = get_fct_param_value('bias')
+            leak = get_fct_param_value('leak')
             return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0]).double()) * gain +
                               torch.min(input=(x - bias), other=torch.tensor([0]).double()) * leak)
 

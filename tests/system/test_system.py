@@ -1,6 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import BogaczEtAl, Linear, Logistic
+from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -134,8 +135,8 @@ class TestInputSpecsDocumentationExamples:
         check_inputs_dictionary = {a: [],
                                    b: []}
         def store_inputs():
-            check_inputs_dictionary[a].append(a.input_values)
-            check_inputs_dictionary[b].append(b.input_values)
+            check_inputs_dictionary[a].append(a.get_input_values(s))
+            check_inputs_dictionary[b].append(b.get_input_values(s))
 
         s.run(inputs=input_dictionary, call_after_trial=store_inputs)
 
@@ -164,7 +165,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         s.run(inputs=input_dictionary,
               num_trials=7,
@@ -190,7 +191,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         s.run(inputs=input_dictionary,
               call_after_trial=store_inputs)
@@ -216,7 +217,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         s.run(inputs=input_dictionary,
               call_after_trial=store_inputs)
@@ -241,7 +242,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         s.run(inputs=input_dictionary,
               call_after_trial=store_inputs)
@@ -265,7 +266,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_dictionary = {a: [[[1.0], [2.0]]]}
 
@@ -291,7 +292,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_dictionary = {a: [[1.0], [2.0]]}
 
@@ -317,7 +318,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
 
@@ -343,7 +344,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_dictionary = {a: [[1.0], [2.0]]}
 
@@ -370,7 +371,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
@@ -396,7 +397,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(s))
 
         input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
 
@@ -419,7 +420,7 @@ class TestInputSpecsDocumentationExamples:
         check_inputs = []
 
         def store_inputs():
-            check_inputs.append(a.input_values)
+            check_inputs.append(a.get_input_values(p1))
 
         input_dictionary = [1.0, 2.0, 3.0]
 
@@ -483,7 +484,7 @@ class TestGraphAndInput:
         S = System(processes=[P])
         run_result = S.run()
 
-        assert np.allclose(T.value, [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        assert np.allclose(T.parameters.value.get(S), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
         assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
 
     def test_some_inputs_not_provided_to_run(self):
@@ -499,8 +500,8 @@ class TestGraphAndInput:
         run_result = S.run(inputs={Origin1: [[5.0, 6.0]]})
         # inputs={Origin1: [[5.0, 6.0], [7.0, 8.0]]}) # NOT currently allowed because inputs would be different lengths
 
-        assert np.allclose(Origin1.value, [[5.0, 6.0]])
-        assert np.allclose(Origin2.value, [[3.0, 4.0]])
+        assert np.allclose(Origin1.parameters.value.get(S), [[5.0, 6.0]])
+        assert np.allclose(Origin2.parameters.value.get(S), [[3.0, 4.0]])
         assert np.allclose(run_result, [[np.array([18.0])]])
 
     def test_branch(self):
@@ -714,6 +715,7 @@ class TestConvergentLearning:
         lm = mech_6.efferents[0].learning_mechanism
         assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
 
+
 class TestInitialize:
 
     def test_initialize_mechanisms(self):
@@ -742,7 +744,11 @@ class TestInitialize:
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-        assert np.allclose(C.log.nparray_dictionary('value')['value'], [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]])
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[abc_system.default_execution_id]['value'],
+            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        )
+
 
 class TestRuntimeParams:
 
@@ -847,13 +853,13 @@ class TestRuntimeParams:
         S.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
         assert T.function_object.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
-        assert T.value == 20.0
+        assert T.parameters.value.get(S) == 20.0
 
         # Runtime param NOT used for slope
         S.run(inputs={T: 2.0})
         assert T.function_object.slope == 1.0
         assert T.parameter_states['slope'].value == 1.0
-        assert T.value == 2.0
+        assert T.parameters.value.get(S) == 2.0
 
     def test_system_run_mechanism_param_no_condition(self):
 
@@ -869,13 +875,13 @@ class TestRuntimeParams:
         S.run(inputs={T: 2.0}, runtime_params={T: {"noise": 10.0}})
         assert T.noise == 0.0
         assert T.parameter_states['noise'].value == 0.0
-        assert T.value == 12.0
+        assert T.parameters.value.get(S) == 12.0
 
         # Runtime param NOT used for noise
         S.run(inputs={T: 2.0}, )
         assert T.noise == 0.0
         assert T.parameter_states['noise'].value == 0.0
-        assert T.value == 2.0
+        assert T.parameters.value.get(S) == 2.0
 
     def test_system_run_with_condition(self):
 

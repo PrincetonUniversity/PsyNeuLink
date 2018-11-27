@@ -19,6 +19,10 @@ import numpy as np
 import psyneulink as pnl
 import timeit
 
+import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.optimizationfunctions
+import psyneulink.core.components.functions.transferfunctions
+
 np.random.seed(0)
 
 
@@ -118,9 +122,9 @@ duration = timeit.timeit(run, number=2)
 
 print('\n')
 print('--------------------')
-print('ControlSignal variables: ', [c.variable for c in lvoc.control_signals])
-print('ControlSignal values: ', [c.value for c in lvoc.control_signals])
-print('features: ', lvoc.feature_values)
-print('lvoc: ', lvoc.evaluation_function([c.variable for c in lvoc.control_signals]))
+print('ControlSignal variables: ', [sig.parameters.variable.get(c) for sig in lvoc.control_signals])
+print('ControlSignal values: ', [sig.parameters.value.get(c) for sig in lvoc.control_signals])
+print('features: ', lvoc.parameters.feature_values.get(c))
+print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], execution_id=c))
 print('time: ', duration)
 print('--------------------')

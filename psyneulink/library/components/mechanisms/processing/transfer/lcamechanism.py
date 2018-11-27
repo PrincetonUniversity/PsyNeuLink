@@ -139,16 +139,17 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param
-from psyneulink.core.components.functions.function import LCAIntegrator, Logistic, SelectionFunction, max_vs_avg, max_vs_next
+from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
+from psyneulink.core.components.functions.integratorfunctions import LCAIntegrator
+from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, NOISE, RATE, RESULT, OUTPUT_STD_DEV, TIME_STEP_SIZE, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, LCA_MECHANISM, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, RATE, RESULT, TIME_STEP_SIZE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
-__all__ = [
-    'LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',
-]
+__all__ = ['LCAMechanism', 'LCAMechanism_OUTPUT', 'LCAError']
 
 
 class LCAError(Exception):
@@ -157,9 +158,6 @@ class LCAError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-MAX_VS_NEXT = 'max_vs_next'
-MAX_VS_AVG = 'max_vs_avg'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class LCAMechanism_OUTPUT():
@@ -503,7 +501,15 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     class Params(RecurrentTransferMechanism.Params):
         function = Param(Logistic, stateful=False, loggable=False)
-        competition = 1.0
+
+        matrix = Param(None, modulable=True)
+        leak = Param(0.5, modulable=True)
+        competition = Param(1.0, modulable=True)
+        self_excitation = Param(0.0, modulable=True)
+        time_step_size = Param(0.1, modulable=True)
+
+        initial_value = None
+        integrator_mode = Param(True, setter=_integrator_mode_setter)
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
@@ -576,10 +582,10 @@ class LCAMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None):
 
-        leak = self.get_current_mechanism_param("leak")
-        time_step_size = self.get_current_mechanism_param("time_step_size")
+        leak = self.get_current_mechanism_param("leak", execution_id)
+        time_step_size = self.get_current_mechanism_param("time_step_size", execution_id)
 
         if not self.integrator_function:
             self.integrator_function = LCAIntegrator(
@@ -592,6 +598,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         current_input = self.integrator_function._execute(
             function_variable,
+            execution_id=execution_id,
             # Should we handle runtime params?
             runtime_params={
                 INITIALIZER: initial_value,

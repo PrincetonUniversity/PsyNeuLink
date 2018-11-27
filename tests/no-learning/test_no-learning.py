@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from psyneulink.core.components.functions.function import Logistic
+from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -94,4 +94,4 @@ class TestNoLearning:
 
         expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
 
-        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
+        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(s))

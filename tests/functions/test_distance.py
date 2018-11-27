@@ -1,6 +1,7 @@
 
 import numpy as np
 import psyneulink.core.components.functions.function as Function
+import psyneulink.core.components.functions.objectivefunctions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -64,7 +65,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
         benchmark(lambda _:0,0)
         pytest.xfail(fail)
         return
-    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    f = psyneulink.core.components.functions.objectivefunctions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -83,7 +84,7 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
         benchmark(lambda _:0,0)
         pytest.xfail(fail)
         return
-    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    f = psyneulink.core.components.functions.objectivefunctions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)

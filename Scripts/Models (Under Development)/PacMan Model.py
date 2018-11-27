@@ -3,8 +3,8 @@ from psyneulink import *
 prey_len = 5
 predator_len = 5
 
-prey = TransferMechanism(size=prey_len, function=Gaussian(variance=1), name="PREY")
-predator = TransferMechanism(size=predator_len, function=Gaussian(variance=1), name="PREDATOR")
+prey = TransferMechanism(size=prey_len, function=Normal(variance=1), name="PREY")
+predator = TransferMechanism(size=predator_len, function=Normal(variance=1), name="PREDATOR")
 
 motor = ProcessingMechanism(name='MOTOR OUTPUT')
 

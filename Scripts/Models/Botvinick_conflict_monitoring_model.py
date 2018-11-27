@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import psyneulink as pnl
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
@@ -17,21 +17,24 @@ import psyneulink as pnl
 # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
 # Linear input layer
 # colors: ('red', 'green'), words: ('RED','GREEN')
+import psyneulink.core.components.functions.objectivefunctions
+import psyneulink.core.components.functions.transferfunctions
+
 colors_input_layer = pnl.TransferMechanism(size=3,
-                                           function=pnl.Linear,
+                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=3,
-                                          function=pnl.Linear,
+                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 task_input_layer = pnl.TransferMechanism(size=2,
-                                          function=pnl.Linear,
-                                          name='TASK_INPUT')
+                                         function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                         name='TASK_INPUT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(size=2,
-                                            function=pnl.Logistic(),
+                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(),
                                             hetero=-2,
                                             integrator_mode=True,
                                             integration_rate=0.01,
@@ -40,14 +43,15 @@ task_layer = pnl.RecurrentTransferMechanism(size=2,
 # Hidden layer
 # colors: ('red','green', 'neutral') words: ('RED','GREEN', 'NEUTRAL')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                     function=pnl.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
+                                                     function=psyneulink.core.components.functions.transferfunctions
+                                                     .Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
                                                      integrator_mode=True,
                                                      hetero=-2,
                                                      integration_rate=0.01,  # cohen-huston text says 0.01
                                                      name='COLORS_HIDDEN')
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                    function=pnl.Logistic(x_0=4.0),
+                                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
                                                     integrator_mode=True,
                                                     hetero=-2,
                                                     integration_rate=0.01,
@@ -55,14 +59,15 @@ words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
 
 #   Response layer, responses: ('red', 'green')
 response_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                function=pnl.Logistic(),
+                                                function=psyneulink.core.components.functions.transferfunctions.Logistic(),
                                                 hetero=-2.0,
                                                 integrator_mode=True,
                                                 integration_rate=0.01,
                                                 output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                  {pnl.NAME: 'DECISION_ENERGY',
                                                                   pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                                                  pnl.FUNCTION: pnl.Stability(
+                                                                  pnl.FUNCTION: psyneulink.core.components.functions
+                                                .objectivefunctions.Stability(
                                                                       default_variable = np.array([0.0, 0.0]),
                                                                       metric = pnl.ENERGY,
                                                                       matrix = np.array([[0.0, -4.0],
@@ -186,15 +191,15 @@ for cond in range(condition):
     System_Conflict_Monitoring.run(inputs=Stimulus[cond][0], num_trials=ntrials0)   #run System with initial input
     System_Conflict_Monitoring.run(inputs=Stimulus[cond][1], num_trials=ntrials)    #run System with condition input
     # reinitialize System after condition was run
-    colors_hidden_layer.reinitialize([[0,0,0]])
-    words_hidden_layer.reinitialize([[0,0,0]])
-    response_layer.reinitialize([[0,0]])
-    task_layer.reinitialize([[0,0]])
+    colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=System_Conflict_Monitoring)
+    words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=System_Conflict_Monitoring)
+    response_layer.reinitialize([[0, 0]], execution_context=System_Conflict_Monitoring)
+    task_layer.reinitialize([[0, 0]], execution_context=System_Conflict_Monitoring)
 
 ####------- PLOTTING  -------------------------------------------------------------------------------------------------
 # Plot energy figure
-r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY') #get logged DECISION_ENERGY dictionary
-energy = r2['DECISION_ENERGY']                                #save logged DECISION_ENERGY
+r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY')[System_Conflict_Monitoring.name]      # get logged DECISION_ENERGY dictionary
+energy = r2['DECISION_ENERGY']                                                                      # save logged DECISION_ENERGY
 
 plt.figure()
 x = np.arange(0,1500,1)             # create x-axis length

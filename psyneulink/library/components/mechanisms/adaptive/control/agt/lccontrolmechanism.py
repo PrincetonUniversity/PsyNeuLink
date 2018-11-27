@@ -268,12 +268,12 @@ Class Reference
 ---------------
 
 """
-import functools
 import typecheck as tc
 
 from llvmlite import ir
 
-from psyneulink.core.components.functions.function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.integratorfunctions import FHNIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -281,6 +281,7 @@ from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, PROJECTIONS
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -606,6 +607,12 @@ class LCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
+    class Params(ControlMechanism.Params):
+        function = Param(FHNIntegrator, stateful=False, loggable=False)
+
+        base_level_gain = Param(0.5, modulable=True)
+        scaling_factor_gain = Param(3.0, modulable=True)
+
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FHNIntegrator,
                                CONTROL_SIGNALS: None,
@@ -651,25 +658,6 @@ class LCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(system=system,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   modulation=modulation,
-                                                  integration_method=integration_method,
-                                                  initial_v_FHN=initial_v_FHN,
-                                                  initial_w_FHN=initial_w_FHN,
-                                                  time_step_size_FHN=time_step_size_FHN,
-                                                  t_0_FHN=t_0_FHN,
-                                                  a_v_FHN=a_v_FHN,
-                                                  b_v_FHN=b_v_FHN,
-                                                  c_v_FHN=c_v_FHN,
-                                                  d_v_FHN=d_v_FHN,
-                                                  e_v_FHN=e_v_FHN,
-                                                  f_v_FHN=f_v_FHN,
-                                                  time_constant_v_FHN=time_constant_v_FHN,
-                                                  a_w_FHN=a_w_FHN,
-                                                  b_w_FHN=b_w_FHN,
-                                                  c_w_FHN=c_w_FHN,
-                                                  threshold_FHN=threshold_FHN,
-                                                  mode_FHN=mode_FHN,
-                                                  uncorrelated_activity_FHN=uncorrelated_activity_FHN,
-                                                  time_constant_w_FHN=time_constant_w_FHN,
                                                   base_level_gain=base_level_gain,
                                                   scaling_factor_gain=scaling_factor_gain,
                                                   params=params)
@@ -797,17 +785,21 @@ class LCControlMechanism(ControlMechanism):
     def _execute(
         self,
         variable=None,
+        execution_id=None,
         runtime_params=None,
         context=None
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        output_values = super(ControlMechanism, self)._execute(variable=variable,
-                                                               runtime_params=runtime_params,
-                                                               context=context)
+        output_values = super(ControlMechanism, self)._execute(
+            variable=variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
 
-        gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
+        gain_t = self.parameters.scaling_factor_gain.get(execution_id) * output_values[1] + self.parameters.base_level_gain.get(execution_id)
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 

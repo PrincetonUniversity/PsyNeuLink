@@ -86,14 +86,15 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
-from psyneulink.core.components.functions.function import LinearMatrix, get_matrix
+from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -289,11 +290,11 @@ class AutoAssociativeProjection(MappingProjection):
                          name=name,
                          prefs=prefs)
 
-    def _update_parameter_states(self, runtime_params=None, context=None):
+    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
         if context==ContextFlags.LEARNING:
-            self.context.execution_phase = ContextFlags.LEARNING
-        super()._update_parameter_states(runtime_params, context)
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+        super()._update_parameter_states(execution_id, runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
@@ -309,9 +310,9 @@ class AutoAssociativeProjection(MappingProjection):
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale,
+    #         owner_mech._parameter_states[AUTO].update(execution_id=execution_id, params=runtime_params, time_scale=time_scale,
     #                                                   context=context + INITIALIZING)
-    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, time_scale=time_scale,
+    #         owner_mech._parameter_states[HETERO].update(execution_id=execution_id, params=runtime_params, time_scale=time_scale,
     #                                                     context=context + INITIALIZING)
     #
 
@@ -342,8 +343,8 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, context=context + INITIALIZING)
-    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[AUTO].update(execution_id=execution_id, params=runtime_params, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[HETERO].update(execution_id=execution_id, params=runtime_params, context=context + INITIALIZING)
     #     else:
     #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,

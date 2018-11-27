@@ -557,6 +557,7 @@ Class Reference
 """
 
 import datetime
+import types
 import warnings
 
 from collections import Iterable
@@ -565,11 +566,11 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -598,6 +599,7 @@ def run(obj,
         termination_processing=None,
         termination_learning=None,
         runtime_params=None,
+        execution_id=None,
         context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
@@ -748,7 +750,7 @@ def run(obj,
             else:
                 raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
-        elif isinstance(targets, function_type):
+        elif isinstance(targets, types.FunctionType):
             if len(obj.target_mechanisms) == 1:
                 targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
                 targets, num_targets = _adjust_target_dict(obj, targets)
@@ -794,13 +796,13 @@ def run(obj,
                     projection.function_obj.learning_rate = obj.learning_rate
 
     # Class-specific validation:
-    if not obj.context.flags:
-        obj.context.initialization_status = ContextFlags.VALIDATING
-        obj.context.string = RUN + "validating " + obj.name
+    if not obj.parameters.context.get(execution_id).flags:
+        obj.parameters.context.get(execution_id).initialization_status = ContextFlags.VALIDATING
+        obj.parameters.context.get(execution_id).string = RUN + "validating " + obj.name
 
     # INITIALIZATION
     if initialize:
-        obj.initialize()
+        obj.initialize(execution_context=execution_id)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -811,28 +813,23 @@ def run(obj,
     # EXECUTE
     execution_inputs = {}
     execution_targets = {}
-
-    execution_id = _get_unique_id()
-
     for execution in range(num_trials):
 
-        # execution_id = _get_unique_id()
-
         if call_before_trial:
-            call_before_trial()
+            call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
         for time_step in range(time_steps):
 
             result = None
 
             if call_before_time_step:
-                call_before_time_step()
+                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when") and mechanism.has_initializers:
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
-                        mechanism.reinitialize(None)
+                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers.get(execution_id):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
+                        mechanism.reinitialize(None, execution_context=execution_id)
 
             input_num = execution%num_inputs_sets
 
@@ -844,7 +841,7 @@ def run(obj,
             # Assign targets:
             if targets is not None:
 
-                if isinstance(targets, function_type):
+                if isinstance(targets, types.FunctionType):
                     obj.target = targets
                 else:
                     for mech in targets:
@@ -857,12 +854,13 @@ def run(obj,
                         obj.current_targets = execution_targets
 
             # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.context.execution_phase == ContextFlags.SIMULATION:
-                obj.context.execution_phase = ContextFlags.PROCESSING
-                obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
+            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING)
+                obj.parameters.context.get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
             result = obj.execute(
                 input=execution_inputs,
+                target=execution_targets,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
@@ -871,9 +869,9 @@ def run(obj,
             )
 
             if call_after_time_step:
-                call_after_time_step()
+                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
-        if obj.context.execution_phase != ContextFlags.SIMULATION:
+        if obj.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:
@@ -881,19 +879,28 @@ def run(obj,
             obj.results.append(result_copy)
 
         if call_after_trial:
-            call_after_trial()
+            call_with_pruned_args(call_after_trial, execution_context=execution_id)
 
         from psyneulink.core.globals.log import _log_trials_and_runs, ContextFlags
-        _log_trials_and_runs(composition=obj,
-                             curr_condition=LogCondition.TRIAL,
-                             context=context)
+        _log_trials_and_runs(
+            composition=obj,
+            curr_condition=LogCondition.TRIAL,
+            context=context,
+            execution_id=execution_id,
+        )
 
     try:
         obj.scheduler_processing.date_last_run_end = datetime.datetime.now()
         obj.scheduler_learning.date_last_run_end = datetime.datetime.now()
 
         for sched in [obj.scheduler_processing, obj.scheduler_learning]:
-            sched.clock._increment_time(TimeScale.RUN)
+            try:
+                sched.get_clock(execution_id)._increment_time(TimeScale.RUN)
+            except KeyError:
+                # learning scheduler may not have been execute, so may not have
+                # created a Clock for execution_id
+                pass
+
     except AttributeError:
         # this will fail on processes, which do not have schedulers
         pass
@@ -907,11 +914,15 @@ def run(obj,
         obj._learning_enabled = learning_state_buffer
 
     from psyneulink.core.globals.log import _log_trials_and_runs
-    _log_trials_and_runs(composition=obj,
-                         curr_condition=LogCondition.RUN,
-                         context=context)
+    _log_trials_and_runs(
+        composition=obj,
+        curr_condition=LogCondition.RUN,
+        context=context,
+        execution_id=execution_id
+    )
 
     return obj.results
+
 
 @tc.typecheck
 

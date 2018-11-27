@@ -101,14 +101,15 @@ import inspect
 
 import typecheck as tc
 
-from psyneulink.core.components.component import Param, parameter_keywords
-from psyneulink.core.components.functions.function import Linear
+from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -127,6 +128,16 @@ class ControlProjectionError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+def _control_signal_getter(owning_component=None, execution_id=None):
+    return owning_component.sender.parameters.value.get(execution_id)
+
+
+def _control_signal_setter(value, owning_component=None, execution_id=None, override=False):
+    owning_component.sender.parameters.value.set(value, execution_id, override)
+    return value
+
 
 class ControlProjection(ModulatoryProjection_Base):
     """
@@ -277,6 +288,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class Params(ModulatoryProjection_Base.Params):
         function = Param(Linear, stateful=False, loggable=False)
+        control_signal = Param(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -391,5 +403,3 @@ class ControlProjection(ModulatoryProjection_Base):
     @property
     def control_signal(self):
         return self.sender.value
-
-

@@ -20,7 +20,7 @@ class TestMechanismInputLabels:
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.input_labels)
+            store_input_labels.append(M.get_input_labels(S))
 
         S.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
@@ -41,7 +41,7 @@ class TestMechanismInputLabels:
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.input_labels)
+            store_input_labels.append(M.get_input_labels(S))
 
         S.run(inputs=['red', 'green', 'blue', 'red'],
               call_after_trial=call_after_trial)
@@ -68,7 +68,7 @@ class TestMechanismInputLabels:
     #
     #     def call_after_trial():
     #         M_output.append(M.value)
-    #         store_input_labels.append(M.input_labels)
+    #         store_input_labels.append(M.get_input_labels(S))
     #
     #     S.run(inputs=[['red', 'green'], ['green', 'red']],
     #           call_after_trial=call_after_trial)
@@ -94,7 +94,7 @@ class TestMechanismInputLabels:
     #     store_input_labels = []
     #
     #     def call_after_trial():
-    #         store_input_labels.append(M.input_labels)
+    #         store_input_labels.append(M.get_input_labels(S))
     #
     #     S.run(inputs=['red', 'green', 'blue'],
     #           call_after_trial=call_after_trial)
@@ -116,7 +116,7 @@ class TestMechanismInputLabels:
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.input_labels)
+            store_input_labels.append(M.get_input_labels(S))
 
         S.run(inputs=[['red'], ['green'], ['green']],
               call_after_trial=call_after_trial)
@@ -181,7 +181,7 @@ class TestMechanismTargetLabels:
 
         learned_matrix = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
         S.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
               call_after_trial=record_matrix_after_trial)
@@ -207,7 +207,7 @@ class TestMechanismTargetLabels:
         learned_matrix = []
         count = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
             count.append(1)
 
 
@@ -239,7 +239,7 @@ class TestMechanismTargetLabels:
         learned_matrix = []
         count = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
             count.append(1)
 
 
@@ -269,7 +269,7 @@ class TestMechanismOutputLabels:
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.output_labels)
+            store_output_labels.append(M.get_output_labels(S))
 
         S.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
@@ -296,7 +296,7 @@ class TestMechanismOutputLabels:
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.output_labels)
+            store_output_labels.append(M.get_output_labels(S))
 
         S.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
@@ -325,7 +325,7 @@ class TestMechanismOutputLabels:
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.output_labels)
+            store_output_labels.append(M.get_output_labels(S))
 
         S.run(inputs=['red', 'blue', 'green', 'blue'],
               call_after_trial=call_after_trial)
