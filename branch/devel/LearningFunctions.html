@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.4.8.0+937.g6375e12 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.4.8.0+938.gae01b5f documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+937.g6375e12 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+938.gae01b5f documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="Composition" href="Composition.html"/>
         <link rel="prev" title="OptimizationFunctions" href="OptimizationFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+937
+                0.4.8.0+938
               </div>
             
           
@@ -207,9 +207,19 @@
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.Kohonen">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Kohonen</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>distance_measure=GAUSSIAN</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a function that calculates a matrix of weight changes using the Kohenen (SOM) learning rule.
-This modifies the weights to each element in proportion to their difference from the current input pattern
-and the distance of that element from the one with the weights most similar to the current input pattern.</p>
+<dd><p>Calculates a matrix of weight changes using the Kohenen learning rule.</p>
+<p>The Kohonen learning rule is used to implement a <a class="reference external" href="http://scholarpedia.org/article/Kohonen_network">Kohonen netowrk</a>, which is an instance of the more general category of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Self-organizing_map">self organizing map (SOM)</a>, that modifies the weights to
+each element in the network in proportion to its difference from the current input pattern and the distance of
+that element from the one with the weights most similar to the current input pattern.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates and returns a matrix of weight changes from an array of activity values
+(in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1]) and a weight matrix that generated them (in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]) using the Kohonen learning rule:</p>
+<div class="math">
+\[learning\_rate * distance_j * variable[0]-w_j\]</div>
+<p>where <span class="math">\(distance_j\)</span> is the distance of the jth element of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1] from the
+element with the weights most similar to activity array in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1],
+and <span class="math">\(w_j\)</span> is the column of the matrix in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2] that corresponds to
+the jth element of the activity array in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1].</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -218,7 +228,7 @@ and the distance of that element from the one with the weights most similar to t
 <li><strong>variable</strong> (<em>List</em><em>[</em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>array</em><em>(</em><em>float64</em><em>)</em><em>, </em><em>2d np.array</em><em>[</em><em>[</em><em>float64</em><em>]</em><em>]</em><em>] </em><em>: default ClassDefaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</li>
 <li><strong>learning_rate</strong> (<em>scalar</em><em> or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array</em><em>, or </em><em>np.matrix of numeric values: default default_learning_rate</em>) – specifies the learning rate used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; supersedes any specification  for the
 <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
-<li><strong>distance_measure</strong> (<em>GAUSSIAN</em><em>, </em><em>LINEAR</em><em>, </em><em>EXPONENTIAL</em><em>, </em><em>SINUSOID</em><em> or </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.function" title="psyneulink.core.components.functions.transferfunctions.Linear.function"><em>function</em></a>) – specifies the method used to calculate the distance of each element in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]
+<li><strong>distance_measure</strong> (<em>GAUSSIAN</em><em>, </em><em>LINEAR</em><em>, </em><em>EXPONENTIAL</em><em>, </em><em>SINUSOID</em><em> or </em><a class="reference internal" href="InterfaceFunctions.html#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function" title="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function"><em>function</em></a>) – specifies the method used to calculate the distance of each element in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2]
 from the one with the greatest value.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments
@@ -280,16 +290,7 @@ input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any
 <dl class="method">
 <dt>
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculate a matrix of weight changes from an array of activity values and a weight matrix that generated
-them using the Kohonen learning rule.</p>
-<p>The weight change matrix is calculated as:</p>
-<blockquote>
-<div><em>learning_rate</em> * <span class="math">\(distance_j' * *variable[0]*-:math:`w_j\)</span></div></blockquote>
-<p>where <span class="math">\(distance_j\)</span> is the distance of the jth element of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1] from the
-element with the weights most similar to activity array in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1],
-and <span class="math">\(w_j\)</span> is the column of the matrix in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[2] that corresponds to
-the jth element of the activity array <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[1].</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -301,11 +302,12 @@ of the constructor.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes scaled by difference of the current weights from the input pattern and the
-distance of each element from the one with the weights most similar to the input pattern.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes scaled by difference of the current weights from the input pattern in
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[0] and the distance of each element from the one with the weights most
+similar to that input pattern.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -317,7 +319,11 @@ distance of each element from the one with the weights most similar to the input
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.Hebbian">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Hebbian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a function that calculates a matrix of weight changes using the Hebbian (correlational) learning rule.</p>
+<dd><p id="hebbian-learning-rule">Calculate a matrix of weight changes using the Hebbian (correlational) learning rule.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://en.wikipedia.org/wiki/Hebbian_theory#Principles">Hebbian learning rule</a>:</p>
+<div class="math">
+\[\Delta w_{ij} = learning\_rate * a_ia_j\ if\ i \neq j,\ else\ 0\]</div>
+<p>where <span class="math">\(a_i\)</span> and <span class="math">\(a_j\)</span> are elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -384,12 +390,7 @@ returned by the function.</p>
 <dl class="method">
 <dt>
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
-The weight change matrix is calculated as:</p>
-<blockquote>
-<div><em>learning_rate</em> * <span class="math">\(a_ia_j\)</span> if <span class="math">\(i \neq j\)</span>, else <span class="math">\(0\)</span></div></blockquote>
-<p>where <span class="math">\(a_i\)</span> and <span class="math">\(a_j\)</span> are elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -401,10 +402,11 @@ of the constructor.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of pairwise products of elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> scaled by the <code class="xref any docutils literal"><span class="pre">learning_rate</span></code>, with all diagonal elements = 0 (i.e., hollow matix).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes generated by the <a class="reference internal" href="#hebbian-learning-rule"><span class="std std-ref">Hebbian Learning rule</span></a>,
+with all diagonal elements = 0 (i.e., hollow matix).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -416,7 +418,14 @@ of the constructor.</li>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">ContrastiveHebbian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a function that calculates a matrix of weight changes using the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/B978148321448150007X">ContrastiveHebbian learning rule</a>.</p>
+<dd><p id="contrastivehebbian-learning-rule">Calculate a matrix of weight changes using the Contrastive Hebbian learning rule.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values
+in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/B978148321448150007X">ContrastiveHebbian learning rule</a>:</p>
+<div class="math">
+\[\Delta w_{ij} = learning\_rate * (a_i^+a_j^+ - a_i^-a_j^-) \ if\ i \neq j,\ else\ 0\]</div>
+<p>where <span class="math">\(a_i^+\)</span> and <span class="math">\(a_j^+\)</span> are the activites of elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+in the <a class="reference internal" href="ContrastiveHebbianMechanism.html#contrastivehebbian-plus-phase"><span class="std std-ref">plus_phase</span></a> of execution, and <span class="math">\(a_i^-\)</span> and <span class="math">\(a_j^-\)</span> are the
+activities of those elements in the <a class="reference internal" href="ContrastiveHebbianMechanism.html#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a> of execution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -485,10 +494,7 @@ returned by the function.</p>
 <dl class="method">
 <dt>
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculate a matrix of weight changes from a 1d array of activity values using ContrastiveHebbian
-learning function.</p>
-<p>The weight change matrix is calculated as:</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -500,11 +506,10 @@ of the constructor.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of pairwise products of elements of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> scaled by the
-<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>, with all diagonal elements = 0 (i.e., hollow matix).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes generated by the <a class="reference internal" href="#contrastivehebbian-learning-rule"><span class="std std-ref">ContrastiveHeabbian learning rule</span></a>, with all diagonal elements = 0 (i.e., hollow matix).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
 </td>
 </tr>
 </tbody>
@@ -643,12 +648,14 @@ that is the <a class="reference internal" href="#psyneulink.core.components.func
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>In order to preserve compatibilty with other <code class="xref any docutils literal"><span class="pre">LearningFunctions</span></code>:</p>
-<ul class="simple">
-<li><strong>variable</strong> must have three items, although only the 2nd and 3rd are used;</li>
+<blockquote class="last">
+<div><ul class="simple">
+<li><strong>variable</strong> must have three items, although only the 2nd and 3rd are not used;</li>
 </ul>
-<ul class="last simple">
+<ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> returns two copies of the error array.</li>
 </ul>
+</div></blockquote>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -944,7 +951,7 @@ uses the BackPropagation LearningFunction).</p>
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.function" title="psyneulink.core.components.functions.transferfunctions.Linear.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="InterfaceFunctions.html#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function" title="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
 <li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s
 <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
@@ -1133,7 +1140,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+937.g6375e12',
+            VERSION:'0.4.8.0+938.gae01b5f',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

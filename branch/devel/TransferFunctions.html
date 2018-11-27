@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.4.8.0+937.g6375e12 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.4.8.0+938.gae01b5f documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+937.g6375e12 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+938.gae01b5f documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="CombinationFunctions" href="CombinationFunctions.html"/>
         <link rel="prev" title="UserDefinedFunction" href="UserDefinedFunction.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+937
+                0.4.8.0+938
               </div>
             
           
@@ -224,16 +224,17 @@ TransferFunction’s function (see <a class="reference internal" href="Functions
 <dt id="psyneulink.core.components.functions.transferfunctions.Linear">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>default_variable</em>, <em>slope=1.0</em>, <em>intercept=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p id="linear"><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.function" title="psyneulink.core.components.functions.transferfunctions.Logistic.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns linear transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
-<blockquote>
-<div>slope &lt;Linear.slope&gt;` * <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> + <a href="#id1"><span class="problematic" id="id2">`</span></a>intercept &lt;Linear.intercept&gt;</div></blockquote>
-<p>Note: default values for <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">Linear.slope</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">Linear.intercept</span></code></a> implement the <em>IDENTITY_FUNCTION</em>.</p>
-<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.derivative" title="psyneulink.core.components.functions.transferfunctions.Linear.derivative"><code class="xref any py py-meth docutils literal"><span class="pre">derivative</span></code></a> returns the derivative of the Linear function returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
+<div class="math">
+\[slope * variable + intercept\]</div>
+<p>Note: default values for <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.intercept" title="psyneulink.core.components.functions.transferfunctions.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> implement the
+<em>IDENTITY_FUNCTION</em>.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.derivative" title="psyneulink.core.components.functions.transferfunctions.Linear.derivative"><code class="xref any py py-meth docutils literal"><span class="pre">derivative</span></code></a> returns <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>slope</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>intercept</strong> (<em>float : default 0.0</em>) – specifies a value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -250,7 +251,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Linear.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – contains value to be transformed.</p>
+<dd><p><em>number or array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -302,7 +303,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -312,7 +313,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>linear transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -353,7 +354,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>rate</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.variable" title="psyneulink.core.components.functions.transferfunctions.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before exponentiation.</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – specifies a value to add to <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.variable" title="psyneulink.core.components.functions.transferfunctions.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after multplying by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.rate" title="psyneulink.core.components.functions.transferfunctions.Exponential.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>
 and before exponentiation.</li>
@@ -374,7 +375,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Exponential.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Exponential.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – contains value to be transformed.</p>
+<dd><p><em>number or array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -437,7 +438,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be exponentiated.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be exponentiated.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -447,7 +448,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Exponential transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -501,7 +502,7 @@ corresponds to the <em>k</em> parameter and <strong>scale</strong> corresponds t
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before logistic transformation</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a>
 and before logistic transformation. This argument is identical to x_0, with the opposite sign.</li>
@@ -524,7 +525,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Logistic.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – contains value to be transformed.</p>
+<dd><p><em>number or array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -595,7 +596,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -605,7 +606,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Logistic transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -660,7 +661,7 @@ The parameters used here have the same meaning as those used for the <a class="r
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Tanh.variable" title="psyneulink.core.components.functions.transferfunctions.Tanh.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before logistic transformation</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Tanh.variable" title="psyneulink.core.components.functions.transferfunctions.Tanh.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Tanh.gain" title="psyneulink.core.components.functions.transferfunctions.Tanh.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a>
 and before logistic transformation. This argument is identical to x_0, with the opposite sign.</li>
@@ -683,7 +684,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Tanh.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Tanh.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – contains value to be transformed.</p>
+<dd><p><em>number or array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -754,7 +755,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -764,7 +765,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hyperbolic tangent of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -806,7 +807,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.bias" title="psyneulink.core.components.functions.transferfunctions.ReLU.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> is subtracted
 from it, if (variable - bias) is greater than 0.</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – specifies a value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before checking if the
@@ -827,7 +828,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.ReLU.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – contains value to be transformed.</p>
+<dd><p><em>number or array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -885,7 +886,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -895,7 +896,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ReLU transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -938,7 +939,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value used as the mean for the Guassian transform.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value used as the mean for the Guassian transform.</li>
 <li><strong>standard_deviation</strong> (<em>float : default 1.0</em>) – specifies “width” of the Gaussian transform applied to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Gaussian.variable" title="psyneulink.core.components.functions.transferfunctions.Gaussian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – value to add to each element after applying height and before applying Gaussian transform.</li>
 <li><strong>offset</strong> (<em>float : default 0.0</em>) – value to add to each element after applying Gaussian transform and <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Gaussian.scale" title="psyneulink.core.components.functions.transferfunctions.Gaussian.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a>.</li>
@@ -957,7 +958,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Gaussian.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Gaussian.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – value used as the mean of the Gaussian transform.</p>
+<dd><p><em>number or array</em> – value used as the mean of the Gaussian transform.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1012,7 +1013,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1022,7 +1023,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Gaussian transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -1059,7 +1060,7 @@ element’s value.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – specifies a template for the value used as the mean for the Guassian transform.</li>
+<li><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – specifies a template for the value used as the mean for the Guassian transform.</li>
 <li><strong>variance</strong> (<em>float : default 1.0</em>) – specifies “width” of the Normal transform applied to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Normal.variable" title="psyneulink.core.components.functions.transferfunctions.Normal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) – value to add to each element after applying height and before applying Normal transform.</li>
 <li><strong>scale</strong> (<em>float : default 1.0</em>) – value by which to multiply each element after applying Normal transform.</li>
@@ -1078,7 +1079,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.Normal.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Normal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> – value used as the mean of the Normal transform.</p>
+<dd><p><em>number or array</em> – value used as the mean of the Normal transform.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1133,7 +1134,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default ClassDefaults.variable</em>) – a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1155,13 +1156,25 @@ arguments of the constructor.</li>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>default_variable</em>, <em>gain=1.0</em>, <em>output=ALL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="Permalink to this definition">¶</a></dt>
-<dd><p id="softmax">SoftMax transform of <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
+<dd><p id="softmax">SoftMax transform of <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.function" title="psyneulink.core.components.functions.transferfunctions.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns SoftMax transform of <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
+<div class="math">
+\[\frac{e^{gain * variable_i}}{\sum\limits^{len(variable)}e^{gain * variable}}\]</div>
+<p>filtered by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">ouptput</span></code></a> specification (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.derivative" title="psyneulink.core.components.functions.transferfunctions.SoftMax.derivative"><code class="xref any py py-meth docutils literal"><span class="pre">derivative</span></code></a> returns the derivative of the SoftMax.  If <em>OUTPUT_TYPE</em> for the SoftMax
+is <em>ALL</em>, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
+others):</p>
+<div class="math">
+\[D_jS_i = S_i(\delta_{i,j} - S_j),\ where\ \delta_{i,j}=1\ if\ i=j\ and\ \delta_{i,j}=0\ if\ i≠j.\]</div>
+<p>If <em>OUTPUT_TYPE</em> is <em>MAX_VAL</em> or <em>MAX_INDICATOR</em>, returns 1d array of the derivatives of the maximum
+value with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> is <em>PROB</em>, raises an exception
+(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>1d array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before SoftMax transformation.</li>
 <li><strong>output</strong> (<a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><em>ALL</em></a><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.function" title="psyneulink.core.components.functions.transferfunctions.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
@@ -1181,7 +1194,7 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – contains value to be transformed.</p>
+<dd><p><em>1d array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1244,16 +1257,12 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return:</p>
-<div class="math">
-\[\frac{e^{gain * variable_i}}{\sum\limits^{len(variable)}e^{gain * variable}}\]</div>
-<p>filtered by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">ouptput</span></code></a> specification.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – an array to be transformed.</li>
+<li><strong>variable</strong> (<em>1d array : default ClassDefaults.variable</em>) – an array to be transformed.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1263,7 +1272,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>SoftMax transformation of variable</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
 </td>
 </tr>
 </tbody>
@@ -1273,21 +1282,13 @@ arguments of the constructor.</li>
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the derivative of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.function" title="psyneulink.core.components.functions.transferfunctions.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-return Jacobian matrix (derivative for each element of the output array with respect to each of the others):</p>
-<blockquote>
-<div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
-where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
-<p>If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative of values returns by SoftMax</strong></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative of values returned by SoftMax</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d array (depending on OUTPUT_TYPE of SoftMax)</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d array (depending on <em>OUTPUT_TYPE</em> of SoftMax)</td>
 </tr>
 </tbody>
 </table>
@@ -1298,17 +1299,17 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>default_variable</em>, <em>matrix=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="Permalink to this definition">¶</a></dt>
-<dd><p id="linearmatrix">Matrix transform of variable:</p>
-<blockquote>
-<div><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.function" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns dot product of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
-<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</div></blockquote>
+<dd><p id="linearmatrix">Matrix transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.function" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns dot product of variable with matrix:</p>
+<div class="math">
+\[variable \bullet matrix\]</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.function" title="psyneulink.core.components.functions.transferfunctions.Linear.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>1d array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="InterfaceFunctions.html#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function" title="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</p>
 <p>When LinearMatrix is the <code class="xref any docutils literal"><span class="pre">function</span></code> of a projection:</p>
 <blockquote>
@@ -1343,18 +1344,18 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – contains value to be transformed.</p>
+<dd><p><em>1d array</em> – contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> – matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+<dd><p><em>2d array</em> – matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
 Can be specified as any of the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li>number - used as the filler value for all elements of the <code class="xref std std-keyword docutils literal"><span class="pre">matrix</span></code> (call to np.fill);</li>
-<li>list of arrays, 2d np.array or np.matrix - assigned as the value of <code class="xref std std-keyword docutils literal"><span class="pre">matrix</span></code>;</li>
+<li>list of arrays, 2d array or np.matrix - assigned as the value of <code class="xref std std-keyword docutils literal"><span class="pre">matrix</span></code>;</li>
 <li>matrix keyword - see <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords" title="psyneulink.core.globals.keywords.MatrixKeywords"><code class="xref any py py-class docutils literal"><span class="pre">MatrixKeywords</span></code></a> for list of options.</li>
 </ul>
 </div></blockquote>
@@ -1379,7 +1380,8 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a>
+for details).</p>
 </dd></dl>
 
 <dl class="method">
@@ -1411,13 +1413,12 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> • <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array</em>) – array to be transformed;  length must equal the number of rows of ‘matrix &lt;LinearMatrix.matrix&gt;`.</li>
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>1d array</em>) – array to be transformed;  length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1427,7 +1428,7 @@ arguments of the constructor.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dot product of variable and matrix</strong> – length of the array returned equals the number of columns of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d np.array</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d array</p>
 </td>
 </tr>
 </tbody>
@@ -1483,7 +1484,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+937.g6375e12',
+            VERSION:'0.4.8.0+938.gae01b5f',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

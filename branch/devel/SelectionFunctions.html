@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+937.g6375e12 documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.4.8.0+938.gae01b5f documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+937.g6375e12 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+938.gae01b5f documentation" href="index.html"/>
         <link rel="up" title="Functions" href="Functions.html"/>
         <link rel="next" title="DistributionFunctions" href="DistributionFunctions.html"/>
         <link rel="prev" title="CombinationFunctions" href="CombinationFunctions.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+937
+                0.4.8.0+938
               </div>
             
           
@@ -207,8 +207,29 @@
 <dl class="class">
 <dt id="psyneulink.core.components.functions.selectionfunctions.OneHot">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.selectionfunctions.</code><code class="descname">OneHot</code><span class="sig-paren">(</span><em>default_variable</em>, <em>mode=MAX_VAL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Permalink to this definition">¶</a></dt>
-<dd><p id="onehot">Return an array with one non-zero value.</p>
-<p>The <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter determines the nature of the non-zero value:</p>
+<dd><p>Return an array with one non-zero value.</p>
+<p id="onehot"><code class="xref any docutils literal"><span class="pre">function</span></code> returns an array the same length as the first item in <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
+with all of its values zeroed except one as specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>MAX_VAL</em>: element with the maximum signed value in first item of <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;</li>
+</ul>
+<ul class="simple">
+<li><em>MAX_ABS_VAL</em>: element with the maximum absolute value;</li>
+</ul>
+<ul class="simple">
+<li><em>MAX_INDICATOR</em>: 1 in place of the element with the maximum signed value;</li>
+</ul>
+<ul class="simple">
+<li><em>MAX_ABS_INDICATOR</em>: 1 in place of the element with the maximum absolute value;</li>
+</ul>
+<ul class="simple">
+<li><em>PROB</em>: probabilistically chosen element based on probabilities passed in second item of variable;</li>
+</ul>
+<ul class="simple">
+<li><em>PROB_INDICATOR</em>: same as <em>PROB</em> but chosen item is assigned a value of 1.</li>
+</ul>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -241,19 +262,8 @@ distribution, each element of which specifies the probability for selecting the 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.selectionfunctions.OneHot.mode">
 <code class="descname">mode</code><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL</em> –</p>
-<dl class="docutils">
-<dt>determines the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>:</dt>
-<dd><ul class="first last simple">
-<li><em>MAX_VAL</em>: element with the maximum signed value in the original array;</li>
-<li><em>MAX_ABS_VAL</em>: element with the maximum absolute value;</li>
-<li><em>MAX_INDICATOR</em>: 1 in place of the element with the maximum signed value;</li>
-<li><em>MAX_ABS_INDICATOR</em>: 1 in place of the element with the maximum absolute value;</li>
-<li><em>PROB</em>: probabilistically chosen element based on probabilities passed in second item of variable;</li>
-<li><em>PROB_INDICATOR</em>: same as <em>PROB</em> but chosen item is assigned a value of 1.</li>
-</ul>
-</dd>
-</dl>
+<dd><p><em>MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL</em> – determines the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for options).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -279,8 +289,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="method">
 <dt id="psyneulink.core.components.functions.selectionfunctions.OneHot.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return array of len(<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) with single non-zero value specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -293,7 +302,7 @@ arguments of the constructor.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>array with single non-zero value</strong></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>array with single non-zero value</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array</p>
@@ -351,7 +360,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+937.g6375e12',
+            VERSION:'0.4.8.0+938.gae01b5f',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
