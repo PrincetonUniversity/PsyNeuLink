@@ -62,6 +62,8 @@ class LLVMBuilderContext:
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
     def get_builtin(self, name, args, function_type = None):
+        if name in ('pow', 'log', 'exp'):
+            return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def get_llvm_function(self, name):

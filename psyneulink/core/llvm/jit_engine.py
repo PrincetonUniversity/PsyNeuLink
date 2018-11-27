@@ -12,7 +12,8 @@ from llvmlite import binding
 
 import os
 
-from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module
+from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
+from .builtins import _generate_cpu_builtins_module
 
 _dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 
@@ -70,12 +71,9 @@ def _cpu_jit_constructor():
     __pass_manager_builder.populate(__cpu_pass_manager)
 
 
-    # And an execution engine with an empty backing module
-    # TODO: why is empty backing mod necessary?
-    # TODO: It looks like backing_mod is just another compiled module.
-    #       Can we use it to avoid recompiling builtins?
-    #       Would cross module calls work? and for GPUs?
-    __backing_mod = binding.parse_assembly("")
+    # And an execution engine with a builtins backing module
+    builtins_module = _generate_cpu_builtins_module(_float_ty)
+    __backing_mod = binding.parse_assembly(str(builtins_module))
 
     __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
     return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine

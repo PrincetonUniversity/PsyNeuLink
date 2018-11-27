@@ -145,4 +145,5 @@ if ptx_enabled:
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:
+    builtins.setup_pnl_intrinsics(ctx)
     builtins.setup_vxm(ctx)
