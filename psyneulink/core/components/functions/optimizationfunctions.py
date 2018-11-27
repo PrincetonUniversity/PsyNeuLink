@@ -227,9 +227,10 @@ class OptimizationFunction(Function_Base):
         search_termination_function = Param(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Param([0], stateful=False, loggable=False)
 
+        save_samples = False
+        save_values = False
+
         # these are created as parameter states, but should they be?
-        save_samples = Param(False, modulable=True)
-        save_values = Param(False, modulable=True)
         max_iterations = Param(None, modulable=True)
 
         saved_samples = Param([], read_only=True)
@@ -861,9 +862,8 @@ class GridSearch(OptimizationFunction):
     class Params(OptimizationFunction.Params):
         variable = Param([[0], [0]], read_only=True)
 
-        # these are created as parameter states, but should they be?
-        save_samples = Param(True, modulable=True)
-        save_values = Param(True, modulable=True)
+        save_samples = True
+        save_values = True
 
         direction = MAXIMIZE
 
