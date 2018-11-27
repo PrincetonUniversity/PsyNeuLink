@@ -3156,8 +3156,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and self.context.execution_phase != ContextFlags.SIMULATION \
                 and self.enable_model_based_optimizer:
             if self.model_based_optimizer:
-                # self.model_based_optimizer.objective_mechanism.execute(context=context)
-                # KAM - temporary solution for assiging control signal values
+                self.model_based_optimizer.context.execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                 self.model_based_optimizer.apply_control_allocation(control_allocation, runtime_params=None, context=None)
 
