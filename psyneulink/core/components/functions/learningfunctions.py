@@ -1126,13 +1126,20 @@ class BayesGLM(LearningFunction):
         params=None,            \
         prefs=None)
 
-    Implements Bayesian linear regression that fits means and distributions of weights to predict dependent variable(s)
-    in `variable <BayesGLM.variable>`\\[1] from predictor vector(s) in `variable <BayesGLM.variable>`\\[0].
+    Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).
 
-    Uses a normal linear model variable[1] = variable[0]\Theta + \epsilon, with normal-gamma prior distribution
-    and returns a vector of prediction weights sampled from the multivariate normal-gamma distribution.
-    [Based on Falk Lieder's BayesianGLM.m, adapted for Python by Yotam Sagiv, and for PsyNeuLink by Jon Cohen;
-    useful reference: `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
+    `function <BayesGLM.function>` uses a normal linear model:
+
+     .. math::
+        dependent\ variable(s) = predictor(s)\ \Theta + \epsilon,
+
+     with predictor(s) in `variable <BayesGLM.variable>`\[0] and dependent variable(s) in `variable
+     <BayesGLM.variable>`\[1], and a normal-gamma prior distribution of weights (:math:`\Theta`), to update
+     the weight distribution parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n
+     <BayesGLM.gamma_shape_n>`, and `gamma_size_n <BayesGLM.gamma_size_n>`, and returns an array of prediction
+     weights sampled from the multivariate normal-gamma distribution [based on Falk Lieder's BayesianGLM.m,
+     adapted for Python by Yotam Sagiv and for PsyNeuLink by Jon Cohen; useful reference:
+    `Bayesian Inference <http://www2.stat.duke.edu/~sayan/Sta613/2017/read/chapter_9.pdf>`_.]
 
     .. hint::
        The **mu_0** or **sigma_0** arguments of the consructor can be used in place of **default_variable** to define
@@ -1236,12 +1243,6 @@ class BayesGLM(LearningFunction):
 
     gamma_size_n : 2d array with single scalar value
         current value of the size parameter of the gamma distribution used to sample the prediction weights.
-
-    function : function
-        updates mean (`mu_n <BayesGLM.mu_n>`) and variance (`Lambda_n <BayesGLM.Lambda_n>`) of weight distributions
-        to improve prediction of of dependent variable sample(s) in `variable <BayesGLM.variable>`\\[1] from
-        predictor vector(s) in `variable <BayesGLM.variable>`\\[1].  Returns a vector of weights `weights_sample
-        <BayesGLM.weights_sample>`) sampled from the weight disributions.
 
     weights_sample : 1d np.array
         last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
@@ -1370,11 +1371,8 @@ class BayesGLM(LearningFunction):
         variable=None,
         execution_id=None,
         params=None,
-        context=None
-    ):
-        '''Use predictor(s) and dependent variable(s) in `variable <BayesGLM.variable>` to update weight distribution
-        parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`,
-        and `gamma_size_n <BayesGLM.gamma_size_n>`, and return an array of weights sampled from the distributions.
+        context=None):
+        '''
 
         Arguments
         ---------
@@ -1394,7 +1392,7 @@ class BayesGLM(LearningFunction):
         Returns
         -------
 
-        sample weights : 1d np.array
+        sample weights : 1d array
             array of weights drawn from updated weight distributions.
 
         '''
