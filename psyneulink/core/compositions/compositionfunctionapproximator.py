@@ -37,14 +37,6 @@ COMMENT
 
 
 """
-import warnings
-from collections import Iterable, deque
-from itertools import product
-import typecheck as tc
-# from aenum import AutoNumberEnum, auto
-from enum import Enum
-
-import numpy as np
 
 from psyneulink.core.compositions.composition import Composition
 
@@ -96,7 +88,7 @@ class CompositionFunctionApproximator(Composition):
         # self.function = function
         super().__init__(name=name)
 
-    def adapt(self, feature_values, control_allocation, net_outcome, context=None):
+    def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None, context=None):
         '''Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
         <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.'''
         raise CompositionFunctionApproximatorError("Subclass of {} ({}) must implement {} method.".
@@ -110,9 +102,6 @@ class CompositionFunctionApproximator(Composition):
 
         # FIX: AUGEMENT TO USE NUM_ESTIMATES
         return self.function(feature_values, control_allocation)
-
-    def _after_agent_rep_execution(self, context=None):
-        pass
 
     @property
     def prediction_parameters(self):

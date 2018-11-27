@@ -91,7 +91,7 @@ lvoc = pnl.OptimizationControlMechanism(
 )
 
 
-# lvoc.reportOutputPref=True
+lvoc.reportOutputPref=True
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_c_node(color_stim)
 c.add_c_node(word_stim)
@@ -124,7 +124,7 @@ print('\n')
 print('--------------------')
 print('ControlSignal variables: ', [sig.parameters.variable.get(c) for sig in lvoc.control_signals])
 print('ControlSignal values: ', [sig.parameters.value.get(c) for sig in lvoc.control_signals])
-print('features: ', lvoc.parameters.feature_values.get(c))
+print('features: ', lvoc.get_feature_values(execution_id=c))
 print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], execution_id=c))
 print('time: ', duration)
 print('--------------------')

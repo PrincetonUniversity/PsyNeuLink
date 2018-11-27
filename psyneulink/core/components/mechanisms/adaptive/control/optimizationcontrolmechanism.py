@@ -384,17 +384,18 @@ Class Reference
 ---------------
 
 """
-from collections import Iterable
-
 import itertools
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Function, ModulationParam, _is_modulation_param, is_function_type
+from collections import Iterable
+
+from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
@@ -403,6 +404,7 @@ from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -627,11 +629,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
     # FIX: ADD OTHER Params() HERE??
     class Params(ControlMechanism.Params):
-        learning_function = None
-        function = None
-        search_function = None
-        search_termination_function = None
+        function = Param(None, stateful=False, loggable=False)
+        feature_function = Param(None, stateful=False, loggable=False)
+        search_function = Param(None, stateful=False, loggable=False)
+        search_termination_function = Param(None, stateful=False, loggable=False)
 
+        agent_rep = Param(None, stateful=False, loggable=False)
+
+        features = None
+        num_estimates = 1
         search_space = None
         control_allocation_search_space = None
 
@@ -726,7 +732,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.input_states = [outcome_input_state]
 
         # Configure default_variable to comport with full set of input_states
-        self.instance_defaults.variable, ignore = self._handle_arg_input_states(self.input_states)
+        self.instance_defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
         super()._instantiate_input_states(context=context)
 
@@ -797,10 +803,10 @@ class OptimizationControlMechanism(ControlMechanism):
         self.parameters.control_allocation_search_space.set(control_allocation_search_space, execution_id, override=True)
         return control_allocation_search_space
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
-        if (self.context.initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
@@ -812,24 +818,24 @@ class OptimizationControlMechanism(ControlMechanism):
         if hasattr(self.agent_rep, "save_state"):
             self.agent_rep.save_state()
 
-        # Get predicted inputs
-        self.feature_values = np.array(np.array(self.variable[1:]).tolist())
-
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        if self.control_allocation is None:
-            self.value = [c.instance_defaults.variable for c in self.control_signals]
+        control_allocation = self.parameters.control_allocation.get(execution_id)
+        if control_allocation is None:
+            control_allocation = [c.instance_defaults.variable for c in self.control_signals]
+            self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
         # Assign default net_outcome if it is not yet specified (presumably first trial)
         # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
         try:
-            net_outcome = self.net_outcome
+            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
+            net_outcome = variable[0] - self.combine_costs(costs)
         except AttributeError:
             net_outcome = [0]
         # FIX: END
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
-            self.agent_rep.adapt(self.feature_values, self.control_allocation, net_outcome)
+            self.agent_rep.adapt(self.get_feature_values(variable, execution_id), control_allocation, net_outcome, execution_id=execution_id)
         except AttributeError as e:
             # If error is due to absence of adapt method, OK; otherwise, raise exception
             if not 'has no attribute \'adapt\'' in e.args[0]:
@@ -837,10 +843,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Get control_allocation that optmizes EVC using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        optimal_control_allocation, self.optimal_EVC, self.saved_samples, self.saved_values = \
-                                        super(ControlMechanism, self)._execute(variable=self.control_allocation,
-                                                                               runtime_params=runtime_params,
-                                                                               context=context)
+        optimal_control_allocation, optimal_EVC, saved_samples, saved_values = super(ControlMechanism, self)._execute(
+            variable=control_allocation,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
+
         # Give agent_rep a chance to clean up
         try:
             self.agent_rep._after_agent_rep_execution(context=context)
@@ -852,7 +861,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
-    def evaluation_function(self, control_allocation):
+    def evaluation_function(self, control_allocation, execution_id=None):
         '''Compute `EVC <OptimizationControlMechanism_EVC>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -867,10 +876,10 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
-        return self.agent_rep.evaluate(self.feature_values,
+        return self.agent_rep.evaluate(self.get_feature_values(control_allocation, execution_id),
                                        control_allocation,
-                                       self.num_estimates,
-                                       context=self.function_object.context)
+                                       self.parameters.num_estimates.get(execution_id),
+                                       context=self.function_object.parameters.context.get(execution_id))
 
     def apply_control_allocation(self, control_allocation, runtime_params, context):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
@@ -888,6 +897,13 @@ class OptimizationControlMechanism(ControlMechanism):
     #         return self.agent_rep._get_predicted_input()
     #     else:
     #         return np.array(np.array(self.variable[1:]).tolist())
+
+    def get_feature_values(self, variable=None, execution_id=None):
+        try:
+            var = variable[1:]
+        except TypeError:
+            var = self.parameters.variable.get(execution_id)[1:]
+        return np.array(np.array(var).tolist())
 
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
@@ -991,7 +1007,6 @@ class OptimizationControlMechanism(ControlMechanism):
     def control_allocation_search_space(self):
         return self._get_control_allocation_search_space()
 
-
     # ******************************************************************************************************************
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep
     # ******************************************************************************************************************
@@ -1005,14 +1020,14 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.instance_defaults.variable[1:]),
                                   control_signals = self.control_signals)
 
-
-
     @property
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.objective_mechanism],
-            [self.learning_function] if isinstance(self.learning_function, Function_Base) else [],
+            [
+                self.objective_mechanism,
+                self.agent_rep,
+            ],
             [self.search_function] if isinstance(self.search_function, Function_Base) else [],
             [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
         ))

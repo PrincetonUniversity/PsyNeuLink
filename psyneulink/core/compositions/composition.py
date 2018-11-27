@@ -1792,6 +1792,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            + input_state.owner.name + "-" + input_state.name + ")")
                 self.shadow_projections[(output_state, input_state)] = shadow_projection
                 self.projections.append(shadow_projection)
+                shadow_projection._activate_for_compositions(self)
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
@@ -3157,7 +3158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.model_based_optimizer:
                 # self.model_based_optimizer.objective_mechanism.execute(context=context)
                 # KAM - temporary solution for assiging control signal values
-                control_allocation = self.model_based_optimizer.execute(context=context)
+                control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
                 self.model_based_optimizer.apply_control_allocation(control_allocation, runtime_params=None, context=None)
 
         # # MODIFIED 11/19/19 OLD:
@@ -3171,13 +3172,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return output_values
 
-    # def _update_predicted_input(self, context=None):
+    # def _update_predicted_input(self, execution_id=None, context=None):
     #     predicted_input = {}
     #     for prediction_mechanism in self.prediction_mechanisms:
     #         origin_node = self.prediction_origin_pairs[prediction_mechanism]
     #         node_output = []
     #         for output_state in prediction_mechanism.output_states:
-    #             node_output.append(output_state.value)
+    #             node_output.append(output_state.parameters.value.get(execution_id))
     #         predicted_input[origin_node] = node_output
     #     return predicted_input
 
@@ -3485,31 +3486,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
         return saved_state, node_values
 
-    # def _get_predicted_input(self, context=None):
+    # def _get_predicted_input(self, execution_id=None, context=None):
     #     """
     #     Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` before any
     #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be reinstated
     #     after all simulations are complete, and (3) set the number of trials of simulations.
     #     """
     #
-    #     predicted_input = self._update_predicted_input()
+    #     predicted_input = self._update_predicted_input(execution_id=execution_id)
     #
     #     return predicted_input
 
     def _after_agent_rep_execution(self, context=None):
-        """
-        Called by the `model_based_optimizer <Composition.model_based_optimizer>` of the `Composition` after all
-        simulations are complete in order to reinstate the `Composition`'s pre-simulation values.
-        """
-        reinitialize_values = self.sim_reinitialize_values
-        node_values = self.sim_node_values
-        for node in reinitialize_values:
-            node.reinitialize(*reinitialize_values[node])
-
-        for node in node_values:
-            node.value = node_values[node][0]
-            for i in range(len(node.output_states)):
-                node.output_states[i].value = node_values[node][1][i]
+        pass
 
     @property
     def _all_nodes(self):

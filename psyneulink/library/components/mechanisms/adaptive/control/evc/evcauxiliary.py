@@ -587,7 +587,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
         inputs = {key:value[i] for key, value in predicted_input.items()}
 
-        outcome = ctlr.run_simulation(
+        outcome = ctlr.evaluate(
             inputs=inputs,
             allocation_vector=allocation_vector,
             execution_id=sim_execution_id,

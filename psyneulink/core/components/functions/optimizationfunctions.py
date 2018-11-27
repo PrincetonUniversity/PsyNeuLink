@@ -27,11 +27,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, OPTIMIZATION_FUNCTION_TYPE, OWNER, \
-    GRADIENT_OPTIMIZATION_FUNCTION, VALUE, VARIABLE, GRID_SEARCH_FUNCTION
-from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
+from psyneulink.core.globals.parameters import Param
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch',
@@ -353,7 +352,13 @@ class OptimizationFunction(Function_Base):
         sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         current_sample = sample
+
+        # KAM HACK - "INITIALIZING" signals to evaluate that this simulation result should NOT be recorded
+        stored_context = self.parameters.context.get(execution_id)
+        original_initialization_status = stored_context.initialization_status
+        stored_context.initialization_status = ContextFlags.INITIALIZING
         current_value = call_with_pruned_args(self.objective_function, current_sample, execution_id=execution_id)
+        stored_context.initialization_status = original_initialization_status
 
         samples = []
         values = []

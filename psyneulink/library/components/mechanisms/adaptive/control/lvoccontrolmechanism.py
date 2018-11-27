@@ -477,7 +477,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         current_state = Param(None, read_only=True)
         previous_state = Param(None, user=False)
         prediction_weights = Param(None, read_only=True)
-        evc_max = Param(None, read_only=True)
+        optimal_EVC = Param(None, read_only=True)
         saved_samples = Param(None, read_only=True)
         saved_values = Param(None, read_only=True)
         control_signal_search_space = Param(None, read_only=True)
@@ -683,9 +683,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
     def _instantiate_learning_function(self):
         '''Instantiate attributes for LVOCControlMechanism's learning_function'''
 
-        self.feature_values = np.array(self.instance_defaults.variable[1:])
-
-        self.current_state = PredictionVector(self.feature_values,
+        self.current_state = PredictionVector(self.get_feature_values(),
                                               self.control_signals,
                                               self.prediction_terms)
 
@@ -753,7 +751,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         # Compute control_allocation using LVOCControlMechanism's optimization function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy, evc_max, saved_samples, saved_values = super(ControlMechanism, self)._execute(
+        allocation_policy, optimal_EVC, saved_samples, saved_values = super(ControlMechanism, self)._execute(
             variable=self.allocation_policy,
             execution_id=execution_id,
             runtime_params=runtime_params,
@@ -762,7 +760,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
 
         self._set_multiple_parameter_values(
             execution_id,
-            evc_max=evc_max,
+            optimal_EVC=optimal_EVC,
             saved_samples=saved_samples,
             saved_values=saved_values,
             override=True
@@ -771,12 +769,12 @@ class LVOCControlMechanism(OptimizationControlMechanism):
         # # # TEST PRINT
         # print ('EXECUTION COUNT: ', self.current_execution_count)
         # print ('ALLOCATION POLICY: ', allocation_policy)
-        # print ('ALLOCATION POLICY: ', self.evc_max)
+        # print ('ALLOCATION POLICY: ', self.optimal_EVC)
         # print ('\n------------------------------------------------')
         # # # TEST PRINT END
 
 
-    def evaluation_function(self, variable):
+    def evaluation_function(self, variable, execution_id=None):
         '''Update interaction terms and then multiply by prediction_weights
 
         Serves as `objective_function <OptimizationControlMechanism.objective_function>` for LVOCControlMechanism.

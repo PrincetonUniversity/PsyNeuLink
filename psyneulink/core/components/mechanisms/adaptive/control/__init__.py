@@ -9,4 +9,3 @@ from .optimizationcontrolmechanism import *
 __all__ = list(controlmechanism.__all__)
 __all__.extend(defaultcontrolmechanism.__all__)
 __all__.extend(optimizationcontrolmechanism.__all__)
-
