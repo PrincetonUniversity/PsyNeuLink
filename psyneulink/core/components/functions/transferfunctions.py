@@ -1289,17 +1289,18 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
 
+    where :math:`\\sigma` = `standard_deviation <Gaussian.standard_deviation>`
+
     .. note::
-        the value returned is deterministic (i.e., the value of the probability density function for the input),
-        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist`.
+        the value returned is deterministic (i.e., the value of the probability density function at variable),
+        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist` and set
+        `mean <NormalDist.mean>` equal to variable.
 
     `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
 
     .. math::
 
        \\frac{-(variable-bias)*e^{-\\frac{(variable-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma^{3}}
-
-    where :math:`\\sigma` = `standard_deviation <Gaussian.standard_deviation>`
 
     Arguments
     ---------
