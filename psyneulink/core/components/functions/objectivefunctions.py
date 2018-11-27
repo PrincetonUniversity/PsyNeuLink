@@ -587,7 +587,7 @@ class Distance(ObjectiveFunction):
         val1 = builder.load(ptr1)
         val2 = builder.load(ptr2)
 
-        log_f = ctx.module.declare_intrinsic("llvm.log", [ctx.float_ty])
+        log_f = ctx.get_builtin("log", [ctx.float_ty])
         log = builder.call(log_f, [val2])
         prod = builder.fmul(val1, log)
 
@@ -630,12 +630,12 @@ class Distance(ObjectiveFunction):
         diff = builder.fsub(val1, val2)
 
         # Get absolute value
-        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
+        fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         diff = builder.call(fabs, [diff])
 
         old_max = builder.load(max_diff_ptr)
         # Maxnum for some reason needs full function prototype
-        fmax = ctx.module.declare_intrinsic("llvm.maxnum", [ctx.float_ty],
+        fmax = ctx.get_builtin("maxnum", [ctx.float_ty],
             ir.types.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
 
         max_diff = builder.call(fmax, [diff, old_max])
@@ -724,8 +724,8 @@ class Distance(ObjectiveFunction):
         with helpers.for_loop_zero_inc(builder, vector_length, self.metric) as args:
             inner(*args)
 
-        sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
-        fabs = ctx.module.declare_intrinsic("llvm.fabs", [ctx.float_ty])
+        sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
+        fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         ret = builder.load(acc_ptr)
         if self.metric == EUCLIDEAN:
             ret = builder.call(sqrt, [ret])

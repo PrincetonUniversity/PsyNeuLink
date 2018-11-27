@@ -3244,7 +3244,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
         # val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v +
         #       d_v + e_v*self.previous_w + f_v*variable)/time_constant_v
-        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
         tmp1 = builder.fmul(param_vals["a_v"], v_3)
