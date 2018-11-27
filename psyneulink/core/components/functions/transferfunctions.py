@@ -16,7 +16,6 @@
 * `Tanh`
 * `ReLU`
 * `Gaussian`
-* `Normal`
 * `SoftMax`
 * `LinearMatrix`
 
@@ -69,7 +68,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
 from psyneulink.core.llvm import helpers
 
 __all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'Normal', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
+           'Gaussian', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
 MODE = 'mode'
@@ -1290,7 +1289,9 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
 
-    and:
+    .. note::
+        the value returned is deterministic (i.e., the value of the probability density function for the input),
+        not a randomly chosen sample from the Gaussian distribution; for the latter, use `NormalDist`.
 
     `derivative <Gaussian.derivative>` returns derivative of the Gaussian transform of `variable <Logistic.variable>`:
 
