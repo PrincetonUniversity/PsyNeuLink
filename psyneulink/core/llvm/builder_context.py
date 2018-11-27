@@ -58,7 +58,7 @@ class LLVMBuilderContext:
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
-        name = re.sub(r"[- ]", "_", name)
+        name = re.sub(r"[- ()\[\]]", "_", name)
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
     def get_builtin(self, name, args, function_type = None):
