@@ -396,6 +396,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
                                                         features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
+                                                        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                         agent_rep=comp,
                                                         function=pnl.GridSearch(),
                                                         control_signals=[("drift_rate", Decision),
