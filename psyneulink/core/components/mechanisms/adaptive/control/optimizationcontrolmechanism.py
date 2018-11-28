@@ -820,7 +820,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # # Get feature_values based on agent_rep
         # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
-        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
+        self.parameters.feature_values.set(np.array(np.array(variable[1:]).tolist()), execution_id)
 
         # Save state before any simulations
         if hasattr(self.agent_rep, "save_state"):
@@ -832,14 +832,15 @@ class OptimizationControlMechanism(ControlMechanism):
             control_allocation = [c.instance_defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
-        # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        try:
-            costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in self.control_signals]
-            net_outcome = variable[0] - self.combine_costs(costs)
-        except AttributeError:
-            net_outcome = [0]
-        # FIX: END
+        # # Assign default net_outcome if it is not yet specified (presumably first trial)
+        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+        #          self.control_signals]
+        # try:
+        #     net_outcome = variable[0] - self.combine_costs(costs)
+        # except AttributeError:
+        #     net_outcome = [0]
+        # # FIX: END
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
@@ -892,15 +893,17 @@ class OptimizationControlMechanism(ControlMechanism):
             context=self.function_object.parameters.context.get(execution_id)
         )
 
-    def apply_control_allocation(self, control_allocation, runtime_params, context):
+    def apply_control_allocation(self, control_allocation, execution_id, runtime_params, context):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.'''
         for i in range(len(control_allocation)):
-            if self.value is None:
-                self.value = self.instance_defaults.value
-            self.value[i] = np.atleast_1d(control_allocation[i])
+            if self.parameters.value.get(execution_id) is None:
+                self.parameters.value.set(self.instance_defaults.value, execution_id)
+                self.parameters.value.get(execution_id)[i] = np.atleast_1d(control_allocation[i])
 
-        self._update_output_states(self.value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+        self._update_output_states(self.parameters.value.get(execution_id),
+                                   runtime_params=runtime_params,
+                                   context=ContextFlags.COMPOSITION)
 
     # @property
     # def feature_values(self):

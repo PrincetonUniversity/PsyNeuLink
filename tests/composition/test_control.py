@@ -382,18 +382,6 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        # comp.add_model_based_optimizer(optimizer=pnl.ModelBasedOptimizationControlMechanism(
-        #                                                 function=pnl.GridSearch(),
-        #                                                 control_signals=[("drift_rate", Decision),
-        #                                                                  ("threshold", Decision)],
-        #                                                 objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
-        #                                                                                                                 Decision.PROBABILITY_UPPER_THRESHOLD,
-        #                                                                                                                 (Decision.RESPONSE_TIME, -1, 1)]
-        #                                                                                            ),
-        #
-        #                                                 )
-        #                                )
-
         comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
                                                         features={pnl.SHADOW_EXTERNAL_INPUTS: [Input, Reward]},
                                                         feature_function=pnl.AdaptiveIntegrator(rate=0.5),
@@ -418,7 +406,7 @@ class TestModelBasedOptimizationControlMechanisms:
             Input: [0.5, 0.123],
             Reward: [20, 20]
         }
-        # print("run")
+        # print("- - - - - - - - RUN - - - - - - - -")
         # comp.show_graph()
         comp.run(
             inputs=stim_list_dict,
@@ -459,8 +447,8 @@ class TestModelBasedOptimizationControlMechanisms:
             [[15.], [15.0], [0.0], [1.], [3.84279648], [0.81637827]]
         ]
         #
-        # print("simulation results = ")
-        # print(comp.simulation_results)
+        print("simulation results = ")
+        print(comp.simulation_results)
 
         for simulation in range(len(expected_sim_results_array)):
             assert np.allclose(expected_sim_results_array[simulation], comp.simulation_results[simulation])

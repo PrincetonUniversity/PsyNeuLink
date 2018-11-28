@@ -728,6 +728,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if system is not None:
             self._activate_projections_for_compositions(system)
 
+        # KAM added 11/28/18 in order to avoid use of self.variable. Need better way to initialize
+        self.outcome = [0.]
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
@@ -1043,6 +1046,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
             )
 
         return control_signal
+     
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
+        self.outcome = variable[0]
+        
+        return super(ControlMechanism, self).\
+            _execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
@@ -1254,9 +1263,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
 
-    @property
-    def outcome(self):
-        return self.variable[0]
+    # @property
+    # def outcome(self):
+    #     return self.variable[0]
 
     @property
     def control_allocation(self):

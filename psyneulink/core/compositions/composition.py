@@ -3132,13 +3132,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return __execution.extract_node_output(self.output_CIM)
 
-        self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
-
-        output_values = []
-        for i in range(0, len(self.output_CIM.output_states)):
-            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
-
         # control phase
         execution_phase = self.parameters.context.get(execution_id).execution_phase
         if (
@@ -3147,30 +3140,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             and self.enable_model_based_optimizer
         ):
             if self.model_based_optimizer:
-                self.model_based_optimizer.context.execution_phase = ContextFlags.PROCESSING
+                self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id, runtime_params=runtime_params, context=context)
 
-        # # MODIFIED 11/19/19 OLD:
-        # self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
-        # self.output_CIM.execute(context=ContextFlags.PROCESSING)
-        #
-        # output_values = []
-        # for i in range(0, len(self.output_CIM.output_states)):
-        #     output_values.append(self.output_CIM.output_states[i].value)
-        # MODIFIED 11/19/19 END
+        self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+
+        output_values = []
+        for i in range(0, len(self.output_CIM.output_states)):
+            output_values.append(self.output_CIM.output_states[i].parameters.value.get(execution_id))
 
         return output_values
-
-    # def _update_predicted_input(self, execution_id=None, context=None):
-    #     predicted_input = {}
-    #     for prediction_mechanism in self.prediction_mechanisms:
-    #         origin_node = self.prediction_origin_pairs[prediction_mechanism]
-    #         node_output = []
-    #         for output_state in prediction_mechanism.output_states:
-    #             node_output.append(output_state.parameters.value.get(execution_id))
-    #         predicted_input[origin_node] = node_output
-    #     return predicted_input
 
     def reinitialize(self, values, execution_context=NotImplemented):
         if execution_context is NotImplemented:
@@ -3278,7 +3259,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output value of the final Node executed in the composition : various
         '''
-
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
@@ -4156,10 +4136,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `model_based_optimizer <Composition.model_based_optimizer>` under that control_allocation. All values are
            reset to pre-simulation values at the end of the simulation. '''
 
-        # Originally call_after_simulation and other_simulation_data were implemented as a way to record arbitrary
-        # data during the simulation. Now that run simulation returns self.net_outcome, which is a property that can
-        # be modified to return anything, this may not be necessary
-
         # These attrs are set during composition.before_simulation
         reinitialize_values = self.sim_reinitialize_values
 
@@ -4170,18 +4146,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Assign control_allocation current being sampled
         if control_allocation is not None:
             self.model_based_optimizer.apply_control_allocation(control_allocation,
+                                                                execution_id,
                                                                    runtime_params=runtime_params,
                                                                    context=context)
 
-        execution_id = self._get_unique_id()
         net_control_allocation_outcomes = []
-        # other_simulation_data = []
+
         for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
                 inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
 
-            self.context.execution_phase = ContextFlags.SIMULATION
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:
                 for proj in output_state.efferents:
                     proj.context.execution_phase = ContextFlags.PROCESSING
@@ -4192,17 +4168,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      runtime_params=runtime_params,
                      context=context)
 
+            # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
                 self.simulation_results.append(self.output_values)
 
-            # call_after_simulation_data = None
-            #
-            # if call_after_simulation:
-            #     call_after_simulation_data = call_after_simulation()
-
-            self.context.execution_phase = ContextFlags.PROCESSING
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             net_control_allocation_outcomes.append(self.model_based_optimizer.net_outcome)
-            # other_simulation_data.append(call_after_simulation_data)
 
         return net_control_allocation_outcomes
 
