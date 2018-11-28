@@ -1,4 +1,5 @@
 import numpy as np
+import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.integratorfunctions
 import psyneulink.core.globals.keywords as kw
@@ -70,11 +71,35 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_llvm(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    res = f.bin_function(variable)
-    res = f.bin_function(variable)
-    res = f.bin_function(variable)
 
-    benchmark(f.bin_function, variable)
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = e.execute(variable)
+    res = e.execute(variable)
+    res = e.execute(variable)
+
+    benchmark(e.execute, variable)
+
+    assert np.allclose(res[0], expected[0])
+    assert np.allclose(res[1], expected[1])
+    assert np.allclose(res[2], expected[2])
+
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.function
+@pytest.mark.integrator_function
+@pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
+@pytest.mark.benchmark
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_cuda_ptx(func, variable, integration_method, params, expected, benchmark):
+    f = func(default_variable=variable, integration_method=integration_method, params=params)
+
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = e.execute(variable)
+    res = e.execute(variable)
+    res = e.execute(variable)
+
+    benchmark(e.execute, variable)
 
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
