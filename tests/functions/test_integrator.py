@@ -70,6 +70,7 @@ def test_llvm(func, variable, params, expected, benchmark):
     assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
 
 @pytest.mark.llvm
+@pytest.mark.cuda
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
