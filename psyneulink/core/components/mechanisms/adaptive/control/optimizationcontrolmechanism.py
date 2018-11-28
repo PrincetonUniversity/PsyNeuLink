@@ -384,6 +384,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import itertools
 import numpy as np
 import typecheck as tc
@@ -827,7 +828,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # # Get feature_values based on agent_rep
         # self.feature_values = self.agent_rep.get_feature_values(context=self.context)
 
-        self.parameters.feature_values.set(np.array(np.array(variable[1:]).tolist()), execution_id)
+        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Save state before any simulations
         if hasattr(self.agent_rep, "save_state"):
@@ -839,14 +840,12 @@ class OptimizationControlMechanism(ControlMechanism):
             control_allocation = [c.instance_defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
 
-        # # Assign default net_outcome if it is not yet specified (presumably first trial)
-        # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
+        # Assign default net_outcome if it is not yet specified (presumably first trial)
+        # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
         costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
                  self.control_signals]
-
         try:
-            if variable[0] is not None:
-                net_outcome = variable[0] - self.combine_costs(costs)
+            net_outcome = variable[0] - self.combine_costs(costs)
         except AttributeError:
             net_outcome = [0]
         # FIX: END
@@ -902,17 +901,17 @@ class OptimizationControlMechanism(ControlMechanism):
             context=self.function_object.parameters.context.get(execution_id)
         )
 
-    def apply_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.'''
         for i in range(len(control_allocation)):
-            if self.parameters.value.get(execution_id) is None:
-                self.parameters.value.set(self.instance_defaults.value, execution_id)
-                self.parameters.value.get(execution_id)[i] = np.atleast_1d(control_allocation[i])
+            value = self.parameters.value.get(execution_id)
+            if value is None:
+                value = copy.deepcopy(self.instance_defaults.value)
+            value[i] = np.atleast_1d(control_allocation[i])
 
-        self._update_output_states(self.parameters.value.get(execution_id),
-                                   runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
+        self.parameters.value.set(value, execution_id)
+        self._update_output_states(value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     # @property
     # def feature_values(self):

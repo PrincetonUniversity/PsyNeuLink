@@ -346,8 +346,8 @@ import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, Composition_Base, System_Base
@@ -672,6 +672,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         costs = Param(None, read_only=True, getter=_control_mechanism_costs_getter)
 
+        simulation_ids = Param(list, user=False)
+
         modulation = ModulationParam.MULTIPLICATIVE
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -727,9 +729,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if system is not None:
             self._activate_projections_for_compositions(system)
-
-        # KAM added 11/28/18 in order to avoid use of self.variable. Need better way to initialize
-        self.outcome = [0.]
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -1046,12 +1045,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
             )
 
         return control_signal
-     
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
-        self.outcome = variable[0]
-        
-        return super(ControlMechanism, self).\
-            _execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism

@@ -415,6 +415,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     class Params(Parameters):
         results = Param([], loggable=False)
+        simulation_results = Param([], loggable=False)
 
     class _CompilationData(Parameters):
         execution = None
@@ -452,7 +453,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM_states = {}
 
         self.enable_model_based_optimizer = enable_model_based_optimizer
-        self.simulation_results = []
         self.default_execution_id = self.name
         self.execution_ids = [self.default_execution_id]
         self.model_based_optimizer = model_based_optimizer
@@ -3150,7 +3150,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.model_based_optimizer:
                 self.model_based_optimizer.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                 control_allocation = self.model_based_optimizer.execute(execution_id=execution_id, context=context)
-                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id, runtime_params=runtime_params, context=context)
+                self.model_based_optimizer.apply_control_allocation(control_allocation, execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         self.output_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
@@ -4152,36 +4152,69 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
+        # KDM 11/28/18: below sets the control allocation for outer execution_id, which is then
+        # copied into all simulation execution contexts
         if control_allocation is not None:
-            self.model_based_optimizer.apply_control_allocation(control_allocation,
-                                                                execution_id,
-                                                                   runtime_params=runtime_params,
-                                                                   context=context)
+            self.model_based_optimizer.apply_control_allocation(
+                control_allocation,
+                execution_id=execution_id,
+                runtime_params=runtime_params,
+                context=context
+            )
+
+        simulation_execution_ids = []
+
+        for i in range(num_trials):
+            sim_execution_id = self.model_based_optimizer.get_next_sim_id(execution_id)
+            print('simulation', sim_execution_id, 'base', execution_id)
+
+            try:
+                self.model_based_optimizer.parameters.simulation_ids.get(execution_id).append(sim_execution_id)
+            except AttributeError:
+                self.model_based_optimizer.parameters.simulation_ids.set([sim_execution_id], execution_id)
+
+            self._initialize_from_context(sim_execution_id, execution_id)
+            simulation_execution_ids.append(sim_execution_id)
 
         net_control_allocation_outcomes = []
 
-        for i in range(num_trials):
+        for sim_execution_id in simulation_execution_ids:
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
                 inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
 
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+            self.parameters.context.get(sim_execution_id).execution_phase = ContextFlags.SIMULATION
+            # KDM 11/28/18: is setting below necessary? would think it's already in PROCESSING phase beforehand
             for output_state in self.output_states:
                 for proj in output_state.efferents:
-                    proj.context.execution_phase = ContextFlags.PROCESSING
+                    proj.parameters.context.get(sim_execution_id).execution_phase = ContextFlags.PROCESSING
 
-            self.run(inputs=inputs,
-                     reinitialize_values=reinitialize_values,
-                     execution_id=execution_id,
-                     runtime_params=runtime_params,
-                     context=context)
+            self.run(
+                inputs=inputs,
+                reinitialize_values=reinitialize_values,
+                execution_id=sim_execution_id,
+                runtime_params=runtime_params,
+                context=context
+            )
 
             # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
-                self.simulation_results.append(self.output_values)
+                simulation_results = self.parameters.simulation_results.get(execution_id)
+                if simulation_results is None:
+                    simulation_results = []
+                simulation_results.append(self.get_output_values(sim_execution_id))
+                self.parameters.simulation_results.set(simulation_results, execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-            net_control_allocation_outcomes.append(self.model_based_optimizer.net_outcome)
+
+            outcome = self.model_based_optimizer.input_state.parameters.value.get(sim_execution_id)
+            net_outcome = outcome - self.model_based_optimizer.combine_costs(
+                [
+                    c.compute_costs(c.parameters.variable.get(sim_execution_id), execution_id=sim_execution_id)
+                    for c in self.model_based_optimizer.control_signals
+                ]
+            )
+            net_control_allocation_outcomes.append(net_outcome)
 
         return net_control_allocation_outcomes
 
@@ -4215,6 +4248,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_input_values(self, execution_context=None):
         return [input_state.parameters.value.get(execution_context) for input_state in self.input_CIM.input_states]
+
+    @property
+    def simulation_results(self):
+        return self.parameters.simulation_results.get(self.default_execution_id)
 
     #  For now, external_input_states == input_states and external_input_values == input_values
     #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
