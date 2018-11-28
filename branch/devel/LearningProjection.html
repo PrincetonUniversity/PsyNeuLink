@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningProjection &mdash; PsyNeuLink 0.4.8.0+939.gb2929ad documentation</title>
+  <title>LearningProjection &mdash; PsyNeuLink 0.4.8.0+984.g8d41292 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.8.0+939.gb2929ad documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.8.0+984.g8d41292 documentation" href="index.html"/>
         <link rel="up" title="Modulatory Projections" href="ModulatoryProjection.html"/>
         <link rel="next" title="ControlProjection" href="ControlProjection.html"/>
         <link rel="prev" title="Modulatory Projections" href="ModulatoryProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.8.0+939
+                0.4.8.0+984
               </div>
             
           
@@ -317,10 +317,10 @@ if it is not specified, and cannot be <a class="reference internal" href="#learn
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a><em> or </em><em>ParameterState for matrix parameter of one</em><em>]</em>) – specifies the <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> (or the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns it) for the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> to be
 modified by the LearningProjection; if it is not specified, and cannot be <a class="reference internal" href="#learningprojection-creation"><span class="std std-ref">inferred from context</span></a>, initialization is <a class="reference internal" href="#learningprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the function used to convert the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> to the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">weight_change_matrix</span></code></a>, prior to applying the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>.</li>
-<li><strong>error_function</strong> (<em>Optional</em><em>[</em><em>Function</em><em> or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><em>function</em></a><em>] </em><em>: default LinearCombination</em><em>(</em><em>weights=</em><em>[</em><em>[</em><em>-1</em><em>]</em><em>, </em><em>[</em><em>1</em><em>]</em><em>]</em><em>)</em>) – specifies a function to be used by the <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanism</span></a> to compute the error
+<li><strong>error_function</strong> (<em>Optional</em><em>[</em><em>Function</em><em> or </em><a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><em>function</em></a><em>] </em><em>: default LinearCombination</em><em>(</em><em>weights=</em><em>[</em><em>[</em><em>-1</em><em>]</em><em>, </em><em>[</em><em>1</em><em>]</em><em>]</em><em>)</em>) – specifies a function to be used by the <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanism</span></a> to compute the error
 used for learning.  Since the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism is a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>, its function must have a <code class="xref any docutils literal"><span class="pre">variable</span></code> with two items, that receives its values from the <em>SAMPLE</em> and <em>TARGET</em> InputStates of the
 ComparatorMechanism.</li>
-<li><strong>learning_function</strong> (<em>Optional</em><em>[</em><em>LearningFunction</em><em> or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><em>function</em></a><em>] </em><em>: default BackPropagation</em>) – <p>specifies a function to be used for learning by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the
+<li><strong>learning_function</strong> (<em>Optional</em><em>[</em><em>LearningFunction</em><em> or </em><a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><em>function</em></a><em>] </em><em>: default BackPropagation</em>) – <p>specifies a function to be used for learning by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the
 LearningProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> belongs.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -515,7 +515,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.8.0+939.gb2929ad',
+            VERSION:'0.4.8.0+984.g8d41292',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
