@@ -884,10 +884,13 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
-        return self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
-                                       control_allocation,
-                                       self.parameters.num_estimates.get(execution_id),
-                                       context=self.function_object.parameters.context.get(execution_id))
+        return self.agent_rep.evaluate(
+            self.parameters.feature_values.get(execution_id),
+            control_allocation,
+            self.parameters.num_estimates.get(execution_id),
+            execution_id=execution_id,
+            context=self.function_object.parameters.context.get(execution_id)
+        )
 
     def apply_control_allocation(self, control_allocation, runtime_params, context):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on

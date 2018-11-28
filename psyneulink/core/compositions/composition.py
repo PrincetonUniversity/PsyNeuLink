@@ -4141,12 +4141,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._assign_context_values(execution_id, base_execution_id, **kwargs)
 
-    def evaluate(self,
-                 predicted_input=None,
-                 control_allocation=None,
-                 num_trials=1,
-                 runtime_params=None,
-                 context=None):
+    def evaluate(
+        self,
+        predicted_input=None,
+        control_allocation=None,
+        num_trials=1,
+        runtime_params=None,
+        execution_id=None,
+        context=None
+    ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `model_based_optimizer <Composition.model_based_optimizer>` in order to return the
            `net_outcome <ModelBasedOptimizationControlMechanism.net_outcome>` of the Composition, according to its
