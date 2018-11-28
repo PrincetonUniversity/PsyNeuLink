@@ -172,16 +172,19 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     `function <Logistic.function>` returns linear transform of `variable <Linear.variable>`:
 
-        slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>
+    .. math::
 
-    Note: default values for `Linear.slope` and `Linear.intercept` implement the *IDENTITY_FUNCTION*.
+        slope * variable + intercept
 
-    `derivative <Linear.derivative>` returns the derivative of the Linear function returns `slope <Linear.slope>`.
+    Note: default values for `slope <Linear.slope>` and `intercept <Linear.intercept>` implement the
+    *IDENTITY_FUNCTION*.
+
+    `derivative <Linear.derivative>` returns `slope <Linear.slope>`.
 
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     slope : float : default 1.0
@@ -207,7 +210,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         contains value to be transformed.
 
     slope : float
@@ -300,7 +303,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -311,7 +314,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Returns
         -------
 
-        linear transformation of variable : number or np.array
+        linear transformation of variable : number or array
 
         """
 
@@ -334,7 +337,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
             # type that even np does not recognize -- typically a custom output state variable with items of different
-            # shapes (e.g. variable = [[0.0], [0.0], np.array([[0.0, 0.0]])] )
+            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
             elif isinstance(variable, list):
                 result = []
                 for variable_item in variable:
@@ -396,7 +399,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     rate : float : default 1.0
@@ -430,7 +433,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         contains value to be transformed.
 
     rate : float
@@ -533,7 +536,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be exponentiated.
 
         params : Dict[param keyword: param value] : default None
@@ -541,11 +544,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
-        Exponential transformation of variable : number or np.array
+        Exponential transformation of variable : number or array
 
         """
 
@@ -621,7 +623,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -659,7 +661,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         contains value to be transformed.
 
     gain : float : default 1.0
@@ -776,7 +778,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -784,11 +786,10 @@ class Logistic(TransferFunction):  # -------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
-        Logistic transformation of variable : number or np.array
+        Logistic transformation of variable : number or array
 
         """
 
@@ -841,10 +842,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     "does not match the value expected for specified {} ({})".
                                     format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
                                            repr('input'), input))
+
+        gain = self.get_current_function_param(GAIN, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
+
         if output is None:
             output = self.function(input)
 
-        return output * (1 - output)
+        return gain * scale * output * (1 - output)
 
 
 class Tanh(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -883,7 +888,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies template for the value to be transformed.
 
     gain : float : default 1.0
@@ -921,7 +926,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         contains value to be transformed.
 
     gain : float : default 1.0
@@ -1038,7 +1043,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1046,11 +1051,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
-        hyperbolic tangent of variable : number or np.array
+        hyperbolic tangent of variable : number or array
 
         """
 
@@ -1091,10 +1095,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, execution_id)
 
         # FIX: ASSUMES ALL SCALE IS DEFAULT;  MULTIPLY BY SCALE?
         from math import e
-        return 1 / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
+        return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
 
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -1125,7 +1130,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     Arguments
     ---------
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
@@ -1150,7 +1155,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         contains value to be transformed.
     gain : float : default 1.0
         value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
@@ -1216,15 +1221,18 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Arguments
         ---------
-        variable : number or np.array : default ClassDefaults.variable
+
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
+
         Returns
         -------
-        ReLU transformation of variable : number or np.array
+
+        ReLU transformation of variable : number or array
         """
 
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
@@ -1250,6 +1258,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         Returns
         -------
+
         derivative :  number or array
 
         """
@@ -1294,7 +1303,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value used as the mean for the Guassian transform.
 
     standard_deviation : float : default 1.0
@@ -1326,7 +1335,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         value used as the mean of the Gaussian transform.
 
     standard_deviation : float : default 1.0
@@ -1444,7 +1453,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1456,7 +1465,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Returns
         -------
 
-        Gaussian transformation of variable : number or np.array
+        Gaussian transformation of variable : number or array
 
         """
 
@@ -1524,7 +1533,7 @@ class Normal(TransferFunction):  # ---------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or np.array : default ClassDefaults.variable
+    default_variable : number or array : default ClassDefaults.variable
         specifies a template for the value used as the mean for the Guassian transform.
 
     variance : float : default 1.0
@@ -1556,7 +1565,7 @@ class Normal(TransferFunction):  # ---------------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : number or array
         value used as the mean of the Normal transform.
 
     variance : float : default 1.0
@@ -1660,7 +1669,7 @@ class Normal(TransferFunction):  # ---------------------------------------------
         Arguments
         ---------
 
-        variable : number or np.array : default ClassDefaults.variable
+        variable : number or array : default ClassDefaults.variable
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -1699,7 +1708,7 @@ class Normal(TransferFunction):  # ---------------------------------------------
     #     Returns
     #     -------
     #
-    #     Derivative of Guassian of variable :  number or np.array
+    #     Derivative of Guassian of variable :  number or array
     #
     #     """
     #     variance = self.get_current_function_param(VARIANCE, execution_id)
@@ -1730,13 +1739,32 @@ class SoftMax(TransferFunction):
 
     .. _SoftMax:
 
-    SoftMax transform of `variable <Softmax.variable>` (see `The Softmax function and its derivative
+    SoftMax transform of `variable <Softmax.variable>`
+
+    `function <SoftMax.function>` returns SoftMax transform of `variable <Softmax.variable>`:
+
+    .. math::
+
+        \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
+
+    filtered by `ouptput <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+    `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
+    is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
+    others):
+
+    .. math::
+        D_jS_i = S_i(\\delta_{i,j} - S_j),\ where\ \\delta_{i,j}=1\ if\ i=j\ and\ \\delta_{i,j}=0\ if\ i≠j.
+
+    If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
+    value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
+    (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
     Arguments
     ---------
 
-    default_variable : 1d np.array : default ClassDefaults.variable
+    default_variable : 1d array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -1767,7 +1795,7 @@ class SoftMax(TransferFunction):
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         contains value to be transformed.
 
     gain : float
@@ -1980,18 +2008,11 @@ class SoftMax(TransferFunction):
                  params=None,
                  context=None):
         """
-        Return:
-
-        .. math::
-
-            \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
-
-        filtered by `ouptput <SoftMax.output>` specification.
 
         Arguments
         ---------
 
-        variable : 1d np.array : default ClassDefaults.variable
+        variable : 1d array : default ClassDefaults.variable
            an array to be transformed.
 
         params : Dict[param keyword: param value] : default None
@@ -2002,7 +2023,7 @@ class SoftMax(TransferFunction):
         Returns
         -------
 
-        SoftMax transformation of variable : number or np.array
+        SoftMax transformation of variable : number or array
 
         """
 
@@ -2027,23 +2048,10 @@ class SoftMax(TransferFunction):
         """
         derivative(output)
 
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
-            COMMENT:
-                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
-            COMMENT
-            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
-            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
-
         Returns
         -------
 
-        derivative of values returns by SoftMax :  1d or 2d array (depending on OUTPUT_TYPE of SoftMax)
-
-
+        derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
         output_type = self.params[OUTPUT_TYPE]
@@ -2094,10 +2102,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     .. _LinearMatrix:
 
-    Matrix transform of variable:
+    Matrix transform of `variable <LinearMatrix.variable>`.
 
-        `function <LinearMatrix.function>` returns dot product of `variable <LinearMatrix.variable>` and
-        `matrix <LinearMatrix.matrix>`.
+    `function <LinearMatrix.function>` returns dot product of variable with matrix:
+
+    .. math::
+        variable \\bullet matrix
 
     COMMENT:  [CONVERT TO FIGURE]
         ----------------------------------------------------------------------------------------------------------
@@ -2127,7 +2137,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Arguments
     ---------
 
-    variable : list or 1d np.array : default ClassDefaults.variable
+    variable : list or 1d array : default ClassDefaults.variable
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
@@ -2170,14 +2180,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         contains value to be transformed.
 
-    matrix : 2d np.array
+    matrix : 2d array
         matrix used to transform `variable <LinearMatrix.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d np.array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * list of arrays, 2d array or np.matrix - assigned as the value of :keyword:`matrix`;
             * matrix keyword - see `MatrixKeywords` for list of options.
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
@@ -2191,8 +2201,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `PreferenceSet`
+        for details).
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
@@ -2242,9 +2252,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     # def _validate_variable(self, variable, context=None):
-    #     """Insure that variable passed to LinearMatrix is a max 2D np.array
+    #     """Insure that variable passed to LinearMatrix is a max 2D array
     #
-    #     :param variable: (max 2D np.array)
+    #     :param variable: (max 2D array)
     #     :param context:
     #     :return:
     #     """
@@ -2279,7 +2289,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
             sender = self.instance_defaults.variable
-            # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
+            # Note: this assumes variable is a 1D array, as enforced by _validate_variable
             sender_len = sender.size
 
             # FIX: RELABEL sender -> input AND receiver -> output
@@ -2297,7 +2307,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             # First try to get receiver from specification in params
             if RECEIVER in param_set:
                 self.receiver = param_set[RECEIVER]
-                # Check that specification is a list of numbers or an np.array
+                # Check that specification is a list of numbers or an array
                 if ((isinstance(self.receiver, list) and all(
                         isinstance(elem, numbers.Number) for elem in self.receiver)) or
                         isinstance(self.receiver, np.ndarray)):
@@ -2390,7 +2400,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                        sender_len))
                         continue
 
-                    # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
+                    # list used to describe matrix, so convert to 2D array and pass to validation of matrix below
                     elif isinstance(param_value, list):
                         try:
                             param_value = np.atleast_2d(param_value)
@@ -2413,7 +2423,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # function so:
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
-                    # -  validate that it returns an np.array or np.matrix
+                    # -  validate that it returns an array or np.matrix
                     elif isinstance(param_value, function_type):
                         test = param_value(1, 1)
                         if not isinstance(test, (np.ndarray, np.matrix)):
@@ -2496,7 +2506,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
         from psyneulink.core.components.projections.projection import Projection
         if isinstance(self.owner, Projection):
-            # Matrix provided (and validated in _validate_params); convert to np.array
+            # Matrix provided (and validated in _validate_params); convert to array
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
@@ -2546,23 +2556,21 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `variable <LinearMatrix.variable>` • `matrix <LinearMatrix.matrix>`
 
         Arguments
         ---------
-        variable : list or 1d np.array
-            array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
+        variable : list or 1d array
+            array to be transformed;  length must equal the number of rows of `matrix <LinearMatrix.matrix>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         ---------
 
-        dot product of variable and matrix : 1d np.array
+        dot product of variable and matrix : 1d array
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
@@ -2628,10 +2636,10 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
 
-     Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
+     Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
-    # Matrix provided (and validated in _validate_params); convert to np.array
+    # Matrix provided (and validated in _validate_params); convert to array
     if isinstance(specification, (list, np.matrix)):
         specification = np.array(specification)
 

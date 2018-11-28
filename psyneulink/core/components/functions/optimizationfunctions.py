@@ -712,16 +712,16 @@ class GradientOptimization(OptimizationFunction):
             return variable
 
         # Update step_size
-        if sample_num == 0:
-            _current_step_size = self.parameters.step_size.get(execution_id)
-        elif self.annealing_function:
-            _current_step_size = call_with_pruned_args(self.annealing_function, self._current_step_size, sample_num, execution_id=execution_id)
+        step_size = self.parameters.step_size.get(execution_id)
+        if sample_num != 0 and self.annealing_function:
+            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
+            self.parameters.step_size.set(step_size, execution_id)
 
         # Compute gradients with respect to current variable
         _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
 
         # Update variable based on new gradients
-        return variable + self.parameters.direction.get(execution_id) * _current_step_size * np.array(_gradients)
+        return variable + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
