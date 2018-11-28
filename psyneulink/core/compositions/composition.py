@@ -420,11 +420,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution = None
 
 
-    def __init__(self,
-                 name=None,
-                 model_based_optimizer=None,
-                 enable_model_based_optimizer=None,
-                 external_input_sources=None):
+    def __init__(
+        self,
+        name=None,
+        model_based_optimizer=None,
+        enable_model_based_optimizer=None,
+        external_input_sources=None,
+        **param_defaults
+    ):
         # also sets name
         register_category(
             entry=self,
@@ -481,7 +484,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.sched = Scheduler(composition=self, execution_id=self.default_execution_id)
 
         self.parameters = self.Params(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(owner=self)
+        self.defaults = Defaults(owner=self, **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
         # Compiled resources
         self.__generated_wrappers = {}
         self.__compiled_mech = {}
