@@ -15,7 +15,7 @@ from collections import defaultdict
 import numpy as np
 
 from .builder_context import *
-from . import helpers
+from . import helpers, jit_engine
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
 
@@ -51,6 +51,10 @@ class FuncExecution:
 
         self.__context_struct = context_struct_ty(*function._get_context_initializer(execution_id))
 
+        self.__cuda_params = None
+        self.__cuda_context = None
+        self.__cuda_out_buf = None
+
     def execute(self, variable):
         new_var = np.asfarray(variable)
         _, _ , vi_ty, vo_ty = self._bin_func.byref_arg_types
@@ -62,6 +66,46 @@ class FuncExecution:
                        ct_vi, ctypes.byref(ct_vo))
 
         return _convert_ctype_to_python(ct_vo)
+
+    def _get_buffer(self, data):
+        address = ctypes.addressof(data)
+        # Return dummy buffer. CUDA does not handle 0 size well.
+        if ctypes.sizeof(data) == 0:
+            return bytearray(b'aaaa')
+        return bytearray(data)
+
+    @property
+    def _cuda_params(self):
+        if self.__cuda_params is None:
+            self.__cuda_params = jit_engine.pycuda.driver.to_device(self._get_buffer(self.__param_struct))
+        return self.__cuda_params
+
+    @property
+    def _cuda_context(self):
+        if self.__cuda_context is None:
+            self.__cuda_context = jit_engine.pycuda.driver.to_device(self._get_buffer(self.__context_struct))
+        return self.__cuda_context
+
+    @property
+    def _cuda_out_buf(self):
+        if self.__cuda_out_buf is None:
+            vo_ty = self._bin_func.byref_arg_types[3]
+            size = ctypes.sizeof(vo_ty)
+            self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
+        return self.__cuda_out_buf
+
+    def cuda_execute(self, variable):
+        new_var = np.asfarray(variable)
+        data_in = jit_engine.pycuda.driver.In(new_var)
+
+        self._bin_func.cuda_call(self._cuda_params, self._cuda_context,
+                                 data_in, self._cuda_out_buf)
+        vo_ty = self._bin_func.byref_arg_types[3]
+        size = ctypes.sizeof(vo_ty)
+        out_buf = bytearray(size)
+        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, self._cuda_out_buf)
+        ct_res = vo_ty.from_buffer(out_buf)
+        return _convert_ctype_to_python(ct_res)
 
 
 class MechExecution:

@@ -1,7 +1,7 @@
 
 import numpy as np
-import psyneulink.core.components.functions.function as Function
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.llvm as pnlvm
+import psyneulink.core.components.functions.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -20,16 +20,16 @@ softmax_helper = softmax_helper - np.max(softmax_helper)
 softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 
 test_data = [
-    (psyneulink.core.components.functions.transferfunctions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
-    (psyneulink.core.components.functions.transferfunctions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
-    (psyneulink.core.components.functions.transferfunctions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
-    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
-    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
-    (psyneulink.core.components.functions.transferfunctions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
+    (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
+    (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
+    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'per_item': False}, None, softmax_helper),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
+    (Functions.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}, 'per_item': False}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
     ### Skip probabilistic since it has no-deterministic result ###
-    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
-    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
-    (psyneulink.core.components.functions.transferfunctions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
+    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
+    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
+    (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
 ]
 
 # use list, naming function produces ugly names
@@ -50,12 +50,6 @@ names = [
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.xfail(fail)
-        return
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;
     res = benchmark(f.function, variable)
@@ -68,18 +62,22 @@ def test_basic(func, variable, params, fail, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        # This is a rather ugly hack to stop pytest benchmark complains
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.xfail(fail)
-        return
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;
-    if not hasattr(f, 'bin_function'):
-        benchmark.disabled = True
-        benchmark(lambda _:0,0)
-        pytest.skip("not implemented")
-        return
-    res = benchmark(f.bin_function, variable)
+    m = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(m.execute, variable)
+    assert np.allclose(res, expected)
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
+@pytest.mark.benchmark
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
+    f = func(default_variable=variable, **params)
+    benchmark.group = "TransferFunction " + func.componentName;
+    m = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(m.execute, variable)
     assert np.allclose(res, expected)

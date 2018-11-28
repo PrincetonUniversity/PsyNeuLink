@@ -9,54 +9,30 @@
 # ********************************************* LLVM bindings **************************************************************
 
 import ctypes, os, sys
+import numpy as np
 
-from llvmlite import binding, ir
+from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
 from .execution import *
 from .execution import _tupleize
-from .jit_engine import cpu_jit_engine
+from .jit_engine import *
 
 __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 
-__dumpenv = os.environ.get("PNL_LLVM_DUMP")
+__dumpenv = str(os.environ.get("PNL_LLVM_DEBUG"))
 _compiled_modules = set()
 _binary_generation = 0
 
-def _try_parse_module(module):
-    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(module)
-
-    # IR module is not the same as binding module.
-    # "assembly" in this case is LLVM IR assembly.
-    # This is intentional design decision to ease
-    # compatibility between LLVM versions.
-    try:
-        mod = binding.parse_assembly(str(module))
-        mod.verify()
-    except Exception as e:
-        print("ERROR: llvm parsing failed: {}".format(e))
-        mod = None
-
-    return mod
-
 def _llvm_build():
-    # Parse generated modules and link them
-    mod_bundle = binding.parse_assembly("")
-    for m in _modules:
-        new_mod = _try_parse_module(m)
-        if new_mod is not None:
-            mod_bundle.link_in(new_mod)
-            _compiled_modules.add(m)
-
+    _cpu_engine.compile_modules(_modules, _compiled_modules)
+    if ptx_enabled:
+        _ptx_engine.compile_modules(_modules, set())
     _modules.clear()
 
-    # Add the new module to jit engine
-    _cpu_engine.opt_and_append_bin_module(mod_bundle)
-
     global _binary_generation
-    if __dumpenv is not None and __dumpenv.find("compile") != -1:
+    if __dumpenv.find("compile") != -1:
         global _binary_generation
         print("COMPILING GENERATION: {} -> {}".format(_binary_generation, LLVMBuilderContext._llvm_generation))
 
@@ -69,8 +45,14 @@ _binaries = {}
 class LLVMBinaryFunction:
     def __init__(self, name):
         self.name = name
-        self.__ptr = None
 
+        self.__c_func = None
+        self.__c_func_type = None
+        self.__byref_arg_types = None
+
+        self.__cuda_kernel = None
+
+    def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
         assert(isinstance(f, ir.Function))
@@ -91,9 +73,6 @@ class LLVMBinaryFunction:
             params.append(param_type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
-        # Binary pointer.
-        self.ptr = _cpu_engine._engine.get_function_address(name)
-
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
 
@@ -103,24 +82,37 @@ class LLVMBinaryFunction:
         cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
         self(*tuple(cargs))
 
-    # This will be useful for non-native targets
-    @property
-    def ptr(self):
-        return self.__ptr
-
-    @ptr.setter
-    def ptr(self, ptr):
-        if self.__ptr != ptr:
-            self.__ptr = ptr
-            self.__c_func = self.__c_func_type(self.__ptr)
-
     @property
     def byref_arg_types(self):
+        if self.__byref_arg_types is None:
+            self._init_host_func_type()
         return self.__byref_arg_types
 
     @property
+    def _c_func_type(self):
+        if self.__c_func_type is None:
+            self._init_host_func_type()
+        return self.__c_func_type
+
+    @property
     def c_func(self):
+        if self.__c_func is None:
+            ptr = _cpu_engine._engine.get_function_address(self.name)
+            self.__c_func = self._c_func_type(ptr)
         return self.__c_func
+
+    @property
+    def _cuda_kernel(self):
+        if self.__cuda_kernel is None:
+            self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
+        return self.__cuda_kernel
+
+    def cuda_call(self, *args):
+        self._cuda_kernel(*args, block=(1,1,1))
+
+    def cuda_wrap_call(self, *args):
+        wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
+        self.cuda_call(*wrap_args)
 
     @staticmethod
     def get(name):
@@ -148,7 +140,10 @@ def _updateNativeBinaries(module, buffer):
         del _binaries[d]
 
 _cpu_engine = cpu_jit_engine(_updateNativeBinaries)
+if ptx_enabled:
+    _ptx_engine = ptx_jit_engine()
 
 # Initialize builtins
 with LLVMBuilderContext() as ctx:
+    builtins.setup_pnl_intrinsics(ctx)
     builtins.setup_vxm(ctx)

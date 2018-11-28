@@ -1585,23 +1585,6 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         return builder
 
-    def bin_function(self,
-                     variable=None,
-                     execution_id=None,
-                     params=None,
-                     context=None):
-
-        ret = super().bin_function(variable, execution_id, params, context)
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        # ct_old also contains the correct value
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value.set(ret, execution_id, override=True)
-
-        return ret
-
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -3036,27 +3019,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return previous_v, previous_w, previous_time
 
-    def bin_function(self,
-                     variable=None,
-                     execution_id=None,
-                     params=None,
-                     context=None):
-
-        ret = super().bin_function(variable, execution_id, params, context)
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self._set_multiple_parameter_values(
-                execution_id,
-                previous_v=ret[0],
-                previous_w=ret[1],
-                previous_time=ret[2]
-            )
-
-        return ret
-
     def _get_context_struct_type(self, ctx):
         context = (self.previous_v, self.previous_w, self.previous_time)
         context_type = ctx.convert_python_struct_to_llvm_ir(context)
@@ -3244,7 +3206,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
         # val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v +
         #       d_v + e_v*self.previous_w + f_v*variable)/time_constant_v
-        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
         tmp1 = builder.fmul(param_vals["a_v"], v_3)

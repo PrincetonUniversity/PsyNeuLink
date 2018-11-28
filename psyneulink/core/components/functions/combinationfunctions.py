@@ -859,7 +859,7 @@ class LinearCombination(
         else:
             val = ctx.float_ty(1.0)
 
-        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
             # No exponent
