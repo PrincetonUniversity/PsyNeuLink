@@ -891,20 +891,14 @@ class InputState(State_Base):
     def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
         if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
-            # KAM added 11/27/18 so that feature_function may be an Integrator (or any other function)
-            # TBI: better way to check whether a particular InputState is a "feature" AND constraint that "feature"
-            #      InputStates may only receive one projection
-            if hasattr(self.owner, "feature_function"):
-                pass
-            else:
-                raise StateError(
-                    "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
-                        FUNCTION,
-                        self.name,
-                        self.owner.name,
-                        function.componentName
-                    )
+            raise StateError(
+                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+                    FUNCTION,
+                    self.name,
+                    self.owner.name,
+                    function.componentName
                 )
+            )
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""

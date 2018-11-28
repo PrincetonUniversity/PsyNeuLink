@@ -397,6 +397,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.featureinputstate import FeatureInputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -742,6 +743,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_input_states(context=context)
 
+        for i in range(1, len(self.input_states)):
+            state = self.input_states[i]
+            if len(state.path_afferents) > 1:
+                raise OptimizationControlMechanismError("Invalid FeatureInputState on {}. {} should receive exactly one"
+                                                        " projection, but it receives {} projections."
+                                                        .format(self.name, state.name, len(state.path_afferents)))
 
         # KAM Removed the exception below 11/6/2018 because it was rejecting valid
         # monitored_output_state spec on ObjectiveMechanism
@@ -834,13 +841,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # # Assign default net_outcome if it is not yet specified (presumably first trial)
         # # FIX: ??CAN GET RID OF THIS ONCE CONTROL SIGNALS ARE STATEFUL (_last_intensity SHOULD BE SET OR NOT NEEDED)
-        # costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
-        #          self.control_signals]
-        # try:
-        #     net_outcome = variable[0] - self.combine_costs(costs)
-        # except AttributeError:
-        #     net_outcome = [0]
-        # # FIX: END
+        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in
+                 self.control_signals]
+
+        try:
+            if variable[0] is not None:
+                net_outcome = variable[0] - self.combine_costs(costs)
+        except AttributeError:
+            net_outcome = [0]
+        # FIX: END
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         try:
@@ -973,6 +982,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(spec)
 
+        for feature in parsed_features:
+            if isinstance(feature, dict):
+                feature['state_type'] = FeatureInputState
+            else:
+                if not isinstance(feature, FeatureInputState):
+                    raise OptimizationControlMechanismError("{} has an invalid Feature: {}. Must be a FeatureInputState"
+                                                            .format(self.name, feature))
         return parsed_features
 
     @tc.typecheck
