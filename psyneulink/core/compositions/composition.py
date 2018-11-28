@@ -619,6 +619,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
 
+            try:
+                # activate any projections the node requires
+                node._activate_projections_for_compositions(self)
+            except AttributeError:
+                pass
+
         if hasattr(node, "aux_components"):
 
             projections = []
@@ -695,6 +701,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.external_input_sources[self.model_based_optimizer] = self.model_based_optimizer.shadow_external_inputs
         for proj in self.model_based_optimizer.objective_mechanism.path_afferents:
             self.add_projection(proj)
+
+        optimizer._activate_projections_for_compositions(self)
         self._analyze_graph()
 
     def _get_control_signals_for_system(self, control_signals=None):
