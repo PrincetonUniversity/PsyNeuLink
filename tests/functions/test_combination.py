@@ -135,18 +135,26 @@ def _naming_function(config):
 
     return "COMBINE-{} {}{} {}".format(inputs, op, param_string, form)
 
-_data =[a + (b,) for a, b in  product(test_linear_combination_data, ['Python', 'LLVM'])]
+_data =[a + (b,) for a, b in  product(test_linear_combination_data, ['Python', 'LLVM', 'PTX'])]
 
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("func, variable, params, expected, bin_execute", _data, ids=list(map(_naming_function, _data)))
 @pytest.mark.benchmark
 def test_linear_combination_function(func, variable, params, expected, bin_execute, benchmark):
+    if bin_execute == 'PTX' and not pnlvm.ptx_enabled:
+        benchmark(lambda _:0,0)
+        benchmark.disabled = True
+        pytest.skip("cuda not enabled/available")
+
     f = func(default_variable=variable, **params)
     benchmark.group = "LinearCombinationFunction " + func.componentName;
     if (bin_execute == 'LLVM'):
         e = pnlvm.execution.FuncExecution(f, None)
         res = benchmark(e.execute, variable)
+    elif (bin_execute == 'PTX'):
+        e = pnlvm.execution.FuncExecution(f, None)
+        res = benchmark(e.cuda_execute, variable)
     else:
         res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -254,6 +262,27 @@ def test_linear_combination_function_in_mechanism_llvm(operation, input, size, i
     benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
     e = pnlvm.execution.FuncExecution(f, None)
     res = benchmark(e.execute, input)
+    if expected is None:
+        if operation == pnl.SUM:
+            expected = np.sum(input, axis=0) * scale + offset
+        if operation == pnl.PRODUCT:
+            expected = np.product(input, axis=0) * scale + offset
+
+    assert np.allclose(res, expected)
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.function
+@pytest.mark.combination_function
+@pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
+@pytest.mark.benchmark
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_linear_combination_function_in_mechanism_ptx_cuda(operation, input, size, input_states, scale, offset, expected, benchmark):
+    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
+    p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
+    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(e.cuda_execute, input)
     if expected is None:
         if operation == pnl.SUM:
             expected = np.sum(input, axis=0) * scale + offset
