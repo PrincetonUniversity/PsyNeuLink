@@ -50,7 +50,7 @@ names = [
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
+@pytest.mark.benchmark(group="FHNIntegrator")
 def test_basic(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
     res = f.function(variable)
@@ -68,7 +68,7 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
+@pytest.mark.benchmark(group="FHNIntegrator")
 def test_llvm(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
 
@@ -89,7 +89,7 @@ def test_llvm(func, variable, integration_method, params, expected, benchmark):
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
+@pytest.mark.benchmark(group="FHNIntegrator")
 @pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
 def test_cuda_ptx(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
