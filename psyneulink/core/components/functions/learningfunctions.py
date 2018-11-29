@@ -1523,11 +1523,6 @@ class BackPropagation(LearningFunction):
           is the derivative of the activation function responsible for generating activation_output
           at the point that generates each of its entries.
 
-
-
-
-
-
     The values of `activation_input <BackPropagation.activation_input>`, `activation_output
     <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
     items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
@@ -1627,12 +1622,6 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
-
-    function : function
-         the function that computes the weight change matrix, and returns that along with the
-         `error_signal <BackPropagation.error_signal>` received, weighted by the contribution made by each element of
-         `activation_output <BackPropagation.activation_output>` as a function of the
-         `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -1801,9 +1790,9 @@ class BackPropagation(LearningFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms.
-
-        Note that both variable and error_matrix must be specified for the function to execute.
+        """
+        .. note::
+           Both variable and error_matrix must be specified for the function to execute.
 
         Arguments
         ---------
@@ -1828,14 +1817,10 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
-        weighted error signal : 1d np.array
-            `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
-            `activation_output <BackPropagation.activation_output>` as a function of
-            `error_matrix <BackPropagation.error_matrix>`.
-
+        weight change matrix, weighted error signal : List[2d array, 1d array]
+            the modifications to make to the matrix, `error_signal <BackPropagation.error_signal>` weighted by the
+            contribution made by each element of `activation_output <BackPropagation.activation_output>` as a
+            function of `error_matrix <BackPropagation.error_matrix>`.
         """
 
         self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
