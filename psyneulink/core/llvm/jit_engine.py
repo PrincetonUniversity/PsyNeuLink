@@ -223,9 +223,9 @@ class cpu_jit_engine(jit_engine):
              self._jit_engine.set_object_cache(self._object_cache)
 
 _ptx_builtin_source = """
-__device__ __noinline__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
-__device__ __noinline__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
-__device__ __noinline__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
+__device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
+__device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
+__device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
 """
 
 class ptx_jit_engine(jit_engine):
