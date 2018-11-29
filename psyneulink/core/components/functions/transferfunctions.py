@@ -515,7 +515,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
         val = builder.fmul(val, rate)
         val = builder.fadd(val, bias)
@@ -754,7 +754,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
         val = builder.fadd(val, bias)
         val = builder.fsub(val, x_0)
@@ -1019,7 +1019,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
         val = builder.fadd(val, bias)
         val = builder.fsub(val, x_0)
@@ -1903,7 +1903,7 @@ class SoftMax(TransferFunction):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
         val = builder.fmul(orig_val, gain)
         exp_val = builder.call(exp_f, [val])
@@ -1925,7 +1925,7 @@ class SoftMax(TransferFunction):
         assert self.get_current_function_param(OUTPUT_TYPE) == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
         val = builder.fmul(orig_val, gain)
         val = builder.call(exp_f, [val])
@@ -1963,7 +1963,7 @@ class SoftMax(TransferFunction):
                 inner(*args)
         elif output_type == MAX_VAL:
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
-            exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+            exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
             val = builder.fmul(orig_val, gain)
             val = builder.call(exp_f, [val])

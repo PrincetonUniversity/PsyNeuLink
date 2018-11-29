@@ -562,9 +562,10 @@ class LinearCombination(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Params(CombinationFunction.Params):
-        weights = None
-        exponents = None
         operation = SUM
+
+        weights = Param(None, modulable=True)
+        exponents = Param(None, modulable=True)
         scale = Param(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Param(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -858,7 +859,7 @@ class LinearCombination(
         else:
             val = ctx.float_ty(1.0)
 
-        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
             # No exponent
