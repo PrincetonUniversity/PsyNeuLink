@@ -379,7 +379,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import function_type
-from psyneulink.core.components.functions.function import LinearCombination
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
@@ -1229,7 +1229,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @cost_function.setter
     def cost_function(self, value):
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._cost_function = udf
@@ -1242,7 +1242,7 @@ class EVCControlMechanism(ControlMechanism):
 
     @combine_outcome_and_cost_function.setter
     def combine_outcome_and_cost_function(self, value):
-        from psyneulink.core.components.functions.function import UserDefinedFunction
+        from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         if isinstance(value, function_type):
             udf = UserDefinedFunction(function=value)
             self._combine_outcome_and_cost_function = udf

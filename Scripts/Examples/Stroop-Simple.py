@@ -4,6 +4,7 @@ import psyneulink as pnl
 
 # NOTE:  This implements the two stimulus processing pathways (color naming and word reading)
 #        but not an "attention" mechanism that selects between them... stay tuned!
+import psyneulink.core.components.functions.transferfunctions
 
 process_prefs = {
     pnl.REPORT_OUTPUT_PREF: True,
@@ -17,31 +18,31 @@ system_prefs = {
 
 colors = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=pnl.Linear,
+    function=psyneulink.core.components.functions.transferfunctions.Linear,
     name="Colors"
 )
 
 words = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=pnl.Linear,
+    function=psyneulink.core.components.functions.transferfunctions.Linear,
     name="Words"
 )
 
 hidden = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     name="Hidden"
 )
 
 response = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=pnl.Logistic(),
+    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
     name="Response"
 )
 
 output = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=pnl.Logistic,
+    function=psyneulink.core.components.functions.transferfunctions.Logistic,
     name="Output"
 )
 

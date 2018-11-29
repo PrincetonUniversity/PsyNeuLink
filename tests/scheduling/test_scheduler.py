@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import uuid
 
-from psyneulink.core.components.functions.function import DriftDiffusionIntegrator, Linear
+from psyneulink.core.components.functions.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

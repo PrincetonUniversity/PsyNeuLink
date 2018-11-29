@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import copy
 import ctypes
 import numpy as np
 import pytest
@@ -20,19 +19,23 @@ llvm_res = np.random.rand(DIM_X)
 x, y = matrix.shape
 
 @pytest.mark.llvm
-def test_fixed_dimensions__pnl_builtin_vxm():
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available"))])
+def test_fixed_dimensions__pnl_builtin_vxm(mode):
     # The original builtin mxv function
     binf = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
-    ct_in_ty, ct_mat_ty, _, _, ct_res_ty = binf.byref_arg_types
+    orig_res = np.empty_like(llvm_res)
+    if mode == 'CPU':
+        ct_in_ty, ct_mat_ty, _, _, ct_res_ty = binf.byref_arg_types
 
-    ct_vec = vector.ctypes.data_as(ctypes.POINTER(ct_in_ty))
-    ct_mat = matrix.ctypes.data_as(ctypes.POINTER(ct_mat_ty))
+        ct_vec = vector.ctypes.data_as(ctypes.POINTER(ct_in_ty))
+        ct_mat = matrix.ctypes.data_as(ctypes.POINTER(ct_mat_ty))
+        ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
 
+        binf.c_func(ct_vec, ct_mat, x, y, ct_res)
+    else:
+        binf.cuda_wrap_call(vector, matrix, np.int32(x), np.int32(y), orig_res)
 
-    orig_res = copy.deepcopy(llvm_res)
-    ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
-
-    binf.c_func(ct_vec, ct_mat, x, y, ct_res)
     custom_name = None
 
     with pnlvm.LLVMBuilderContext() as ctx:
@@ -53,10 +56,13 @@ def test_fixed_dimensions__pnl_builtin_vxm():
         builder.ret_void()
 
     binf2 = pnlvm.LLVMBinaryFunction.get(custom_name)
-    new_res = copy.deepcopy(llvm_res)
-    ct_res_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
-    ct_res = new_res.ctypes.data_as(ct_res_ty)
+    new_res = np.empty_like(llvm_res)
 
-    binf2(ct_vec, ct_mat, ct_res)
+    if mode == 'CPU':
+        ct_res = new_res.ctypes.data_as(ctypes.POINTER(ct_res_ty))
+
+        binf2(ct_vec, ct_mat, ct_res)
+    else:
+        binf2.cuda_wrap_call(vector, matrix, new_res)
 
     assert np.array_equal(orig_res, new_res)

@@ -11,7 +11,7 @@
 import atexit
 import ctypes
 import numpy as np
-import os
+import os, re
 
 from llvmlite import ir
 
@@ -22,7 +22,7 @@ _all_modules = set()
 
 @atexit.register
 def module_count():
-    if str(os.environ.get("PNL_LLVM_DUMP")).find("mod_count") != -1:
+    if str(os.environ.get("PNL_LLVM_DEBUG")).find("mod_count") != -1:
         print("Total LLVM modules: ", len(_all_modules))
 
 # TODO: Should this be selectable?
@@ -58,7 +58,13 @@ class LLVMBuilderContext:
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
-        return name + '-' + str(LLVMBuilderContext.uniq_counter)
+        name = re.sub(r"[- ()\[\]]", "_", name)
+        return name + '_' + str(LLVMBuilderContext.uniq_counter)
+
+    def get_builtin(self, name, args, function_type = None):
+        if name in ('pow', 'log', 'exp'):
+            return self.get_llvm_function("__pnl_builtin_" + name)
+        return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def get_llvm_function(self, name):
         if hasattr(name, '_llvm_symbol_name'):
@@ -137,6 +143,38 @@ def _find_llvm_function(name, mods = _all_modules):
     if not isinstance(f, ir.Function):
         raise ValueError("No such function: {}".format(name))
     return f
+
+def _gen_cuda_kernel_wrapper_module(function):
+    module = ir.Module(name="wrapper_"  + function.name)
+
+    decl_f = ir.Function(module, function.type.pointee, function.name)
+    assert decl_f.is_declaration
+    kernel_func = ir.Function(module, function.type.pointee, function.name + "_cuda_kernel")
+    block = kernel_func.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+
+    # Calculate global id of a thread in x dimension
+    intrin_ty = ir.FunctionType(ir.IntType(32), [])
+    tid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.tid.x")
+    ntid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ntid.x")
+    ctaid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ctaid.x")
+    global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
+    global_id = builder.add(global_id, builder.call(tid_x_f, []))
+
+    # Index all pointer arguments
+    # TODO: This might need some more flexibility
+    indexed_args = []
+    for arg in kernel_func.args:
+        if isinstance(arg.type, ir.PointerType):
+            arg = builder.gep(arg, [global_id])
+        indexed_args.append(arg)
+    builder.call(decl_f, kernel_func.args)
+    builder.ret_void()
+
+    # Add kernel mark metadata
+    module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
+
+    return module
 
 _field_count = 0
 _struct_count = 0

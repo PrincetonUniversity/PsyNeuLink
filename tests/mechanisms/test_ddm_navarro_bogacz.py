@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from psyneulink.core.components.functions.function import BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator, FunctionError, NormalDist
-from psyneulink.library.components.mechanisms.processing.integrator.ddm import ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY
+from psyneulink.core.components.functions.integratorfunctions import BogaczEtAl, NavarroAndFuss
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 @pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
 def test_nf_vs_bogacz():

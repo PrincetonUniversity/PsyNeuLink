@@ -2,6 +2,10 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
+import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.transferfunctions
+
+
 class TestContrastiveHebbian:
 
     def test_scheduled_contrastive_hebbian(self):
@@ -46,8 +50,8 @@ class TestContrastiveHebbian:
                 target_size=4,
                 mode=pnl.SIMPLE_HEBBIAN,
                 enable_learning=True,
-                function=pnl.Linear,
-                learning_function=pnl.Hebbian,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
+                learning_function=psyneulink.core.components.functions.learningfunctions.Hebbian,
                 minus_phase_termination_criterion=.01,
                 plus_phase_termination_criterion=.01,
                 # auto=0,
@@ -110,10 +114,10 @@ class TestContrastiveHebbian:
                 separated=False,
                 mode=pnl.SIMPLE_HEBBIAN,
                 enable_learning=True,
-                function=pnl.Linear,
+                function=psyneulink.core.components.functions.transferfunctions.Linear,
                 integrator_mode=True,
                 integration_rate=0.2,
-                learning_function=pnl.Hebbian,
+                learning_function=psyneulink.core.components.functions.learningfunctions.Hebbian,
                 minus_phase_termination_criterion=.01,
                 plus_phase_termination_criterion=.01,
                 # auto=0,

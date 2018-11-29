@@ -336,7 +336,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import method_type
-from psyneulink.core.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
+from psyneulink.core.components.functions.integratorfunctions import Integrator, DriftDiffusionIntegrator, THRESHOLD, \
+    STARTING_POINT, BogaczEtAl, NF_Results, NavarroAndFuss
+from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -1113,7 +1115,7 @@ class DDM(ProcessingMechanism_Base):
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
     def reinitialize(self, *args, execution_context=None):
-        from psyneulink.core.components.functions.function import Integrator
+        from psyneulink.core.components.functions.integratorfunctions import Integrator
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function_object, Integrator):

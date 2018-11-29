@@ -11,7 +11,7 @@ import psyneulink as pnl
 
 
 # In[15]:
-
+import psyneulink.core.components.functions.transferfunctions
 
 nouns=['oak','pine','rose','daisy','canary','robin','salmon','sunfish']
 relations=['is','has','can']
@@ -121,30 +121,30 @@ nouns_in = pnl.TransferMechanism(name="nouns_input",default_variable=np.zeros(r_
 rels_in = pnl.TransferMechanism(name="rels_input",default_variable=np.zeros(r_2))
 
 h1 = pnl.TransferMechanism(name="hidden_nouns",
-                          size=8,
-                          function=pnl.Logistic)
+                           size=8,
+                           function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 h2 = pnl.TransferMechanism(name="hidden_mixed",
-                          size=15,
-                          function=pnl.Logistic)
+                           size=15,
+                           function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 out_sig_I = pnl.TransferMechanism(name="sig_outs_I",
-                                 size=len(nouns),
-                                 function=pnl.Logistic)
+                                  size=len(nouns),
+                                  function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 out_sig_is = pnl.TransferMechanism(name="sig_outs_is",
-                                 size=len(is_list),
-                                 function=pnl.Logistic)
+                                   size=len(is_list),
+                                   function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 
 out_sig_has = pnl.TransferMechanism(name="sig_outs_has",
-                                 size=len(has_list),
-                                 function=pnl.Logistic)
+                                    size=len(has_list),
+                                    function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 
 out_sig_can = pnl.TransferMechanism(name="sig_outs_can",
-                                 size=len(can_list),
-                                 function=pnl.Logistic)
+                                    size=len(can_list),
+                                    function=psyneulink.core.components.functions.transferfunctions.Logistic)
 
 #biases
 bh1 = pnl.TransferMechanism(name="bias_hidden_nouns",

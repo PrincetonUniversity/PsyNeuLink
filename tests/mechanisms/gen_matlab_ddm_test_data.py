@@ -1,6 +1,6 @@
 import numpy as np
 
-from psyneulink.core.components.functions.function import NavarroAndFuss
+from psyneulink.core.components.functions.integratorfunctions import NavarroAndFuss
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 def gen_matlab_ddm_test_data(non_degenerate_only=False):

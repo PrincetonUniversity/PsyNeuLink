@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import Linear, Logistic, UserDefinedFunction
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing import TransferMechanism
 from psyneulink.core.components.process import Process

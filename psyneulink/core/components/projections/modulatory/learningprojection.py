@@ -166,7 +166,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base

@@ -249,7 +249,9 @@ import itertools
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import Function_Base, ModulationParam, OBJECTIVE_FUNCTION, SEARCH_FUNCTION, SEARCH_SPACE, SEARCH_TERMINATION_FUNCTION, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_FUNCTION, \
+    SEARCH_SPACE, SEARCH_TERMINATION_FUNCTION
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
@@ -275,7 +277,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                       \
     objective_mechanism=None,                              \
     learning_function=None,                                \
-    evaluation_function=None,                               \
+    evaluation_function=None,                              \
     search_function=None,                                  \
     search_termination_function=None,                      \
     search_space=None,                                     \

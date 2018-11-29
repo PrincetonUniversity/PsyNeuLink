@@ -1,7 +1,17 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.function import AGTUtilityIntegrator, AccumulatorIntegrator, AdaptiveIntegrator, BackPropagation, BogaczEtAl, CombineMeans, ConstantIntegrator, Distance, DriftDiffusionIntegrator, Exponential, ExponentialDist, FHNIntegrator, FunctionError, GammaDist, Hebbian, Integrator, Linear, LinearCombination, LinearMatrix, Logistic, NavarroAndFuss, NormalDist, OrnsteinUhlenbeckIntegrator, Reduce, Reinforcement, SimpleIntegrator, SoftMax, Stability, TDLearning, UniformDist, UniformToNormalDist, WaldDist
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
+from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
+    ExponentialDist, \
+    UniformDist, GammaDist, WaldDist
+from psyneulink.core.components.functions.integratorfunctions import Integrator, SimpleIntegrator, ConstantIntegrator, \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FHNIntegrator, AccumulatorIntegrator, \
+    AGTUtilityIntegrator, BogaczEtAl, NavarroAndFuss
+from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
+from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 
 class TestProcessingMechanismFunctions:

@@ -1,6 +1,8 @@
 
 import numpy as np
+import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
+import psyneulink.core.components.functions.objectivefunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -64,7 +66,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
         benchmark(lambda _:0,0)
         pytest.xfail(fail)
         return
-    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -77,14 +79,36 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(variable, metric, normalize, fail, expected, benchmark):
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     if fail is not None:
         # This is a rather ugly hack to stop pytest benchmark complains
         benchmark.disabled = True
         benchmark(lambda _:0,0)
         pytest.xfail(fail)
         return
-    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(e.execute, variable)
+    assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
+
+@pytest.mark.cuda
+@pytest.mark.llvm
+@pytest.mark.function
+@pytest.mark.distance_function
+@pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
+@pytest.mark.benchmark
+@pytest.mark.skipif(not pnlvm.ptx_enabled, reason="PTX engine not enabled/available")
+def test_ptx_cuda(variable, metric, normalize, fail, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    res = benchmark(f.bin_function, variable)
+    if fail is not None:
+        # This is a rather ugly hack to stop pytest benchmark complains
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.xfail(fail)
+        return
+    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    e = pnlvm.execution.FuncExecution(f, None)
+    res = benchmark(e.cuda_execute, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)

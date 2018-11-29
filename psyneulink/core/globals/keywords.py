@@ -579,6 +579,7 @@ LOGISTIC_FUNCTION = "Logistic Function"
 RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
+NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"

@@ -3,6 +3,8 @@ import psyneulink as pnl
 import itertools
 
 # Setting up default network parameters
+import psyneulink.core.components.functions.transferfunctions
+
 DEFAULT_HIDDEN_PATH_SIZE = 1
 DEFAULT_OUTPUT_PATH_SIZE = 1
 DEFAULT_LEARNING_RATE = 0.3
@@ -43,7 +45,8 @@ class MultitaskingModel:
                                                 name='task_input')
         self.hidden_layer = pnl.TransferMechanism(size=self.hidden_layer_size,
                                                   name='hidden',
-                                                  function=pnl.Logistic)
+                                                  function=psyneulink.core.components.functions.transferfunctions
+                                                  .Logistic)
         self.hidden_bias = pnl.TransferMechanism(default_variable=np.ones((self.hidden_layer_size,)),
                                                  name='hidden bias')
         self.input_layers = self._generate_io_layers('input')
