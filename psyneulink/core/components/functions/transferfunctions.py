@@ -1432,7 +1432,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         numerator = builder.fdiv(denom, numerator)
         numerator = builder.call(exp_f, [numerator])
 
-        import math pi
+        from math import pi
         denom = ctx.get_builtin(2*pi, [ctx.float_ty])
         denom = builder.fmul(standard_deviation, denom)
         denom = builder.sqrtpd(denom)
