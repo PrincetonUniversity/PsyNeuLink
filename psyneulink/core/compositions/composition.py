@@ -420,7 +420,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class _CompilationData(Parameters):
         execution = None
 
-
     def __init__(
         self,
         name=None,
@@ -4135,6 +4134,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         control_allocation=None,
         num_trials=1,
         runtime_params=None,
+        base_execution_id=None,
         execution_id=None,
         context=None
     ):
@@ -4152,8 +4152,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # (NECESSARY, SINCE adjustment_cost (?AND duration_cost) DEPEND ON PREVIOUS VALUE OF ControlSignal,
         #  AND ALL NEED TO BE WITH RESPECT TO THE *SAME* PREVIOUS VALUE
         # Assign control_allocation current being sampled
-        # KDM 11/28/18: below sets the control allocation for outer execution_id, which is then
-        # copied into all simulation execution contexts
         if control_allocation is not None:
             self.model_based_optimizer.apply_control_allocation(
                 control_allocation,
@@ -4162,55 +4160,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context=context
             )
 
-        simulation_execution_ids = []
-
-        for i in range(num_trials):
-            sim_execution_id = self.model_based_optimizer.get_next_sim_id(execution_id)
-            print('simulation', sim_execution_id, 'base', execution_id)
-
-            try:
-                self.model_based_optimizer.parameters.simulation_ids.get(execution_id).append(sim_execution_id)
-            except AttributeError:
-                self.model_based_optimizer.parameters.simulation_ids.set([sim_execution_id], execution_id)
-
-            self._initialize_from_context(sim_execution_id, execution_id)
-            simulation_execution_ids.append(sim_execution_id)
-
         net_control_allocation_outcomes = []
 
-        for sim_execution_id in simulation_execution_ids:
+        for i in range(num_trials):
             inputs = {}
             for j in range(len(self.model_based_optimizer.shadow_external_inputs)):
                 inputs[self.model_based_optimizer.shadow_external_inputs[j]] = predicted_input[j][i]
 
-            self.parameters.context.get(sim_execution_id).execution_phase = ContextFlags.SIMULATION
-            # KDM 11/28/18: is setting below necessary? would think it's already in PROCESSING phase beforehand
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
             for output_state in self.output_states:
                 for proj in output_state.efferents:
-                    proj.parameters.context.get(sim_execution_id).execution_phase = ContextFlags.PROCESSING
+                    proj.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-            self.run(
-                inputs=inputs,
-                reinitialize_values=reinitialize_values,
-                execution_id=sim_execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+            self.run(inputs=inputs,
+                     reinitialize_values=reinitialize_values,
+                     execution_id=execution_id,
+                     runtime_params=runtime_params,
+                     context=context)
 
             # KAM Note: Need to manage execution_id here in order to report simulation results on "outer" comp
             if context.initialization_status != ContextFlags.INITIALIZING:
-                simulation_results = self.parameters.simulation_results.get(execution_id)
-                if simulation_results is None:
-                    simulation_results = []
-                simulation_results.append(self.get_output_values(sim_execution_id))
-                self.parameters.simulation_results.set(simulation_results, execution_id)
+                try:
+                    self.parameters.simulation_results.get(base_execution_id).append(self.get_output_values(execution_id))
+                except AttributeError:
+                    self.parameters.simulation_results.set([self.get_output_values(execution_id)], base_execution_id)
 
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-            outcome = self.model_based_optimizer.input_state.parameters.value.get(sim_execution_id)
+            outcome = self.model_based_optimizer.input_state.parameters.value.get(execution_id)
             net_outcome = outcome - self.model_based_optimizer.combine_costs(
                 [
-                    c.compute_costs(c.parameters.variable.get(sim_execution_id), execution_id=sim_execution_id)
+                    c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
                     for c in self.model_based_optimizer.control_signals
                 ]
             )
@@ -4248,6 +4228,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_input_values(self, execution_context=None):
         return [input_state.parameters.value.get(execution_context) for input_state in self.input_CIM.input_states]
+
+    @property
+    def runs_simulations(self):
+        return True
 
     @property
     def simulation_results(self):

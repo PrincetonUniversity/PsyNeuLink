@@ -414,7 +414,6 @@ class OptimizationFunction(Function_Base):
 
         return new_sample, new_value, samples, values
 
-
 ASCENT = 'ascent'
 DESCENT = 'descent'
 
@@ -985,7 +984,7 @@ class GridSearch(OptimizationFunction):
                     _progress_bar_count +=1
 
                 # Evaluate objective_function for current sample
-                value = self.objective_function(sample)
+                value = self.objective_function(sample, execution_id=execution_id)
 
                 # Evaluate for optimal value
                 if self.direction is MAXIMIZE:

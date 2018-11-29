@@ -397,8 +397,8 @@ from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism imp
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Function
-from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.featureinputstate import FeatureInputState
+from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, ControlSignalCosts
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -878,6 +878,18 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
+    def _set_up_simulation(self, base_execution_id=None):
+        sim_execution_id = self.get_next_sim_id(base_execution_id)
+
+        try:
+            self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
+        except AttributeError:
+            self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
+
+        self.agent_rep._initialize_from_context(sim_execution_id, base_execution_id, override=False)
+
+        return sim_execution_id
+
     def evaluation_function(self, control_allocation, execution_id=None):
         '''Compute `EVC <OptimizationControlMechanism_EVC>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
@@ -893,25 +905,40 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
-        return self.agent_rep.evaluate(
-            self.parameters.feature_values.get(execution_id),
-            control_allocation,
-            self.parameters.num_estimates.get(execution_id),
-            execution_id=execution_id,
-            context=self.function_object.parameters.context.get(execution_id)
-        )
+        if self.agent_rep.runs_simulations:
+            sim_execution_id = self._set_up_simulation(execution_id)
+
+            result = self.agent_rep.evaluate(
+                self.parameters.feature_values.get(execution_id),
+                control_allocation,
+                self.parameters.num_estimates.get(execution_id),
+                base_execution_id=execution_id,
+                execution_id=sim_execution_id,
+                context=self.function_object.parameters.context.get(execution_id)
+            )
+        else:
+            result = self.agent_rep.evaluate(
+                self.parameters.feature_values.get(execution_id),
+                control_allocation,
+                self.parameters.num_estimates.get(execution_id),
+                execution_id=execution_id,
+                context=self.function_object.parameters.context.get(execution_id)
+            )
+
+        return result
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.'''
+        value = self.parameters.value.get(execution_id)
+        if value is None:
+            value = copy.deepcopy(self.instance_defaults.value)
+
         for i in range(len(control_allocation)):
-            value = self.parameters.value.get(execution_id)
-            if value is None:
-                value = copy.deepcopy(self.instance_defaults.value)
             value[i] = np.atleast_1d(control_allocation[i])
 
         self.parameters.value.set(value, execution_id)
-        self._update_output_states(value, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
+        self._update_output_states(value, execution_id=execution_id, runtime_params=runtime_params, context=ContextFlags.COMPOSITION)
 
     # @property
     # def feature_values(self):
