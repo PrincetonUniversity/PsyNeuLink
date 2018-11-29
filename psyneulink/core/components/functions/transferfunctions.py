@@ -617,7 +617,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
-        output * (1-output)
+        gain * scale * output * (1-output)
 
     Arguments
     ---------
@@ -882,7 +882,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{1}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(variable+bias-x\_0)+offset)}})^2}
+        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(
+       variable+bias-x\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1096,7 +1097,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
 
-        # FIX: ASSUMES ALL SCALE IS DEFAULT;  MULTIPLY BY SCALE?
         from math import e
         return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
 
