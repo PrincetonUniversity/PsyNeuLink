@@ -1,30 +1,27 @@
-import numpy as np
 import pytest
-import typecheck
-from math import isclose
+import numpy as np
 
-from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator, FunctionError, NormalDist
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
-
-from psyneulink.core.scheduling.condition import Never, WhenFinished
-from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY
 
+@pytest.mark.skip(reason="Requires MATLAB engine for NavarroAndFuss, NavarroAndFuss is deprecated as well.")
 def test_nf_vs_bogacz():
-
+    """
+    This test compares the NavarroAndFuss() and bogaczEtAl (renamed DriftDiffusionAnalytical) against eachother.
+    """
     NF = DDM(
         name='DDM',
         function=NavarroAndFuss()
     )
 
+    # Create a BogaczEtAl Function, make sure to set shenav_et_al_compat_mode=True to get exact behavior
+    # of old MATLAB code (Matlab/DDMFunctions/ddmSimFRG.m)
     B = DDM(
         name='DDM',
         function=BogaczEtAl(shenhav_et_al_compat_mode=True)
     )
 
-    NUM_CHECKS = 1000
+    NUM_CHECKS = 5000
     rng = np.random.RandomState(100)
     for i in range(NUM_CHECKS):
         r_stim = rng.uniform(-5, 5)
@@ -35,17 +32,18 @@ def test_nf_vs_bogacz():
         r_t0 = rng.uniform(0, 3)
         r_noise = rng.uniform(0,1)
 
-        print("\n{} of {}".format(i, NUM_CHECKS))
-        print("\tr_stim = {}".format(r_stim))
-        print("\tr_drift_rate = {}".format(r_drift_rate))
-        print("\tr_threshold = {}".format(r_threshold))
-        print("\tr_starting_point = {}".format(r_starting_point))
-        print("\tr_bias = {}".format(r_bias))
-        print("\tr_noise = {}".format(r_noise))
-        print("\tr_t0 = {}".format(r_t0))
-        print("ddm_params.z = {threshold}; ddm_params.c = {noise}; ddm_params.T0 = {t0}; [meanERs,meanRTs,meanDTs,condRTs,condVarRTs,condSkewRTs] = ddmSimFRG({drift_rate},{bias}, ddm_params, 1)".format(
-                threshold=r_threshold, noise=r_noise, bias=r_bias, drift_rate=r_stim * r_drift_rate, t0=r_t0))
-        NF.function_object.drift_rate=r_stim*r_drift_rate
+        # These print statements can be useful for debugging. Disable in general though.
+        # print("\n{} of {}".format(i, NUM_CHECKS))
+        # print("\tr_stim = {}".format(r_stim))
+        # print("\tr_drift_rate = {}".format(r_drift_rate))
+        # print("\tr_threshold = {}".format(r_threshold))
+        # print("\tr_starting_point = {}".format(r_starting_point))
+        # print("\tr_bias = {}".format(r_bias))
+        # print("\tr_noise = {}".format(r_noise))
+        # print("\tr_t0 = {}".format(r_t0))
+        # print("ddm_params.z = {threshold}; ddm_params.c = {noise}; ddm_params.T0 = {t0}; [meanERs,meanRTs,meanDTs,condRTs,condVarRTs,condSkewRTs] = ddmSimFRG({drift_rate},{bias}, ddm_params, 1)".format(
+        #        threshold=r_threshold, noise=r_noise, bias=r_bias, drift_rate=r_stim * r_drift_rate, t0=r_t0))
+        NF.function_object.drift_rate=r_stim*r_drift_rate # NavarroAndFuss doesn't multiply stimulus to drift, do it here.
         NF.function_object.threshold=r_threshold
         NF.function_object.starting_point=r_bias
         NF.function_object.t0=r_t0
