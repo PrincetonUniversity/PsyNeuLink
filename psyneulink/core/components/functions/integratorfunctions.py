@@ -12,6 +12,7 @@
 
 * `Integrator`
 * `SimpleIntegrator`
+* `InteractiveActivation`
 * `ConstantIntegrator`
 * `Buffer`
 * `AdaptiveIntegrator`
@@ -63,7 +64,7 @@ __all__ = ['Integrator', 'IntegratorFunction', 'SimpleIntegrator', 'ConstantInte
            'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'OrnsteinUhlenbeckIntegrator', 'FHNIntegrator',
            'AccumulatorIntegrator', 'LCAIntegrator', 'AGTUtilityIntegrator', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY',
            'THRESHOLD', 'THRESHOLD_VARIABILITY', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'NON_DECISION_TIME',
-           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss']
+           'kwBogaczEtAl', 'kwNavarrosAndFuss', 'BogaczEtAl', 'NF_Results', 'NavarroAndFuss', 'InteractiveActivation']
 
 
 class IntegratorFunction(Function_Base):
@@ -809,8 +810,13 @@ class InteractiveActivation(Integrator):  # ------------------------------------
 
     .. math::
 
-        previous_value + rate * variable * (max_val-previous_value) + noise if variable is > 0,
-        otherwise previous_value + rate * variable * (previous_value-min_value) + noise
+        if\ variable > 0:\ previous\_value + rate * variable * (max\_val-previous\_value) + noise
+
+    .. math::
+        if\ variable < 0:\ previous\_value + rate * variable * (previous\_value-min\_value) + noise
+
+    .. math::
+        if\ variable = 0:\ previous\_value
 
 
     Arguments
@@ -975,9 +981,6 @@ class InteractiveActivation(Integrator):  # ------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <InteractiveActivation.previous_value>`
-        according to `previous_value <InteractiveActivation.previous_value>` + `rate <InteractiveActivation.rate>` *`variable
-        <variable.InteractiveActivation.variable>` + `noise <InteractiveActivation.noise>`;
 
         Arguments
         ---------
@@ -993,7 +996,7 @@ class InteractiveActivation(Integrator):  # ------------------------------------
         Returns
         -------
 
-        updated value of integral : 2d np.array
+        updated value of integral : 2d array
 
         """
 
