@@ -9970,6 +9970,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
+    shenhav_et_al_compat_mode: bool : default False
+        whether Shenhav et al. compatibility mode is set. See shenhav_et_al_compat_mode property.
+
+
     Attributes
     ----------
 
@@ -10010,6 +10014,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
+
     """
 
     componentName = kwBogaczEtAl
@@ -10034,7 +10039,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                  t0: parameter_spec = .200,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 shenhav_et_al_compat_mode=False):
+
+        self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
@@ -10059,6 +10067,47 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         # disabled because it happens during normal execution, may be confusing
         # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
         self._output_type = None
+
+    @property
+    def shenhav_et_al_compat_mode(self):
+        """
+        Get the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        the analytic computations of mean error rate and reaction time to match exactly the
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        should only effect edges cases that involve the following cases:
+
+            - Floating point overflows and underflows are ignored when computing mean RT and mean ER
+            - Exponential expressions used in cacluating mean RT and mean ER are bounded by 1e-12 to 1e12.
+            - Decision time is not permitted to be negative and will be set to 0 in these cases. Thus RT
+              will be RT = non-decision-time in these cases.
+
+        Returns
+        -------
+        Shenhav et al. compatible mode setting : (bool)
+
+        """
+        return self._shenhav_et_al_compat_mode
+
+    @shenhav_et_al_compat_mode.setter
+    def shenhav_et_al_compat_mode(self, value):
+        """
+        Set the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        the analytic computations of mean error rate and reaction time to match exactly the
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        should only effect edges cases that involve the following cases:
+
+            - Floating point overflows and underflows are ignored when computing mean RT and mean ER
+            - Exponential expressions used in cacluating mean RT and mean ER are bounded by 1e-12 to 1e12.
+            - Decision time is not permitted to be negative and will be set to 0 in these cases. Thus RT
+              will be RT = non-decision-time in these cases.
+
+        Arguments
+        ---------
+
+        value : bool
+            Set True to turn on Shenhav et al. compatibility mode, False for off.
+        """
+        self._shenhav_et_al_compat_mode = value
 
     def function(self,
                  variable=None,
@@ -10127,23 +10176,31 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
             if np.abs(y0tilde) > threshold:
-                #y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
-                y0tilde = -1 * (y0tilde < 0) * threshold + (y0tilde >=0 ) * threshold
+                # First difference between Shenhav et al. DDM code and PNL's.
+                if self.shenhav_et_al_compat_mode:
+                    y0tilde = -1 * (y0tilde < 0) * threshold + (y0tilde >=0 ) * threshold
+                else:
+                    y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
 
             x0tilde = y0tilde / drift_rate_normed
 
-            with np.errstate(over='ignore', under='ignore'):
-                try:
-                    # rt = ztilde * np.tanh(ztilde * atilde) + \
-                    #      ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
-                    #          np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                    # er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
-                    #      ((1 - np.exp(-2 * x0tilde * atilde)) / (
-                    #      np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
+            # Whether we should ignore or raise floating point over and underflow exceptions.
+            # Shenhav et al. MATLAB code ignores them.
+            ignore_or_raise = "raise"
+            if self.shenhav_et_al_compat_mode:
+                ignore_or_raise = "ignore"
 
-                    exp_neg2_x0tilde_atilde = np.nanmax([1e-12, np.exp(-2 * x0tilde * atilde)])
-                    exp_2_ztilde_atilde = np.nanmin([1e12, np.exp(2 * ztilde * atilde)])
-                    exp_neg2_ztilde_atilde = np.nanmax([1e-12, np.exp(-2 * ztilde * atilde)])
+            with np.errstate(over=ignore_or_raise, under=ignore_or_raise):
+                try:
+                    # Lets precompute these common sub-expressions
+                    exp_neg2_x0tilde_atilde = np.exp(-2 * x0tilde * atilde)
+                    exp_2_ztilde_atilde = np.exp(2 * ztilde * atilde)
+                    exp_neg2_ztilde_atilde = np.exp(-2 * ztilde * atilde)
+
+                    if self.shenhav_et_al_compat_mode:
+                        exp_neg2_x0tilde_atilde = np.nanmax([1e-12, exp_neg2_x0tilde_atilde])
+                        exp_2_ztilde_atilde = np.nanmin([1e12, exp_2_ztilde_atilde])
+                        exp_neg2_ztilde_atilde = np.nanmax([1e-12, exp_neg2_ztilde_atilde])
 
                     rt = ztilde * np.tanh(ztilde * atilde) + \
                          ((2 * ztilde * (1 - exp_neg2_x0tilde_atilde)) / (
@@ -10151,8 +10208,10 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
                     er = 1 / (1 + exp_2_ztilde_atilde) - \
                          ((1 - exp_neg2_x0tilde_atilde) / (exp_2_ztilde_atilde - exp_neg2_ztilde_atilde))
 
-                    if rt < 0:
-                        rt = 0
+                    # Fail safe to prevent negative mean RT's. Shenhav et al. do this.
+                    if self.shenhav_et_al_compat_mode:
+                        if rt < 0:
+                            rt = 0
 
                     rt = rt + t0
 

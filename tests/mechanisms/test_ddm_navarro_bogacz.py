@@ -21,7 +21,7 @@ def test_nf_vs_bogacz():
 
     B = DDM(
         name='DDM',
-        function=BogaczEtAl()
+        function=BogaczEtAl(shenhav_et_al_compat_mode=True)
     )
 
     NUM_CHECKS = 1000
