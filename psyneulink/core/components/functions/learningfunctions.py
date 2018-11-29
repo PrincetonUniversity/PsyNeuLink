@@ -44,11 +44,17 @@ __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'LEARNING_ACTIVATION_FUNCTION','LEARNING_ACTIVATION_INPUT','LEARNING_ACTIVATION_OUTPUT',
            'LEARNING_ERROR_OUTPUT','AUTOASSOCIATIVE']
 
+# Inidices of terms in variable:
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
 AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
+# Argument and attribute names:
+ACTIVATION_INPUT = 'activation_input'
+ACTIVATION_OUTPUT = 'activation_output'
+ERROR_SIGNAL = 'error_signal'
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
@@ -1213,43 +1219,46 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         name=None,                     \
         prefs=None)
 
-    Implements a function that returns an error term for a single item in an input array, scaled by the learning_rate.
+    Calculate error term for a single item in an input array, scaled by the learning_rate.
 
-    Reinforcement takes an array with a single non-zero value (`activation_output <Reinforcement.activation_output>`),
-    and returns an array of the same length with the single non-zero value replaced by the `error_signal
-    <Reinforcement.error_signal>` scaled by the `learning_rate <Reinforcement.learning_rate>`.
+    `function <Reinforcement.function>` takes an array (`activation_output <Reinforcement.activation_output>`) with
+    only one non-zero value, and returns an array of the same length with the one non-zero value replaced by
+    :math:`\\Delta w` -- the `error_signal <Reinforcement.error_signal>` scaled by the `learning_rate
+    <Reinforcement.learning_rate>`:
+
+    .. math::
+        \\Delta w_i = learning\_rate * error\_signal_i\ if\ activation\_output_i \\neq 0,\ otherwise\ 0
+
     The non-zero item in `activation_output <Reinforcement.activation_output>` can be thought of as the predicted
     likelihood of a stimulus or value of an action, and the `error_signal <Reinforcement.error_signal>` as the error in
     the prediction for that value.
 
+    .. _Reinforcement_Note:
+
     .. note::
        To preserve compatibility with other LearningFunctions:
 
-       * the **variable** argument of both the constructor and calls to the Reinforcement `function
-         <Reinforcement.function>` must have three items, although only the 2nd and 3rd items are used
-         (for the `activation_output <Reinforcement.activation_output>` and `error_signal
-         <Reinforcement.error_signal>` attributes, respectively);
+       * the **variable** argument of both the constructor and calls to `function <Reinforcement.function>`
+         must have three items, although only the 2nd and 3rd items are used; these are referenced by the
+         `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`
+         attributes, respectively (the first item is used by other LearningFunctions as their `activation_input
+         <LearningFunction.activation_input>` attribute).
        ..
-       * the Reinforcement `function <Reinforcement.function>` returns two copies of the error array
+       * `function <Reinforcement.function>` returns two copies of the error array
          (the first is a "place-marker", where a matrix of weights changes is often returned).
 
     Arguments
     ---------
 
-    default_variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+    default_variable : List or 2d array : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
 
-           * `activation_input <Reinforcement.activation_input>` (1d np.array);
+           * `activation_input <Reinforcement.activation_input>` (1d array) (not used);
 
-           * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value);
+           * `activation_output <Reinforcement.activation_output>` (1d array with only one non-zero value);
 
-           * `error_signal <Reinforcement.error_signal>`  (1d np.array with a single value).
-
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
-    COMMENT
+           * `error_signal <Reinforcement.error_signal>`  (1d array with a single scalar element).
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -1281,23 +1290,17 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
             * `error_signal <Reinforcement.error_signal>`.
 
-    activation_input : 1d np.array
+    activation_input : 1d array
         first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for compatibility
-        with other `LearningFunctions <LearningFunction>`).
+        with other LearningFunctions).
 
-    activation_output : 1d np.array
-        an array containing a single "prediction" or "action" value as one of its elements, the remainder of which
-        are zero.
+    activation_output : 1d array
+        second item of `variable <Reinforcement.variable>`;  contains a single "prediction" or "action" value as one
+        of its elements, the others of which are zero.
 
-    error_signal : 1d np.array
-        contains a single item, specifying the error associated with the non-zero item in `activation_output
-        <Reinforcement.activation_output>`.
-
-    COMMENT:
-    activation_function : Function or function : SoftMax
-        the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
-        return an array with a single non-zero value.
-    COMMENT
+    error_signal : 1d array
+        third item of `variable <Reinforcement.variable>`; contains a single scalar value, specifying the error
+        associated with the non-zero item in `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -1377,7 +1380,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             if np.count_nonzero(variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
                 raise ComponentError(
-                    "Second item ({}) of variable for {} must be an array with a single non-zero value "
+                    "Second item ({}) of variable for {} must be an array with only one non-zero value "
                     "(if output Mechanism being trained uses softmax,"
                     " its \'output\' arg may need to be set to to PROB)".
                     format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
@@ -1397,31 +1400,21 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  params=None,
                  context=None,
                  **kwargs):
-        """Return an error array for the specified item of activation_output scaled by the learning_rate.
-
-        Returns a 1d error array with a single non-zero value in the same position as the non-zero item
-        in `activation_output <Reinforcement.activation_output>` (2nd item of the **variable** argument),
-        that is the `error_signal <Reinforcement.error_signal>` (3rd item of
-        **variable** argument) scaled by the `learning_rate <Reinforement.learning_rate>`.
-
-        .. note::
-           In order to preserve compatibilty with other `LearningFunctions <LearningFunction>`:
-
-               * **variable** must have three items, although only the 2nd and 3rd are not used;
-               ..
-               * `function <Reinforcement.function>` returns two copies of the error array.
+        """
 
         Arguments
         ---------
 
         variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
-           must have three items that are the values for (in order):
+           must have three items that are (in order):
 
-               * `activation_input <Reinforcement.activation_input>` (not used),
+               * `activation_input <Reinforcement.activation_input>` (not used);
 
-               * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+               * `activation_output <Reinforcement.activation_output>` (1d array with only one non-zero value);
 
-               * `error_signal <Reinforcement.error_signal>` (1d np.array with a single item).
+               * `error_signal <Reinforcement.error_signal>` (1d array with a single scalar element);
+
+           (see `note <Reinforcement_Note>` above).
 
         params : Dict[param keyword: param value] : default None
            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -1431,15 +1424,15 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         Returns
         -------
 
-        error array : List[1d np.array, 1d np.array]
-            Two copies of a 1d array with a single non-zero error term.
+        error array : List[1d array, 1d array]
+            Both 1d arrays are the same, with a single non-zero error term (see `note <Reinforcement_Note>` above).
 
         """
 
         self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        output = self.get_current_function_param('activation_output', execution_id)
-        error = self.get_current_function_param('error_signal', execution_id)
+        output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
+        error = self.get_current_function_param(ERROR_SIGNAL, execution_id)
         learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1688,8 +1681,8 @@ class BackPropagation(LearningFunction):
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items: "
-                                 "activation_input, activation_output, and error_signal)".
-                                 format(self.name, variable))
+                                 "{}, {}, and {})".
+                                 format(self.name, variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         return variable
 
@@ -1860,7 +1853,7 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.get_current_function_param('error_signal', execution_id))
+        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, execution_id))
 
         # Derivative of the output activity
         activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
