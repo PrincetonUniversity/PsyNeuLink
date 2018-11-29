@@ -1453,11 +1453,14 @@ class BackPropagation(LearningFunction):
         name=None,                                       \
         prefs=None)
 
-    Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
-    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_
-     (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
-    learning algorithm.  The weight change matrix is computed as:
+    Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
+    terms.
 
+    `function <BackPropagation.function>` calculates a matrix of weight changes using the
+    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_ (`Generalized Delta Rule
+    <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm, computed as:
+
+    COMMENT:
         *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
         <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
 
@@ -1467,7 +1470,7 @@ class BackPropagation(LearningFunction):
 
                  is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
 
-               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\cdot`
+               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\bullet`
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
@@ -1482,17 +1485,46 @@ class BackPropagation(LearningFunction):
 
                  is the derivative of the activation function responsible for generating `activation_output
                  <BackPropagation.activation_output>` at the point that generates each of its entries.
+    COMMENT
+
+        .. math::
+            weight\_change\_matrix = learning\_rate * activation\_input * \\frac{\delta E}{\delta W}
+
+        where
+
+        .. math::
+            \\frac{\delta E}{\delta W} = \\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}
+
+        is the derivative of the error_signal with respect to the weights, in which:
+
+          :math:`\\frac{\delta E}{\delta A} = error\_matrix \\bullet error\_signal`
+
+          is the derivative of the error with respect to activation_output (i.e., the weighted contribution to the
+          error_signal of each unit that receives activity from the weight matrix being learned), and
+
+          :math:`\\frac{\delta A}{\delta W} = activation\_derivative\_fct(input=activation\_input,output=activation\_output)`
+
+          is the derivative of the activation function responsible for generating activation_output
+          at the point that generates each of its entries.
+
+
+
+
+
 
     The values of `activation_input <BackPropagation.activation_input>`, `activation_output
     <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
     items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
     and in calls to its `function <BackPropagation.function>`.  Although `error_matrix <BackPropagation.error_matrix>`
     is not specified in the constructor, it is required as an argument of the `function <BackPropagation.function>`;
-    it is assumed that it's value is determined in context at the time of execution (e.g., by a LearningMechanism that
-    uses the BackPropagation LearningFunction).
+    it is assumed that it's value is determined in context at the time of execution (e.g., by a `LearningMechanism`
+    that uses the BackPropagation LearningFunction).
 
-    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as
-    :math:`\\frac{\delta E}{\delta W}`.
+    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as the
+    `error_signal <BackPropagation.error_signal>` it receives weighted by the contribution made by each
+    element of `activation_output <BackPropagation.activation_output>` as a function of the
+    `error_matrix <BackPropagation.error_matrix>` :math:`\\frac{\delta E}{\delta W}`.
+
 
     Arguments
     ---------
@@ -1580,12 +1612,6 @@ class BackPropagation(LearningFunction):
 
     default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
-
-    function : function
-         the function that computes the weight change matrix, and returns that along with the
-         `error_signal <BackPropagation.error_signal>` received, weighted by the contribution made by each element of
-         `activation_output <BackPropagation.activation_output>` as a function of the
-         `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
@@ -1754,9 +1780,9 @@ class BackPropagation(LearningFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms.
-
-        Note that both variable and error_matrix must be specified for the function to execute.
+        """
+        .. note::
+           Both variable and error_matrix must be specified for the function to execute.
 
         Arguments
         ---------
@@ -1781,13 +1807,10 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
-        weighted error signal : 1d np.array
-            `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
-            `activation_output <BackPropagation.activation_output>` as a function of
-            `error_matrix <BackPropagation.error_matrix>`.
+        weight change matrix, weighted error signal : List[2d array, 1d array]
+            the modifications to make to the matrix, `error_signal <BackPropagation.error_signal>` weighted by the
+            contribution made by each element of `activation_output <BackPropagation.activation_output>` as a
+            function of `error_matrix <BackPropagation.error_matrix>`.
 
         """
 
