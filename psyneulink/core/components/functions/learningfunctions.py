@@ -44,17 +44,24 @@ __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'LEARNING_ACTIVATION_FUNCTION','LEARNING_ACTIVATION_INPUT','LEARNING_ACTIVATION_OUTPUT',
            'LEARNING_ERROR_OUTPUT','AUTOASSOCIATIVE']
 
+AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
 # Inidices of terms in variable:
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
+
+# Other indices
+WT_MATRIX_SENDERS_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
 
 # Argument and attribute names:
 ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_OUTPUT = 'activation_output'
 ERROR_SIGNAL = 'error_signal'
+ERROR_MATRIX = 'error_matrix'
+
 
 ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
@@ -1202,13 +1209,6 @@ def _error_signal_getter(owning_component=None, execution_id=None):
     return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
 
 
-# Argument names:
-ERROR_MATRIX = 'error_matrix'
-WT_MATRIX_SENDERS_DIM = 0
-WT_MATRIX_RECEIVERS_DIM = 1
-ACTIVATION_INPUT = 'activation_input'
-ACTIVATION_OUTPUT = 'activation_output'
-
 
 class Reinforcement(LearningFunction):  # -----------------------------------------------------------------------------
     """
@@ -1870,9 +1870,8 @@ class BackPropagation(LearningFunction):
 
 
 class TDLearning(Reinforcement):
-    """
-    This class is used to implement temporal difference learning via the
-    `Reinforcement` function. See `Reinforcement` for class details.
+    """Implement temporal difference learning using the `Reinforcement` Function
+    (see `Reinforcement` for class details).
     """
     componentName = TDLEARNING_FUNCTION
 
@@ -1897,7 +1896,6 @@ class TDLearning(Reinforcement):
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
         # params=params)
         super().__init__(default_variable=default_variable,
-                         # activation_function=activation_function,
                          learning_rate=learning_rate,
                          params=params,
                          owner=owner,
@@ -1907,12 +1905,10 @@ class TDLearning(Reinforcement):
         variable = super(Reinforcement, self)._validate_variable(variable, context)
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items "
-                                 "(input, output, and error arrays)".format(self.name,
-                                                                            variable))
+            raise ComponentError("Variable for {} ({}) must have three items (input, output, and error arrays)".
+                                 format(self.name, variable))
 
         if len(variable[LEARNING_ERROR_OUTPUT]) != len(variable[LEARNING_ACTIVATION_OUTPUT]):
-            raise ComponentError("Error term does not match the length of the"
-                                 "sample sequence")
+            raise ComponentError("Error term does not match the length of the sample sequence")
 
         return variable
